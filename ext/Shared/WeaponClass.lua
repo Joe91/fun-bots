@@ -244,7 +244,8 @@ function Weapon:getAllAttachments()
 	---@type string[]
 	local s_AttachmentList = {}
 
-	for _, l_Attachment in pairs(self.unlocks) do
+	for l_Index = 1, #self.unlocks do
+		local l_Attachment = self.unlocks[l_Index]
 		s_AttachmentList[#s_AttachmentList + 1] = self:getResourcePath(l_Attachment)
 	end
 

@@ -1139,7 +1139,8 @@ function Bot:_UpdateInputs(p_DeltaTime)
 		end
 	end
 
-	for l_Index, l_DelayedInput in ipairs(self.m_DelayedInputs) do
+	for l_Index = 1, #self.m_DelayedInputs do
+		local l_DelayedInput = self.m_DelayedInputs[l_Index]
 		l_DelayedInput.delay = l_DelayedInput.delay - p_DeltaTime
 		if l_DelayedInput.delay <= 0 then
 			self.m_ActiveInputs[l_DelayedInput.input] = {

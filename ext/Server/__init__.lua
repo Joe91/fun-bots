@@ -351,7 +351,8 @@ function FunBotServer:DestroyObstacles(p_LevelName, p_GameMode)
 		s_Positions[#s_Positions + 1] = Vec3(-93.82, 174.97, -11.36)
 	end
 
-	for _, l_Position in ipairs(s_Positions) do
+	for l_Index = 1, #s_Positions do
+		local l_Position = s_Positions[l_Index]
 		self:SpawnGrenade(l_Position)
 	end
 end

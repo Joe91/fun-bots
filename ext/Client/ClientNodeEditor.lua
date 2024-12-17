@@ -185,7 +185,8 @@ function ClientNodeEditor:_OnUiTraceData(p_TotalTraceNodes, p_TotalTraceDistance
 end
 
 function ClientNodeEditor:_OnDrawNodes(p_NodesToDraw, p_UpdateView)
-	for _, l_NodeData in pairs(p_NodesToDraw) do
+	for l_Index = 1, #p_NodesToDraw do
+		local l_NodeData = p_NodesToDraw[l_Index]
 		self:_DrawData(l_NodeData)
 		self.m_TempDataPoints[#self.m_TempDataPoints + 1] = l_NodeData
 
@@ -313,7 +314,8 @@ function ClientNodeEditor:_DrawData(p_DataPoint)
 
 		-- Draw Links.
 		if s_Waypoint.Data and s_Waypoint.Data.LinkMode ~= nil and s_Waypoint.Data.Links ~= nil then
-			for _, l_LinkPos in pairs(p_DataPoint.Links) do
+			for l_Index = 1, #p_DataPoint.Links do
+				local l_LinkPos = p_DataPoint.Links[l_Index]
 				self:DrawLine(l_LinkPos, s_Waypoint.Position, self.m_Colors.Purple, self.m_Colors.Purple)
 			end
 		end
@@ -395,7 +397,8 @@ end
 function ClientNodeEditor:FindNode(p_Position)
 	local s_ClosestNode = nil
 	local s_ClosestDistance = 0.6 -- Maximum 0.6 meter.
-	for _, l_DataNode in pairs(self.m_DataPoints) do
+	for l_Index = 1, #self.m_DataPoints do
+		local l_DataNode = self.m_DataPoints[l_Index]
 		local s_Distance = self:GetDistance(l_DataNode.Node.Position, p_Position)
 		if s_ClosestDistance > s_Distance then
 			s_ClosestDistance = s_Distance
@@ -451,7 +454,8 @@ end
 
 function ClientNodeEditor:GetSelectedNodes()
 	local s_Selection = {}
-	for _, l_Node in pairs(self.m_DataPoints) do
+	for l_Index = 1, #self.m_DataPoints do
+		local l_Node = self.m_DataPoints[l_Index]
 		if l_Node.IsSelected then
 			s_Selection[#s_Selection + 1] = l_Node
 		end
@@ -947,22 +951,26 @@ function ClientNodeEditor:OnUIDrawHud()
 		return
 	end
 
-	for _, l_Node in pairs(self.m_NodesToDraw) do
+	for l_Index = 1, #self.m_NodesToDraw do
+		local l_Node = self.m_NodesToDraw[l_Index]
 		-- Draw spheres.
 		DebugRenderer:DrawSphere(l_Node.pos, l_Node.radius, l_Node.color, l_Node.renderLines, l_Node.smallSizeSegmentDecrease)
 	end
 
-	for _, l_Line in pairs(self.m_LinesToDraw) do
+	for l_Index = 1, #self.m_LinesToDraw do
+		local l_Line = self.m_LinesToDraw[l_Index]
 		-- Draw lines.
 		DebugRenderer:DrawLine(l_Line.from, l_Line.to, l_Line.colorFrom, l_Line.colorTo)
 	end
 
-	for _, l_Text in pairs(self.m_TextToDraw) do
+	for l_Index = 1, #self.m_TextToDraw do
+		local l_Text = self.m_TextToDraw[l_Index]
 		-- Draw text.
 		DebugRenderer:DrawText2D(l_Text.x, l_Text.y, l_Text.text, l_Text.color, l_Text.scale)
 	end
 
-	for _, l_TextPos in pairs(self.m_TextPosToDraw) do
+	for l_Index = 1, #self.m_TextPosToDraw do
+		local l_TextPos = self.m_TextPosToDraw[l_Index]
 		local s_ScreenPos = ClientUtils:WorldToScreen(l_TextPos.pos)
 
 		if s_ScreenPos ~= nil then
@@ -970,7 +978,8 @@ function ClientNodeEditor:OnUIDrawHud()
 		end
 	end
 
-	for _, l_Obb in pairs(self.m_ObbToDraw) do
+	for l_Index = 1, #self.m_ObbToDraw do
+		local l_Obb = self.m_ObbToDraw[l_Index]
 		-- Draw OBB.
 		DebugRenderer:DrawOBB(l_Obb.p_Aab, l_Obb.transform, l_Obb.color)
 	end

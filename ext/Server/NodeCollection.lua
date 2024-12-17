@@ -194,7 +194,8 @@ function NodeCollection:Remove(p_SelectionId, p_Waypoint)
 	if p_Waypoint == nil then
 		local s_Selection = self:GetSelected(p_SelectionId)
 
-		for _, l_SelectedWaypoint in pairs(s_Selection) do
+		for l_Index = 1, #s_Selection do
+			local l_SelectedWaypoint = s_Selection[l_Index]
 			self:Remove(p_SelectionId, l_SelectedWaypoint)
 		end
 
@@ -1141,7 +1142,8 @@ function NodeCollection:ProcessAllDataToLoad()
 			return
 		end
 
-		for _, l_Row in pairs(s_Results) do
+		for l_Index = 1, #s_Results do
+			local l_Row = s_Results[l_Index]
 			if l_Row['pathIndex'] ~= self._LoadLastPathindex then
 				self._LoadPathCount = self._LoadPathCount + 1
 				self._LoadLastPathindex = l_Row['pathIndex']
@@ -1211,7 +1213,8 @@ function NodeCollection:ProcessAllDataToSave()
 		local s_Orphans = {}
 		local s_Disconnects = {}
 
-		for _, l_Waypoint in pairs(self._Waypoints) do
+		for l_Index = 1, #self._Waypoints do
+			local l_Waypoint = self._Waypoints[l_Index]
 			-- Keep track of disconnected nodes, only two should exist.
 			-- The first node and the last node.
 			if l_Waypoint.Previous == false and l_Waypoint.Next ~= false then
@@ -1458,7 +1461,8 @@ function NodeCollection:ObjectiveDirection(p_Waypoint, p_Objective, p_InVehicle)
 			break
 		else
 			if s_CurrentWaypoint[s_Direction].Data.Links ~= nil then
-				for _, l_LinkID in pairs(s_CurrentWaypoint[s_Direction].Data.Links) do
+				for l_Index = 1, #s_CurrentWaypoint[s_Direction].Data.Links do
+					local l_LinkID = s_CurrentWaypoint[s_Direction].Data.Links[l_Index]
 					local s_Link = self:Get(l_LinkID)
 
 					local s_PathWaypoint = nil
@@ -1620,7 +1624,8 @@ function NodeCollection:FindAlongTrace(p_Vec3Start, p_Vec3End, p_Granularity, p_
 	local s_Direction = s_Heading / s_Heading.magnitude
 
 	while #s_SearchWaypoints > 0 and s_Distance > p_Granularity and s_Distance > 0 do
-		for _, l_Waypoint in pairs(s_SearchWaypoints) do
+		for l_Index = 1, #s_SearchWaypoints do
+			local l_Waypoint = s_SearchWaypoints[l_Index]
 			if l_Waypoint ~= nil and self:IsPathVisible(l_Waypoint.PathIndex) and l_Waypoint.Position ~= nil and
 				l_Waypoint.Position:Distance(s_TestPos) <= p_Tolerance then
 				self:Log('NodeCollection:FindAlongTrace -> Found: ' .. l_Waypoint.ID)

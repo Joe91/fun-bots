@@ -54,7 +54,8 @@ function AirTargets:GetTarget(p_Player, p_MaxDistance)
 	local s_ClosestTarget2 = nil
 	local s_ClosestTarget3 = nil
 
-	for _, l_Target in pairs(self._Targets) do
+	for l_Index = 1, #self._Targets do
+		local l_Target = self._Targets[l_Index]
 		local s_TargetPlayer = PlayerManager:GetPlayerByName(l_Target)
 
 		if s_TargetPlayer ~= nil and s_TargetPlayer.teamId ~= s_Team and s_TargetPlayer.soldier ~= nil then
@@ -102,7 +103,8 @@ end
 
 ---@param p_Player Player
 function AirTargets:_RemoveTarget(p_Player)
-	for l_Index, l_Target in pairs(self._Targets) do
+	for l_Index = 1, #self._Targets do
+		local l_Target = self._Targets[l_Index]
 		if l_Target == p_Player.name then
 			table.remove(self._Targets, l_Index)
 			break

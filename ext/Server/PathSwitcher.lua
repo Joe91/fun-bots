@@ -31,7 +31,8 @@ function PathSwitcher:GetPriorityOfPath(p_Node, p_TargetObjective)
 			-- Otherwise, check if the path has an objective I want.
 		else -- more than one objective
 			-- Loop through the path's objectives and compare to mine.
-			for _, l_PathObjective in pairs(p_Node.Data.Objectives) do
+			for l_Index = 1, #p_Node.Data.Objectives do
+				local l_PathObjective = p_Node.Data.Objectives[l_Index]
 				if p_TargetObjective == l_PathObjective then
 					s_Priority = 3
 					break
@@ -96,7 +97,8 @@ function PathSwitcher:GetNewPath(p_Bot, p_BotId, p_Point, p_Objective, p_InVehic
 						local s_isAirPath = false
 						local s_isWaterPath = false
 
-						for _, l_PathType in pairs(s_PathNode.Data.Vehicles) do
+						for l_Index = 1, #s_PathNode.Data.Vehicles do
+							local l_PathType = s_PathNode.Data.Vehicles[l_Index]
 							if l_PathType:lower() == "air" then
 								s_isAirPath = true
 							end

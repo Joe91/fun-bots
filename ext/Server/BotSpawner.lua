@@ -133,29 +133,32 @@ function BotSpawner:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 
 	-- Kick players named after bots
 	if #self._KickPlayers > 0 then
-		for i, l_PlayerNameToKick in pairs(self._KickPlayers) do
+		for l_Index0 = 1, #self._KickPlayers do
+			local l_PlayerNameToKick = self._KickPlayers[l_Index0]
 			local s_PlayerToKick = PlayerManager:GetPlayerByName(l_PlayerNameToKick)
 
 			if s_PlayerToKick ~= nil then
 				s_PlayerToKick:Kick("You used a BOT-Name. Please use a real name on Fun-Bot-Servers...")
 
-				for j, l_BotNameToIgnore in pairs(Globals.IgnoreBotNames) do
+				for l_Index1 = 1, #Globals.IgnoreBotNames do
+					local l_BotNameToIgnore = Globals.IgnoreBotNames[l_Index1]
 					if l_BotNameToIgnore == l_PlayerNameToKick then
-						table.remove(Globals.IgnoreBotNames, j)
+						table.remove(Globals.IgnoreBotNames, l_Index1)
 						break
 					end
 				end
 
-				table.remove(self._KickPlayers, i)
+				table.remove(self._KickPlayers, l_Index0)
 				break
 			end
 		end
 	end
 
 	if #self._BotsWithoutPath > 0 then
-		for i, l_Bot in pairs(self._BotsWithoutPath) do
+		for l_Index = 1, #self._BotsWithoutPath do
+			local l_Bot = self._BotsWithoutPath[l_Index]
 			if l_Bot == nil or l_Bot.m_Player == nil then
-				table.remove(self._BotsWithoutPath, i)
+				table.remove(self._BotsWithoutPath, l_Index)
 				break
 			end
 
@@ -166,7 +169,7 @@ function BotSpawner:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 
 				if s_Node ~= nil then
 					l_Bot:SetVarsWay(nil, true, s_Node.PathIndex, s_Node.PointIndex, false)
-					table.remove(self._BotsWithoutPath, i)
+					table.remove(self._BotsWithoutPath, l_Index)
 
 					if Globals.RemoveKitVisuals then
 						Events:Dispatch('Bot:SoldierEntity', l_Bot.m_Player.soldier)
@@ -188,7 +191,8 @@ end
 function BotSpawner:OnPlayerJoining(p_Name)
 	-- Detect BOT-Names.
 	if Registry.COMMON.ALLOW_PLAYER_BOT_NAMES then
-		for _, l_Name in pairs(BotNames) do
+		for l_Index = 1, #BotNames do
+			local l_Name = BotNames[l_Index]
 			if Registry.COMMON.BOT_TOKEN .. l_Name == p_Name then
 				-- Prevent bots from being named like this.
 				m_Logger:Write("Don't use the name " .. p_Name .. " for Bots anymore")
@@ -204,7 +208,8 @@ function BotSpawner:OnPlayerJoining(p_Name)
 		end
 	else -- Not allowed to use Bot-Names.
 		if Registry.COMMON.BOT_TOKEN == "" then
-			for _, l_Name in pairs(BotNames) do
+			for l_Index = 1, #BotNames do
+				local l_Name = BotNames[l_Index]
 				if l_Name == p_Name then
 					self._KickPlayers[#self._KickPlayers + 1] = p_Name
 
@@ -238,7 +243,8 @@ function BotSpawner:OnPlayerAuthenticated(p_Player)
 			s_CountPlayers[i] = 0
 			local s_TempPlayers = PlayerManager:GetPlayersByTeam(i)
 
-			for _, l_Player in pairs(s_TempPlayers) do
+			for l_Index = 1, #s_TempPlayers do
+				local l_Player = s_TempPlayers[l_Index]
 				if not m_Utilities:isBot(l_Player) then
 					s_CountPlayers[i] = s_CountPlayers[i] + 1
 				end
@@ -379,7 +385,8 @@ function BotSpawner:UpdateBotAmountAndTeam()
 			s_BotsToDelay[i] = #g_GameDirector:GetSpawnableVehicle(i)
 		end
 
-		for _, l_Player in pairs(s_TempPlayers) do
+		for l_Index = 1, #s_TempPlayers do
+			local l_Player = s_TempPlayers[l_Index]
 			if not m_Utilities:isBot(l_Player) then
 				s_CountPlayers[i] = s_CountPlayers[i] + 1
 			end
@@ -449,7 +456,8 @@ function BotSpawner:UpdateBotAmountAndTeam()
 
 			for i = 1, Globals.NrOfTeams do
 				if s_CountPlayers[i] < s_MinTargetPlayersPerTeam then
-					for _, l_Player in pairs(PlayerManager:GetPlayers()) do
+					for l_Index = 1, #PlayerManager:GetPlayers() do
+						local l_Player = PlayerManager:GetPlayers()[l_Index]
 						if l_Player.soldier == nil and l_Player.teamId ~= i then
 							local s_OldTeam = l_Player.teamId
 							l_Player.teamId = i
@@ -892,7 +900,8 @@ function BotSpawner:_RushSpawn(p_Bot)
 		if s_Entity.data:Is('CharacterSpawnReferenceObjectData') then
 			if CharacterSpawnReferenceObjectData(s_Entity.data).team == p_Bot.m_Player.teamId then
 				-- Skip if it is a vehicle spawn.
-				for i, l_Entity in pairs(s_Entity.bus.entities) do
+				for l_Index = 1, #s_Entity.bus.entities do
+					local l_Entity = s_Entity.bus.entities[l_Index]
 					if l_Entity:Is("ServerVehicleSpawnEntity") then
 						goto skip
 					end
@@ -943,7 +952,8 @@ function BotSpawner:_FindAttackedSpawnPoint(p_TeamId)
 			goto endOfLoop
 		end
 
-		for i, l_Entity in pairs(s_Entity.bus.entities) do
+		for l_Index = 1, #s_Entity.bus.entities do
+			local l_Entity = s_Entity.bus.entities[l_Index]
 			if l_Entity:Is('ServerCharacterSpawnEntity') then
 				if CharacterSpawnReferenceObjectData(l_Entity.data).team == p_TeamId
 					or CharacterSpawnReferenceObjectData(l_Entity.data).team == 0 then
@@ -988,7 +998,8 @@ function BotSpawner:_FindClosestSpawnPoint(p_TeamId)
 			goto endOfLoop
 		end
 
-		for _, l_Entity in pairs(s_Entity.bus.entities) do
+		for l_Index = 1, #s_Entity.bus.entities do
+			local l_Entity = s_Entity.bus.entities[l_Index]
 			if l_Entity:Is('ServerCharacterSpawnEntity') then
 				if CharacterSpawnReferenceObjectData(l_Entity.data).team == p_TeamId
 					or CharacterSpawnReferenceObjectData(l_Entity.data).team == 0 then
@@ -1036,7 +1047,8 @@ function BotSpawner:_FindTargetLocation(p_TeamId)
 			goto endOfLoop
 		end
 
-		for i, l_Entity in pairs(s_Entity.bus.entities) do
+		for l_Index = 1, #s_Entity.bus.entities do
+			local l_Entity = s_Entity.bus.entities[l_Index]
 			if l_Entity:Is('ServerCharacterSpawnEntity') then
 				if CharacterSpawnReferenceObjectData(l_Entity.data).team == 0 then
 					s_TargetLocation = s_Entity.transform.trans
@@ -1141,7 +1153,8 @@ function BotSpawner:_SpawnSingleWayBot(p_Player, p_UseRandomWay, p_ActiveWayInde
 				if s_SpawnPoint == "SpawnAtVehicle" then
 					local s_Vehicles = g_GameDirector:GetSpawnableVehicle(s_TeamId)
 
-					for _, l_Vehicle in pairs(s_Vehicles) do
+					for l_Index = 1, #s_Vehicles do
+						local l_Vehicle = s_Vehicles[l_Index]
 						if l_Vehicle ~= nil then
 							s_SpawnEntity = l_Vehicle
 							break
@@ -1150,7 +1163,8 @@ function BotSpawner:_SpawnSingleWayBot(p_Player, p_UseRandomWay, p_ActiveWayInde
 				elseif s_SpawnPoint == "SpawnInAa" then
 					local s_StationaryAas = g_GameDirector:GetStationaryAas(s_TeamId)
 
-					for _, l_Aa in pairs(s_StationaryAas) do
+					for l_Index = 1, #s_StationaryAas do
+						local l_Aa = s_StationaryAas[l_Index]
 						if l_Aa ~= nil then
 							s_SpawnEntity = l_Aa
 							break
@@ -1470,7 +1484,8 @@ function BotSpawner:_GetUnlocks(p_Bot, p_TeamId, p_SquadId)
 	local s_CurrentUnlockNames = {}
 	local s_CurrentUnlocks = {}
 
-	for _, l_PlayerUnlock in pairs(p_Bot.m_Player.selectedUnlocks) do
+	for l_Index = 1, #p_Bot.m_Player.selectedUnlocks do
+		local l_PlayerUnlock = p_Bot.m_Player.selectedUnlocks[l_Index]
 		s_CurrentUnlocks[#s_CurrentUnlocks + 1] = l_PlayerUnlock
 		s_CurrentUnlockNames[#s_CurrentUnlockNames + 1] = l_PlayerUnlock["partition"]["name"]
 	end
@@ -1529,11 +1544,14 @@ function BotSpawner:_GetUnlocks(p_Bot, p_TeamId, p_SquadId)
 	end
 
 	local s_SquadPlayers = PlayerManager:GetPlayersBySquad(p_TeamId, p_SquadId)
-	for _, l_SquadPlayer in pairs(s_SquadPlayers) do
+	for l_Index = 1, #s_SquadPlayers do
+		local l_SquadPlayer = s_SquadPlayers[l_Index]
 		if l_SquadPlayer.id ~= p_Bot.m_Player.id then
-			for _, l_PlayerUnlock in pairs(l_SquadPlayer.selectedUnlocks) do
+			for l_Index = 1, #l_SquadPlayer.selectedUnlocks do
+				local l_PlayerUnlock = l_SquadPlayer.selectedUnlocks[l_Index]
 				local s_UsedSquadPerk = l_PlayerUnlock["partition"]["name"]
-				for l_Index, l_PossiblePerk in pairs(s_PossiblePerks) do
+				for l_Index = 1, #s_PossiblePerks do
+					local l_PossiblePerk = s_PossiblePerks[l_Index]
 					if l_PossiblePerk == s_UsedSquadPerk then
 						table.remove(s_PossiblePerks, l_Index)
 						break
@@ -1544,7 +1562,8 @@ function BotSpawner:_GetUnlocks(p_Bot, p_TeamId, p_SquadId)
 	end
 
 	-- Choose good available perk.
-	for _, l_PerkName in pairs(s_PossiblePerks) do
+	for l_Index = 1, #s_PossiblePerks do
+		local l_PerkName = s_PossiblePerks[l_Index]
 		s_SelectedPerk = l_PerkName
 		if m_Utilities:CheckProbablity(80) then -- Use the best available perk with this percentage.
 			break
@@ -1552,7 +1571,8 @@ function BotSpawner:_GetUnlocks(p_Bot, p_TeamId, p_SquadId)
 	end
 
 	-- Update Perks if needed.
-	for l_Index, l_PerkName in pairs(s_CurrentUnlockNames) do
+	for l_Index = 1, #s_CurrentUnlockNames do
+		local l_PerkName = s_CurrentUnlockNames[l_Index]
 		if string.find(l_PerkName, "soldiers") then
 			-- Squad perk.
 			if l_PerkName == s_SelectedPerk then
@@ -1575,7 +1595,8 @@ function BotSpawner:_GetUnlocks(p_Bot, p_TeamId, p_SquadId)
 	if s_SelectedPerk ~= "" then
 		s_Unlocks[#s_Unlocks + 1] = ResourceManager:SearchForDataContainer(s_SelectedPerk)
 	end
-	for _, l_VehicelPerk in pairs(s_VehiclePerksToAdd) do
+	for l_Index = 1, #s_VehiclePerksToAdd do
+		local l_VehicelPerk = s_VehiclePerksToAdd[l_Index]
 		s_Unlocks[#s_Unlocks + 1] = ResourceManager:SearchForDataContainer(l_VehicelPerk)
 	end
 
@@ -1658,7 +1679,8 @@ function BotSpawner:_SetKitAndAppearance(p_Bot, p_Kit, p_Color)
 end
 
 function BotSpawner:_SetPrimaryAttachments(p_UnlockWeapon, p_Attachments)
-	for _, l_Attachment in pairs(p_Attachments) do
+	for l_Index = 1, #p_Attachments do
+		local l_Attachment = p_Attachments[l_Index]
 		local s_Asset = ResourceManager:SearchForDataContainer(l_Attachment)
 
 		if s_Asset == nil then
@@ -1890,7 +1912,8 @@ function BotSpawner:_FindAppearance(p_TeamName, p_KitName, p_ColorName)
 	}
 
 	-- 'Persistence/Unlocks/Soldiers/Visual/MP[or:MP_XP4]/Us/MP_US_Assault_Appearance_'..p_ColorName
-	for _, l_GameMode in pairs(s_GameModeAppearances) do
+	for l_Index = 1, #s_GameModeAppearances do
+		local l_GameMode = s_GameModeAppearances[l_Index]
 		local s_AppearanceString = l_GameMode ..
 			p_TeamName .. '/MP_' .. string.upper(p_TeamName) .. '_' .. p_KitName .. '_Appearance_' .. p_ColorName
 		local s_Appearance = ResourceManager:SearchForDataContainer('Persistence/Unlocks/Soldiers/Visual/' ..
@@ -1981,7 +2004,8 @@ end
 function BotSpawner:_SwitchTeams()
 	local s_Players = PlayerManager:GetPlayers()
 
-	for _, l_Player in pairs(s_Players) do
+	for l_Index = 1, #s_Players do
+		local l_Player = s_Players[l_Index]
 		local s_OldTeam = l_Player.teamId
 
 		if s_OldTeam ~= TeamId.TeamNeutral then

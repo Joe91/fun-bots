@@ -26,7 +26,8 @@ function VehicleMovement:UpdateNormalMovementVehicle(p_DeltaTime, p_Bot)
 			if m_Vehicles:IsVehicleType(p_Bot.m_ActiveVehicle, VehicleTypes.Plane) then
 				-- Check for other plane in front of bot.
 				local s_IsInfront = false
-				for _, l_Jet in pairs(g_GameDirector:GetSpawnableVehicle(p_Bot.m_Player.teamId)) do
+				for l_Index = 1, #g_GameDirector:GetSpawnableVehicle(p_Bot.m_Player.teamId) do
+					local l_Jet = g_GameDirector:GetSpawnableVehicle(p_Bot.m_Player.teamId)[l_Index]
 					local s_DistanceToJet = p_Bot.m_Player.controlledControllable.transform.trans:Distance(l_Jet.transform.trans)
 					if s_DistanceToJet < 30 then
 						local s_CompPos = p_Bot.m_Player.controlledControllable.transform.trans +
@@ -114,7 +115,8 @@ function VehicleMovement:UpdateNormalMovementVehicle(p_DeltaTime, p_Bot)
 						p_Bot:ExitVehicle()
 					end
 				elseif p_Bot._ActionTimer <= s_Point.Data.Action.time then
-					for _, l_Input in pairs(s_Point.Data.Action.inputs) do
+					for l_Index = 1, #s_Point.Data.Action.inputs do
+						local l_Input = s_Point.Data.Action.inputs[l_Index]
 						p_Bot:_SetInput(l_Input, 1)
 					end
 				end

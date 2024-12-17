@@ -868,7 +868,8 @@ function NodeEditor:ClearTrace(p_Player)
 
 		-- Detect selected path(s).
 		local s_Selection = m_NodeCollection:GetSelected(p_Player.onlineId)
-		for _, l_Node in pairs(s_Selection) do
+		for l_Index = 1, #s_Selection do
+			local l_Node = s_Selection[l_Index]
 			local s_PathIndex = l_Node.PathIndex
 			s_PathIndexes[s_PathIndex] = true -- Add more checks?
 		end
@@ -1308,13 +1309,15 @@ function NodeEditor:OnEngineUpdate(p_DeltaTime, p_SimulationDeltaTime)
 								end
 
 								if s_FirstNode.Data.Objectives then
-									for _, l_Objective in pairs(s_FirstNode.Data.Objectives) do
+									for l_Index = 1, #s_FirstNode.Data.Objectives do
+										local l_Objective = s_FirstNode.Data.Objectives[l_Index]
 										s_DataNode.Objectives[#s_DataNode.Objectives + 1] = l_Objective
 									end
 								end
 
 								if s_FirstNode.Data.Vehicles then
-									for _, l_Vehicle in pairs(s_FirstNode.Data.Vehicles) do
+									for l_Index = 1, #s_FirstNode.Data.Vehicles do
+										local l_Vehicle = s_FirstNode.Data.Vehicles[l_Index]
 										s_DataNode.Vehicles[#s_DataNode.Vehicles + 1] = l_Vehicle
 									end
 								end

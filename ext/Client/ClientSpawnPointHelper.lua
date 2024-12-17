@@ -56,7 +56,8 @@ function ClientSpawnPointHelper:OnUIDrawHud()
 		return
 	end
 
-	for _, l_Transform in pairs(self.m_SpawnPointTable) do
+	for l_Index = 1, #self.m_SpawnPointTable do
+		local l_Transform = self.m_SpawnPointTable[l_Index]
 		if l_Transform.trans:Distance(s_LocalPlayer.soldier.worldTransform.trans) <= Config.SpawnPointRange then
 			self:DrawSpawnPoint(l_Transform)
 		end

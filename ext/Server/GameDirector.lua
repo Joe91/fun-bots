@@ -65,7 +65,8 @@ function GameDirector:OnLoadFinished()
 	-- parse all objectives
 	self:_InitObjectives()
 	-- update all already spawned vehicles (before the paths and objectives were ready)
-	for _, l_VehicleEntity in pairs(self.m_SpawnedEntitiesToProcess) do
+	for l_Index = 1, #self.m_SpawnedEntitiesToProcess do
+		local l_VehicleEntity = self.m_SpawnedEntitiesToProcess[l_Index]
 		self:OnVehicleSpawnDone(l_VehicleEntity)
 	end
 	self.m_SpawnedEntitiesToProcess = {}
@@ -210,7 +211,8 @@ function GameDirector:OnEngineUpdate(p_DeltaTime)
 	local s_AvailableObjectivesAttack = {}
 	local s_AvailableObjectivesDefend = {}
 
-	for _, l_Objective in pairs(self.m_AllObjectives) do
+	for l_Index = 1, #self.m_AllObjectives do
+		local l_Objective = self.m_AllObjectives[l_Index]
 		if not l_Objective.subObjective and not l_Objective.isBase and l_Objective.active and not l_Objective.destroyed and
 			not l_Objective.isEnterVehiclePath then
 			for i = 1, Globals.NrOfTeams do
@@ -271,14 +273,17 @@ function GameDirector:OnEngineUpdate(p_DeltaTime)
 
 	-- Check objective statuses.
 	-- Clear assigned-count on every cycle first
-	for l_BotTeam, l_Bots in pairs(self.m_BotsByTeam) do
-		for _, l_Objective in pairs(self.m_AllObjectives) do
+	for l_BotTeam = 1, #self.m_BotsByTeam do
+		for l_Index = 1, #self.m_AllObjectives do
+			local l_Objective = self.m_AllObjectives[l_Index]
 			l_Objective.assigned[l_BotTeam] = 0
 		end
 	end
 
-	for l_BotTeam, l_Bots in pairs(self.m_BotsByTeam) do
-		for _, l_Bot in pairs(l_Bots) do
+	for l_BotTeam = 1, #self.m_BotsByTeam do
+		local l_Bots = self.m_BotsByTeam[l_BotTeam]
+		for l_Index0 = 1, #l_Bots do
+			local l_Bot = l_Bots[l_Index0]
 			if l_Bot:GetObjective() == '' or l_Bot:GetObjective() == nil then -- no active objective of bot
 				if l_Bot.m_Player.soldier == nil then
 					goto continue_with_next_bot
@@ -290,7 +295,8 @@ function GameDirector:OnEngineUpdate(p_DeltaTime)
 				local s_ClosestObjectiveMode = BotObjectiveModes.Default
 
 				-- loop through all objectives
-				for _, l_Objective in pairs(self.m_AllObjectives) do
+				for l_Index1 = 1, #self.m_AllObjectives do
+					local l_Objective = self.m_AllObjectives[l_Index1]
 					if l_Objective.subObjective then
 						goto continue_with_next_objective
 					end
@@ -542,7 +548,8 @@ end
 ---@param p_TeamId TeamId
 function GameDirector:ReturnStationaryAaEntity(p_ControllableEntity, p_TeamId)
 	p_ControllableEntity = ControllableEntity(p_ControllableEntity)
-	for _, l_Entity in pairs(self.m_SpawnableStationaryAas[p_TeamId]) do
+	for l_Index = 1, #self.m_SpawnableStationaryAas[p_TeamId] do
+		local l_Entity = self.m_SpawnableStationaryAas[p_TeamId][l_Index]
 		if (l_Entity.uniqueId == p_ControllableEntity.uniqueId) and (l_Entity.instanceId == p_ControllableEntity.instanceId) then
 			-- already in list, return
 			return
@@ -558,7 +565,8 @@ function GameDirector:GetGadgetOwner(p_Entity)
 	local s_ClosestPlayer = nil
 	local s_Players = PlayerManager:GetPlayers()
 
-	for _, l_Player in pairs(s_Players) do
+	for l_Index = 1, #s_Players do
+		local l_Player = s_Players[l_Index]
 		if l_Player.soldier ~= nil then
 			local s_CurrentDistance = s_GadgetPosition:Distance(l_Player.soldier.worldTransform.trans)
 
@@ -703,20 +711,23 @@ function GameDirector:OnVehicleUnspawn(p_Entity, p_VehiclePoints, p_HotTeam)
 
 	for l_Team = TeamId.Team1, Globals.NrOfTeams do
 		if m_Vehicles:IsVehicleType(s_VehicleData, VehicleTypes.StationaryAA) then
-			for l_Index, l_Entity in pairs(self.m_SpawnableStationaryAas[l_Team]) do
+			for l_Index = 1, #self.m_SpawnableStationaryAas[l_Team] do
+				local l_Entity = self.m_SpawnableStationaryAas[l_Team][l_Index]
 				if (l_Entity.uniqueId == p_Entity.uniqueId) and (l_Entity.instanceId == p_Entity.instanceId) then
 					table.remove(self.m_SpawnableStationaryAas[l_Team], l_Index)
 					break -- should only happen once
 				end
 			end
 		else
-			for l_Index, l_Entity in pairs(self.m_SpawnableVehicles[l_Team]) do
+			for l_Index = 1, #self.m_SpawnableVehicles[l_Team] do
+				local l_Entity = self.m_SpawnableVehicles[l_Team][l_Index]
 				if (l_Entity.uniqueId == p_Entity.uniqueId) and (l_Entity.instanceId == p_Entity.instanceId) then
 					table.remove(self.m_SpawnableVehicles[l_Team], l_Index)
 					break -- should only happen once
 				end
 			end
-			for l_Index, l_Entity in pairs(self.m_AvailableVehicles[l_Team]) do
+			for l_Index = 1, #self.m_AvailableVehicles[l_Team] do
+				local l_Entity = self.m_AvailableVehicles[l_Team][l_Index]
 				if (l_Entity.uniqueId == p_Entity.uniqueId) and (l_Entity.instanceId == p_Entity.instanceId) then
 					table.remove(self.m_AvailableVehicles[l_Team], l_Index)
 					break -- should only happen once
@@ -751,20 +762,23 @@ function GameDirector:OnVehicleEnter(p_Entity, p_Player)
 
 	if s_VehicleData ~= nil then
 		if m_Vehicles:IsVehicleType(s_VehicleData, VehicleTypes.StationaryAA) then
-			for l_Index, l_Entity in pairs(self.m_SpawnableStationaryAas[p_Player.teamId]) do
+			for l_Index = 1, #self.m_SpawnableStationaryAas[p_Player.teamId] do
+				local l_Entity = self.m_SpawnableStationaryAas[p_Player.teamId][l_Index]
 				if (l_Entity.uniqueId == p_Entity.uniqueId) and (l_Entity.instanceId == p_Entity.instanceId) then
 					table.remove(self.m_SpawnableStationaryAas[p_Player.teamId], l_Index)
 					break -- should only happen once
 				end
 			end
 		else
-			for l_Index, l_Entity in pairs(self.m_SpawnableVehicles[p_Player.teamId]) do
+			for l_Index = 1, #self.m_SpawnableVehicles[p_Player.teamId] do
+				local l_Entity = self.m_SpawnableVehicles[p_Player.teamId][l_Index]
 				if (l_Entity.uniqueId == p_Entity.uniqueId) and (l_Entity.instanceId == p_Entity.instanceId) then
 					table.remove(self.m_SpawnableVehicles[p_Player.teamId], l_Index)
 					break -- should only happen once
 				end
 			end
-			for l_Index, l_Entity in pairs(self.m_AvailableVehicles[p_Player.teamId]) do
+			for l_Index = 1, #self.m_AvailableVehicles[p_Player.teamId] do
+				local l_Entity = self.m_AvailableVehicles[p_Player.teamId][l_Index]
 				if (l_Entity.uniqueId == p_Entity.uniqueId) and (l_Entity.instanceId == p_Entity.instanceId) then
 					table.remove(self.m_AvailableVehicles[p_Player.teamId], l_Index)
 					break -- should only happen once
@@ -926,7 +940,8 @@ function GameDirector:FindClosestPath(p_Trans, p_VehiclePath, p_DetailedSearch, 
 					if l_Waypoints[1].Data.Vehicles ~= nil then
 						s_isVehiclePath = true
 
-						for _, l_PathType in pairs(l_Waypoints[1].Data.Vehicles) do
+						for l_Index = 1, #l_Waypoints[1].Data.Vehicles do
+							local l_PathType = l_Waypoints[1].Data.Vehicles[l_Index]
 							if l_PathType:lower() == "air" then
 								s_isAirPath = true
 							end
@@ -1030,7 +1045,8 @@ function GameDirector:GetSpawnPath(p_TeamId, p_SquadId, p_OnlyBase)
 	-- Check for spawn at squad-mate.
 	local s_SquadMates = PlayerManager:GetPlayersBySquad(p_TeamId, p_SquadId)
 
-	for _, l_Player in pairs(s_SquadMates) do
+	for l_Index = 1, #s_SquadMates do
+		local l_Player = s_SquadMates[l_Index]
 		local s_Beacon = self:GetPlayerBeacon(l_Player.name)
 
 		if s_Beacon ~= nil then
@@ -1116,7 +1132,8 @@ function GameDirector:GetSpawnPath(p_TeamId, p_SquadId, p_OnlyBase)
 	local s_ReferenceObjectivesNeutral = {}
 	local s_ReferenceObjectivesEnemy = {}
 
-	for _, l_ReferenceObjective in pairs(self.m_AllObjectives) do
+	for l_Index = 1, #self.m_AllObjectives do
+		local l_ReferenceObjective = self.m_AllObjectives[l_Index]
 		if not l_ReferenceObjective.isEnterVehiclePath and not l_ReferenceObjective.isBase and
 			not l_ReferenceObjective.isSpawnPath then
 			if l_ReferenceObjective.team == TeamId.TeamNeutral then
@@ -1144,7 +1161,8 @@ function GameDirector:GetSpawnPath(p_TeamId, p_SquadId, p_OnlyBase)
 	local s_RushConvertedBases = {}
 	local s_PathsDone = {}
 
-	for _, l_Objective in pairs(self.m_AllObjectives) do
+	for l_Index = 1, #self.m_AllObjectives do
+		local l_Objective = self.m_AllObjectives[l_Index]
 		local s_AllObjectives = m_NodeCollection:GetKnownObjectives()
 		local s_PathsWithObjective = s_AllObjectives[l_Objective.name]
 
@@ -1153,7 +1171,8 @@ function GameDirector:GetSpawnPath(p_TeamId, p_SquadId, p_OnlyBase)
 			return 0, 0
 		end
 
-		for _, l_Path in pairs(s_PathsWithObjective) do
+		for l_Index = 1, #s_PathsWithObjective do
+			local l_Path = s_PathsWithObjective[l_Index]
 			if s_PathsDone[l_Path] then
 				goto continue_paths_loop
 			end
@@ -1240,7 +1259,8 @@ function GameDirector:GetSpawnPathOfObjectives(p_PossibleObjectives)
 	local s_TempObject = p_PossibleObjectives[MathUtils:GetRandomInt(1, #p_PossibleObjectives)]
 	local s_AvailableSpawnPaths = nil
 
-	for _, l_Objective in pairs(self.m_AllObjectives) do
+	for l_Index = 1, #self.m_AllObjectives do
+		local l_Objective = self.m_AllObjectives[l_Index]
 		if l_Objective.isSpawnPath and not l_Objective.isEnterVehiclePath then
 			for _, name in pairs(l_Objective.name:split(" ")) do
 				if name == s_TempObject.name then
@@ -1298,7 +1318,8 @@ function GameDirector:IsBasePath(p_ObjectiveNames)
 	if #p_ObjectiveNames < 1 then
 		return false
 	end
-	for _, l_ObjectiveName in pairs(p_ObjectiveNames) do
+	for l_Index = 1, #p_ObjectiveNames do
+		local l_ObjectiveName = p_ObjectiveNames[l_Index]
 		local s_Objective = self:_GetObjectiveObject(l_ObjectiveName)
 		if s_Objective ~= nil and s_Objective.isBase then
 			return true
@@ -1583,7 +1604,8 @@ function GameDirector:_UpdateValidObjectives()
 			s_McomIndexB = self.m_RushStageCounter * 2
 		end
 
-		for _, l_Objective in pairs(self.m_AllObjectives) do
+		for l_Index = 1, #self.m_AllObjectives do
+			local l_Objective = self.m_AllObjectives[l_Index]
 			local s_Fields = l_Objective.name:split(" ")
 			local s_Active = false
 			local s_SubObjective = false
@@ -1675,7 +1697,8 @@ function GameDirector:_UpdateObjective(p_Name, p_Data)
 	if p_Name == "" then
 		return
 	end
-	for _, l_Objective in pairs(self.m_AllObjectives) do
+	for l_Index = 1, #self.m_AllObjectives do
+		local l_Objective = self.m_AllObjectives[l_Index]
 		if l_Objective.name == p_Name then
 			for l_Key, l_Value in pairs(p_Data) do
 				l_Objective[l_Key] = l_Value
@@ -1699,7 +1722,8 @@ function GameDirector:_GetDistanceFromObjective(p_Objective, p_Position)
 	local s_AllObjectives = m_NodeCollection:GetKnownObjectives()
 	local s_Paths = s_AllObjectives[p_Objective]
 
-	for _, l_Path in pairs(s_Paths) do
+	for l_Index = 1, #s_Paths do
+		local l_Path = s_Paths[l_Index]
 		local s_Node = m_NodeCollection:Get(1, l_Path)
 
 		if s_Node ~= nil and s_Node.Data.Objectives ~= nil then
@@ -1727,7 +1751,8 @@ function GameDirector:_TranslateObjective(p_Position, p_Name)
 	local s_ClosestDistance = nil
 
 	for l_Objective, l_Paths in pairs(s_AllObjectives) do
-		for _, l_Path in pairs(l_Paths) do
+		for l_Index = 1, #l_Paths do
+			local l_Path = l_Paths[l_Index]
 			if s_PathsDone[l_Path] then
 				goto continue_paths_loop
 			end
@@ -1770,7 +1795,8 @@ end
 ---@param p_Name string
 ---@return table|nil
 function GameDirector:_GetObjectiveObject(p_Name)
-	for _, l_Objective in pairs(self.m_AllObjectives) do
+	for l_Index = 1, #self.m_AllObjectives do
+		local l_Objective = self.m_AllObjectives[l_Index]
 		if l_Objective.name == p_Name then
 			return l_Objective
 		end
@@ -1780,7 +1806,8 @@ end
 ---@param p_Objective string
 ---@return string|nil
 function GameDirector:_GetSubObjectiveFromObj(p_Objective)
-	for _, l_TempObjective in pairs(self.m_AllObjectives) do
+	for l_Index = 1, #self.m_AllObjectives do
+		local l_TempObjective = self.m_AllObjectives[l_Index]
 		if l_TempObjective.subObjective and l_TempObjective.name ~= p_Objective then
 			local s_Name = l_TempObjective.name:lower()
 
@@ -1794,7 +1821,8 @@ end
 ---@param p_SubObjective string
 ---@return string|nil
 function GameDirector:_GetObjectiveFromSubObj(p_SubObjective)
-	for _, l_TempObjective in pairs(self.m_AllObjectives) do
+	for l_Index = 1, #self.m_AllObjectives do
+		local l_TempObjective = self.m_AllObjectives[l_Index]
 		if not l_TempObjective.subObjective and l_TempObjective.name ~= p_SubObjective then
 			local s_Name = l_TempObjective.name:lower()
 
