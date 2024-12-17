@@ -39,13 +39,13 @@ Registry = {
 	-- We use semantic versioning. Please see: https://semver.org.
 	VERSION = {
 		-- Major version.
-		VERSION_MAJ = 2,
+		VERSION_MAJ = 3,
 		-- Minor version.
-		VERSION_MIN = 9,
+		VERSION_MIN = 0,
 		-- Patch version.
-		VERSION_PATCH = 3,
+		VERSION_PATCH = 0,
 		-- Additional label for pre-releases and build metadata.
-		VERSION_LABEL = "dev12",
+		VERSION_LABEL = "dev1",
 		-- Current version type of this build.
 		VERSION_TYPE = VersionType.DevBuild,
 		-- The Version used for the Update-Check.
