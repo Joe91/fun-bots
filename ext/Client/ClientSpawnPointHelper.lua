@@ -18,7 +18,7 @@ function ClientSpawnPointHelper:OnPartitionLoaded(p_Partition)
 		if l_Instance:Is("AlternateSpawnEntityData") then
 			---@type AlternateSpawnEntityData
 			l_Instance = AlternateSpawnEntityData(l_Instance)
-			table.insert(self.m_SpawnPointTable, l_Instance.transform)
+			self.m_SpawnPointTable[#self.m_SpawnPointTable + 1] = l_Instance.transform
 		end
 	end
 end

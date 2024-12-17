@@ -479,25 +479,25 @@ function WeaponList:_insertWeapon(p_Kit, p_WeaponType, p_WeaponName, p_Team)
 	local s_BotWeaponType = self:_typeToBotWeapon(p_WeaponType)
 
 	if s_BotWeaponType ~= nil then
-		table.insert(Weapons[p_Kit][s_BotWeaponType][p_Team], p_WeaponName)
+		Weapons[p_Kit][s_BotWeaponType][p_Team][#Weapons[p_Kit][s_BotWeaponType][p_Team] + 1] = p_WeaponName
 	end
 
 	if s_BotWeaponType == BotWeapons.Primary then -- Only insert primaries once.
 		if p_Kit == BotKits.Assault then
 			if not table.has(AssaultPrimary, p_WeaponName) then
-				table.insert(AssaultPrimary, p_WeaponName)
+				AssaultPrimary[#AssaultPrimary + 1] = p_WeaponName
 			end
 		elseif p_Kit == BotKits.Engineer then
 			if not table.has(EngineerPrimary, p_WeaponName) then
-				table.insert(EngineerPrimary, p_WeaponName)
+				EngineerPrimary[#EngineerPrimary + 1] = p_WeaponName
 			end
 		elseif p_Kit == BotKits.Support then
 			if not table.has(SupportPrimary, p_WeaponName) then
-				table.insert(SupportPrimary, p_WeaponName)
+				SupportPrimary[#SupportPrimary + 1] = p_WeaponName
 			end
 		else
 			if not table.has(ReconPrimary, p_WeaponName) then
-				table.insert(ReconPrimary, p_WeaponName)
+				ReconPrimary[#ReconPrimary + 1] = p_WeaponName
 			end
 		end
 	end
@@ -549,16 +549,16 @@ function WeaponList:UpdateWeaponList()
 		local s_Wep = self._weapons[i]
 
 		if (s_Wep.type == WeaponTypes.Knife) then
-			table.insert(KnifeWeapons, s_Wep.name)
+			KnifeWeapons[#KnifeWeapons + 1] = s_Wep.name
 		elseif (s_Wep.type == WeaponTypes.Pistol) then
-			table.insert(PistolWeapons, s_Wep.name)
+			PistolWeapons[#PistolWeapons + 1] = s_Wep.name
 		end
 
 		if self:_useWeaponScavenger(s_Wep.name) then
 			local s_BotWeaponType = self:_typeToBotWeapon(s_Wep.type)
 
 			if s_BotWeaponType ~= nil then
-				table.insert(ScavengerWeapons[s_BotWeaponType], s_Wep.name)
+				ScavengerWeapons[s_BotWeaponType][#ScavengerWeapons[s_BotWeaponType] + 1] = s_Wep.name
 			end
 		end
 
@@ -587,7 +587,7 @@ function WeaponList:getWeapon(p_Name)
 
 	for _, l_Weapon in pairs(self._weapons) do
 		if string.find(l_Weapon.name, p_Name .. "_") ~= nil then -- Check for weapon-variant.
-			table.insert(s_AllPossibleWeapons, l_Weapon)
+			s_AllPossibleWeapons[#s_AllPossibleWeapons + 1] = l_Weapon
 		end
 
 		if l_Weapon.name == p_Name then

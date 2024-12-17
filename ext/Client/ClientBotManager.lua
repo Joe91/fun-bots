@@ -280,7 +280,7 @@ function ClientBotManager:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 
 		for _, l_Player in pairs(PlayerManager:GetPlayers()) do
 			if l_Player.teamId ~= self.m_Player.teamId and self.m_Player.teamId ~= 0 then -- Don't let bots attack spectators.
-				table.insert(s_EnemyPlayers, l_Player)
+				s_EnemyPlayers[#s_EnemyPlayers + 1] = l_Player
 			end
 		end
 
@@ -437,7 +437,7 @@ end
 
 function ClientBotManager:CheckForBotBotAttack(p_RaycastData)
 	for _, l_RaycastEntry in pairs(p_RaycastData) do
-		table.insert(self.m_BotBotRaycastsToDo, l_RaycastEntry)
+		self.m_BotBotRaycastsToDo[#self.m_BotBotRaycastsToDo + 1] = l_RaycastEntry
 	end
 end
 

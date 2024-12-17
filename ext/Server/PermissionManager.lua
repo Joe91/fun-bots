@@ -54,7 +54,7 @@ function PermissionManager:__boot()
 			self.m_Permissions[l_Value.PlayerName] = { PermissionManager:GetCorrectName(l_Value.Value) }
 		elseif Utilities:has(self.m_Permissions[l_Value.PlayerName], l_Value.Value) == false then
 			m_Logger:Write(l_Value.PlayerName .. ' ~> ' .. PermissionManager:GetCorrectName(l_Value.Value))
-			table.insert(self.m_Permissions[l_Value.PlayerName], PermissionManager:GetCorrectName(l_Value.Value))
+			self.m_Permissions[l_Value.PlayerName][#self.m_Permissions[l_Value.PlayerName] + 1] = PermissionManager:GetCorrectName(l_Value.Value)
 		end
 	end
 end
@@ -92,7 +92,7 @@ function PermissionManager:AddPermission(p_Name, p_Permission)
 	if self.m_Permissions[p_Name] == nil then
 		self.m_Permissions[p_Name] = { p_Permission }
 	elseif Utilities:has(self.m_Permissions[p_Name], p_Permission) == false then
-		table.insert(self.m_Permissions[p_Name], p_Permission)
+		self.m_Permissions[p_Name][#self.m_Permissions[p_Name] + 1] = p_Permission
 	end
 
 	local s_Single = m_Database:Single('SELECT * FROM `FB_Permissions` WHERE `PlayerName`=\'' ..
@@ -123,8 +123,8 @@ function PermissionManager:GetAll()
 	local s_Result = {}
 
 	for l_Name, l_Permissions in pairs(self.m_Permissions) do
-		table.insert(s_Result, l_Name)
-		table.insert(s_Result, tostring(#l_Permissions))
+		s_Result[#s_Result + 1] = l_Name
+		s_Result[#s_Result + 1] = tostring(#l_Permissions)
 	end
 
 	return s_Result
@@ -139,7 +139,7 @@ function PermissionManager:ExtendPermissions(p_Permissions)
 
 		for _, l_Part in pairs(s_Parts) do
 			s_Temp = s_Temp .. l_Part
-			table.insert(s_Result, s_Temp)
+			s_Result[#s_Result + 1] = s_Temp
 
 			s_Temp = s_Temp .. '.'
 		end

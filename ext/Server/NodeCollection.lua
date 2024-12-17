@@ -131,7 +131,7 @@ function NodeCollection:Register(p_Waypoint)
 	end
 	--]]
 
-	table.insert(self._Waypoints, p_Waypoint)
+	self._Waypoints[#self._Waypoints + 1] = p_Waypoint
 
 	if #self._Waypoints ~= p_Waypoint.Index then
 		local s_Diff = p_Waypoint.Index - #self._Waypoints
@@ -140,7 +140,7 @@ function NodeCollection:Register(p_Waypoint)
 			tostring(p_Waypoint.Index) .. ' | #self._Waypoints:' .. tostring(#self._Waypoints) .. ' | ' .. tostring(s_Diff))
 	end
 
-	table.insert(self._WaypointsByPathIndex[p_Waypoint.PathIndex], p_Waypoint)
+	self._WaypointsByPathIndex[p_Waypoint.PathIndex][#self._WaypointsByPathIndex[p_Waypoint.PathIndex] + 1] = p_Waypoint
 
 	if #self._WaypointsByPathIndex[p_Waypoint.PathIndex] ~= p_Waypoint.PointIndex then
 		local s_Diff = p_Waypoint.PointIndex - #self._WaypointsByPathIndex[p_Waypoint.PathIndex]
@@ -404,7 +404,7 @@ function NodeCollection:_processWaypointMetadata(p_Waypoint)
 			p_Waypoint.Data.Links = {}
 
 			for i = 1, s_NearbyNodes do
-				table.insert(p_Waypoint.Data.Links, s_NearbyNodes[i].ID)
+				p_Waypoint.Data.Links[#p_Waypoint.Data.Links + 1] = s_NearbyNodes[i].ID
 			end
 		end
 	end
@@ -531,7 +531,7 @@ function NodeCollection:Link(p_SelectionId, p_Waypoints, p_LinkID, p_OneWay)
 	end
 
 	local s_Links = s_Selection.Data.Links or {}
-	table.insert(s_Links, p_LinkID)
+	s_Links[#s_Links + 1] = p_LinkID
 	self:Update(s_Selection.Data, {
 		LinkMode = (s_Selection.Data.LinkMode or 0),
 		Links = s_Links,
@@ -582,7 +582,7 @@ function NodeCollection:Unlink(p_SelectionId, p_Waypoints, p_LinkID, p_OneWay)
 		for i = 1, #s_Selection.Data.Links do
 			if s_Selection.Data.Links[i] ~= p_LinkID then
 				-- Skip matching connections.
-				table.insert(s_NewLinks, s_Selection.Data.Links[i])
+				s_NewLinks[#s_NewLinks + 1] = s_Selection.Data.Links[i]
 			else
 				-- Remove link from connected node, `p_OneWay` prevents infinite recursion.
 				if not p_OneWay then
@@ -843,7 +843,7 @@ function NodeCollection:GetSelected(p_SelectionId, p_PathIndex)
 	-- Copy selection into index-based array and sort results.
 	for l_WaypointID, l_Waypoint in pairs(self._SelectedWaypoints[p_SelectionId]) do
 		if self:IsSelected(p_SelectionId, l_Waypoint) and (p_PathIndex == nil or l_Waypoint.PathIndex == p_PathIndex) then
-			table.insert(s_Selection, l_Waypoint)
+			s_Selection[#s_Selection + 1] = l_Waypoint
 		end
 	end
 
@@ -1215,14 +1215,14 @@ function NodeCollection:ProcessAllDataToSave()
 			-- Keep track of disconnected nodes, only two should exist.
 			-- The first node and the last node.
 			if l_Waypoint.Previous == false and l_Waypoint.Next ~= false then
-				table.insert(s_Disconnects, l_Waypoint)
+				s_Disconnects[#s_Disconnects + 1] = l_Waypoint
 			elseif l_Waypoint.Previous ~= false and l_Waypoint.Next == false then
-				table.insert(s_Disconnects, l_Waypoint)
+				s_Disconnects[#s_Disconnects + 1] = l_Waypoint
 			end
 
 			-- Skip orphaned nodes.
 			if l_Waypoint.Previous == false and l_Waypoint.Next == false then
-				table.insert(s_Orphans, l_Waypoint)
+				s_Orphans[#s_Orphans + 1] = l_Waypoint
 			else
 				local s_WaypointData = {}
 
@@ -1240,7 +1240,7 @@ function NodeCollection:ProcessAllDataToSave()
 							local s_LinkedWaypoint = self:Get(l_Waypoint.Data.Links[i])
 
 							if s_LinkedWaypoint ~= nil then
-								table.insert(s_ConvertedLinks, { s_LinkedWaypoint.PathIndex, s_LinkedWaypoint.PointIndex })
+								s_ConvertedLinks[#s_ConvertedLinks + 1] = { s_LinkedWaypoint.PathIndex, s_LinkedWaypoint.PointIndex }
 							end
 						end
 
@@ -1302,7 +1302,7 @@ function NodeCollection:ProcessAllDataToSave()
 
 			if self._ValuesTable == nil then
 				self._ValuesTable = {}
-				table.insert(self._ValuesTable, self._SaveTraceBatchQueries[self._SaveTraceQueriesDone + 1])
+				self._ValuesTable[#self._ValuesTable + 1] = self._SaveTraceBatchQueries[self._SaveTraceQueriesDone + 1]
 				self._ValuesAdded = self._ValuesAdded + 1
 
 				self._SaveTraceQueriesDone = self._SaveTraceQueriesDone + 1
@@ -1313,8 +1313,8 @@ function NodeCollection:ProcessAllDataToSave()
 			do
 				local s_NewString = self._SaveTraceBatchQueries[self._SaveTraceQueriesDone + 1]
 
-				table.insert(self._ValuesTable, ',')
-				table.insert(self._ValuesTable, s_NewString)
+				self._ValuesTable[#self._ValuesTable + 1] = ','
+				self._ValuesTable[#self._ValuesTable + 1] = s_NewString
 				self._ValuesAdded = self._ValuesAdded + 1
 
 				self._SaveTraceQueriesDone = self._SaveTraceQueriesDone + 1
@@ -1325,7 +1325,7 @@ function NodeCollection:ProcessAllDataToSave()
 			end
 
 			local s_Values = table.concat(self._ValuesTable)
-			table.insert(self._SaveTracesQueryStrings, self._InsertQuery .. s_Values)
+			self._SaveTracesQueryStrings[#self._SaveTracesQueryStrings + 1] = self._InsertQuery .. s_Values
 
 			self._ValuesTable = nil
 			self._ValuesAdded = 0
@@ -1505,7 +1505,7 @@ function NodeCollection:GetKnownObjectives()
 				s_Objectives[s_Objective] = {}
 			end
 
-			table.insert(s_Objectives[s_Objective], l_PathIndex)
+			s_Objectives[s_Objective][#s_Objectives[s_Objective] + 1] = l_PathIndex
 		end
 	end
 
@@ -1579,7 +1579,7 @@ function NodeCollection:FindAll(p_Vec3Position, p_Tolerance)
 	for _, l_Waypoint in pairs(self._WaypointsByID) do
 		if l_Waypoint ~= nil and l_Waypoint.Position ~= nil and self:IsPathVisible(l_Waypoint.PathIndex) and
 			self:InRange(l_Waypoint, p_Vec3Position, p_Tolerance) then
-			table.insert(s_WaypointsFound, l_Waypoint)
+			s_WaypointsFound[#s_WaypointsFound + 1] = l_Waypoint
 		end
 	end
 

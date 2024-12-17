@@ -653,7 +653,7 @@ function Bot:ShootAt(p_Player, p_IgnoreYaw)
 			self._VehicleReadyToShoot = false
 
 			if self.m_KnifeMode then
-				table.insert(self._KnifeWayPositions, p_Player.soldier.worldTransform.trans:Clone())
+				self._KnifeWayPositions[#self._KnifeWayPositions + 1] = p_Player.soldier.worldTransform.trans:Clone()
 			end
 
 			if Globals.IsGm then

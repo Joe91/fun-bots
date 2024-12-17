@@ -192,7 +192,7 @@ function BotSpawner:OnPlayerJoining(p_Name)
 			if Registry.COMMON.BOT_TOKEN .. l_Name == p_Name then
 				-- Prevent bots from being named like this.
 				m_Logger:Write("Don't use the name " .. p_Name .. " for Bots anymore")
-				table.insert(Globals.IgnoreBotNames, p_Name)
+				Globals.IgnoreBotNames[#Globals.IgnoreBotNames + 1] = p_Name
 
 				-- Destroy bots with this name.
 				if m_BotManager:GetBotByName(p_Name) ~= nil then
@@ -206,10 +206,10 @@ function BotSpawner:OnPlayerJoining(p_Name)
 		if Registry.COMMON.BOT_TOKEN == "" then
 			for _, l_Name in pairs(BotNames) do
 				if l_Name == p_Name then
-					table.insert(self._KickPlayers, p_Name)
+					self._KickPlayers[#self._KickPlayers + 1] = p_Name
 
 					if m_BotManager:GetBotByName(p_Name) ~= nil then
-						table.insert(Globals.IgnoreBotNames, p_Name)
+						Globals.IgnoreBotNames[#Globals.IgnoreBotNames + 1] = p_Name
 						m_BotManager:DestroyBot(p_Name)
 					end
 
@@ -218,10 +218,10 @@ function BotSpawner:OnPlayerJoining(p_Name)
 			end
 		else
 			if string.find(p_Name, Registry.COMMON.BOT_TOKEN) == 1 then -- Check if name starts with bot-token
-				table.insert(self._KickPlayers, p_Name)
+				self._KickPlayers[#self._KickPlayers + 1] = p_Name
 
 				if m_BotManager:GetBotByName(p_Name) ~= nil then
-					table.insert(Globals.IgnoreBotNames, p_Name)
+					Globals.IgnoreBotNames[#Globals.IgnoreBotNames + 1] = p_Name
 					m_BotManager:DestroyBot(p_Name)
 				end
 			end
@@ -274,7 +274,7 @@ function BotSpawner:OnTeamChange(p_Player, p_TeamId, p_SquadId)
 
 				for i = 1, Globals.NrOfTeams do
 					if Config.BotTeam ~= i then
-						table.insert(s_PlayerTeams, i)
+						s_PlayerTeams[#s_PlayerTeams + 1] = i
 					end
 				end
 
@@ -761,7 +761,7 @@ function BotSpawner:SpawnWayBots(p_Amount, p_UseRandomWay, p_ActiveWayIndex, p_I
 		s_SpawnSet.m_ActiveWayIndex = p_ActiveWayIndex or 0
 		s_SpawnSet.m_IndexOnPath = p_IndexOnPath or 0
 		s_SpawnSet.m_Team = p_TeamId
-		table.insert(self._SpawnSets, s_SpawnSet)
+		self._SpawnSets[#self._SpawnSets + 1] = s_SpawnSet
 	end
 end
 
@@ -1119,7 +1119,7 @@ function BotSpawner:_SpawnSingleWayBot(p_Player, p_UseRandomWay, p_ActiveWayInde
 			m_BotCreator:SetAttributesToBot(s_Bot)
 			self:_SelectLoadout(s_Bot, false)
 			self:_TriggerSpawn(s_Bot)
-			table.insert(self._BotsWithoutPath, s_Bot)
+			self._BotsWithoutPath[#self._BotsWithoutPath + 1] = s_Bot
 			return
 		end
 
@@ -1471,8 +1471,8 @@ function BotSpawner:_GetUnlocks(p_Bot, p_TeamId, p_SquadId)
 	local s_CurrentUnlocks = {}
 
 	for _, l_PlayerUnlock in pairs(p_Bot.m_Player.selectedUnlocks) do
-		table.insert(s_CurrentUnlocks, l_PlayerUnlock)
-		table.insert(s_CurrentUnlockNames, l_PlayerUnlock["partition"]["name"])
+		s_CurrentUnlocks[#s_CurrentUnlocks + 1] = l_PlayerUnlock
+		s_CurrentUnlockNames[#s_CurrentUnlockNames + 1] = l_PlayerUnlock["partition"]["name"]
 	end
 
 	local s_Unlocks = {}
@@ -1514,17 +1514,17 @@ function BotSpawner:_GetUnlocks(p_Bot, p_TeamId, p_SquadId)
 		}
 		-- some variation in appearance
 		if m_Utilities:CheckProbablity(50) then
-			table.insert(s_VehiclePerksToAdd, "persistence/unlocks/vehicles/mbtreactivearmor")
-			table.insert(s_VehiclePerksToAdd, "persistence/unlocks/vehicles/lbtreactivearmor")
-			table.insert(s_VehiclePerksToAdd, "persistence/unlocks/vehicles/ifvreloadupgrade")
-			table.insert(s_VehiclePerksToAdd, "persistence/unlocks/vehicles/mbtsmokelaunchers")
-			table.insert(s_VehiclePerksToAdd, "persistence/unlocks/vehicles/lbtsmokelaunchers")
+			s_VehiclePerksToAdd[#s_VehiclePerksToAdd + 1] = "persistence/unlocks/vehicles/mbtreactivearmor"
+			s_VehiclePerksToAdd[#s_VehiclePerksToAdd + 1] = "persistence/unlocks/vehicles/lbtreactivearmor"
+			s_VehiclePerksToAdd[#s_VehiclePerksToAdd + 1] = "persistence/unlocks/vehicles/ifvreloadupgrade"
+			s_VehiclePerksToAdd[#s_VehiclePerksToAdd + 1] = "persistence/unlocks/vehicles/mbtsmokelaunchers"
+			s_VehiclePerksToAdd[#s_VehiclePerksToAdd + 1] = "persistence/unlocks/vehicles/lbtsmokelaunchers"
 		else
-			table.insert(s_VehiclePerksToAdd, "persistence/unlocks/vehicles/mbtproximityscan")
-			table.insert(s_VehiclePerksToAdd, "persistence/unlocks/vehicles/lbtproximityscan")
-			table.insert(s_VehiclePerksToAdd, "persistence/unlocks/vehicles/ifvreactivearmor")
-			table.insert(s_VehiclePerksToAdd, "persistence/unlocks/vehicles/mbtenvgoptics")
-			table.insert(s_VehiclePerksToAdd, "persistence/unlocks/vehicles/lbtenvgoptics")
+			s_VehiclePerksToAdd[#s_VehiclePerksToAdd + 1] = "persistence/unlocks/vehicles/mbtproximityscan"
+			s_VehiclePerksToAdd[#s_VehiclePerksToAdd + 1] = "persistence/unlocks/vehicles/lbtproximityscan"
+			s_VehiclePerksToAdd[#s_VehiclePerksToAdd + 1] = "persistence/unlocks/vehicles/ifvreactivearmor"
+			s_VehiclePerksToAdd[#s_VehiclePerksToAdd + 1] = "persistence/unlocks/vehicles/mbtenvgoptics"
+			s_VehiclePerksToAdd[#s_VehiclePerksToAdd + 1] = "persistence/unlocks/vehicles/lbtenvgoptics"
 		end
 	end
 
@@ -1557,7 +1557,7 @@ function BotSpawner:_GetUnlocks(p_Bot, p_TeamId, p_SquadId)
 			-- Squad perk.
 			if l_PerkName == s_SelectedPerk then
 				s_SelectedPerk = ""
-				table.insert(s_Unlocks, s_CurrentUnlocks[l_Index])
+				s_Unlocks[#s_Unlocks + 1] = s_CurrentUnlocks[l_Index]
 			end
 		else
 			-- Vehicle perk.
@@ -1565,7 +1565,7 @@ function BotSpawner:_GetUnlocks(p_Bot, p_TeamId, p_SquadId)
 				local l_VehiclePerkName = s_VehiclePerksToAdd[l_IndexVehiclePerk]
 				if l_PerkName == l_VehiclePerkName then
 					table.remove(s_VehiclePerksToAdd, l_IndexVehiclePerk)
-					table.insert(s_Unlocks, s_CurrentUnlocks[l_Index])
+					s_Unlocks[#s_Unlocks + 1] = s_CurrentUnlocks[l_Index]
 				end
 			end
 		end
@@ -1573,10 +1573,10 @@ function BotSpawner:_GetUnlocks(p_Bot, p_TeamId, p_SquadId)
 
 	-- Add perk if not already copied.
 	if s_SelectedPerk ~= "" then
-		table.insert(s_Unlocks, ResourceManager:SearchForDataContainer(s_SelectedPerk))
+		s_Unlocks[#s_Unlocks + 1] = ResourceManager:SearchForDataContainer(s_SelectedPerk)
 	end
 	for _, l_VehicelPerk in pairs(s_VehiclePerksToAdd) do
-		table.insert(s_Unlocks, ResourceManager:SearchForDataContainer(l_VehicelPerk))
+		s_Unlocks[#s_Unlocks + 1] = ResourceManager:SearchForDataContainer(l_VehicelPerk)
 	end
 
 	return s_Unlocks
@@ -1828,19 +1828,19 @@ function BotSpawner:_GetSpawnBotKit()
 		local s_AvailableKitList = {}
 
 		if (Config.MaxAssaultBots == -1) or (m_BotManager:GetKitCount(BotKits.Assault) < Config.MaxAssaultBots) then
-			table.insert(s_AvailableKitList, BotKits.Assault)
+			s_AvailableKitList[#s_AvailableKitList + 1] = BotKits.Assault
 		end
 
 		if (Config.MaxEngineerBots == -1) or (m_BotManager:GetKitCount(BotKits.Engineer) < Config.MaxEngineerBots) then
-			table.insert(s_AvailableKitList, BotKits.Engineer)
+			s_AvailableKitList[#s_AvailableKitList + 1] = BotKits.Engineer
 		end
 
 		if (Config.MaxSupportBots == -1) or (m_BotManager:GetKitCount(BotKits.Support) < Config.MaxSupportBots) then
-			table.insert(s_AvailableKitList, BotKits.Support)
+			s_AvailableKitList[#s_AvailableKitList + 1] = BotKits.Support
 		end
 
 		if (Config.MaxReconBots == -1) or (m_BotManager:GetKitCount(BotKits.Recon) < Config.MaxReconBots) then
-			table.insert(s_AvailableKitList, BotKits.Recon)
+			s_AvailableKitList[#s_AvailableKitList + 1] = BotKits.Recon
 		end
 
 		if #s_AvailableKitList > 0 then

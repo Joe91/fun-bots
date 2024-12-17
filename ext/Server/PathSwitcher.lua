@@ -86,7 +86,7 @@ function PathSwitcher:GetNewPath(p_Bot, p_BotId, p_Point, p_Objective, p_InVehic
 		if s_NewPoint ~= nil then
 			if not p_InVehicle then
 				-- todo: prevent air-paths?
-				table.insert(s_PossiblePaths, s_NewPoint)
+				s_PossiblePaths[#s_PossiblePaths + 1] = s_NewPoint
 			else
 				local s_PathNode = m_NodeCollection:GetFirst(s_NewPoint.PathIndex)
 
@@ -109,11 +109,11 @@ function PathSwitcher:GetNewPath(p_Bot, p_BotId, p_Point, p_Objective, p_InVehic
 							(s_VehicleTerrain == VehicleTerrains.Water and s_isWaterPath) or
 							(s_VehicleTerrain == VehicleTerrains.Land and not s_isWaterPath and not s_isAirPath) or
 							(s_VehicleTerrain == VehicleTerrains.Amphibious and not s_isAirPath) then
-							table.insert(s_PossiblePaths, s_NewPoint)
+							s_PossiblePaths[#s_PossiblePaths + 1] = s_NewPoint
 						end
 					else
 						-- Invalid Terrain. Insert path anyway.
-						table.insert(s_PossiblePaths, s_NewPoint)
+						s_PossiblePaths[#s_PossiblePaths + 1] = s_NewPoint
 					end
 				end
 			end
@@ -160,7 +160,7 @@ function PathSwitcher:GetNewPath(p_Bot, p_BotId, p_Point, p_Objective, p_InVehic
 
 			if m_GameDirector:IsExplorePath(s_PathNode.Data.Objectives[1]) then
 				if (p_Bot:AtObjectivePath()
-					and MathUtils:GetRandomInt(1, 100) <= Registry.BOT.PROBABILITY_SWITCH_TO_EXPLORE_PATH)
+						and MathUtils:GetRandomInt(1, 100) <= Registry.BOT.PROBABILITY_SWITCH_TO_EXPLORE_PATH)
 					or MathUtils:GetRandomInt(1, 100) <= Registry.BOT.PROBABILITY_SWITCH_TO_EXPLORE_PATH / 2
 				then
 					return true, s_NewPoint
@@ -270,7 +270,7 @@ function PathSwitcher:GetNewPath(p_Bot, p_BotId, p_Point, p_Objective, p_InVehic
 		local s_HighestPrioPathsIndex = {}
 		for i = 1, #s_ValidPaths do
 			if s_ValidPaths[i].Priority == s_HighestPriority then
-				table.insert(s_HighestPrioPathsIndex, i)
+				s_HighestPrioPathsIndex[#s_HighestPrioPathsIndex + 1] = i
 			end
 		end
 		local s_RandomIndex = MathUtils:GetRandomInt(1, #s_HighestPrioPathsIndex)

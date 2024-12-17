@@ -168,7 +168,7 @@ function GameDirector:OnEngineUpdate(p_DeltaTime)
 				self.m_BotsByTeam[s_BotList[i].m_Player.teamId] = {}
 			end
 
-			table.insert(self.m_BotsByTeam[s_BotList[i].m_Player.teamId], s_BotList[i])
+			self.m_BotsByTeam[s_BotList[i].m_Player.teamId][#self.m_BotsByTeam[s_BotList[i].m_Player.teamId] + 1] = s_BotList[i]
 		end
 
 		if (Globals.IsRush or Globals.IsConquest) then
@@ -548,7 +548,7 @@ function GameDirector:ReturnStationaryAaEntity(p_ControllableEntity, p_TeamId)
 			return
 		end
 	end
-	table.insert(self.m_SpawnableStationaryAas[p_TeamId], p_ControllableEntity)
+	self.m_SpawnableStationaryAas[p_TeamId][#self.m_SpawnableStationaryAas[p_TeamId] + 1] = p_ControllableEntity
 end
 
 function GameDirector:GetGadgetOwner(p_Entity)
@@ -622,7 +622,7 @@ function GameDirector:OnVehicleSpawnDone(p_Entity)
 
 	-- if map not completely loaded yet, insert them for later and return
 	if not self.m_MapCompletelyLoaded then
-		table.insert(self.m_SpawnedEntitiesToProcess, p_Entity)
+		self.m_SpawnedEntitiesToProcess[#self.m_SpawnedEntitiesToProcess + 1] = p_Entity
 		return
 	end
 
@@ -633,22 +633,22 @@ function GameDirector:OnVehicleSpawnDone(p_Entity)
 
 		if s_Node ~= nil and s_Node.Position:Distance(p_Entity.transform.trans) < Registry.VEHICLES.MIN_DISTANCE_VEHICLE_ENTER then
 			if s_Objective.isSpawnPath then
-				table.insert(self.m_SpawnableVehicles[s_Objective.team], p_Entity)
+				self.m_SpawnableVehicles[s_Objective.team][#self.m_SpawnableVehicles[s_Objective.team] + 1] = p_Entity
 			else
-				table.insert(self.m_AvailableVehicles[s_Objective.team], p_Entity)
+				self.m_AvailableVehicles[s_Objective.team][#self.m_AvailableVehicles[s_Objective.team] + 1] = p_Entity
 			end
 		end
 	else
 		if Config.EnableParadrop and self.m_Gunship ~= nil then
 			if p_Entity.transform.trans.y > self.m_Gunship.Entity.transform.trans.y then
 				m_Logger:Write("Add spawnable vehicle at gunship: " .. s_VehicleData.Name)
-				table.insert(self.m_SpawnableVehicles[self.m_Gunship.Team], p_Entity)
+				self.m_SpawnableVehicles[self.m_Gunship.Team][#self.m_SpawnableVehicles[self.m_Gunship.Team] + 1] = p_Entity
 			end
 		end
 	end
 
 	if m_Vehicles:IsVehicleType(s_VehicleData, VehicleTypes.StationaryAA) then
-		table.insert(self.m_SpawnableStationaryAas[s_VehicleData.Team], p_Entity)
+		self.m_SpawnableStationaryAas[s_VehicleData.Team][#self.m_SpawnableStationaryAas[s_VehicleData.Team] + 1] = p_Entity
 	end
 
 	if m_Vehicles:IsVehicleType(s_VehicleData, VehicleTypes.Gunship)
@@ -1120,10 +1120,10 @@ function GameDirector:GetSpawnPath(p_TeamId, p_SquadId, p_OnlyBase)
 		if not l_ReferenceObjective.isEnterVehiclePath and not l_ReferenceObjective.isBase and
 			not l_ReferenceObjective.isSpawnPath then
 			if l_ReferenceObjective.team == TeamId.TeamNeutral then
-				table.insert(s_ReferenceObjectivesNeutral, l_ReferenceObjective)
+				s_ReferenceObjectivesNeutral[#s_ReferenceObjectivesNeutral + 1] = l_ReferenceObjective
 				break
 			elseif l_ReferenceObjective.team ~= p_TeamId then
-				table.insert(s_ReferenceObjectivesEnemy, l_ReferenceObjective)
+				s_ReferenceObjectivesEnemy[#s_ReferenceObjectivesEnemy + 1] = l_ReferenceObjective
 			end
 		end
 	end
@@ -1167,13 +1167,13 @@ function GameDirector:GetSpawnPath(p_TeamId, p_SquadId, p_OnlyBase)
 			-- Possible path.
 			if l_Objective.team == p_TeamId and l_Objective.active and not l_Objective.isEnterVehiclePath then
 				if l_Objective.isBase then
-					table.insert(s_PossibleBases, l_Path)
+					s_PossibleBases[#s_PossibleBases + 1] = l_Path
 				elseif not p_OnlyBase then
 					if l_Objective.isAttacked then
-						table.insert(s_AttackedObjectives, { name = l_Objective.name, path = l_Path })
+						s_AttackedObjectives[#s_AttackedObjectives + 1] = { name = l_Objective.name, path = l_Path }
 					end
 
-					table.insert(s_PossibleObjectives, { name = l_Objective.name, path = l_Path })
+					s_PossibleObjectives[#s_PossibleObjectives + 1] = { name = l_Objective.name, path = l_Path }
 
 					if s_ReferenceObjective ~= nil and s_ReferenceObjective.position ~= nil and l_Objective.position ~= nil then
 						local s_DistanceToRef = s_ReferenceObjective.position:Distance(l_Objective.position)
@@ -1186,7 +1186,7 @@ function GameDirector:GetSpawnPath(p_TeamId, p_SquadId, p_OnlyBase)
 				end
 			elseif l_Objective.team ~= p_TeamId and l_Objective.isBase and not l_Objective.active and
 				l_Objective.name == self.m_RushAttackingBase then -- Rush attacking team.
-				table.insert(s_RushConvertedBases, l_Path)
+				s_RushConvertedBases[#s_RushConvertedBases + 1] = l_Path
 			end
 
 			s_PathsDone[l_Path] = true
@@ -1530,7 +1530,7 @@ function GameDirector:_InitObjectives()
 			end
 		end
 
-		table.insert(self.m_AllObjectives, s_Objective)
+		self.m_AllObjectives[#self.m_AllObjectives + 1] = s_Objective
 	end
 
 	self:_InitFlagTeams()

@@ -245,7 +245,7 @@ function Weapon:getAllAttachments()
 	local s_AttachmentList = {}
 
 	for _, l_Attachment in pairs(self.unlocks) do
-		table.insert(s_AttachmentList, self:getResourcePath(l_Attachment))
+		s_AttachmentList[#s_AttachmentList + 1] = self:getResourcePath(l_Attachment)
 	end
 
 	return s_AttachmentList

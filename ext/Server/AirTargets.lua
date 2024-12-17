@@ -95,7 +95,7 @@ function AirTargets:_CreateTarget(p_Player)
 	if p_Player.controlledEntryId == 0 then
 		local s_Vehicle = m_Vehicles:GetVehicle(p_Player)
 		if s_Vehicle and m_Vehicles:IsAirVehicle(s_Vehicle) then
-			table.insert(self._Targets, p_Player.name)
+			self._Targets[#self._Targets + 1] = p_Player.name
 		end
 	end
 end

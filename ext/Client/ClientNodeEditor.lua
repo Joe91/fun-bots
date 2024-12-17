@@ -187,7 +187,7 @@ end
 function ClientNodeEditor:_OnDrawNodes(p_NodesToDraw, p_UpdateView)
 	for _, l_NodeData in pairs(p_NodesToDraw) do
 		self:_DrawData(l_NodeData)
-		table.insert(self.m_TempDataPoints, l_NodeData)
+		self.m_TempDataPoints[#self.m_TempDataPoints + 1] = l_NodeData
 
 		if self.m_NewNodeId > 0 and l_NodeData.Node.Index == self.m_NewNodeId then
 			self.m_NodeIdFound = true
@@ -453,7 +453,7 @@ function ClientNodeEditor:GetSelectedNodes()
 	local s_Selection = {}
 	for _, l_Node in pairs(self.m_DataPoints) do
 		if l_Node.IsSelected then
-			table.insert(s_Selection, l_Node)
+			s_Selection[#s_Selection + 1] = l_Node
 		end
 	end
 	return s_Selection
@@ -480,7 +480,7 @@ function ClientNodeEditor:_onToggleMoveNode(p_Args)
 					ID = s_Selection[i].Node.ID,
 					Pos = self.m_EditNodeStartPos[s_Selection[i].Node.ID],
 				}
-				table.insert(s_UpdateData, s_UpdateNode)
+				s_UpdateData[#s_UpdateData + 1] = s_UpdateNode
 			end
 
 			NetEvents:SendLocal('NodeEditor:UpdatePos', s_UpdateData)
@@ -929,7 +929,7 @@ function ClientNodeEditor:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 								ID = s_Selection[i].Node.ID,
 								Pos = s_AdjustedPosition,
 							}
-							table.insert(s_UpdateData, s_UpdateNode)
+							s_UpdateData[#s_UpdateData + 1] = s_UpdateNode
 						end
 
 						NetEvents:SendLocal('NodeEditor:UpdatePos', s_UpdateData)
