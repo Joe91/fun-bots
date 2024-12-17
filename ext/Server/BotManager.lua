@@ -1101,9 +1101,10 @@ function BotManager:ExitVehicle(p_Player)
 
 	local s_SoldierPosition = p_Player.soldier.worldTransform.trans
 
+	local s_BotStates = g_BotStates
 	for l_Index = 1, #self._BotsByTeam[p_Player.teamId + 1] do
 		local l_Bot = self._BotsByTeam[p_Player.teamId + 1][l_Index]
-		if (l_Bot.m_InVehicle or l_Bot.m_OnVehicle) and l_Bot.m_Player.soldier then
+		if (s_BotStates:IsInVehicleState(l_Bot.m_ActiveState)) and l_Bot.m_Player.soldier then
 			local s_BotSoldierPosition = nil
 			if l_Bot.m_Player.controlledControllable then
 				s_BotSoldierPosition = l_Bot.m_Player.controlledControllable.transform.trans
@@ -1154,9 +1155,10 @@ function BotManager:Deploy(p_Player, p_Type)
 
 	local s_SoldierPosition = p_Player.soldier.worldTransform.trans
 
+	local s_BotStates = g_BotStates
 	for l_Index = 1, #self._BotsByTeam[p_Player.teamId + 1] do
 		local l_Bot = self._BotsByTeam[p_Player.teamId + 1][l_Index]
-		if not l_Bot.m_InVehicle then
+		if s_BotStates:IsSoldierState(l_Bot.m_ActiveState) then
 			local s_BotPosition = l_Bot.m_Player.soldier and l_Bot.m_Player.soldier.worldTransform.trans
 
 			if s_BotPosition then
@@ -1187,9 +1189,10 @@ function BotManager:RepairVehicle(p_Player)
 
 	local s_SoldierPosition = p_Player.soldier.worldTransform.trans
 
+	local s_BotStates = g_BotStates
 	for l_Index = 1, #self._BotsByTeam[p_Player.teamId + 1] do
 		local l_Bot = self._BotsByTeam[p_Player.teamId + 1][l_Index]
-		if not l_Bot.m_InVehicle and l_Bot.m_Kit == BotKits.Engineer then
+		if s_BotStates:IsSoldierState(l_Bot.m_ActiveState) and l_Bot.m_Kit == BotKits.Engineer then
 			local s_BotSoldier = l_Bot.m_Player.soldier
 
 			if s_BotSoldier then
@@ -1220,9 +1223,10 @@ function BotManager:EnterVehicle(p_Player)
 
 	local s_SoldierPosition = p_Player.soldier.worldTransform.trans
 
+	local s_BotStates = g_BotStates
 	for l_Index = 1, #self._BotsByTeam[p_Player.teamId + 1] do
 		local l_Bot = self._BotsByTeam[p_Player.teamId + 1][l_Index]
-		if not l_Bot.m_InVehicle then
+		if s_BotStates:IsSoldierState(l_Bot.m_ActiveState) then
 			local s_BotSoldier = l_Bot.m_Player.soldier
 
 			if s_BotSoldier then
@@ -1350,11 +1354,7 @@ function BotManager:_CheckForBotBotAttack()
 		-- Filter out bots not in StationaryAA.
 		for l_Index = 1, #self._Bots do
 			local l_Bot = self._Bots[l_Index]
-			if l_Bot.m_InVehicle then
-				if l_Bot.m_ActiveVehicle and l_Bot.m_ActiveVehicle.Type ~= VehicleTypes.StationaryAA then
-					self._BotBotAttackList[#self._BotBotAttackList + 1] = l_Bot.m_Id
-				end
-			else
+			if not l_Bot.m_ActiveVehicle or l_Bot.m_ActiveVehicle.Type ~= VehicleTypes.StationaryAA then
 				self._BotBotAttackList[#self._BotBotAttackList + 1] = l_Bot.m_Id
 			end
 		end
@@ -1371,6 +1371,8 @@ function BotManager:_CheckForBotBotAttack()
 
 	---@type RaycastRequests[]
 	local s_RaycastEntries = {}
+
+	local s_BotStates = g_BotStates
 
 	for i = self._LastBotCheckIndex, #self._BotBotAttackList do
 		-- Body.
@@ -1429,8 +1431,8 @@ function BotManager:_CheckForBotBotAttack()
 								table.insert(s_RaycastEntries, {
 									Bot1 = s_BotIdToCheck,
 									Bot2 = l_BotId,
-									Bot1InVehicle = s_Bot.m_InVehicle,
-									Bot2InVehicle = s_EnemyBot.m_InVehicle,
+									Bot1InVehicle = s_BotStates:IsInVehicleState(s_Bot.m_ActiveState),
+									Bot2InVehicle = s_BotStates:IsInVehicleState(s_EnemyBot.m_ActiveState),
 								})
 								s_Raycasts = s_Raycasts + 1
 
@@ -1476,9 +1478,11 @@ function BotManager:_CheckForBotBotRevive()
 	local s_MedicBots = {}
 	local s_BotsAlreadInRevive = {}
 
+	local s_StateIdle = g_BotStates.States.Idle
+
 	for l_Index = 1, #self._Bots do
 		local l_Bot = self._Bots[l_Index]
-		if not l_Bot.m_InVehicle then
+		if l_Bot.m_ActiveState == s_StateIdle then
 			if l_Bot.m_Player.corpse
 				and not l_Bot.m_Player.corpse.isDead
 				and not l_Bot.m_DontRevive
@@ -1592,7 +1596,7 @@ function BotManager:_GetDamageValue(p_Damage, p_Bot, p_Soldier)
 		return s_ResultDamage
 	end
 
-	if p_Bot.m_InVehicle then
+	if g_BotStates:IsInVehicleState(p_Bot.m_ActiveState) then
 		return p_Damage * Config.DamageFactorVehicles
 	end
 

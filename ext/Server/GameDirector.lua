@@ -163,6 +163,7 @@ function GameDirector:OnEngineUpdate(p_DeltaTime)
 	local s_BotList = g_BotManager:GetBots()
 	self.m_BotsByTeam = {}
 
+	local s_BotStates = g_BotStates
 	for i = 1, #s_BotList do
 		if not s_BotList[i]:IsInactive() and s_BotList[i].m_Player ~= nil then
 			if self.m_BotsByTeam[s_BotList[i].m_Player.teamId] == nil then
@@ -174,7 +175,7 @@ function GameDirector:OnEngineUpdate(p_DeltaTime)
 
 		if (Globals.IsRush or Globals.IsConquest) then
 			-- chekc for vehicle or valid path
-			if s_BotList[i].m_InVehicle then
+			if s_BotStates:IsInVehicleState(s_BotList[i].m_ActiveState) then
 				s_BotList[i]._KillYourselfTimer = 0.0
 			else
 				-- check if bot is on active path
@@ -310,7 +311,7 @@ function GameDirector:OnEngineUpdate(p_DeltaTime)
 						l_Objective.isEnterVehiclePath and
 						l_Objective.team == l_BotTeam and
 						l_Objective.assigned[l_BotTeam] == 0 and
-						not l_Bot.m_InVehicle then
+						s_BotStates:IsSoldierState(l_Bot.m_ActiveState) then
 						if l_Bot:SetObjectiveIfPossible(l_Objective.name, BotObjectiveModes.Attack) then
 							l_Objective.assigned[l_BotTeam] = 1
 							m_Logger:Write("assigned bot to " .. l_Objective.name)
@@ -369,7 +370,7 @@ function GameDirector:OnEngineUpdate(p_DeltaTime)
 				end
 
 				if s_Objective.isEnterVehiclePath then
-					if not s_Objective.active or s_Objective.destroyed or l_Bot.m_InVehicle then
+					if not s_Objective.active or s_Objective.destroyed or s_BotStates:IsInVehicleState(l_Bot.m_ActiveState) then
 						l_Bot:SetObjective()
 					end
 
@@ -424,7 +425,7 @@ function GameDirector:OnEngineUpdate(p_DeltaTime)
 					l_Bot:SetObjective()
 				end
 				-- remove from enter vehicle, when enter is done
-				if s_Objective.team == l_BotTeam and s_Objective.isEnterVehiclePath and l_Bot.m_InVehicle then
+				if s_Objective.team == l_BotTeam and s_Objective.isEnterVehiclePath and s_BotStates:IsInVehicleState(l_Bot.m_ActiveState) then
 					l_Bot:SetObjective()
 				end
 			end
@@ -1045,6 +1046,7 @@ function GameDirector:GetSpawnPath(p_TeamId, p_SquadId, p_OnlyBase)
 	-- Check for spawn at squad-mate.
 	local s_SquadMates = PlayerManager:GetPlayersBySquad(p_TeamId, p_SquadId)
 
+	local s_BotStates = g_BotStates
 	for l_Index = 1, #s_SquadMates do
 		local l_Player = s_SquadMates[l_Index]
 		local s_Beacon = self:GetPlayerBeacon(l_Player.name)
@@ -1064,7 +1066,7 @@ function GameDirector:GetSpawnPath(p_TeamId, p_SquadId, p_OnlyBase)
 				if not s_SquadBot then
 					break -- this should not happen
 				end
-				if not s_SquadBot.m_InVehicle then
+				if s_BotStates:IsSoldierState(s_SquadBot.m_ActiveState) then
 					local s_WayIndex = s_SquadBot:GetWayIndex()
 					local s_PointIndex = s_SquadBot:GetPointIndex()
 

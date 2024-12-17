@@ -11,8 +11,6 @@ local m_PathSwitcher = require('PathSwitcher')
 ---@type NodeCollection
 local m_NodeCollection = require('NodeCollection')
 
-local m_BotWeaponHandling = require('Bot/BotWeaponHandling')
-
 function BotMovement:__init()
 	-- Nothing to do.
 end
@@ -195,7 +193,7 @@ function BotMovement:UpdateNormalMovement(p_DeltaTime, p_Bot)
 				end
 			end
 
-			if Config.OverWriteBotSpeedMode ~= BotMoveSpeeds.NoMovement and not p_Bot.m_InVehicle then
+			if Config.OverWriteBotSpeedMode ~= BotMoveSpeeds.NoMovement then
 				p_Bot.m_ActiveSpeedValue = Config.OverWriteBotSpeedMode
 			end
 
@@ -257,21 +255,19 @@ function BotMovement:UpdateNormalMovement(p_DeltaTime, p_Bot)
 					p_Bot:_ResetActionFlag(BotActionFlags.MeleeActive)
 					p_Bot._ObstacleRetryCounter = p_Bot._ObstacleRetryCounter + 1
 				elseif p_Bot._ObstacleSequenceTimer > 1.0 then -- Step 3
-					if not p_Bot.m_InVehicle then
-						if p_Bot._ObstacleRetryCounter == 0 then
-							if p_Bot._ActiveAction ~= BotActionFlags.MeleeActive then
-								p_Bot._ActiveAction = BotActionFlags.MeleeActive
-								p_Bot:_SetInput(EntryInputActionEnum.EIASelectWeapon7, 1)
-								p_Bot:_SetInput(EntryInputActionEnum.EIAQuicktimeFastMelee, 1)
-								p_Bot:_SetInput(EntryInputActionEnum.EIAMeleeAttack, 1)
-								p_Bot.m_ActiveWeapon = p_Bot.m_Knife
-								p_Bot._MeleeCooldownTimer = Config.MeleeAttackCoolDown -- Set time to ensure bot exit knife-mode when attack starts.
-							else
-								p_Bot:_SetInput(EntryInputActionEnum.EIAFire, 1)
-							end
+					if p_Bot._ObstacleRetryCounter == 0 then
+						if p_Bot._ActiveAction ~= BotActionFlags.MeleeActive then
+							p_Bot._ActiveAction = BotActionFlags.MeleeActive
+							p_Bot:_SetInput(EntryInputActionEnum.EIASelectWeapon7, 1)
+							p_Bot:_SetInput(EntryInputActionEnum.EIAQuicktimeFastMelee, 1)
+							p_Bot:_SetInput(EntryInputActionEnum.EIAMeleeAttack, 1)
+							p_Bot.m_ActiveWeapon = p_Bot.m_Knife
+							p_Bot._MeleeCooldownTimer = Config.MeleeAttackCoolDown -- Set time to ensure bot exit knife-mode when attack starts.
 						else
 							p_Bot:_SetInput(EntryInputActionEnum.EIAFire, 1)
 						end
+					else
+						p_Bot:_SetInput(EntryInputActionEnum.EIAFire, 1)
 					end
 				elseif p_Bot._ObstacleSequenceTimer > 0.4 then -- Step 2
 					p_Bot._TargetPitch = 0.0
@@ -304,17 +300,15 @@ function BotMovement:UpdateNormalMovement(p_DeltaTime, p_Bot)
 						p_Bot.m_Player.soldier:SetTransform(s_Transform)
 						m_Logger:Write('teleported ' .. p_Bot.m_Player.name)
 					else
-						if not p_Bot.m_InVehicle then
-							s_PointIncrement = MathUtils:GetRandomInt(-5, 5) -- Go 5 points further.
-							-- Experimental.
-							if s_PointIncrement == 0 then -- We can't have this.
-								s_PointIncrement = -2   -- Go backwards and try again.
-							end
+						s_PointIncrement = MathUtils:GetRandomInt(-5, 5) -- Go 5 points further.
+						-- Experimental.
+						if s_PointIncrement == 0 then  -- We can't have this.
+							s_PointIncrement = -2      -- Go backwards and try again.
+						end
 
-							if (Globals.IsConquest or Globals.IsRush) then
-								if g_GameDirector:IsOnObjectivePath(p_Bot._PathIndex) then
-									p_Bot._InvertPathDirection = m_Utilities:CheckProbablity(Registry.BOT.PROBABILITY_CHANGE_DIRECTION_IF_STUCK)
-								end
+						if (Globals.IsConquest or Globals.IsRush) then
+							if g_GameDirector:IsOnObjectivePath(p_Bot._PathIndex) then
+								p_Bot._InvertPathDirection = m_Utilities:CheckProbablity(Registry.BOT.PROBABILITY_CHANGE_DIRECTION_IF_STUCK)
 							end
 						end
 					end
@@ -403,7 +397,7 @@ function BotMovement:UpdateNormalMovement(p_DeltaTime, p_Bot)
 				-- CHECK FOR PATH-SWITCHES.
 				local s_NewWaypoint = nil
 				local s_SwitchPath = false
-				s_SwitchPath, s_NewWaypoint = m_PathSwitcher:GetNewPath(p_Bot, p_Bot.m_Id, s_Point, p_Bot._Objective, p_Bot.m_InVehicle,
+				s_SwitchPath, s_NewWaypoint = m_PathSwitcher:GetNewPath(p_Bot, p_Bot.m_Id, s_Point, p_Bot._Objective, false,
 					p_Bot.m_Player.teamId, nil)
 
 				if p_Bot.m_Player.soldier == nil then
@@ -413,7 +407,7 @@ function BotMovement:UpdateNormalMovement(p_DeltaTime, p_Bot)
 				if s_SwitchPath == true and not p_Bot._OnSwitch and s_NewWaypoint then
 					if p_Bot._Objective ~= '' then
 						-- 'Best' direction for objective on switch.
-						local s_Direction = m_NodeCollection:ObjectiveDirection(s_NewWaypoint, p_Bot._Objective, p_Bot.m_InVehicle)
+						local s_Direction = m_NodeCollection:ObjectiveDirection(s_NewWaypoint, p_Bot._Objective, false)
 						if s_Direction then
 							p_Bot._InvertPathDirection = (s_Direction == 'Previous')
 						end

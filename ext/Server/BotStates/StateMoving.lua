@@ -66,12 +66,8 @@ function StateMoving:Update(p_Bot, p_DeltaTime)
 
 	-- TODO: transition to vehicle with enter-vehicle functions (this is not needed this way)
 	if p_Bot.m_Player.controlledControllable ~= nil and not p_Bot.m_Player.controlledControllable:Is('ServerSoldierEntity') then
-		p_Bot.m_InVehicle = true
-		p_Bot.m_OnVehicle = false
 		p_Bot:SetState(g_BotStates.States.InVehicleMoving)
 	elseif p_Bot.m_Player.attachedControllable ~= nil then
-		p_Bot.m_InVehicle = false
-		p_Bot.m_OnVehicle = true
 		p_Bot:SetState(g_BotStates.States.OnVehicleIdle)
 	end
 end

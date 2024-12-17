@@ -56,14 +56,10 @@ function StateOnVehicleAttacking:Update(p_Bot, p_DeltaTime)
 
 
 	if p_Bot.m_Player.controlledControllable ~= nil and not p_Bot.m_Player.controlledControllable:Is('ServerSoldierEntity') then
-		p_Bot.m_InVehicle = true
-		p_Bot.m_OnVehicle = false
 		p_Bot:SetState(g_BotStates.States.InVehicleMoving)
 	elseif p_Bot.m_Player.attachedControllable ~= nil then
 		-- already in this state - nothing to do
 	else
-		p_Bot.m_InVehicle = false
-		p_Bot.m_OnVehicle = false
 		p_Bot:SetState(g_BotStates.States.Attacking)
 	end
 end

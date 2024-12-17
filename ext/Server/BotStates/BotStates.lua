@@ -19,6 +19,44 @@ function BotStates:__init()
 	}
 end
 
+function BotStates:IsSoldierState(p_State)
+	if p_State == self.States.Moving or
+		p_State == self.States.Attacking then
+		return true
+	else
+		return false
+	end
+end
+
+function BotStates:IsInVehicleState(p_State)
+	if p_State == self.States.InVehicleAttacking or
+		p_State == self.States.InVehicleMoving then
+		return true
+	else
+		return false
+	end
+end
+
+function BotStates:IsOnVehicleState(p_State)
+	if p_State == self.States.OnVehicleAttacking or
+		p_State == self.States.OnVehicleIdle then
+		return true
+	else
+		return false
+	end
+end
+
+function BotStates:IsVehicleState(p_State)
+	if p_State == self.States.InVehicleAttacking or
+		p_State == self.States.InVehicleMoving or
+		p_State == self.States.OnVehicleAttacking or
+		p_State == self.States.OnVehicleIdle then
+		return true
+	else
+		return false
+	end
+end
+
 if g_BotStates == nil then
 	---@type BotStates
 	g_BotStates = BotStates()
