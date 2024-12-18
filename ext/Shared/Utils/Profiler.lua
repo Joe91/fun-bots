@@ -16,6 +16,7 @@ function Profiler:Start(p_EventName)
 			count = 0,
 			total_time = 0,
 			start_time = 0,
+			max_time = 0,
 		}
 	end
 	self.m_Stats[p_EventName].start_time = os.clock()
@@ -30,6 +31,10 @@ function Profiler:End(p_EventName)
 	local s_ElapsedTime = s_EndTime - self.m_Stats[p_EventName].start_time
 	local s_Data = self.m_Stats[p_EventName]
 
+	if s_Data.max_time < s_ElapsedTime then
+		s_Data.max_time = s_ElapsedTime
+	end
+
 
 	s_Data.count = s_Data.count + 1
 	s_Data.total_time = s_Data.total_time + s_ElapsedTime
@@ -38,6 +43,7 @@ function Profiler:End(p_EventName)
 		self:PrintStats(p_EventName)
 		s_Data.count = 0
 		s_Data.total_time = 0
+		s_Data.max_time = 0
 	end
 end
 
@@ -45,9 +51,10 @@ function Profiler:PrintStats(p_EventName)
 	local s_Data = self.m_Stats[p_EventName]
 	local s_AvgTime = s_Data.total_time / s_Data.count * 1000
 	local s_TotalTime = s_Data.total_time * 1000
+	local s_MaxTime = s_Data.max_time * 1000
 	print(string.format(
-		"Event: %s - Called: %d times, Total Time: %.6f ms, Avg Time: %.6f ms",
-		p_EventName, s_Data.count, s_TotalTime, s_AvgTime
+		"Event: %s - Called: %d times, Max Time: %.6f ms, Avg Time: %.6f ms",
+		p_EventName, s_Data.count, s_MaxTime, s_AvgTime
 	))
 end
 
