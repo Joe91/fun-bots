@@ -1,5 +1,3 @@
-require('os')
-
 ---@class Profiler
 Profiler = class "Profiler"
 
@@ -19,7 +17,7 @@ function Profiler:Start(p_EventName)
 			max_time = 0,
 		}
 	end
-	self.m_Stats[p_EventName].start_time = os.clock()
+	self.m_Stats[p_EventName].start_time = SharedUtils:GetTimeNS()
 end
 
 function Profiler:End(p_EventName)
@@ -27,14 +25,13 @@ function Profiler:End(p_EventName)
 		return
 	end
 
-	local s_EndTime = os.clock()
+	local s_EndTime = SharedUtils:GetTimeNS()
 	local s_ElapsedTime = s_EndTime - self.m_Stats[p_EventName].start_time
 	local s_Data = self.m_Stats[p_EventName]
 
 	if s_Data.max_time < s_ElapsedTime then
 		s_Data.max_time = s_ElapsedTime
 	end
-
 
 	s_Data.count = s_Data.count + 1
 	s_Data.total_time = s_Data.total_time + s_ElapsedTime
@@ -49,12 +46,12 @@ end
 
 function Profiler:PrintStats(p_EventName)
 	local s_Data = self.m_Stats[p_EventName]
-	local s_AvgTime = s_Data.total_time / s_Data.count * 1000
-	local s_TotalTime = s_Data.total_time * 1000
-	local s_MaxTime = s_Data.max_time * 1000
+	local s_AvgTime = s_Data.total_time / s_Data.count / (1000 * 1000)
+	local s_TotalTime = s_Data.total_time / (1000 * 1000)
+	local s_MaxTime = s_Data.max_time / (1000 * 1000)
 	print(string.format(
-		"Event: %s - Called: %d times, Max Time: %.6f ms, Avg Time: %.6f ms",
-		p_EventName, s_Data.count, s_MaxTime, s_AvgTime
+		"Event: %s - Avg:  %.4f ms,  Max: %.2f ms",
+		p_EventName, s_AvgTime, s_MaxTime
 	))
 end
 
