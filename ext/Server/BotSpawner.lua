@@ -80,14 +80,10 @@ end
 -- Update Events
 -- =============================================
 
----VEXT Shared UpdateManager:Update Event
+---VEXT Shared OnEngineUpdate:Update Event
 ---@param p_DeltaTime number
----@param p_UpdatePass UpdatePass|integer
-function BotSpawner:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
-	if p_UpdatePass ~= UpdatePass.UpdatePass_PostFrame then
-		return
-	end
-
+---@param p_SimulationDeltaTime number
+function BotSpawner:OnEngineUpdate(p_DeltaTime, p_SimulationDeltaTime)
 	if self._FirstSpawnInLevel then
 		if self._FirstSpawnDelay <= 0.0 then
 			m_BotManager:ConfigGlobals()
@@ -113,9 +109,11 @@ function BotSpawner:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 	if #self._SpawnSets > 0 then
 		if self._BotSpawnTimer > 0.2 then -- Time to wait between spawn. 0.2 works
 			self._BotSpawnTimer = 0.0
-			local s_SpawnSet = table.remove(self._SpawnSets)
-			self:_SpawnSingleWayBot(s_SpawnSet.m_PlayerVarOfBot, s_SpawnSet.m_UseRandomWay, s_SpawnSet.m_ActiveWayIndex,
-				s_SpawnSet.m_IndexOnPath, nil, s_SpawnSet.m_Team)
+			---@type SpawnSet
+			local s_SpawnSet = table.remove(self._SpawnSets, 1)
+			self:_SpawnSingleWayBot(s_SpawnSet.PlayerVarOfBot, s_SpawnSet.UseRandomWay, s_SpawnSet.ActiveWayIndex,
+				s_SpawnSet.IndexOnPath, s_SpawnSet.Bot, s_SpawnSet.Team)
+
 		end
 
 		self._BotSpawnTimer = self._BotSpawnTimer + p_DeltaTime
@@ -299,32 +297,44 @@ end
 -- Custom Bot Respawn Event
 -- =============================================
 
----@param p_BotId integer
-function BotSpawner:OnRespawnBot(p_BotId)
-	local s_Bot = m_BotManager:GetBotById(p_BotId)
-	if s_Bot == nil then
-		return
-	end
+---@param p_Bot Bot
+function BotSpawner:TriggerRespawnBot(p_Bot)
 	-- fix for end-of-round-crash
 	if Registry.COMMON.DONT_SPAWN_BOTS_ON_LAST_CONQUEST_TICKET and Globals.IsConquest then
-		local s_Player = s_Bot.m_Player
-		if s_Player ~= nil then
-			local s_PlayerTeam = s_Player.teamId
-			local s_TicketsOfPlayerTeam = TicketManager:GetTicketCount(s_PlayerTeam)
-			if s_TicketsOfPlayerTeam < 2 then
-				-- only one ticket remaining. Don't spawn
-				return
-			end
+		local s_TicketsOfPlayerTeam = TicketManager:GetTicketCount(p_Bot.m_Player.teamId)
+		if s_TicketsOfPlayerTeam < 2 then
+			-- only one ticket remaining. Don't spawn
+			return
 		end
 	end
 
-	local s_SpawnMode = s_Bot:GetSpawnMode()
+	local s_SpawnMode = p_Bot:GetSpawnMode()
+
 	if s_SpawnMode == BotSpawnModes.RespawnFixedPath then -- Fixed Way.
-		local s_WayIndex = s_Bot:GetWayIndex()
+		local s_WayIndex = p_Bot:GetWayIndex()
 		local s_RandIndex = MathUtils:GetRandomInt(1, #m_NodeCollection:Get(nil, s_WayIndex))
-		self:_SpawnSingleWayBot(nil, false, s_WayIndex, s_RandIndex, s_Bot)
+
+		---@type SpawnSet
+		local s_SpawnSet = {
+			PlayerVarOfBot = nil,
+			UseRandomWay = false,
+			ActiveWayIndex = s_WayIndex,
+			IndexOnPath = s_RandIndex,
+			Team = nil,
+			Bot = p_Bot
+		}
+		self._SpawnSets[#self._SpawnSets + 1] = s_SpawnSet
 	elseif s_SpawnMode == BotSpawnModes.RespawnRandomPath then -- Random Way.
-		self:_SpawnSingleWayBot(nil, true, 0, 0, s_Bot)
+		---@type SpawnSet
+		local s_SpawnSet = {
+			PlayerVarOfBot = nil,
+			UseRandomWay = true,
+			ActiveWayIndex = 0,
+			IndexOnPath = 0,
+			Team = nil,
+			Bot = p_Bot
+		}
+		self._SpawnSets[#self._SpawnSets + 1] = s_SpawnSet
 	end
 end
 
@@ -763,12 +773,14 @@ function BotSpawner:SpawnWayBots(p_Amount, p_UseRandomWay, p_ActiveWayIndex, p_I
 
 	for i = 1, p_Amount do
 		---@type SpawnSet
-		local s_SpawnSet = SpawnSet()
-		s_SpawnSet.m_PlayerVarOfBot = nil
-		s_SpawnSet.m_UseRandomWay = p_UseRandomWay
-		s_SpawnSet.m_ActiveWayIndex = p_ActiveWayIndex or 0
-		s_SpawnSet.m_IndexOnPath = p_IndexOnPath or 0
-		s_SpawnSet.m_Team = p_TeamId
+		local s_SpawnSet = {
+			PlayerVarOfBot = nil,
+			UseRandomWay = p_UseRandomWay,
+			ActiveWayIndex = p_ActiveWayIndex or 0,
+			IndexOnPath = p_IndexOnPath or 0,
+			Team = p_TeamId,
+			Bot = nil
+		}
 		self._SpawnSets[#self._SpawnSets + 1] = s_SpawnSet
 	end
 end

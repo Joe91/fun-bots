@@ -146,7 +146,6 @@ end
 
 function FunBotServer:RegisterCustomEvents()
 	NetEvents:Subscribe("Botmanager:RaycastResults", self, self.OnClientRaycastResults)
-	Events:Subscribe('Bot:RespawnBot', self, self.OnRespawnBot)
 	Events:Subscribe('Bot:AbortWait', self, self.OnBotAbortWait)
 	Events:Subscribe('Bot:ExitVehicle', self, self.OnBotExitVehicle)
 	NetEvents:Subscribe('Client:RequestSettings', self, self.OnRequestClientSettings)
@@ -253,6 +252,7 @@ end
 ---@param p_SimulationDeltaTime number
 function FunBotServer:OnEngineUpdate(p_DeltaTime, p_SimulationDeltaTime)
 	m_GameDirector:OnEngineUpdate(p_DeltaTime)
+	m_BotSpawner:OnEngineUpdate(p_DeltaTime, p_SimulationDeltaTime)
 	m_NodeEditor:OnEngineUpdate(p_DeltaTime, p_SimulationDeltaTime)
 end
 
@@ -261,8 +261,6 @@ end
 ---@param p_UpdatePass UpdatePass|integer
 function FunBotServer:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 	m_BotManager:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
-	m_BotSpawner:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
-	m_NodeEditor:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 end
 
 function FunBotServer:OnScoringStatEvent(p_Player, p_ObjectPlayer, p_StatEvent, p_ParamX, p_ParamY, p_Value)
@@ -609,10 +607,6 @@ end
 
 function FunBotServer:OnBotExitVehicle(p_BotId)
 	m_BotManager:OnBotExitVehicle(p_BotId)
-end
-
-function FunBotServer:OnRespawnBot(p_BotId)
-	m_BotSpawner:OnRespawnBot(p_BotId)
 end
 
 function FunBotServer:OnRequestClientSettings(p_Player)

@@ -7,7 +7,7 @@ function Profiler:__init()
 end
 
 function Profiler:Start(p_EventName)
-	self.m_PrintFrequency = 600
+	self.m_PrintFrequency = 20
 
 	if not self.m_Stats[p_EventName] then
 		self.m_Stats[p_EventName] = {

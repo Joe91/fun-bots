@@ -1140,11 +1140,11 @@ function Bot:_UpdateRespawn(p_DeltaTime)
 	end
 
 	-- Wait for respawn-delay gone.
-	if self._SpawnDelayTimer > (Globals.RespawnDelay + Config.AdditionalBotSpawnDelay) then
+	if self._SpawnDelayTimer < (Globals.RespawnDelay + Config.AdditionalBotSpawnDelay) then
 		self._SpawnDelayTimer = self._SpawnDelayTimer + p_DeltaTime
 	else
 		self._SpawnDelayTimer = 0.0 -- Prevent triggering again.
-		Events:DispatchLocal('Bot:RespawnBot', self.m_Id)
+		g_BotSpawner:TriggerRespawnBot(self)
 	end
 end
 
