@@ -11,15 +11,9 @@ StateInVehicleAttacking = class('StateInVehicleAttacking')
 -- - enter vehicle
 -- - idle (on death)
 
----@type Utilities
-local m_Utilities = require('__shared/Utilities')
 -- bot-methods
 local m_Vehicles = require('Vehicles')
 local m_AirTargets = require('AirTargets')
-local m_BotAiming = require('Bot/BotAiming')
-local m_BotAttacking = require('Bot/BotAttacking')
-local m_BotMovement = require('Bot/BotMovement')
-local m_BotWeaponHandling = require('Bot/BotWeaponHandling')
 local m_VehicleAiming = require('Bot/VehicleAiming')
 local m_VehicleAttacking = require('Bot/VehicleAttacking')
 local m_VehicleMovement = require('Bot/VehicleMovement')
@@ -80,17 +74,6 @@ function StateInVehicleAttacking:Update(p_Bot, p_DeltaTime)
 	-- Common things.
 	m_VehicleMovement:UpdateSpeedOfMovementVehicle(p_DeltaTime, p_Bot, true)
 	p_Bot:_UpdateInputs(p_DeltaTime)
-
-
-
-
-	if p_Bot.m_Player.controlledControllable ~= nil and not p_Bot.m_Player.controlledControllable:Is('ServerSoldierEntity') then
-		-- already in this state - nothing to do
-	elseif p_Bot.m_Player.attachedControllable ~= nil then
-		p_Bot:SetState(g_BotStates.States.OnVehicleIdle)
-	else
-		p_Bot:SetState(g_BotStates.States.Moving)
-	end
 end
 
 ---fast update-function

@@ -11,17 +11,9 @@ StateMoving = class('StateMoving')
 -- - enter vehicle
 -- - idle (on death)
 
----@type Utilities
-local m_Utilities = require('__shared/Utilities')
 -- bot-methods
-local m_BotAiming = require('Bot/BotAiming')
-local m_BotAttacking = require('Bot/BotAttacking')
 local m_BotMovement = require('Bot/BotMovement')
 local m_BotWeaponHandling = require('Bot/BotWeaponHandling')
-local m_VehicleAiming = require('Bot/VehicleAiming')
-local m_VehicleAttacking = require('Bot/VehicleAttacking')
-local m_VehicleMovement = require('Bot/VehicleMovement')
-local m_VehicleWeaponHandling = require('Bot/VehicleWeaponHandling')
 
 function StateMoving:__init()
 	-- Nothing to do.
@@ -65,11 +57,6 @@ function StateMoving:Update(p_Bot, p_DeltaTime)
 	-- TODO: transition to repair
 
 	-- TODO: transition to vehicle with enter-vehicle functions (this is not needed this way)
-	if p_Bot.m_Player.controlledControllable ~= nil and not p_Bot.m_Player.controlledControllable:Is('ServerSoldierEntity') then
-		p_Bot:SetState(g_BotStates.States.InVehicleMoving)
-	elseif p_Bot.m_Player.attachedControllable ~= nil then
-		p_Bot:SetState(g_BotStates.States.OnVehicleIdle)
-	end
 end
 
 ---fast update-function

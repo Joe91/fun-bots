@@ -11,17 +11,9 @@ StateOnVehicleIdle = class('StateOnVehicleIdle')
 -- - moving
 -- (- vehicle-idle?)
 
----@type Utilities
-local m_Utilities = require('__shared/Utilities')
 -- bot-methods
-local m_BotAiming = require('Bot/BotAiming')
-local m_BotAttacking = require('Bot/BotAttacking')
 local m_BotMovement = require('Bot/BotMovement')
 local m_BotWeaponHandling = require('Bot/BotWeaponHandling')
-local m_VehicleAiming = require('Bot/VehicleAiming')
-local m_VehicleAttacking = require('Bot/VehicleAttacking')
-local m_VehicleMovement = require('Bot/VehicleMovement')
-local m_VehicleWeaponHandling = require('Bot/VehicleWeaponHandling')
 
 function StateOnVehicleIdle:__init()
 	-- Nothing to do.
@@ -52,15 +44,6 @@ function StateOnVehicleIdle:Update(p_Bot, p_DeltaTime)
 
 	-- TODO: this seems to be little broken. Set absolute yaws and not relative ones
 	p_Bot:_UpdateLookAroundPassenger(p_DeltaTime)
-
-	-- transitions
-	if p_Bot.m_Player.controlledControllable ~= nil and not p_Bot.m_Player.controlledControllable:Is('ServerSoldierEntity') then
-		p_Bot:SetState(g_BotStates.States.InVehicleMoving)
-	elseif p_Bot.m_Player.attachedControllable ~= nil then
-		-- already in this state - nothing to do
-	else
-		p_Bot:SetState(g_BotStates.States.Moving)
-	end
 end
 
 ---fast update-function

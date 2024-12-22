@@ -288,6 +288,7 @@ function Bot:_DoExitVehicle()
 	if self._ExitVehicleActive then
 		self:AbortAttack()
 		self.m_Player:ExitVehicle(false, false)
+		self:SetState(g_BotStates.States.Moving)
 		local s_Node = g_GameDirector:FindClosestPath(self.m_Player.soldier.worldTransform.trans, false, true, nil)
 
 		if s_Node ~= nil then
@@ -1171,9 +1172,11 @@ function Bot:UpdateVehicleMovableId()
 	if self.m_Player.controlledControllable ~= nil and not self.m_Player.controlledControllable:Is('ServerSoldierEntity') then
 		s_InVehicle = true
 		s_OnVehicle = false
+		self:SetState(g_BotStates.States.InVehicleMoving)
 	elseif self.m_Player.attachedControllable ~= nil then
 		s_InVehicle = false
 		s_OnVehicle = true
+		self:SetState(g_BotStates.States.OnVehicleIdle)
 	end
 
 	if s_OnVehicle then
@@ -1251,7 +1254,6 @@ function Bot:_EnterVehicleEntity(p_Entity, p_PlayerIsDriver)
 			self.m_ActiveVehicle = s_VehicleData
 			self._ActiveVehicleWeaponSlot = 0
 			self._VehicleMovableId = m_Vehicles:GetPartIdForSeat(self.m_ActiveVehicle, seatIndex, self._ActiveVehicleWeaponSlot)
-			-- m_Logger:Write(self.m_ActiveVehicle)
 
 			if seatIndex == 0 then
 				if seatIndex == s_MaxEntries - 1 then
@@ -1276,6 +1278,14 @@ function Bot:_EnterVehicleEntity(p_Entity, p_PlayerIsDriver)
 					end
 				end
 			end
+
+			-- transition to vehicle state
+			if self.m_Player.controlledControllable ~= nil and not self.m_Player.controlledControllable:Is('ServerSoldierEntity') then
+				self:SetState(g_BotStates.States.InVehicleMoving)
+			elseif self.m_Player.attachedControllable ~= nil then
+				self:SetState(g_BotStates.States.OnVehicleIdle)
+			end
+
 			return 0, s_Position -- Everything fine.
 		end
 	end

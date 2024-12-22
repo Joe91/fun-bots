@@ -11,17 +11,8 @@ StateIdle = class('StateIdle')
 -- - moving
 -- (- vehicle-idle?)
 
----@type Utilities
-local m_Utilities = require('__shared/Utilities')
 -- bot-methods
-local m_BotAiming = require('Bot/BotAiming')
-local m_BotAttacking = require('Bot/BotAttacking')
 local m_BotMovement = require('Bot/BotMovement')
-local m_BotWeaponHandling = require('Bot/BotWeaponHandling')
-local m_VehicleAiming = require('Bot/VehicleAiming')
-local m_VehicleAttacking = require('Bot/VehicleAttacking')
-local m_VehicleMovement = require('Bot/VehicleMovement')
-local m_VehicleWeaponHandling = require('Bot/VehicleWeaponHandling')
 
 function StateIdle:__init()
 	-- Nothing to do.
