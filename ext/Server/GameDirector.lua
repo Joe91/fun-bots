@@ -18,11 +18,10 @@ end
 function GameDirector:RegisterVars()
 	self.m_UpdateTimer = -1
 
-	self.m_BotsByTeam = {}
-
 	self.m_AllObjectives = {}
 	self.m_Translations = {}
 	self.m_ArmedMcoms = {}
+	self.m_ObjectivePositions = {}
 
 	self.m_RushStageCounter = 0
 	self.m_RushAttackingBase = ''
@@ -76,6 +75,7 @@ function GameDirector:OnLevelDestroy()
 	self.m_MapCompletelyLoaded = false
 	self.m_SpawnedEntitiesToProcess = {}
 	self.m_AllObjectives = {}
+	self.m_ObjectivePositions = {}
 	self.m_Translations = {}
 end
 
@@ -153,6 +153,8 @@ function GameDirector:OnEngineUpdate(p_DeltaTime)
 		return
 	end
 
+	g_Profiler:Start("GameDirector:Update1")
+
 	if Globals.IsRush then
 		self:_UpdateTimersOfMcoms(self.m_UpdateTimer)
 	end
@@ -161,25 +163,26 @@ function GameDirector:OnEngineUpdate(p_DeltaTime)
 
 	-- Update bot → team list.
 	local s_BotList = g_BotManager:GetBots()
-	self.m_BotsByTeam = {}
+	local s_BotsByTeam = {}
 
 	local s_BotStates = g_BotStates
 	for i = 1, #s_BotList do
-		if not s_BotList[i]:IsInactive() and s_BotList[i].m_Player ~= nil then
-			if self.m_BotsByTeam[s_BotList[i].m_Player.teamId] == nil then
-				self.m_BotsByTeam[s_BotList[i].m_Player.teamId] = {}
+		local l_Bot = s_BotList[i]
+		if not l_Bot:IsInactive() and l_Bot.m_Player ~= nil then
+			if s_BotsByTeam[l_Bot.m_Player.teamId] == nil then
+				s_BotsByTeam[l_Bot.m_Player.teamId] = {}
 			end
 
-			self.m_BotsByTeam[s_BotList[i].m_Player.teamId][#self.m_BotsByTeam[s_BotList[i].m_Player.teamId] + 1] = s_BotList[i]
+			s_BotsByTeam[l_Bot.m_Player.teamId][#s_BotsByTeam[l_Bot.m_Player.teamId] + 1] = l_Bot
 		end
 
 		if (Globals.IsRush or Globals.IsConquest) then
-			-- chekc for vehicle or valid path
-			if s_BotStates:IsInVehicleState(s_BotList[i].m_ActiveState) then
-				s_BotList[i]._KillYourselfTimer = 0.0
+			-- check for vehicle or valid path
+			if s_BotStates:IsInVehicleState(l_Bot.m_ActiveState) then
+				l_Bot._KillYourselfTimer = 0.0
 			else
 				-- check if bot is on active path
-				local s_CurrentPathFirst = m_NodeCollection:GetFirst(s_BotList[i]._PathIndex)
+				local s_CurrentPathFirst = m_NodeCollection:GetFirst(l_Bot._PathIndex)
 				local s_CurrentPathStatus = 0
 				local s_OnBasePath = false
 				if s_CurrentPathFirst ~= nil and type(s_CurrentPathFirst) ~= 'boolean' and s_CurrentPathFirst.Data ~= nil and s_CurrentPathFirst.Data.Objectives ~= nil then
@@ -188,22 +191,25 @@ function GameDirector:OnEngineUpdate(p_DeltaTime)
 				end
 
 				if s_CurrentPathStatus == 0 or s_OnBasePath then
-					s_BotList[i]._KillYourselfTimer = s_BotList[i]._KillYourselfTimer + Registry.GAME_DIRECTOR.UPDATE_OBJECTIVES_CYCLE
+					l_Bot._KillYourselfTimer = l_Bot._KillYourselfTimer + Registry.GAME_DIRECTOR.UPDATE_OBJECTIVES_CYCLE
 				else
-					s_BotList[i]._KillYourselfTimer = 0.0
+					l_Bot._KillYourselfTimer = 0.0
 				end
 
-				if s_BotList[i]._KillYourselfTimer > Registry.GAME_DIRECTOR.KILL_ON_INVALID_PATH_TIME then
-					if s_BotList[i].m_Player ~= nil and s_BotList[i].m_Player.soldier ~= nil then
-						s_BotList[i].m_DontRevive = true;
-						s_BotList[i].m_Player.soldier:Kill()
-						s_BotList[i]._KillYourselfTimer = 0.0
-						m_Logger:Write("kill " .. s_BotList[i].m_Name .. " because of inactivity on wrong paths")
+				if l_Bot._KillYourselfTimer > Registry.GAME_DIRECTOR.KILL_ON_INVALID_PATH_TIME then
+					if l_Bot.m_Player ~= nil and l_Bot.m_Player.soldier ~= nil then
+						l_Bot.m_DontRevive = true
+						l_Bot.m_Player.soldier:Kill()
+						l_Bot._KillYourselfTimer = 0.0
+						m_Logger:Write("kill " .. l_Bot.m_Name .. " because of inactivity on wrong paths")
 					end
 				end
 			end
 		end
 	end
+
+	g_Profiler:End("GameDirector:Update1")
+	g_Profiler:Start("GameDirector:Update2")
 
 	local s_MaxAssignsAttack = {}
 	local s_MaxAssignsDefend = {}
@@ -248,10 +254,10 @@ function GameDirector:OnEngineUpdate(p_DeltaTime)
 		local s_TotalObjectivesBalanced = s_AvailableObjectivesAttack[i] * Registry.GAME_DIRECTOR.WEIGHT_ATTACK_OBJECTIVE +
 			s_AvailableObjectivesDefend[i] * Registry.GAME_DIRECTOR.WEIGHT_DEFEND_OBJECTIVE
 
-		-- assing bots to the objectives
-		-- number of bots / weighted objective-count = bots pro weight-unit
-		if self.m_BotsByTeam[i] ~= nil then
-			local s_BotsPerWeightObjective = #self.m_BotsByTeam[i] / s_TotalObjectivesBalanced
+		-- assign bots to the objectives
+		-- number of bots / weighted objective-count = bots per weight-unit
+		if s_BotsByTeam[i] ~= nil then
+			local s_BotsPerWeightObjective = #s_BotsByTeam[i] / s_TotalObjectivesBalanced
 			s_MaxAssignsAttack[i] = math.floor((s_BotsPerWeightObjective * Registry.GAME_DIRECTOR.WEIGHT_ATTACK_OBJECTIVE) + 0.999)
 			s_MaxAssignsDefend[i] = math.floor((s_BotsPerWeightObjective * Registry.GAME_DIRECTOR.WEIGHT_DEFEND_OBJECTIVE) + 0.999)
 			if s_MaxAssignsDefend[i] == 0 then
@@ -274,18 +280,22 @@ function GameDirector:OnEngineUpdate(p_DeltaTime)
 
 	-- Check objective statuses.
 	-- Clear assigned-count on every cycle first
-	for l_BotTeam = 1, #self.m_BotsByTeam do
+	for l_BotTeam = 1, #s_BotsByTeam do
 		for l_Index = 1, #self.m_AllObjectives do
 			local l_Objective = self.m_AllObjectives[l_Index]
 			l_Objective.assigned[l_BotTeam] = 0
 		end
 	end
 
-	for l_BotTeam = 1, #self.m_BotsByTeam do
-		local l_Bots = self.m_BotsByTeam[l_BotTeam]
+	g_Profiler:End("GameDirector:Update2")
+	g_Profiler:Start("GameDirector:Update3")
+
+	for l_BotTeam = 1, #s_BotsByTeam do
+		local l_Bots = s_BotsByTeam[l_BotTeam]
 		for l_Index0 = 1, #l_Bots do
 			local l_Bot = l_Bots[l_Index0]
-			if l_Bot:GetObjective() == '' or l_Bot:GetObjective() == nil then -- no active objective of bot
+			local s_BotObjective = l_Bot:GetObjective()
+			if s_BotObjective == '' or s_BotObjective == nil then -- no active objective of bot
 				if l_Bot.m_Player.soldier == nil then
 					goto continue_with_next_bot
 				end
@@ -433,6 +443,7 @@ function GameDirector:OnEngineUpdate(p_DeltaTime)
 			::continue_with_next_bot::
 		end
 	end
+	g_Profiler:End("GameDirector:Update3")
 end
 
 -- =============================================
@@ -1721,17 +1732,22 @@ function GameDirector:_GetDistanceFromObjective(p_Objective, p_Position)
 		return s_Distance
 	end
 
-	local s_AllObjectives = m_NodeCollection:GetKnownObjectives()
-	local s_Paths = s_AllObjectives[p_Objective]
+	if self.m_ObjectivePositions[p_Objective] ~= nil then
+		s_Distance = self.m_ObjectivePositions[p_Objective]:Distance(p_Position)
+	else
+		local s_AllObjectives = m_NodeCollection:GetKnownObjectives()
+		local s_Paths = s_AllObjectives[p_Objective]
 
-	for l_Index = 1, #s_Paths do
-		local l_Path = s_Paths[l_Index]
-		local s_Node = m_NodeCollection:Get(1, l_Path)
+		for l_Index = 1, #s_Paths do
+			local l_Path = s_Paths[l_Index]
+			local s_Node = m_NodeCollection:Get(1, l_Path)
 
-		if s_Node ~= nil and s_Node.Data.Objectives ~= nil then
-			if #s_Node.Data.Objectives == 1 then
-				s_Distance = p_Position:Distance(s_Node.Position)
-				break
+			if s_Node ~= nil and s_Node.Data.Objectives ~= nil then
+				if #s_Node.Data.Objectives == 1 then
+					self.m_ObjectivePositions[p_Objective] = s_Node.Position
+					s_Distance = p_Position:Distance(s_Node.Position)
+					break
+				end
 			end
 		end
 	end
@@ -1784,6 +1800,7 @@ function GameDirector:_TranslateObjective(p_Position, p_Name)
 
 	if p_Name ~= nil and s_ClosestObjective ~= nil then
 		self.m_Translations[p_Name] = s_ClosestObjective.name
+		self.m_ObjectivePositions[p_Name] = p_Position:Clone()
 		s_ClosestObjective.position = p_Position
 	end
 
