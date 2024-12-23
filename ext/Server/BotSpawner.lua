@@ -101,19 +101,23 @@ function BotSpawner:OnEngineUpdate(p_DeltaTime, p_SimulationDeltaTime)
 		self._PlayerUpdateTimer = self._PlayerUpdateTimer + p_DeltaTime
 
 		if self._PlayerUpdateTimer > 2.0 then
+			g_Profiler:Start("BotSpawner:UpdateBots")
 			self._PlayerUpdateTimer = 0.0
 			self:UpdateBotAmountAndTeam()
+			g_Profiler:Start("BotSpawner:UpdateBots")
 		end
 	end
 
 	if #self._SpawnSets > 0 then
 		if self._BotSpawnTimer > 0.2 then -- Time to wait between spawn. 0.2 works
+			g_Profiler:Start("BotSpawner:Spawn")
 			self._BotSpawnTimer = 0.0
 			---@type SpawnSet
 			local s_SpawnSet = table.remove(self._SpawnSets, 1)
 			self:_SpawnSingleWayBot(s_SpawnSet.PlayerVarOfBot, s_SpawnSet.UseRandomWay, s_SpawnSet.ActiveWayIndex,
 				s_SpawnSet.IndexOnPath, s_SpawnSet.Bot, s_SpawnSet.Team)
 
+			g_Profiler:End("BotSpawner:Spawn")
 		end
 
 		self._BotSpawnTimer = self._BotSpawnTimer + p_DeltaTime
@@ -1101,6 +1105,7 @@ function BotSpawner:_SpawnSingleWayBot(p_Player, p_UseRandomWay, p_ActiveWayInde
 		s_TeamId = m_BotManager:GetBotTeam()
 	end
 
+	g_Profiler:Start("BotSpawner:SpawnPart1")
 	if p_ExistingBot ~= nil then
 		s_IsRespawn = true
 		s_Name = p_ExistingBot.m_Name
@@ -1132,7 +1137,11 @@ function BotSpawner:_SpawnSingleWayBot(p_Player, p_UseRandomWay, p_ActiveWayInde
 
 	local s_InverseDirection = nil
 
+	g_Profiler:End("BotSpawner:SpawnPart1")
+
+
 	if s_Name ~= nil or s_IsRespawn then
+		g_Profiler:Start("BotSpawner:SpawnPart2") -- about 60 ms on conquest (close to 0 on deathmatch)
 		if Config.SpawnMethod == SpawnMethod.Spawn then
 			local s_Bot = self:GetBot(p_ExistingBot, s_Name, s_TeamId, s_SquadId)
 
@@ -1222,6 +1231,8 @@ function BotSpawner:_SpawnSingleWayBot(p_Player, p_UseRandomWay, p_ActiveWayInde
 			s_SpawnPoint = m_NodeCollection:Get(p_IndexOnPath, p_ActiveWayIndex)
 		end
 
+		g_Profiler:End("BotSpawner:SpawnPart2")
+		g_Profiler:Start("BotSpawner:SpawnPart3") -- about 20 ms
 		if s_SpawnPoint == nil then
 			if s_SquadSpawnVehicle ~= nil then
 				s_SpawnPoint = m_NodeCollection:Get()[1]
@@ -1272,6 +1283,7 @@ function BotSpawner:_SpawnSingleWayBot(p_Player, p_UseRandomWay, p_ActiveWayInde
 				end
 			end
 		end
+		g_Profiler:End("BotSpawner:SpawnPart3")
 	end
 end
 
