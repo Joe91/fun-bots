@@ -885,8 +885,7 @@ function BotManager:SpawnBot(p_Bot, p_Transform, p_Pose)
 	local s_BotPlayer = p_Bot.m_Player
 
 	-- Returns SoldierEntity.
-	local s_BotSoldier = s_BotPlayer:CreateSoldier(s_BotPlayer.selectedKit, p_Transform)
-
+	local s_BotSoldier = s_BotPlayer:CreateSoldier(s_BotPlayer.selectedKit, p_Transform) -- ~3 ms
 	if not s_BotSoldier then
 		m_Logger:Error("CreateSoldier failed")
 		return nil
@@ -894,8 +893,7 @@ function BotManager:SpawnBot(p_Bot, p_Transform, p_Pose)
 
 	-- Customization of health of bot.
 	s_BotSoldier.maxHealth = Config.BotMaxHealth
-
-	s_BotPlayer:SpawnSoldierAt(s_BotSoldier, p_Transform, p_Pose)
+	s_BotPlayer:SpawnSoldierAt(s_BotSoldier, p_Transform, p_Pose) -- ~17 ms
 end
 
 ---@param p_Player Player

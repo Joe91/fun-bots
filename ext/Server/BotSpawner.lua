@@ -101,10 +101,8 @@ function BotSpawner:OnEngineUpdate(p_DeltaTime, p_SimulationDeltaTime)
 		self._PlayerUpdateTimer = self._PlayerUpdateTimer + p_DeltaTime
 
 		if self._PlayerUpdateTimer > 2.0 then
-			g_Profiler:Start("BotSpawner:UpdateBots")
 			self._PlayerUpdateTimer = 0.0
 			self:UpdateBotAmountAndTeam()
-			g_Profiler:Start("BotSpawner:UpdateBots")
 		end
 	end
 
@@ -1105,7 +1103,6 @@ function BotSpawner:_SpawnSingleWayBot(p_Player, p_UseRandomWay, p_ActiveWayInde
 		s_TeamId = m_BotManager:GetBotTeam()
 	end
 
-	g_Profiler:Start("BotSpawner:SpawnPart1")
 	if p_ExistingBot ~= nil then
 		s_IsRespawn = true
 		s_Name = p_ExistingBot.m_Name
@@ -1136,9 +1133,6 @@ function BotSpawner:_SpawnSingleWayBot(p_Player, p_UseRandomWay, p_ActiveWayInde
 	end
 
 	local s_InverseDirection = nil
-
-	g_Profiler:End("BotSpawner:SpawnPart1")
-
 
 	if s_Name ~= nil or s_IsRespawn then
 		g_Profiler:Start("BotSpawner:SpawnPart2") -- about 60 ms on conquest (close to 0 on deathmatch)
@@ -1334,7 +1328,7 @@ function BotSpawner:_SpawnBot(p_Bot, p_Transform, p_SetKit)
 
 	self:_SetKitAndAppearance(p_Bot, s_BotKit, s_BotColor)
 
-	m_BotManager:SpawnBot(p_Bot, p_Transform, CharacterPoseType.CharacterPoseType_Stand)
+	m_BotManager:SpawnBot(p_Bot, p_Transform, CharacterPoseType.CharacterPoseType_Stand) -- 20 ms
 
 	if not p_Bot.m_Player.soldier then
 		-- happens on the last ticket. round has ended.
