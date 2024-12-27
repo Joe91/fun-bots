@@ -946,6 +946,7 @@ function BotSpawner:_RushSpawn(p_Bot)
 end
 
 ---@param p_Bot Bot
+--TODO: handle spawn-logic here as well (unify it?)
 function BotSpawner:_ConquestSpawn(p_Bot)
 	local s_Event = ServerPlayerEvent("Spawn", p_Bot.m_Player, true, false, false, false, false, false,
 		p_Bot.m_Player.teamId)
