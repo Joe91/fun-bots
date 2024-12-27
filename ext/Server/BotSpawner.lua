@@ -844,8 +844,7 @@ end
 -- =============================================
 
 ---@param p_Bot Bot
----@param p_SetKit boolean
-function BotSpawner:_SelectLoadout(p_Bot, p_SetKit)
+function BotSpawner:_SelectLoadout(p_Bot)
 	local s_WriteNewKit = false
 
 	if p_Bot.m_ActiveWeapon == nil then
@@ -1159,7 +1158,7 @@ function BotSpawner:_SpawnSingleWayBot(p_Player, p_UseRandomWay, p_ActiveWayInde
 			end
 
 			m_BotCreator:SetAttributesToBot(s_Bot)
-			self:_SelectLoadout(s_Bot, false)
+			self:_SelectLoadout(s_Bot)
 			self:_TriggerSpawn(s_Bot)
 			self._BotsWithoutPath[#self._BotsWithoutPath + 1] = s_Bot
 			return
@@ -1360,37 +1359,7 @@ end
 
 ---@param p_Bot Bot
 function BotSpawner:_ApplyCosumizationAfterSpawn(p_Bot)
-	local s_WriteNewKit = false
-
-	if p_Bot.m_ActiveWeapon == nil then
-		s_WriteNewKit = true
-	end
-
-	local s_BotColor = p_Bot.m_Color
-	local s_BotKit = p_Bot.m_Kit
-
-	local s_Team = "US"
-
-	if p_Bot.m_Player.teamId % 2 == 0 then
-		s_Team = "RU"
-	end
-
-	self:_SetBotWeapons(p_Bot, s_BotKit, s_Team, s_WriteNewKit)
-
-	-- Create kit and appearance.
-	if p_Bot.m_Player.selectedKit == nil then
-		-- SoldierBlueprint
-		p_Bot.m_Player.selectedKit = self:GetResourceDataContainer('Characters/Soldiers/MpSoldier') -- MpSoldier
-	end
-
-	self:_SetKitAndAppearance(p_Bot, s_BotKit, s_BotColor)
-
-	if not p_Bot.m_Player.soldier then
-		-- happens on the last ticket. round has ended.
-		return
-	end
-
-	p_Bot.m_Player.soldier:ApplyCustomization(self:_GetCustomization(p_Bot, s_BotKit))
+	p_Bot.m_Player.soldier:ApplyCustomization(self:_GetCustomization(p_Bot, p_Bot.m_Kit))
 end
 
 ---@param p_TeamId TeamId|integer
