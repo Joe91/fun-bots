@@ -12,8 +12,8 @@ function PlayerData:__init()
 	self._Players = {}
 end
 
-function PlayerData:SetPlayerData(p_Player)
-	self._Players[p_Player.name] = {
+function PlayerData:SetPlayerData(p_PlayerName)
+	self._Players[p_PlayerName] = {
 		Vehicle = VehicleTypes.NoVehicle,
 		ShootPlayerName = ''
 	}
@@ -38,6 +38,9 @@ function PlayerData:OnVehicleExit(p_VehicleEntity, p_Player)
 end
 
 function PlayerData:_UpdatePlayerData(p_PlayerName, p_Attribute, p_Value)
+	if self._Players[p_PlayerName] == nil then
+		self:SetPlayerData(p_PlayerName)
+	end
 	self._Players[p_PlayerName][p_Attribute] = p_Value
 end
 

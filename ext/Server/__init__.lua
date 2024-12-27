@@ -412,7 +412,6 @@ end
 ---@param p_Player Player
 function FunBotServer:OnPlayerRespawn(p_Player)
 	m_NodeEditor:OnPlayerRespawn(p_Player)
-	m_PlayerData:SetPlayerData(p_Player)
 end
 
 ---VEXT Server Player:Killed Event

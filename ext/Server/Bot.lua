@@ -634,7 +634,12 @@ function Bot:ShootAt(p_Player, p_IgnoreYaw)
 				self._DoneShootDuration = 0.0
 				self._ShootPlayerName = p_Player.name
 				self._ShootPlayer = PlayerManager:GetPlayerByName(self._ShootPlayerName)
-				self._ShootPlayerVehicleType = g_PlayerData:GetData(self._ShootPlayerName).Vehicle
+				local s_PlayerData = g_PlayerData:GetData(self._ShootPlayerName)
+				if s_PlayerData then
+					self._ShootPlayerVehicleType = s_PlayerData.Vehicle
+				else
+					self._ShootPlayerVehicleType = VehicleTypes.NoVehicle
+				end
 			end
 			self._KnifeWayPositions = {}
 			self._VehicleReadyToShoot = false
@@ -1405,7 +1410,12 @@ end
 function Bot:_SetActiveVarsSlow()
 	if self._ShootPlayer ~= nil then
 		-- only needed on change
-		self._ShootPlayerVehicleType = g_PlayerData:GetData(self._ShootPlayerName).Vehicle
+		local s_PlayerData = g_PlayerData:GetData(self._ShootPlayerName)
+		if s_PlayerData then
+			self._ShootPlayerVehicleType = s_PlayerData.Vehicle
+		else
+			self._ShootPlayerVehicleType = VehicleTypes.NoVehicle
+		end
 	end
 end
 

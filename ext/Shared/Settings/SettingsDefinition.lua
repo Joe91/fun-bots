@@ -1680,7 +1680,7 @@ SettingsDefinition = {
 			Value = Config.SpawnMethod,
 			Description = "Method the bots spawn with. Careful, not supported on most of the maps!!",
 			Reference = SpawnMethod,
-			Default = SpawnMethod.SpawnSoldierAt,
+			Default = SpawnMethod.Spawn,
 			UpdateFlag = UpdateFlag.None,
 			Category = "EXPERT"
 		},
