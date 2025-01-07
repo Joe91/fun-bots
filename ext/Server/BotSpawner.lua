@@ -174,6 +174,25 @@ function BotSpawner:OnEngineUpdate(p_DeltaTime, p_SimulationDeltaTime)
 			end
 
 			if l_Bot.m_Player.soldier ~= nil then
+				local s_String, s_SpawnEntity = self:_GetSpecialSpawnEnity(l_Bot.m_Name, l_Bot.m_Player.teamId)
+				if s_SpawnEntity then
+					table.remove(self._BotsWithoutPath, l_Index)
+
+					if l_Bot:_EnterVehicleEntity(s_SpawnEntity, false) ~= 0 then
+						l_Bot:Kill()
+					elseif s_SpawnEntity ~= nil then
+						l_Bot:FindVehiclePath(s_SpawnEntity.transform.trans)
+					end
+
+					self:_ApplyCosumizationAfterSpawn(l_Bot)
+
+					-- for Civilianizer-mod:
+					if Globals.RemoveKitVisuals then
+						Events:Dispatch('Bot:SoldierEntity', l_Bot.m_Player.soldier)
+					end
+
+					break
+				end
 				local s_Position = l_Bot.m_Player.soldier.worldTransform.trans:Clone()
 				-- local s_Node = m_NodeCollection:Find(s_Position, 5)
 				local s_Node = g_GameDirector:FindClosestPath(s_Position, false, false, nil)
