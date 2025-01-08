@@ -910,7 +910,7 @@ function BotSpawner:_TriggerSpawn(p_Bot)
 		-- Seems to be the same as DeathMatchSpawn.
 		-- But it has vehicles.
 		self:_RushSpawn(p_Bot)
-	elseif s_CurrentGameMode:match("Conquest") then
+	elseif s_CurrentGameMode:match("Conquest") then -- TODO: does this also match Assault?
 		-- event + target spawn ("ID_H_US_B", "_ID_H_US_HQ", etc.)
 		self:_ConquestSpawn(p_Bot)
 	end
@@ -1379,6 +1379,38 @@ end
 ---@param p_Bot Bot
 function BotSpawner:_ApplyCosumizationAfterSpawn(p_Bot)
 	p_Bot.m_Player.soldier:ApplyCustomization(self:_GetCustomization(p_Bot, p_Bot.m_Kit))
+end
+
+function BotSpawner:_GetSpecialSpawnEnity(p_BotName, p_TeamId)
+	local s_Beacon = g_GameDirector:GetPlayerBeacon(p_BotName)
+	if s_Beacon ~= nil then
+		return "SpawnAtBeacon", s_Beacon.Entity
+	end
+
+	if Config.UseVehicles and self._DelayDirectSpawn <= 0.0 and #g_GameDirector:GetSpawnableVehicle(p_TeamId) > 0 then
+		return "SpawnInVehicle", g_GameDirector:GetSpawnableVehicle(p_TeamId)[1]
+	end
+
+	if Config.AABots and #g_GameDirector:GetStationaryAas(p_TeamId) > 0 then
+		return "SpawnInAa", g_GameDirector:GetStationaryAas(p_TeamId)[1]
+	end
+
+	-- Gunships disabled for now! TODO: enable gunship again, once server-cameras are supported for aiming
+	local s_Gunship = g_GameDirector:GetGunship(p_TeamId)
+	if false and s_Gunship then -- TODO: Remove "false", once the aiming works
+		local s_SeatsLeft = false
+		for i = 1, s_Gunship.entryCount - 1 do
+			if s_Gunship:GetPlayerInEntry(i) == nil then
+				s_SeatsLeft = true
+				break
+			end
+		end
+		if s_SeatsLeft then
+			return "SpawnInGunship", g_GameDirector:GetGunship(p_TeamId)
+		end
+	end
+
+	return nil
 end
 
 ---@param p_TeamId TeamId|integer
