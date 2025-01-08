@@ -39,6 +39,7 @@ function NodeCollection:InitVars()
 	self._SpawnPointTable = {}
 
 	self._SelectedWaypoints = {}
+	self._SelectedSpawnPoints = {}
 	self._HiddenPaths = {}
 
 	self._MapName = ''
@@ -554,6 +555,22 @@ function NodeCollection:Link(p_SelectionId, p_Waypoints, p_LinkID, p_OneWay)
 	local s_Selection = p_Waypoints or g_NodeCollection:GetSelected(p_SelectionId)
 	p_OneWay = p_OneWay or false
 
+	local s_SelectedSpawn = g_NodeCollection:GetSelectedSpawn(p_SelectionId)
+	if s_SelectedSpawn > 0 and #s_Selection > 0 then
+		for i = 1, #s_Selection do
+			local s_SecetedId = s_Selection[i].ID
+			print(s_SelectedSpawn)
+			print(self._SpawnPointTable[s_SelectedSpawn])
+			if not self._SpawnPointTable[s_SelectedSpawn].Data then
+				self._SpawnPointTable[s_SelectedSpawn].Data = {}
+			end
+			local s_Links = self._SpawnPointTable[s_SelectedSpawn].Data.Links or {}
+			s_Links[#s_Links + 1] = s_SecetedId
+			self._SpawnPointTable[s_SelectedSpawn].Data.Links = s_Links
+		end
+		return true, 'Success'
+	end
+
 	if #s_Selection == 2 then
 		-- Special case, nodes link to each other.
 		self:Link(p_SelectionId, s_Selection[1], s_Selection[2].ID, true)
@@ -587,6 +604,31 @@ function NodeCollection:Link(p_SelectionId, p_Waypoints, p_LinkID, p_OneWay)
 	end
 
 	return true, 'Success'
+end
+
+function NodeCollection:SelectSpawn(p_SelectionId, p_SpawnId)
+	self._SelectedSpawnPoints[p_SelectionId] = p_SpawnId
+	print(p_SpawnId)
+end
+
+function NodeCollection:UnelectSpawn(p_SelectionId, p_SpawnId)
+	self._SelectedSpawnPoints[p_SelectionId] = nil
+end
+
+---@param p_SelectionId integer
+---@return boolean
+---@return string
+function NodeCollection:LinkSpawn(p_SelectionId)
+	local s_Selection = g_NodeCollection:GetSelected(p_SelectionId)
+	local s_SelectedSpawn = g_NodeCollection:GetSelectedSpawn(p_SelectionId)
+end
+
+---@param p_SelectionId integer
+---@return boolean
+---@return string
+function NodeCollection:UnlinkSpawn(p_SelectionId)
+	local s_Selection = g_NodeCollection:GetSelected(p_SelectionId)
+	local s_SelectedSpawn = g_NodeCollection:GetSelectedSpawn(p_SelectionId)
 end
 
 -- Removes a linked connection between two or more arbitrary waypoints.
@@ -873,6 +915,10 @@ function NodeCollection:IsSelected(p_SelectionId, p_Waypoint, p_PathIndex)
 	end
 
 	return self._SelectedWaypoints[p_SelectionId][p_Waypoint.ID] ~= nil
+end
+
+function NodeCollection:GetSelectedSpawn(p_SelectionId)
+	return self._SelectedSpawnPoints[p_SelectionId]
 end
 
 ---@param p_PathIndex? integer
@@ -1296,13 +1342,31 @@ function NodeCollection:ProcessAllDataToSave()
 			'"' .. s_JsonSaveData .. '"'
 		}, ',') .. ')')
 
-		print("!!!!!!")
-		print(#self._SpawnPointTable)
+		-- then save spawn-points
 		for l_IndexSpawn = 1, #self._SpawnPointTable do
 			local s_JsonSaveData = ''
+			local l_SpawnPoint = self._SpawnPointTable[l_IndexSpawn]
 
-			if self._SpawnPointTable[l_IndexSpawn] ~= nil and type(self._SpawnPointTable[l_IndexSpawn].Data) == 'table' then
-				local s_JsonData, s_EncodeError = json.encode(self._SpawnPointTable[l_IndexSpawn].Data)
+			if l_SpawnPoint ~= nil and type(l_SpawnPoint.Data) == 'table' then
+				-- Convert linked node IDs to {pathIndex, pointindex}.
+				if l_SpawnPoint.Data.Links ~= nil and #l_SpawnPoint.Data.Links > 0 then
+					local s_ConvertedLinks = {}
+
+					for i = 1, #l_SpawnPoint.Data.Links do
+						local s_LinkedWaypoint = self:Get(l_SpawnPoint.Data.Links[i])
+						-- print(l_SpawnPoint.Data.Links[i])
+						-- print(s_LinkedWaypoint)
+
+						if s_LinkedWaypoint ~= nil then
+							s_ConvertedLinks[#s_ConvertedLinks + 1] = { s_LinkedWaypoint.PathIndex, s_LinkedWaypoint.PointIndex }
+						end
+					end
+
+					l_SpawnPoint.Links = s_ConvertedLinks
+				end
+
+
+				local s_JsonData, s_EncodeError = json.encode(l_SpawnPoint.Data)
 				if s_JsonData == nil then
 					m_Logger:Warning('Infonode data could not encode: ' .. tostring(s_EncodeError))
 				end

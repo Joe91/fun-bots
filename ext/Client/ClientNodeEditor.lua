@@ -432,6 +432,13 @@ function ClientNodeEditor:_onSelectNode(p_Args)
 	local s_HitSpawn = m_ClientSpawnPointHelper:FindSpawn(s_Hit.position)
 	if s_HitSpawn then
 		print(s_HitSpawn)
+		NetEvents:SendLocal('NodeEditor:SelectSpawn', s_HitSpawn)
+	end
+
+	local s_SelectedSpawn = m_ClientSpawnPointHelper:GetSelectedSpawn()
+	if s_SelectedSpawn then
+		print(s_SelectedSpawn)
+		NetEvents:SendLocal('NodeEditor:SelectSpawn', s_SelectedSpawn)
 	end
 end
 
