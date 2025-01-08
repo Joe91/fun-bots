@@ -166,6 +166,7 @@ function BotSpawner:OnEngineUpdate(p_DeltaTime, p_SimulationDeltaTime)
 	end
 
 	if #self._BotsWithoutPath > 0 then
+		g_Profiler:Start("BotSpawner:AfterSpawn")
 		for l_Index = 1, #self._BotsWithoutPath do
 			local l_Bot = self._BotsWithoutPath[l_Index]
 			if l_Bot == nil or l_Bot.m_Player == nil then
@@ -174,7 +175,7 @@ function BotSpawner:OnEngineUpdate(p_DeltaTime, p_SimulationDeltaTime)
 			end
 
 			if l_Bot.m_Player.soldier ~= nil then
-				local s_String, s_SpawnEntity = self:_GetSpecialSpawnEnity(l_Bot.m_Name, l_Bot.m_Player.teamId)
+				local s_String, s_SpawnEntity = self:_GetSpecialSpawnEnity(l_Bot, l_Bot.m_Player.teamId)
 				if s_SpawnEntity then
 					table.remove(self._BotsWithoutPath, l_Index)
 
@@ -195,7 +196,14 @@ function BotSpawner:OnEngineUpdate(p_DeltaTime, p_SimulationDeltaTime)
 				end
 				local s_Position = l_Bot.m_Player.soldier.worldTransform.trans:Clone()
 				-- local s_Node = m_NodeCollection:Find(s_Position, 5)
-				local s_Node = g_GameDirector:FindClosestPath(s_Position, false, false, nil)
+				local s_Node = nil
+				local s_SpawnNode = m_NodeCollection:GetNodeFromSpawnPoint(s_Position)
+				if s_SpawnNode then
+					print(s_SpawnNode)
+					s_Node = m_NodeCollection:Get(s_SpawnNode)
+				else
+					s_Node = g_GameDirector:FindClosestPath(s_Position, false, false, nil)
+				end
 
 				if s_Node ~= nil then
 					l_Bot:SetVarsWay(nil, true, s_Node.PathIndex, s_Node.PointIndex, false)
@@ -212,6 +220,7 @@ function BotSpawner:OnEngineUpdate(p_DeltaTime, p_SimulationDeltaTime)
 				end
 			end
 		end
+		g_Profiler:End("BotSpawner:AfterSpawn")
 	end
 end
 
@@ -1381,10 +1390,10 @@ function BotSpawner:_ApplyCosumizationAfterSpawn(p_Bot)
 	p_Bot.m_Player.soldier:ApplyCustomization(self:_GetCustomization(p_Bot, p_Bot.m_Kit))
 end
 
-function BotSpawner:_GetSpecialSpawnEnity(p_BotName, p_TeamId)
-	local s_Beacon = g_GameDirector:GetPlayerBeacon(p_BotName)
-	if s_Beacon ~= nil then
-		return "SpawnAtBeacon", s_Beacon.Entity
+function BotSpawner:_GetSpecialSpawnEnity(p_Bot, p_TeamId)
+	local s_BeaconOrMate = g_GameDirector:GetSpawnableBeaconOrMate(p_Bot.m_Player.teamId, p_Bot.m_Player.squadId)
+	if s_BeaconOrMate ~= nil then
+		return "SpawnAtBeacon", s_BeaconOrMate.Entity
 	end
 
 	if Config.UseVehicles and self._DelayDirectSpawn <= 0.0 and #g_GameDirector:GetSpawnableVehicle(p_TeamId) > 0 then

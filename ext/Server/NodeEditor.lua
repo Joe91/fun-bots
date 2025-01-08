@@ -1029,6 +1029,20 @@ function NodeEditor:OnLevelLoaded(p_LevelName, p_GameMode, p_CustomGameMode)
 	m_NodeCollection:StartLoad(p_LevelName, s_GameModeToLoad)
 end
 
+---VEXT Shared Partition:Loaded Event
+---@param p_Partition DatabasePartition
+function NodeEditor:OnPartitionLoaded(p_Partition)
+	-- m_NodeCollection:ClearSpawnPoints()
+	---@type AlternateSpawnEntityData
+	for _, l_Instance in pairs(p_Partition.instances) do
+		if l_Instance:Is("AlternateSpawnEntityData") then
+			---@type AlternateSpawnEntityData
+			l_Instance = AlternateSpawnEntityData(l_Instance)
+			m_NodeCollection:AddSpawnPoint(l_Instance.transform)
+		end
+	end
+end
+
 function NodeEditor:EndOfLoad()
 	local s_Counter = 0
 	local s_Waypoints = m_NodeCollection:Get()
@@ -1051,6 +1065,7 @@ end
 ---VEXT Shared Level:Destroy Event
 function NodeEditor:OnLevelDestroy()
 	m_NodeCollection:Clear()
+	m_NodeCollection:ClearSpawnPoints()
 	self.m_ActiveTracePlayers = {}
 	self.m_CustomTrace = {}
 	self.m_CustomTraceIndex = {}

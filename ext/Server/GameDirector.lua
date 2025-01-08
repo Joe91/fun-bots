@@ -1046,6 +1046,29 @@ function GameDirector:GetPlayerBeacon(p_PlayerName)
 	return self.m_Beacons[p_PlayerName]
 end
 
+function GameDirector:GetSpawnableBeaconOrMate(p_TeamId, p_SquadId)
+	local s_SquadMates = PlayerManager:GetPlayersBySquad(p_TeamId, p_SquadId)
+
+	local s_BotStates = g_BotStates
+	for l_Index = 1, #s_SquadMates do
+		local l_Player = s_SquadMates[l_Index]
+		local s_Beacon = self:GetPlayerBeacon(l_Player.name)
+
+		if s_Beacon ~= nil then
+			if m_Utilities:CheckProbablity(Registry.BOT_SPAWN.PROBABILITY_SQUADMATE_SPAWN) then
+				m_Logger:Write("spawn at beacon, owned by " .. l_Player.name)
+				return s_Beacon.Path, s_Beacon.Point, true, s_Beacon.Entity
+			else
+				break
+			end
+		end
+
+		if l_Player.soldier and l_Player.isAllowedToSpawnOn then
+			-- check for vehicle and spawn either on player or vehicle
+		end
+	end
+end
+
 ---@param p_TeamId TeamId|integer
 ---@param p_SquadId SquadId|integer
 ---@param p_OnlyBase boolean

@@ -34,6 +34,10 @@ function NodeCollection:InitVars()
 	self._WaypointsByID = {}
 	self._WaypointsByPathIndex = {}
 
+	self._InfoNode = nil -- node 0.0
+	print("INIT-VARS")
+	self._SpawnPointTable = {}
+
 	self._SelectedWaypoints = {}
 	self._HiddenPaths = {}
 
@@ -184,6 +188,46 @@ function NodeCollection:Add(p_SelectionId)
 	end
 
 	return false, 'Must select up to two waypoints'
+end
+
+function NodeCollection:GetNodeFromSpawnPoint(s_Position)
+	local s_ClosestSpawn = nil
+	for i = 1, #self._SpawnPointTable do
+		local s_SpawnPoint = self._SpawnPointTable[i]
+		local s_Distance = m_Utilities:DistanceFast(s_Position, s_SpawnPoint.Transform.trans)
+		if s_ClosestSpawn == nil or s_Distance < s_ClosestSpawn.Distance then
+			s_ClosestSpawn = {
+				Spawn = s_SpawnPoint,
+				Distance = s_Distance
+			}
+			if s_Distance < 1.0 then
+				break
+			end
+		end
+	end
+
+	if s_ClosestSpawn ~= nil and s_ClosestSpawn.Data and s_ClosestSpawn.Data.Links then
+		if #s_ClosestSpawn.Data.Links == 1 then
+			return s_ClosestSpawn.Data.Links[1]
+		elseif #s_ClosestSpawn.Data.Links > 1 then
+			local s_RandomIndex = MathUtils:GetRandomInt(1, #s_ClosestSpawn.Data.Links)
+			return s_ClosestSpawn.Data.Links[s_RandomIndex]
+		end
+	end
+end
+
+function NodeCollection:ClearSpawnPoints()
+	print("CLEAR-TABLE")
+	print(#self._SpawnPointTable)
+	self._SpawnPointTable = {}
+end
+
+function NodeCollection:AddSpawnPoint(p_Transform)
+	self._SpawnPointTable[#self._SpawnPointTable + 1] = {
+		Transform = p_Transform,
+		Data = {}
+	}
+	print(#self._SpawnPointTable)
 end
 
 ---@param p_Waypoint? Waypoint
@@ -757,6 +801,8 @@ function NodeCollection:Clear()
 
 	self._WaypointsByPathIndex = {}
 	self._SelectedWaypoints = {}
+
+	self._InfoNode = nil
 end
 
 -----------------------------
@@ -1144,33 +1190,45 @@ function NodeCollection:ProcessAllDataToLoad()
 
 		for l_Index = 1, #s_Results do
 			local l_Row = s_Results[l_Index]
-			if l_Row['pathIndex'] ~= self._LoadLastPathindex then
+			if l_Row['pathIndex'] ~= self._LoadLastPathindex and l_Row['pathIndex'] > 0 then
 				self._LoadPathCount = self._LoadPathCount + 1
 				self._LoadLastPathindex = l_Row['pathIndex']
 			end
 
-			local s_Waypoint = {
-				Position = Vec3(l_Row['transX'], l_Row['transY'], l_Row['transZ']),
-				PathIndex = l_Row['pathIndex'],
-				PointIndex = l_Row['pointIndex'],
-				InputVar = l_Row['inputVar'],
-				SpeedMode = l_Row['inputVar'] & 0xF,
-				ExtraMode = (l_Row['inputVar'] >> 4) & 0xF,
-				OptValue = (l_Row['inputVar'] >> 8) & 0xFF,
-				Data = json.decode(l_Row['data'] or '{}'),
-			}
+			-- use node 0.0 as gerenal node, use nodes 0.1ff as spawn-points
+			if l_Row['pathIndex'] == 0 then
+				local s_PointIndex = l_Row['pointIndex']
+				if s_PointIndex == 0 then
+					self._InfoNode = json.decode(l_Row['data'] or '{}')
+					print("???")
+					print(#self._SpawnPointTable)
+				else
+					self._SpawnPointTable[s_PointIndex].Data = json.decode(l_Row['data'] or '{}')
+				end
+			else
+				local s_Waypoint = {
+					Position = Vec3(l_Row['transX'], l_Row['transY'], l_Row['transZ']),
+					PathIndex = l_Row['pathIndex'],
+					PointIndex = l_Row['pointIndex'],
+					InputVar = l_Row['inputVar'],
+					SpeedMode = l_Row['inputVar'] & 0xF,
+					ExtraMode = (l_Row['inputVar'] >> 4) & 0xF,
+					OptValue = (l_Row['inputVar'] >> 8) & 0xFF,
+					Data = json.decode(l_Row['data'] or '{}'),
+				}
 
-			if self._LoadFirstWaypoint == nil then
-				self._LoadFirstWaypoint = s_Waypoint
+				if self._LoadFirstWaypoint == nil then
+					self._LoadFirstWaypoint = s_Waypoint
+				end
+
+				if self._LoadLastWaypoint ~= nil then
+					s_Waypoint.Previous = self._LoadLastWaypoint.ID
+					self._LoadLastWaypoint.Next = s_Waypoint.ID
+				end
+
+				s_Waypoint = self:Create(s_Waypoint, true)
+				self._LoadLastWaypoint = s_Waypoint
 			end
-
-			if self._LoadLastWaypoint ~= nil then
-				s_Waypoint.Previous = self._LoadLastWaypoint.ID
-				self._LoadLastWaypoint.Next = s_Waypoint.ID
-			end
-
-			s_Waypoint = self:Create(s_Waypoint, true)
-			self._LoadLastWaypoint = s_Waypoint
 			self._LoadWaypointCount = self._LoadWaypointCount + 1
 		end
 
@@ -1213,6 +1271,59 @@ function NodeCollection:ProcessAllDataToSave()
 		local s_Orphans = {}
 		local s_Disconnects = {}
 
+		-- save info-node first,
+		-- then save spawn-points,
+		local s_JsonSaveData = ''
+
+		if self._InfoNode ~= nil and type(self._InfoNode) == 'table' then
+			local s_JsonData, s_EncodeError = json.encode(self._InfoNode)
+			if s_JsonData == nil then
+				m_Logger:Warning('Infonode data could not encode: ' .. tostring(s_EncodeError))
+			end
+			if s_JsonData ~= '{}' then
+				s_JsonSaveData = SQL:Escape(table.concat(s_JsonData:split('"'), '""'))
+			end
+		end
+
+		-- info-node
+		table.insert(self._SaveTraceBatchQueries, '(' .. table.concat({
+			0, -- path
+			0, -- point
+			0, --x
+			0, --y
+			0, --z
+			0, -- var
+			'"' .. s_JsonSaveData .. '"'
+		}, ',') .. ')')
+
+		print("!!!!!!")
+		print(#self._SpawnPointTable)
+		for l_IndexSpawn = 1, #self._SpawnPointTable do
+			local s_JsonSaveData = ''
+
+			if self._SpawnPointTable[l_IndexSpawn] ~= nil and type(self._SpawnPointTable[l_IndexSpawn].Data) == 'table' then
+				local s_JsonData, s_EncodeError = json.encode(self._SpawnPointTable[l_IndexSpawn].Data)
+				if s_JsonData == nil then
+					m_Logger:Warning('Infonode data could not encode: ' .. tostring(s_EncodeError))
+				end
+				if s_JsonData ~= '{}' then
+					s_JsonSaveData = SQL:Escape(table.concat(s_JsonData:split('"'), '""'))
+				end
+			end
+
+			-- info-node
+			table.insert(self._SaveTraceBatchQueries, '(' .. table.concat({
+				0, -- path
+				l_IndexSpawn, -- point
+				0, -- self._SpawnPointTable[l_IndexSpawn].Transform.trans.x, --x
+				0, -- self._SpawnPointTable[l_IndexSpawn].Transform.trans.y, --y
+				0, -- self._SpawnPointTable[l_IndexSpawn].Transform.trans.z, --z
+				1, -- var
+				'"' .. s_JsonSaveData .. '"'
+			}, ',') .. ')')
+		end
+
+		-- then save waypoints
 		for l_Index = 1, #self._Waypoints do
 			local l_Waypoint = self._Waypoints[l_Index]
 			-- Keep track of disconnected nodes, only two should exist.

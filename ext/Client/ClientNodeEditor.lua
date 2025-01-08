@@ -6,6 +6,8 @@ require('__shared/Config')
 
 ---@type Logger
 local m_Logger = Logger('ClientNodeEditor', Debug.Client.NODEEDITOR)
+---@type ClientSpawnPointHelper
+local m_ClientSpawnPointHelper = require('ClientSpawnPointHelper')
 
 function ClientNodeEditor:__init()
 	-- Data Points.
@@ -425,6 +427,11 @@ function ClientNodeEditor:_onSelectNode(p_Args)
 		else
 			NetEvents:SendLocal('NodeEditor:Select', s_HitPoint.Node.ID)
 		end
+	end
+
+	local s_HitSpawn = m_ClientSpawnPointHelper:FindSpawn(s_Hit.position)
+	if s_HitSpawn then
+		print(s_HitSpawn)
 	end
 end
 

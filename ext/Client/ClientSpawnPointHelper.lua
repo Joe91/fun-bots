@@ -38,6 +38,24 @@ function ClientSpawnPointHelper:OnSetEnabled(p_Args)
 	self.m_Enabled = (s_Enabled == true or s_Enabled == 'true' or s_Enabled == '1')
 end
 
+function ClientSpawnPointHelper:FindSpawn(p_Position)
+	local s_ClosestIndex = 0
+	local s_ClosestDistance = 999999
+
+	for l_Index = 1, #self.m_SpawnPointTable do
+		local s_Transform = self.m_SpawnPointTable[l_Index]
+		local s_Distance = s_Transform.trans:Distance(p_Position)
+		if s_Distance < s_ClosestDistance then
+			s_ClosestIndex = l_Index
+			s_ClosestDistance = s_Distance
+		end
+	end
+
+	if s_ClosestDistance < 0.6 then
+		return s_ClosestIndex
+	end
+end
+
 ---VEXT Client UI:DrawHud Event
 function ClientSpawnPointHelper:OnUIDrawHud()
 	self.m_SelectedSpawnPoint = nil
