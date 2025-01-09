@@ -175,38 +175,38 @@ function BotSpawner:OnEngineUpdate(p_DeltaTime, p_SimulationDeltaTime)
 			end
 
 			if l_Bot.m_Player.soldier ~= nil then
-				local s_String, s_SpawnEntity = self:_GetSpecialSpawnEnity(l_Bot, l_Bot.m_Player.teamId)
-				if s_SpawnEntity then
-					table.remove(self._BotsWithoutPath, l_Index)
+				-- local s_String, s_SpawnEntity = self:_GetSpecialSpawnEnity(l_Bot, l_Bot.m_Player.teamId)
+				-- if s_SpawnEntity then
+				-- 	table.remove(self._BotsWithoutPath, l_Index)
 
-					if l_Bot:_EnterVehicleEntity(s_SpawnEntity, false) ~= 0 then
-						l_Bot:Kill()
-					elseif s_SpawnEntity ~= nil then
-						l_Bot:FindVehiclePath(s_SpawnEntity.transform.trans)
-					end
+				-- 	if l_Bot:_EnterVehicleEntity(s_SpawnEntity, false) ~= 0 then
+				-- 		l_Bot:Kill()
+				-- 	elseif s_SpawnEntity ~= nil then
+				-- 		l_Bot:FindVehiclePath(s_SpawnEntity.transform.trans)
+				-- 	end
 
-					self:_ApplyCosumizationAfterSpawn(l_Bot)
+				-- 	self:_ApplyCosumizationAfterSpawn(l_Bot)
 
-					-- for Civilianizer-mod:
-					if Globals.RemoveKitVisuals then
-						Events:Dispatch('Bot:SoldierEntity', l_Bot.m_Player.soldier)
-					end
+				-- 	-- for Civilianizer-mod:
+				-- 	if Globals.RemoveKitVisuals then
+				-- 		Events:Dispatch('Bot:SoldierEntity', l_Bot.m_Player.soldier)
+				-- 	end
 
-					break
-				end
+				-- 	break
+				-- end
 				local s_Position = l_Bot.m_Player.soldier.worldTransform.trans:Clone()
-				-- local s_Node = m_NodeCollection:Find(s_Position, 5)
-				local s_Node = nil
-				local s_SpawnNode = m_NodeCollection:GetNodeFromSpawnPoint(s_Position)
-				if s_SpawnNode then
-					print(s_SpawnNode)
-					s_Node = m_NodeCollection:Get(s_SpawnNode)
-				else
-					s_Node = g_GameDirector:FindClosestPath(s_Position, false, false, nil)
+				local s_Link = m_NodeCollection:GetLinkFromSpawnPoint(s_Position)
+				-- print(s_Link)
+				if not s_Link then
+					local s_Node = g_GameDirector:FindClosestPath(s_Position, false, false, nil)
+					if s_Node then
+						s_Link = { s_Node.PathIndex, s_Node.PointIndex }
+					end
 				end
 
-				if s_Node ~= nil then
-					l_Bot:SetVarsWay(nil, true, s_Node.PathIndex, s_Node.PointIndex, false)
+
+				if s_Link ~= nil then
+					l_Bot:SetVarsWay(nil, true, s_Link[1], s_Link[2], false)
 					table.remove(self._BotsWithoutPath, l_Index)
 
 					self:_ApplyCosumizationAfterSpawn(l_Bot)
@@ -919,7 +919,7 @@ function BotSpawner:_TriggerSpawn(p_Bot)
 		-- Seems to be the same as DeathMatchSpawn.
 		-- But it has vehicles.
 		self:_RushSpawn(p_Bot)
-	elseif s_CurrentGameMode:match("Conquest") then -- TODO: does this also match Assault?
+	elseif s_CurrentGameMode:match("Conquest") then
 		-- event + target spawn ("ID_H_US_B", "_ID_H_US_HQ", etc.)
 		self:_ConquestSpawn(p_Bot)
 	end

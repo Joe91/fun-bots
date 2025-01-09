@@ -1057,13 +1057,13 @@ end
 ---VEXT Shared Partition:Loaded Event
 ---@param p_Partition DatabasePartition
 function NodeEditor:OnPartitionLoaded(p_Partition)
-	-- m_NodeCollection:ClearSpawnPoints()
 	---@type AlternateSpawnEntityData
 	for _, l_Instance in pairs(p_Partition.instances) do
 		if l_Instance:Is("AlternateSpawnEntityData") then
+			local s_LevelName = SharedUtils:GetLevelName() .. SharedUtils:GetCurrentGameMode()
 			---@type AlternateSpawnEntityData
 			l_Instance = AlternateSpawnEntityData(l_Instance)
-			m_NodeCollection:AddSpawnPoint(l_Instance.transform)
+			m_NodeCollection:AddSpawnPoint(l_Instance.transform, s_LevelName)
 		end
 	end
 end
@@ -1085,12 +1085,13 @@ function NodeEditor:EndOfLoad()
 	end
 
 	self:Log(nil, 'Load -> Stale Nodes: %d', s_Counter)
+
+	m_NodeCollection:ParseAllSpawns()
 end
 
 ---VEXT Shared Level:Destroy Event
 function NodeEditor:OnLevelDestroy()
 	m_NodeCollection:Clear()
-	m_NodeCollection:ClearSpawnPoints()
 	self.m_ActiveTracePlayers = {}
 	self.m_CustomTrace = {}
 	self.m_CustomTraceIndex = {}
