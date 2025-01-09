@@ -11,6 +11,8 @@ This is the changelog for the version V3.0 Don't forget to [join us on Discord](
 ### New features / improvements
 * rework of complete update to state pattern
 * performance-improvements
+* original game-spawn-method by default
+* add two missing weapons
 
 ### Bug fixes
 * fix stationary AA again...

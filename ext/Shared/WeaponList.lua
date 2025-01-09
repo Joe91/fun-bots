@@ -173,6 +173,8 @@ function WeaponList:__init()
 			'Weapons/XP1_HK53/U_HK53'),
 		Weapon('M4A1_RX01', '', { 'RX01', 'HeavyBarrel', 'Foregrip' }, WeaponTypes.Carabine, 'Weapons/M4A1/U_M4A1'),
 		Weapon('M4A1_Kobra', '', { 'Kobra', 'HeavyBarrel', 'Foregrip' }, WeaponTypes.Carabine, 'Weapons/M4A1/U_M4A1'),
+		Weapon('M4_RX01', '', { 'RX01', 'HeavyBarrel', 'Foregrip' }, WeaponTypes.Assault, 'Weapons/M4A1/U_M4'),
+		Weapon('M4_Kobra', '', { 'Kobra', 'HeavyBarrel', 'Foregrip' }, WeaponTypes.Assault, 'Weapons/M4A1/U_M4'),
 		Weapon('MTAR_RX01', 'XP2', { 'RX_01', 'HeavyBarrel', 'Foregrip', 'CAMO_1' }, WeaponTypes.Carabine,
 			'Weapons/XP2_MTAR/U_MTAR'),
 		Weapon('MTAR_Kobra', 'XP2', { 'Kobra', 'HeavyBarrel', 'Foregrip', 'CAMO_2' }, WeaponTypes.Carabine,
@@ -278,6 +280,10 @@ function WeaponList:__init()
 			'Weapons/SVD/U_SVD'),
 		Weapon('SVD_RifleScope', '', { 'Rifle_Scope', 'Target_pointer', 'Weapons/Common/NoPrimaryAccessory' },
 			WeaponTypes.Sniper, 'Weapons/SVD/U_SVD'),
+		Weapon('QBU88_RifleScope', '', { 'Rifle_Scope', 'TargetPointer', 'Weapons/Common/NoPrimaryAccessory' },
+			WeaponTypes.Sniper, 'Weapons/XP1_QBU-88/U_QBU-88_Sniper'),
+		Weapon('QBU88_PSO-1', '', { 'PSO-1', 'TargetPointer', 'Weapons/Common/NoPrimaryAccessory' },
+			WeaponTypes.Sniper, 'Weapons/XP1_QBU-88/U_QBU-88_Sniper'),
 
 		---------------------------
 		-- Pistols.
