@@ -116,7 +116,7 @@ function StateInVehicleMoving:UpdateFast(p_Bot, p_DeltaTime)
 
 	-- Fast code.
 	if p_Bot.m_Player.controlledEntryId == 0 and not s_IsStationaryLauncher then -- Only if driver.
-		m_VehicleMovement:UpdateTargetMovementVehicle(p_Bot)
+		m_VehicleMovement:UpdateTargetMovementVehicle(p_Bot, p_DeltaTime)
 	else
 		m_VehicleMovement:UpdateVehicleLookAround(p_Bot, p_DeltaTime)
 	end

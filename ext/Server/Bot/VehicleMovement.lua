@@ -51,11 +51,11 @@ function VehicleMovement:UpdateNormalMovementVehicle(p_DeltaTime, p_Bot)
 	if p_Bot._VehicleTakeoffTimer > 0.0 then
 		p_Bot._VehicleTakeoffTimer = p_Bot._VehicleTakeoffTimer - p_DeltaTime
 		if p_Bot._JetAbortAttackActive then
-			local s_TargetPosition = p_Bot.m_Player.controlledControllable.transform.trans
-			local s_Forward = p_Bot.m_Player.controlledControllable.transform.forward
+			local s_TargetPosition = p_Bot.m_Player.controlledControllable.transform.trans:Clone()
+			local s_Forward = p_Bot.m_Player.controlledControllable.transform.forward:Clone()
 			s_Forward.y = 0
 			s_Forward:Normalize()
-			s_TargetPosition = s_TargetPosition + (s_Forward * 50)
+			s_TargetPosition = s_TargetPosition + (s_Forward * 30)
 			s_TargetPosition.y = s_TargetPosition.y + 50
 			local s_Waypoint = {
 				Position = s_TargetPosition,
@@ -65,6 +65,24 @@ function VehicleMovement:UpdateNormalMovementVehicle(p_DeltaTime, p_Bot)
 		end
 	end
 	p_Bot._JetAbortAttackActive = false
+
+	-- don't move along paths with planes
+	if m_Vehicles:IsVehicleType(p_Bot.m_ActiveVehicle, VehicleTypes.Plane) then
+		local s_TargetPosition = p_Bot.m_Player.controlledControllable.transform.trans:Clone()
+		local s_Forward = p_Bot.m_Player.controlledControllable.transform.forward:Clone()
+		local s_Left = p_Bot.m_Player.controlledControllable.transform.left:Clone()
+		s_Forward.y = 0
+		s_Left.y = 0
+		s_Forward:Normalize()
+		s_Left:Normalize()
+		s_TargetPosition = s_TargetPosition + (s_Forward * 40) + (s_Left * 70)
+		s_TargetPosition.y = s_TargetPosition.y + 10
+		local s_Waypoint = {
+			Position = s_TargetPosition,
+		}
+		p_Bot._TargetPoint = s_Waypoint
+		return
+	end
 
 	-- Move along points.
 	if m_NodeCollection:Get(1, p_Bot._PathIndex) ~= nil then -- Check for valid point.
@@ -379,7 +397,7 @@ function VehicleMovement:UpdateSpeedOfMovementVehicle(p_DeltaTime, p_Bot, p_Atta
 end
 
 ---@param p_Bot Bot
-function VehicleMovement:UpdateTargetMovementVehicle(p_Bot)
+function VehicleMovement:UpdateTargetMovementVehicle(p_Bot, p_DeltaTime)
 	if p_Bot._TargetPoint ~= nil then
 		local s_Distance = p_Bot.m_Player.controlledControllable.transform.trans:Distance(p_Bot._TargetPoint.Position)
 
@@ -613,7 +631,7 @@ function VehicleMovement:UpdateYawVehicle(p_Bot, p_Attacking, p_IsStationaryLaun
 		if p_Bot._VehicleWaitTimer > 0.0 then
 			return
 		end
-		if not p_Attacking and (p_Bot._TargetPoint == nil or p_Bot._NextTargetPoint == nil) then
+		if not p_Attacking and (p_Bot._TargetPoint == nil) then
 			return
 		end
 		if p_Bot.m_Player.controlledControllable == nil then
@@ -626,8 +644,6 @@ function VehicleMovement:UpdateYawVehicle(p_Bot, p_Attacking, p_IsStationaryLaun
 		if p_Attacking then
 			s_Delta_Tilt = -s_DeltaPitch
 		else
-			-- To-do: use angle between two nodes?
-
 			local s_Delta_Height = p_Bot._TargetPoint.Position.y - p_Bot.m_Player.controlledControllable.transform.trans.y
 
 			local s_Tartget_Tilt = 0.0

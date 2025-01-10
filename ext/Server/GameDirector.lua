@@ -1079,7 +1079,6 @@ function GameDirector:GetSpawnableBeaconOrMate(p_TeamId, p_SquadId)
 						return s_Node.PathIndex, s_Node.PointIndex, false, nil
 					end
 				end
-				return s_Beacon.Path, s_Beacon.Point, true, s_Beacon.Entity
 			end
 		end
 	end
