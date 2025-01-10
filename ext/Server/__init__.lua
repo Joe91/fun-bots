@@ -341,6 +341,7 @@ end
 function FunBotServer:OnFinishedLoading()
 	m_NodeEditor:EndOfLoad()
 	m_GameDirector:OnLoadFinished()
+	m_NodeEditor:ParseAllSpawns()
 end
 
 function FunBotServer:DestroyObstacles(p_LevelName, p_GameMode)

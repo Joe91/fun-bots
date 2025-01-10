@@ -175,25 +175,30 @@ function BotSpawner:OnEngineUpdate(p_DeltaTime, p_SimulationDeltaTime)
 			end
 
 			if l_Bot.m_Player.soldier ~= nil then
-				-- local s_String, s_SpawnEntity = self:_GetSpecialSpawnEnity(l_Bot, l_Bot.m_Player.teamId)
-				-- if s_SpawnEntity then
-				-- 	table.remove(self._BotsWithoutPath, l_Index)
+				local s_String, s_SpawnEntity = self:_GetSpecialSpawnEnity(l_Bot, l_Bot.m_Player.teamId)
+				if s_SpawnEntity then
+					table.remove(self._BotsWithoutPath, l_Index)
 
-				-- 	if l_Bot:_EnterVehicleEntity(s_SpawnEntity, false) ~= 0 then
-				-- 		l_Bot:Kill()
-				-- 	elseif s_SpawnEntity ~= nil then
-				-- 		l_Bot:FindVehiclePath(s_SpawnEntity.transform.trans)
-				-- 	end
+					if l_Bot:_EnterVehicleEntity(s_SpawnEntity, false) ~= 0 then
+						l_Bot:Kill()
+					elseif s_SpawnEntity ~= nil then
+						l_Bot:FindVehiclePath(s_SpawnEntity.transform.trans)
+					end
 
-				-- 	self:_ApplyCosumizationAfterSpawn(l_Bot)
+					self:_ApplyCosumizationAfterSpawn(l_Bot)
 
-				-- 	-- for Civilianizer-mod:
-				-- 	if Globals.RemoveKitVisuals then
-				-- 		Events:Dispatch('Bot:SoldierEntity', l_Bot.m_Player.soldier)
-				-- 	end
+					-- for Civilianizer-mod:
+					if Globals.RemoveKitVisuals then
+						Events:Dispatch('Bot:SoldierEntity', l_Bot.m_Player.soldier)
+					end
 
-				-- 	break
-				-- end
+					break
+				end
+
+				-- check for mate or beacon
+				local s_BeaconOrMate = g_GameDirector:GetSpawnableBeaconOrMate(l_Bot.m_Player.teamId, l_Bot.m_Player.squadId)
+				-- TODO: spawn inside vehicle of mate or at mate or at beacon
+
 				local s_Position = l_Bot.m_Player.soldier.worldTransform.trans:Clone()
 				local s_Link = m_NodeCollection:GetLinkFromSpawnPoint(s_Position)
 				-- print(s_Link)
@@ -1391,11 +1396,6 @@ function BotSpawner:_ApplyCosumizationAfterSpawn(p_Bot)
 end
 
 function BotSpawner:_GetSpecialSpawnEnity(p_Bot, p_TeamId)
-	local s_BeaconOrMate = g_GameDirector:GetSpawnableBeaconOrMate(p_Bot.m_Player.teamId, p_Bot.m_Player.squadId)
-	if s_BeaconOrMate ~= nil then
-		return "SpawnAtBeacon", s_BeaconOrMate.Entity
-	end
-
 	if Config.UseVehicles and self._DelayDirectSpawn <= 0.0 and #g_GameDirector:GetSpawnableVehicle(p_TeamId) > 0 then
 		return "SpawnInVehicle", g_GameDirector:GetSpawnableVehicle(p_TeamId)[1]
 	end

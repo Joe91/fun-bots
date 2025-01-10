@@ -1169,7 +1169,7 @@ function NodeCollection:ParseAllSpawns()
 	print("start to parse")
 	local s_MaterialFlags = 0
 	---@type RayCastFlags
-	local s_RaycastFlags = RayCastFlags.DontCheckWater | RayCastFlags.DontCheckCharacter
+	local s_RaycastFlags = RayCastFlags.DontCheckWater | RayCastFlags.DontCheckCharacter | RayCastFlags.DontCheckRagdoll
 
 	local s_Paths = self:GetPaths()
 	for i = 1, #self._SpawnPointTable do
@@ -1180,6 +1180,8 @@ function NodeCollection:ParseAllSpawns()
 
 		local s_ClosestPathNodes = {}
 		for l_PathIndex, l_Path in pairs(s_Paths) do
+			-- TODO: skip path, if spawn-vehicle-path or vehicle-path
+
 			local s_ClosestNode = nil
 			local s_ClosestDistance = 0
 

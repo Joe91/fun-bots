@@ -1085,7 +1085,9 @@ function NodeEditor:EndOfLoad()
 	end
 
 	self:Log(nil, 'Load -> Stale Nodes: %d', s_Counter)
+end
 
+function NodeEditor:ParseAllSpawns()
 	m_NodeCollection:ParseAllSpawns()
 end
 
