@@ -1165,11 +1165,23 @@ function NodeCollection:IsMapAvailable(p_LevelName, p_GameMode)
 	end
 end
 
+-- Function to check if a node is in front of or behind a point with direction
+function NodeCollection:isNodeInFront(p_Point, p_Direction, p_Node)
+	-- Vector from point to node
+	local s_VectorToNode = p_Node - p_Point
+
+	-- Calculate the dot product
+	local dotProduct = s_VectorToNode:Dot(p_Direction)
+
+	-- If dot product is positive, the node is in front of the point
+	return dotProduct > 0
+end
+
 function NodeCollection:ParseAllSpawns()
 	print("start to parse")
 	local s_MaterialFlags = 0
 	---@type RayCastFlags
-	local s_RaycastFlags = RayCastFlags.DontCheckWater | RayCastFlags.DontCheckCharacter | RayCastFlags.DontCheckRagdoll
+	local s_RaycastFlags = RayCastFlags.DontCheckWater | RayCastFlags.DontCheckCharacter | RayCastFlags.DontCheckRagdoll | RayCastFlags.CheckDetailMesh
 
 	local s_Paths = self:GetPaths()
 	for i = 1, #self._SpawnPointTable do
@@ -1180,85 +1192,49 @@ function NodeCollection:ParseAllSpawns()
 
 		local s_ClosestPathNodes = {}
 		for l_PathIndex, l_Path in pairs(s_Paths) do
-			-- TODO: skip path, if spawn-vehicle-path or vehicle-path
-
-			local s_ClosestNode = nil
-			local s_ClosestDistance = 0
+			if l_Path.Data and l_Path.Data.Objectives and l_Path.Data.Objectives[1] then
+				local s_Objective = l_Path.Data.Objectives[1]
+				if g_GameDirector:IsVehicleEnterPath(s_Objective) then -- TODO: air-paths?
+					goto continue
+				end
+			end
+			if l_Path.Data and l_Path.Data.Vehicles and (table.has(l_Path.Data.Vehicles, "air") or table.has(l_Path.Data.Vehicles, "water")) then
+				goto continue
+			end
 
 			for l_Index = 1, #l_Path do
 				local s_Waypoint = l_Path[l_Index]
 				local s_Distance = s_PositionSpawn:Distance(s_Waypoint.Position)
 
-				if s_ClosestNode == nil or s_Distance < s_ClosestDistance then
-					s_ClosestNode = s_Waypoint
-					s_ClosestDistance = s_Distance
+				if s_Distance < 15 then
+					s_ClosestPathNodes[#s_ClosestPathNodes + 1] = s_Waypoint
 				end
 			end
-
-			if #s_ClosestPathNodes < 4 then
-				s_ClosestPathNodes[#s_ClosestPathNodes + 1] = {
-					s_ClosestNode,
-					s_ClosestDistance
-				}
-			else
-				-- replace furtherst-away path, if closer
-				local s_IndexToReplace = 0
-				local s_MaxDistance = 0
-				for l_NodeIndex, Node in pairs(s_ClosestPathNodes) do
-					if Node[2] > s_MaxDistance then
-						s_MaxDistance = Node[2]
-						s_IndexToReplace = l_NodeIndex
-						break
-					end
-				end
-				if s_IndexToReplace > 0 then
-					s_ClosestPathNodes[s_IndexToReplace] = {
-						s_ClosestNode,
-						s_ClosestDistance
-					}
-				end
-			end
+			::continue::
 		end
 
 
+		local s_NodeCount = 0
+		local s_PathsLinked = {}
 		-- find closest paths with closest node (3+ paths min)
 		for j = 1, #s_ClosestPathNodes do
-			local s_ClosestNode = s_ClosestPathNodes[j][1]
+			local s_CloseNode = s_ClosestPathNodes[j]
 
-			local s_PositionNode = s_ClosestNode.Position:Clone()
-			s_PositionNode.y = s_PositionNode.y + 1.0
+			local s_PositionNode = s_CloseNode.Position:Clone()
+			local s_HeightDifference = math.abs(s_PositionSpawn.y - s_PositionNode.y)
 
-			local s_Result = RaycastManager:CollisionRaycast(s_PositionNode, s_PositionSpawnHigher, 1, s_MaterialFlags, s_RaycastFlags)
-			-- check for previous and backward nodes, if no hit
-			if #s_Result == 0 then
-				-- print("hit - link")
-				self:LinkSpawn(s_Spawn, s_ClosestNode)
-			else
-				local s_PrevioursNode = s_ClosestNode.Previous
-				local s_NextNode = s_ClosestNode.Next
-				for k = 1, 5 do
-					if s_PrevioursNode and s_PrevioursNode.Previous then
-						s_PrevioursNode = s_PrevioursNode.Previous
-					end
-					if s_NextNode and s_NextNode.Next then
-						s_NextNode = s_NextNode.Next
-					end
-				end
-				if s_PrevioursNode then
-					s_PositionNode = s_PrevioursNode.Position:Clone()
-					s_PositionNode.y = s_PositionNode.y + 1.0
-					s_Result = RaycastManager:CollisionRaycast(s_PositionNode, s_PositionSpawnHigher, 1, s_MaterialFlags, s_RaycastFlags)
-					-- check for previous and backward nodes, if no hit
-				end
-				if s_PrevioursNode and #s_Result == 0 then
-					self:LinkSpawn(s_Spawn, s_PrevioursNode)
-				elseif s_NextNode then
-					s_PositionNode = s_NextNode.Position:Clone()
-					s_PositionNode.y = s_PositionNode.y + 1.0
-					s_Result = RaycastManager:CollisionRaycast(s_PositionNode, s_PositionSpawnHigher, 1, s_MaterialFlags, s_RaycastFlags)
-					-- check for previous and backward nodes, if no hit
-					if #s_Result == 0 then
-						self:LinkSpawn(s_Spawn, s_NextNode)
+			-- check for height difference
+
+			-- check for direction of node (only forward nodes?)
+			if not s_PathsLinked[s_CloseNode.PathIndex] and s_HeightDifference < 2.0 and self:isNodeInFront(s_PositionSpawn, s_Spawn.Transform.forward, s_PositionNode) then
+				s_PositionNode.y = s_PositionNode.y + 1.0
+				local s_Result = RaycastManager:CollisionRaycast(s_PositionNode, s_PositionSpawnHigher, 1, s_MaterialFlags, s_RaycastFlags)
+				if #s_Result == 0 then
+					self:LinkSpawn(s_Spawn, s_CloseNode)
+					s_NodeCount = s_NodeCount + 1
+					s_PathsLinked[s_CloseNode.PathIndex] = true
+					if s_NodeCount > 5 then
+						break
 					end
 				end
 			end
@@ -1471,32 +1447,33 @@ function NodeCollection:ProcessAllDataToSave()
 			'"' .. s_JsonSaveData .. '"'
 		}, ',') .. ')')
 
-		-- then save spawn-points
-		for l_IndexSpawn = 1, #self._SpawnPointTable do
-			local s_JsonSaveData = ''
-			local l_SpawnPoint = self._SpawnPointTable[l_IndexSpawn]
+		-- don't save spawn-poits for now, just parse them
+		-- -- then save spawn-points
+		-- for l_IndexSpawn = 1, #self._SpawnPointTable do
+		-- 	local s_JsonSaveData = ''
+		-- 	local l_SpawnPoint = self._SpawnPointTable[l_IndexSpawn]
 
-			if l_SpawnPoint ~= nil and type(l_SpawnPoint.Data) == 'table' then
-				local s_JsonData, s_EncodeError = json.encode(l_SpawnPoint.Data)
-				if s_JsonData == nil then
-					m_Logger:Warning('Infonode data could not encode: ' .. tostring(s_EncodeError))
-				end
-				if s_JsonData ~= '{}' then
-					s_JsonSaveData = SQL:Escape(table.concat(s_JsonData:split('"'), '""'))
-				end
-			end
+		-- 	if l_SpawnPoint ~= nil and type(l_SpawnPoint.Data) == 'table' then
+		-- 		local s_JsonData, s_EncodeError = json.encode(l_SpawnPoint.Data)
+		-- 		if s_JsonData == nil then
+		-- 			m_Logger:Warning('Infonode data could not encode: ' .. tostring(s_EncodeError))
+		-- 		end
+		-- 		if s_JsonData ~= '{}' then
+		-- 			s_JsonSaveData = SQL:Escape(table.concat(s_JsonData:split('"'), '""'))
+		-- 		end
+		-- 	end
 
-			-- info-node
-			table.insert(self._SaveTraceBatchQueries, '(' .. table.concat({
-				0, -- path
-				l_IndexSpawn, -- point
-				0, -- self._SpawnPointTable[l_IndexSpawn].Transform.trans.x, --x
-				0, -- self._SpawnPointTable[l_IndexSpawn].Transform.trans.y, --y
-				0, -- self._SpawnPointTable[l_IndexSpawn].Transform.trans.z, --z
-				1, -- var
-				'"' .. s_JsonSaveData .. '"'
-			}, ',') .. ')')
-		end
+		-- 	-- info-node
+		-- 	table.insert(self._SaveTraceBatchQueries, '(' .. table.concat({
+		-- 		0, -- path
+		-- 		l_IndexSpawn, -- point
+		-- 		0, -- self._SpawnPointTable[l_IndexSpawn].Transform.trans.x, --x
+		-- 		0, -- self._SpawnPointTable[l_IndexSpawn].Transform.trans.y, --y
+		-- 		0, -- self._SpawnPointTable[l_IndexSpawn].Transform.trans.z, --z
+		-- 		1, -- var
+		-- 		'"' .. s_JsonSaveData .. '"'
+		-- 	}, ',') .. ')')
+		-- end
 
 		-- then save waypoints
 		for l_Index = 1, #self._Waypoints do
