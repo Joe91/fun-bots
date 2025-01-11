@@ -37,6 +37,16 @@ function BotSpawner:RegisterVars()
 	self._KickPlayers = {}
 	---@type Bot[]
 	self._BotsWithoutPath = {}
+	self._ResourceDataContainer = {}
+end
+
+function BotSpawner:GetResourceDataContainer(p_ResourceName)
+	local s_Resource = self._ResourceDataContainer[p_ResourceName]
+	if s_Resource == nil then
+		s_Resource = ResourceManager:SearchForDataContainer(p_ResourceName)
+		self._ResourceDataContainer[p_ResourceName] = s_Resource
+	end
+	return s_Resource
 end
 
 -- =============================================
@@ -63,6 +73,7 @@ function BotSpawner:OnLevelLoaded(p_Round)
 	end
 
 	self._LastRound = p_Round
+	self._ResourceDataContainer = {}
 end
 
 ---VEXT Shared Level:Destroy Event
@@ -80,14 +91,10 @@ end
 -- Update Events
 -- =============================================
 
----VEXT Shared UpdateManager:Update Event
+---VEXT Shared OnEngineUpdate:Update Event
 ---@param p_DeltaTime number
----@param p_UpdatePass UpdatePass|integer
-function BotSpawner:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
-	if p_UpdatePass ~= UpdatePass.UpdatePass_PostFrame then
-		return
-	end
-
+---@param p_SimulationDeltaTime number
+function BotSpawner:OnEngineUpdate(p_DeltaTime, p_SimulationDeltaTime)
 	if self._FirstSpawnInLevel then
 		if self._FirstSpawnDelay <= 0.0 then
 			m_BotManager:ConfigGlobals()
@@ -112,10 +119,14 @@ function BotSpawner:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 
 	if #self._SpawnSets > 0 then
 		if self._BotSpawnTimer > 0.2 then -- Time to wait between spawn. 0.2 works
+			g_Profiler:Start("BotSpawner:Spawn")
 			self._BotSpawnTimer = 0.0
-			local s_SpawnSet = table.remove(self._SpawnSets)
-			self:_SpawnSingleWayBot(s_SpawnSet.m_PlayerVarOfBot, s_SpawnSet.m_UseRandomWay, s_SpawnSet.m_ActiveWayIndex,
-				s_SpawnSet.m_IndexOnPath, nil, s_SpawnSet.m_Team)
+			---@type SpawnSet
+			local s_SpawnSet = table.remove(self._SpawnSets, 1)
+			self:_SpawnSingleWayBot(s_SpawnSet.PlayerVarOfBot, s_SpawnSet.UseRandomWay, s_SpawnSet.ActiveWayIndex,
+				s_SpawnSet.IndexOnPath, s_SpawnSet.Bot, s_SpawnSet.Team)
+
+			g_Profiler:End("BotSpawner:Spawn")
 		end
 
 		self._BotSpawnTimer = self._BotSpawnTimer + p_DeltaTime
@@ -133,41 +144,66 @@ function BotSpawner:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 
 	-- Kick players named after bots
 	if #self._KickPlayers > 0 then
-		for i, l_PlayerNameToKick in pairs(self._KickPlayers) do
+		for l_Index0 = 1, #self._KickPlayers do
+			local l_PlayerNameToKick = self._KickPlayers[l_Index0]
 			local s_PlayerToKick = PlayerManager:GetPlayerByName(l_PlayerNameToKick)
 
 			if s_PlayerToKick ~= nil then
 				s_PlayerToKick:Kick("You used a BOT-Name. Please use a real name on Fun-Bot-Servers...")
 
-				for j, l_BotNameToIgnore in pairs(Globals.IgnoreBotNames) do
+				for l_Index1 = 1, #Globals.IgnoreBotNames do
+					local l_BotNameToIgnore = Globals.IgnoreBotNames[l_Index1]
 					if l_BotNameToIgnore == l_PlayerNameToKick then
-						table.remove(Globals.IgnoreBotNames, j)
+						table.remove(Globals.IgnoreBotNames, l_Index1)
 						break
 					end
 				end
 
-				table.remove(self._KickPlayers, i)
+				table.remove(self._KickPlayers, l_Index0)
 				break
 			end
 		end
 	end
 
 	if #self._BotsWithoutPath > 0 then
-		for i, l_Bot in pairs(self._BotsWithoutPath) do
+		for l_Index = 1, #self._BotsWithoutPath do
+			local l_Bot = self._BotsWithoutPath[l_Index]
 			if l_Bot == nil or l_Bot.m_Player == nil then
-				table.remove(self._BotsWithoutPath, i)
+				table.remove(self._BotsWithoutPath, l_Index)
 				break
 			end
 
 			if l_Bot.m_Player.soldier ~= nil then
+				local s_String, s_SpawnEntity = self:_GetSpecialSpawnEnity(l_Bot.m_Name, l_Bot.m_Player.teamId)
+				if s_SpawnEntity then
+					table.remove(self._BotsWithoutPath, l_Index)
+
+					if l_Bot:_EnterVehicleEntity(s_SpawnEntity, false) ~= 0 then
+						l_Bot:Kill()
+					elseif s_SpawnEntity ~= nil then
+						l_Bot:FindVehiclePath(s_SpawnEntity.transform.trans)
+					end
+
+					self:_ApplyCosumizationAfterSpawn(l_Bot)
+
+					-- for Civilianizer-mod:
+					if Globals.RemoveKitVisuals then
+						Events:Dispatch('Bot:SoldierEntity', l_Bot.m_Player.soldier)
+					end
+
+					break
+				end
 				local s_Position = l_Bot.m_Player.soldier.worldTransform.trans:Clone()
 				-- local s_Node = m_NodeCollection:Find(s_Position, 5)
 				local s_Node = g_GameDirector:FindClosestPath(s_Position, false, false, nil)
 
 				if s_Node ~= nil then
 					l_Bot:SetVarsWay(nil, true, s_Node.PathIndex, s_Node.PointIndex, false)
-					table.remove(self._BotsWithoutPath, i)
+					table.remove(self._BotsWithoutPath, l_Index)
 
+					self:_ApplyCosumizationAfterSpawn(l_Bot)
+
+					-- for Civilianizer-mod:
 					if Globals.RemoveKitVisuals then
 						Events:Dispatch('Bot:SoldierEntity', l_Bot.m_Player.soldier)
 					end
@@ -188,11 +224,12 @@ end
 function BotSpawner:OnPlayerJoining(p_Name)
 	-- Detect BOT-Names.
 	if Registry.COMMON.ALLOW_PLAYER_BOT_NAMES then
-		for _, l_Name in pairs(BotNames) do
+		for l_Index = 1, #BotNames do
+			local l_Name = BotNames[l_Index]
 			if Registry.COMMON.BOT_TOKEN .. l_Name == p_Name then
 				-- Prevent bots from being named like this.
 				m_Logger:Write("Don't use the name " .. p_Name .. " for Bots anymore")
-				table.insert(Globals.IgnoreBotNames, p_Name)
+				Globals.IgnoreBotNames[#Globals.IgnoreBotNames + 1] = p_Name
 
 				-- Destroy bots with this name.
 				if m_BotManager:GetBotByName(p_Name) ~= nil then
@@ -204,12 +241,13 @@ function BotSpawner:OnPlayerJoining(p_Name)
 		end
 	else -- Not allowed to use Bot-Names.
 		if Registry.COMMON.BOT_TOKEN == "" then
-			for _, l_Name in pairs(BotNames) do
+			for l_Index = 1, #BotNames do
+				local l_Name = BotNames[l_Index]
 				if l_Name == p_Name then
-					table.insert(self._KickPlayers, p_Name)
+					self._KickPlayers[#self._KickPlayers + 1] = p_Name
 
 					if m_BotManager:GetBotByName(p_Name) ~= nil then
-						table.insert(Globals.IgnoreBotNames, p_Name)
+						Globals.IgnoreBotNames[#Globals.IgnoreBotNames + 1] = p_Name
 						m_BotManager:DestroyBot(p_Name)
 					end
 
@@ -218,10 +256,10 @@ function BotSpawner:OnPlayerJoining(p_Name)
 			end
 		else
 			if string.find(p_Name, Registry.COMMON.BOT_TOKEN) == 1 then -- Check if name starts with bot-token
-				table.insert(self._KickPlayers, p_Name)
+				self._KickPlayers[#self._KickPlayers + 1] = p_Name
 
 				if m_BotManager:GetBotByName(p_Name) ~= nil then
-					table.insert(Globals.IgnoreBotNames, p_Name)
+					Globals.IgnoreBotNames[#Globals.IgnoreBotNames + 1] = p_Name
 					m_BotManager:DestroyBot(p_Name)
 				end
 			end
@@ -238,7 +276,8 @@ function BotSpawner:OnPlayerAuthenticated(p_Player)
 			s_CountPlayers[i] = 0
 			local s_TempPlayers = PlayerManager:GetPlayersByTeam(i)
 
-			for _, l_Player in pairs(s_TempPlayers) do
+			for l_Index = 1, #s_TempPlayers do
+				local l_Player = s_TempPlayers[l_Index]
 				if not m_Utilities:isBot(l_Player) then
 					s_CountPlayers[i] = s_CountPlayers[i] + 1
 				end
@@ -274,7 +313,7 @@ function BotSpawner:OnTeamChange(p_Player, p_TeamId, p_SquadId)
 
 				for i = 1, Globals.NrOfTeams do
 					if Config.BotTeam ~= i then
-						table.insert(s_PlayerTeams, i)
+						s_PlayerTeams[#s_PlayerTeams + 1] = i
 					end
 				end
 
@@ -293,32 +332,44 @@ end
 -- Custom Bot Respawn Event
 -- =============================================
 
----@param p_BotId integer
-function BotSpawner:OnRespawnBot(p_BotId)
-	local s_Bot = m_BotManager:GetBotById(p_BotId)
-	if s_Bot == nil then
-		return
-	end
+---@param p_Bot Bot
+function BotSpawner:TriggerRespawnBot(p_Bot)
 	-- fix for end-of-round-crash
 	if Registry.COMMON.DONT_SPAWN_BOTS_ON_LAST_CONQUEST_TICKET and Globals.IsConquest then
-		local s_Player = s_Bot.m_Player
-		if s_Player ~= nil then
-			local s_PlayerTeam = s_Player.teamId
-			local s_TicketsOfPlayerTeam = TicketManager:GetTicketCount(s_PlayerTeam)
-			if s_TicketsOfPlayerTeam < 2 then
-				-- only one ticket remaining. Don't spawn
-				return
-			end
+		local s_TicketsOfPlayerTeam = TicketManager:GetTicketCount(p_Bot.m_Player.teamId)
+		if s_TicketsOfPlayerTeam < 2 then
+			-- only one ticket remaining. Don't spawn
+			return
 		end
 	end
 
-	local s_SpawnMode = s_Bot:GetSpawnMode()
+	local s_SpawnMode = p_Bot:GetSpawnMode()
+
 	if s_SpawnMode == BotSpawnModes.RespawnFixedPath then -- Fixed Way.
-		local s_WayIndex = s_Bot:GetWayIndex()
+		local s_WayIndex = p_Bot:GetWayIndex()
 		local s_RandIndex = MathUtils:GetRandomInt(1, #m_NodeCollection:Get(nil, s_WayIndex))
-		self:_SpawnSingleWayBot(nil, false, s_WayIndex, s_RandIndex, s_Bot)
+
+		---@type SpawnSet
+		local s_SpawnSet = {
+			PlayerVarOfBot = nil,
+			UseRandomWay = false,
+			ActiveWayIndex = s_WayIndex,
+			IndexOnPath = s_RandIndex,
+			Team = nil,
+			Bot = p_Bot
+		}
+		self._SpawnSets[#self._SpawnSets + 1] = s_SpawnSet
 	elseif s_SpawnMode == BotSpawnModes.RespawnRandomPath then -- Random Way.
-		self:_SpawnSingleWayBot(nil, true, 0, 0, s_Bot)
+		---@type SpawnSet
+		local s_SpawnSet = {
+			PlayerVarOfBot = nil,
+			UseRandomWay = true,
+			ActiveWayIndex = 0,
+			IndexOnPath = 0,
+			Team = nil,
+			Bot = p_Bot
+		}
+		self._SpawnSets[#self._SpawnSets + 1] = s_SpawnSet
 	end
 end
 
@@ -379,7 +430,8 @@ function BotSpawner:UpdateBotAmountAndTeam()
 			s_BotsToDelay[i] = #g_GameDirector:GetSpawnableVehicle(i)
 		end
 
-		for _, l_Player in pairs(s_TempPlayers) do
+		for l_Index = 1, #s_TempPlayers do
+			local l_Player = s_TempPlayers[l_Index]
 			if not m_Utilities:isBot(l_Player) then
 				s_CountPlayers[i] = s_CountPlayers[i] + 1
 			end
@@ -449,7 +501,8 @@ function BotSpawner:UpdateBotAmountAndTeam()
 
 			for i = 1, Globals.NrOfTeams do
 				if s_CountPlayers[i] < s_MinTargetPlayersPerTeam then
-					for _, l_Player in pairs(PlayerManager:GetPlayers()) do
+					for l_Index = 1, #PlayerManager:GetPlayers() do
+						local l_Player = PlayerManager:GetPlayers()[l_Index]
 						if l_Player.soldier == nil and l_Player.teamId ~= i then
 							local s_OldTeam = l_Player.teamId
 							l_Player.teamId = i
@@ -755,13 +808,15 @@ function BotSpawner:SpawnWayBots(p_Amount, p_UseRandomWay, p_ActiveWayIndex, p_I
 
 	for i = 1, p_Amount do
 		---@type SpawnSet
-		local s_SpawnSet = SpawnSet()
-		s_SpawnSet.m_PlayerVarOfBot = nil
-		s_SpawnSet.m_UseRandomWay = p_UseRandomWay
-		s_SpawnSet.m_ActiveWayIndex = p_ActiveWayIndex or 0
-		s_SpawnSet.m_IndexOnPath = p_IndexOnPath or 0
-		s_SpawnSet.m_Team = p_TeamId
-		table.insert(self._SpawnSets, s_SpawnSet)
+		local s_SpawnSet = {
+			PlayerVarOfBot = nil,
+			UseRandomWay = p_UseRandomWay,
+			ActiveWayIndex = p_ActiveWayIndex or 0,
+			IndexOnPath = p_IndexOnPath or 0,
+			Team = p_TeamId,
+			Bot = nil
+		}
+		self._SpawnSets[#self._SpawnSets + 1] = s_SpawnSet
 	end
 end
 
@@ -808,8 +863,7 @@ end
 -- =============================================
 
 ---@param p_Bot Bot
----@param p_SetKit boolean
-function BotSpawner:_SelectLoadout(p_Bot, p_SetKit)
+function BotSpawner:_SelectLoadout(p_Bot)
 	local s_WriteNewKit = false
 
 	if p_Bot.m_ActiveWeapon == nil then
@@ -856,7 +910,7 @@ function BotSpawner:_TriggerSpawn(p_Bot)
 		-- Seems to be the same as DeathMatchSpawn.
 		-- But it has vehicles.
 		self:_RushSpawn(p_Bot)
-	elseif s_CurrentGameMode:match("Conquest") then
+	elseif s_CurrentGameMode:match("Conquest") then -- TODO: does this also match Assault?
 		-- event + target spawn ("ID_H_US_B", "_ID_H_US_HQ", etc.)
 		self:_ConquestSpawn(p_Bot)
 	end
@@ -892,7 +946,8 @@ function BotSpawner:_RushSpawn(p_Bot)
 		if s_Entity.data:Is('CharacterSpawnReferenceObjectData') then
 			if CharacterSpawnReferenceObjectData(s_Entity.data).team == p_Bot.m_Player.teamId then
 				-- Skip if it is a vehicle spawn.
-				for i, l_Entity in pairs(s_Entity.bus.entities) do
+				for l_Index = 1, #s_Entity.bus.entities do
+					local l_Entity = s_Entity.bus.entities[l_Index]
 					if l_Entity:Is("ServerVehicleSpawnEntity") then
 						goto skip
 					end
@@ -909,6 +964,7 @@ function BotSpawner:_RushSpawn(p_Bot)
 end
 
 ---@param p_Bot Bot
+--TODO: handle spawn-logic here as well (unify it?)
 function BotSpawner:_ConquestSpawn(p_Bot)
 	local s_Event = ServerPlayerEvent("Spawn", p_Bot.m_Player, true, false, false, false, false, false,
 		p_Bot.m_Player.teamId)
@@ -943,7 +999,8 @@ function BotSpawner:_FindAttackedSpawnPoint(p_TeamId)
 			goto endOfLoop
 		end
 
-		for i, l_Entity in pairs(s_Entity.bus.entities) do
+		for l_Index = 1, #s_Entity.bus.entities do
+			local l_Entity = s_Entity.bus.entities[l_Index]
 			if l_Entity:Is('ServerCharacterSpawnEntity') then
 				if CharacterSpawnReferenceObjectData(l_Entity.data).team == p_TeamId
 					or CharacterSpawnReferenceObjectData(l_Entity.data).team == 0 then
@@ -988,7 +1045,8 @@ function BotSpawner:_FindClosestSpawnPoint(p_TeamId)
 			goto endOfLoop
 		end
 
-		for _, l_Entity in pairs(s_Entity.bus.entities) do
+		for l_Index = 1, #s_Entity.bus.entities do
+			local l_Entity = s_Entity.bus.entities[l_Index]
 			if l_Entity:Is('ServerCharacterSpawnEntity') then
 				if CharacterSpawnReferenceObjectData(l_Entity.data).team == p_TeamId
 					or CharacterSpawnReferenceObjectData(l_Entity.data).team == 0 then
@@ -1036,7 +1094,8 @@ function BotSpawner:_FindTargetLocation(p_TeamId)
 			goto endOfLoop
 		end
 
-		for i, l_Entity in pairs(s_Entity.bus.entities) do
+		for l_Index = 1, #s_Entity.bus.entities do
+			local l_Entity = s_Entity.bus.entities[l_Index]
 			if l_Entity:Is('ServerCharacterSpawnEntity') then
 				if CharacterSpawnReferenceObjectData(l_Entity.data).team == 0 then
 					s_TargetLocation = s_Entity.transform.trans
@@ -1109,6 +1168,7 @@ function BotSpawner:_SpawnSingleWayBot(p_Player, p_UseRandomWay, p_ActiveWayInde
 	local s_InverseDirection = nil
 
 	if s_Name ~= nil or s_IsRespawn then
+		g_Profiler:Start("BotSpawner:SpawnPart2") -- about 60 ms on conquest (close to 0 on deathmatch)
 		if Config.SpawnMethod == SpawnMethod.Spawn then
 			local s_Bot = self:GetBot(p_ExistingBot, s_Name, s_TeamId, s_SquadId)
 
@@ -1117,9 +1177,9 @@ function BotSpawner:_SpawnSingleWayBot(p_Player, p_UseRandomWay, p_ActiveWayInde
 			end
 
 			m_BotCreator:SetAttributesToBot(s_Bot)
-			self:_SelectLoadout(s_Bot, false)
+			self:_SelectLoadout(s_Bot)
 			self:_TriggerSpawn(s_Bot)
-			table.insert(self._BotsWithoutPath, s_Bot)
+			self._BotsWithoutPath[#self._BotsWithoutPath + 1] = s_Bot
 			return
 		end
 
@@ -1141,7 +1201,8 @@ function BotSpawner:_SpawnSingleWayBot(p_Player, p_UseRandomWay, p_ActiveWayInde
 				if s_SpawnPoint == "SpawnAtVehicle" then
 					local s_Vehicles = g_GameDirector:GetSpawnableVehicle(s_TeamId)
 
-					for _, l_Vehicle in pairs(s_Vehicles) do
+					for l_Index = 1, #s_Vehicles do
+						local l_Vehicle = s_Vehicles[l_Index]
 						if l_Vehicle ~= nil then
 							s_SpawnEntity = l_Vehicle
 							break
@@ -1150,7 +1211,8 @@ function BotSpawner:_SpawnSingleWayBot(p_Player, p_UseRandomWay, p_ActiveWayInde
 				elseif s_SpawnPoint == "SpawnInAa" then
 					local s_StationaryAas = g_GameDirector:GetStationaryAas(s_TeamId)
 
-					for _, l_Aa in pairs(s_StationaryAas) do
+					for l_Index = 1, #s_StationaryAas do
+						local l_Aa = s_StationaryAas[l_Index]
 						if l_Aa ~= nil then
 							s_SpawnEntity = l_Aa
 							break
@@ -1196,6 +1258,8 @@ function BotSpawner:_SpawnSingleWayBot(p_Player, p_UseRandomWay, p_ActiveWayInde
 			s_SpawnPoint = m_NodeCollection:Get(p_IndexOnPath, p_ActiveWayIndex)
 		end
 
+		g_Profiler:End("BotSpawner:SpawnPart2")
+		g_Profiler:Start("BotSpawner:SpawnPart3") -- about 20 ms
 		if s_SpawnPoint == nil then
 			if s_SquadSpawnVehicle ~= nil then
 				s_SpawnPoint = m_NodeCollection:Get()[1]
@@ -1246,6 +1310,7 @@ function BotSpawner:_SpawnSingleWayBot(p_Player, p_UseRandomWay, p_ActiveWayInde
 				end
 			end
 		end
+		g_Profiler:End("BotSpawner:SpawnPart3")
 	end
 end
 
@@ -1291,12 +1356,12 @@ function BotSpawner:_SpawnBot(p_Bot, p_Transform, p_SetKit)
 	-- Create kit and appearance.
 	if p_Bot.m_Player.selectedKit == nil then
 		-- SoldierBlueprint
-		p_Bot.m_Player.selectedKit = ResourceManager:SearchForDataContainer('Characters/Soldiers/MpSoldier') -- MpSoldier
+		p_Bot.m_Player.selectedKit = self:GetResourceDataContainer('Characters/Soldiers/MpSoldier') -- MpSoldier
 	end
 
 	self:_SetKitAndAppearance(p_Bot, s_BotKit, s_BotColor)
 
-	m_BotManager:SpawnBot(p_Bot, p_Transform, CharacterPoseType.CharacterPoseType_Stand)
+	m_BotManager:SpawnBot(p_Bot, p_Transform, CharacterPoseType.CharacterPoseType_Stand) -- 20 ms
 
 	if not p_Bot.m_Player.soldier then
 		-- happens on the last ticket. round has ended.
@@ -1309,6 +1374,43 @@ function BotSpawner:_SpawnBot(p_Bot, p_Transform, p_SetKit)
 		-- for Civilianizer-mod:
 		Events:Dispatch('Bot:SoldierEntity', p_Bot.m_Player.soldier)
 	end
+end
+
+---@param p_Bot Bot
+function BotSpawner:_ApplyCosumizationAfterSpawn(p_Bot)
+	p_Bot.m_Player.soldier:ApplyCustomization(self:_GetCustomization(p_Bot, p_Bot.m_Kit))
+end
+
+function BotSpawner:_GetSpecialSpawnEnity(p_BotName, p_TeamId)
+	local s_Beacon = g_GameDirector:GetPlayerBeacon(p_BotName)
+	if s_Beacon ~= nil then
+		return "SpawnAtBeacon", s_Beacon.Entity
+	end
+
+	if Config.UseVehicles and self._DelayDirectSpawn <= 0.0 and #g_GameDirector:GetSpawnableVehicle(p_TeamId) > 0 then
+		return "SpawnInVehicle", g_GameDirector:GetSpawnableVehicle(p_TeamId)[1]
+	end
+
+	if Config.AABots and #g_GameDirector:GetStationaryAas(p_TeamId) > 0 then
+		return "SpawnInAa", g_GameDirector:GetStationaryAas(p_TeamId)[1]
+	end
+
+	-- Gunships disabled for now! TODO: enable gunship again, once server-cameras are supported for aiming
+	local s_Gunship = g_GameDirector:GetGunship(p_TeamId)
+	if false and s_Gunship then -- TODO: Remove "false", once the aiming works
+		local s_SeatsLeft = false
+		for i = 1, s_Gunship.entryCount - 1 do
+			if s_Gunship:GetPlayerInEntry(i) == nil then
+				s_SeatsLeft = true
+				break
+			end
+		end
+		if s_SeatsLeft then
+			return "SpawnInGunship", g_GameDirector:GetGunship(p_TeamId)
+		end
+	end
+
+	return nil
 end
 
 ---@param p_TeamId TeamId|integer
@@ -1470,9 +1572,10 @@ function BotSpawner:_GetUnlocks(p_Bot, p_TeamId, p_SquadId)
 	local s_CurrentUnlockNames = {}
 	local s_CurrentUnlocks = {}
 
-	for _, l_PlayerUnlock in pairs(p_Bot.m_Player.selectedUnlocks) do
-		table.insert(s_CurrentUnlocks, l_PlayerUnlock)
-		table.insert(s_CurrentUnlockNames, l_PlayerUnlock["partition"]["name"])
+	for l_Index = 1, #p_Bot.m_Player.selectedUnlocks do
+		local l_PlayerUnlock = p_Bot.m_Player.selectedUnlocks[l_Index]
+		s_CurrentUnlocks[#s_CurrentUnlocks + 1] = l_PlayerUnlock
+		s_CurrentUnlockNames[#s_CurrentUnlockNames + 1] = l_PlayerUnlock["partition"]["name"]
 	end
 
 	local s_Unlocks = {}
@@ -1514,26 +1617,29 @@ function BotSpawner:_GetUnlocks(p_Bot, p_TeamId, p_SquadId)
 		}
 		-- some variation in appearance
 		if m_Utilities:CheckProbablity(50) then
-			table.insert(s_VehiclePerksToAdd, "persistence/unlocks/vehicles/mbtreactivearmor")
-			table.insert(s_VehiclePerksToAdd, "persistence/unlocks/vehicles/lbtreactivearmor")
-			table.insert(s_VehiclePerksToAdd, "persistence/unlocks/vehicles/ifvreloadupgrade")
-			table.insert(s_VehiclePerksToAdd, "persistence/unlocks/vehicles/mbtsmokelaunchers")
-			table.insert(s_VehiclePerksToAdd, "persistence/unlocks/vehicles/lbtsmokelaunchers")
+			s_VehiclePerksToAdd[#s_VehiclePerksToAdd + 1] = "persistence/unlocks/vehicles/mbtreactivearmor"
+			s_VehiclePerksToAdd[#s_VehiclePerksToAdd + 1] = "persistence/unlocks/vehicles/lbtreactivearmor"
+			s_VehiclePerksToAdd[#s_VehiclePerksToAdd + 1] = "persistence/unlocks/vehicles/ifvreloadupgrade"
+			s_VehiclePerksToAdd[#s_VehiclePerksToAdd + 1] = "persistence/unlocks/vehicles/mbtsmokelaunchers"
+			s_VehiclePerksToAdd[#s_VehiclePerksToAdd + 1] = "persistence/unlocks/vehicles/lbtsmokelaunchers"
 		else
-			table.insert(s_VehiclePerksToAdd, "persistence/unlocks/vehicles/mbtproximityscan")
-			table.insert(s_VehiclePerksToAdd, "persistence/unlocks/vehicles/lbtproximityscan")
-			table.insert(s_VehiclePerksToAdd, "persistence/unlocks/vehicles/ifvreactivearmor")
-			table.insert(s_VehiclePerksToAdd, "persistence/unlocks/vehicles/mbtenvgoptics")
-			table.insert(s_VehiclePerksToAdd, "persistence/unlocks/vehicles/lbtenvgoptics")
+			s_VehiclePerksToAdd[#s_VehiclePerksToAdd + 1] = "persistence/unlocks/vehicles/mbtproximityscan"
+			s_VehiclePerksToAdd[#s_VehiclePerksToAdd + 1] = "persistence/unlocks/vehicles/lbtproximityscan"
+			s_VehiclePerksToAdd[#s_VehiclePerksToAdd + 1] = "persistence/unlocks/vehicles/ifvreactivearmor"
+			s_VehiclePerksToAdd[#s_VehiclePerksToAdd + 1] = "persistence/unlocks/vehicles/mbtenvgoptics"
+			s_VehiclePerksToAdd[#s_VehiclePerksToAdd + 1] = "persistence/unlocks/vehicles/lbtenvgoptics"
 		end
 	end
 
 	local s_SquadPlayers = PlayerManager:GetPlayersBySquad(p_TeamId, p_SquadId)
-	for _, l_SquadPlayer in pairs(s_SquadPlayers) do
+	for l_Index = 1, #s_SquadPlayers do
+		local l_SquadPlayer = s_SquadPlayers[l_Index]
 		if l_SquadPlayer.id ~= p_Bot.m_Player.id then
-			for _, l_PlayerUnlock in pairs(l_SquadPlayer.selectedUnlocks) do
+			for l_Index = 1, #l_SquadPlayer.selectedUnlocks do
+				local l_PlayerUnlock = l_SquadPlayer.selectedUnlocks[l_Index]
 				local s_UsedSquadPerk = l_PlayerUnlock["partition"]["name"]
-				for l_Index, l_PossiblePerk in pairs(s_PossiblePerks) do
+				for l_Index = 1, #s_PossiblePerks do
+					local l_PossiblePerk = s_PossiblePerks[l_Index]
 					if l_PossiblePerk == s_UsedSquadPerk then
 						table.remove(s_PossiblePerks, l_Index)
 						break
@@ -1544,7 +1650,8 @@ function BotSpawner:_GetUnlocks(p_Bot, p_TeamId, p_SquadId)
 	end
 
 	-- Choose good available perk.
-	for _, l_PerkName in pairs(s_PossiblePerks) do
+	for l_Index = 1, #s_PossiblePerks do
+		local l_PerkName = s_PossiblePerks[l_Index]
 		s_SelectedPerk = l_PerkName
 		if m_Utilities:CheckProbablity(80) then -- Use the best available perk with this percentage.
 			break
@@ -1552,12 +1659,13 @@ function BotSpawner:_GetUnlocks(p_Bot, p_TeamId, p_SquadId)
 	end
 
 	-- Update Perks if needed.
-	for l_Index, l_PerkName in pairs(s_CurrentUnlockNames) do
+	for l_Index = 1, #s_CurrentUnlockNames do
+		local l_PerkName = s_CurrentUnlockNames[l_Index]
 		if string.find(l_PerkName, "soldiers") then
 			-- Squad perk.
 			if l_PerkName == s_SelectedPerk then
 				s_SelectedPerk = ""
-				table.insert(s_Unlocks, s_CurrentUnlocks[l_Index])
+				s_Unlocks[#s_Unlocks + 1] = s_CurrentUnlocks[l_Index]
 			end
 		else
 			-- Vehicle perk.
@@ -1565,7 +1673,7 @@ function BotSpawner:_GetUnlocks(p_Bot, p_TeamId, p_SquadId)
 				local l_VehiclePerkName = s_VehiclePerksToAdd[l_IndexVehiclePerk]
 				if l_PerkName == l_VehiclePerkName then
 					table.remove(s_VehiclePerksToAdd, l_IndexVehiclePerk)
-					table.insert(s_Unlocks, s_CurrentUnlocks[l_Index])
+					s_Unlocks[#s_Unlocks + 1] = s_CurrentUnlocks[l_Index]
 				end
 			end
 		end
@@ -1573,10 +1681,11 @@ function BotSpawner:_GetUnlocks(p_Bot, p_TeamId, p_SquadId)
 
 	-- Add perk if not already copied.
 	if s_SelectedPerk ~= "" then
-		table.insert(s_Unlocks, ResourceManager:SearchForDataContainer(s_SelectedPerk))
+		s_Unlocks[#s_Unlocks + 1] = self:GetResourceDataContainer(s_SelectedPerk)
 	end
-	for _, l_VehicelPerk in pairs(s_VehiclePerksToAdd) do
-		table.insert(s_Unlocks, ResourceManager:SearchForDataContainer(l_VehicelPerk))
+	for l_Index = 1, #s_VehiclePerksToAdd do
+		local l_VehicelPerk = s_VehiclePerksToAdd[l_Index]
+		s_Unlocks[#s_Unlocks + 1] = self:GetResourceDataContainer(l_VehicelPerk)
 	end
 
 	return s_Unlocks
@@ -1658,8 +1767,9 @@ function BotSpawner:_SetKitAndAppearance(p_Bot, p_Kit, p_Color)
 end
 
 function BotSpawner:_SetPrimaryAttachments(p_UnlockWeapon, p_Attachments)
-	for _, l_Attachment in pairs(p_Attachments) do
-		local s_Asset = ResourceManager:SearchForDataContainer(l_Attachment)
+	for l_Index = 1, #p_Attachments do
+		local l_Attachment = p_Attachments[l_Index]
+		local s_Asset = self:GetResourceDataContainer(l_Attachment)
 
 		if s_Asset == nil then
 			m_Logger:Warning('Attachment invalid [' .. tostring(p_UnlockWeapon.weapon.name) .. ']: ' .. tostring(l_Attachment))
@@ -1692,7 +1802,7 @@ function BotSpawner:_GetCustomization(p_Bot, p_Kit)
 	s_PrimaryWeapon.slot = WeaponSlot.WeaponSlot_0
 
 	if s_PrimaryInput ~= nil then
-		local s_PrimaryWeaponResource = ResourceManager:SearchForDataContainer(s_PrimaryInput:getResourcePath())
+		local s_PrimaryWeaponResource = self:GetResourceDataContainer(s_PrimaryInput:getResourcePath())
 
 		if s_PrimaryWeaponResource == nil then
 			m_Logger:Warning("Path not found: " .. s_PrimaryInput:getResourcePath())
@@ -1712,7 +1822,7 @@ function BotSpawner:_GetCustomization(p_Bot, p_Kit)
 	end
 
 	if s_Gadget1Input ~= nil then
-		local s_Gadget1Weapon = ResourceManager:SearchForDataContainer(s_Gadget1Input:getResourcePath())
+		local s_Gadget1Weapon = self:GetResourceDataContainer(s_Gadget1Input:getResourcePath())
 
 		if s_Gadget1Weapon == nil then
 			m_Logger:Warning("Path not found: " .. s_Gadget1Input:getResourcePath())
@@ -1724,7 +1834,7 @@ function BotSpawner:_GetCustomization(p_Bot, p_Kit)
 	-- Secondary Gadget.
 	local s_SecondaryGadget = UnlockWeaponAndSlot()
 	if s_Gadget2Input ~= nil then
-		local s_Gadget2Weapon = ResourceManager:SearchForDataContainer(s_Gadget2Input:getResourcePath())
+		local s_Gadget2Weapon = self:GetResourceDataContainer(s_Gadget2Input:getResourcePath())
 		s_SecondaryGadget.slot = WeaponSlot.WeaponSlot_5
 
 		if s_Gadget2Weapon == nil then
@@ -1740,7 +1850,7 @@ function BotSpawner:_GetCustomization(p_Bot, p_Kit)
 	s_Grenade.slot = WeaponSlot.WeaponSlot_6
 
 	if s_GrenadeInput ~= nil then
-		local s_GrenadeWeapon = ResourceManager:SearchForDataContainer(s_GrenadeInput:getResourcePath())
+		local s_GrenadeWeapon = self:GetResourceDataContainer(s_GrenadeInput:getResourcePath())
 
 		if s_GrenadeWeapon == nil then
 			m_Logger:Warning("Path not found: " .. s_GrenadeInput:getResourcePath())
@@ -1754,7 +1864,7 @@ function BotSpawner:_GetCustomization(p_Bot, p_Kit)
 	s_SecondaryWeapon.slot = WeaponSlot.WeaponSlot_1
 
 	if s_PistolInput ~= nil then
-		local s_PistolWeapon = ResourceManager:SearchForDataContainer(s_PistolInput:getResourcePath())
+		local s_PistolWeapon = self:GetResourceDataContainer(s_PistolInput:getResourcePath())
 
 		if s_PistolWeapon == nil then
 			m_Logger:Warning("Path not found: " .. s_PistolInput:getResourcePath())
@@ -1768,7 +1878,7 @@ function BotSpawner:_GetCustomization(p_Bot, p_Kit)
 	s_Knife.slot = WeaponSlot.WeaponSlot_7
 
 	if s_KnifeInput ~= nil then
-		local s_KnifeWeapon = ResourceManager:SearchForDataContainer(s_KnifeInput:getResourcePath())
+		local s_KnifeWeapon = self:GetResourceDataContainer(s_KnifeInput:getResourcePath())
 
 		if s_KnifeWeapon == nil then
 			m_Logger:Warning("Path not found: " .. s_KnifeInput:getResourcePath())
@@ -1828,19 +1938,19 @@ function BotSpawner:_GetSpawnBotKit()
 		local s_AvailableKitList = {}
 
 		if (Config.MaxAssaultBots == -1) or (m_BotManager:GetKitCount(BotKits.Assault) < Config.MaxAssaultBots) then
-			table.insert(s_AvailableKitList, BotKits.Assault)
+			s_AvailableKitList[#s_AvailableKitList + 1] = BotKits.Assault
 		end
 
 		if (Config.MaxEngineerBots == -1) or (m_BotManager:GetKitCount(BotKits.Engineer) < Config.MaxEngineerBots) then
-			table.insert(s_AvailableKitList, BotKits.Engineer)
+			s_AvailableKitList[#s_AvailableKitList + 1] = BotKits.Engineer
 		end
 
 		if (Config.MaxSupportBots == -1) or (m_BotManager:GetKitCount(BotKits.Support) < Config.MaxSupportBots) then
-			table.insert(s_AvailableKitList, BotKits.Support)
+			s_AvailableKitList[#s_AvailableKitList + 1] = BotKits.Support
 		end
 
 		if (Config.MaxReconBots == -1) or (m_BotManager:GetKitCount(BotKits.Recon) < Config.MaxReconBots) then
-			table.insert(s_AvailableKitList, BotKits.Recon)
+			s_AvailableKitList[#s_AvailableKitList + 1] = BotKits.Recon
 		end
 
 		if #s_AvailableKitList > 0 then
@@ -1869,7 +1979,7 @@ function BotSpawner:_FindKit(p_TeamName, p_KitName)
 		s_ProperKitName = s_ProperKitName:gsub("%a", string.upper, 1)
 
 		local s_FullKitName = string.upper(p_TeamName) .. s_ProperKitName .. s_GameModeKits[l_KitType]
-		local s_Kit = ResourceManager:SearchForDataContainer('Gameplay/Kits/' .. s_FullKitName)
+		local s_Kit = self:GetResourceDataContainer('Gameplay/Kits/' .. s_FullKitName)
 
 		if s_Kit ~= nil then
 			return s_Kit
@@ -1890,10 +2000,11 @@ function BotSpawner:_FindAppearance(p_TeamName, p_KitName, p_ColorName)
 	}
 
 	-- 'Persistence/Unlocks/Soldiers/Visual/MP[or:MP_XP4]/Us/MP_US_Assault_Appearance_'..p_ColorName
-	for _, l_GameMode in pairs(s_GameModeAppearances) do
+	for l_Index = 1, #s_GameModeAppearances do
+		local l_GameMode = s_GameModeAppearances[l_Index]
 		local s_AppearanceString = l_GameMode ..
 			p_TeamName .. '/MP_' .. string.upper(p_TeamName) .. '_' .. p_KitName .. '_Appearance_' .. p_ColorName
-		local s_Appearance = ResourceManager:SearchForDataContainer('Persistence/Unlocks/Soldiers/Visual/' ..
+		local s_Appearance = self:GetResourceDataContainer('Persistence/Unlocks/Soldiers/Visual/' ..
 			s_AppearanceString)
 
 		if s_Appearance ~= nil then
@@ -1981,7 +2092,8 @@ end
 function BotSpawner:_SwitchTeams()
 	local s_Players = PlayerManager:GetPlayers()
 
-	for _, l_Player in pairs(s_Players) do
+	for l_Index = 1, #s_Players do
+		local l_Player = s_Players[l_Index]
 		local s_OldTeam = l_Player.teamId
 
 		if s_OldTeam ~= TeamId.TeamNeutral then

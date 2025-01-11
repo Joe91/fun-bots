@@ -17,32 +17,17 @@ function VehicleMovement:__init()
 	-- Nothing to do.
 end
 
+---@param p_DeltaTime number
 ---@param p_Bot Bot
-function VehicleMovement:UpdateNormalMovementVehicle(p_Bot)
-	if p_Bot._VehicleTakeoffTimer > 0.0 then
-		p_Bot._VehicleTakeoffTimer = p_Bot._VehicleTakeoffTimer - Registry.BOT.BOT_UPDATE_CYCLE
-		if p_Bot._JetAbortAttackActive then
-			local s_TargetPosition = p_Bot.m_Player.controlledControllable.transform.trans
-			local s_Forward = p_Bot.m_Player.controlledControllable.transform.forward
-			s_Forward.y = 0
-			s_Forward:Normalize()
-			s_TargetPosition = s_TargetPosition + (s_Forward * 50)
-			s_TargetPosition.y = s_TargetPosition.y + 50
-			local s_Waypoint = {
-				Position = s_TargetPosition,
-			}
-			p_Bot._TargetPoint = s_Waypoint
-			return
-		end
-	end
-	p_Bot._JetAbortAttackActive = false
+function VehicleMovement:UpdateNormalMovementVehicle(p_DeltaTime, p_Bot)
 	if p_Bot._VehicleWaitTimer > 0.0 then
-		p_Bot._VehicleWaitTimer = p_Bot._VehicleWaitTimer - Registry.BOT.BOT_UPDATE_CYCLE
+		p_Bot._VehicleWaitTimer = p_Bot._VehicleWaitTimer - p_DeltaTime
 		if p_Bot._VehicleWaitTimer <= 0.0 then
 			if m_Vehicles:IsVehicleType(p_Bot.m_ActiveVehicle, VehicleTypes.Plane) then
 				-- Check for other plane in front of bot.
 				local s_IsInfront = false
-				for _, l_Jet in pairs(g_GameDirector:GetSpawnableVehicle(p_Bot.m_Player.teamId)) do
+				for l_Index = 1, #g_GameDirector:GetSpawnableVehicle(p_Bot.m_Player.teamId) do
+					local l_Jet = g_GameDirector:GetSpawnableVehicle(p_Bot.m_Player.teamId)[l_Index]
 					local s_DistanceToJet = p_Bot.m_Player.controlledControllable.transform.trans:Distance(l_Jet.transform.trans)
 					if s_DistanceToJet < 30 then
 						local s_CompPos = p_Bot.m_Player.controlledControllable.transform.trans +
@@ -62,6 +47,24 @@ function VehicleMovement:UpdateNormalMovementVehicle(p_Bot)
 			return
 		end
 	end
+
+	if p_Bot._VehicleTakeoffTimer > 0.0 then
+		p_Bot._VehicleTakeoffTimer = p_Bot._VehicleTakeoffTimer - p_DeltaTime
+		if p_Bot._JetAbortAttackActive then
+			local s_TargetPosition = p_Bot.m_Player.controlledControllable.transform.trans
+			local s_Forward = p_Bot.m_Player.controlledControllable.transform.forward
+			s_Forward.y = 0
+			s_Forward:Normalize()
+			s_TargetPosition = s_TargetPosition + (s_Forward * 50)
+			s_TargetPosition.y = s_TargetPosition.y + 50
+			local s_Waypoint = {
+				Position = s_TargetPosition,
+			}
+			p_Bot._TargetPoint = s_Waypoint
+			return
+		end
+	end
+	p_Bot._JetAbortAttackActive = false
 
 	-- Move along points.
 	if m_NodeCollection:Get(1, p_Bot._PathIndex) ~= nil then -- Check for valid point.
@@ -112,7 +115,8 @@ function VehicleMovement:UpdateNormalMovementVehicle(p_Bot)
 						p_Bot:ExitVehicle()
 					end
 				elseif p_Bot._ActionTimer <= s_Point.Data.Action.time then
-					for _, l_Input in pairs(s_Point.Data.Action.inputs) do
+					for l_Index = 1, #s_Point.Data.Action.inputs do
+						local l_Input = s_Point.Data.Action.inputs[l_Index]
 						p_Bot:_SetInput(l_Input, 1)
 					end
 				end
@@ -120,7 +124,7 @@ function VehicleMovement:UpdateNormalMovementVehicle(p_Bot)
 				p_Bot:_ResetActionFlag(BotActionFlags.OtherActionActive)
 			end
 
-			p_Bot._ActionTimer = p_Bot._ActionTimer - Registry.BOT.BOT_UPDATE_CYCLE
+			p_Bot._ActionTimer = p_Bot._ActionTimer - p_DeltaTime
 
 			if p_Bot._ActionTimer <= 0.0 then
 				p_Bot:_ResetActionFlag(BotActionFlags.OtherActionActive)
@@ -184,7 +188,7 @@ function VehicleMovement:UpdateNormalMovementVehicle(p_Bot)
 						p_Bot._ObstacleRetryCounter = p_Bot._ObstacleRetryCounter + 1
 					end
 
-					p_Bot._ObstacleSequenceTimer = p_Bot._ObstacleSequenceTimer + Registry.BOT.BOT_UPDATE_CYCLE
+					p_Bot._ObstacleSequenceTimer = p_Bot._ObstacleSequenceTimer + p_DeltaTime
 
 					if p_Bot._ObstacleRetryCounter >= 4 then -- Try next waypoint.
 						p_Bot._ObstacleRetryCounter = 0
@@ -258,7 +262,7 @@ function VehicleMovement:UpdateNormalMovementVehicle(p_Bot)
 				---@type Waypoint|nil
 				local s_NewWaypoint = nil
 				local s_SwitchPath = false
-				s_SwitchPath, s_NewWaypoint = m_PathSwitcher:GetNewPath(p_Bot, p_Bot.m_Id, s_Point, p_Bot._Objective, p_Bot.m_InVehicle,
+				s_SwitchPath, s_NewWaypoint = m_PathSwitcher:GetNewPath(p_Bot, p_Bot.m_Id, s_Point, p_Bot._Objective, true,
 					p_Bot.m_Player.teamId, p_Bot.m_ActiveVehicle)
 
 				if p_Bot.m_Player.soldier == nil then
@@ -268,7 +272,7 @@ function VehicleMovement:UpdateNormalMovementVehicle(p_Bot)
 				if s_SwitchPath == true and not p_Bot._OnSwitch and s_NewWaypoint then
 					if p_Bot._Objective ~= '' then
 						-- 'Best' direction for objective on switch.
-						local s_Direction = m_NodeCollection:ObjectiveDirection(s_NewWaypoint, p_Bot._Objective, p_Bot.m_InVehicle)
+						local s_Direction = m_NodeCollection:ObjectiveDirection(s_NewWaypoint, p_Bot._Objective, true)
 						if s_Direction then
 							p_Bot._InvertPathDirection = (s_Direction == 'Previous')
 						end
@@ -294,9 +298,9 @@ function VehicleMovement:UpdateNormalMovementVehicle(p_Bot)
 				p_Bot._LastWayDistance = 1000.0
 			end
 		else -- Wait mode.
-			p_Bot._WayWaitTimer = p_Bot._WayWaitTimer + Registry.BOT.BOT_UPDATE_CYCLE
+			p_Bot._WayWaitTimer = p_Bot._WayWaitTimer + p_DeltaTime
 
-			self:UpdateVehicleLookAround(p_Bot, Registry.BOT.BOT_UPDATE_CYCLE)
+			self:UpdateVehicleLookAround(p_Bot, p_DeltaTime)
 
 			if p_Bot._WayWaitTimer > s_Point.OptValue then
 				p_Bot._WayWaitTimer = 0.0
@@ -317,9 +321,10 @@ function VehicleMovement:UpdateShootMovementVehicle(p_Bot)
 	p_Bot.m_ActiveSpeedValue = BotMoveSpeeds.NoMovement -- No movement while attacking in vehicles.
 end
 
+---@param p_DeltaTime number
 ---@param p_Bot Bot
 ---@param p_Attacking boolean
-function VehicleMovement:UpdateSpeedOfMovementVehicle(p_Bot, p_Attacking)
+function VehicleMovement:UpdateSpeedOfMovementVehicle(p_DeltaTime, p_Bot, p_Attacking)
 	if p_Bot.m_Player.soldier == nil or p_Bot._VehicleWaitTimer > 0.0 then
 		return
 	end
@@ -368,7 +373,7 @@ function VehicleMovement:UpdateSpeedOfMovementVehicle(p_Bot, p_Attacking)
 				p_Bot:_SetInput(EntryInputActionEnum.EIABrake, 1)
 			end
 
-			p_Bot._BrakeTimer = p_Bot._BrakeTimer - Registry.BOT.BOT_UPDATE_CYCLE
+			p_Bot._BrakeTimer = p_Bot._BrakeTimer - p_DeltaTime
 		end
 	end
 end

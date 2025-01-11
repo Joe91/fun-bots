@@ -11,8 +11,9 @@ function VehicleWeaponHandling:__init()
 	-- Nothing to do.
 end
 
+---@param p_DeltaTime number
 ---@param p_Bot Bot
-function VehicleWeaponHandling:UpdateReloadVehicle(p_Bot)
+function VehicleWeaponHandling:UpdateReloadVehicle(p_DeltaTime, p_Bot)
 	p_Bot._VehicleWeaponSlotToUse = 1 -- Primary.
 	p_Bot:AbortAttack()
 
@@ -20,9 +21,9 @@ function VehicleWeaponHandling:UpdateReloadVehicle(p_Bot)
 		p_Bot._TargetPitch = 0.0
 	end
 
-	p_Bot._ReloadTimer = p_Bot._ReloadTimer + Registry.BOT.BOT_UPDATE_CYCLE
+	p_Bot._ReloadTimer = p_Bot._ReloadTimer + p_DeltaTime
 
-	if p_Bot._ReloadTimer > 1.5 and p_Bot._ReloadTimer < 2.5 then
+	if p_Bot._ReloadTimer > 1.5 and p_Bot._ReloadTimer < 2.55 then
 		p_Bot:_SetInput(EntryInputActionEnum.EIAReload, 1)
 	end
 end

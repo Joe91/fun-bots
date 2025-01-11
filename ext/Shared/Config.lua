@@ -162,7 +162,7 @@ Config = {
 	MaxTrysToSpawnAtDistance = 3,		-- Try this often to spawn a bot away from players 
 	AttackWayBots = true,				-- Bots on paths attack player 
 	RespawnWayBots = true,				-- Bots on paths respawn if killed 
-	SpawnMethod = SpawnMethod.SpawnSoldierAt,	-- Method the bots spawn with. Careful, not supported on most of the maps!! 
+	SpawnMethod = SpawnMethod.Spawn,	-- Method the bots spawn with. Careful, not supported on most of the maps!! 
 
 	-- OTHER 
 	DisableUserInterface = false,		-- If true, the complete UI will be disabled (not available in the UI) 

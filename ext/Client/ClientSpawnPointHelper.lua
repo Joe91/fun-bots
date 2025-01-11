@@ -18,7 +18,7 @@ function ClientSpawnPointHelper:OnPartitionLoaded(p_Partition)
 		if l_Instance:Is("AlternateSpawnEntityData") then
 			---@type AlternateSpawnEntityData
 			l_Instance = AlternateSpawnEntityData(l_Instance)
-			table.insert(self.m_SpawnPointTable, l_Instance.transform)
+			self.m_SpawnPointTable[#self.m_SpawnPointTable + 1] = l_Instance.transform
 		end
 	end
 end
@@ -56,7 +56,8 @@ function ClientSpawnPointHelper:OnUIDrawHud()
 		return
 	end
 
-	for _, l_Transform in pairs(self.m_SpawnPointTable) do
+	for l_Index = 1, #self.m_SpawnPointTable do
+		local l_Transform = self.m_SpawnPointTable[l_Index]
 		if l_Transform.trans:Distance(s_LocalPlayer.soldier.worldTransform.trans) <= Config.SpawnPointRange then
 			self:DrawSpawnPoint(l_Transform)
 		end

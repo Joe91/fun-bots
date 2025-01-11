@@ -7,7 +7,7 @@ function ArrayMap:__init()
 end
 
 function ArrayMap:add(p_Value)
-	table.insert(self._Entries, p_Value)
+	self._Entries[#self._Entries + 1] = p_Value
 end
 
 function ArrayMap:deleteByIndex(p_Index)

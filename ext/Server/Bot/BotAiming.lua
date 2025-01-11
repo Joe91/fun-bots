@@ -276,7 +276,7 @@ local function _DefaultAimingAction(p_Bot)
 	if s_ActiveWeaponType == WeaponTypes.Grenade then
 		s_Pitch = _GetGrenadePitch(p_Bot._DistanceToPlayer)
 	else
-		local s_Distance = math.sqrt(s_DifferenceZ ^ 2 + s_DifferenceX ^ 2)
+		local s_Distance = math.sqrt((s_DifferenceZ * s_DifferenceZ) + (s_DifferenceX * s_DifferenceX))
 		s_Pitch = math.atan(s_DifferenceY, s_Distance)
 	end
 

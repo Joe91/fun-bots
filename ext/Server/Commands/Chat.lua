@@ -254,7 +254,8 @@ function ChatCommands:Execute(p_Parts, p_Player)
 			ChatManager:SendMessage('You have no permissions for this action (ChatCommands).', p_Player)
 			return
 		end
-		for _, l_Bot in pairs(m_BotManager:GetBots()) do
+		for l_Index = 1, #m_BotManager:GetBots() do
+			local l_Bot = m_BotManager:GetBots()[l_Index]
 			print("Objecitve: " .. l_Bot._Objective .. " - " .. l_Bot._ObjectiveMode .. " of Bot" .. l_Bot.m_Name)
 		end
 		print(g_Utilities:dump(p_Player.selectedUnlocks, true, 4))

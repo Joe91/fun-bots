@@ -9,10 +9,10 @@ function BotWeaponHandling:__init()
 	-- Nothing to do.
 end
 
----comment
+---@param p_DeltaTime number
 ---@param p_Bot Bot
 ---@param p_Deploy boolean
-function BotWeaponHandling:UpdateDeployAndReload(p_Bot, p_Deploy)
+function BotWeaponHandling:UpdateDeployAndReload(p_DeltaTime, p_Bot, p_Deploy)
 	if p_Bot._ActiveAction == BotActionFlags.MeleeActive or p_Bot._ActiveAction == BotActionFlags.OtherActionActive then
 		return
 	end
@@ -28,10 +28,10 @@ function BotWeaponHandling:UpdateDeployAndReload(p_Bot, p_Deploy)
 		p_Bot._TargetPitch = 0.0
 	end
 
-	p_Bot._ReloadTimer = p_Bot._ReloadTimer + Registry.BOT.BOT_UPDATE_CYCLE
+	p_Bot._ReloadTimer = p_Bot._ReloadTimer + p_DeltaTime
 
 	-- reload primary weapon
-	if p_Bot.m_ActiveWeapon ~= nil and p_Bot._ReloadTimer > 1.5 and p_Bot._ReloadTimer < 2.5 and
+	if p_Bot.m_ActiveWeapon ~= nil and p_Bot._ReloadTimer > 1.5 and p_Bot._ReloadTimer < 2.55 and
 		p_Bot.m_Player.soldier.weaponsComponent.weapons[1] and
 		p_Bot.m_Player.soldier.weaponsComponent.weapons[1].primaryAmmo <= p_Bot.m_ActiveWeapon.reload then
 		p_Bot:_SetInput(EntryInputActionEnum.EIAReload, 1)
@@ -47,7 +47,7 @@ function BotWeaponHandling:UpdateDeployAndReload(p_Bot, p_Deploy)
 	if Config.BotsDeploy and p_Deploy and not Globals.IsScavenger then
 		if p_Bot.m_PrimaryGadget ~= nil and (p_Bot.m_Kit == BotKits.Support or p_Bot.m_Kit == BotKits.Assault) then
 			if p_Bot.m_PrimaryGadget.type == WeaponTypes.Ammobag or p_Bot.m_PrimaryGadget.type == WeaponTypes.Medkit then
-				p_Bot._DeployTimer = p_Bot._DeployTimer + Registry.BOT.BOT_UPDATE_CYCLE
+				p_Bot._DeployTimer = p_Bot._DeployTimer + p_DeltaTime
 
 				if p_Bot._DeployTimer > Config.DeployCycle then
 					p_Bot._DeployTimer = 0.0

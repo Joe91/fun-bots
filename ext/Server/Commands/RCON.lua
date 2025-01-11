@@ -58,7 +58,7 @@ function RCONCommands:__init()
 					return { 'ERROR', 'Needing <String>.' }
 				end
 
-				table.insert(BotNames, s_Value)
+				BotNames[#BotNames + 1] = s_Value
 
 				return { 'OK' }
 			end)
@@ -174,7 +174,7 @@ function RCONCommands:__init()
 
 						if s_Permissions ~= nil and #s_Permissions >= 1 then
 							for l_Key, l_Value in pairs(s_Permissions) do
-								table.insert(s_Result, PermissionManager:GetCorrectName(l_Value))
+								s_Result[#s_Result + 1] = PermissionManager:GetCorrectName(l_Value)
 							end
 						end
 
@@ -207,7 +207,7 @@ function RCONCommands:__init()
 						local s_Result = { 'OK', 'LIST' }
 
 						for l_Key, l_Value in pairs(s_All) do
-							table.insert(s_Result, PermissionManager:GetCorrectName(l_Value))
+							s_Result[#s_Result + 1] = PermissionManager:GetCorrectName(l_Value)
 						end
 
 						return s_Result
@@ -232,7 +232,7 @@ function RCONCommands:__init()
 
 					if s_Permissions ~= nil then
 						for l_Name, l_Value in pairs(s_Permissions) do
-							table.insert(s_Result, PermissionManager:GetCorrectName(l_Value))
+							s_Result[#s_Result + 1] = PermissionManager:GetCorrectName(l_Value)
 						end
 					end
 
@@ -253,7 +253,7 @@ function RCONCommands:__init()
 	self:_CreateCommand('funbots', (function(p_Command, p_Args)
 		local s_Result = {}
 
-		table.insert(s_Result, 'OK')
+		s_Result[#s_Result + 1] = 'OK'
 
 		for l_Index, l_Command in pairs(self.m_Commands) do
 			local s_Command = l_Command.Name
@@ -264,7 +264,7 @@ function RCONCommands:__init()
 				end
 			end
 
-			table.insert(s_Result, s_Command)
+			s_Result[#s_Result + 1] = s_Command
 		end
 
 		return s_Result

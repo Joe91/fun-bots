@@ -39,13 +39,13 @@ Registry = {
 	-- We use semantic versioning. Please see: https://semver.org.
 	VERSION = {
 		-- Major version.
-		VERSION_MAJ = 2,
+		VERSION_MAJ = 3,
 		-- Minor version.
-		VERSION_MIN = 9,
+		VERSION_MIN = 0,
 		-- Patch version.
-		VERSION_PATCH = 3,
+		VERSION_PATCH = 0,
 		-- Additional label for pre-releases and build metadata.
-		VERSION_LABEL = "dev12",
+		VERSION_LABEL = "dev1",
 		-- Current version type of this build.
 		VERSION_TYPE = VersionType.DevBuild,
 		-- The Version used for the Update-Check.
@@ -109,9 +109,9 @@ Registry = {
 		-- Once a chopper is that low above a vehicle or person, he aborts.
 		ABORT_ATTACK_HEIGHT_CHOPPER = 20,
 		-- In this time, a jet will not attack.
-		JET_TAKEOFF_TIME = 20,
+		JET_TAKEOFF_TIME = 15,
 		-- Time a jet waits after an attack.
-		JET_ABORT_ATTACK_TIME = 4.0,
+		JET_ABORT_ATTACK_TIME = 5.0,
 		-- Time a jet waits after an attack on another jet.
 		JET_ABORT_JET_ATTACK_TIME = 0.7,
 		-- Percentage of vehicle health to leave vehicle with (currently no passive events for bot-only vehicles)
@@ -122,24 +122,22 @@ Registry = {
 		VEHICLE_PROPABILITY_SECOND_AIRTARGET = 40,
 		-- Probability to use 3nd best air-target.
 		VEHICLE_PROPABILITY_THIRD_AIRTARGET = 25,
-		-- Health-check cycle-time.
-		VEHICLE_HEALTH_CYLCE_TIME = 0.5,
 		-- Seat-check cycle-time.
-		VEHICLE_SEAT_CHECK_CYCLE_TIME = 4.0,
+		VEHICLE_SEAT_CHECK_CYCLE_TIME = 3.0,
 	},
 	-- Bot related.
 	BOT = {
-		-- Update cycle fast.
-		BOT_FAST_UPDATE_CYCLE = 0.03, -- Equals 30 fps.
 		-- Distance a bot tries to revive a bot.
 		REVIVE_DISTANCE = 15.0,
 		-- Revive probabilities
 		REVIVE_PROBABILITY = 80.0,
 		REVIVE_PROBABILITY_IF_HAS_TARGET = 40.0,
+		-- Update cycle fast.
+		BOT_FAST_UPDATE_CYCLE = 0.03, -- Equals 30 fps.
 		-- Update cycle.
-		BOT_UPDATE_CYCLE = 0.1,
+		BOT_UPDATE_CYCLE = 0.13, -- 7 fps
 		-- Update cycle.
-		BOT_SLOW_UPDATE_CYCLE = 1.0,
+		BOT_SLOW_UPDATE_CYCLE = 0.66,
 		-- - distance the bots have to reach in height to continue with next Waypoint.
 		TARGET_HEIGHT_DISTANCE_WAYPOINT = 1.5,
 		-- Chance that the bot will teleport when they are stuck.

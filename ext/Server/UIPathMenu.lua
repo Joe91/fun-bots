@@ -383,9 +383,9 @@ function FunBotUIPathMenu:_OnPathMenuRequest(p_Player, p_Data)
 		local s_VehicleType = self.m_NavigaionPath[p_Player.onlineId][4]:split('_')[3]
 		local s_Index = request.action:split('_')[3]
 		local s_ObjectiveData = {}
-		table.insert(s_ObjectiveData, "vehicle")
-		table.insert(s_ObjectiveData, s_VehicleType .. s_Index)
-		table.insert(s_ObjectiveData, s_Team)
+		s_ObjectiveData[#s_ObjectiveData + 1] = "vehicle"
+		s_ObjectiveData[#s_ObjectiveData + 1] = s_VehicleType .. s_Index
+		s_ObjectiveData[#s_ObjectiveData + 1] = s_Team
 		m_NodeEditor:OnAddObjective(p_Player, s_ObjectiveData);
 		return
 	elseif request.action == 'set_vehicle_spawn' then

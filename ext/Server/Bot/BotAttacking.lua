@@ -16,8 +16,9 @@ local function _Fire(p_Bot)
 	p_Bot:_SetInput(EntryInputActionEnum.EIAFire, 1)
 end
 
+---@param p_DeltaTime number
 ---@param p_Bot Bot
-local function _ReviveAttackingAction(p_Bot)
+local function _ReviveAttackingAction(p_DeltaTime, p_Bot)
 	-- Soldier alive again.
 	if not p_Bot._ShootPlayer.corpse or p_Bot._ShootPlayer.corpse.isDead then
 		p_Bot._WeaponToUse = BotWeapons.Primary
@@ -28,7 +29,7 @@ local function _ReviveAttackingAction(p_Bot)
 	end
 
 	-- Revive.
-	p_Bot._ShootModeTimer = p_Bot._ShootModeTimer - Registry.BOT.BOT_UPDATE_CYCLE
+	p_Bot._ShootModeTimer = p_Bot._ShootModeTimer - p_DeltaTime
 	p_Bot.m_ActiveMoveMode = BotMoveModes.ReviveC4 -- Movement-mode : revive.
 	p_Bot._ReloadTimer = 0.0                    -- Reset reloading.
 
@@ -45,7 +46,7 @@ local function _ReviveAttackingAction(p_Bot)
 		p_Bot._ShotTimer = 0.0
 	end
 
-	p_Bot._ShotTimer = p_Bot._ShotTimer + Registry.BOT.BOT_UPDATE_CYCLE
+	p_Bot._ShotTimer = p_Bot._ShotTimer + p_DeltaTime
 
 	-- Trace way back.
 	if p_Bot._ShootTraceTimer > Registry.BOT.TRACE_DELTA_SHOOTING then
@@ -58,21 +59,22 @@ local function _ReviveAttackingAction(p_Bot)
 			OptValue = 0,
 		}
 
-		table.insert(p_Bot._ShootWayPoints, s_Point)
+		p_Bot._ShootWayPoints[#p_Bot._ShootWayPoints + 1] = s_Point
 		if p_Bot.m_KnifeMode and p_Bot._ShootPlayer.soldier then
 			local s_Trans = p_Bot._ShootPlayer.soldier.worldTransform.trans:Clone()
 			if (#p_Bot._KnifeWayPositions == 0 or s_Trans:Distance(p_Bot._KnifeWayPositions[#p_Bot._KnifeWayPositions]) > Registry.BOT.TRACE_DELTA_SHOOTING) then
-				table.insert(p_Bot._KnifeWayPositions, s_Trans)
+				p_Bot._KnifeWayPositions[#p_Bot._KnifeWayPositions + 1] = s_Trans
 			end
 		end
 	end
 
-	p_Bot._ShootTraceTimer = p_Bot._ShootTraceTimer + Registry.BOT.BOT_UPDATE_CYCLE
+	p_Bot._ShootTraceTimer = p_Bot._ShootTraceTimer + p_DeltaTime
 end
 
+---@param p_DeltaTime number
 ---@param p_Bot Bot
-local function _EnterVehicleAttackingAction(p_Bot)
-	p_Bot._ShootModeTimer = p_Bot._ShootModeTimer - Registry.BOT.BOT_UPDATE_CYCLE
+local function _EnterVehicleAttackingAction(p_DeltaTime, p_Bot)
+	p_Bot._ShootModeTimer = p_Bot._ShootModeTimer - p_DeltaTime
 	p_Bot.m_ActiveMoveMode = BotMoveModes.ReviveC4 -- Movement-mode : revive.
 	if not p_Bot._ShootPlayer.soldier then
 		p_Bot._TargetPitch = 0.0
@@ -96,9 +98,10 @@ local function _EnterVehicleAttackingAction(p_Bot)
 	end
 end
 
+---@param p_DeltaTime number
 ---@param p_Bot Bot
-local function _RepairAttackingAction(p_Bot)
-	p_Bot._ShootModeTimer = p_Bot._ShootModeTimer - Registry.BOT.BOT_UPDATE_CYCLE
+local function _RepairAttackingAction(p_DeltaTime, p_Bot)
+	p_Bot._ShootModeTimer = p_Bot._ShootModeTimer - p_DeltaTime
 	p_Bot.m_ActiveMoveMode = BotMoveModes.ReviveC4 -- Movement-mode : repair.
 
 	if p_Bot._RepairVehicleEntity then
@@ -126,8 +129,9 @@ local function _RepairAttackingAction(p_Bot)
 	end
 end
 
+---@param p_DeltaTime number
 ---@param p_Bot Bot
-local function _DefaultAttackingAction(p_Bot)
+local function _DefaultAttackingAction(p_DeltaTime, p_Bot)
 	if not p_Bot._ShootPlayer.soldier or not p_Bot._Shoot or p_Bot._ShootModeTimer <= 0.0 then
 		p_Bot._TargetPitch = 0.0
 		p_Bot._WeaponToUse = BotWeapons.Primary
@@ -143,7 +147,7 @@ local function _DefaultAttackingAction(p_Bot)
 	end
 
 	if p_Bot._ActiveAction ~= BotActionFlags.GrenadeActive then
-		p_Bot._ShootModeTimer = p_Bot._ShootModeTimer - Registry.BOT.BOT_UPDATE_CYCLE
+		p_Bot._ShootModeTimer = p_Bot._ShootModeTimer - p_DeltaTime
 	end
 
 	p_Bot._ReloadTimer = 0.0 -- Reset reloading.
@@ -163,7 +167,7 @@ local function _DefaultAttackingAction(p_Bot)
 		if p_Bot._MeleeCooldownTimer < 0.0 then
 			p_Bot._MeleeCooldownTimer = 0.0
 		elseif p_Bot._MeleeCooldownTimer > 0.0 then
-			p_Bot._MeleeCooldownTimer = p_Bot._MeleeCooldownTimer - Registry.BOT.BOT_UPDATE_CYCLE
+			p_Bot._MeleeCooldownTimer = p_Bot._MeleeCooldownTimer - p_DeltaTime
 			if p_Bot._MeleeCooldownTimer < (Config.MeleeAttackCoolDown - 0.8) then
 				p_Bot:_ResetActionFlag(BotActionFlags.MeleeActive)
 			else
@@ -247,7 +251,7 @@ local function _DefaultAttackingAction(p_Bot)
 								s_ProbabilityRocket = Registry.BOT.PROBABILITY_SHOOT_ROCKET_PRIO
 							end
 							if (p_Bot._ShootModeTimer <= (s_TargetTimeValueRocket + 0.001)) and
-								(p_Bot._ShootModeTimer >= (s_TargetTimeValueRocket - Registry.BOT.BOT_UPDATE_CYCLE - 0.001)) and
+								(p_Bot._ShootModeTimer >= (s_TargetTimeValueRocket - p_DeltaTime - 0.001)) and
 								p_Bot.m_SecondaryGadget ~= nil and p_Bot.m_SecondaryGadget.type == WeaponTypes.Rocket and
 								m_Utilities:CheckProbablity(s_ProbabilityRocket)
 							then
@@ -267,7 +271,7 @@ local function _DefaultAttackingAction(p_Bot)
 
 				if p_Bot._WeaponToUse ~= BotWeapons.Gadget2 and
 					((p_Bot._ShootModeTimer <= (s_TargetTimeValue + 0.001)) and
-						(p_Bot._ShootModeTimer >= (s_TargetTimeValue - Registry.BOT.BOT_UPDATE_CYCLE - 0.001)) and
+						(p_Bot._ShootModeTimer >= (s_TargetTimeValue - p_DeltaTime - 0.001)) and
 						(p_Bot.m_Player.soldier.weaponsComponent.weapons[7] and p_Bot.m_Player.soldier.weaponsComponent.weapons[7].primaryAmmo > 0) and
 						p_Bot._ActiveAction ~= BotActionFlags.GrenadeActive) or Config.BotWeapon == BotWeapons.Grenade then
 					-- Should be triggered only once per fireMode.
@@ -297,15 +301,15 @@ local function _DefaultAttackingAction(p_Bot)
 				OptValue = 0,
 			}
 
-			table.insert(p_Bot._ShootWayPoints, s_Point)
+			p_Bot._ShootWayPoints[#p_Bot._ShootWayPoints + 1] = s_Point
 
 			if p_Bot.m_KnifeMode and p_Bot._ShootPlayer.soldier then
 				local s_Trans = p_Bot._ShootPlayer.soldier.worldTransform.trans:Clone()
-				table.insert(p_Bot._KnifeWayPositions, s_Trans)
+				p_Bot._KnifeWayPositions[#p_Bot._KnifeWayPositions + 1] = s_Trans
 			end
 		end
 
-		p_Bot._ShootTraceTimer = p_Bot._ShootTraceTimer + Registry.BOT.BOT_UPDATE_CYCLE
+		p_Bot._ShootTraceTimer = p_Bot._ShootTraceTimer + p_DeltaTime
 	end
 
 	-- Shooting sequence.
@@ -352,13 +356,14 @@ local function _DefaultAttackingAction(p_Bot)
 			end
 		end
 
-		p_Bot._ShotTimer = p_Bot._ShotTimer + Registry.BOT.BOT_UPDATE_CYCLE
-		p_Bot._SoundTimer = math.min(p_Bot._SoundTimer + Registry.BOT.BOT_UPDATE_CYCLE, 30.0)
+		p_Bot._ShotTimer = p_Bot._ShotTimer + p_DeltaTime
+		p_Bot._SoundTimer = math.min(p_Bot._SoundTimer + p_DeltaTime, 30.0)
 	end
 end
 
+---@param p_DeltaTime number
 ---@param p_Bot Bot
-function BotAttacking:UpdateAttacking(p_Bot)
+function BotAttacking:UpdateAttacking(p_DeltaTime, p_Bot)
 	-- Reset if enemy is dead or attack is disabled.
 	if not p_Bot._ShootPlayer then
 		p_Bot:AbortAttack()
@@ -366,13 +371,13 @@ function BotAttacking:UpdateAttacking(p_Bot)
 	end
 
 	if p_Bot._ActiveAction == BotActionFlags.ReviveActive then
-		_ReviveAttackingAction(p_Bot)
+		_ReviveAttackingAction(p_DeltaTime, p_Bot)
 	elseif p_Bot._ActiveAction == BotActionFlags.EnterVehicleActive then
-		_EnterVehicleAttackingAction(p_Bot)
+		_EnterVehicleAttackingAction(p_DeltaTime, p_Bot)
 	elseif p_Bot._ActiveAction == BotActionFlags.RepairActive then
-		_RepairAttackingAction(p_Bot)
+		_RepairAttackingAction(p_DeltaTime, p_Bot)
 	else
-		_DefaultAttackingAction(p_Bot)
+		_DefaultAttackingAction(p_DeltaTime, p_Bot)
 	end
 end
 

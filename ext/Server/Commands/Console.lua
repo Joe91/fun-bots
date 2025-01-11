@@ -68,7 +68,7 @@ function Console:RegisterConsoleCommands(p_Player)
 		local s_CommandList = {}
 
 		for _, l_Item in pairs(SettingsDefinition.Elements) do
-			table.insert(s_CommandList, { Name = l_Item.Name, Default = l_Item.Default, Description = l_Item.Description })
+			s_CommandList[#s_CommandList + 1] = { Name = l_Item.Name, Default = l_Item.Default, Description = l_Item.Description }
 		end
 
 		NetEvents:SendToLocal('ConsoleCommands:RegisterCommands', p_Player, s_CommandList)

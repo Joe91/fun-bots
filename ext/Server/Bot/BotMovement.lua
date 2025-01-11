@@ -11,13 +11,14 @@ local m_PathSwitcher = require('PathSwitcher')
 ---@type NodeCollection
 local m_NodeCollection = require('NodeCollection')
 
-local m_BotWeaponHandling = require('Bot/BotWeaponHandling')
-
 function BotMovement:__init()
 	-- Nothing to do.
 end
 
-function BotMovement:UpdateNormalMovement(p_Bot)
+---comment
+---@param p_DeltaTime number
+---@param p_Bot Bot
+function BotMovement:UpdateNormalMovement(p_DeltaTime, p_Bot)
 	-- Move along points.
 	p_Bot._AttackModeMoveTimer = 0.0
 
@@ -65,7 +66,7 @@ function BotMovement:UpdateNormalMovement(p_Bot)
 
 		-- Do defense, if needed
 		if p_Bot._ObjectiveMode == BotObjectiveModes.Defend and g_GameDirector:IsAtTargetObjective(p_Bot._PathIndex, p_Bot._Objective) then
-			p_Bot._DefendTimer = p_Bot._DefendTimer + Registry.BOT.BOT_UPDATE_CYCLE
+			p_Bot._DefendTimer = p_Bot._DefendTimer + p_DeltaTime
 
 			local s_TargetTime = p_Bot.m_Id % 5 + 4 -- min 2 sec on path, then 2 sec movement to side
 			if p_Bot._DefendTimer >= s_TargetTime then
@@ -87,7 +88,7 @@ function BotMovement:UpdateNormalMovement(p_Bot)
 					end
 				end
 
-				self:LookAround(p_Bot, Registry.BOT.BOT_UPDATE_CYCLE)
+				self:LookAround(p_Bot, p_DeltaTime)
 
 				-- TODO: look at target
 				-- don't do anything else
@@ -145,7 +146,8 @@ function BotMovement:UpdateNormalMovement(p_Bot)
 				elseif s_Point.Data.Action.type == "beacon" then
 					p_Bot:_ResetActionFlag(BotActionFlags.OtherActionActive)
 				elseif p_Bot._ActionTimer <= s_Point.Data.Action.time then
-					for _, l_Input in pairs(s_Point.Data.Action.inputs) do
+					for l_Index = 1, #s_Point.Data.Action.inputs do
+						local l_Input = s_Point.Data.Action.inputs[l_Index]
 						p_Bot:_SetInput(l_Input, 1)
 					end
 				end
@@ -153,7 +155,7 @@ function BotMovement:UpdateNormalMovement(p_Bot)
 				p_Bot:_ResetActionFlag(BotActionFlags.OtherActionActive)
 			end
 
-			p_Bot._ActionTimer = p_Bot._ActionTimer - Registry.BOT.BOT_UPDATE_CYCLE
+			p_Bot._ActionTimer = p_Bot._ActionTimer - p_DeltaTime
 
 			if p_Bot._ActionTimer <= 0.0 then
 				p_Bot:_ResetActionFlag(BotActionFlags.OtherActionActive)
@@ -174,7 +176,7 @@ function BotMovement:UpdateNormalMovement(p_Bot)
 			p_Bot.m_ActiveSpeedValue = s_Point.SpeedMode -- Speed.
 
 			if p_Bot._ActiveAction == BotActionFlags.RunAway and p_Bot._ActionTimer > 0.0 then
-				p_Bot._ActionTimer = p_Bot._ActionTimer - Registry.BOT.BOT_UPDATE_CYCLE
+				p_Bot._ActionTimer = p_Bot._ActionTimer - p_DeltaTime
 
 				p_Bot.m_ActiveSpeedValue = BotMoveSpeeds.Sprint
 				if p_Bot._ActionTimer <= 0.0 then
@@ -183,7 +185,7 @@ function BotMovement:UpdateNormalMovement(p_Bot)
 			end
 
 			if p_Bot._ActiveAction == BotActionFlags.HideOnAttack and p_Bot._ActionTimer > 0.0 then
-				p_Bot._ActionTimer = p_Bot._ActionTimer - Registry.BOT.BOT_UPDATE_CYCLE
+				p_Bot._ActionTimer = p_Bot._ActionTimer - p_DeltaTime
 
 				p_Bot.m_ActiveSpeedValue = BotMoveSpeeds.VerySlowProne
 				if p_Bot._ActionTimer <= 0.0 then
@@ -191,7 +193,7 @@ function BotMovement:UpdateNormalMovement(p_Bot)
 				end
 			end
 
-			if Config.OverWriteBotSpeedMode ~= BotMoveSpeeds.NoMovement and not p_Bot.m_InVehicle then
+			if Config.OverWriteBotSpeedMode ~= BotMoveSpeeds.NoMovement then
 				p_Bot.m_ActiveSpeedValue = Config.OverWriteBotSpeedMode
 			end
 
@@ -217,12 +219,12 @@ function BotMovement:UpdateNormalMovement(p_Bot)
 					end
 				end
 				p_Bot:_SetInput(EntryInputActionEnum.EIAStrafe, p_Bot.m_StrafeValue)
-				p_Bot._SidewardsTimer = p_Bot._SidewardsTimer - Registry.BOT.BOT_UPDATE_CYCLE
+				p_Bot._SidewardsTimer = p_Bot._SidewardsTimer - p_DeltaTime
 			end
 
 			-- Use parachute if needed.
 			local s_VelocityFalling = PhysicsEntity(p_Bot.m_Player.soldier).velocity.y
-			if s_VelocityFalling < -50.0 then
+			if s_VelocityFalling < -25.0 then
 				p_Bot:_SetInput(EntryInputActionEnum.EIAToggleParachute, 1)
 			end
 
@@ -253,21 +255,19 @@ function BotMovement:UpdateNormalMovement(p_Bot)
 					p_Bot:_ResetActionFlag(BotActionFlags.MeleeActive)
 					p_Bot._ObstacleRetryCounter = p_Bot._ObstacleRetryCounter + 1
 				elseif p_Bot._ObstacleSequenceTimer > 1.0 then -- Step 3
-					if not p_Bot.m_InVehicle then
-						if p_Bot._ObstacleRetryCounter == 0 then
-							if p_Bot._ActiveAction ~= BotActionFlags.MeleeActive then
-								p_Bot._ActiveAction = BotActionFlags.MeleeActive
-								p_Bot:_SetInput(EntryInputActionEnum.EIASelectWeapon7, 1)
-								p_Bot:_SetInput(EntryInputActionEnum.EIAQuicktimeFastMelee, 1)
-								p_Bot:_SetInput(EntryInputActionEnum.EIAMeleeAttack, 1)
-								p_Bot.m_ActiveWeapon = p_Bot.m_Knife
-								p_Bot._MeleeCooldownTimer = Config.MeleeAttackCoolDown -- Set time to ensure bot exit knife-mode when attack starts.
-							else
-								p_Bot:_SetInput(EntryInputActionEnum.EIAFire, 1)
-							end
+					if p_Bot._ObstacleRetryCounter == 0 then
+						if p_Bot._ActiveAction ~= BotActionFlags.MeleeActive then
+							p_Bot._ActiveAction = BotActionFlags.MeleeActive
+							p_Bot:_SetInput(EntryInputActionEnum.EIASelectWeapon7, 1)
+							p_Bot:_SetInput(EntryInputActionEnum.EIAQuicktimeFastMelee, 1)
+							p_Bot:_SetInput(EntryInputActionEnum.EIAMeleeAttack, 1)
+							p_Bot.m_ActiveWeapon = p_Bot.m_Knife
+							p_Bot._MeleeCooldownTimer = Config.MeleeAttackCoolDown -- Set time to ensure bot exit knife-mode when attack starts.
 						else
 							p_Bot:_SetInput(EntryInputActionEnum.EIAFire, 1)
 						end
+					else
+						p_Bot:_SetInput(EntryInputActionEnum.EIAFire, 1)
 					end
 				elseif p_Bot._ObstacleSequenceTimer > 0.4 then -- Step 2
 					p_Bot._TargetPitch = 0.0
@@ -282,8 +282,8 @@ function BotMovement:UpdateNormalMovement(p_Bot)
 					p_Bot:_SetInput(EntryInputActionEnum.EIAJump, 1)
 				end
 
-				p_Bot._ObstacleSequenceTimer = p_Bot._ObstacleSequenceTimer + Registry.BOT.BOT_UPDATE_CYCLE
-				p_Bot._StuckTimer = p_Bot._StuckTimer + Registry.BOT.BOT_UPDATE_CYCLE
+				p_Bot._ObstacleSequenceTimer = p_Bot._ObstacleSequenceTimer + p_DeltaTime
+				p_Bot._StuckTimer = p_Bot._StuckTimer + p_DeltaTime
 
 				if p_Bot._ObstacleRetryCounter >= 2 then -- Try next waypoint.
 					p_Bot._ObstacleRetryCounter = 0
@@ -300,17 +300,15 @@ function BotMovement:UpdateNormalMovement(p_Bot)
 						p_Bot.m_Player.soldier:SetTransform(s_Transform)
 						m_Logger:Write('teleported ' .. p_Bot.m_Player.name)
 					else
-						if not p_Bot.m_InVehicle then
-							s_PointIncrement = MathUtils:GetRandomInt(-5, 5) -- Go 5 points further.
-							-- Experimental.
-							if s_PointIncrement == 0 then -- We can't have this.
-								s_PointIncrement = -2   -- Go backwards and try again.
-							end
+						s_PointIncrement = MathUtils:GetRandomInt(-5, 5) -- Go 5 points further.
+						-- Experimental.
+						if s_PointIncrement == 0 then  -- We can't have this.
+							s_PointIncrement = -2      -- Go backwards and try again.
+						end
 
-							if (Globals.IsConquest or Globals.IsRush) then
-								if g_GameDirector:IsOnObjectivePath(p_Bot._PathIndex) then
-									p_Bot._InvertPathDirection = m_Utilities:CheckProbablity(Registry.BOT.PROBABILITY_CHANGE_DIRECTION_IF_STUCK)
-								end
+						if (Globals.IsConquest or Globals.IsRush) then
+							if g_GameDirector:IsOnObjectivePath(p_Bot._PathIndex) then
+								p_Bot._InvertPathDirection = m_Utilities:CheckProbablity(Registry.BOT.PROBABILITY_CHANGE_DIRECTION_IF_STUCK)
 							end
 						end
 					end
@@ -399,7 +397,7 @@ function BotMovement:UpdateNormalMovement(p_Bot)
 				-- CHECK FOR PATH-SWITCHES.
 				local s_NewWaypoint = nil
 				local s_SwitchPath = false
-				s_SwitchPath, s_NewWaypoint = m_PathSwitcher:GetNewPath(p_Bot, p_Bot.m_Id, s_Point, p_Bot._Objective, p_Bot.m_InVehicle,
+				s_SwitchPath, s_NewWaypoint = m_PathSwitcher:GetNewPath(p_Bot, p_Bot.m_Id, s_Point, p_Bot._Objective, false,
 					p_Bot.m_Player.teamId, nil)
 
 				if p_Bot.m_Player.soldier == nil then
@@ -409,7 +407,7 @@ function BotMovement:UpdateNormalMovement(p_Bot)
 				if s_SwitchPath == true and not p_Bot._OnSwitch and s_NewWaypoint then
 					if p_Bot._Objective ~= '' then
 						-- 'Best' direction for objective on switch.
-						local s_Direction = m_NodeCollection:ObjectiveDirection(s_NewWaypoint, p_Bot._Objective, p_Bot.m_InVehicle)
+						local s_Direction = m_NodeCollection:ObjectiveDirection(s_NewWaypoint, p_Bot._Objective, false)
 						if s_Direction then
 							p_Bot._InvertPathDirection = (s_Direction == 'Previous')
 						end
@@ -436,9 +434,9 @@ function BotMovement:UpdateNormalMovement(p_Bot)
 				p_Bot._LastWayDistance = 1000.0
 			end
 		else -- Wait mode.
-			p_Bot._WayWaitTimer = p_Bot._WayWaitTimer + Registry.BOT.BOT_UPDATE_CYCLE
+			p_Bot._WayWaitTimer = p_Bot._WayWaitTimer + p_DeltaTime
 
-			self:LookAround(p_Bot, Registry.BOT.BOT_UPDATE_CYCLE)
+			self:LookAround(p_Bot, p_DeltaTime)
 
 			if p_Bot._WayWaitTimer > s_Point.OptValue then
 				p_Bot._WayWaitTimer = 0.0
@@ -454,8 +452,9 @@ function BotMovement:UpdateNormalMovement(p_Bot)
 	end
 end
 
+---@param p_DeltaTime number
 ---@param p_Bot Bot
-function BotMovement:UpdateMovementSprintToTarget(p_Bot)
+function BotMovement:UpdateMovementSprintToTarget(p_DeltaTime, p_Bot)
 	p_Bot.m_ActiveSpeedValue = BotMoveSpeeds.Sprint -- Run to target.
 
 	if p_Bot.m_Player.soldier.pose ~= CharacterPoseType.CharacterPoseType_Stand then
@@ -473,7 +472,7 @@ function BotMovement:UpdateMovementSprintToTarget(p_Bot)
 
 	-- To-do: obstacle detection.
 	if s_Jump == true then
-		p_Bot._AttackModeMoveTimer = p_Bot._AttackModeMoveTimer + Registry.BOT.BOT_UPDATE_CYCLE
+		p_Bot._AttackModeMoveTimer = p_Bot._AttackModeMoveTimer + p_DeltaTime
 
 		if p_Bot._AttackModeMoveTimer > 3.0 then
 			p_Bot._AttackModeMoveTimer = 0.0
@@ -484,8 +483,9 @@ function BotMovement:UpdateMovementSprintToTarget(p_Bot)
 	end
 end
 
+---@param p_DeltaTime number
 ---@param p_Bot Bot
-function BotMovement:UpdateShootMovement(p_Bot)
+function BotMovement:UpdateShootMovement(p_DeltaTime, p_Bot)
 	p_Bot._DefendTimer = 0.0
 	-- Shoot MoveMode.
 	if p_Bot._AttackMode == BotAttackModes.RandomNotSet then
@@ -556,7 +556,7 @@ function BotMovement:UpdateShootMovement(p_Bot)
 			p_Bot:_SetInput(EntryInputActionEnum.EIAStrafe, 0.5 * Config.SpeedFactorAttack)
 		end
 
-		p_Bot._AttackModeMoveTimer = p_Bot._AttackModeMoveTimer + Registry.BOT.BOT_UPDATE_CYCLE
+		p_Bot._AttackModeMoveTimer = p_Bot._AttackModeMoveTimer + p_DeltaTime
 	end
 end
 
@@ -612,7 +612,7 @@ end
 
 ---@param p_Bot Bot
 function BotMovement:UpdateTargetMovement(p_Bot)
-	if p_Bot._TargetPoint ~= nil and p_Bot.m_Player.soldier ~= nil then
+	if p_Bot._TargetPoint ~= nil then
 		local s_Distance = p_Bot.m_Player.soldier.worldTransform.trans:Distance(p_Bot._TargetPoint.Position)
 
 		if s_Distance < 0.2 then

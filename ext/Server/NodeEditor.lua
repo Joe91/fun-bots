@@ -276,7 +276,7 @@ function NodeEditor:OnAddVehiclePath(p_Player, p_Args)
 				end
 
 				if not s_InTable then
-					table.insert(s_Vehicles, s_Data)
+					s_Vehicles[#s_Vehicles + 1] = s_Data
 					s_Waypoint.Data.Vehicles = s_Vehicles
 					self:Log(p_Player, 'Updated Waypoint: %s', s_Waypoint.ID)
 				end
@@ -357,7 +357,7 @@ function NodeEditor:OnAddObjective(p_Player, p_Args)
 			end
 
 			if not s_InTable then
-				table.insert(s_Objectives, s_Data)
+				s_Objectives[#s_Objectives + 1] = s_Data
 				s_Waypoint.Data.Objectives = s_Objectives
 				self:Log(p_Player, 'Updated Waypoint: %s', s_Waypoint.ID)
 			end
@@ -400,7 +400,7 @@ function NodeEditor:OnRemoveObjective(p_Player, p_Args)
 
 			for j = 1, #s_Objectives do
 				if (s_Objectives[j] ~= s_Data) then
-					table.insert(s_NewObjectives, s_Objectives[j])
+					s_NewObjectives[#s_NewObjectives + 1] = s_Objectives[j]
 				end
 			end
 
@@ -868,7 +868,8 @@ function NodeEditor:ClearTrace(p_Player)
 
 		-- Detect selected path(s).
 		local s_Selection = m_NodeCollection:GetSelected(p_Player.onlineId)
-		for _, l_Node in pairs(s_Selection) do
+		for l_Index = 1, #s_Selection do
+			local l_Node = s_Selection[l_Index]
 			local s_PathIndex = l_Node.PathIndex
 			s_PathIndexes[s_PathIndex] = true -- Add more checks?
 		end
@@ -1092,13 +1093,6 @@ end
 -- =============================================
 -- Update Events
 -- =============================================
-function NodeEditor:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
-	-- Only do math on presimulation UpdatePass, don't bother if debugging is off.
-	if p_UpdatePass ~= UpdatePass.UpdatePass_PreSim then
-		return
-	end
-end
-
 ---VEXT Shared Engine:Update Event
 ---@param p_DeltaTime number
 ---@param p_SimulationDeltaTime number
@@ -1296,7 +1290,7 @@ function NodeEditor:OnEngineUpdate(p_DeltaTime, p_SimulationDeltaTime)
 									for i = 1, #l_Node.Data.Links do
 										local s_LinkNode = m_NodeCollection:Get(l_Node.Data.Links[i])
 										if s_LinkNode then
-											table.insert(s_DataNode.Links, s_LinkNode.Position)
+											s_DataNode.Links[#s_DataNode.Links + 1] = s_LinkNode.Position
 										end
 									end
 								end
@@ -1308,14 +1302,16 @@ function NodeEditor:OnEngineUpdate(p_DeltaTime, p_SimulationDeltaTime)
 								end
 
 								if s_FirstNode.Data.Objectives then
-									for _, l_Objective in pairs(s_FirstNode.Data.Objectives) do
-										table.insert(s_DataNode.Objectives, l_Objective)
+									for l_Index = 1, #s_FirstNode.Data.Objectives do
+										local l_Objective = s_FirstNode.Data.Objectives[l_Index]
+										s_DataNode.Objectives[#s_DataNode.Objectives + 1] = l_Objective
 									end
 								end
 
 								if s_FirstNode.Data.Vehicles then
-									for _, l_Vehicle in pairs(s_FirstNode.Data.Vehicles) do
-										table.insert(s_DataNode.Vehicles, l_Vehicle)
+									for l_Index = 1, #s_FirstNode.Data.Vehicles do
+										local l_Vehicle = s_FirstNode.Data.Vehicles[l_Index]
+										s_DataNode.Vehicles[#s_DataNode.Vehicles + 1] = l_Vehicle
 									end
 								end
 
@@ -1323,7 +1319,7 @@ function NodeEditor:OnEngineUpdate(p_DeltaTime, p_SimulationDeltaTime)
 									s_DataNode.NextPos = l_Node.Next.Position:Clone()
 								end
 
-								table.insert(s_NodesToDraw, s_DataNode)
+								s_NodesToDraw[#s_NodesToDraw + 1] = s_DataNode
 								if s_Count >= Config.NodesPerCycle and l_Waypoint < #s_WaypointPaths[l_Path] then
 									self.m_lastDrawIndexNode[l_PlayerGuid] = l_Waypoint
 									self.m_lastDrawIndexPath[l_PlayerGuid] = l_Path
@@ -1386,7 +1382,7 @@ function NodeEditor:OnEngineUpdate(p_DeltaTime, p_SimulationDeltaTime)
 							s_DataNode.NextPos = l_Node.Next.Position:Clone()
 						end
 
-						table.insert(s_NodesToDraw, s_DataNode)
+						s_NodesToDraw[#s_NodesToDraw + 1] = s_DataNode
 						if s_Count >= Config.NodesPerCycle and i < #s_CustomWaypoints then
 							self.m_lastDrawIndexNode[l_PlayerGuid] = i
 							NetEvents:SendUnreliableToLocal('ClientNodeEditor:DrawNodes', s_Player, s_NodesToDraw, false)

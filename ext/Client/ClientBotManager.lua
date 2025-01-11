@@ -57,7 +57,9 @@ function ClientBotManager:OnClientUpdateInput(p_DeltaTime)
 
 			if s_Raycast ~= nil and s_Raycast.rigidBody:Is("CharacterPhysicsEntity") then
 				-- Find a teammate at this position.
-				for _, l_Player in pairs(PlayerManager:GetPlayersByTeam(self.m_Player.teamId)) do
+				local s_PlayersByTeam = PlayerManager:GetPlayersByTeam(self.m_Player.teamId)
+				for l_Index = 1, #s_PlayersByTeam do
+					local l_Player = s_PlayersByTeam[l_Index]
 					if l_Player.soldier ~= nil and m_Utilities:isBot(l_Player) and
 						l_Player.soldier.worldTransform.trans:Distance(s_Raycast.position) < 2 then
 						NetEvents:SendLocal('Client:RequestEnterVehicle', l_Player.name)
@@ -278,9 +280,11 @@ function ClientBotManager:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 		---@type Player[]
 		local s_EnemyPlayers = {}
 
-		for _, l_Player in pairs(PlayerManager:GetPlayers()) do
+		local s_Players = PlayerManager:GetPlayers()
+		for l_Index = 1, #s_Players do
+			local l_Player = s_Players[l_Index]
 			if l_Player.teamId ~= self.m_Player.teamId and self.m_Player.teamId ~= 0 then -- Don't let bots attack spectators.
-				table.insert(s_EnemyPlayers, l_Player)
+				s_EnemyPlayers[#s_EnemyPlayers + 1] = l_Player
 			end
 		end
 
@@ -436,8 +440,9 @@ function ClientBotManager:OnWriteClientSettings(p_NewConfig, p_UpdateWeaponSets)
 end
 
 function ClientBotManager:CheckForBotBotAttack(p_RaycastData)
-	for _, l_RaycastEntry in pairs(p_RaycastData) do
-		table.insert(self.m_BotBotRaycastsToDo, l_RaycastEntry)
+	for l_Index = 1, #p_RaycastData do
+		local l_RaycastEntry = p_RaycastData[l_Index]
+		self.m_BotBotRaycastsToDo[#self.m_BotBotRaycastsToDo + 1] = l_RaycastEntry
 	end
 end
 

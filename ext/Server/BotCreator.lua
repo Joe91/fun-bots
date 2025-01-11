@@ -98,11 +98,11 @@ function BotCreator:GenerateBotAtributes(p_BotNames, p_TeamId)
 			else
 				p_TeamId = TeamId.Team1
 			end
-			table.insert(self.BotAttributesByTeamByClass[p_TeamId][s_Kit], s_BotAttributes)
+			self.BotAttributesByTeamByClass[p_TeamId][s_Kit][#self.BotAttributesByTeamByClass[p_TeamId][s_Kit] + 1] = s_BotAttributes
 		else
-			table.insert(self.BotAttributesByClass[s_Kit], s_BotAttributes)
+			self.BotAttributesByClass[s_Kit][#self.BotAttributesByClass[s_Kit] + 1] = s_BotAttributes
 		end
-		table.insert(self.AllBotAttributes, s_BotAttributes)
+		self.AllBotAttributes[#self.AllBotAttributes + 1] = s_BotAttributes
 	end
 end
 
@@ -141,12 +141,12 @@ function BotCreator:GetNextBotName(p_BotKit, p_TeamId)
 		--TODO: check for existing player or Bot?
 
 		if s_NameAvailable then
-			table.insert(s_PossibleNames, l_Attributes.Name)
+			s_PossibleNames[#s_PossibleNames + 1] = l_Attributes.Name
 		end
 	end
 	local s_SelectedName = s_PossibleNames[MathUtils:GetRandomInt(1, #s_PossibleNames)]
 
-	table.insert(activeNames, s_SelectedName)
+	activeNames[#activeNames + 1] = s_SelectedName
 	return s_SelectedName
 end
 

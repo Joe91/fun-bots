@@ -30,8 +30,10 @@ require('__shared/Settings/SettingsDefinition')
 require('__shared/WeaponList')
 require('__shared/EbxEditUtils')
 require('__shared/Utils/Logger')
+require('__shared/Utils/Profiler')
 require('Vehicles')
 require('UIServer')
+require('BotStates/BotStates')
 require('UIPathMenu')
 require('Model/Globals')
 require('Constants/Permissions')
@@ -49,6 +51,8 @@ local m_Language = require('__shared/Language')
 local m_SettingsManager = require('SettingsManager')
 ---@type BotManager
 local m_BotManager = require('BotManager')
+---@type PlayerData
+local m_PlayerData = require('PlayerData')
 ---@type BotCreator
 local m_BotCreator = require('BotCreator')
 ---@type BotSpawner
@@ -142,7 +146,6 @@ end
 
 function FunBotServer:RegisterCustomEvents()
 	NetEvents:Subscribe("Botmanager:RaycastResults", self, self.OnClientRaycastResults)
-	Events:Subscribe('Bot:RespawnBot', self, self.OnRespawnBot)
 	Events:Subscribe('Bot:AbortWait', self, self.OnBotAbortWait)
 	Events:Subscribe('Bot:ExitVehicle', self, self.OnBotExitVehicle)
 	NetEvents:Subscribe('Client:RequestSettings', self, self.OnRequestClientSettings)
@@ -249,6 +252,7 @@ end
 ---@param p_SimulationDeltaTime number
 function FunBotServer:OnEngineUpdate(p_DeltaTime, p_SimulationDeltaTime)
 	m_GameDirector:OnEngineUpdate(p_DeltaTime)
+	m_BotSpawner:OnEngineUpdate(p_DeltaTime, p_SimulationDeltaTime)
 	m_NodeEditor:OnEngineUpdate(p_DeltaTime, p_SimulationDeltaTime)
 end
 
@@ -257,8 +261,6 @@ end
 ---@param p_UpdatePass UpdatePass|integer
 function FunBotServer:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 	m_BotManager:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
-	m_BotSpawner:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
-	m_NodeEditor:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 end
 
 function FunBotServer:OnScoringStatEvent(p_Player, p_ObjectPlayer, p_StatEvent, p_ParamX, p_ParamY, p_Value)
@@ -299,6 +301,7 @@ function FunBotServer:OnLevelLoaded(p_LevelName, p_GameMode, p_Round, p_RoundsPe
 	local s_CustomGameMode = ServerUtils:GetCustomGameModeName()
 
 	m_WeaponList:OnLevelLoaded()
+	m_PlayerData:Clear()
 
 	-- Only use name of Level.
 	p_LevelName = p_LevelName:gsub(".+/.+/", "")
@@ -346,7 +349,8 @@ function FunBotServer:DestroyObstacles(p_LevelName, p_GameMode)
 		s_Positions[#s_Positions + 1] = Vec3(-93.82, 174.97, -11.36)
 	end
 
-	for _, l_Position in ipairs(s_Positions) do
+	for l_Index = 1, #s_Positions do
+		local l_Position = s_Positions[l_Index]
 		self:SpawnGrenade(l_Position)
 	end
 end
@@ -511,6 +515,7 @@ end
 ---@param p_Player Player
 function FunBotServer:OnVehicleEnter(p_VehicleEntity, p_Player)
 	m_GameDirector:OnVehicleEnter(p_VehicleEntity, p_Player)
+	m_PlayerData:OnVehicleEnter(p_VehicleEntity, p_Player)
 	m_AirTargets:OnVehicleEnter(p_VehicleEntity, p_Player)
 end
 
@@ -519,6 +524,7 @@ end
 ---@param p_Player Player
 function FunBotServer:OnVehicleExit(p_VehicleEntity, p_Player)
 	m_GameDirector:OnVehicleExit(p_VehicleEntity, p_Player)
+	m_PlayerData:OnVehicleExit(p_VehicleEntity, p_Player)
 	m_AirTargets:OnVehicleExit(p_VehicleEntity, p_Player)
 end
 
@@ -600,10 +606,6 @@ end
 
 function FunBotServer:OnBotExitVehicle(p_BotId)
 	m_BotManager:OnBotExitVehicle(p_BotId)
-end
-
-function FunBotServer:OnRespawnBot(p_BotId)
-	m_BotSpawner:OnRespawnBot(p_BotId)
 end
 
 function FunBotServer:OnRequestClientSettings(p_Player)
