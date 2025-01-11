@@ -1057,7 +1057,7 @@ function GameDirector:GetSpawnableBeaconOrMate(p_TeamId, p_SquadId)
 		if s_Beacon ~= nil then
 			if m_Utilities:CheckProbablity(Registry.BOT_SPAWN.PROBABILITY_SQUADMATE_SPAWN) then
 				m_Logger:Write("spawn at beacon, owned by " .. l_Player.name)
-				return s_Beacon.Path, s_Beacon.Point, true, s_Beacon.Entity
+				return s_Beacon.Path, s_Beacon.Point, true, nil, s_Beacon.Entity.transform.trans
 			end
 		end
 
@@ -1071,12 +1071,12 @@ function GameDirector:GetSpawnableBeaconOrMate(p_TeamId, p_SquadId)
 
 					-- Check for free seats.
 					if m_Vehicles:GetNrOfFreeSeats(s_Vehicle, true) > 0 then
-						return 1, 1, false, s_Vehicle
+						return 1, 1, false, s_Vehicle, nil
 					end
 				else
 					local s_Node = self:FindClosestPath(l_Player.soldier.worldTransform.trans, false, false)
 					if s_Node then
-						return s_Node.PathIndex, s_Node.PointIndex, false, nil
+						return s_Node.PathIndex, s_Node.PointIndex, false, nil, l_Player.soldier.worldTransform.trans
 					end
 				end
 			end

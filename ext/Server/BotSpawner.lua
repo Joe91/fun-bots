@@ -196,8 +196,27 @@ function BotSpawner:OnEngineUpdate(p_DeltaTime, p_SimulationDeltaTime)
 				end
 
 				-- check for mate or beacon
-				local s_BeaconOrMate = g_GameDirector:GetSpawnableBeaconOrMate(l_Bot.m_Player.teamId, l_Bot.m_Player.squadId)
-				-- TODO: spawn inside vehicle of mate or at mate or at beacon
+				local s_PathIndex, s_IndexOnPath, s_InvertDirection, s_SpawnEntity, s_SpawnPosition = g_GameDirector:GetSpawnableBeaconOrMate(l_Bot.m_Player.teamId, l_Bot.m_Player.squadId)
+				if s_PathIndex then
+					-- spawn at mate or beacon
+					l_Bot:SetVarsWay(nil, true, s_PathIndex, s_IndexOnPath, s_InvertDirection)
+					if s_SpawnEntity then
+						if l_Bot:_EnterVehicleEntity(s_SpawnEntity, false) ~= 0 then
+							l_Bot:Kill()
+						end
+					elseif s_SpawnPosition then
+						local s_Transform = l_Bot.m_Player.soldier.worldTransform:Clone()
+						s_Transform.trans = s_SpawnPosition
+						l_Bot.m_Player.soldier:SetTransform(s_Transform)
+					end
+
+					self:_ApplyCosumizationAfterSpawn(l_Bot)
+
+					-- for Civilianizer-mod:
+					if Globals.RemoveKitVisuals then
+						Events:Dispatch('Bot:SoldierEntity', l_Bot.m_Player.soldier)
+					end
+				end
 
 				local s_Position = l_Bot.m_Player.soldier.worldTransform.trans:Clone()
 				local s_Link = m_NodeCollection:GetLinkFromSpawnPoint(s_Position)
@@ -209,8 +228,7 @@ function BotSpawner:OnEngineUpdate(p_DeltaTime, p_SimulationDeltaTime)
 					end
 				end
 
-
-				if s_Link ~= nil then
+				if s_Link then
 					l_Bot:SetVarsWay(nil, true, s_Link[1], s_Link[2], false)
 					table.remove(self._BotsWithoutPath, l_Index)
 

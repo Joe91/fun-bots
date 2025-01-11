@@ -14,6 +14,7 @@ This is the changelog for the version V3.0 Don't forget to [join us on Discord](
 * original game-spawn-method by default (still a bit to do, till it works fine)
 * add two missing weapons
 * Info-Node in maps for future versioning and information
+* Preparation for pathless-jets TODO: rework transformation and aiming for air-vehicles
 
 ### Bug fixes
 * fix stationary AA again...
