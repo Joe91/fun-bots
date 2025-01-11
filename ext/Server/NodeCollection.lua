@@ -41,12 +41,19 @@ function NodeCollection:InitVars()
 
 	-- Data for Save-Statemachine.
 	self._SaveActive = false
+	self._LoadActive = false
 	self._SaveStateMachineCounter = 0
+	self._LoadStateMachineCounter = 0
 	self._SaveTracesQueryStrings = {}
 	self._SaveTracesQueryStringsDone = 0
 	self._SavedPathCount = 0
 	self._SaveTraceBatchQueries = {}
 	self._SaveTraceQueriesDone = 0
+	self._LoadPathCount = 0
+	self._LoadWaypointCount = 0
+	self._LoadFirstWaypoint = nil
+	self._LoadLastWaypoint = nil
+	self._LoadLastPathindex = -1
 end
 
 -----------------------------
@@ -1054,91 +1061,7 @@ end
 -- Save/Load.
 
 function NodeCollection:Load(p_LevelName, p_GameMode)
-	if p_GameMode ~= nil and p_LevelName ~= nil then
-		self._MapName = p_LevelName .. '_' .. p_GameMode
-		self._MapName = self._MapName:gsub(' ', '_')
-	end
 
-	if self._MapName == '' or self._MapName == nil then
-		m_Logger:Error('Mapname not set. Abort Load')
-		return
-	end
-
-	m_Logger:Write('Load: ' .. self._MapName)
-
-	if not SQL:Open() then
-		m_Logger:Error('Failed to open SQL. ' .. SQL:Error())
-		return
-	end
-
-	local s_Results = SQL:Query("select name from sqlite_master where type='table' and name='" .. self._MapName .. "_table'")
-	if not s_Results or #s_Results == 0 then
-		m_Logger:Write('Map not available')
-		SQL:Close()
-		return
-	end
-
-	-- Fetch all rows from the table.
-	local s_Results = SQL:Query('SELECT * FROM ' .. self._MapName .. '_table ORDER BY pathIndex, pointIndex ASC')
-
-	if not s_Results then
-		m_Logger:Error('Failed to retrieve waypoints for map [' .. self._MapName .. ']: ' .. SQL:Error())
-		SQL:Close()
-		return
-	end
-
-	self:Clear()
-	local s_PathCount = 0
-	local s_WaypointCount = 0
-	local s_FirstWaypoint = nil
-	local s_LastWaypoint = nil
-	local s_LastPathindex = -1
-
-	for _, l_Row in pairs(s_Results) do
-		if l_Row['pathIndex'] ~= s_LastPathindex then
-			s_PathCount = s_PathCount + 1
-			s_LastPathindex = l_Row['pathIndex']
-		end
-
-		local s_Waypoint = {
-			Position = Vec3(l_Row['transX'], l_Row['transY'], l_Row['transZ']),
-			PathIndex = l_Row['pathIndex'],
-			PointIndex = l_Row['pointIndex'],
-			InputVar = l_Row['inputVar'],
-			SpeedMode = l_Row['inputVar'] & 0xF,
-			ExtraMode = (l_Row['inputVar'] >> 4) & 0xF,
-			OptValue = (l_Row['inputVar'] >> 8) & 0xFF,
-			Data = json.decode(l_Row['data'] or '{}'),
-		}
-
-		if s_FirstWaypoint == nil then
-			s_FirstWaypoint = s_Waypoint
-		end
-
-		if s_LastWaypoint ~= nil then
-			s_Waypoint.Previous = s_LastWaypoint.ID
-			s_LastWaypoint.Next = s_Waypoint.ID
-		end
-
-		s_Waypoint = self:Create(s_Waypoint, true)
-		s_LastWaypoint = s_Waypoint
-		s_WaypointCount = s_WaypointCount + 1
-	end
-
-	SQL:Close()
-	self:RecalculateIndexes(s_LastWaypoint)
-	self:ProcessMetadata()
-
-	-- We're on the server.
-	-- if Global ~= nil then
-	-- Global.wayPoints = self._WaypointsByPathIndex
-	-- Global.activeTraceIndexes = pathCount
-	-- end
-
-	m_Logger:Write('Load -> Paths: ' .. tostring(s_PathCount) .. ' | Waypoints: ' .. tostring(s_WaypointCount))
-
-	ChatManager:Yell(Language:I18N('Loaded %d paths with %d waypoints for map %s', s_PathCount, s_WaypointCount,
-		self._MapName), 5.5)
 end
 
 function NodeCollection:UpdateSaving()
@@ -1147,6 +1070,129 @@ function NodeCollection:UpdateSaving()
 		return true
 	end
 	return false
+end
+
+function NodeCollection:StartLoad(p_Level, p_Gamemode)
+	self._LevelNameToLoad = p_Level
+	self._GameModeToLoad = p_Gamemode
+	self._LoadStateMachineCounter = 0
+	self._LoadActive = true
+end
+
+function NodeCollection:UpdateLoading()
+	if self._LoadActive then
+		self:ProcessAllDataToLoad()
+		return true
+	end
+	return false
+end
+
+function NodeCollection:ProcessAllDataToLoad()
+	-- preparation steps
+	if self._LoadStateMachineCounter == 0 then
+		if self._GameModeToLoad ~= nil and self._LevelNameToLoad ~= nil then
+			self._MapName = self._LevelNameToLoad .. '_' .. self._GameModeToLoad
+			self._MapName = self._MapName:gsub(' ', '_')
+		end
+
+		if self._MapName == '' or self._MapName == nil then
+			m_Logger:Error('Mapname not set. Abort Load')
+			self._LoadActive = false
+			return
+		end
+
+		m_Logger:Write('Load: ' .. self._MapName)
+
+		if not SQL:Open() then
+			m_Logger:Error('Failed to open SQL. ' .. SQL:Error())
+			self._LoadActive = false
+			return
+		end
+
+		local s_Results = SQL:Query("select name from sqlite_master where type='table' and name='" .. self._MapName .. "_table'")
+		if not s_Results or #s_Results == 0 then
+			m_Logger:Write('Map not available')
+			SQL:Close()
+			self._LoadActive = false
+			return
+		end
+
+		-- prepare vars
+		self:Clear()
+		self._LoadPathCount = 0
+		self._LoadWaypointCount = 0
+		self._LoadFirstWaypoint = nil
+		self._LoadLastWaypoint = nil
+		self._LoadLastPathindex = -1
+
+		self._LoadStateMachineCounter = 10
+
+		-- start to actually load
+	elseif self._LoadStateMachineCounter == 10 then
+		-- Fetch all rows from the table.
+		local s_MaxEntries = Registry.COMMON.MAX_NUMBER_OF_NODES_PER_CYCLE
+		local s_Offset = self._LoadWaypointCount
+		local s_Results = SQL:Query('SELECT * FROM ' .. self._MapName .. '_table ORDER BY pathIndex, pointIndex ASC LIMIT ' .. tostring(s_MaxEntries) .. ' OFFSET ' .. tostring(s_Offset))
+
+		if not s_Results then
+			m_Logger:Error('Failed to retrieve waypoints for map [' .. self._MapName .. ']: ' .. SQL:Error())
+			SQL:Close()
+			self._LoadActive = false
+			return
+		end
+
+		for _, l_Row in pairs(s_Results) do
+			if l_Row['pathIndex'] ~= self._LoadLastPathindex then
+				self._LoadPathCount = self._LoadPathCount + 1
+				self._LoadLastPathindex = l_Row['pathIndex']
+			end
+
+			local s_Waypoint = {
+				Position = Vec3(l_Row['transX'], l_Row['transY'], l_Row['transZ']),
+				PathIndex = l_Row['pathIndex'],
+				PointIndex = l_Row['pointIndex'],
+				InputVar = l_Row['inputVar'],
+				SpeedMode = l_Row['inputVar'] & 0xF,
+				ExtraMode = (l_Row['inputVar'] >> 4) & 0xF,
+				OptValue = (l_Row['inputVar'] >> 8) & 0xFF,
+				Data = json.decode(l_Row['data'] or '{}'),
+			}
+
+			if self._LoadFirstWaypoint == nil then
+				self._LoadFirstWaypoint = s_Waypoint
+			end
+
+			if self._LoadLastWaypoint ~= nil then
+				s_Waypoint.Previous = self._LoadLastWaypoint.ID
+				self._LoadLastWaypoint.Next = s_Waypoint.ID
+			end
+
+			s_Waypoint = self:Create(s_Waypoint, true)
+			self._LoadLastWaypoint = s_Waypoint
+			self._LoadWaypointCount = self._LoadWaypointCount + 1
+		end
+
+		if #s_Results < s_MaxEntries then
+			self._LoadStateMachineCounter = 20
+		end
+	elseif self._LoadStateMachineCounter == 20 then
+		SQL:Close()
+		self:RecalculateIndexes(self._LoadLastWaypoint)
+		self._LoadStateMachineCounter = 30
+	elseif self._LoadStateMachineCounter == 30 then
+		self:ProcessMetadata()
+		self._LoadStateMachineCounter = 40
+	elseif self._LoadStateMachineCounter == 40 then
+		m_Logger:Write('Load -> Paths: ' .. tostring(self._LoadPathCount) .. ' | Waypoints: ' .. tostring(self._LoadWaypointCount))
+
+		ChatManager:Yell(Language:I18N('Loaded %d paths with %d waypoints for map %s', self._LoadPathCount, self._LoadWaypointCount,
+			self._MapName), 5.5)
+		self._LoadStateMachineCounter = 50
+	elseif self._LoadStateMachineCounter == 50 then
+		-- all done
+		self._LoadActive = false
+		Events:Dispatch('NodeCollection:FinishedLoading')
+	end
 end
 
 function NodeCollection:ProcessAllDataToSave()

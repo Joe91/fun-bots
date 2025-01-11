@@ -8,7 +8,6 @@ local m_NodeCollection = require('NodeCollection')
 
 local m_BotManager = require('BotManager')
 local m_BotSpawner = require('BotSpawner')
-local m_Debug = require('Debug/BugReport')
 
 local m_CarParts
 
@@ -148,7 +147,99 @@ function ChatCommands:Execute(p_Parts, p_Player)
 						print(s_Direction)
 					end
 
-					m_CarParts[j] = s_Direction
+					m_CarParts[j] = s_QuatTransform.rotation:ToEuler()
+				end
+			end
+		end
+	elseif p_Parts[1] == '!caryaw' then
+		if PermissionManager:HasPermission(p_Player, 'ChatCommands') == false then
+			ChatManager:SendMessage('You have no permissions for this action (ChatCommands).', p_Player)
+			return
+		end
+
+		m_CarParts = {}
+
+		if p_Player.attachedControllable ~= nil then
+			local s_VehicleName = VehicleEntityData(p_Player.controlledControllable.data).controllableType:gsub(".+/.+/", "")
+			local s_Pos = p_Player.controlledControllable.transform.forward
+			local s_PlayerPos = p_Player.soldier.worldTransform.trans
+			print("-----------------------------")
+			print(s_VehicleName)
+			local s_VehicleEntity
+			print(s_PlayerPos)
+
+			-- Vehicle found.
+			print(p_Player.controlledControllable.physicsEntityBase.partCount)
+			s_VehicleEntity = p_Player.controlledControllable.physicsEntityBase
+
+			print("Offset of vehicle to bullet:")
+			local s_DiffProjectile = Globals.LastPorjectile.trans - p_Player.controlledControllable.transform.trans
+			for j = 0, s_VehicleEntity.partCount - 1 do
+				if j == 1 then                                                   --j == 1 or j == 3
+					if p_Player.controlledControllable.physicsEntityBase:GetPart(j) ~= nil then -- And p_Player.controlledControllable.physicsEntityBase:GetPart(j):Is("ServerChildComponent") then
+						local s_QuatTransform = p_Player.controlledControllable.physicsEntityBase:GetPartTransform(j)
+						if s_QuatTransform == nil then
+							return -1
+						end
+
+						print("index: " .. j)
+
+						-- print(p_Player.controlledControllable.physicsEntityBase:GetPart(j).typeInfo.name)
+						-- local s_TempX = s_QuatTransform.rotation.x
+						-- local s_TempY = s_QuatTransform.rotation.y
+						-- local s_TempZ = s_QuatTransform.rotation.z
+						-- local s_TempW = s_QuatTransform.rotation.w
+						-- s_QuatTransform.rotation.x = s_TempY
+						-- s_QuatTransform.rotation.y = s_TempZ
+						-- s_QuatTransform.rotation.z = s_TempW
+						-- s_QuatTransform.rotation.w = s_TempX
+
+						-- tested: x,y ; y,z; ; z,w; x,w; y,w;
+						-- x, y, z, w
+
+						local s_Euler = s_QuatTransform.rotation:ToEuler()
+						s_Euler.x = s_Euler.x
+						s_Euler.y = s_Euler.y - 0.5 -- roll equals pitch
+						s_Euler.z = s_Euler.z
+
+						local s_Quat = Quat(s_Euler)
+						s_QuatTransform.rotation = s_Quat
+
+
+
+						local s_DirOld = s_QuatTransform:ToLinearTransform().forward + p_Player.controlledControllable.transform.left
+						local s_DirrBullet = (Globals.LastPorjectile.trans - s_QuatTransform:ToLinearTransform().trans):Normalize()
+
+						local s_AtanDzDx = math.atan(s_DirOld.z, s_DirOld.x)
+						local s_Yaw1 = (s_AtanDzDx > math.pi / 2) and (s_AtanDzDx - math.pi / 2) or (s_AtanDzDx + 3 * math.pi / 2)
+						local s_Pitch1 = math.asin(s_DirOld.y / 1.0)
+
+						local s_AtanDzDx = math.atan(s_DirrBullet.z, s_DirrBullet.x)
+						local s_Yaw2 = (s_AtanDzDx > math.pi / 2) and (s_AtanDzDx - math.pi / 2) or (s_AtanDzDx + 3 * math.pi / 2)
+						local s_Pitch2 = math.asin(s_DirrBullet.y / 1.0)
+
+
+						local s_Yaw4 = s_QuatTransform.rotation:ToEuler().x
+						local s_Roll4 = s_QuatTransform.rotation:ToEuler().y
+						local s_Pitch4 = s_QuatTransform.rotation:ToEuler().z
+						print("euler:")
+						print(-s_Yaw4 + math.pi + math.pi / 2) --- 0.344
+						print(s_Roll4)
+						print(s_Pitch4)      --+ 0.6499
+						print("old:")
+						print(s_Yaw1)
+						print(s_Pitch1)
+						print("bullet:")
+						print(s_Yaw2)
+						print(s_Pitch2)
+						print("---")
+
+						print(s_Yaw1 + s_Yaw4)
+						print(s_Pitch1 + s_Pitch4)
+						-- print(s_Yaw1 - s_Yaw3)
+						-- print(s_Pitch1 - s_Pitch3)
+						-- print(s_QuatTransform.rotation)
+					end
 				end
 			end
 		end
@@ -193,7 +284,7 @@ function ChatCommands:Execute(p_Parts, p_Player)
 
 					print(p_Player.controlledControllable.physicsEntityBase:GetPart(j).typeInfo.name)
 					print("index: " .. j)
-					local s_Direction = s_QuatTransform:ToLinearTransform().forward - s_Pos
+					local s_Direction = s_QuatTransform.rotation:ToEuler()
 
 					if m_CarParts[j] ~= nil then
 						print(s_Direction - m_CarParts[j])
@@ -497,17 +588,6 @@ function ChatCommands:Execute(p_Parts, p_Player)
 
 		local s_TraceIndex = tonumber(p_Parts[2]) or 0
 		NetEvents:SendToLocal('ClientNodeEditor:SaveTrace', p_Player, s_TraceIndex)
-
-		-- Section: Debugging, Bug Reporting and error logging.
-		-- Command: !bugreport
-		-- Permission: Debug.BugReport
-	elseif p_Parts[1] == '!bugreport' then
-		if PermissionManager:HasPermission(p_Player, 'Debug.BugReport') == false then
-			ChatManager:SendMessage('You have no permissions for this action (Debug.BugReport).', p_Player)
-			return
-		end
-
-		BugReport:GenerateReport(p_Player)
 	else
 		-- Nothing to do.
 	end

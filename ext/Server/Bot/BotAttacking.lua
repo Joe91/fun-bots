@@ -11,6 +11,11 @@ function BotAttacking:__init()
 	-- Nothing to do.
 end
 
+local function _Fire(p_Bot)
+	p_Bot._SoundTimer = 0.0
+	p_Bot:_SetInput(EntryInputActionEnum.EIAFire, 1)
+end
+
 ---@param p_Bot Bot
 local function _ReviveAttackingAction(p_Bot)
 	-- Soldier alive again.
@@ -244,7 +249,7 @@ local function _DefaultAttackingAction(p_Bot)
 							if (p_Bot._ShootModeTimer <= (s_TargetTimeValueRocket + 0.001)) and
 								(p_Bot._ShootModeTimer >= (s_TargetTimeValueRocket - Registry.BOT.BOT_UPDATE_CYCLE - 0.001)) and
 								p_Bot.m_SecondaryGadget ~= nil and p_Bot.m_SecondaryGadget.type == WeaponTypes.Rocket and
-								MathUtils:GetRandomInt(1, 100) <= s_ProbabilityRocket
+								m_Utilities:CheckProbablity(s_ProbabilityRocket)
 							then
 								p_Bot._WeaponToUse = BotWeapons.Gadget2
 							end
@@ -266,7 +271,7 @@ local function _DefaultAttackingAction(p_Bot)
 						(p_Bot.m_Player.soldier.weaponsComponent.weapons[7] and p_Bot.m_Player.soldier.weaponsComponent.weapons[7].primaryAmmo > 0) and
 						p_Bot._ActiveAction ~= BotActionFlags.GrenadeActive) or Config.BotWeapon == BotWeapons.Grenade then
 					-- Should be triggered only once per fireMode.
-					if MathUtils:GetRandomInt(1, 100) <= s_ProbabilityGrenade then
+					if m_Utilities:CheckProbablity(s_ProbabilityGrenade) then
 						if p_Bot.m_Grenade ~= nil
 							and p_Bot._DistanceToPlayer > Registry.BOT.MIN_DISTANCE_NADE
 							and p_Bot._DistanceToPlayer < 25.0 then -- Algorithm only works for up to 25 m.
@@ -337,17 +342,18 @@ local function _DefaultAttackingAction(p_Bot)
 			if p_Bot._ShotTimer >= 0.0 and p_Bot._ActiveAction ~= BotActionFlags.MeleeActive then
 				if p_Bot.m_ActiveWeapon.delayed == false then
 					if p_Bot._ShotTimer <= p_Bot.m_ActiveWeapon.fireCycle then
-						p_Bot:_SetInput(EntryInputActionEnum.EIAFire, 1)
+						_Fire(p_Bot)
 					end
 				else -- Start with pause Cycle.
 					if p_Bot._ShotTimer >= p_Bot.m_ActiveWeapon.pauseCycle then
-						p_Bot:_SetInput(EntryInputActionEnum.EIAFire, 1)
+						_Fire(p_Bot)
 					end
 				end
 			end
 		end
 
 		p_Bot._ShotTimer = p_Bot._ShotTimer + Registry.BOT.BOT_UPDATE_CYCLE
+		p_Bot._SoundTimer = math.min(p_Bot._SoundTimer + Registry.BOT.BOT_UPDATE_CYCLE, 30.0)
 	end
 end
 

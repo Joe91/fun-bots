@@ -100,7 +100,7 @@ function BotManager:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 	end
 
 	if #self._BotsToDestroy > 0 then
-		if self._DestroyBotsTimer >= 0.05 then
+		if self._DestroyBotsTimer >= Registry.BOT.BOT_DESTORY_DELAY then
 			self._DestroyBotsTimer = 0.0
 			self:DestroyBot(table.remove(self._BotsToDestroy))
 		end
@@ -130,6 +130,7 @@ function BotManager:OnPlayerLeft(p_Player)
 			if l_BotNameToIgnore == p_Player.name then
 				table.remove(Globals.IgnoreBotNames, l_Index)
 				m_Logger:Write("Bot-Name " .. l_BotNameToIgnore .. " usable again")
+				break
 			end
 		end
 	end
@@ -314,7 +315,9 @@ function BotManager:OnBotShootAtBot(p_BotId1, p_BotId2)
 end
 
 ---@param p_MissileEntity Entity
-function BotManager:CheckForFlareOrSmoke(p_MissileEntity)
+---@param p_MissileSpeed number
+---@---@param p_TimeDelay number
+function BotManager:CheckForFlareOrSmoke(p_MissileEntity, p_MissileSpeed, p_TimeDelay)
 	p_MissileEntity = SpatialEntity(p_MissileEntity)
 
 	local s_MissileTransform = p_MissileEntity.transform
@@ -322,12 +325,36 @@ function BotManager:CheckForFlareOrSmoke(p_MissileEntity)
 
 	local s_SmallestAngle = 1.0
 	local s_DriverOfVehicle = nil
+	local s_DistanceToPlayer = 0
 
 	local s_Iterator = EntityManager:GetIterator("ServerVehicleEntity")
 	local s_Entity = s_Iterator:Next()
+
+	local s_GunShipEntity = g_GameDirector:GetGunship()
 	while s_Entity ~= nil do
 		s_Entity = ControllableEntity(s_Entity)
 		local s_DriverPlayer = s_Entity:GetPlayerInEntry(0)
+		if s_GunShipEntity and (s_Entity.uniqueId == s_GunShipEntity.uniqueId) then
+			local s_BotsPlayersInGunship = {}
+			for i = 1, 2 do
+				local s_TempPlayer = s_Entity:GetPlayerInEntry(i)
+				if not s_TempPlayer then
+					goto continue
+				end
+				local s_TempBot = self:GetBotById(s_TempPlayer.id)
+				if s_TempBot then
+					table.insert(s_BotsPlayersInGunship, s_TempPlayer)
+				end
+				::continue::
+			end
+			if #s_BotsPlayersInGunship > 0 then
+				s_DriverPlayer = s_BotsPlayersInGunship[MathUtils:GetRandomInt(1, #s_BotsPlayersInGunship)]
+			else
+				s_DriverPlayer = nil
+			end
+		end
+
+
 		if s_DriverPlayer then
 			local s_PositionVehicle = s_Entity.transform.trans
 			local s_VecMissile = (s_PositionVehicle - s_MissilePosition):Normalize()
@@ -338,9 +365,9 @@ function BotManager:CheckForFlareOrSmoke(p_MissileEntity)
 			if s_Angle < s_SmallestAngle and s_Distance < 350 then
 				s_SmallestAngle = s_Angle
 				s_DriverOfVehicle = s_DriverPlayer
+				s_DistanceToPlayer = s_Distance
 			end
 		end
-
 		s_Entity = s_Iterator:Next()
 	end
 
@@ -350,7 +377,9 @@ function BotManager:CheckForFlareOrSmoke(p_MissileEntity)
 
 	local s_TargetBot = self:GetBotById(s_DriverOfVehicle.id)
 	if s_TargetBot then
-		s_TargetBot:FireFlareSmoke()
+		local s_TimeToTravel = p_TimeDelay + s_DistanceToPlayer / p_MissileSpeed
+		local s_DelayToFire = s_TimeToTravel * (0.5 + MathUtils:GetRandom(-0.1, 0.3)) -- 40-80 % of calc time
+		s_TargetBot:FireFlareSmoke(s_DelayToFire)
 	end
 end
 
@@ -582,6 +611,34 @@ function BotManager:GetActiveBotCount(p_TeamId)
 	return s_Count
 end
 
+---@param p_TeamId? TeamId
+---@return integer
+function BotManager:GetInactiveBotCount(p_TeamId)
+	local s_Count = 0
+
+	for _, l_Bot in ipairs(self._Bots) do
+		if l_Bot:IsInactive() then
+			if p_TeamId == nil or l_Bot.m_Player.teamId == p_TeamId then
+				s_Count = s_Count + 1
+			end
+		end
+	end
+
+	return s_Count
+end
+
+function BotManager:GetInactiveBot(p_TeamId)
+	for _, l_Bot in ipairs(self._Bots) do
+		if l_Bot:IsInactive() then
+			if p_TeamId == nil or l_Bot.m_Player.teamId == p_TeamId then
+				return l_Bot
+			end
+		end
+	end
+
+	return nil
+end
+
 -- Returns all real players.
 ---@return Player[]
 function BotManager:GetPlayers()
@@ -798,8 +855,10 @@ function BotManager:KillAll(p_Amount, p_TeamId)
 	end
 
 	p_Amount = p_Amount or #s_BotTable
+	-- start from the end, to kill the last spawned bots first
+	for l_Index = #s_BotTable, 1, -1 do
+		local l_Bot = s_BotTable[l_Index]
 
-	for _, l_Bot in ipairs(s_BotTable) do
 		l_Bot:Kill()
 
 		p_Amount = p_Amount - 1
@@ -822,7 +881,8 @@ function BotManager:DestroyAll(p_Amount, p_TeamId, p_Force)
 
 	p_Amount = p_Amount or #s_BotTable
 
-	for _, l_Bot in ipairs(s_BotTable) do
+	for l_Index = #s_BotTable, 1, -1 do
+		local l_Bot = s_BotTable[l_Index]
 		if p_Force then
 			self:DestroyBot(l_Bot)
 		else
@@ -837,10 +897,20 @@ function BotManager:DestroyAll(p_Amount, p_TeamId, p_Force)
 	end
 end
 
-function BotManager:DestroyDisabledBots()
+function BotManager:DestroyDisabledBots(p_ProtectBots)
+	local s_ProtectedBots = {}
+	for i = 1, Globals.NrOfTeams do
+		s_ProtectedBots[i] = 0
+	end
+
 	for _, l_Bot in ipairs(self._Bots) do
 		if l_Bot:IsInactive() then
-			table.insert(self._BotsToDestroy, l_Bot.m_Name)
+			local s_TeamId = l_Bot.m_Player.teamId
+			if p_ProtectBots and (s_ProtectedBots[s_TeamId] < #g_GameDirector:GetSpawnableVehicle(s_TeamId)) then
+				s_ProtectedBots[s_TeamId] = s_ProtectedBots[s_TeamId] + 1
+			else
+				table.insert(self._BotsToDestroy, l_Bot.m_Name)
+			end
 		end
 	end
 end

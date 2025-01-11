@@ -293,7 +293,7 @@ function BotMovement:UpdateNormalMovement(p_Bot)
 
 					-- Teleport to target.
 					s_NoStuckReset = true
-					if Config.TeleportIfStuck and (MathUtils:GetRandomInt(0, 100) <= Registry.BOT.PROBABILITY_TELEPORT_IF_STUCK) then
+					if Config.TeleportIfStuck and m_Utilities:CheckProbablity(Registry.BOT.PROBABILITY_TELEPORT_IF_STUCK) then
 						local s_Transform = p_Bot.m_Player.soldier.worldTransform:Clone()
 						s_Transform.trans = p_Bot._TargetPoint.Position
 						s_Transform:LookAtTransform(p_Bot._TargetPoint.Position, p_Bot._NextTargetPoint.Position)
@@ -309,8 +309,7 @@ function BotMovement:UpdateNormalMovement(p_Bot)
 
 							if (Globals.IsConquest or Globals.IsRush) then
 								if g_GameDirector:IsOnObjectivePath(p_Bot._PathIndex) then
-									p_Bot._InvertPathDirection = (
-										MathUtils:GetRandomInt(0, 100) <= Registry.BOT.PROBABILITY_CHANGE_DIRECTION_IF_STUCK)
+									p_Bot._InvertPathDirection = m_Utilities:CheckProbablity(Registry.BOT.PROBABILITY_CHANGE_DIRECTION_IF_STUCK)
 								end
 							end
 						end

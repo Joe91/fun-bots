@@ -71,19 +71,6 @@ function Utilities:isBot(p_Player)
 	return s_Player ~= nil and s_Player.onlineId == 0
 end
 
----@param p_Enum table
----@param p_Value any
----@return any|nil
-function Utilities:getEnumName(p_Enum, p_Value)
-	for l_Key, l_Value in pairs(getmetatable(p_Enum)['__index']) do
-		if l_Value == p_Value then
-			return l_Key
-		end
-	end
-
-	return nil
-end
-
 ---@param p_PosA Vec3
 ---@param p_PosB Vec3
 ---@return number

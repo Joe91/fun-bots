@@ -297,7 +297,9 @@ function SettingsManager:UpdateSetting(p_Name, p_Value)
 		elseif s_UpdateFlag == UpdateFlag.AmountAndTeam then
 			Globals.SpawnMode = Config.SpawnMode
 			m_BotSpawner:UpdateBotAmountAndTeam()
-		elseif s_UpdateFlag == UpdateFlag.Skil then
+		elseif s_UpdateFlag == UpdateFlag.BotNames then
+			m_BotSpawner:UpdateBotNames()
+		elseif s_UpdateFlag == UpdateFlag.Skill then
 			m_BotManager:ResetSkills()
 		end
 

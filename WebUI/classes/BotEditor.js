@@ -322,7 +322,7 @@ const BotEditor = (new function BotEditor() {
 				case 'mcom_inter_9':
 				case 'mcom_inter_10':
 				case 'poi_beacon':
-				case 'poi_sniper':
+				case 'poi_explore':
 				case 'base_us_1':
 				case 'base_us_2':
 				case 'base_us_3':

@@ -4,7 +4,6 @@ FunBotServer = class('FunBotServer')
 
 -- The registry should be loaded first before loading anything else.
 require('__shared/Registry/Registry')
-require('__shared/Registry/RegistryManager')
 
 require('__shared/Debug')
 require('__shared/Config')
@@ -56,8 +55,6 @@ local m_BotCreator = require('BotCreator')
 local m_BotSpawner = require('BotSpawner')
 ---@type WeaponList
 local m_WeaponList = require('__shared/WeaponList')
----@type BugReport
-local m_bugReport = require('Debug/BugReport')
 ---@type ChatCommands
 local m_ChatCommands = require('Commands/Chat')
 ---@type Console
@@ -133,6 +130,8 @@ function FunBotServer:RegisterEvents()
 	Events:Subscribe('CombatArea:PlayerDeserting', self, self.OnCombatAreaDeserting)
 	Events:Subscribe('CombatArea:PlayerReturning', self, self.OnCombatAreaReturning)
 	Events:Subscribe('LifeCounter:BaseDestroyed', self, self.OnLifeCounterBaseDestoyed)
+
+	Events:Subscribe('NodeCollection:FinishedLoading', self, self.OnFinishedLoading)
 end
 
 function FunBotServer:RegisterHooks()
@@ -304,6 +303,7 @@ function FunBotServer:OnLevelLoaded(p_LevelName, p_GameMode, p_Round, p_RoundsPe
 	-- Only use name of Level.
 	p_LevelName = p_LevelName:gsub(".+/.+/", "")
 	Globals.LevelName = p_LevelName
+	Globals.Round = p_Round
 	m_Logger:Write('OnLevelLoaded: ' .. p_LevelName .. ' ' .. p_GameMode)
 
 	self:SetRespawnDelay()
@@ -321,10 +321,15 @@ function FunBotServer:OnLevelLoaded(p_LevelName, p_GameMode, p_Round, p_RoundsPe
 		self:DestroyObstacles(p_LevelName, p_GameMode)
 	end
 
-	m_NodeEditor:OnLevelLoaded(p_LevelName, p_GameMode, s_CustomGameMode)
 	m_GameDirector:OnLevelLoaded()
 	m_AirTargets:OnLevelLoaded()
-	m_BotSpawner:OnLevelLoaded(p_Round)
+	m_BotSpawner:OnLevelLoaded(Globals.Round)
+	m_NodeEditor:OnLevelLoaded(p_LevelName, p_GameMode, s_CustomGameMode)
+end
+
+function FunBotServer:OnFinishedLoading()
+	m_NodeEditor:EndOfLoad()
+	m_GameDirector:OnLoadFinished()
 end
 
 function FunBotServer:DestroyObstacles(p_LevelName, p_GameMode)
@@ -336,6 +341,9 @@ function FunBotServer:DestroyObstacles(p_LevelName, p_GameMode)
 		s_Positions[#s_Positions + 1] = Vec3(-74.64, 178.01, 42.61)
 		s_Positions[#s_Positions + 1] = Vec3(-85.23, 178.01, 44.08)
 		s_Positions[#s_Positions + 1] = Vec3(-89.42, 178.40, 50.82)
+		s_Positions[#s_Positions + 1] = Vec3(-64.84, 179.04, -36.78)
+		s_Positions[#s_Positions + 1] = Vec3(-77.92, 174.98, 4.35)
+		s_Positions[#s_Positions + 1] = Vec3(-93.82, 174.97, -11.36)
 	end
 
 	for _, l_Position in ipairs(s_Positions) do
@@ -349,6 +357,7 @@ function FunBotServer:OnLevelDestroy()
 	m_BotSpawner:OnLevelDestroy()
 	m_NodeEditor:OnLevelDestroy()
 	m_AirTargets:OnLevelDestroy()
+	m_GameDirector:OnLevelDestroy()
 	local s_OldMemory = math.floor(collectgarbage("count") / 1024)
 	collectgarbage('collect')
 	m_Logger:Write("*Collecting Garbage on Level Destroy: " ..
@@ -509,6 +518,7 @@ end
 ---@param p_VehicleEntity Entity @`ControllableEntity`
 ---@param p_Player Player
 function FunBotServer:OnVehicleExit(p_VehicleEntity, p_Player)
+	m_GameDirector:OnVehicleExit(p_VehicleEntity, p_Player)
 	m_AirTargets:OnVehicleExit(p_VehicleEntity, p_Player)
 end
 
@@ -533,8 +543,10 @@ function FunBotServer:OnEntityFactoryCreate(p_HookCtx, p_EntityData, p_Transform
 			if not s_CreatedEntity then
 				return
 			end
+			local s_TimeDelay = s_MissileEntityData.engineTimeToIgnition + s_MissileEntityData.timeToActivateGuidingSystem
+			local s_MaxSpeed = s_MissileEntityData.maxSpeed
 
-			m_BotManager:CheckForFlareOrSmoke(s_CreatedEntity)
+			m_BotManager:CheckForFlareOrSmoke(s_CreatedEntity, s_MaxSpeed, s_TimeDelay)
 		end
 	end
 	if Registry.DEBUG.VEHICLE_PROJECTILE_TRACE then
@@ -542,7 +554,7 @@ function FunBotServer:OnEntityFactoryCreate(p_HookCtx, p_EntityData, p_Transform
 			local s_CreatedEntity = p_HookCtx:Call()
 			if s_CreatedEntity then
 				local s_SpartialEntity = SpatialEntity(s_CreatedEntity)
-				Globals.LastPorjectile = s_SpartialEntity.transform
+				-- Globals.LastPorjectile = s_SpartialEntity.transform
 			end
 		end
 	end
@@ -556,6 +568,11 @@ function FunBotServer:OnBulletEntityCollision(p_HookCtx, p_Entity, p_Hit, p_Give
 	if Registry.COMMON.USE_BUGGED_HITBOXES then
 		return
 	end
+
+	if Registry.DEBUG.VEHICLE_PROJECTILE_TRACE then
+		Globals.LastPorjectile = SpatialEntity(p_Entity).transform
+	end
+
 	if p_GiverInfo.giver and p_GiverInfo.giver.onlineId == 0 then
 		local s_SyncedGameSettings = ResourceManager:GetSettings("SyncedGameSettings")
 
@@ -867,7 +884,8 @@ function FunBotServer:SetGameMode(p_GameMode, p_LevelName)
 		p_GameMode == 'ConquestAssaultSmall0' or
 		p_GameMode == 'ConquestAssaultSmall1' or
 		p_GameMode == 'TankSuperiority0' or
-		p_GameMode == "BFLAG0" or
+		p_GameMode == 'CaptureTheFlag0' or
+		p_GameMode == 'BFLAG0' or
 		p_GameMode == 'BFLAG' then
 		Globals.IsConquest = true
 	else
