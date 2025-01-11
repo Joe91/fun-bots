@@ -44,6 +44,11 @@ function NodeEditor:RegisterCustomEvents()
 	NetEvents:Subscribe('NodeEditor:SplitNode', self, self.OnSplitNode)
 	NetEvents:Subscribe('NodeEditor:RemoveNode', self, self.OnRemoveNode)
 
+	NetEvents:Subscribe('NodeEditor:SelectSpawn', self, self.OnSelectSpawn)
+	NetEvents:Subscribe('NodeEditor:DeselectSpawn', self, self.OnDeselectSpawn)
+	NetEvents:Subscribe('NodeEditor:LinkSpawn', self, self.LinkSpawn)
+	NetEvents:Subscribe('NodeEditor:UnlinkSpawn', self, self.UnlinkSpawn)
+
 	NetEvents:Subscribe('NodeEditor:AddMcom', self, self.OnAddMcom)
 	NetEvents:Subscribe('NodeEditor:AddVehicle', self, self.OnAddVehicle)
 	NetEvents:Subscribe('NodeEditor:ExitVehicle', self, self.OnExitVehicle)
@@ -658,6 +663,26 @@ function NodeEditor:OnDeselect(p_Player, p_WaypointId)
 end
 
 ---@param p_Player Player
+---@param p_SpawnId integer|string
+function NodeEditor:OnSelectSpawn(p_Player, p_SpawnId)
+	m_NodeCollection:SelectSpawn(p_Player.onlineId, p_SpawnId)
+end
+
+---@param p_Player Player
+---@param p_SpawnId integer|string
+function NodeEditor:OnDeselectSpawn(p_Player, p_SpawnId)
+	m_NodeCollection:UnelectSpawn(p_Player.onlineId, p_SpawnId)
+end
+
+function NodeEditor:LinkSpawn(p_Player)
+	m_NodeCollection:LinkSpawn(p_Player.onlineId)
+end
+
+function NodeEditor:UnlinkSpawn(p_Player)
+	m_NodeCollection:UnlinkSpawn(p_Player.onlineId)
+end
+
+---@param p_Player Player
 function NodeEditor:OnSelectBetween(p_Player)
 	local s_Selection = m_NodeCollection:GetSelected(p_Player.onlineId)
 
@@ -1029,6 +1054,20 @@ function NodeEditor:OnLevelLoaded(p_LevelName, p_GameMode, p_CustomGameMode)
 	m_NodeCollection:StartLoad(p_LevelName, s_GameModeToLoad)
 end
 
+---VEXT Shared Partition:Loaded Event
+---@param p_Partition DatabasePartition
+function NodeEditor:OnPartitionLoaded(p_Partition)
+	---@type AlternateSpawnEntityData
+	for _, l_Instance in pairs(p_Partition.instances) do
+		if l_Instance:Is("AlternateSpawnEntityData") then
+			local s_LevelName = SharedUtils:GetLevelName() .. SharedUtils:GetCurrentGameMode()
+			---@type AlternateSpawnEntityData
+			l_Instance = AlternateSpawnEntityData(l_Instance)
+			m_NodeCollection:AddSpawnPoint(l_Instance.transform, s_LevelName)
+		end
+	end
+end
+
 function NodeEditor:EndOfLoad()
 	local s_Counter = 0
 	local s_Waypoints = m_NodeCollection:Get()
@@ -1046,6 +1085,10 @@ function NodeEditor:EndOfLoad()
 	end
 
 	self:Log(nil, 'Load -> Stale Nodes: %d', s_Counter)
+end
+
+function NodeEditor:ParseAllSpawns()
+	m_NodeCollection:ParseAllSpawns()
 end
 
 ---VEXT Shared Level:Destroy Event

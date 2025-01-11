@@ -166,6 +166,7 @@ function BotSpawner:OnEngineUpdate(p_DeltaTime, p_SimulationDeltaTime)
 	end
 
 	if #self._BotsWithoutPath > 0 then
+		g_Profiler:Start("BotSpawner:AfterSpawn")
 		for l_Index = 1, #self._BotsWithoutPath do
 			local l_Bot = self._BotsWithoutPath[l_Index]
 			if l_Bot == nil or l_Bot.m_Player == nil then
@@ -174,7 +175,7 @@ function BotSpawner:OnEngineUpdate(p_DeltaTime, p_SimulationDeltaTime)
 			end
 
 			if l_Bot.m_Player.soldier ~= nil then
-				local s_String, s_SpawnEntity = self:_GetSpecialSpawnEnity(l_Bot.m_Name, l_Bot.m_Player.teamId)
+				local s_String, s_SpawnEntity = self:_GetSpecialSpawnEnity(l_Bot, l_Bot.m_Player.teamId)
 				if s_SpawnEntity then
 					table.remove(self._BotsWithoutPath, l_Index)
 
@@ -193,12 +194,42 @@ function BotSpawner:OnEngineUpdate(p_DeltaTime, p_SimulationDeltaTime)
 
 					break
 				end
-				local s_Position = l_Bot.m_Player.soldier.worldTransform.trans:Clone()
-				-- local s_Node = m_NodeCollection:Find(s_Position, 5)
-				local s_Node = g_GameDirector:FindClosestPath(s_Position, false, false, nil)
 
-				if s_Node ~= nil then
-					l_Bot:SetVarsWay(nil, true, s_Node.PathIndex, s_Node.PointIndex, false)
+				-- check for mate or beacon
+				local s_PathIndex, s_IndexOnPath, s_InvertDirection, s_SpawnEntity, s_SpawnPosition = g_GameDirector:GetSpawnableBeaconOrMate(l_Bot.m_Player.teamId, l_Bot.m_Player.squadId)
+				if s_PathIndex then
+					-- spawn at mate or beacon
+					l_Bot:SetVarsWay(nil, true, s_PathIndex, s_IndexOnPath, s_InvertDirection)
+					if s_SpawnEntity then
+						if l_Bot:_EnterVehicleEntity(s_SpawnEntity, false) ~= 0 then
+							l_Bot:Kill()
+						end
+					elseif s_SpawnPosition then
+						local s_Transform = l_Bot.m_Player.soldier.worldTransform:Clone()
+						s_Transform.trans = s_SpawnPosition
+						l_Bot.m_Player.soldier:SetTransform(s_Transform)
+					end
+
+					self:_ApplyCosumizationAfterSpawn(l_Bot)
+
+					-- for Civilianizer-mod:
+					if Globals.RemoveKitVisuals then
+						Events:Dispatch('Bot:SoldierEntity', l_Bot.m_Player.soldier)
+					end
+				end
+
+				local s_Position = l_Bot.m_Player.soldier.worldTransform.trans:Clone()
+				local s_Link = m_NodeCollection:GetLinkFromSpawnPoint(s_Position)
+				-- print(s_Link)
+				if not s_Link then
+					local s_Node = g_GameDirector:FindClosestPath(s_Position, false, false, nil)
+					if s_Node then
+						s_Link = { s_Node.PathIndex, s_Node.PointIndex }
+					end
+				end
+
+				if s_Link then
+					l_Bot:SetVarsWay(nil, true, s_Link[1], s_Link[2], false)
 					table.remove(self._BotsWithoutPath, l_Index)
 
 					self:_ApplyCosumizationAfterSpawn(l_Bot)
@@ -212,6 +243,7 @@ function BotSpawner:OnEngineUpdate(p_DeltaTime, p_SimulationDeltaTime)
 				end
 			end
 		end
+		g_Profiler:End("BotSpawner:AfterSpawn")
 	end
 end
 
@@ -910,7 +942,7 @@ function BotSpawner:_TriggerSpawn(p_Bot)
 		-- Seems to be the same as DeathMatchSpawn.
 		-- But it has vehicles.
 		self:_RushSpawn(p_Bot)
-	elseif s_CurrentGameMode:match("Conquest") then -- TODO: does this also match Assault?
+	elseif s_CurrentGameMode:match("Conquest") then
 		-- event + target spawn ("ID_H_US_B", "_ID_H_US_HQ", etc.)
 		self:_ConquestSpawn(p_Bot)
 	end
@@ -1381,12 +1413,7 @@ function BotSpawner:_ApplyCosumizationAfterSpawn(p_Bot)
 	p_Bot.m_Player.soldier:ApplyCustomization(self:_GetCustomization(p_Bot, p_Bot.m_Kit))
 end
 
-function BotSpawner:_GetSpecialSpawnEnity(p_BotName, p_TeamId)
-	local s_Beacon = g_GameDirector:GetPlayerBeacon(p_BotName)
-	if s_Beacon ~= nil then
-		return "SpawnAtBeacon", s_Beacon.Entity
-	end
-
+function BotSpawner:_GetSpecialSpawnEnity(p_Bot, p_TeamId)
 	if Config.UseVehicles and self._DelayDirectSpawn <= 0.0 and #g_GameDirector:GetSpawnableVehicle(p_TeamId) > 0 then
 		return "SpawnInVehicle", g_GameDirector:GetSpawnableVehicle(p_TeamId)[1]
 	end

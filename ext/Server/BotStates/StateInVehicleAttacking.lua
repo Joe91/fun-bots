@@ -128,7 +128,7 @@ function StateInVehicleAttacking:UpdateFast(p_Bot, p_DeltaTime)
 		if Config.VehicleMoveWhileShooting and m_Vehicles:IsNotVehicleTerrain(p_Bot.m_ActiveVehicle, VehicleTerrains.Air) then
 			if p_Bot.m_Player.controlledEntryId == 0 and not s_IsStationaryLauncher then -- Only if driver.
 				-- also update movement
-				m_VehicleMovement:UpdateTargetMovementVehicle(p_Bot)
+				m_VehicleMovement:UpdateTargetMovementVehicle(p_Bot, p_DeltaTime)
 			end
 		end
 		m_VehicleAiming:UpdateAimingVehicle(p_Bot, false)

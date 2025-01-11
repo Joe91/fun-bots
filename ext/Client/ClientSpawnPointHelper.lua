@@ -8,6 +8,7 @@ function ClientSpawnPointHelper:__init()
 	self.m_Enabled = false
 	self.m_SpawnPointTable = {}
 	self.m_SelectedSpawnPoint = nil
+	self.m_SelectedSpawnPointIndex = nil
 end
 
 ---VEXT Shared Partition:Loaded Event
@@ -38,6 +39,28 @@ function ClientSpawnPointHelper:OnSetEnabled(p_Args)
 	self.m_Enabled = (s_Enabled == true or s_Enabled == 'true' or s_Enabled == '1')
 end
 
+function ClientSpawnPointHelper:FindSpawn(p_Position)
+	local s_ClosestIndex = 0
+	local s_ClosestDistance = 999999
+
+	for l_Index = 1, #self.m_SpawnPointTable do
+		local s_Transform = self.m_SpawnPointTable[l_Index]
+		local s_Distance = s_Transform.trans:Distance(p_Position)
+		if s_Distance < s_ClosestDistance then
+			s_ClosestIndex = l_Index
+			s_ClosestDistance = s_Distance
+		end
+	end
+
+	if s_ClosestDistance < 0.6 then
+		return s_ClosestIndex
+	end
+end
+
+function ClientSpawnPointHelper:GetSelectedSpawn()
+	return self.m_SelectedSpawnPointIndex
+end
+
 ---VEXT Client UI:DrawHud Event
 function ClientSpawnPointHelper:OnUIDrawHud()
 	self.m_SelectedSpawnPoint = nil
@@ -59,7 +82,7 @@ function ClientSpawnPointHelper:OnUIDrawHud()
 	for l_Index = 1, #self.m_SpawnPointTable do
 		local l_Transform = self.m_SpawnPointTable[l_Index]
 		if l_Transform.trans:Distance(s_LocalPlayer.soldier.worldTransform.trans) <= Config.SpawnPointRange then
-			self:DrawSpawnPoint(l_Transform)
+			self:DrawSpawnPoint(l_Transform, l_Index)
 		end
 	end
 end
@@ -82,7 +105,7 @@ function ClientSpawnPointHelper:OnClientUpdateInput(p_DeltaTime)
 	end
 end
 
-function ClientSpawnPointHelper:DrawSpawnPoint(p_Transform)
+function ClientSpawnPointHelper:DrawSpawnPoint(p_Transform, p_Index)
 	local s_Color = Vec4(1, 1, 1, 0.5)
 	local s_PointScreenPos = ClientUtils:WorldToScreen(p_Transform.trans)
 
@@ -93,6 +116,7 @@ function ClientSpawnPointHelper:DrawSpawnPoint(p_Transform)
 		-- Select point if it's close to the hitPosition.
 		if s_Center:Distance(s_PointScreenPos) < 20 then
 			self.m_SelectedSpawnPoint = p_Transform
+			self.m_SelectedSpawnPointIndex = p_Index
 			s_Color = Vec4(0, 0, 1, 0.5)
 		end
 	end

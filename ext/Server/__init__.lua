@@ -77,6 +77,8 @@ function FunBotServer:__init()
 	self.m_PlayerKilledDelay = 0
 	Events:Subscribe('Engine:Init', self, self.OnEngineInit)
 	Events:Subscribe('Extension:Loaded', self, self.OnExtensionLoaded)
+
+	Events:Subscribe('Partition:Loaded', self, self.OnPartitionLoaded)
 end
 
 ---VEXT Server Engine:Init Event
@@ -247,6 +249,12 @@ function FunBotServer:OnExtensionUnloading()
 	m_BotManager:DestroyAll(nil, nil, true)
 end
 
+---VEXT Shared Partition:Loaded Event
+---@param p_Partition DatabasePartition
+function FunBotServer:OnPartitionLoaded(p_Partition)
+	m_NodeEditor:OnPartitionLoaded(p_Partition)
+end
+
 ---VEXT Shared Engine:Update Event
 ---@param p_DeltaTime number
 ---@param p_SimulationDeltaTime number
@@ -333,6 +341,7 @@ end
 function FunBotServer:OnFinishedLoading()
 	m_NodeEditor:EndOfLoad()
 	m_GameDirector:OnLoadFinished()
+	m_NodeEditor:ParseAllSpawns()
 end
 
 function FunBotServer:DestroyObstacles(p_LevelName, p_GameMode)
