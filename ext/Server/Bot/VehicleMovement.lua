@@ -485,12 +485,13 @@ function VehicleMovement:UpdateYawVehicle(p_Bot, p_Attacking, p_IsStationaryLaun
 
 	local s_Pos = nil
 
-	if m_Vehicles:IsVehicleType(p_Bot.m_ActiveVehicle, VehicleTypes.Plane) and (p_Bot._TargetPoint or p_Bot._NextTargetPoint) then
-		local s_DeltaYaw, s_DeltaPitch
+	if m_Vehicles:IsVehicleType(p_Bot.m_ActiveVehicle, VehicleTypes.Plane) then
+		local s_DeltaYaw, s_DeltaPitch = 0, 0
 
 		if p_Attacking then
+			-- print({ p_Bot._AttackPosition, p_Bot.m_Player.controlledControllable.transform.trans })
 			s_DeltaYaw, s_DeltaPitch = self:CalculateDeviationRelativeToOrientation(p_Bot.m_Player.controlledControllable.transform:Clone(), p_Bot._AttackPosition)
-		else
+		elseif p_Bot._TargetPoint then
 			s_DeltaYaw, s_DeltaPitch = self:CalculateDeviationRelativeToOrientation(p_Bot.m_Player.controlledControllable.transform:Clone(), p_Bot._TargetPoint.Position)
 		end
 
@@ -514,9 +515,9 @@ function VehicleMovement:UpdateYawVehicle(p_Bot, p_Attacking, p_IsStationaryLaun
 
 		local s_DeltaRoll = s_TargetRoll - s_Roll
 
-		if p_Bot.m_Player.teamId == TeamId.Team1 then
-			print({ s_DeltaYaw, s_DeltaPitch, s_DeltaRoll })
-		end
+		-- if p_Bot.m_Player.teamId == TeamId.Team1 then
+		-- 	print({ s_DeltaYaw, s_DeltaPitch, s_DeltaRoll })
+		-- end
 
 		-- Roll
 		p_Bot.m_Player.input:SetLevel(EntryInputActionEnum.EIARoll, -s_DeltaYaw) -- Use delta-yaw for this? s_DeltaRoll
@@ -546,7 +547,7 @@ function VehicleMovement:UpdateYawVehicle(p_Bot, p_Attacking, p_IsStationaryLaun
 			p_Bot.m_Player.input:SetLevel(EntryInputActionEnum.EIABrake, -s_Output_Throttle)
 		end
 
-		if math.abs(s_DeltaYaw) < 0.2 and p_Attacking and math.abs(s_DeltaPitch) < 0.2 then
+		if p_Attacking and math.abs(s_DeltaYaw) < 0.2 and math.abs(s_DeltaPitch) < 0.2 then
 			p_Bot._VehicleReadyToShoot = true
 		else
 			p_Bot._VehicleReadyToShoot = false

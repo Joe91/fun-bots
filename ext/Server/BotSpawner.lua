@@ -178,6 +178,7 @@ function BotSpawner:OnEngineUpdate(p_DeltaTime, p_SimulationDeltaTime)
 				local s_String, s_SpawnEntity = self:_GetSpecialSpawnEnity(l_Bot, l_Bot.m_Player.teamId)
 				if s_SpawnEntity then
 					table.remove(self._BotsWithoutPath, l_Index)
+					l_Bot:SetVarsWay(nil, true, 0, 0, false)
 
 					if l_Bot:_EnterVehicleEntity(s_SpawnEntity, false) ~= 0 then
 						l_Bot:Kill()
