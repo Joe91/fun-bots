@@ -70,12 +70,11 @@ function VehicleMovement:UpdateNormalMovementVehicle(p_DeltaTime, p_Bot)
 	if m_Vehicles:IsVehicleType(p_Bot.m_ActiveVehicle, VehicleTypes.Plane) then
 		local s_TargetPosition = p_Bot.m_Player.controlledControllable.transform.trans:Clone()
 		local s_Forward = p_Bot.m_Player.controlledControllable.transform.forward:Clone()
-		local s_Left = p_Bot.m_Player.controlledControllable.transform.left:Clone()
+		local s_Up = Vec3(0, 1, 0)
+		local s_Right = s_Forward:Cross(s_Up)
 		s_Forward.y = 0
-		s_Left.y = 0
 		s_Forward:Normalize()
-		s_Left:Normalize()
-		s_TargetPosition = s_TargetPosition + (s_Forward * 40) + (s_Left * 70)
+		s_TargetPosition = s_TargetPosition + (s_Forward * 40) + (s_Right * 70)
 		s_TargetPosition.y = s_TargetPosition.y + 10
 		local s_Waypoint = {
 			Position = s_TargetPosition,
@@ -486,60 +485,78 @@ function VehicleMovement:UpdateYawVehicle(p_Bot, p_Attacking, p_IsStationaryLaun
 
 	local s_Pos = nil
 
-	if not p_Attacking then
-		if m_Vehicles:IsVehicleType(p_Bot.m_ActiveVehicle, VehicleTypes.Plane) and p_Bot._TargetPoint then
-			local s_DeltaYaw, s_DeltaPitch = self:CalculateDeviationRelativeToOrientation(p_Bot.m_Player.controlledControllable.transform:Clone(), p_Bot._TargetPoint.Position)
-			local s_Euler = p_Bot.m_Player.controlledControllable.transform:ToQuatTransform(false).rotation:ToEuler()
-			local s_Roll = s_Euler.y
+	if m_Vehicles:IsVehicleType(p_Bot.m_ActiveVehicle, VehicleTypes.Plane) and (p_Bot._TargetPoint or p_Bot._NextTargetPoint) then
+		local s_DeltaYaw, s_DeltaPitch
 
-			local s_TargetRoll = 0
-			-- try to always roll to the yaw-value, to convert it to pitchDeviation (faster)
-			if math.abs(s_DeltaYaw) > 0.1 then
-				s_TargetRoll = -s_DeltaYaw
-			end
-
-			-- limit targetRoll 1,6 (90)
-			if s_TargetRoll > 1.6 then
-				s_TargetRoll = 1.6
-			elseif s_TargetRoll < -1.6 then
-				s_TargetRoll = -1.6
-			end
-
-			local s_DeltaRoll = s_Roll - s_TargetRoll
-
-			print({ s_DeltaYaw, s_DeltaPitch, s_DeltaRoll })
-
-
-			p_Bot.m_Player.input:SetLevel(EntryInputActionEnum.EIARoll, s_DeltaYaw) -- Use delta-yaw for this? s_DeltaRoll
-
-			-- -- Trasform tilt and yaw to rotation of roll.
-			-- local s_TransformedInputYaw = math.cos(s_Current_Roll) * s_DeltaYaw + math.sin(s_Current_Roll) * s_Delta_Tilt
-			-- local s_TransformedInputTilt = math.cos(s_Current_Roll) * s_Delta_Tilt - math.sin(s_Current_Roll) * s_DeltaYaw
-			-- local s_Output_Tilt = p_Bot._Pid_Drv_Tilt:Update(s_TransformedInputTilt)
-			-- local s_Output_Yaw = p_Bot._Pid_Drv_Yaw:Update(s_TransformedInputYaw)
-
-			-- TILT
-			p_Bot.m_Player.input:SetLevel(EntryInputActionEnum.EIAPitch, s_DeltaPitch)
-
-			-- YAW
-			-- No backwards in planes.
-			p_Bot.m_Player.input:SetLevel(EntryInputActionEnum.EIAYaw, s_DeltaYaw)
-
-			-- Throttle.
-			-- Target velocity == 313 km/h → 86.9444 m/s
-			local s_Delta_Speed = 86.9444 - PhysicsEntity(p_Bot.m_Player.controlledControllable).velocity.magnitude
-			local s_Output_Throttle = p_Bot._Pid_Drv_Throttle:Update(s_Delta_Speed)
-			if s_Output_Throttle > 0 then
-				p_Bot.m_Player.input:SetLevel(EntryInputActionEnum.EIAThrottle, s_Output_Throttle)
-				p_Bot.m_Player.input:SetLevel(EntryInputActionEnum.EIABrake, 0.0)
-			else
-				p_Bot.m_Player.input:SetLevel(EntryInputActionEnum.EIAThrottle, 0.0)
-				p_Bot.m_Player.input:SetLevel(EntryInputActionEnum.EIABrake, -s_Output_Throttle)
-			end
-
-
-			return
+		if p_Attacking then
+			s_DeltaYaw, s_DeltaPitch = self:CalculateDeviationRelativeToOrientation(p_Bot.m_Player.controlledControllable.transform:Clone(), p_Bot._AttackPosition)
+		else
+			s_DeltaYaw, s_DeltaPitch = self:CalculateDeviationRelativeToOrientation(p_Bot.m_Player.controlledControllable.transform:Clone(), p_Bot._TargetPoint.Position)
 		end
+
+		local s_Euler = p_Bot.m_Player.controlledControllable.transform:ToQuatTransform(false).rotation:ToEuler()
+		local s_Roll = s_Euler.y
+
+		local s_TargetRoll = 0
+		-- try to always roll to the yaw-value, to convert it to pitchDeviation (faster)
+		-- roll to strongest direction
+
+		if math.abs(s_DeltaYaw) > 0.1 then
+			s_TargetRoll = -s_DeltaYaw
+		end
+
+		-- limit targetRoll 1,6 (90)
+		if s_TargetRoll > 1.6 then
+			s_TargetRoll = 1.6
+		elseif s_TargetRoll < -1.6 then
+			s_TargetRoll = -1.6
+		end
+
+		local s_DeltaRoll = s_TargetRoll - s_Roll
+
+		if p_Bot.m_Player.teamId == TeamId.Team1 then
+			print({ s_DeltaYaw, s_DeltaPitch, s_DeltaRoll })
+		end
+
+		-- Roll
+		p_Bot.m_Player.input:SetLevel(EntryInputActionEnum.EIARoll, -s_DeltaYaw) -- Use delta-yaw for this? s_DeltaRoll
+
+		-- -- Trasform tilt and yaw to rotation of roll.
+		-- local s_TransformedInputYaw = math.cos(s_Current_Roll) * s_DeltaYaw + math.sin(s_Current_Roll) * s_Delta_Tilt
+		-- local s_TransformedInputTilt = math.cos(s_Current_Roll) * s_Delta_Tilt - math.sin(s_Current_Roll) * s_DeltaYaw
+		-- local s_Output_Tilt = p_Bot._Pid_Drv_Tilt:Update(s_DeltaPitch)
+		-- local s_Output_Yaw = p_Bot._Pid_Drv_Yaw:Update(s_DeltaYaw)
+
+		-- TILT
+		p_Bot.m_Player.input:SetLevel(EntryInputActionEnum.EIAPitch, s_DeltaPitch)
+
+		-- YAW
+		-- No backwards in planes.
+		p_Bot.m_Player.input:SetLevel(EntryInputActionEnum.EIAYaw, s_DeltaYaw)
+
+		-- Throttle.
+		-- Target velocity == 313 km/h → 86.9444 m/s
+		local s_Delta_Speed = 86.9444 - PhysicsEntity(p_Bot.m_Player.controlledControllable).velocity.magnitude
+		local s_Output_Throttle = p_Bot._Pid_Drv_Throttle:Update(s_Delta_Speed)
+		if s_Output_Throttle > 0 then
+			p_Bot.m_Player.input:SetLevel(EntryInputActionEnum.EIAThrottle, s_Output_Throttle)
+			p_Bot.m_Player.input:SetLevel(EntryInputActionEnum.EIABrake, 0.0)
+		else
+			p_Bot.m_Player.input:SetLevel(EntryInputActionEnum.EIAThrottle, 0.0)
+			p_Bot.m_Player.input:SetLevel(EntryInputActionEnum.EIABrake, -s_Output_Throttle)
+		end
+
+		if math.abs(s_DeltaYaw) < 0.2 and p_Attacking and math.abs(s_DeltaPitch) < 0.2 then
+			p_Bot._VehicleReadyToShoot = true
+		else
+			p_Bot._VehicleReadyToShoot = false
+		end
+
+
+		return
+	end
+
+	if not p_Attacking then
 		if p_Bot.m_Player.controlledEntryId == 0 and not p_IsStationaryLauncher then
 			local s_Euler = p_Bot.m_Player.controlledControllable.transform:ToQuatTransform(false).rotation:ToEuler()
 			local s_Yaw = -s_Euler.x

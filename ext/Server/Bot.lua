@@ -36,6 +36,8 @@ function Bot:__init(p_Player)
 	self.m_PrefWeapon = ""
 	self.m_PrefVehicle = ""
 
+	self._AttackPosition = Vec3.zero
+
 	-- Common settings.
 	---@type BotSpawnModes
 	self._SpawnMode = BotSpawnModes.NoRespawn
