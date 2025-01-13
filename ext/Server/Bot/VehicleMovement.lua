@@ -55,8 +55,8 @@ function VehicleMovement:UpdateNormalMovementVehicle(p_DeltaTime, p_Bot)
 			local s_Forward = p_Bot.m_Player.controlledControllable.transform.forward:Clone()
 			s_Forward.y = 0
 			s_Forward:Normalize()
-			s_TargetPosition = s_TargetPosition + (s_Forward * 30)
-			s_TargetPosition.y = s_TargetPosition.y + 50
+			s_TargetPosition = s_TargetPosition + (s_Forward * 70)
+			s_TargetPosition.y = s_TargetPosition.y + 70
 			local s_Waypoint = {
 				Position = s_TargetPosition,
 			}
@@ -497,30 +497,46 @@ function VehicleMovement:UpdateYawVehicle(p_Bot, p_Attacking, p_IsStationaryLaun
 
 		local s_Euler = p_Bot.m_Player.controlledControllable.transform:ToQuatTransform(false).rotation:ToEuler()
 		local s_Roll = s_Euler.y
+		local s_Pitch = -s_Euler.z
 
-		local s_TargetRoll = 0
+		local s_TargetRoll = math.pi
 		-- try to always roll to the yaw-value, to convert it to pitchDeviation (faster)
 		-- roll to strongest direction
-
-		if math.abs(s_DeltaYaw) > 0.1 then
-			s_TargetRoll = -s_DeltaYaw
+		if s_DeltaYaw > 0.3 then
+			s_TargetRoll = math.pi * 0.7
+		elseif s_DeltaYaw < -0.3 then
+			s_TargetRoll = math.pi * 1.3
 		end
 
-		-- limit targetRoll 1,6 (90)
-		if s_TargetRoll > 1.6 then
-			s_TargetRoll = 1.6
-		elseif s_TargetRoll < -1.6 then
-			s_TargetRoll = -1.6
-		end
 
-		local s_DeltaRoll = s_TargetRoll - s_Roll
+		s_Roll = s_Roll + math.pi
+
+
+		-- -- limit targetRoll 1,6 (90)
+		-- if s_TargetRoll > 1.6 then
+		-- 	s_TargetRoll = 1.6
+		-- elseif s_TargetRoll < -1.6 then
+		-- 	s_TargetRoll = -1.6
+		-- end
+
 
 		-- if p_Bot.m_Player.teamId == TeamId.Team1 then
 		-- 	print({ s_DeltaYaw, s_DeltaPitch, s_DeltaRoll })
 		-- end
 
 		-- Roll
-		p_Bot.m_Player.input:SetLevel(EntryInputActionEnum.EIARoll, -s_DeltaYaw) -- Use delta-yaw for this? s_DeltaRoll
+		p_Bot.m_Player.input:SetLevel(EntryInputActionEnum.EIARoll, -3 * s_DeltaYaw) -- Use delta-yaw for this? s_DeltaRoll
+
+
+		-- if s_Roll > math.pi / 2 then
+		-- 	s_TargetRoll = 0
+		-- 	p_Bot.m_Player.input:SetLevel(EntryInputActionEnum.EIARoll, -1)
+		-- elseif s_Roll < -math.pi / 2 then
+		-- 	s_TargetRoll = 0
+		-- 	p_Bot.m_Player.input:SetLevel(EntryInputActionEnum.EIARoll, 1)
+		-- else
+
+		-- end
 
 		-- -- Trasform tilt and yaw to rotation of roll.
 		-- local s_TransformedInputYaw = math.cos(s_Current_Roll) * s_DeltaYaw + math.sin(s_Current_Roll) * s_Delta_Tilt
@@ -528,8 +544,14 @@ function VehicleMovement:UpdateYawVehicle(p_Bot, p_Attacking, p_IsStationaryLaun
 		-- local s_Output_Tilt = p_Bot._Pid_Drv_Tilt:Update(s_DeltaPitch)
 		-- local s_Output_Yaw = p_Bot._Pid_Drv_Yaw:Update(s_DeltaYaw)
 
+		-- if s_Pitch > 0.7 and s_DeltaPitch < 0 then
+		-- 	s_DeltaPitch = 0
+		-- elseif s_Pitch < -0.7 and s_DeltaPitch > 0 then
+		-- 	s_DeltaPitch = 0
+		-- end
+
 		-- TILT
-		p_Bot.m_Player.input:SetLevel(EntryInputActionEnum.EIAPitch, s_DeltaPitch)
+		p_Bot.m_Player.input:SetLevel(EntryInputActionEnum.EIAPitch, 3 * s_DeltaPitch)
 
 		-- YAW
 		-- No backwards in planes.
