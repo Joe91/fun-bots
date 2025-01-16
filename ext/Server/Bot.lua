@@ -1182,6 +1182,8 @@ function Bot:UpdateVehicleMovableId()
 
 		if m_Vehicles:IsVehicleType(self.m_ActiveVehicle, VehicleTypes.Plane) then
 			self:SetState(g_BotStates.States.InVehicleJetControl)
+		elseif m_Vehicles:IsVehicleType(self.m_ActiveVehicle, VehicleTypes.StationaryAA) then
+			self:SetState(g_BotStates.States.InVehicleStationaryAaControl)
 		else
 			self:SetState(g_BotStates.States.InVehicleMoving)
 		end
@@ -1295,6 +1297,8 @@ function Bot:_EnterVehicleEntity(p_Entity, p_PlayerIsDriver)
 			if self.m_Player.controlledControllable ~= nil and not self.m_Player.controlledControllable:Is('ServerSoldierEntity') then
 				if m_Vehicles:IsVehicleType(self.m_ActiveVehicle, VehicleTypes.Plane) then
 					self:SetState(g_BotStates.States.InVehicleJetControl)
+				elseif m_Vehicles:IsVehicleType(self.m_ActiveVehicle, VehicleTypes.StationaryAA) then
+					self:SetState(g_BotStates.States.InVehicleStationaryAaControl)
 				else
 					self:SetState(g_BotStates.States.InVehicleMoving)
 				end

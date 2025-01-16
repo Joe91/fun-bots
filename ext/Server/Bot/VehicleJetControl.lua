@@ -102,50 +102,46 @@ end
 ---@param p_Bot Bot
 ---@param p_Attacking boolean
 function VehicleJetControl:UpdateYawJet(p_Bot, p_Attacking)
-	if m_Vehicles:IsVehicleType(p_Bot.m_ActiveVehicle, VehicleTypes.Plane) then
-		local s_DeltaYaw, s_DeltaPitch = 0, 0
+	local s_DeltaYaw, s_DeltaPitch = 0, 0
 
-		if p_Attacking then
-			-- print({ p_Bot._AttackPosition, p_Bot.m_Player.controlledControllable.transform.trans })
-			s_DeltaYaw, s_DeltaPitch = self:CalculateDeviationRelativeToOrientation(p_Bot.m_Player.controlledControllable.transform:Clone(), p_Bot._AttackPosition)
-		elseif p_Bot._TargetPoint then
-			s_DeltaYaw, s_DeltaPitch = self:CalculateDeviationRelativeToOrientation(p_Bot.m_Player.controlledControllable.transform:Clone(), p_Bot._TargetPoint.Position)
-		end
+	if p_Attacking then
+		-- print({ p_Bot._AttackPosition, p_Bot.m_Player.controlledControllable.transform.trans })
+		s_DeltaYaw, s_DeltaPitch = self:CalculateDeviationRelativeToOrientation(p_Bot.m_Player.controlledControllable.transform:Clone(), p_Bot._AttackPosition)
+	elseif p_Bot._TargetPoint then
+		s_DeltaYaw, s_DeltaPitch = self:CalculateDeviationRelativeToOrientation(p_Bot.m_Player.controlledControllable.transform:Clone(), p_Bot._TargetPoint.Position)
+	end
 
-		local s_Euler = p_Bot.m_Player.controlledControllable.transform:ToQuatTransform(false).rotation:ToEuler()
-		local s_Roll = s_Euler.y
+	local s_Euler = p_Bot.m_Player.controlledControllable.transform:ToQuatTransform(false).rotation:ToEuler()
+	local s_Roll = s_Euler.y
 
-		s_Roll = s_Roll + math.pi
+	s_Roll = s_Roll + math.pi
 
-		-- Roll
-		p_Bot.m_Player.input:SetLevel(EntryInputActionEnum.EIARoll, -3 * s_DeltaYaw) -- Use delta-yaw for this? s_DeltaRoll
+	-- Roll
+	p_Bot.m_Player.input:SetLevel(EntryInputActionEnum.EIARoll, -3 * s_DeltaYaw) -- Use delta-yaw for this? s_DeltaRoll
 
-		-- TILT
-		p_Bot.m_Player.input:SetLevel(EntryInputActionEnum.EIAPitch, 3 * s_DeltaPitch)
+	-- TILT
+	p_Bot.m_Player.input:SetLevel(EntryInputActionEnum.EIAPitch, 3 * s_DeltaPitch)
 
-		-- YAW
-		-- No backwards in planes.
-		p_Bot.m_Player.input:SetLevel(EntryInputActionEnum.EIAYaw, s_DeltaYaw)
+	-- YAW
+	-- No backwards in planes.
+	p_Bot.m_Player.input:SetLevel(EntryInputActionEnum.EIAYaw, s_DeltaYaw)
 
-		-- Throttle.
-		-- Target velocity == 313 km/h → 86.9444 m/s
-		local s_Delta_Speed = 86.9444 - PhysicsEntity(p_Bot.m_Player.controlledControllable).velocity.magnitude
-		local s_Output_Throttle = p_Bot._Pid_Drv_Throttle:Update(s_Delta_Speed)
-		if s_Output_Throttle > 0 then
-			p_Bot.m_Player.input:SetLevel(EntryInputActionEnum.EIAThrottle, s_Output_Throttle)
-			p_Bot.m_Player.input:SetLevel(EntryInputActionEnum.EIABrake, 0.0)
-		else
-			p_Bot.m_Player.input:SetLevel(EntryInputActionEnum.EIAThrottle, 0.0)
-			p_Bot.m_Player.input:SetLevel(EntryInputActionEnum.EIABrake, -s_Output_Throttle)
-		end
+	-- Throttle.
+	-- Target velocity == 313 km/h → 86.9444 m/s
+	local s_Delta_Speed = 86.9444 - PhysicsEntity(p_Bot.m_Player.controlledControllable).velocity.magnitude
+	local s_Output_Throttle = p_Bot._Pid_Drv_Throttle:Update(s_Delta_Speed)
+	if s_Output_Throttle > 0 then
+		p_Bot.m_Player.input:SetLevel(EntryInputActionEnum.EIAThrottle, s_Output_Throttle)
+		p_Bot.m_Player.input:SetLevel(EntryInputActionEnum.EIABrake, 0.0)
+	else
+		p_Bot.m_Player.input:SetLevel(EntryInputActionEnum.EIAThrottle, 0.0)
+		p_Bot.m_Player.input:SetLevel(EntryInputActionEnum.EIABrake, -s_Output_Throttle)
+	end
 
-		if p_Attacking and math.abs(s_DeltaYaw) < 0.2 and math.abs(s_DeltaPitch) < 0.2 then
-			p_Bot._VehicleReadyToShoot = true
-		else
-			p_Bot._VehicleReadyToShoot = false
-		end
-
-		return
+	if p_Attacking and math.abs(s_DeltaYaw) < 0.2 and math.abs(s_DeltaPitch) < 0.2 then
+		p_Bot._VehicleReadyToShoot = true
+	else
+		p_Bot._VehicleReadyToShoot = false
 	end
 end
 

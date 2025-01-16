@@ -397,6 +397,33 @@ function VehicleMovement:UpdateVehicleLookAround(p_Bot, p_DeltaTime)
 	end
 end
 
+-- Function to calculate the yaw and pitch deviation relative to the orientation of a reference object
+function VehicleMovement:CalculateDeviationRelativeToOrientation(p_Transform, targetPoint)
+	-- Vector from start point to target point
+	local toTarget = targetPoint - p_Transform.trans
+
+	-- Normalize the vectors
+	local normalizedDirection = p_Transform.forward
+	local normalizedToTarget = toTarget:Normalize()
+
+	-- Calculate the dot product
+	local dotProduct = normalizedDirection:Dot(normalizedToTarget)
+
+	-- Calculate the angle between the vectors - not needed
+	-- local angle = math.acos(dotProduct)
+
+	-- Calculate the cross product to determine the sign of the angle
+	local crossProduct = normalizedDirection:Cross(normalizedToTarget)
+
+	-- Calculate yaw deviation relative to the orientation
+	local yawDeviation = math.atan(crossProduct:Dot(p_Transform.up), dotProduct)
+
+	-- Calculate pitch deviation relative to the orientation
+	local pitchDeviation = math.asin(crossProduct:Dot(p_Transform.left))
+
+	return yawDeviation, pitchDeviation
+end
+
 ---@param p_Bot Bot
 ---@param p_Attacking boolean
 ---@param p_IsStationaryLauncher boolean

@@ -1425,7 +1425,7 @@ function BotSpawner:_GetSpecialSpawnEnity(p_Bot, p_TeamId)
 
 	-- Gunships disabled for now! TODO: enable gunship again, once server-cameras are supported for aiming
 	local s_Gunship = g_GameDirector:GetGunship(p_TeamId)
-	if false and s_Gunship then -- TODO: Remove "false", once the aiming works
+	if s_Gunship then -- TODO: Remove "false", once the aiming works
 		local s_SeatsLeft = false
 		for i = 1, s_Gunship.entryCount - 1 do
 			if s_Gunship:GetPlayerInEntry(i) == nil then
@@ -1469,7 +1469,7 @@ function BotSpawner:_GetSpawnPoint(p_TeamId, p_SquadId)
 
 	-- Gunships disabled for now! TODO: enable gunship again, once server-cameras are supported for aiming
 	local s_Gunship = g_GameDirector:GetGunship(p_TeamId)
-	if false and s_Gunship then -- TODO: Remove "false", once the aiming works
+	if s_Gunship then -- TODO: Remove "false", once the aiming works
 		local s_SeatsLeft = false
 		for i = 1, s_Gunship.entryCount - 1 do
 			if s_Gunship:GetPlayerInEntry(i) == nil then
