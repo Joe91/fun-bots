@@ -173,7 +173,7 @@ function ChatCommands:Execute(p_Parts, p_Player)
 			s_VehicleEntity = p_Player.controlledControllable.physicsEntityBase
 
 			print("Offset of vehicle to bullet:")
-			local s_DiffProjectile = Globals.LastPorjectile.trans - p_Player.controlledControllable.transform.trans
+			-- local s_DiffProjectile = Globals.LastPorjectile.trans - p_Player.controlledControllable.transform.trans
 			for j = 0, s_VehicleEntity.partCount - 1 do
 				if j == 1 then                                                   --j == 1 or j == 3
 					if p_Player.controlledControllable.physicsEntityBase:GetPart(j) ~= nil then -- And p_Player.controlledControllable.physicsEntityBase:GetPart(j):Is("ServerChildComponent") then
