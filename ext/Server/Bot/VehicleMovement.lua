@@ -424,6 +424,14 @@ function VehicleMovement:CalculateDeviationRelativeToOrientation(p_Transform, ta
 	return yawDeviation, pitchDeviation
 end
 
+function VehicleMovement:rotate_vector(v, axis, angle)
+	local cos_theta = math.cos(angle)
+	local sin_theta = math.sin(angle)
+	local dot = v:Dot(axis)
+	local cross = v:Cross(axis)
+	return (v * cos_theta + cross * sin_theta + axis * dot * (1 - cos_theta)):Normalize()
+end
+
 ---@param p_Bot Bot
 ---@param p_Attacking boolean
 ---@param p_IsStationaryLauncher boolean
@@ -439,18 +447,23 @@ function VehicleMovement:UpdateYawVehicle(p_Bot, p_Attacking, p_IsStationaryLaun
 	if m_Vehicles:IsVehicleType(p_Bot.m_ActiveVehicle, VehicleTypes.Gunship) then
 		local s_Transform = p_Bot.m_Player.controlledControllable.physicsEntityBase:GetPartTransform(p_Bot._VehicleMovableId):ToLinearTransform()
 
-		local s_EulerPlane = p_Bot.m_Player.controlledControllable.transform:ToQuatTransform(false).rotation:ToEuler()
-		local s_EulerGun = p_Bot.m_Player.controlledControllable.physicsEntityBase:GetPartTransform(p_Bot._VehicleMovableId).rotation:ToEuler()
-		local s_EulerCombined = s_EulerGun:Clone()
-		s_EulerCombined.y = s_EulerCombined.y + s_EulerPlane.y -- todo: we still need a little more. No idea where this is coming from. Maybe the angle of the guns itself?
-		local s_Quat = Quat(s_EulerCombined)
-		local s_QuatTransform = QuatTransform(s_Quat, Vec4(s_Transform.trans.x, s_Transform.trans.y, s_Transform.trans.z, 1.0))
-		local s_CombindedLinearTransform = s_QuatTransform:ToLinearTransform()
+		-- now rotate corresponding to the gun-alignment
+		-- now modify the orientation as needed
+		local s_forward = s_Transform.forward
+		local s_left = s_Transform.left
+		local s_up = s_Transform.up
 
-		-- already quite good!
-		local s_LinearTransformNew = LinearTransform(Vec3.zero - s_CombindedLinearTransform.forward, s_CombindedLinearTransform.up:Clone(), s_CombindedLinearTransform.left:Clone(), s_Transform.trans) -- already really close!
-		-- TODO: add angle of plane aswell. This is missing right now...
-		-- s_Transform:LookAtTransform(s_Transform.left:Clone(), s_Transform.trans:Clone())
+		local s_Corrections = m_Vehicles:GetRotationOffsets(p_Bot.m_ActiveVehicle, p_Bot._VehicleMovableId, p_Bot._ActiveVehicleWeaponSlot)
+		local s_YawCorr = -s_Corrections.x + Debug.Vars[6]
+		local s_PitchCorr = -s_Corrections.y + Debug.Vars[7]
+
+		local s_NewForward = self:rotate_vector(s_forward, s_up, s_YawCorr)
+		local s_NewLeft = self:rotate_vector(s_left, s_up, s_YawCorr)
+
+		local s_AdjustedForward = self:rotate_vector(s_NewForward, s_NewLeft, s_PitchCorr)
+		local s_AdjustedUp = self:rotate_vector(s_up, s_NewLeft, s_PitchCorr)
+
+		local s_LinearTransformNew = LinearTransform(s_NewLeft, s_AdjustedUp, s_AdjustedForward, s_Transform.trans)
 
 		if p_Attacking then
 			-- print({ p_Bot._AttackPosition, p_Bot.m_Player.controlledControllable.transform.trans })

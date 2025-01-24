@@ -239,6 +239,26 @@ end
 ---@param p_VehicleData VehicleDataInner
 ---@param p_Index integer
 ---@param p_WeaponSelection integer
+function Vehicles:GetRotationOffsets(p_VehicleData, p_Index, p_WeaponSelection)
+	local s_Offset = Vec3.zero
+
+	if p_VehicleData and p_VehicleData.RotationOffset then
+		s_Offset = p_VehicleData.RotationOffset[p_Index + 1]
+		if type(s_Offset) == "table" then
+			if p_WeaponSelection ~= 0 then
+				s_Offset = s_Offset[p_WeaponSelection]
+			else
+				s_Offset = s_Offset[1]
+			end
+		end
+	end
+
+	return s_Offset
+end
+
+---@param p_VehicleData VehicleDataInner
+---@param p_Index integer
+---@param p_WeaponSelection integer
 function Vehicles:GetSpeedAndDrop(p_VehicleData, p_Index, p_WeaponSelection)
 	local s_Drop = nil
 	local s_Speed = nil

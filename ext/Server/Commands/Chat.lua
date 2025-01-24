@@ -243,6 +243,14 @@ function ChatCommands:Execute(p_Parts, p_Player)
 				end
 			end
 		end
+	elseif p_Parts[1] == '!dbg' then
+		local s_Index = tonumber(p_Parts[2]) or 1
+		if s_Index > 10 then
+			s_Index = 1
+		end
+		local s_Value = tonumber(p_Parts[3]) or 0.0
+
+		Debug.Vars[s_Index] = s_Value
 	elseif p_Parts[1] == '!perks' then
 		if PermissionManager:HasPermission(p_Player, 'ChatCommands') == false then
 			ChatManager:SendMessage('You have no permissions for this action (ChatCommands).', p_Player)

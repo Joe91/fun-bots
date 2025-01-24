@@ -39,5 +39,17 @@ Debug = {
 	Logger = {
 		ENABLED = true,
 		PRINTALL = false
+	},
+	Vars = {
+		0,
+		0,
+		0,
+		0,
+		0,
+		0,
+		0,
+		0,
+		0,
+		0
 	}
 }
