@@ -15,12 +15,14 @@ This is the changelog for the version V3.0 Don't forget to [join us on Discord](
 * add two missing weapons
 * Info-Node in maps for future versioning and information
 * Preparation for pathless-jets TODO: rework transformation and aiming for air-vehicles
+* Bots can use the gunships (TODO: separate state with separate distace and tragets)
 
 ### some open TODOs:
 * rework of raycasts for better performance
 * fully support default-sapwn-method
 * further performance increses
-* jet navigation and driving improvements
+* jet navigation and driving improvements (get rid of paths already possible?)
+* performance of spawn-point parsing -> save those?
 
 ### Bug fixes
 * fix stationary AA again...
