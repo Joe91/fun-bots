@@ -178,6 +178,7 @@ function BotSpawner:OnEngineUpdate(p_DeltaTime, p_SimulationDeltaTime)
 				local s_String, s_SpawnEntity = self:_GetSpecialSpawnEnity(l_Bot, l_Bot.m_Player.teamId)
 				if s_SpawnEntity then
 					table.remove(self._BotsWithoutPath, l_Index)
+					l_Bot:SetVarsWay(nil, true, 0, 0, false)
 
 					if l_Bot:_EnterVehicleEntity(s_SpawnEntity, false) ~= 0 then
 						l_Bot:Kill()
@@ -1424,7 +1425,7 @@ function BotSpawner:_GetSpecialSpawnEnity(p_Bot, p_TeamId)
 
 	-- Gunships disabled for now! TODO: enable gunship again, once server-cameras are supported for aiming
 	local s_Gunship = g_GameDirector:GetGunship(p_TeamId)
-	if false and s_Gunship then -- TODO: Remove "false", once the aiming works
+	if s_Gunship then -- TODO: Remove "false", once the aiming works
 		local s_SeatsLeft = false
 		for i = 1, s_Gunship.entryCount - 1 do
 			if s_Gunship:GetPlayerInEntry(i) == nil then
@@ -1468,7 +1469,7 @@ function BotSpawner:_GetSpawnPoint(p_TeamId, p_SquadId)
 
 	-- Gunships disabled for now! TODO: enable gunship again, once server-cameras are supported for aiming
 	local s_Gunship = g_GameDirector:GetGunship(p_TeamId)
-	if false and s_Gunship then -- TODO: Remove "false", once the aiming works
+	if s_Gunship then -- TODO: Remove "false", once the aiming works
 		local s_SeatsLeft = false
 		for i = 1, s_Gunship.entryCount - 1 do
 			if s_Gunship:GetPlayerInEntry(i) == nil then

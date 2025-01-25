@@ -14,6 +14,9 @@ function BotStates:__init()
 		InVehicleMoving = require('BotStates/StateInVehicleMoving'),
 		InVehicleAttacking = require('BotStates/StateInVehicleAttacking'),
 
+		InVehicleJetControl = require('BotStates/StateInVehicleJetControl'),
+		InVehicleStationaryAaControl = require('BotStates/StateInVehicleStationaryAAControl'),
+
 		OnVehicleIdle = require('BotStates/StateOnVehicleIdle'),
 		OnVehicleAttacking = require('BotStates/StateOnVehicleAttacking'),
 	}
@@ -30,7 +33,9 @@ end
 
 function BotStates:IsInVehicleState(p_State)
 	if p_State == self.States.InVehicleAttacking or
-		p_State == self.States.InVehicleMoving then
+		p_State == self.States.InVehicleMoving or
+		p_State == self.States.InVehicleJetControl or
+		p_State == self.States.InVehicleStationaryAaControl then
 		return true
 	else
 		return false
@@ -49,6 +54,8 @@ end
 function BotStates:IsVehicleState(p_State)
 	if p_State == self.States.InVehicleAttacking or
 		p_State == self.States.InVehicleMoving or
+		p_State == self.States.InVehicleJetControl or
+		p_State == self.States.InVehicleStationaryAaControl or
 		p_State == self.States.OnVehicleAttacking or
 		p_State == self.States.OnVehicleIdle then
 		return true

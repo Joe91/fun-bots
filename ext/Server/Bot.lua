@@ -36,6 +36,8 @@ function Bot:__init(p_Player)
 	self.m_PrefWeapon = ""
 	self.m_PrefVehicle = ""
 
+	self._AttackPosition = Vec3.zero
+
 	-- Common settings.
 	---@type BotSpawnModes
 	self._SpawnMode = BotSpawnModes.NoRespawn
@@ -1177,7 +1179,14 @@ function Bot:UpdateVehicleMovableId()
 	if self.m_Player.controlledControllable ~= nil and not self.m_Player.controlledControllable:Is('ServerSoldierEntity') then
 		s_InVehicle = true
 		s_OnVehicle = false
-		self:SetState(g_BotStates.States.InVehicleMoving)
+
+		if m_Vehicles:IsVehicleType(self.m_ActiveVehicle, VehicleTypes.Plane) then
+			self:SetState(g_BotStates.States.InVehicleJetControl)
+		elseif m_Vehicles:IsVehicleType(self.m_ActiveVehicle, VehicleTypes.StationaryAA) then
+			self:SetState(g_BotStates.States.InVehicleStationaryAaControl)
+		else
+			self:SetState(g_BotStates.States.InVehicleMoving)
+		end
 	elseif self.m_Player.attachedControllable ~= nil then
 		s_InVehicle = false
 		s_OnVehicle = true
@@ -1286,7 +1295,13 @@ function Bot:_EnterVehicleEntity(p_Entity, p_PlayerIsDriver)
 
 			-- transition to vehicle state
 			if self.m_Player.controlledControllable ~= nil and not self.m_Player.controlledControllable:Is('ServerSoldierEntity') then
-				self:SetState(g_BotStates.States.InVehicleMoving)
+				if m_Vehicles:IsVehicleType(self.m_ActiveVehicle, VehicleTypes.Plane) then
+					self:SetState(g_BotStates.States.InVehicleJetControl)
+				elseif m_Vehicles:IsVehicleType(self.m_ActiveVehicle, VehicleTypes.StationaryAA) then
+					self:SetState(g_BotStates.States.InVehicleStationaryAaControl)
+				else
+					self:SetState(g_BotStates.States.InVehicleMoving)
+				end
 			elseif self.m_Player.attachedControllable ~= nil then
 				self:SetState(g_BotStates.States.OnVehicleIdle)
 			end

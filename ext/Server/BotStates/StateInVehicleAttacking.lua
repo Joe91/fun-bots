@@ -43,18 +43,7 @@ function StateInVehicleAttacking:Update(p_Bot, p_DeltaTime)
 	-- update state-timer
 	p_Bot.m_StateTimer = p_Bot.m_StateTimer + p_DeltaTime
 
-	-- Stationary AA needs separate handling.
-	if m_Vehicles:IsVehicleType(p_Bot.m_ActiveVehicle, VehicleTypes.StationaryAA) then
-		-- Common part.
-		m_VehicleWeaponHandling:UpdateWeaponSelectionVehicle(p_Bot)
-		-- Differ attacking.
-		m_VehicleAttacking:UpdateAttackStationaryAAVehicle(p_Bot)
-		p_Bot:_UpdateInputs(p_DeltaTime)
-		return
-	end
-
-
-	local s_IsStationaryLauncher = m_Vehicles:IsVehicleType(p_Bot.m_ActiveVehicle, VehicleTypes.StationaryLauncher) or m_Vehicles:IsVehicleType(p_Bot.m_ActiveVehicle, VehicleTypes.StationaryAA)
+	local s_IsStationaryLauncher = m_Vehicles:IsVehicleType(p_Bot.m_ActiveVehicle, VehicleTypes.StationaryLauncher)
 
 	-- Common part.
 	m_VehicleWeaponHandling:UpdateWeaponSelectionVehicle(p_Bot)
@@ -70,7 +59,6 @@ function StateInVehicleAttacking:Update(p_Bot, p_DeltaTime)
 		m_VehicleMovement:UpdateShootMovementVehicle(p_Bot)
 	end
 
-
 	-- Common things.
 	m_VehicleMovement:UpdateSpeedOfMovementVehicle(p_DeltaTime, p_Bot, true)
 	p_Bot:_UpdateInputs(p_DeltaTime)
@@ -80,49 +68,10 @@ end
 ---@param p_Bot Bot
 ---@param p_DeltaTime number
 function StateInVehicleAttacking:UpdateFast(p_Bot, p_DeltaTime)
-	-- Stationary AA needs separate handling.
-	local s_IsStationaryAA = m_Vehicles:IsVehicleType(p_Bot.m_ActiveVehicle, VehicleTypes.StationaryAA)
-	if s_IsStationaryAA then
-		-- Get new target if needed.
-		if p_Bot._DeployTimer > 3.0 then
-			local s_Target = m_AirTargets:GetTarget(p_Bot.m_Player, Config.MaxDistanceAABots)
-			if s_Target ~= nil then
-				p_Bot._ShootPlayerName = s_Target.name
-				p_Bot._ShootPlayer = PlayerManager:GetPlayerByName(p_Bot._ShootPlayerName)
-				p_Bot._ShootPlayerVehicleType = g_PlayerData:GetData(p_Bot._ShootPlayerName).Vehicle
-			else
-				p_Bot:AbortAttack()
-			end
-
-			p_Bot._DeployTimer = 0.0
-		else
-			p_Bot._DeployTimer = p_Bot._DeployTimer + p_DeltaTime
-		end
-	end
-
-	if m_Vehicles:IsVehicleType(p_Bot.m_ActiveVehicle, VehicleTypes.Plane) then
-		-- assign new target after some time
-		if p_Bot._DeployTimer > (Config.BotVehicleFireModeDuration - 0.5) and p_Bot._VehicleTakeoffTimer <= 0.0 then
-			local s_Target = m_AirTargets:GetTarget(p_Bot.m_Player, Registry.VEHICLES.MAX_ATTACK_DISTANCE_JET)
-			if s_Target ~= nil then
-				p_Bot._ShootPlayerName = s_Target.name
-				p_Bot._ShootPlayer = PlayerManager:GetPlayerByName(p_Bot._ShootPlayerName)
-				p_Bot._ShootPlayerVehicleType = g_PlayerData:GetData(p_Bot._ShootPlayerName).Vehicle
-				p_Bot._ShootModeTimer = Config.BotVehicleFireModeDuration
-			else
-				p_Bot:AbortAttack()
-			end
-
-			p_Bot._DeployTimer = 0.0
-		else
-			p_Bot._DeployTimer = p_Bot._DeployTimer + p_DeltaTime
-		end
-	end
-
-	local s_IsStationaryLauncher = m_Vehicles:IsVehicleType(p_Bot.m_ActiveVehicle, VehicleTypes.StationaryLauncher) or s_IsStationaryAA
+	local s_IsStationaryLauncher = m_Vehicles:IsVehicleType(p_Bot.m_ActiveVehicle, VehicleTypes.StationaryLauncher)
 
 	-- Fast code.
-	if m_Vehicles:IsAirVehicle(p_Bot.m_ActiveVehicle) or s_IsStationaryAA then
+	if m_Vehicles:IsAirVehicle(p_Bot.m_ActiveVehicle) then
 		m_VehicleAiming:UpdateAimingVehicle(p_Bot, true)
 	else
 		if Config.VehicleMoveWhileShooting and m_Vehicles:IsNotVehicleTerrain(p_Bot.m_ActiveVehicle, VehicleTerrains.Air) then
@@ -148,9 +97,7 @@ end
 ---@param p_Bot Bot
 ---@param p_DeltaTime number
 function StateInVehicleAttacking:UpdateSlow(p_Bot, p_DeltaTime)
-	if m_Vehicles:IsNotVehicleType(p_Bot.m_ActiveVehicle, VehicleTypes.StationaryAA) then
-		p_Bot:_CheckForVehicleActions(p_DeltaTime, true)
-	end
+	p_Bot:_CheckForVehicleActions(p_DeltaTime, true)
 	p_Bot:_DoExitVehicle()
 end
 

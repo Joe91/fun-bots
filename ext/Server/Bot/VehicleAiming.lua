@@ -111,7 +111,10 @@ function VehicleAiming:UpdateAimingVehicle(p_Bot, p_AdvancedAlgorithm)
 
 	s_TargetMovement = (s_TargetMovement * s_TimeToTravel)
 
-
+	-- only for jet aiming for now
+	local s_AimAtPos = s_FullPositionTarget:Clone() + s_TargetMovement
+	s_AimAtPos.y = s_AimAtPos.y + s_PitchCorrection
+	p_Bot._AttackPosition = s_AimAtPos:Clone()
 
 	-- Calculate yaw and pitch.
 	local s_DifferenceZ = s_FullPositionTarget.z + s_TargetMovement.z - s_FullPositionBot.z
