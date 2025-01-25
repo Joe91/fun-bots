@@ -173,7 +173,7 @@ function ChatCommands:Execute(p_Parts, p_Player)
 			s_VehicleEntity = p_Player.controlledControllable.physicsEntityBase
 
 			print("Offset of vehicle to bullet:")
-			local s_DiffProjectile = Globals.LastPorjectile.trans - p_Player.controlledControllable.transform.trans
+			-- local s_DiffProjectile = Globals.LastPorjectile.trans - p_Player.controlledControllable.transform.trans
 			for j = 0, s_VehicleEntity.partCount - 1 do
 				if j == 1 then                                                   --j == 1 or j == 3
 					if p_Player.controlledControllable.physicsEntityBase:GetPart(j) ~= nil then -- And p_Player.controlledControllable.physicsEntityBase:GetPart(j):Is("ServerChildComponent") then
@@ -243,6 +243,14 @@ function ChatCommands:Execute(p_Parts, p_Player)
 				end
 			end
 		end
+	elseif p_Parts[1] == '!dbg' then
+		local s_Index = tonumber(p_Parts[2]) or 1
+		if s_Index > 10 then
+			s_Index = 1
+		end
+		local s_Value = tonumber(p_Parts[3]) or 0.0
+
+		Debug.Vars[s_Index] = s_Value
 	elseif p_Parts[1] == '!perks' then
 		if PermissionManager:HasPermission(p_Player, 'ChatCommands') == false then
 			ChatManager:SendMessage('You have no permissions for this action (ChatCommands).', p_Player)

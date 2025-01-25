@@ -52,6 +52,8 @@ Registry = {
 		UPDATE_CHANNEL = VersionType.DevBuild,
 		-- Prints current version in console.
 		CLIENT_SHOW_VERSION_ON_JOIN = false,
+		-- compatibility version for traces
+		COMP_MAP_TRACES = 1,
 	},
 	-- Some Client Variables.
 	CLIENT = {

@@ -368,30 +368,44 @@ end
 ---@param p_DeltaTime number
 function VehicleMovement:UpdateVehicleLookAround(p_Bot, p_DeltaTime)
 	-- Move around a little.
-	if p_Bot._VehicleMovableId >= 0 then
-		local s_Pos = p_Bot.m_Player.controlledControllable.transform.forward
-		local s_AtanDzDx = math.atan(s_Pos.z, s_Pos.x)
-		p_Bot._TargetYaw = (s_AtanDzDx > math.pi / 2) and (s_AtanDzDx - math.pi / 2) or (s_AtanDzDx + 3 * math.pi / 2)
-		p_Bot._TargetPitch = 0.0
-
+	if m_Vehicles:IsVehicleType(p_Bot.m_ActiveVehicle, VehicleTypes.Gunship) then
 		p_Bot._VehicleWaitTimer = p_Bot._VehicleWaitTimer + p_DeltaTime
 
-		if p_Bot._VehicleWaitTimer > 9.0 then
-			p_Bot._VehicleWaitTimer = 0.0
-		elseif p_Bot._VehicleWaitTimer >= 6.0 then
-		elseif p_Bot._VehicleWaitTimer >= 3.0 then
-			p_Bot._TargetYaw = p_Bot._TargetYaw - 1.0 -- 60° rotation left.
-			p_Bot._TargetPitch = 0.5
+		local s_TargetPosition = p_Bot.m_Player.controlledControllable.transform.trans:Clone()
+		local s_Forward = p_Bot.m_Player.controlledControllable.transform.left:Clone()
+		s_TargetPosition = s_TargetPosition + (s_Forward * 100)
+		s_TargetPosition.y = s_TargetPosition.y - 50
+		local s_Waypoint = {
+			Position = s_TargetPosition,
+		}
 
-			if p_Bot._TargetYaw < 0.0 then
-				p_Bot._TargetYaw = p_Bot._TargetYaw + (2 * math.pi)
-			end
-		elseif p_Bot._VehicleWaitTimer >= 0.0 then
-			p_Bot._TargetYaw = p_Bot._TargetYaw + 1.0 -- 60° rotation right.
-			p_Bot._TargetPitch = -0.5
+		p_Bot._TargetPoint = s_Waypoint
+	else
+		if p_Bot._VehicleMovableId >= 0 then
+			local s_Pos = p_Bot.m_Player.controlledControllable.transform.forward
+			local s_AtanDzDx = math.atan(s_Pos.z, s_Pos.x)
+			p_Bot._TargetYaw = (s_AtanDzDx > math.pi / 2) and (s_AtanDzDx - math.pi / 2) or (s_AtanDzDx + 3 * math.pi / 2)
+			p_Bot._TargetPitch = 0.0
 
-			if p_Bot._TargetYaw > (math.pi * 2) then
-				p_Bot._TargetYaw = p_Bot._TargetYaw - (2 * math.pi)
+			p_Bot._VehicleWaitTimer = p_Bot._VehicleWaitTimer + p_DeltaTime
+
+			if p_Bot._VehicleWaitTimer > 9.0 then
+				p_Bot._VehicleWaitTimer = 0.0
+			elseif p_Bot._VehicleWaitTimer >= 6.0 then
+			elseif p_Bot._VehicleWaitTimer >= 3.0 then
+				p_Bot._TargetYaw = p_Bot._TargetYaw - 1.0 -- 60° rotation left.
+				p_Bot._TargetPitch = 0.5
+
+				if p_Bot._TargetYaw < 0.0 then
+					p_Bot._TargetYaw = p_Bot._TargetYaw + (2 * math.pi)
+				end
+			elseif p_Bot._VehicleWaitTimer >= 0.0 then
+				p_Bot._TargetYaw = p_Bot._TargetYaw + 1.0 -- 60° rotation right.
+				p_Bot._TargetPitch = -0.5
+
+				if p_Bot._TargetYaw > (math.pi * 2) then
+					p_Bot._TargetYaw = p_Bot._TargetYaw - (2 * math.pi)
+				end
 			end
 		end
 	end
@@ -424,6 +438,14 @@ function VehicleMovement:CalculateDeviationRelativeToOrientation(p_Transform, ta
 	return yawDeviation, pitchDeviation
 end
 
+function VehicleMovement:rotate_vector(v, axis, angle)
+	local cos_theta = math.cos(angle)
+	local sin_theta = math.sin(angle)
+	local dot = v:Dot(axis)
+	local cross = v:Cross(axis)
+	return (v * cos_theta + cross * sin_theta + axis * dot * (1 - cos_theta)):Normalize()
+end
+
 ---@param p_Bot Bot
 ---@param p_Attacking boolean
 ---@param p_IsStationaryLauncher boolean
@@ -436,31 +458,76 @@ function VehicleMovement:UpdateYawVehicle(p_Bot, p_Attacking, p_IsStationaryLaun
 
 	local s_Pos = nil
 
-	if not p_Attacking then
-		if p_Bot.m_Player.controlledEntryId == 0 and not p_IsStationaryLauncher then
-			local s_Euler = p_Bot.m_Player.controlledControllable.transform:ToQuatTransform(false).rotation:ToEuler()
-			local s_Yaw = -s_Euler.x
-			local s_Roll = s_Euler.y
-			local s_Pitch = -s_Euler.z / math.cos(s_Roll)
+	if m_Vehicles:IsVehicleType(p_Bot.m_ActiveVehicle, VehicleTypes.Gunship) then
+		local s_Transform = p_Bot.m_Player.controlledControllable.physicsEntityBase:GetPartTransform(p_Bot._VehicleMovableId):ToLinearTransform()
 
-			-- TODO: delta pitch also needed?
-			s_DeltaYaw = s_Yaw - p_Bot._TargetYaw
-			s_DeltaPitch = s_Pitch - p_Bot._TargetPitch
-			s_Current_Roll = s_Roll
-			s_Current_Pitch = s_Pitch
+		-- now rotate corresponding to the gun-alignment
+		-- now modify the orientation as needed
+		local s_forward = s_Transform.forward
+		local s_left = s_Transform.left
+		local s_up = s_Transform.up
 
-			if p_Bot._VehicleMovableId >= 0 then
-				p_Bot.m_Player.input:SetLevel(EntryInputActionEnum.EIAPitch, 0)
-				local s_EulerGun = p_Bot.m_Player.controlledControllable.physicsEntityBase:GetPartTransform(p_Bot._VehicleMovableId).rotation:ToEuler()
-				local s_DiffPos = s_Euler.x - s_EulerGun.x
-				-- Prepare for moving gun back.
-				p_Bot._LastVehicleYaw = s_Yaw
+		local s_Corrections = m_Vehicles:GetRotationOffsets(p_Bot.m_ActiveVehicle, p_Bot.m_Player.controlledEntryId, p_Bot._ActiveVehicleWeaponSlot)
+		local s_YawCorr = -s_Corrections.x + Debug.Vars[6]
+		local s_PitchCorr = -s_Corrections.y + Debug.Vars[7]
 
-				if math.abs(s_DiffPos) > 0.08 then
-					s_CorrectGunYaw = true
+		local s_NewForward = self:rotate_vector(s_forward, s_up, s_YawCorr)
+		local s_NewLeft = self:rotate_vector(s_left, s_up, s_YawCorr)
+
+		local s_AdjustedForward = self:rotate_vector(s_NewForward, s_NewLeft, s_PitchCorr)
+		local s_AdjustedUp = self:rotate_vector(s_up, s_NewLeft, s_PitchCorr)
+
+		local s_LinearTransformNew = LinearTransform(s_NewLeft, s_AdjustedUp, s_AdjustedForward, s_Transform.trans)
+
+		local s_Direction = Vec3.zero
+		if p_Attacking then
+			-- print({ p_Bot._AttackPosition, p_Bot.m_Player.controlledControllable.transform.trans })
+			s_DeltaYaw, s_DeltaPitch = self:CalculateDeviationRelativeToOrientation(s_LinearTransformNew, p_Bot._AttackPosition)
+			s_Direction = p_Bot._AttackPosition - s_LinearTransformNew.trans
+		elseif p_Bot._TargetPoint then
+			s_DeltaYaw, s_DeltaPitch = self:CalculateDeviationRelativeToOrientation(s_LinearTransformNew, p_Bot._TargetPoint.Position)
+			s_Direction = p_Bot._TargetPoint.Position - s_LinearTransformNew.trans
+		end
+
+		p_Bot._TargetYaw = math.atan(s_Direction.z, s_Direction.x)
+		p_Bot._TargetPitch = 0.0
+	else
+		if not p_Attacking then
+			if p_Bot.m_Player.controlledEntryId == 0 and not p_IsStationaryLauncher then
+				local s_Euler = p_Bot.m_Player.controlledControllable.transform:ToQuatTransform(false).rotation:ToEuler()
+				local s_Yaw = -s_Euler.x
+				local s_Roll = s_Euler.y
+				local s_Pitch = -s_Euler.z / math.cos(s_Roll)
+
+				-- TODO: delta pitch also needed?
+				s_DeltaYaw = s_Yaw - p_Bot._TargetYaw
+				s_DeltaPitch = s_Pitch - p_Bot._TargetPitch
+				s_Current_Roll = s_Roll
+				s_Current_Pitch = s_Pitch
+
+				if p_Bot._VehicleMovableId >= 0 then
+					p_Bot.m_Player.input:SetLevel(EntryInputActionEnum.EIAPitch, 0)
+					local s_EulerGun = p_Bot.m_Player.controlledControllable.physicsEntityBase:GetPartTransform(p_Bot._VehicleMovableId).rotation:ToEuler()
+					local s_DiffPos = s_Euler.x - s_EulerGun.x
+					-- Prepare for moving gun back.
+					p_Bot._LastVehicleYaw = s_Yaw
+
+					if math.abs(s_DiffPos) > 0.08 then
+						s_CorrectGunYaw = true
+					end
+				end
+			else -- Passenger.
+				if p_Bot._VehicleMovableId >= 0 then
+					local s_Euler = p_Bot.m_Player.controlledControllable.physicsEntityBase:GetPartTransform(p_Bot._VehicleMovableId).rotation:ToEuler()
+					local s_Yaw = -s_Euler.x
+					local s_Roll = s_Euler.y
+					local s_Pitch = -s_Euler.z / math.cos(s_Roll)
+
+					s_DeltaPitch = s_Pitch - p_Bot._TargetPitch
+					s_DeltaYaw = s_Yaw - p_Bot._TargetYaw
 				end
 			end
-		else -- Passenger.
+		else
 			if p_Bot._VehicleMovableId >= 0 then
 				local s_Euler = p_Bot.m_Player.controlledControllable.physicsEntityBase:GetPartTransform(p_Bot._VehicleMovableId).rotation:ToEuler()
 				local s_Yaw = -s_Euler.x
@@ -469,43 +536,33 @@ function VehicleMovement:UpdateYawVehicle(p_Bot, p_Attacking, p_IsStationaryLaun
 
 				s_DeltaPitch = s_Pitch - p_Bot._TargetPitch
 				s_DeltaYaw = s_Yaw - p_Bot._TargetYaw
+
+				-- Detect direction for moving gun back.
+				local s_GunDeltaYaw = s_Yaw - p_Bot._LastVehicleYaw
+
+				if s_GunDeltaYaw > math.pi then
+					s_GunDeltaYaw = s_GunDeltaYaw - 2 * math.pi
+				elseif s_GunDeltaYaw < -math.pi then
+					s_GunDeltaYaw = s_GunDeltaYaw + 2 * math.pi
+				end
+
+				if s_GunDeltaYaw > 0 then
+					p_Bot._VehicleDirBackPositive = false
+				else
+					p_Bot._VehicleDirBackPositive = true
+				end
+			elseif m_Vehicles:IsAirVehicle(p_Bot.m_ActiveVehicle) and p_Bot.m_Player.controlledEntryId == 0 then
+				local s_Euler = p_Bot.m_Player.controlledControllable.transform:ToQuatTransform(false).rotation:ToEuler()
+
+				local s_Yaw = -s_Euler.x
+				local s_Roll = s_Euler.y
+				local s_Pitch = -s_Euler.z / math.cos(s_Roll)
+
+				s_DeltaPitch = s_Pitch - p_Bot._TargetPitch
+				s_DeltaYaw = s_Yaw - p_Bot._TargetYaw
+				s_Current_Roll = s_Roll
+				s_Current_Pitch = s_Pitch
 			end
-		end
-	else
-		if p_Bot._VehicleMovableId >= 0 then
-			local s_Euler = p_Bot.m_Player.controlledControllable.physicsEntityBase:GetPartTransform(p_Bot._VehicleMovableId).rotation:ToEuler()
-			local s_Yaw = -s_Euler.x
-			local s_Roll = s_Euler.y
-			local s_Pitch = -s_Euler.z / math.cos(s_Roll)
-
-			s_DeltaPitch = s_Pitch - p_Bot._TargetPitch
-			s_DeltaYaw = s_Yaw - p_Bot._TargetYaw
-
-			-- Detect direction for moving gun back.
-			local s_GunDeltaYaw = s_Yaw - p_Bot._LastVehicleYaw
-
-			if s_GunDeltaYaw > math.pi then
-				s_GunDeltaYaw = s_GunDeltaYaw - 2 * math.pi
-			elseif s_GunDeltaYaw < -math.pi then
-				s_GunDeltaYaw = s_GunDeltaYaw + 2 * math.pi
-			end
-
-			if s_GunDeltaYaw > 0 then
-				p_Bot._VehicleDirBackPositive = false
-			else
-				p_Bot._VehicleDirBackPositive = true
-			end
-		elseif m_Vehicles:IsAirVehicle(p_Bot.m_ActiveVehicle) and p_Bot.m_Player.controlledEntryId == 0 then
-			local s_Euler = p_Bot.m_Player.controlledControllable.transform:ToQuatTransform(false).rotation:ToEuler()
-
-			local s_Yaw = -s_Euler.x
-			local s_Roll = s_Euler.y
-			local s_Pitch = -s_Euler.z / math.cos(s_Roll)
-
-			s_DeltaPitch = s_Pitch - p_Bot._TargetPitch
-			s_DeltaYaw = s_Yaw - p_Bot._TargetYaw
-			s_Current_Roll = s_Roll
-			s_Current_Pitch = s_Pitch
 		end
 	end
 
@@ -520,7 +577,7 @@ function VehicleMovement:UpdateYawVehicle(p_Bot, p_Attacking, p_IsStationaryLaun
 
 	p_Bot.m_Player.input.authoritativeAimingYaw = p_Bot._TargetYaw -- Always set yaw to let the FOV work.
 
-	local s_TargetRangeForShooting = 0.10
+	local s_TargetRangeForShooting = 0.15
 	if s_AbsDeltaYaw < s_TargetRangeForShooting then
 		p_Bot._FullVehicleSteering = false
 		if p_Attacking and s_AbsDeltaPitch < s_TargetRangeForShooting then

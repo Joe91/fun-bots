@@ -551,6 +551,7 @@ VehicleData = {
 		Parts = { -1, { 1, 3 }, { 0, 2 } },
 		Speed = { 300, { 600, 900 }, { 250, 900 } },
 		Drop = { 0.0, { 0.0, 0.0 }, { 0.0, 0.0 } },
+		RotationOffset = { Vec3(0, 0, 0), { Vec3(math.pi / 2, 0.52, 0), Vec3(math.pi / 2, 0, 0) }, { Vec3(math.pi / 2, 0.375, 0), Vec3(math.pi / 2, 0, 0) } } -- use yaw and pitch as offset here
 	},
 	["AC130"] = {
 		Name = "[GUNSHIP]",
@@ -559,6 +560,7 @@ VehicleData = {
 		Parts = { -1, { 1, 3 }, { 0, 2 } },
 		Speed = { 300, { 600, 900 }, { 250, 900 } },
 		Drop = { 0.0, { 0.0, 0.0 }, { 0.0, 0.0 } },
+		RotationOffset = { Vec3(0, 0, 0), { Vec3(math.pi / 2, 0.52, 0), Vec3(math.pi / 2, 0, 0) }, { Vec3(math.pi / 2, 0.375, 0), Vec3(math.pi / 2, 0, 0) } } -- use yaw and pitch as offset here
 	},
 	-- AA Stationary.
 	["Centurion_C-RAM"] = {
