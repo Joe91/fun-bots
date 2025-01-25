@@ -1426,6 +1426,7 @@ function NodeCollection:ProcessAllDataToSave()
 				table.insert(self._InfoNode.Authors, self._SavePlayerName)
 			end
 		end
+		self._InfoNode.CompIndex = Registry.VERSION.COMP_MAP_TRACES
 		self._InfoNode.Date = os.date('%Y-%m-%d %H:%M:%S')
 		local s_JsonData, s_EncodeError = json.encode(self._InfoNode)
 		if s_JsonData == nil then

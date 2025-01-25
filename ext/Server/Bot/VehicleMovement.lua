@@ -368,30 +368,44 @@ end
 ---@param p_DeltaTime number
 function VehicleMovement:UpdateVehicleLookAround(p_Bot, p_DeltaTime)
 	-- Move around a little.
-	if p_Bot._VehicleMovableId >= 0 then
-		local s_Pos = p_Bot.m_Player.controlledControllable.transform.forward
-		local s_AtanDzDx = math.atan(s_Pos.z, s_Pos.x)
-		p_Bot._TargetYaw = (s_AtanDzDx > math.pi / 2) and (s_AtanDzDx - math.pi / 2) or (s_AtanDzDx + 3 * math.pi / 2)
-		p_Bot._TargetPitch = 0.0
-
+	if m_Vehicles:IsVehicleType(p_Bot.m_ActiveVehicle, VehicleTypes.Gunship) then
 		p_Bot._VehicleWaitTimer = p_Bot._VehicleWaitTimer + p_DeltaTime
 
-		if p_Bot._VehicleWaitTimer > 9.0 then
-			p_Bot._VehicleWaitTimer = 0.0
-		elseif p_Bot._VehicleWaitTimer >= 6.0 then
-		elseif p_Bot._VehicleWaitTimer >= 3.0 then
-			p_Bot._TargetYaw = p_Bot._TargetYaw - 1.0 -- 60° rotation left.
-			p_Bot._TargetPitch = 0.5
+		local s_TargetPosition = p_Bot.m_Player.controlledControllable.transform.trans:Clone()
+		local s_Forward = p_Bot.m_Player.controlledControllable.transform.left:Clone()
+		s_TargetPosition = s_TargetPosition + (s_Forward * 100)
+		s_TargetPosition.y = s_TargetPosition.y - 50
+		local s_Waypoint = {
+			Position = s_TargetPosition,
+		}
 
-			if p_Bot._TargetYaw < 0.0 then
-				p_Bot._TargetYaw = p_Bot._TargetYaw + (2 * math.pi)
-			end
-		elseif p_Bot._VehicleWaitTimer >= 0.0 then
-			p_Bot._TargetYaw = p_Bot._TargetYaw + 1.0 -- 60° rotation right.
-			p_Bot._TargetPitch = -0.5
+		p_Bot._TargetPoint = s_Waypoint
+	else
+		if p_Bot._VehicleMovableId >= 0 then
+			local s_Pos = p_Bot.m_Player.controlledControllable.transform.forward
+			local s_AtanDzDx = math.atan(s_Pos.z, s_Pos.x)
+			p_Bot._TargetYaw = (s_AtanDzDx > math.pi / 2) and (s_AtanDzDx - math.pi / 2) or (s_AtanDzDx + 3 * math.pi / 2)
+			p_Bot._TargetPitch = 0.0
 
-			if p_Bot._TargetYaw > (math.pi * 2) then
-				p_Bot._TargetYaw = p_Bot._TargetYaw - (2 * math.pi)
+			p_Bot._VehicleWaitTimer = p_Bot._VehicleWaitTimer + p_DeltaTime
+
+			if p_Bot._VehicleWaitTimer > 9.0 then
+				p_Bot._VehicleWaitTimer = 0.0
+			elseif p_Bot._VehicleWaitTimer >= 6.0 then
+			elseif p_Bot._VehicleWaitTimer >= 3.0 then
+				p_Bot._TargetYaw = p_Bot._TargetYaw - 1.0 -- 60° rotation left.
+				p_Bot._TargetPitch = 0.5
+
+				if p_Bot._TargetYaw < 0.0 then
+					p_Bot._TargetYaw = p_Bot._TargetYaw + (2 * math.pi)
+				end
+			elseif p_Bot._VehicleWaitTimer >= 0.0 then
+				p_Bot._TargetYaw = p_Bot._TargetYaw + 1.0 -- 60° rotation right.
+				p_Bot._TargetPitch = -0.5
+
+				if p_Bot._TargetYaw > (math.pi * 2) then
+					p_Bot._TargetYaw = p_Bot._TargetYaw - (2 * math.pi)
+				end
 			end
 		end
 	end
@@ -465,12 +479,18 @@ function VehicleMovement:UpdateYawVehicle(p_Bot, p_Attacking, p_IsStationaryLaun
 
 		local s_LinearTransformNew = LinearTransform(s_NewLeft, s_AdjustedUp, s_AdjustedForward, s_Transform.trans)
 
+		local s_Direction = Vec3.zero
 		if p_Attacking then
 			-- print({ p_Bot._AttackPosition, p_Bot.m_Player.controlledControllable.transform.trans })
 			s_DeltaYaw, s_DeltaPitch = self:CalculateDeviationRelativeToOrientation(s_LinearTransformNew, p_Bot._AttackPosition)
+			s_Direction = p_Bot._AttackPosition - s_LinearTransformNew.trans
 		elseif p_Bot._TargetPoint then
 			s_DeltaYaw, s_DeltaPitch = self:CalculateDeviationRelativeToOrientation(s_LinearTransformNew, p_Bot._TargetPoint.Position)
+			s_Direction = p_Bot._TargetPoint.Position - s_LinearTransformNew.trans
 		end
+
+		p_Bot._TargetYaw = math.atan(s_Direction.z, s_Direction.x)
+		p_Bot._TargetPitch = 0.0
 	else
 		if not p_Attacking then
 			if p_Bot.m_Player.controlledEntryId == 0 and not p_IsStationaryLauncher then
