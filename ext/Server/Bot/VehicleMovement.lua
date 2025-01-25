@@ -453,7 +453,7 @@ function VehicleMovement:UpdateYawVehicle(p_Bot, p_Attacking, p_IsStationaryLaun
 		local s_left = s_Transform.left
 		local s_up = s_Transform.up
 
-		local s_Corrections = m_Vehicles:GetRotationOffsets(p_Bot.m_ActiveVehicle, p_Bot._VehicleMovableId, p_Bot._ActiveVehicleWeaponSlot)
+		local s_Corrections = m_Vehicles:GetRotationOffsets(p_Bot.m_ActiveVehicle, p_Bot.m_Player.controlledEntryId, p_Bot._ActiveVehicleWeaponSlot)
 		local s_YawCorr = -s_Corrections.x + Debug.Vars[6]
 		local s_PitchCorr = -s_Corrections.y + Debug.Vars[7]
 
