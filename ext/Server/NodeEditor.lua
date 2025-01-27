@@ -1063,6 +1063,11 @@ function NodeEditor:OnPartitionLoaded(p_Partition)
 			local s_LevelName = SharedUtils:GetLevelName() .. SharedUtils:GetCurrentGameMode()
 			---@type AlternateSpawnEntityData
 			l_Instance = AlternateSpawnEntityData(l_Instance)
+			-- print(l_Instance.typeInfo.name)
+			-- print(l_Instance.indexInBlueprint) -- should be uinique. maybe use it?
+			-- print(l_Instance.isEventConnectionTarget)
+			-- print(l_Instance.isPropertyConnectionTarget)
+			-- print(l_Instance.priority)
 			m_NodeCollection:AddSpawnPoint(l_Instance.transform, s_LevelName)
 		end
 	end
@@ -1270,9 +1275,9 @@ function NodeEditor:OnEngineUpdate(p_DeltaTime, p_SimulationDeltaTime)
 			-- selected + isTracepath + showOption (text, node, id)
 
 			local s_PlayerPos = s_Player.soldier.worldTransform.trans
-			local s_WaypointPaths = m_NodeCollection:GetPaths()
+			local s_WaypointPaths = m_NodeCollection:GetPathsAndSpawns()
 			for l_Path, _ in pairs(s_WaypointPaths) do
-				if m_NodeCollection:IsPathVisible(l_Path) and l_Path >= self.m_lastDrawIndexPath[l_PlayerGuid] then
+				if (m_NodeCollection:IsPathVisible(l_Path) and l_Path >= self.m_lastDrawIndexPath[l_PlayerGuid]) then
 					local s_startIndex = 1
 
 					if s_FirstPath then
@@ -1288,7 +1293,7 @@ function NodeEditor:OnEngineUpdate(p_DeltaTime, p_SimulationDeltaTime)
 					local s_FirstNode = s_WaypointPaths[l_Path][1]
 					for l_Waypoint = s_startIndex, #s_WaypointPaths[l_Path] do
 						local l_Node = s_WaypointPaths[l_Path][l_Waypoint]
-						if (l_Node.Next ~= false or l_Node.Previous ~= false) then -- Removed node?
+						if (l_Node.Next ~= false or l_Node.Previous ~= false) or l_Node.PathIndex == 0 then -- Removed node?
 							local s_DrawNode = false
 							local s_DrawLine = false
 							local s_DrawText = false
@@ -1331,7 +1336,14 @@ function NodeEditor:OnEngineUpdate(p_DeltaTime, p_SimulationDeltaTime)
 								-- Fill tables.
 								if l_Node.Data.Links then
 									for i = 1, #l_Node.Data.Links do
-										local s_LinkNode = m_NodeCollection:Get(l_Node.Data.Links[i])
+										local s_Link     = l_Node.Data.Links[i]
+										local s_LinkNode = nil
+										if #s_Link == 2 then
+											s_LinkNode = m_NodeCollection:Get(s_Link[2], s_Link[1])
+										else
+											s_LinkNode = m_NodeCollection:Get(s_Link)
+										end
+
 										if s_LinkNode then
 											s_DataNode.Links[#s_DataNode.Links + 1] = s_LinkNode.Position
 										end

@@ -191,6 +191,10 @@ function NodeCollection:Add(p_SelectionId)
 	return false, 'Must select up to two waypoints'
 end
 
+function NodeCollection:GetSpawnPoints()
+	return self._SpawnPointTable
+end
+
 function NodeCollection:GetLinkFromSpawnPoint(s_Position)
 	local s_ClosestSpawn = nil
 	local s_ClosestDistance = 0
@@ -841,6 +845,38 @@ function NodeCollection:GetPaths()
 	return self._WaypointsByPathIndex
 end
 
+function NodeCollection:ParseSpawnsToNodes()
+	local s_Nodes = {}
+	for l_Index = 1, #self._SpawnPointTable do
+		local s_SpawnPoint = self._SpawnPointTable[l_Index]
+		local s_Node = {
+			PathIndex = 0,
+			PointIndex = l_Index,
+			InputVar = 0,
+			SpeedMode = 0,
+			ExtraMode = 0,
+			OptValue = 0,
+			ID = 'SpawnPoint_' .. l_Index,
+			Position = s_SpawnPoint.Transform.trans,
+			Data = s_SpawnPoint.Data
+		}
+		s_Nodes[#s_Nodes + 1] = s_Node
+	end
+	return s_Nodes
+end
+
+function NodeCollection:GetPathsAndSpawns()
+	local s_Paths = {}
+	-- print(s_Paths[0])
+	local s_LastIndex = 0
+	for l_PathIndex, _ in pairs(self._WaypointsByPathIndex) do
+		s_Paths[l_PathIndex] = self._WaypointsByPathIndex[l_PathIndex]
+		s_LastIndex = l_PathIndex
+	end
+	s_Paths[s_LastIndex + 1] = self:ParseSpawnsToNodes()
+	return s_Paths
+end
+
 function NodeCollection:Clear()
 	m_Logger:Write('NodeCollection:Clear')
 
@@ -1449,32 +1485,32 @@ function NodeCollection:ProcessAllDataToSave()
 		}, ',') .. ')')
 
 		-- don't save spawn-poits for now, just parse them
-		-- -- then save spawn-points
-		-- for l_IndexSpawn = 1, #self._SpawnPointTable do
-		-- 	local s_JsonSaveData = ''
-		-- 	local l_SpawnPoint = self._SpawnPointTable[l_IndexSpawn]
+		-- then save spawn-points
+		for l_IndexSpawn = 1, #self._SpawnPointTable do
+			local s_JsonSaveData = ''
+			local l_SpawnPoint = self._SpawnPointTable[l_IndexSpawn]
 
-		-- 	if l_SpawnPoint ~= nil and type(l_SpawnPoint.Data) == 'table' then
-		-- 		local s_JsonData, s_EncodeError = json.encode(l_SpawnPoint.Data)
-		-- 		if s_JsonData == nil then
-		-- 			m_Logger:Warning('Infonode data could not encode: ' .. tostring(s_EncodeError))
-		-- 		end
-		-- 		if s_JsonData ~= '{}' then
-		-- 			s_JsonSaveData = SQL:Escape(table.concat(s_JsonData:split('"'), '""'))
-		-- 		end
-		-- 	end
+			if l_SpawnPoint ~= nil and type(l_SpawnPoint.Data) == 'table' then
+				local s_JsonData, s_EncodeError = json.encode(l_SpawnPoint.Data)
+				if s_JsonData == nil then
+					m_Logger:Warning('Infonode data could not encode: ' .. tostring(s_EncodeError))
+				end
+				if s_JsonData ~= '{}' then
+					s_JsonSaveData = SQL:Escape(table.concat(s_JsonData:split('"'), '""'))
+				end
+			end
 
-		-- 	-- info-node
-		-- 	table.insert(self._SaveTraceBatchQueries, '(' .. table.concat({
-		-- 		0, -- path
-		-- 		l_IndexSpawn, -- point
-		-- 		0, -- self._SpawnPointTable[l_IndexSpawn].Transform.trans.x, --x
-		-- 		0, -- self._SpawnPointTable[l_IndexSpawn].Transform.trans.y, --y
-		-- 		0, -- self._SpawnPointTable[l_IndexSpawn].Transform.trans.z, --z
-		-- 		1, -- var
-		-- 		'"' .. s_JsonSaveData .. '"'
-		-- 	}, ',') .. ')')
-		-- end
+			-- info-node
+			table.insert(self._SaveTraceBatchQueries, '(' .. table.concat({
+				0, -- path
+				l_IndexSpawn, -- point
+				0, -- self._SpawnPointTable[l_IndexSpawn].Transform.trans.x, --x
+				0, -- self._SpawnPointTable[l_IndexSpawn].Transform.trans.y, --y
+				0, -- self._SpawnPointTable[l_IndexSpawn].Transform.trans.z, --z
+				1, -- var
+				'"' .. s_JsonSaveData .. '"'
+			}, ',') .. ')')
+		end
 
 		-- then save waypoints
 		for l_Index = 1, #self._Waypoints do
