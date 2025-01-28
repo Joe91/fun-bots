@@ -200,8 +200,8 @@ function NodeCollection:GetLinkFromSpawnPoint(s_Position)
 	local s_ClosestDistance = 0
 	for i = 1, #self._SpawnPointTable do
 		local s_SpawnPoint = self._SpawnPointTable[i]
-		-- local s_Distance = m_Utilities:DistanceFast(s_Position, s_SpawnPoint.Transform.trans)
-		local s_Distance = s_Position:Distance(s_SpawnPoint.Transform.trans)
+		local s_Distance = m_Utilities:DistanceFast(s_Position, s_SpawnPoint.Transform.trans)
+		-- local s_Distance = s_Position:Distance(s_SpawnPoint.Transform.trans)
 		if s_ClosestSpawn == nil or s_Distance < s_ClosestDistance then
 			s_ClosestSpawn = s_SpawnPoint
 			s_ClosestDistance = s_Distance
@@ -211,12 +211,21 @@ function NodeCollection:GetLinkFromSpawnPoint(s_Position)
 		end
 	end
 
-	if s_ClosestSpawn ~= nil and s_ClosestSpawn.Data and s_ClosestSpawn.Data.Links then
-		if #s_ClosestSpawn.Data.Links == 1 then
-			return s_ClosestSpawn.Data.Links[1]
-		elseif #s_ClosestSpawn.Data.Links > 1 then
-			local s_RandomIndex = MathUtils:GetRandomInt(1, #s_ClosestSpawn.Data.Links)
-			return s_ClosestSpawn.Data.Links[s_RandomIndex]
+	if s_ClosestSpawn ~= nil then
+		if s_ClosestSpawn.Data == nil or s_ClosestSpawn.Data.Links == nil then
+			print("parse spawn")
+			g_Profiler:Start("ParseSingleSpawn")
+			self:ParseSingleSpawn(s_ClosestSpawn)
+			g_Profiler:End("ParseSingleSpawn")
+		end
+
+		if s_ClosestSpawn.Data and s_ClosestSpawn.Data.Links then
+			if #s_ClosestSpawn.Data.Links == 1 then
+				return s_ClosestSpawn.Data.Links[1]
+			elseif #s_ClosestSpawn.Data.Links > 1 then
+				local s_RandomIndex = MathUtils:GetRandomInt(1, #s_ClosestSpawn.Data.Links)
+				return s_ClosestSpawn.Data.Links[s_RandomIndex]
+			end
 		end
 	end
 end
@@ -1213,68 +1222,81 @@ function NodeCollection:isNodeInFront(p_Point, p_Direction, p_Node)
 	return dotProduct > 0
 end
 
-function NodeCollection:ParseAllSpawns()
-	print("start to parse")
+function NodeCollection:ParseSingleSpawn(p_SpawnPoint)
+	local s_PositionSpawn = p_SpawnPoint.Transform.trans
+
 	local s_MaterialFlags = 0
 	---@type RayCastFlags
 	local s_RaycastFlags = RayCastFlags.DontCheckWater | RayCastFlags.DontCheckCharacter | RayCastFlags.DontCheckRagdoll | RayCastFlags.CheckDetailMesh
 
 	local s_Paths = self:GetPaths()
-	for i = 1, #self._SpawnPointTable do
-		local s_Spawn = self._SpawnPointTable[i]
-		local s_PositionSpawn = s_Spawn.Transform.trans
-		local s_PositionSpawnHigher = s_PositionSpawn:Clone()
-		s_PositionSpawnHigher.y = s_PositionSpawnHigher.y + 1.0
 
-		local s_ClosestPathNodes = {}
-		for l_PathIndex, l_Path in pairs(s_Paths) do
-			if l_Path.Data and l_Path.Data.Objectives and l_Path.Data.Objectives[1] then
-				local s_Objective = l_Path.Data.Objectives[1]
-				if g_GameDirector:IsVehicleEnterPath(s_Objective) then -- TODO: air-paths?
-					goto continue
-				end
-			end
-			if l_Path.Data and l_Path.Data.Vehicles and (table.has(l_Path.Data.Vehicles, "air") or table.has(l_Path.Data.Vehicles, "water")) then
+	local s_PositionSpawnHigher = s_PositionSpawn:Clone()
+	s_PositionSpawnHigher.y = s_PositionSpawnHigher.y + 1.0
+
+	local s_ClosestPathNodes = {}
+	for l_PathIndex, l_Path in pairs(s_Paths) do
+		if l_Path[1].Data and l_Path[1].Data.Objectives and l_Path[1].Data.Objectives[1] then
+			local s_Objective = l_Path[1].Data.Objectives[1]
+			if g_GameDirector:IsVehicleEnterPath(s_Objective) then -- TODO: air-paths?
 				goto continue
 			end
-
-			for l_Index = 1, #l_Path do
-				local s_Waypoint = l_Path[l_Index]
-				local s_Distance = s_PositionSpawn:Distance(s_Waypoint.Position)
-
-				if s_Distance < 15 then
-					s_ClosestPathNodes[#s_ClosestPathNodes + 1] = s_Waypoint
-				end
-			end
-			::continue::
+		end
+		if l_Path[1].Data and l_Path[1].Data.Vehicles and (table.has(l_Path[1].Data.Vehicles, "air") or table.has(l_Path[1].Data.Vehicles, "water")) then
+			goto continue
 		end
 
+		for l_Index = 1, #l_Path do
+			local s_Waypoint = l_Path[l_Index]
 
-		local s_NodeCount = 0
-		local s_PathsLinked = {}
-		-- find closest paths with closest node (3+ paths min)
-		for j = 1, #s_ClosestPathNodes do
-			local s_CloseNode = s_ClosestPathNodes[j]
+			local s_Distance = m_Utilities:DistanceFast(s_PositionSpawn, s_Waypoint.Position)
+			-- local s_Distance = s_PositionSpawn:Distance(s_Waypoint.Position)
 
-			local s_PositionNode = s_CloseNode.Position:Clone()
-			local s_HeightDifference = math.abs(s_PositionSpawn.y - s_PositionNode.y)
+			if s_Distance < 15 then
+				s_ClosestPathNodes[#s_ClosestPathNodes + 1] = s_Waypoint
+			end
+		end
+		::continue::
+	end
 
-			-- check for height difference
 
-			-- check for direction of node (only forward nodes?)
-			if not s_PathsLinked[s_CloseNode.PathIndex] and s_HeightDifference < 2.0 and self:isNodeInFront(s_PositionSpawn, s_Spawn.Transform.forward, s_PositionNode) then
-				s_PositionNode.y = s_PositionNode.y + 1.0
-				local s_Result = RaycastManager:CollisionRaycast(s_PositionNode, s_PositionSpawnHigher, 1, s_MaterialFlags, s_RaycastFlags)
-				if #s_Result == 0 then
-					self:LinkSpawn(s_Spawn, s_CloseNode)
-					s_NodeCount = s_NodeCount + 1
-					s_PathsLinked[s_CloseNode.PathIndex] = true
-					if s_NodeCount > 5 then
-						break
-					end
+	local s_NodeCount = 0
+	local s_PathsLinked = {}
+	-- find closest paths with closest node (3+ paths min)
+	for j = 1, #s_ClosestPathNodes do
+		local s_CloseNode = s_ClosestPathNodes[j]
+
+		local s_PositionNode = s_CloseNode.Position:Clone()
+		local s_HeightDifference = math.abs(s_PositionSpawn.y - s_PositionNode.y)
+
+		-- check for height difference
+
+		-- check for direction of node (only forward nodes?)
+		if not s_PathsLinked[s_CloseNode.PathIndex] and s_HeightDifference < 2.0 and self:isNodeInFront(s_PositionSpawn, p_SpawnPoint.Transform.forward, s_PositionNode) then
+			s_PositionNode.y = s_PositionNode.y + 1.0
+			local s_Result = RaycastManager:CollisionRaycast(s_PositionNode, s_PositionSpawnHigher, 1, s_MaterialFlags, s_RaycastFlags)
+			if #s_Result == 0 then
+				self:LinkSpawn(p_SpawnPoint, s_CloseNode)
+				s_NodeCount = s_NodeCount + 1
+				s_PathsLinked[s_CloseNode.PathIndex] = true
+				if s_NodeCount >= 5 then
+					break
 				end
 			end
 		end
+	end
+	if s_NodeCount == 0 and #s_ClosestPathNodes > 0 then
+		-- no node found, just use one randomly
+		local s_RandomIndex = MathUtils:GetRandomInt(1, #s_ClosestPathNodes)
+		self:LinkSpawn(p_SpawnPoint, s_ClosestPathNodes[s_RandomIndex])
+	end
+end
+
+function NodeCollection:ParseAllSpawns()
+	print("start to parse")
+	for i = 1, #self._SpawnPointTable do
+		local s_Spawn = self._SpawnPointTable[i]
+		self:ParseSingleSpawn(s_Spawn)
 	end
 	print("end of parse")
 end
@@ -1838,9 +1860,9 @@ function NodeCollection:GetDistance(p_Waypoint, p_Vec3Position)
 	local s_DiffY = math.abs(s_PosA.y - s_PosB.y)
 	local s_DiffZ = math.abs(s_PosA.z - s_PosB.z)
 	if s_DiffX > s_DiffZ then
-		return s_DiffX + 0.5 * s_DiffZ + 0.25 * s_DiffY
+		return s_DiffX + s_DiffZ + 0.25 * s_DiffY
 	else
-		return s_DiffZ + 0.5 * s_DiffX + 0.25 * s_DiffY
+		return s_DiffZ + s_DiffX + 0.25 * s_DiffY
 	end
 end
 
