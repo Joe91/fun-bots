@@ -1234,15 +1234,20 @@ function NodeCollection:ParseSingleSpawn(p_SpawnPoint)
 	local s_PositionSpawnHigher = s_PositionSpawn:Clone()
 	s_PositionSpawnHigher.y = s_PositionSpawnHigher.y + 1.0
 
+	local s_TargetDistance = 15.0
+	if Globals.IsConquest then
+		s_TargetDistance = 30.0
+	end
+
 	local s_ClosestPathNodes = {}
 	for l_PathIndex, l_Path in pairs(s_Paths) do
-		if l_Path[1].Data and l_Path[1].Data.Objectives and l_Path[1].Data.Objectives[1] then
+		if l_Path[1] and l_Path[1].Data and l_Path[1].Data.Objectives and l_Path[1].Data.Objectives[1] then
 			local s_Objective = l_Path[1].Data.Objectives[1]
 			if g_GameDirector:IsVehicleEnterPath(s_Objective) then -- TODO: air-paths?
 				goto continue
 			end
 		end
-		if l_Path[1].Data and l_Path[1].Data.Vehicles and (table.has(l_Path[1].Data.Vehicles, "air") or table.has(l_Path[1].Data.Vehicles, "water")) then
+		if l_Path[1].Data and l_Path[1].Data.Vehicles and #l_Path[1].Data.Vehicles ~= 0 and (table.has(l_Path[1].Data.Vehicles, "air") or table.has(l_Path[1].Data.Vehicles, "water")) then
 			goto continue
 		end
 
@@ -1252,7 +1257,7 @@ function NodeCollection:ParseSingleSpawn(p_SpawnPoint)
 			local s_Distance = m_Utilities:DistanceFast(s_PositionSpawn, s_Waypoint.Position)
 			-- local s_Distance = s_PositionSpawn:Distance(s_Waypoint.Position)
 
-			if s_Distance < 15 then
+			if s_Distance < s_TargetDistance then
 				s_ClosestPathNodes[#s_ClosestPathNodes + 1] = s_Waypoint
 			end
 		end
