@@ -1260,6 +1260,17 @@ SettingsDefinition = {
 			Category = "TRACE"
 		},
 		{
+			Name = "DrawParsedSpawns",
+			Text = "Draw Parsed Spawns",
+			---@type Type|integer
+			Type = Type.Boolean,
+			Value = Config.DrawParsedSpawns,
+			Description = "Draw the parsed spawn-points with parsed links",
+			Default = false,
+			UpdateFlag = UpdateFlag.None,
+			Category = "TRACE"
+		},
+		{
 			Name = "SpawnPointRange",
 			Text = "Range of Spawn Points",
 			---@type Type|integer

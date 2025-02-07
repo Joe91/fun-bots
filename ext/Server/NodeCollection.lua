@@ -882,7 +882,9 @@ function NodeCollection:GetPathsAndSpawns()
 		s_Paths[l_PathIndex] = self._WaypointsByPathIndex[l_PathIndex]
 		s_LastIndex = l_PathIndex
 	end
-	s_Paths[s_LastIndex + 1] = self:ParseSpawnsToNodes()
+	if Config.DrawParsedSpawns then
+		s_Paths[s_LastIndex + 1] = self:ParseSpawnsToNodes()
+	end
 	return s_Paths
 end
 
