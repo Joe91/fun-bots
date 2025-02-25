@@ -36,7 +36,7 @@ Config = {
 	SpawnInBothTeams = true,			-- Bots spawn in both teams 
 	InitNumberOfBots = 10,				-- Bots for spawnmode 
 	NewBotsPerNewPlayer = 1.6,			-- Number to increase Bots by when new players join 
-	FactorPlayerTeamCount = 0.9,		-- Reduce player team in balanced_teams or fixed_number mode 
+	FactorPlayerTeamCount = 1.0,		-- Reduce player team in balanced_teams or fixed_number mode 
 	BotTeam = 0,						-- Default bot team (0 = neutral / auto, 1 = US, 2 = RU) TeamId.Team2 
 	BotNewLoadoutOnSpawn = true,		-- Bots get a new kit and color, if they respawn 
 	MaxAssaultBots = -1,				-- Maximum number of Bots with Assault Kit. -1 = no limit 
@@ -163,7 +163,7 @@ Config = {
 	MaxTrysToSpawnAtDistance = 3,		-- Try this often to spawn a bot away from players 
 	AttackWayBots = true,				-- Bots on paths attack player 
 	RespawnWayBots = true,				-- Bots on paths respawn if killed 
-	SpawnMethod = SpawnMethod.Spawn,	-- Method the bots spawn with. Careful, not supported on most of the maps!! 
+	SpawnMethod = SpawnMethod.SpawnOnTdm,	-- Method the bots spawn with. Careful, not supported on most of the maps!! 
 
 	-- OTHER 
 	DisableUserInterface = false,		-- If true, the complete UI will be disabled (not available in the UI) 

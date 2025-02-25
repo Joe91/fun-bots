@@ -358,7 +358,7 @@ SettingsDefinition = {
 			Value = Config.FactorPlayerTeamCount,
 			Description = "Reduce player team in balanced_teams or fixed_number mode",
 			Reference = Range(0.00, 1.00, 0.05),
-			Default = 0.9,
+			Default = 1.0,
 			UpdateFlag = UpdateFlag.AmountAndTeam,
 			Category = "SPAWN"
 		},
@@ -1691,7 +1691,7 @@ SettingsDefinition = {
 			Value = Config.SpawnMethod,
 			Description = "Method the bots spawn with. Careful, not supported on most of the maps!!",
 			Reference = SpawnMethod,
-			Default = SpawnMethod.Spawn,
+			Default = SpawnMethod.SpawnOnTdm,
 			UpdateFlag = UpdateFlag.None,
 			Category = "EXPERT"
 		},

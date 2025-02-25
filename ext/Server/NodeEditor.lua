@@ -1070,7 +1070,7 @@ function NodeEditor:OnPartitionLoaded(p_Partition)
 			-- print(l_Instance.isPropertyConnectionTarget)
 			-- print(l_Instance.priority)
 			m_NodeCollection:AddSpawnPoint(l_Instance.transform, s_LevelName)
-			print("add spawn")
+			-- print("add spawn")
 		end
 	end
 end

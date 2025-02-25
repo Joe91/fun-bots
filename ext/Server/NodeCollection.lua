@@ -214,10 +214,9 @@ function NodeCollection:GetLinkFromSpawnPoint(s_Position)
 
 	if s_ClosestSpawn ~= nil then
 		if s_ClosestSpawn.Data == nil or s_ClosestSpawn.Data.Links == nil then
-			print("parse spawn")
-			g_Profiler:Start("ParseSingleSpawn")
+			-- g_Profiler:Start("ParseSingleSpawn")
 			self:ParseSingleSpawn(s_ClosestSpawn)
-			g_Profiler:End("ParseSingleSpawn")
+			-- g_Profiler:End("ParseSingleSpawn")
 		end
 
 		if s_ClosestSpawn.Data and s_ClosestSpawn.Data.Links then
@@ -232,8 +231,6 @@ function NodeCollection:GetLinkFromSpawnPoint(s_Position)
 end
 
 function NodeCollection:ClearSpawnPoints()
-	print("CLEAR-TABLE")
-	print(#self._SpawnPointTable)
 	self._SpawnPointTable = {}
 end
 
@@ -1225,7 +1222,9 @@ function NodeCollection:isNodeInFront(p_Point, p_Direction, p_Node)
 	return dotProduct > 0
 end
 
-function NodeCollection:AddToClosestSpawnPoint(p_Node, p_FirstNode)
+function NodeCollection:AddToClosestSpawnPoint(p_Node)
+	local s_FirstNode = self._LoadLastFirstNode
+
 	local s_ClosestSpawnPoint = nil
 	local s_ClosestDistance = 9999999
 
@@ -1311,12 +1310,10 @@ function NodeCollection:ParseSingleSpawn(p_SpawnPoint)
 end
 
 function NodeCollection:ParseAllSpawns()
-	print("start to parse")
 	for i = 1, #self._SpawnPointTable do
 		local s_Spawn = self._SpawnPointTable[i]
 		self:ParseSingleSpawn(s_Spawn)
 	end
-	print("end of parse")
 end
 
 -----------------------------
@@ -1450,7 +1447,7 @@ function NodeCollection:ProcessAllDataToLoad()
 				self._LoadLastWaypoint = s_Waypoint
 
 				-- TODO: partly parse spawn-points here?
-				self:AddToClosestSpawnPoint(s_Waypoint)
+				-- self:AddToClosestSpawnPoint(s_Waypoint)
 			end
 			self._LoadWaypointCount = self._LoadWaypointCount + 1
 		end
