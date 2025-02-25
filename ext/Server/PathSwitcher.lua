@@ -279,7 +279,6 @@ function PathSwitcher:GetNewPath(p_Bot, p_BotId, p_Point, p_Objective, p_InVehic
 		local s_RandomPath = s_ValidPaths[s_HighestPrioPathsIndex[s_RandomIndex]]
 
 		if (s_RandomPath == nil) then
-			print("!!! was nil !!!")
 			return false
 		end
 

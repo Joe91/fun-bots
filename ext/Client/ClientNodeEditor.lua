@@ -250,15 +250,24 @@ function ClientNodeEditor:_DrawData(p_DataPoint)
 	local s_Color = self.m_Colors.Orphan
 
 	-- Happens after the 20th path --To-do: add more colours?
-	if self.m_Colors[s_Waypoint.PathIndex] == nil then
-		local r, g, b = (math.random(20, 100) / 100), (math.random(20, 100) / 100), (math.random(20, 100) / 100)
-		self.m_Colors[s_Waypoint.PathIndex] = {
-			Node = Vec4(r, g, b, 0.25),
-			Line = Vec4(r, g, b, 1),
+	if s_Waypoint.PathIndex > 0 then
+		if self.m_Colors[s_Waypoint.PathIndex] == nil then
+			local r, g, b = (math.random(20, 100) / 100), (math.random(20, 100) / 100), (math.random(20, 100) / 100)
+			self.m_Colors[s_Waypoint.PathIndex] = {
+				Node = Vec4(r, g, b, 0.25),
+				Line = Vec4(r, g, b, 1),
+			}
+		end
+
+		s_Color = self.m_Colors[s_Waypoint.PathIndex]
+	else
+		-- print("node with index 0")
+		-- print(s_Waypoint)
+		s_Color = {
+			Node = self.m_Colors.Red,
+			Line = self.m_Colors.Red,
 		}
 	end
-
-	s_Color = self.m_Colors[s_Waypoint.PathIndex]
 
 	if s_IsTracePath then
 		s_Color = {
@@ -315,7 +324,7 @@ function ClientNodeEditor:_DrawData(p_DataPoint)
 		end
 
 		-- Draw Links.
-		if s_Waypoint.Data and s_Waypoint.Data.LinkMode ~= nil and s_Waypoint.Data.Links ~= nil then
+		if s_Waypoint.Data and s_Waypoint.Data.Links ~= nil then
 			for l_Index = 1, #p_DataPoint.Links do
 				local l_LinkPos = p_DataPoint.Links[l_Index]
 				self:DrawLine(l_LinkPos, s_Waypoint.Position, self.m_Colors.Purple, self.m_Colors.Purple)

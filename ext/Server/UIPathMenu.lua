@@ -806,7 +806,6 @@ function FunBotUIPathMenu:_OnPathMenuRequest(p_Player, p_Data)
 		return
 	else
 		print(request.action)
-		print("not found")
 	end
 end
 

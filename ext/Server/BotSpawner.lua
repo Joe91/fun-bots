@@ -119,14 +119,14 @@ function BotSpawner:OnEngineUpdate(p_DeltaTime, p_SimulationDeltaTime)
 
 	if #self._SpawnSets > 0 then
 		if self._BotSpawnTimer > 0.2 then -- Time to wait between spawn. 0.2 works
-			g_Profiler:Start("BotSpawner:Spawn")
+			-- g_Profiler:Start("BotSpawner:Spawn")
 			self._BotSpawnTimer = 0.0
 			---@type SpawnSet
 			local s_SpawnSet = table.remove(self._SpawnSets, 1)
 			self:_SpawnSingleWayBot(s_SpawnSet.PlayerVarOfBot, s_SpawnSet.UseRandomWay, s_SpawnSet.ActiveWayIndex,
 				s_SpawnSet.IndexOnPath, s_SpawnSet.Bot, s_SpawnSet.Team)
 
-			g_Profiler:End("BotSpawner:Spawn")
+			-- g_Profiler:End("BotSpawner:Spawn")
 		end
 
 		self._BotSpawnTimer = self._BotSpawnTimer + p_DeltaTime
@@ -166,7 +166,7 @@ function BotSpawner:OnEngineUpdate(p_DeltaTime, p_SimulationDeltaTime)
 	end
 
 	if #self._BotsWithoutPath > 0 then
-		g_Profiler:Start("BotSpawner:AfterSpawn")
+		-- g_Profiler:Start("BotSpawner:AfterSpawn")
 		for l_Index = 1, #self._BotsWithoutPath do
 			local l_Bot = self._BotsWithoutPath[l_Index]
 			if l_Bot == nil or l_Bot.m_Player == nil then
@@ -244,7 +244,7 @@ function BotSpawner:OnEngineUpdate(p_DeltaTime, p_SimulationDeltaTime)
 				end
 			end
 		end
-		g_Profiler:End("BotSpawner:AfterSpawn")
+		-- g_Profiler:End("BotSpawner:AfterSpawn")
 	end
 end
 
@@ -1201,8 +1201,8 @@ function BotSpawner:_SpawnSingleWayBot(p_Player, p_UseRandomWay, p_ActiveWayInde
 	local s_InverseDirection = nil
 
 	if s_Name ~= nil or s_IsRespawn then
-		g_Profiler:Start("BotSpawner:SpawnPart2") -- about 60 ms on conquest (close to 0 on deathmatch)
-		if Config.SpawnMethod == SpawnMethod.Spawn then
+		-- g_Profiler:Start("BotSpawner:SpawnPart2") -- about 60 ms on conquest (close to 0 on deathmatch)
+		if Globals.UsedSpawnMethod == SpawnMethod.Spawn then
 			local s_Bot = self:GetBot(p_ExistingBot, s_Name, s_TeamId, s_SquadId)
 
 			if s_Bot == nil then
@@ -1291,8 +1291,8 @@ function BotSpawner:_SpawnSingleWayBot(p_Player, p_UseRandomWay, p_ActiveWayInde
 			s_SpawnPoint = m_NodeCollection:Get(p_IndexOnPath, p_ActiveWayIndex)
 		end
 
-		g_Profiler:End("BotSpawner:SpawnPart2")
-		g_Profiler:Start("BotSpawner:SpawnPart3") -- about 20 ms
+		-- g_Profiler:End("BotSpawner:SpawnPart2")
+		-- g_Profiler:Start("BotSpawner:SpawnPart3") -- about 20 ms
 		if s_SpawnPoint == nil then
 			if s_SquadSpawnVehicle ~= nil then
 				s_SpawnPoint = m_NodeCollection:Get()[1]
@@ -1343,7 +1343,7 @@ function BotSpawner:_SpawnSingleWayBot(p_Player, p_UseRandomWay, p_ActiveWayInde
 				end
 			end
 		end
-		g_Profiler:End("BotSpawner:SpawnPart3")
+		-- g_Profiler:End("BotSpawner:SpawnPart3")
 	end
 end
 

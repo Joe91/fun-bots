@@ -327,6 +327,14 @@ function FunBotServer:OnLevelLoaded(p_LevelName, p_GameMode, p_Round, p_RoundsPe
 	self:DetectSpecialMods()
 	self:RegisterInputRestrictionEventCallbacks()
 	self:SetGameMode(p_GameMode, p_LevelName)
+	Globals.UsedSpawnMethod = Config.SpawnMethod
+	if Config.SpawnMethod == SpawnMethod.SpawnOnTdm then
+		if Globals.IsTdm then
+			Globals.UsedSpawnMethod = SpawnMethod.Spawn
+		else
+			Globals.UsedSpawnMethod = SpawnMethod.SpawnSoldierAt
+		end
+	end
 	self:SetMaxBotsPerTeam(p_GameMode)
 	if Registry.COMMON.DESTROY_OBSTACLES_ON_START then
 		self:DestroyObstacles(p_LevelName, p_GameMode)
@@ -341,7 +349,10 @@ end
 function FunBotServer:OnFinishedLoading()
 	m_NodeEditor:EndOfLoad()
 	m_GameDirector:OnLoadFinished()
-	m_NodeEditor:ParseAllSpawns()
+	-- don't parse the spawn before on other map-types than TDM
+	if Globals.IsTdm and Config.SpawnMethod == SpawnMethod.SpawnOnTdm then
+		m_NodeEditor:ParseAllSpawns()
+	end
 end
 
 function FunBotServer:DestroyObstacles(p_LevelName, p_GameMode)

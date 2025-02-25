@@ -153,7 +153,7 @@ function GameDirector:OnEngineUpdate(p_DeltaTime)
 		return
 	end
 
-	g_Profiler:Start("GameDirector:Update1")
+	-- g_Profiler:Start("GameDirector:Update1")
 
 	if Globals.IsRush then
 		self:_UpdateTimersOfMcoms(self.m_UpdateTimer)
@@ -184,13 +184,18 @@ function GameDirector:OnEngineUpdate(p_DeltaTime)
 				-- check if bot is on active path
 				local s_CurrentPathFirst = m_NodeCollection:GetFirst(l_Bot._PathIndex)
 				local s_CurrentPathStatus = 0
+				local s_OnVehiclePath = false
 				local s_OnBasePath = false
-				if s_CurrentPathFirst ~= nil and type(s_CurrentPathFirst) ~= 'boolean' and s_CurrentPathFirst.Data ~= nil and s_CurrentPathFirst.Data.Objectives ~= nil then
-					s_CurrentPathStatus = self:GetEnableStateOfPath(s_CurrentPathFirst.Data.Objectives)
-					s_OnBasePath = (self:IsBasePath(s_CurrentPathFirst.Data.Objectives) and (#s_CurrentPathFirst.Data.Objectives == 1))
+				if s_CurrentPathFirst and type(s_CurrentPathFirst) ~= 'boolean' and s_CurrentPathFirst.Data then
+					if s_CurrentPathFirst.Data.Objectives then
+						s_CurrentPathStatus = self:GetEnableStateOfPath(s_CurrentPathFirst.Data.Objectives)
+						s_OnBasePath = (self:IsBasePath(s_CurrentPathFirst.Data.Objectives) and (#s_CurrentPathFirst.Data.Objectives == 1))
+					elseif s_CurrentPathFirst.Data.Vehicles and table.has(s_CurrentPathFirst.Data.Vehicles, "land") then
+						s_OnVehiclePath = true
+					end
 				end
 
-				if s_CurrentPathStatus == 0 or s_OnBasePath then
+				if (s_CurrentPathStatus == 0 or s_OnBasePath) and not s_OnVehiclePath then
 					l_Bot._KillYourselfTimer = l_Bot._KillYourselfTimer + Registry.GAME_DIRECTOR.UPDATE_OBJECTIVES_CYCLE
 				else
 					l_Bot._KillYourselfTimer = 0.0
@@ -208,8 +213,8 @@ function GameDirector:OnEngineUpdate(p_DeltaTime)
 		end
 	end
 
-	g_Profiler:End("GameDirector:Update1")
-	g_Profiler:Start("GameDirector:Update2")
+	-- g_Profiler:End("GameDirector:Update1")
+	-- g_Profiler:Start("GameDirector:Update2")
 
 	local s_MaxAssignsAttack = {}
 	local s_MaxAssignsDefend = {}
@@ -287,8 +292,8 @@ function GameDirector:OnEngineUpdate(p_DeltaTime)
 		end
 	end
 
-	g_Profiler:End("GameDirector:Update2")
-	g_Profiler:Start("GameDirector:Update3")
+	-- g_Profiler:End("GameDirector:Update2")
+	-- g_Profiler:Start("GameDirector:Update3")
 
 	for l_BotTeam = 1, #s_BotsByTeam do
 		local l_Bots = s_BotsByTeam[l_BotTeam]
@@ -443,7 +448,7 @@ function GameDirector:OnEngineUpdate(p_DeltaTime)
 			::continue_with_next_bot::
 		end
 	end
-	g_Profiler:End("GameDirector:Update3")
+	-- g_Profiler:End("GameDirector:Update3")
 end
 
 -- =============================================
