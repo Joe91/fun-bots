@@ -961,7 +961,7 @@ SettingsDefinition = {
 			Value = Config.MaxShootDistanceVehicles,
 			Description = "Meters bots in Vehicles start shooting at players",
 			Reference = Range(1.00, 1500.00, 5.0),
-			Default = 250,
+			Default = 500,
 			UpdateFlag = UpdateFlag.None,
 			Category = "VEHICLE"
 		},
@@ -973,7 +973,7 @@ SettingsDefinition = {
 			Value = Config.MaxShootDistanceNoAntiAir,
 			Description = "Meters bots in vehicle (no Anti-Air) starts shooting at players",
 			Reference = Range(1.00, 1500.00, 5.0),
-			Default = 150,
+			Default = 175,
 			UpdateFlag = UpdateFlag.None,
 			Category = "VEHICLE"
 		},

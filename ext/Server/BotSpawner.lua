@@ -118,14 +118,13 @@ function BotSpawner:OnEngineUpdate(p_DeltaTime, p_SimulationDeltaTime)
 	end
 
 	if #self._SpawnSets > 0 then
-		if self._BotSpawnTimer > 0.2 then -- Time to wait between spawn. 0.2 works
+		if self._BotSpawnTimer > 0.5 then -- Time to wait between spawn. 0.2 works
 			-- g_Profiler:Start("BotSpawner:Spawn")
 			self._BotSpawnTimer = 0.0
 			---@type SpawnSet
 			local s_SpawnSet = table.remove(self._SpawnSets, 1)
 			self:_SpawnSingleWayBot(s_SpawnSet.PlayerVarOfBot, s_SpawnSet.UseRandomWay, s_SpawnSet.ActiveWayIndex,
 				s_SpawnSet.IndexOnPath, s_SpawnSet.Bot, s_SpawnSet.Team)
-
 			-- g_Profiler:End("BotSpawner:Spawn")
 		end
 
