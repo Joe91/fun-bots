@@ -329,7 +329,7 @@ function FunBotServer:OnLevelLoaded(p_LevelName, p_GameMode, p_Round, p_RoundsPe
 	self:SetGameMode(p_GameMode, p_LevelName)
 	Globals.UsedSpawnMethod = Config.SpawnMethod
 	if Config.SpawnMethod == SpawnMethod.SpawnOnTdm then
-		if Globals.IsTdm then
+		if Globals.IsTdm or Globals.IsSdm or Globals.IsGm then
 			Globals.UsedSpawnMethod = SpawnMethod.Spawn
 		else
 			Globals.UsedSpawnMethod = SpawnMethod.SpawnSoldierAt

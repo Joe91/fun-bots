@@ -60,6 +60,8 @@ function NodeCollection:InitVars()
 	self._LoadLastWaypoint = nil
 	self._LoadLastFirstNode = nil
 	self._LoadLastPathindex = -1
+
+	self._PrintDiagOnInvalidPointindex = false
 end
 
 -----------------------------
@@ -140,10 +142,11 @@ function NodeCollection:Register(p_Waypoint)
 	self._Waypoints[#self._Waypoints + 1] = p_Waypoint
 
 	if #self._Waypoints ~= p_Waypoint.Index then
-		local s_Diff = p_Waypoint.Index - #self._Waypoints
+		self._PrintDiagOnInvalidPointindex = true
 
-		m_Logger:Warning('New Node Index does not match: p_Waypoint.Index:' ..
-			tostring(p_Waypoint.Index) .. ' | #self._Waypoints:' .. tostring(#self._Waypoints) .. ' | ' .. tostring(s_Diff))
+		-- local s_Diff = p_Waypoint.Index - #self._Waypoints
+		-- m_Logger:Warning('New Node Index does not match: p_Waypoint.Index:' ..
+		-- 	tostring(p_Waypoint.Index) .. ' | #self._Waypoints:' .. tostring(#self._Waypoints) .. ' | ' .. tostring(s_Diff))
 	end
 
 	self._WaypointsByPathIndex[p_Waypoint.PathIndex][#self._WaypointsByPathIndex[p_Waypoint.PathIndex] + 1] = p_Waypoint
@@ -905,6 +908,8 @@ function NodeCollection:Clear()
 	self._SelectedWaypoints = {}
 
 	self._InfoNode = {}
+
+	self._PrintDiagOnInvalidPointindex = false
 end
 
 -----------------------------
@@ -1471,6 +1476,9 @@ function NodeCollection:ProcessAllDataToLoad()
 	elseif self._LoadStateMachineCounter == 50 then
 		-- all done
 		self._LoadActive = false
+		if self._PrintDiagOnInvalidPointindex then
+			m_Logger:Warning('Invalid pointindexes during load detected.')
+		end
 		Events:Dispatch('NodeCollection:FinishedLoading')
 	end
 end

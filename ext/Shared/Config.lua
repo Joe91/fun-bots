@@ -38,7 +38,6 @@ Config = {
 	NewBotsPerNewPlayer = 1.6,			-- Number to increase Bots by when new players join 
 	FactorPlayerTeamCount = 1.0,		-- Reduce player team in balanced_teams or fixed_number mode 
 	BotTeam = 0,						-- Default bot team (0 = neutral / auto, 1 = US, 2 = RU) TeamId.Team2 
-	BotNewLoadoutOnSpawn = true,		-- Bots get a new kit and color, if they respawn 
 	MaxAssaultBots = -1,				-- Maximum number of Bots with Assault Kit. -1 = no limit 
 	MaxEngineerBots = -1,				-- Maximum number of Bots with Engineer Kit. -1 = no limit 
 	MaxSupportBots = -1,				-- Maximum number of Bots with Support Kit. -1 = no limit 

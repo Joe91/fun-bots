@@ -1065,6 +1065,11 @@ end
 ---@param p_DeltaTime number
 function Bot:_UpdateLookAroundPassenger(p_DeltaTime)
 	-- Move around a little.
+	-- TODO: why is this check needed sometimes?
+	if self.m_Player.attachedControllable == nil then
+		return
+	end
+
 	local s_Pos = self.m_Player.attachedControllable.transform.forward
 	local s_AtanDzDx = math.atan(s_Pos.z, s_Pos.x)
 	self._TargetYaw = (s_AtanDzDx > math.pi / 2) and (s_AtanDzDx - math.pi / 2) or (s_AtanDzDx + 3 * math.pi / 2)

@@ -49,14 +49,6 @@ function StateMoving:Update(p_Bot, p_DeltaTime)
 
 	m_BotMovement:UpdateSpeedOfMovement(p_Bot)
 	p_Bot:_UpdateInputs(p_DeltaTime)
-
-
-	-- transition to attacking in fast-code
-	-- TODO: transition to revive
-
-	-- TODO: transition to repair
-
-	-- TODO: transition to vehicle with enter-vehicle functions (this is not needed this way)
 end
 
 ---fast update-function

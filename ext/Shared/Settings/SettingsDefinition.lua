@@ -375,17 +375,6 @@ SettingsDefinition = {
 			Category = "SPAWN"
 		},
 		{
-			Name = "BotNewLoadoutOnSpawn",
-			Text = "New Loadout on Spawn",
-			---@type Type|integer
-			Type = Type.Boolean,
-			Value = Config.BotNewLoadoutOnSpawn,
-			Description = "Bots get a new kit and color, if they respawn",
-			Default = true,
-			UpdateFlag = UpdateFlag.None,
-			Category = "SPAWN"
-		},
-		{
 			Name = "MaxAssaultBots",
 			Text = "Max Assault Bots",
 			---@type Type|integer

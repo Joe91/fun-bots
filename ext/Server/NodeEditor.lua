@@ -1021,7 +1021,6 @@ end
 ---@param p_GameMode string
 ---@param p_CustomGameMode string|nil
 function NodeEditor:OnLevelLoaded(p_LevelName, p_GameMode, p_CustomGameMode)
-	print("start load")
 	self:Log(nil, 'Level Load: %s %s', p_LevelName, p_GameMode)
 
 	local s_GameModeToLoad = p_GameMode
