@@ -389,11 +389,9 @@ function Bot:GetAttackDistance(p_ShootBackAfterHit, p_VehicleAttackMode)
 	local s_AttackDistance = 0.0
 
 	if not g_BotStates:IsInVehicleState(self.m_ActiveState) then
-		local s_MissileAttack = false
 		if p_VehicleAttackMode and (p_VehicleAttackMode == VehicleAttackModes.AttackWithMissileAir) then
-			s_MissileAttack = true
-		end
-		if (self.m_ActiveWeapon and self.m_ActiveWeapon.type == WeaponTypes.Sniper) or s_MissileAttack then
+			s_AttackDistance = Config.MaxShootDistanceMissileAir
+		elseif self.m_ActiveWeapon and self.m_ActiveWeapon.type == WeaponTypes.Sniper then
 			if p_ShootBackAfterHit then
 				s_AttackDistance = Config.MaxDistanceShootBackSniper
 			else

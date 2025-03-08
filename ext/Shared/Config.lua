@@ -66,6 +66,7 @@ Config = {
 	FovVerticleForShooting = 90,		-- Degrees of FOV of Bot in vertical direction 
 	MaxShootDistance = 70,				-- Meters before bots (not sniper) will start shooting at players 
 	MaxShootDistanceSniper = 150,		-- Meters before bots will start shooting at players 
+	MaxShootDistanceMissileAir = 350,	-- Meters before bots will start shooting at players 
 	MaxDistanceShootBack = 150,			-- Meters until bots (not sniper) shoot back if hit 
 	MaxDistanceShootBackSniper = 400,	-- Meters until snipers shoot back if hit 
 	MaxShootDistancePistol = 20,		-- The distance before a bot switches to pistol if his magazine is empty (Only in auto-weapon-mode) 
