@@ -612,7 +612,7 @@ end
 
 ---@param p_Bot Bot
 function BotMovement:UpdateTargetMovement(p_Bot)
-	if p_Bot._TargetPoint ~= nil then
+	if p_Bot._TargetPoint ~= nil and p_Bot.m_Player.soldier ~= nil then
 		local s_Distance = p_Bot.m_Player.soldier.worldTransform.trans:Distance(p_Bot._TargetPoint.Position)
 
 		if s_Distance < 0.2 then
