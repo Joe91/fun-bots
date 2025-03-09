@@ -16,6 +16,8 @@ This is the changelog for the version V3.0 Don't forget to [join us on Discord](
 * Info-Node in maps for future versioning and information
 * Preparation for pathless-jets TODO: rework transformation and aiming for air-vehicles
 * Bots can use the gunships (TODO: separate state with separate distace and tragets)
+* Separate worsening values for different vehicle types (by MatiasPastori)
+* Make bots attack the gunship by themselves (by Tagener Noisu)
 
 ### some open TODOs:
 * rework of raycasts for better performance
