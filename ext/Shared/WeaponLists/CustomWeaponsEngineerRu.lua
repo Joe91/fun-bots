@@ -44,9 +44,9 @@ CustomWeaponsEngineerRu = {
 	-- 'M9_Silenced', -- US
 	-- 'M9_Tactical', -- US
 	-- 'M93R', -- US
-	'MP412Rex', -- RU
+	'MP412Rex',    -- RU
 	-- 'Taurus44', -- Both
-	'MP443', -- RU
+	'MP443',       -- RU
 	'MP443_Tactical', -- RU
 	-- 'MP443_Silenced', -- RU
 
@@ -55,7 +55,7 @@ CustomWeaponsEngineerRu = {
 
 	-- Gadget 2
 	-- 'SMAW', -- US
-	'RPG7', -- RU
+	'RPG7',  -- RU
 	'Sa18IGLA', -- RU
 	-- 'Stinger', -- US
 	'Javelin', -- Both

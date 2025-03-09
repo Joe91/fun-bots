@@ -33,11 +33,11 @@ CustomWeaponsEngineerUs = {
 	-- 'Crossbow', -- Both
 
 	-- Pistols
-	'Glock17', -- US
+	'Glock17',     -- US
 	-- 'Glock17_Silenced', -- US
-	'Glock18', -- US
+	'Glock18',     -- US
 	-- 'Glock18_Silenced', -- US
-	'M1911_Lit', -- US
+	'M1911_Lit',   -- US
 	-- 'M1911_Silenced', -- US
 	'M1911_Tactical', -- US
 	-- 'M9', -- US

@@ -170,6 +170,11 @@ function Vehicles:IsAirVehicle(p_VehicleData)
 end
 
 ---@param p_VehicleData VehicleDataInner
+function Vehicles:IsGunship(p_VehicleData)
+	return self:IsVehicleType(p_VehicleData, VehicleTypes.Gunship)
+end
+
+---@param p_VehicleData VehicleDataInner
 function Vehicles:IsAAVehicle(p_VehicleData)
 	return self:IsVehicleType(p_VehicleData, VehicleTypes.AntiAir)
 		or self:IsVehicleType(p_VehicleData, VehicleTypes.LightAA)
