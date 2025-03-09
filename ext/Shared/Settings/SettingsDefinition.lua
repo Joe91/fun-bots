@@ -655,6 +655,18 @@ SettingsDefinition = {
 			Category = "BEHAVIOUR"
 		},
 		{
+			Name = "MaxShootDistanceMissileAir",
+			Text = "Max Shoot Distance Air Missiles",
+			---@type Type|integer
+			Type = Type.Integer,
+			Value = Config.MaxShootDistanceMissileAir,
+			Description = "Meters before bots will start shooting with stingers",
+			Reference = Range(1.00, 1500.00, 5.0),
+			Default = 350,
+			UpdateFlag = UpdateFlag.None,
+			Category = "BEHAVIOUR"
+		},
+		{
 			Name = "MaxDistanceShootBack",
 			Text = "Max Distance a normal soldier shoots back if Hit",
 			---@type Type|integer

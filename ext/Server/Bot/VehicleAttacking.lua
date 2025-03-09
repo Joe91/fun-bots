@@ -37,10 +37,8 @@ function VehicleAttacking:UpdateAttackingVehicle(p_DeltaTime, p_Bot)
 						-- To-do more logic depending on vehicle and distance.
 						-- Chopper on Plane / Chopper → weapon 2 (seaker).
 						if m_Vehicles:IsVehicleType(p_Bot.m_ActiveVehicle, VehicleTypes.Chopper) then
-							if p_Bot.m_Player.controlledEntryId == 0 and
-								(p_Bot._ShootPlayerVehicleType == VehicleTypes.Chopper
-									or p_Bot._ShootPlayerVehicleType == VehicleTypes.ScoutChopper
-									or p_Bot._ShootPlayerVehicleType == VehicleTypes.Plane)
+							if p_Bot.m_Player.controlledEntryId == 0
+								and m_Vehicles:IsAirVehicleType(p_Bot._ShootPlayerVehicleType)
 							then
 								p_Bot._VehicleWeaponSlotToUse = 2
 							elseif p_Bot.m_Player.controlledEntryId == 1 and
@@ -58,10 +56,8 @@ function VehicleAttacking:UpdateAttackingVehicle(p_DeltaTime, p_Bot)
 								p_Bot._VehicleWeaponSlotToUse = 1
 							end
 						elseif m_Vehicles:IsVehicleType(p_Bot.m_ActiveVehicle, VehicleTypes.ScoutChopper) then
-							if p_Bot.m_Player.controlledEntryId == 0 and
-								(p_Bot._ShootPlayerVehicleType == VehicleTypes.Chopper
-									or p_Bot._ShootPlayerVehicleType == VehicleTypes.Plane
-									or p_Bot._ShootPlayerVehicleType == VehicleTypes.ScoutChopper)
+							if p_Bot.m_Player.controlledEntryId == 0
+								and m_Vehicles:IsAirVehicleType(p_Bot._ShootPlayerVehicleType)
 							then
 								p_Bot._VehicleWeaponSlotToUse = 1
 							else

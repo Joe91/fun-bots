@@ -163,10 +163,7 @@ function VehicleAiming:UpdateAimingVehicle(p_Bot, p_AdvancedAlgorithm)
 			s_FullPositionBot:Distance(s_FullPositionTarget) < Registry.VEHICLES.ABORT_ATTACK_AIR_DISTANCE_JET then
 			p_Bot:AbortAttack()
 		end
-		if p_Bot._ShootPlayerVehicleType ~= VehicleTypes.Chopper
-			and p_Bot._ShootPlayerVehicleType ~= VehicleTypes.ScoutChopper
-			and p_Bot._ShootPlayerVehicleType ~= VehicleTypes.Plane
-		then
+		if not m_Vehicles:IsAirVehicleType(p_Bot._ShootPlayerVehicleType) then
 			local s_DiffVertical = s_FullPositionBot.y - s_FullPositionTarget.y
 			if m_Vehicles:IsChopper(p_Bot.m_ActiveVehicle) then
 				if s_DiffVertical < Registry.VEHICLES.ABORT_ATTACK_HEIGHT_CHOPPER then -- Too low to the ground.

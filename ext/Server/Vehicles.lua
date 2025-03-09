@@ -180,6 +180,7 @@ function Vehicles:IsAirVehicleType(p_VehicleType)
 	return p_VehicleType == VehicleTypes.Chopper
 		or p_VehicleType == VehicleTypes.ScoutChopper
 		or p_VehicleType == VehicleTypes.Plane
+		or p_VehicleType == VehicleTypes.Gunship
 end
 
 ---@param p_VehicleType VehicleTypes
@@ -320,15 +321,15 @@ function Vehicles:CheckForVehicleAttack(p_VehicleType, p_Distance, p_Gadget, p_I
 		if p_Gadget.type == WeaponTypes.Rocket then
 			s_AttackMode = VehicleAttackModes.AttackWithRocket                                                                          -- Always use rocket if possible.
 		elseif p_Gadget.type == WeaponTypes.C4 and p_Distance < 25 then
-			if p_VehicleType ~= VehicleTypes.Chopper and p_VehicleType ~= VehicleTypes.ScoutChopper and p_VehicleType ~= VehicleTypes.Plane then -- No air vehicles.
+			if not self:IsAirVehicleType(p_VehicleType) then
 				s_AttackMode = VehicleAttackModes.AttackWithC4                                                                          -- Always use C4 if possible.
 			end
 		elseif p_Gadget.type == WeaponTypes.MissileAir then
-			if p_VehicleType == VehicleTypes.Chopper or p_VehicleType == VehicleTypes.ScoutChopper or p_VehicleType == VehicleTypes.Plane then -- No air vehicles.
+			if self:IsAirVehicleType(p_VehicleType) then
 				s_AttackMode = VehicleAttackModes.AttackWithMissileAir
 			end
 		elseif p_Gadget.type == WeaponTypes.MissileLand then
-			if p_VehicleType ~= VehicleTypes.Chopper and p_VehicleType ~= VehicleTypes.ScoutChopper and p_VehicleType ~= VehicleTypes.Plane then -- No air vehicles.
+			if not self:IsAirVehicleType(p_VehicleType) then
 				s_AttackMode = VehicleAttackModes.AttackWithMissileLand
 			end
 		end
