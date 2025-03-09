@@ -132,10 +132,16 @@ function VehicleAiming:UpdateAimingVehicle(p_Bot, p_AdvancedAlgorithm)
 	local s_WorseningYaw = 0.0
 	local s_WorseningValue = 0.0
 
-	if s_IsAirVehicle then
+	if not s_IsAirVehicle then
 		s_WorseningValue = Config.VehicleAimWorsening
+	elseif m_Vehicles:IsAAVehicle(p_Bot.m_ActiveVehicle) then
+		s_WorseningValue = Config.VehicleAAAimWorsening
+	elseif m_Vehicles:IsGunship(p_Bot.m_ActiveVehicle) then
+		s_WorseningValue = Config.VehicleGunshipAimWorsening
+	elseif m_Vehicles:IsChopper(p_Bot.m_ActiveVehicle) then
+		s_WorseningValue = Config.VehicleChopperAimWorsening
 	else
-		s_WorseningValue = Config.VehicleAirAimWorsening
+		s_WorseningValue = Config.VehiclePlaneAimWorsening
 	end
 	if s_WorseningValue > 0 then
 		local s_SkillDistanceFactor = 1 / (p_Bot._DistanceToPlayer * Registry.BOT.WORSENING_FACOTR_DISTANCE)

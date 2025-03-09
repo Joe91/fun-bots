@@ -255,12 +255,48 @@ SettingsDefinition = {
 			Category = "DIFFICULTY"
 		},
 		{
-			Name = "VehicleAirAimWorsening",
-			Text = "Vehicle Air Aim Worsening",
+			Name = "VehicleAAAimWorsening",
+			Text = "AA Aim Worsening",
 			---@type Type|integer
 			Type = Type.Float,
-			Value = Config.VehicleAirAimWorsening,
-			Description = "See VehicleAimWorsening, only for Air-Vehicles",
+			Value = Config.VehicleAAAimWorsening,
+			Description = "Make bots in AA aim worse: for difficulty: 0 = no offset (hard), 1 or even greater = more sway (easy)",
+			Reference = Range(0.00, 10.00, 0.05),
+			Default = 0.9,
+			UpdateFlag = UpdateFlag.None,
+			Category = "DIFFICULTY"
+		},
+		{
+			Name = "VehicleGunshipAimWorsening",
+			Text = "Gunship Aim Worsening",
+			---@type Type|integer
+			Type = Type.Float,
+			Value = Config.VehicleGunshipAimWorsening,
+			Description = "Make bots in Gunships aim worse: for difficulty: 0 = no offset (hard), 1 or even greater = more sway (easy)",
+			Reference = Range(0.00, 10.00, 0.05),
+			Default = 0.8,
+			UpdateFlag = UpdateFlag.None,
+			Category = "DIFFICULTY"
+		},
+		{
+			Name = "VehicleChopperAimWorsening",
+			Text = "Chopper Aim Worsening",
+			---@type Type|integer
+			Type = Type.Float,
+			Value = Config.VehicleChopperAimWorsening,
+			Description = "Make bots in Choppers aim worse: for difficulty: 0 = no offset (hard), 1 or even greater = more sway (easy)",
+			Reference = Range(0.00, 10.00, 0.05),
+			Default = 0.5,
+			UpdateFlag = UpdateFlag.None,
+			Category = "DIFFICULTY"
+		},
+		{
+			Name = "VehiclePlaneAimWorsening",
+			Text = "Vehicle Plane Aim Worsening",
+			---@type Type|integer
+			Type = Type.Float,
+			Value = Config.VehiclePlaneAimWorsening,
+			Description = "See VehicleAimWorsening, only for Planes",
 			Reference = Range(0.00, 10.00, 0.05),
 			Default = 0.02,
 			UpdateFlag = UpdateFlag.None,
