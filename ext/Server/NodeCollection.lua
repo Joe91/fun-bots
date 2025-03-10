@@ -149,16 +149,17 @@ function NodeCollection:Register(p_Waypoint)
 		-- 	tostring(p_Waypoint.Index) .. ' | #self._Waypoints:' .. tostring(#self._Waypoints) .. ' | ' .. tostring(s_Diff))
 	end
 
-	self._WaypointsByPathIndex[p_Waypoint.PathIndex][#self._WaypointsByPathIndex[p_Waypoint.PathIndex] + 1] = p_Waypoint
+	table.insert(self._WaypointsByPathIndex[p_Waypoint.PathIndex], p_Waypoint)
 
 	if #self._WaypointsByPathIndex[p_Waypoint.PathIndex] ~= p_Waypoint.PointIndex then
-		local s_Diff = p_Waypoint.PointIndex - #self._WaypointsByPathIndex[p_Waypoint.PathIndex]
+		self._PrintDiagOnInvalidPointindex = true
 
-		m_Logger:Warning('New Node PointIndex does not match: p_Waypoint.PointIndex: ' ..
-			tostring(p_Waypoint.PointIndex) ..
-			' | #self._WaypointsByPathIndex[' ..
-			p_Waypoint.PathIndex ..
-			']: ' .. tostring(#self._WaypointsByPathIndex[p_Waypoint.PathIndex]) .. ' | ' .. tostring(s_Diff))
+		-- local s_Diff = p_Waypoint.PointIndex - #self._WaypointsByPathIndex[p_Waypoint.PathIndex]
+		-- m_Logger:Warning('New Node PointIndex does not match: p_Waypoint.PointIndex: ' ..
+		-- 	tostring(p_Waypoint.PointIndex) ..
+		-- 	' | #self._WaypointsByPathIndex[' ..
+		-- 	p_Waypoint.PathIndex ..
+		-- 	']: ' .. tostring(#self._WaypointsByPathIndex[p_Waypoint.PathIndex]) .. ' | ' .. tostring(s_Diff))
 	end
 
 	self._WaypointsByID[p_Waypoint.ID] = p_Waypoint
