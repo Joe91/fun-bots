@@ -149,7 +149,8 @@ function NodeCollection:Register(p_Waypoint)
 		-- 	tostring(p_Waypoint.Index) .. ' | #self._Waypoints:' .. tostring(#self._Waypoints) .. ' | ' .. tostring(s_Diff))
 	end
 
-	table.insert(self._WaypointsByPathIndex[p_Waypoint.PathIndex], p_Waypoint)
+	-- table.insert(self._WaypointsByPathIndex[p_Waypoint.PathIndex], p_Waypoint)
+	self._WaypointsByPathIndex[p_Waypoint.PathIndex][#self._WaypointsByPathIndex[p_Waypoint.PathIndex] + 1] = p_Waypoint
 
 	if #self._WaypointsByPathIndex[p_Waypoint.PathIndex] ~= p_Waypoint.PointIndex then
 		self._PrintDiagOnInvalidPointindex = true
@@ -900,6 +901,19 @@ function NodeCollection:Clear()
 
 	self._Waypoints = {}
 	self._WaypointsByID = {}
+
+	-- special handling for exit while saving or loading
+	if self._LoadActive and self._LoadStateMachineCounter ~= 0 then
+		self._LoadActive = false
+		self._LoadStateMachineCounter = 0
+		SQL:Close()
+	end
+
+	if self._SaveActive and self._SaveStateMachineCounter ~= 0 then
+		self._SaveActive = false
+		self._SaveStateMachineCounter = 0
+		SQL:Close()
+	end
 
 	for l_PathIndex, _ in pairs(self._WaypointsByPathIndex) do
 		self._WaypointsByPathIndex[l_PathIndex] = {}
@@ -1696,12 +1710,14 @@ function NodeCollection:ProcessAllDataToSave()
 		if self._MapName == '' or self._MapName == nil then
 			m_Logger:Error('Mapname not set. Abort Save')
 			self._SaveActive = false
+			SQL:Close()
 			return
 		end
 
 		if not SQL:Query('DROP TABLE IF EXISTS ' .. self._MapName .. '_table') then
 			m_Logger:Error('Failed to reset table for map [' .. self._MapName .. ']: ' .. SQL:Error())
 			self._SaveActive = false
+			SQL:Close()
 			return
 		end
 
@@ -1721,6 +1737,7 @@ function NodeCollection:ProcessAllDataToSave()
 		if not SQL:Query(s_Query) then
 			m_Logger:Error('Failed to create table for map [' .. self._MapName .. ']: ' .. SQL:Error())
 			self._SaveActive = false
+			SQL:Close()
 			return
 		end
 	elseif self._SaveStateMachineCounter == 4 then
@@ -1730,6 +1747,7 @@ function NodeCollection:ProcessAllDataToSave()
 			if not SQL:Query(self._SaveTracesQueryStrings[s_QueryIndex]) then
 				m_Logger:Write('Save -> Batch query failed [' .. self._SaveTraceQueriesDone .. ']: ' .. SQL:Error())
 				self._SaveActive = false
+				SQL:Close()
 				return
 			end
 			self._SaveTracesQueryStringsDone = s_QueryIndex
@@ -1744,6 +1762,7 @@ function NodeCollection:ProcessAllDataToSave()
 				self._MapName .. ']: ' .. SQL:Error())
 			ChatManager:Yell(Language:I18N('Failed to execute query: %s', SQL:Error()), 5.5)
 			self._SaveActive = false
+			SQL:Close()
 			return
 		end
 
