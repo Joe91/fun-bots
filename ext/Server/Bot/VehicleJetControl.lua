@@ -65,7 +65,7 @@ function VehicleJetControl:UpdateMovementJet(p_DeltaTime, p_Bot)
 	s_Forward.y = 0
 	s_Forward:Normalize()
 	s_TargetPosition = s_TargetPosition + (s_Forward * 40) + (s_Right * 70)
-	s_TargetPosition.y = s_TargetPosition.y + 5
+	s_TargetPosition.y = s_TargetPosition.y + 2
 	local s_Waypoint = {
 		Position = s_TargetPosition,
 	}
@@ -111,13 +111,28 @@ function VehicleJetControl:UpdateYawJet(p_Bot, p_Attacking)
 		s_DeltaYaw, s_DeltaPitch = self:CalculateDeviationRelativeToOrientation(p_Bot.m_Player.controlledControllable.transform:Clone(), p_Bot._TargetPoint.Position)
 	end
 
+	local s_FacingDown = p_Bot.m_Player.controlledControllable.transform.forward.y < 0.0
+	local s_IsUpwards = p_Bot.m_Player.controlledControllable.transform.up.y > 0.0
+	if s_FacingDown then
+		if math.abs(s_DeltaPitch) > math.pi / 2 then
+			if s_IsUpwards and s_DeltaPitch < 0 then
+				s_DeltaPitch = 2 * math.pi + s_DeltaPitch
+			elseif not s_IsUpwards and s_DeltaPitch > 0 then
+				s_DeltaPitch = -2 * math.pi + s_DeltaPitch
+			end
+		end
+	end
+
 	local s_Euler = p_Bot.m_Player.controlledControllable.transform:ToQuatTransform(false).rotation:ToEuler()
 	local s_Roll = s_Euler.y
 
 	s_Roll = s_Roll + math.pi
 
+	local s_TargetRoll = math.pi
+	local s_DelateRoll = s_TargetRoll - s_Roll
+
 	-- Roll
-	p_Bot.m_Player.input:SetLevel(EntryInputActionEnum.EIARoll, -3 * s_DeltaYaw) -- Use delta-yaw for this? s_DeltaRoll
+	p_Bot.m_Player.input:SetLevel(EntryInputActionEnum.EIARoll, 3 * s_DelateRoll) -- Use delta-yaw for this? s_DeltaRoll
 
 	-- TILT
 	p_Bot.m_Player.input:SetLevel(EntryInputActionEnum.EIAPitch, 3 * s_DeltaPitch)
