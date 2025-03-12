@@ -30,6 +30,7 @@ function BotManager:__init()
 	self._ActivePlayers = {}
 	self._BotAttackBotTimer = 0.0
 	self._BotReviveBotTimer = 0.0
+	self._BotRepairVehicleTimer = 0.0
 	self._DestroyBotsTimer = 0.0
 	---@type integer[]
 	---`BotId[]`
@@ -157,12 +158,21 @@ function BotManager:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 		and self._InitDone
 		and not Globals.IsGm
 	then
-		if self._BotReviveBotTimer >= Registry.GAME_RAYCASTING.BOT_BOT_REVICE_INTERVAL then
+		if self._BotReviveBotTimer >= Registry.GAME_RAYCASTING.BOT_BOT_REVIVE_INTERVAL then
 			self._BotReviveBotTimer = 0.0
 			self:_CheckForBotBotRevive()
 		end
 
 		self._BotReviveBotTimer = self._BotReviveBotTimer + p_DeltaTime
+	end
+
+	if self._InitDone and not Globals.IsGm then
+		if self._BotRepairVehicleTimer >= Registry.GAME_RAYCASTING.BOT_BOT_REVIVE_INTERVAL then
+			self._BotRepairVehicleTimer = 0.0
+			self:_CheckForBotBotRevive()
+		end
+
+		self._BotRepairVehicleTimer = self._BotRepairVehicleTimer + p_DeltaTime
 	end
 
 	if #self._BotsToDestroy > 0 then
@@ -1463,6 +1473,22 @@ function BotManager:_CheckForBotBotAttack()
 	self._BotCheckState = {}
 	self._ConnectionCheckState = {}
 	self._BotBotAttackList = {}
+end
+
+function BotManager:_CheckForBotPlayerRepair(p_Player)
+	-- if #self._ActivePlayers == 0 then
+	-- 	return
+	-- end
+
+	-- First it woudl be nice to make it work just for the player.
+	-- So, if a bot is your passanger and your vehicle gets damage equal to 50% or more, he goes out and immediatly tries to repair.
+	local vehiclePosition = p_Player.controlledControllable.worldTransform.trans
+
+	if p_Player.controlledControllable and p_Player.controlledControllable.typeInfo.name == "ServerVehicleEntity" then
+		-- Check for the controllable entity health
+
+		-- Get the passenger bot?
+	end
 end
 
 function BotManager:_CheckForBotBotRevive()
