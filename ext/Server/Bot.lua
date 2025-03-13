@@ -146,6 +146,8 @@ function Bot:__init(p_Player)
 	self._FullVehicleSteering = false
 	self._VehicleDirBackPositive = false
 	self._JetAbortAttackActive = false
+	self._JetTakeoffActive = false
+	self._JetMidPosition = Vec3.zero
 	self._ExitVehicleHealth = 0.0
 	self._LastVehicleHealth = 0.0
 	self._TargetHeightAttack = 0.0
@@ -995,6 +997,8 @@ function Bot:ResetSpawnVars()
 	self.m_HasBeacon = false
 	self.m_DontRevive = false
 	self._JetAbortAttackActive = false
+	self._JetTakeoffActive = false
+	self._JetMidPosition = Vec3.zero
 	self._VehicleReadyToShoot = false
 	self._FullVehicleSteering = false
 	self._VehicleDirBackPositive = false
@@ -1276,7 +1280,7 @@ function Bot:_EnterVehicleEntity(p_Entity, p_PlayerIsDriver)
 				if seatIndex == s_MaxEntries - 1 then
 					self._VehicleWaitTimer = 0.5 -- Always wait a short time to check for free start.
 					self._VehicleTakeoffTimer = Registry.VEHICLES.JET_TAKEOFF_TIME
-					self._JetAbortAttackActive = true
+					self._JetTakeoffActive = true
 					g_GameDirector:_SetVehicleObjectiveState(p_Entity.transform.trans, false)
 				else
 					self._VehicleWaitTimer = Config.VehicleWaitForPassengersTime

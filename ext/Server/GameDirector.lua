@@ -1639,17 +1639,32 @@ function GameDirector:_InitObjectives()
 end
 
 function GameDirector:_InitFlagTeams()
-	if not Globals.IsConquest then -- Valid for all Conquest-types.
+	self._AllCaptuerPoints = {}
+	self._MidMapPoint = Vec3.zero
+	if not Globals.IsConquest then -- Valid for all Conquest-types. TODO: check for rush?
 		return
 	end
 
-	self._AllCaptuerPoints = {}
 	local s_Iterator = EntityManager:GetIterator('ServerCapturePointEntity')
 	---@type CapturePointEntity
 	local s_Entity = s_Iterator:Next()
 
 	while s_Entity ~= nil do
 		s_Entity = CapturePointEntity(s_Entity)
+		self._AllCaptuerPoints[#self._AllCaptuerPoints + 1] = s_Entity
+		print(s_Entity.name)
+
+		s_Entity = s_Iterator:Next()
+	end
+	for l_Index = 1, #self._AllCaptuerPoints do
+		local s_Entity = self._AllCaptuerPoints[l_Index]
+		self._MidMapPoint = self._MidMapPoint + s_Entity.transform.trans
+	end
+	self._MidMapPoint = self._MidMapPoint / #self._AllCaptuerPoints
+
+	for l_Index = 1, #self._AllCaptuerPoints do
+		local s_Entity = self._AllCaptuerPoints[l_Index]
+
 		local s_ObjectiveName = self:_TranslateObjective(s_Entity.transform.trans, s_Entity.name)
 		self._AllCaptuerPoints[#self._AllCaptuerPoints + 1] = s_Entity
 		if s_ObjectiveName ~= "" then
@@ -1663,8 +1678,6 @@ function GameDirector:_InitFlagTeams()
 				})
 			end
 		end
-
-		s_Entity = s_Iterator:Next()
 	end
 end
 

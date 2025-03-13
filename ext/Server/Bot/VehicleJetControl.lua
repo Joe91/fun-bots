@@ -39,9 +39,19 @@ function VehicleJetControl:UpdateMovementJet(p_DeltaTime, p_Bot)
 		end
 	end
 
+	p_Bot._JetMidPosition = g_GameDirector._MidMapPoint:Clone()
+	p_Bot._JetMidPosition.y = p_Bot._JetMidPosition.y + Registry.VEHICLES.JET_TARGET_HEIGHT
+	if (p_Bot.m_Player.teamId % 2) == 1 then
+		p_Bot._JetMidPosition.z = p_Bot._JetMidPosition.z + 100
+	else
+		p_Bot._JetMidPosition.z = p_Bot._JetMidPosition.z - 100
+	end
+
 	if p_Bot._VehicleTakeoffTimer > 0.0 then
 		p_Bot._VehicleTakeoffTimer = p_Bot._VehicleTakeoffTimer - p_DeltaTime
-		if p_Bot._JetAbortAttackActive then
+		if p_Bot._JetTakeoffActive or
+			(p_Bot._JetAbortAttackActive and (p_Bot.m_Player.controlledControllable.transform.trans.y < (p_Bot._JetMidPosition.y - 45)))
+		then
 			local s_TargetPosition = p_Bot.m_Player.controlledControllable.transform.trans:Clone()
 			local s_Forward = p_Bot.m_Player.controlledControllable.transform.forward:Clone()
 			s_Forward.y = 0
@@ -53,21 +63,22 @@ function VehicleJetControl:UpdateMovementJet(p_DeltaTime, p_Bot)
 			}
 			p_Bot._TargetPoint = s_Waypoint
 			return
+		elseif p_Bot._JetAbortAttackActive then
+			-- don't move along paths with planes
+			local s_Waypoint = {
+				Position = p_Bot._JetMidPosition,
+			}
+			p_Bot._TargetPoint = s_Waypoint
+			return
 		end
 	end
+
+	p_Bot._JetTakeoffActive = false
 	p_Bot._JetAbortAttackActive = false
 
 	-- don't move along paths with planes
-	local s_TargetPosition = p_Bot.m_Player.controlledControllable.transform.trans:Clone()
-	local s_Forward = p_Bot.m_Player.controlledControllable.transform.forward:Clone()
-	local s_Up = Vec3(0, 1, 0)
-	local s_Right = s_Forward:Cross(s_Up)
-	s_Forward.y = 0
-	s_Forward:Normalize()
-	s_TargetPosition = s_TargetPosition + (s_Forward * 40) + (s_Right * 70)
-	s_TargetPosition.y = s_TargetPosition.y + 2
 	local s_Waypoint = {
-		Position = s_TargetPosition,
+		Position = p_Bot._JetMidPosition,
 	}
 	p_Bot._TargetPoint = s_Waypoint
 end
@@ -107,32 +118,49 @@ function VehicleJetControl:UpdateYawJet(p_Bot, p_Attacking)
 	if p_Attacking then
 		-- print({ p_Bot._AttackPosition, p_Bot.m_Player.controlledControllable.transform.trans })
 		s_DeltaYaw, s_DeltaPitch = self:CalculateDeviationRelativeToOrientation(p_Bot.m_Player.controlledControllable.transform:Clone(), p_Bot._AttackPosition)
+		if p_Bot.m_Player.controlledControllable.transform.trans.y > p_Bot._JetMidPosition.y + 120 then
+			p_Bot._JetTakeoffActive = false
+			p_Bot:AbortAttack()
+		elseif p_Bot.m_Player.controlledControllable.transform.trans.y < p_Bot._JetMidPosition.y - 75 then
+			p_Bot._JetTakeoffActive = false
+			p_Bot:AbortAttack()
+		end
 	elseif p_Bot._TargetPoint then
 		s_DeltaYaw, s_DeltaPitch = self:CalculateDeviationRelativeToOrientation(p_Bot.m_Player.controlledControllable.transform:Clone(), p_Bot._TargetPoint.Position)
 	end
 
-	local s_FacingDown = p_Bot.m_Player.controlledControllable.transform.forward.y < 0.0
-	local s_IsUpwards = p_Bot.m_Player.controlledControllable.transform.up.y > 0.0
-	if s_FacingDown then
-		if math.abs(s_DeltaPitch) > math.pi / 2 then
-			if s_IsUpwards and s_DeltaPitch < 0 then
-				s_DeltaPitch = 2 * math.pi + s_DeltaPitch
-			elseif not s_IsUpwards and s_DeltaPitch > 0 then
-				s_DeltaPitch = -2 * math.pi + s_DeltaPitch
-			end
-		end
-	end
+	-- local s_FacingDown = p_Bot.m_Player.controlledControllable.transform.forward.y < 0.2
+	-- local s_FacingUp = p_Bot.m_Player.controlledControllable.transform.forward.y > 0.2
+	-- local s_IsUpwards = p_Bot.m_Player.controlledControllable.transform.up.y > 0.0
+	-- local s_IsBelowTarget = p_Bot.m_Player.controlledControllable.transform.up.y < p_Bot._JetMidPosition.y
+	-- if s_FacingDown then
+	-- 	if math.abs(s_DeltaPitch) > math.pi / 2 then
+	-- 		if s_IsBelowTarget then
+	-- 			if s_IsUpwards and s_DeltaPitch < 0 then
+	-- 				s_DeltaPitch = 2 * math.pi + s_DeltaPitch
+	-- 			elseif not s_IsUpwards and s_DeltaPitch > 0 then
+	-- 				s_DeltaPitch = -2 * math.pi + s_DeltaPitch
+	-- 			end
+	-- 		else
+	-- 			if s_IsUpwards and s_DeltaPitch > 0 then
+	-- 				s_DeltaPitch = -2 * math.pi + s_DeltaPitch
+	-- 			elseif not s_IsUpwards and s_DeltaPitch < 0 then
+	-- 				s_DeltaPitch = 2 * math.pi + s_DeltaPitch
+	-- 			end
+	-- 		end
+	-- 	end
+	-- end
 
-	local s_Euler = p_Bot.m_Player.controlledControllable.transform:ToQuatTransform(false).rotation:ToEuler()
-	local s_Roll = s_Euler.y
+	-- local s_Euler = p_Bot.m_Player.controlledControllable.transform:ToQuatTransform(false).rotation:ToEuler()
+	-- local s_Roll = s_Euler.y
 
-	s_Roll = s_Roll + math.pi
+	-- s_Roll = s_Roll + math.pi
 
-	local s_TargetRoll = math.pi
-	local s_DelateRoll = s_TargetRoll - s_Roll
+	-- local s_TargetRoll = math.pi
+	-- local s_DelateRoll = s_TargetRoll - s_Roll
 
 	-- Roll
-	p_Bot.m_Player.input:SetLevel(EntryInputActionEnum.EIARoll, 3 * s_DelateRoll) -- Use delta-yaw for this? s_DeltaRoll
+	p_Bot.m_Player.input:SetLevel(EntryInputActionEnum.EIARoll, -3 * s_DeltaYaw) -- Use delta-yaw for this? s_DeltaRoll
 
 	-- TILT
 	p_Bot.m_Player.input:SetLevel(EntryInputActionEnum.EIAPitch, 3 * s_DeltaPitch)
