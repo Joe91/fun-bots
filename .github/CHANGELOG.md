@@ -28,7 +28,6 @@ This is the changelog for the version V3.0 Don't forget to [join us on Discord](
 * get Rid of chopper-paths if possible
 * performance of spawn-point parsing -> save those?
 * performance of node-editor
-* fix connecting nodes
 * add logic for jets in rush
 * improve team-logic for AA and other vehicles (example AA on Rush)
 
