@@ -90,6 +90,7 @@ end
 ---@param p_Bot Bot
 ---@param p_DeltaTime number
 function StateInVehicleJetControl:UpdateSlow(p_Bot, p_DeltaTime)
+	-- p_Bot:_CheckForVehicleActions(p_DeltaTime, true) -- don't exit vehicle on low health?
 	p_Bot:_DoExitVehicle()
 end
 

@@ -453,8 +453,6 @@ function VehicleMovement:UpdateYawVehicle(p_Bot, p_Attacking, p_IsStationaryLaun
 	local s_DeltaYaw = 0
 	local s_DeltaPitch = 0
 	local s_CorrectGunYaw = false
-	local s_Current_Roll = 0
-	local s_Current_Pitch = 0
 
 	local s_Pos = nil
 
@@ -502,8 +500,6 @@ function VehicleMovement:UpdateYawVehicle(p_Bot, p_Attacking, p_IsStationaryLaun
 				-- TODO: delta pitch also needed?
 				s_DeltaYaw = s_Yaw - p_Bot._TargetYaw
 				s_DeltaPitch = s_Pitch - p_Bot._TargetPitch
-				s_Current_Roll = s_Roll
-				s_Current_Pitch = s_Pitch
 
 				if p_Bot._VehicleMovableId >= 0 then
 					p_Bot.m_Player.input:SetLevel(EntryInputActionEnum.EIAPitch, 0)
@@ -560,8 +556,6 @@ function VehicleMovement:UpdateYawVehicle(p_Bot, p_Attacking, p_IsStationaryLaun
 
 				s_DeltaPitch = s_Pitch - p_Bot._TargetPitch
 				s_DeltaYaw = s_Yaw - p_Bot._TargetYaw
-				s_Current_Roll = s_Roll
-				s_Current_Pitch = s_Pitch
 			end
 		end
 	end
@@ -586,76 +580,6 @@ function VehicleMovement:UpdateYawVehicle(p_Bot, p_Attacking, p_IsStationaryLaun
 	else
 		p_Bot._FullVehicleSteering = true
 		p_Bot._VehicleReadyToShoot = false
-	end
-
-	-- Chopper driver handling here.
-	if p_Bot.m_Player.controlledEntryId == 0 and m_Vehicles:IsChopper(p_Bot.m_ActiveVehicle) then
-		if p_Bot._VehicleWaitTimer > 0.0 then
-			return
-		end
-		if not p_Attacking and (p_Bot._TargetPoint == nil or p_Bot._NextTargetPoint == nil) then
-			return
-		end
-		if p_Bot.m_Player.controlledControllable == nil then
-			return
-		end
-
-		-- YAW
-		local s_Output_Yaw = p_Bot._Pid_Drv_Yaw:Update(s_DeltaYaw)
-		-- No backwards in chopper.
-		p_Bot.m_Player.input:SetLevel(EntryInputActionEnum.EIAYaw, -s_Output_Yaw)
-
-		-- HEIGHT
-		local s_Delta_Height = 0.0
-		if p_Attacking then
-			s_Delta_Height = p_Bot._TargetHeightAttack - p_Bot.m_Player.controlledControllable.transform.trans.y
-		else
-			p_Bot._TargetHeightAttack = p_Bot._TargetPoint.Position.y
-			s_Delta_Height = p_Bot._TargetPoint.Position.y - p_Bot.m_Player.controlledControllable.transform.trans.y
-		end
-		local s_Output_Throttle = p_Bot._Pid_Drv_Throttle:Update(s_Delta_Height)
-		if s_Output_Throttle > 0 then
-			p_Bot.m_Player.input:SetLevel(EntryInputActionEnum.EIAThrottle, s_Output_Throttle)
-			p_Bot.m_Player.input:SetLevel(EntryInputActionEnum.EIABrake, 0.0)
-		else
-			p_Bot.m_Player.input:SetLevel(EntryInputActionEnum.EIAThrottle, 0.0)
-			p_Bot.m_Player.input:SetLevel(EntryInputActionEnum.EIABrake, -s_Output_Throttle)
-		end
-
-		-- FORWARD (depending on speed).
-		-- A: use distance horizontally between points for speed-value → not that good for that.
-		-- local DeltaX = p_Bot._NextTargetPoint.Position.x - p_Bot._TargetPoint.Position.x
-		-- local DeltaZ = p_Bot._NextTargetPoint.Position.z - p_Bot._TargetPoint.Position.z
-		-- local Distance = math.sqrt(DeltaX*DeltaX + DeltaZ*DeltaZ)
-		-- B: just fly with constant speed →
-
-		local s_Delta_Tilt = 0
-		if p_Attacking then
-			s_Delta_Tilt = -s_DeltaPitch
-		else
-			local s_Tartget_Tilt = -0.35 -- = 20°
-			s_Delta_Tilt = s_Tartget_Tilt - s_Current_Pitch
-		end
-
-		local s_Output_Tilt = p_Bot._Pid_Drv_Tilt:Update(s_Delta_Tilt)
-		p_Bot.m_Player.input:SetLevel(EntryInputActionEnum.EIAPitch, -s_Output_Tilt)
-
-		-- ROLL (keep it zero).
-		local s_Tartget_Roll = 0.0
-		-- To-do: in strong steering: Roll a little?
-		if p_Bot._FullVehicleSteering then
-			if s_AbsDeltaYaw > 0 then
-				s_Tartget_Roll = 0.1
-			else
-				s_Tartget_Roll = -0.1
-			end
-		end
-
-		local s_Delta_Roll = s_Tartget_Roll - s_Current_Roll
-		local s_Output_Roll = p_Bot._Pid_Drv_Roll:Update(s_Delta_Roll)
-		p_Bot.m_Player.input:SetLevel(EntryInputActionEnum.EIARoll, s_Output_Roll)
-
-		return -- Don't do anything else.
 	end
 
 	if not p_Attacking then

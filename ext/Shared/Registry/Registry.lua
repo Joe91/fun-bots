@@ -118,6 +118,8 @@ Registry = {
 		JET_ABORT_JET_ATTACK_TIME = 4.0,
 		-- Target height for jets.
 		JET_TARGET_HEIGHT = 350,
+		-- Target height for choppers.
+		CHOPPER_TARGET_HEIGHT = 110,
 		-- Percentage of vehicle health to leave vehicle with (currently no passive events for bot-only vehicles)
 		VEHICLE_EXIT_HEALTH = 12,
 		-- Probability to exit on low health.

@@ -582,19 +582,16 @@ function NodeCollection:Link(p_SelectionId, p_Waypoints, p_LinkID, p_OneWay)
 	local s_Selection = p_Waypoints or g_NodeCollection:GetSelected(p_SelectionId)
 	p_OneWay = p_OneWay or false
 
+	-- not used right now. Keep for future-spawn-point-handling
 	local s_SelectedSpawn = g_NodeCollection:GetSelectedSpawn(p_SelectionId)
-	if s_SelectedSpawn > 0 and #s_Selection > 0 then
-		for i = 1, #s_Selection do
-			local s_SecetedId = s_Selection[i].ID
-			print(s_SelectedSpawn)
-			print(self._SpawnPointTable[s_SelectedSpawn])
-			if not self._SpawnPointTable[s_SelectedSpawn].Data then
-				self._SpawnPointTable[s_SelectedSpawn].Data = {}
-			end
-			local s_Links = self._SpawnPointTable[s_SelectedSpawn].Data.Links or {}
-			s_Links[#s_Links + 1] = s_SecetedId
-			self._SpawnPointTable[s_SelectedSpawn].Data.Links = s_Links
+	if s_SelectedSpawn then
+		local s_SecetedId = s_SelectedSpawn.ID
+		if not self._SpawnPointTable[s_SelectedSpawn].Data then
+			self._SpawnPointTable[s_SelectedSpawn].Data = {}
 		end
+		local s_Links = self._SpawnPointTable[s_SelectedSpawn].Data.Links or {}
+		s_Links[#s_Links + 1] = s_SecetedId
+		self._SpawnPointTable[s_SelectedSpawn].Data.Links = s_Links
 		return true, 'Success'
 	end
 

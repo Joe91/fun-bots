@@ -1191,6 +1191,8 @@ function Bot:UpdateVehicleMovableId()
 			self:SetState(g_BotStates.States.InVehicleJetControl)
 		elseif m_Vehicles:IsVehicleType(self.m_ActiveVehicle, VehicleTypes.StationaryAA) then
 			self:SetState(g_BotStates.States.InVehicleStationaryAaControl)
+		elseif m_Vehicles:IsVehicleType(self.m_ActiveVehicle, VehicleTypes.Chopper) and self.m_Player.controlledEntryId == 0 then
+			self:SetState(g_BotStates.States.InVehicleChopperControl)
 		else
 			self:SetState(g_BotStates.States.InVehicleMoving)
 		end
@@ -1306,6 +1308,8 @@ function Bot:_EnterVehicleEntity(p_Entity, p_PlayerIsDriver)
 					self:SetState(g_BotStates.States.InVehicleJetControl)
 				elseif m_Vehicles:IsVehicleType(self.m_ActiveVehicle, VehicleTypes.StationaryAA) then
 					self:SetState(g_BotStates.States.InVehicleStationaryAaControl)
+				elseif m_Vehicles:IsVehicleType(self.m_ActiveVehicle, VehicleTypes.Chopper) and self.m_Player.controlledEntryId == 0 then
+					self:SetState(g_BotStates.States.InVehicleChopperControl)
 				else
 					self:SetState(g_BotStates.States.InVehicleMoving)
 				end
