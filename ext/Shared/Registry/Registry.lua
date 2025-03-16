@@ -105,17 +105,19 @@ Registry = {
 		-- Once a jet is that low above a vehicle or person, he aborts.
 		ABORT_ATTACK_HEIGHT_JET = 100,
 		-- Once a jet is that far away from a vehicle or person, he aborts.
-		ABORT_ATTACK_DISTANCE_JET = 170,
+		ABORT_ATTACK_DISTANCE_JET = 100,
 		-- Once a jet is that far away from a jet or chopper, he aborts.
-		ABORT_ATTACK_AIR_DISTANCE_JET = 80,
+		ABORT_ATTACK_AIR_DISTANCE_JET = 50,
 		-- Once a chopper is that low above a vehicle or person, he aborts.
 		ABORT_ATTACK_HEIGHT_CHOPPER = 20,
 		-- In this time, a jet will not attack.
 		JET_TAKEOFF_TIME = 12,
 		-- Time a jet waits after an attack.
-		JET_ABORT_ATTACK_TIME = 7.0,
+		JET_ABORT_ATTACK_TIME = 6.0,
 		-- Time a jet waits after an attack on another jet.
-		JET_ABORT_JET_ATTACK_TIME = 5.0,
+		JET_ABORT_JET_ATTACK_TIME = 4.0,
+		-- Target height for jets.
+		JET_TARGET_HEIGHT = 350,
 		-- Percentage of vehicle health to leave vehicle with (currently no passive events for bot-only vehicles)
 		VEHICLE_EXIT_HEALTH = 12,
 		-- Probability to exit on low health.

@@ -52,9 +52,6 @@ function StateInVehicleStationaryAAControl:Update(p_Bot, p_DeltaTime)
 	if s_IsAttacking then
 		-- Differ attacking.
 		m_VehicleAttacking:UpdateAttackStationaryAAVehicle(p_Bot)
-	else
-		-- Stationary AA needs separate handling.
-		m_VehicleWeaponHandling:UpdateWeaponSelectionVehicle(p_Bot)
 	end
 
 	p_Bot:_UpdateInputs(p_DeltaTime)

@@ -651,8 +651,32 @@ function GameDirector:OnVehicleSpawnDone(p_Entity)
 		return
 	end
 
-	local s_Objective = self:_SetVehicleObjectiveState(p_Entity.transform.trans, true)
+	-- spawn directly into jets
+	if m_Vehicles:IsVehicleType(s_VehicleData, VehicleTypes.Plane) then
+		-- find closest spawn --> team of jet
+		if self._AllCaptuerPoints then
+			local s_ClosestDistance = nil
+			local s_ClosestTeam = nil
 
+			for l_Index = 1, #self._AllCaptuerPoints do
+				local l_CapturePoint = self._AllCaptuerPoints[l_Index]
+				if l_CapturePoint.team ~= TeamId.TeamNeutral then
+					local s_Distance = l_CapturePoint.transform.trans:Distance(p_Entity.transform.trans)
+					if s_ClosestDistance == nil or s_ClosestDistance > s_Distance then
+						s_ClosestDistance = s_Distance
+						s_ClosestTeam = l_CapturePoint.team
+					end
+				end
+			end
+			if s_ClosestTeam then
+				self.m_SpawnableVehicles[s_ClosestTeam][#self.m_SpawnableVehicles[s_ClosestTeam] + 1] = p_Entity
+			end
+		end
+		return
+	end
+
+	-- now check the other vehicles
+	local s_Objective = self:_SetVehicleObjectiveState(p_Entity.transform.trans, true)
 	if s_Objective ~= nil then
 		local s_Node = self:FindClosestPath(p_Entity.transform.trans, true, false, s_VehicleData.Terrain)
 
@@ -1615,7 +1639,9 @@ function GameDirector:_InitObjectives()
 end
 
 function GameDirector:_InitFlagTeams()
-	if not Globals.IsConquest then -- Valid for all Conquest-types.
+	self._AllCaptuerPoints = {}
+	self._MidMapPoint = Vec3.zero
+	if not Globals.IsConquest then -- Valid for all Conquest-types. TODO: check for rush?
 		return
 	end
 
@@ -1625,8 +1651,22 @@ function GameDirector:_InitFlagTeams()
 
 	while s_Entity ~= nil do
 		s_Entity = CapturePointEntity(s_Entity)
-		local s_ObjectiveName = self:_TranslateObjective(s_Entity.transform.trans, s_Entity.name)
+		self._AllCaptuerPoints[#self._AllCaptuerPoints + 1] = s_Entity
+		print(s_Entity.name)
 
+		s_Entity = s_Iterator:Next()
+	end
+	for l_Index = 1, #self._AllCaptuerPoints do
+		local s_Entity = self._AllCaptuerPoints[l_Index]
+		self._MidMapPoint = self._MidMapPoint + s_Entity.transform.trans
+	end
+	self._MidMapPoint = self._MidMapPoint / #self._AllCaptuerPoints
+
+	for l_Index = 1, #self._AllCaptuerPoints do
+		local s_Entity = self._AllCaptuerPoints[l_Index]
+
+		local s_ObjectiveName = self:_TranslateObjective(s_Entity.transform.trans, s_Entity.name)
+		self._AllCaptuerPoints[#self._AllCaptuerPoints + 1] = s_Entity
 		if s_ObjectiveName ~= "" then
 			local s_Objective = self:_GetObjectiveObject(s_ObjectiveName)
 
@@ -1638,8 +1678,6 @@ function GameDirector:_InitFlagTeams()
 				})
 			end
 		end
-
-		s_Entity = s_Iterator:Next()
 	end
 end
 
