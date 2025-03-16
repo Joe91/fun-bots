@@ -71,7 +71,7 @@ function StateInVehicleAttacking:UpdateFast(p_Bot, p_DeltaTime)
 	local s_IsStationaryLauncher = m_Vehicles:IsVehicleType(p_Bot.m_ActiveVehicle, VehicleTypes.StationaryLauncher)
 
 	-- Fast code.
-	if m_Vehicles:IsAirVehicle(p_Bot.m_ActiveVehicle) then
+	if m_Vehicles:IsAirVehicle(p_Bot.m_ActiveVehicle) then -- TODO: simplyfy once Gunship has own state and handling
 		m_VehicleAiming:UpdateAimingVehicle(p_Bot, true)
 	else
 		if Config.VehicleMoveWhileShooting and m_Vehicles:IsNotVehicleTerrain(p_Bot.m_ActiveVehicle, VehicleTerrains.Air) then
