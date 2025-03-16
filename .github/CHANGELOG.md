@@ -25,7 +25,7 @@ This is the changelog for the version V3.0 Don't forget to [join us on Discord](
 * fully support default-sapwn-method (for now only on TDM/GM/SDM by default)
 * further performance increses
 * jet navigation and driving improvements (get rid of paths already possible!)
-* get Rid of chopper-paths if possible
+* get Rid of chopper-paths if possible -> also handle different hights and positions depending on caturep-points
 * performance of spawn-point parsing -> save those?
 * performance of node-editor
 * add logic for jets in rush

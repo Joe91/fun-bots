@@ -39,6 +39,8 @@ function VehicleChopperControl:UpdateMovementChopper(p_DeltaTime, p_Bot)
 	-- 	end
 	-- end
 
+
+
 	-- p_Bot._JetMidPosition = g_GameDirector._MidMapPoint:Clone()
 	-- p_Bot._JetMidPosition.y = p_Bot._JetMidPosition.y + Registry.VEHICLES.JET_TARGET_HEIGHT
 	-- if (p_Bot.m_Player.teamId % 2) == 1 then
@@ -81,6 +83,23 @@ function VehicleChopperControl:UpdateMovementChopper(p_DeltaTime, p_Bot)
 	-- 	Position = p_Bot._JetMidPosition,
 	-- }
 	-- p_Bot._TargetPoint = s_Waypoint
+end
+
+function VehicleChopperControl:UpdateTargetMovementChopper(p_Bot)
+	local s_TargetPoint = g_GameDirector._MidMapPoint:Clone()
+	s_TargetPoint.y = s_TargetPoint.y + Registry.VEHICLES.CHOPPER_TARGET_HEIGHT
+	if (p_Bot.m_Player.teamId % 2) == 1 then
+		s_TargetPoint.z = s_TargetPoint.z + 20
+	else
+		s_TargetPoint.z = s_TargetPoint.z - 20
+	end
+
+	local s_DifferenceY = s_TargetPoint.z - p_Bot.m_Player.controlledControllable.transform.trans.z
+	local s_DifferenceX = s_TargetPoint.x - p_Bot.m_Player.controlledControllable.transform.trans.x
+	local s_AtanDzDx = math.atan(s_DifferenceY, s_DifferenceX)
+	local s_Yaw = (s_AtanDzDx > math.pi / 2) and (s_AtanDzDx - math.pi / 2) or (s_AtanDzDx + 3 * math.pi / 2)
+	p_Bot._TargetYaw = s_Yaw
+	p_Bot._TargetYawMovementVehicle = s_Yaw
 end
 
 ---@param p_Bot Bot

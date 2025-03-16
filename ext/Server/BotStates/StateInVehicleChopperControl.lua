@@ -4,11 +4,9 @@ StateInVehicleChopperControl = class('StateInVehicleChopperControl')
 
 
 -- bot-methods
-local m_AirTargets = require('AirTargets')
 local m_VehicleAiming = require('Bot/VehicleAiming')
 local m_VehicleAttacking = require('Bot/VehicleAttacking')
 local m_VehicleMovement = require('Bot/VehicleMovement')
-local m_VehicleWeaponHandling = require('Bot/VehicleWeaponHandling')
 local m_ChopperControl = require('Bot/VehicleChopperControl')
 local m_VehicleWeaponHandling = require('Bot/VehicleWeaponHandling')
 
@@ -62,7 +60,7 @@ function StateInVehicleChopperControl:UpdateFast(p_Bot, p_DeltaTime)
 	if s_IsAttacking then
 		m_VehicleAiming:UpdateAimingVehicle(p_Bot, true)
 	else
-		m_VehicleMovement:UpdateTargetMovementVehicle(p_Bot, p_DeltaTime)
+		m_ChopperControl:UpdateTargetMovementChopper(p_Bot)
 	end
 
 	m_ChopperControl:UpdateYawChopperPilot(p_Bot, s_IsAttacking)
