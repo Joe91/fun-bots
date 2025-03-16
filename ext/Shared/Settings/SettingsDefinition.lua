@@ -1235,7 +1235,7 @@ SettingsDefinition = {
 			Value = Config.WaypointRange,
 			Description = "Set how far away waypoints are visible (meters)",
 			Reference = Range(1.00, 1000.00, 1.0),
-			Default = 50,
+			Default = 100,
 			UpdateFlag = UpdateFlag.None,
 			Category = "TRACE"
 		},
@@ -1258,7 +1258,7 @@ SettingsDefinition = {
 			Value = Config.LineRange,
 			Description = "Set how far away waypoint lines are visible (meters)",
 			Reference = Range(1.00, 1000.00, 1.0),
-			Default = 25,
+			Default = 50,
 			UpdateFlag = UpdateFlag.None,
 			Category = "TRACE"
 		},
@@ -1281,7 +1281,7 @@ SettingsDefinition = {
 			Value = Config.TextRange,
 			Description = "Set how far away waypoint text is visible (meters)",
 			Reference = Range(1.00, 1000.00, 1.0),
-			Default = 7,
+			Default = 15,
 			UpdateFlag = UpdateFlag.None,
 			Category = "TRACE"
 		},
@@ -1315,7 +1315,7 @@ SettingsDefinition = {
 			Value = Config.SpawnPointRange,
 			Description = "Set how far away spawn points are visible (meters)",
 			Reference = Range(1.00, 1000.00, 1.0),
-			Default = 100,
+			Default = 150,
 			UpdateFlag = UpdateFlag.None,
 			Category = "TRACE"
 		},
@@ -1339,7 +1339,7 @@ SettingsDefinition = {
 			Value = Config.NodesPerCycle,
 			Description = "Set how many nodes get drawn per cycle. Affects performance",
 			Reference = Range(1.00, 10000.00, 1.0),
-			Default = 400,
+			Default = 2048,
 			UpdateFlag = UpdateFlag.None,
 			Category = "TRACE"
 		},

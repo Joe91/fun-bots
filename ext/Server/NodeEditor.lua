@@ -1257,7 +1257,7 @@ function NodeEditor:OnEngineUpdate(p_DeltaTime, p_SimulationDeltaTime)
 	end
 
 	-- Visible NODE distribution-handling.
-	if self.m_NodeSendUpdateTimer < 0.1 then
+	if self.m_NodeSendUpdateTimer < 1.0 then
 		self.m_NodeSendUpdateTimer = self.m_NodeSendUpdateTimer + p_DeltaTime
 	else
 		self.m_NodeSendUpdateTimer = 0.0
