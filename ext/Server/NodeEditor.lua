@@ -1075,6 +1075,7 @@ function NodeEditor:OnPartitionLoaded(p_Partition)
 end
 
 function NodeEditor:EndOfLoad()
+	m_NodeCollection:ParseObjectives()
 	local s_Counter = 0
 	local s_Waypoints = m_NodeCollection:Get()
 

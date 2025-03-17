@@ -42,6 +42,8 @@ function NodeCollection:InitVars()
 	self._SelectedSpawnPoints = {}
 	self._HiddenPaths = {}
 
+	self._Objectives = {}
+
 	self._MapName = ''
 
 	-- Data for Save-Statemachine.
@@ -1863,10 +1865,8 @@ function NodeCollection:ObjectiveDirection(p_Waypoint, p_Objective, p_InVehicle)
 	return s_BestDirection, s_BestWaypoint
 end
 
-function NodeCollection:GetKnownObjectives()
-	local s_Objectives = {
-		-- [<Objective Name>] = {<PathIndex 1>, <PathIndex 2>}
-	}
+function NodeCollection:ParseObjectives()
+	self._Objectives = {}
 
 	for l_PathIndex, _ in pairs(self._WaypointsByPathIndex) do
 		local s_PathWaypoint = self._WaypointsByPathIndex[l_PathIndex][1]
@@ -1874,15 +1874,17 @@ function NodeCollection:GetKnownObjectives()
 		-- Only insert objectives that are objectives (on at least one path alone).
 		if s_PathWaypoint ~= nil and s_PathWaypoint.Data.Objectives ~= nil and #s_PathWaypoint.Data.Objectives == 1 then
 			local s_Objective = s_PathWaypoint.Data.Objectives[1]
-			if s_Objectives[s_Objective] == nil then
-				s_Objectives[s_Objective] = {}
+			if self._Objectives[s_Objective] == nil then
+				self._Objectives[s_Objective] = {}
 			end
 
-			s_Objectives[s_Objective][#s_Objectives[s_Objective] + 1] = l_PathIndex
+			self._Objectives[s_Objective][#self._Objectives[s_Objective] + 1] = l_PathIndex
 		end
 	end
+end
 
-	return s_Objectives
+function NodeCollection:GetKnownObjectives()
+	return self._Objectives
 end
 
 -- This method avoids the use of the Vec3:Distance() method to avoid complex maths internally.

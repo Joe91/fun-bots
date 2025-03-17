@@ -36,6 +36,10 @@ function GameDirector:RegisterVars()
 
 	self.m_MapCompletelyLoaded = false
 	self.m_SpawnedEntitiesToProcess = {}
+
+	self._MidMapPoint = nil
+	self._AllCaptuerPoints = {}
+	self._McomPositions = {}
 end
 
 -- =============================================
@@ -1517,6 +1521,46 @@ function GameDirector:UseSubobjective(p_BotId, p_BotTeam, p_Objective)
 	return false
 end
 
+---@param p_TeamId TeamId
+---@return Vec3
+function GameDirector:GetActiveTargetPointPosition(p_TeamId)
+	local s_TargetPos = Vec3.zero
+	if Globals.IsConquest then
+		local s_NeutralNode = nil
+		local s_EnemyNode = nil
+		local s_FriendlyNode = nil
+		for l_Index = 1, #self._AllCaptuerPoints do
+			local l_CapturePoint = self._AllCaptuerPoints[l_Index]
+			local s_Pos = l_CapturePoint.transform.trans
+			if l_CapturePoint.team ~= p_TeamId then
+				s_NeutralNode = s_Pos
+			end
+			if l_CapturePoint.team == p_TeamId then
+				s_FriendlyNode = s_Pos
+			end
+			if l_CapturePoint.team == TeamId.TeamNeutral then
+				s_NeutralNode = s_Pos
+			end
+		end
+		-- first use enemy-nodes, then neutral, then friendly
+		if s_EnemyNode then
+			s_TargetPos = s_EnemyNode
+		elseif s_NeutralNode then
+			s_TargetPos = s_NeutralNode
+		elseif s_FriendlyNode then
+			s_TargetPos = s_FriendlyNode
+		end
+	elseif Globals.IsRush then
+		if Globals.IsSquadRush then
+			s_TargetPos = self._McomPositions[self.m_RushStageCounter]
+		else -- Rush-Large, use middle between positions
+			s_TargetPos = (self._McomPositions[self.m_RushStageCounter * 2] + self._McomPositions[self.m_RushStageCounter * 2 - 1]) / 2
+		end
+	end
+
+	return s_TargetPos
+end
+
 -- =============================================
 -- Private Functions.
 -- =============================================
@@ -1560,6 +1604,7 @@ end
 
 function GameDirector:_InitObjectives()
 	self.m_AllObjectives = {}
+	self._McomPositions = {}
 
 	for l_ObjectiveName, _ in pairs(m_NodeCollection:GetKnownObjectives()) do
 		local s_Objective = {
@@ -1632,6 +1677,27 @@ function GameDirector:_InitObjectives()
 		end
 
 		self.m_AllObjectives[#self.m_AllObjectives + 1] = s_Objective
+	end
+
+	for l_PathIndex, _ in pairs(m_NodeCollection:GetPaths()) do
+		local s_PathWaypoint = m_NodeCollection:GetFirst(l_PathIndex)
+
+		-- Only insert objectives that are objectives (on at least one path alone).
+		if s_PathWaypoint ~= nil and s_PathWaypoint.Data.Objectives ~= nil and #s_PathWaypoint.Data.Objectives == 1 then
+			local s_ObjectiveName = s_PathWaypoint.Data.Objectives[1]
+
+			if string.find(s_ObjectiveName:lower(), "interact") ~= nil and string.find(s_ObjectiveName:lower(), "mcom") ~= nil then
+				local s_Fields = s_ObjectiveName:split(" ")
+				local s_Index = nil
+				if #s_Fields > 1 then
+					s_Index = tonumber(s_Fields[2])
+				end
+				-- add to list of mcoms
+				if s_Index then
+					self._McomPositions[s_Index] = s_PathWaypoint.Position
+				end
+			end
+		end
 	end
 
 	self:_InitFlagTeams()

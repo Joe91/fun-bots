@@ -86,7 +86,7 @@ function VehicleChopperControl:UpdateMovementChopper(p_DeltaTime, p_Bot)
 end
 
 function VehicleChopperControl:UpdateTargetMovementChopper(p_Bot)
-	local s_TargetPoint = g_GameDirector._MidMapPoint:Clone()
+	local s_TargetPoint = g_GameDirector:GetActiveTargetPointPosition(p_Bot.m_Player.teamId)
 	s_TargetPoint.y = s_TargetPoint.y + Registry.VEHICLES.CHOPPER_TARGET_HEIGHT
 	if (p_Bot.m_Player.teamId % 2) == 1 then
 		s_TargetPoint.z = s_TargetPoint.z + 20
@@ -131,6 +131,10 @@ function VehicleChopperControl:UpdateYawChopperPilot(p_Bot, p_Attacking) -- only
 		s_DeltaYaw = s_Yaw - p_Bot._TargetYaw
 		s_Current_Roll = s_Roll
 		s_Current_Pitch = s_Pitch
+
+		if p_Bot._TargetPitch > 0.5 then -- 30°
+			p_Bot:AbortAttack()
+		end
 	end
 
 
