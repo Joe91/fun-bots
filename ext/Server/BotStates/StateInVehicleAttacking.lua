@@ -50,7 +50,10 @@ function StateInVehicleAttacking:Update(p_Bot, p_DeltaTime)
 
 	m_VehicleAttacking:UpdateAttackingVehicle(p_DeltaTime, p_Bot)
 	if Config.VehicleMoveWhileShooting and m_Vehicles:IsNotVehicleTerrain(p_Bot.m_ActiveVehicle, VehicleTerrains.Air) then
-		if p_Bot.m_Player.controlledEntryId == 0 and not s_IsStationaryLauncher then -- Only if driver.
+		local s_Chance = Registry.BOT.PROBABILITY_VEHICLE_STOP_TO_SHOOT
+		local s_RandomNumber = MathUtils:GetRandomInt(0, 100)
+		-- chance of the driver stopping
+		if s_RandomNumber <= s_Chance and p_Bot.m_Player.controlledEntryId == 0 and not s_IsStationaryLauncher then -- Only if driver.
 			m_VehicleMovement:UpdateNormalMovementVehicle(p_DeltaTime, p_Bot)
 		else
 			m_VehicleMovement:UpdateShootMovementVehicle(p_Bot)
@@ -75,7 +78,9 @@ function StateInVehicleAttacking:UpdateFast(p_Bot, p_DeltaTime)
 		m_VehicleAiming:UpdateAimingVehicle(p_Bot, true)
 	else
 		if Config.VehicleMoveWhileShooting and m_Vehicles:IsNotVehicleTerrain(p_Bot.m_ActiveVehicle, VehicleTerrains.Air) then
-			if p_Bot.m_Player.controlledEntryId == 0 and not s_IsStationaryLauncher then -- Only if driver.
+			local s_Chance = Registry.BOT.PROBABILITY_VEHICLE_STOP_TO_SHOOT
+			local s_RandomNumber = MathUtils:GetRandomInt(0, 100)
+			if s_RandomNumber <= s_Chance and p_Bot.m_Player.controlledEntryId == 0 and not s_IsStationaryLauncher then -- Only if driver.
 				-- also update movement
 				m_VehicleMovement:UpdateTargetMovementVehicle(p_Bot, p_DeltaTime)
 			end
