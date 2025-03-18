@@ -335,6 +335,10 @@ function FunBotServer:OnLevelLoaded(p_LevelName, p_GameMode, p_Round, p_RoundsPe
 			Globals.UsedSpawnMethod = SpawnMethod.SpawnSoldierAt
 		end
 	end
+	-- If AirSuperiority is active, set SpawnMethod to Spawn.
+	if Globals.IsAirSuperiority then
+		Globals.UsedSpawnMethod = SpawnMethod.Spawn
+	end
 	self:SetMaxBotsPerTeam(p_GameMode)
 	if Registry.COMMON.DESTROY_OBSTACLES_ON_START then
 		self:DestroyObstacles(p_LevelName, p_GameMode)
@@ -908,10 +912,17 @@ function FunBotServer:SetGameMode(p_GameMode, p_LevelName)
 		p_GameMode == 'TankSuperiority0' or
 		p_GameMode == 'CaptureTheFlag0' or
 		p_GameMode == 'BFLAG0' or
-		p_GameMode == 'BFLAG' then
+		p_GameMode == 'BFLAG' or
+		p_GameMode == 'AirSuperiority0' then
 		Globals.IsConquest = true
 	else
 		Globals.IsConquest = false
+	end
+
+	if p_GameMode == 'AirSuperiority0' then
+		Globals.IsAirSuperiority = true
+	else
+		Globals.IsAirSuperiority = false
 	end
 
 	if p_GameMode == 'ConquestAssaultLarge0' or

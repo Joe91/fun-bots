@@ -945,6 +945,8 @@ function BotSpawner:_TriggerSpawn(p_Bot)
 	elseif s_CurrentGameMode:match("Conquest") then
 		-- event + target spawn ("ID_H_US_B", "_ID_H_US_HQ", etc.)
 		self:_ConquestSpawn(p_Bot)
+	elseif s_CurrentGameMode:match("AirSuperiority") then
+		self:_AirSuperioritySpawn(p_Bot)
 	end
 end
 
@@ -991,6 +993,37 @@ function BotSpawner:_RushSpawn(p_Bot)
 		end
 
 		::skip::
+		s_Entity = s_EntityIterator:Next()
+	end
+end
+
+---@param p_Bot Bot
+function BotSpawner:_AirSuperioritySpawn(p_Bot)
+	local s_Event = ServerPlayerEvent("Spawn", p_Bot.m_Player, true, false, false, false, false, false,
+		p_Bot.m_Player.teamId)
+	local s_EntityIterator = EntityManager:GetIterator("ServerCharacterSpawnEntity")
+	local s_Entity = s_EntityIterator:Next()
+	local s_ValidSpawn = false
+
+	while s_Entity do
+		if s_Entity.data:Is('CharacterSpawnReferenceObjectData') then
+			if CharacterSpawnReferenceObjectData(s_Entity.data).team == p_Bot.m_Player.teamId then
+				-- Skip if it is a vehicle spawn.
+				for l_Index = 1, #s_Entity.bus.entities do
+					local l_Entity = s_Entity.bus.entities[l_Index]
+					if l_Entity:Is("ServerVehicleSpawnEntity") then
+						s_ValidSpawn = true
+						break
+					end
+				end
+
+				if s_ValidSpawn then
+					s_Entity:FireEvent(s_Event)
+				end
+				return
+			end
+		end
+
 		s_Entity = s_EntityIterator:Next()
 	end
 end
@@ -1414,6 +1447,9 @@ function BotSpawner:_ApplyCosumizationAfterSpawn(p_Bot)
 end
 
 function BotSpawner:_GetSpecialSpawnEnity(p_Bot, p_TeamId)
+	if Globals.IsAirSuperiority then
+		return "SpawnInJet", p_Bot.m_Player.controlledControllable
+	end
 	if Config.UseVehicles and self._DelayDirectSpawn <= 0.0 and #g_GameDirector:GetSpawnableVehicle(p_TeamId) > 0 then
 		return "SpawnInVehicle", g_GameDirector:GetSpawnableVehicle(p_TeamId)[1]
 	end
