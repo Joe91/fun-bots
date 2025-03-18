@@ -8,6 +8,7 @@ for filename in os.listdir(mapfiles_dir):
         continue
     # Step 1: Collect all existing path indices from all .map files
     path_indices = set()
+    all_links = []
 
     filepath = os.path.join(mapfiles_dir, filename)
     with open(filepath, 'r') as f:
@@ -20,6 +21,9 @@ for filename in os.listdir(mapfiles_dir):
                 continue
             path_index = parts[0].strip()
             path_indices.add(path_index)
+            
+            if "Links" in parts[6]:
+                all_links.append(parts)
 
 #    Step 2: Process each file to remove invalid LinkMode and Links entries
     
@@ -69,6 +73,7 @@ for filename in os.listdir(mapfiles_dir):
             if 'LinkMode' in data_dict and 'Links' in data_dict:
                 links = data_dict['Links']
                 invalid_found = False
+                invalid_links = []
                 
                 # Check each link's path index
                 for link in links:
@@ -77,16 +82,48 @@ for filename in os.listdir(mapfiles_dir):
                         or len(link) < 1 
                         or str(link[0]) not in path_indices
                     ):
-                        invalid_found = True
+                        invalid_links.append(link)
                         break
+                    
+                    invalid_found = True
+                    for comp_link in all_links:
+                        if int(link[0]) == int(comp_link[0]):
+                            if int(link[1]) == int(comp_link[1]):
+                                # now compare the link itself of the connecting path
+                                link_data = comp_link[6].split("\"Links\":[[")[1].split("]]")[0].split("],[")
+                                for data in link_data:
+                                    parts = data.split(",")
+                                    # must match pathindex and pointindex of the link
+                                    path_index = line.split(";")[0]
+                                    point_index = line.split(";")[1]
+                                    if int(parts[0]) ==  int(path_index) and  int(parts[1]) == int(point_index):
+                                        # if it matches, then it is a valid link
+                                        invalid_found = False
+                                        break
+                    if invalid_found:
+                        invalid_links.append(link)
+                        break
+
                 
                 # Remove LinkMode and Links if any invalid links found
-                if invalid_found:
-                    del data_dict['LinkMode']
-                    del data_dict['Links']
-                    # Convert back to string and unwrap
-                    new_data = json.dumps(data_dict, separators=(',', ':')).strip('{}')
-                    modified_data = new_data
+                if len(invalid_links) > 0:
+                    if len(links) == len(invalid_links):
+                        # Remove entire data content if all links are invalid
+                        del data_dict['LinkMode']
+                        del data_dict['Links']
+                        # Convert back to string and unwrap
+                        new_data = json.dumps(data_dict, separators=(',', ':')).strip('{}')
+                        modified_data = ""
+                        if new_data:
+                            modified_data = '{' + new_data + '}'
+                    else:
+                        # Remove only invalid links
+                        data_dict['Links'] = [link for link in links if link not in invalid_links]
+                        # Convert back to string and unwrap
+                        new_data = json.dumps(data_dict, separators=(',', ':')).strip('{}')
+                        modified_data = ""
+                        if new_data:
+                            modified_data = '{' + new_data + '}'
         
         # Rebuild the line with original whitespace
         new_data_part = f"{leading_ws}{modified_data}{trailing_ws}"
@@ -100,3 +137,5 @@ for filename in os.listdir(mapfiles_dir):
     if modified:
         with open(filepath, 'w') as f:
             f.writelines(new_lines)
+            
+        # break # remove this line to process all files
