@@ -1679,22 +1679,24 @@ function GameDirector:_InitObjectives()
 		self.m_AllObjectives[#self.m_AllObjectives + 1] = s_Objective
 	end
 
-	for l_PathIndex, _ in pairs(m_NodeCollection:GetPaths()) do
-		local s_PathWaypoint = m_NodeCollection:GetFirst(l_PathIndex)
+	if Globals.IsRush then
+		for l_PathIndex, _ in pairs(m_NodeCollection:GetPaths()) do
+			local s_PathWaypoint = m_NodeCollection:GetFirst(l_PathIndex)
 
-		-- Only insert objectives that are objectives (on at least one path alone).
-		if s_PathWaypoint ~= nil and s_PathWaypoint.Data.Objectives ~= nil and #s_PathWaypoint.Data.Objectives == 1 then
-			local s_ObjectiveName = s_PathWaypoint.Data.Objectives[1]
+			-- Only insert objectives that are objectives (on at least one path alone).
+			if type(s_PathWaypoint) == "table" and s_PathWaypoint.Data.Objectives ~= nil and #s_PathWaypoint.Data.Objectives == 1 then
+				local s_ObjectiveName = s_PathWaypoint.Data.Objectives[1]
 
-			if string.find(s_ObjectiveName:lower(), "interact") ~= nil and string.find(s_ObjectiveName:lower(), "mcom") ~= nil then
-				local s_Fields = s_ObjectiveName:split(" ")
-				local s_Index = nil
-				if #s_Fields > 1 then
-					s_Index = tonumber(s_Fields[2])
-				end
-				-- add to list of mcoms
-				if s_Index then
-					self._McomPositions[s_Index] = s_PathWaypoint.Position
+				if string.find(s_ObjectiveName:lower(), "interact") ~= nil and string.find(s_ObjectiveName:lower(), "mcom") ~= nil then
+					local s_Fields = s_ObjectiveName:split(" ")
+					local s_Index = nil
+					if #s_Fields > 1 then
+						s_Index = tonumber(s_Fields[2])
+					end
+					-- add to list of mcoms
+					if s_Index then
+						self._McomPositions[s_Index] = s_PathWaypoint.Position
+					end
 				end
 			end
 		end
