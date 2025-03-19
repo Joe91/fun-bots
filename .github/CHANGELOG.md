@@ -20,6 +20,7 @@ This is the changelog for the version V3.0 Don't forget to [join us on Discord](
 * Make bots attack the gunship by themselves (by Tagener Noisu)
 * Bots can use every jet in conquest now (no more paths needed)
 * No more air-paths needed (only enter-paths for choppers)
+* Kind of Support for AirS uperiority (jets still too passive)
 
 ### some open TODOs:
 * rework of raycasts for better performance

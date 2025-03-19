@@ -40,7 +40,11 @@ function VehicleJetControl:UpdateMovementJet(p_DeltaTime, p_Bot)
 	end
 
 	p_Bot._JetMidPosition = g_GameDirector:GetActiveTargetPointPosition(p_Bot.m_Player.teamId)
-	p_Bot._JetMidPosition.y = p_Bot._JetMidPosition.y + Registry.VEHICLES.JET_TARGET_HEIGHT
+	if Globals.IsAirSuperiority then
+		p_Bot._JetMidPosition.y = p_Bot._JetMidPosition.y + 0 -- no offset
+	else
+		p_Bot._JetMidPosition.y = p_Bot._JetMidPosition.y + Registry.VEHICLES.JET_TARGET_HEIGHT
+	end
 	if (p_Bot.m_Player.teamId % 2) == 1 then
 		p_Bot._JetMidPosition.z = p_Bot._JetMidPosition.z + 100
 	else

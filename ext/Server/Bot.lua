@@ -1269,7 +1269,7 @@ function Bot:_EnterVehicleEntity(p_Entity, p_PlayerIsDriver)
 		if s_VehicleData.Type == VehicleTypes.Gunship then
 			seatIndex = seatIndex + 1
 		end
-		if p_Entity:GetPlayerInEntry(seatIndex) == nil then
+		if p_Entity:GetPlayerInEntry(seatIndex) == nil or Globals.IsAirSuperiority then -- already in this seat in air superiority
 			self.m_Player:EnterVehicle(p_Entity, seatIndex)
 			self._ExitVehicleHealth = PhysicsEntity(p_Entity).internalHealth * (Registry.VEHICLES.VEHICLE_EXIT_HEALTH / 100.0)
 
@@ -1281,8 +1281,13 @@ function Bot:_EnterVehicleEntity(p_Entity, p_PlayerIsDriver)
 			if seatIndex == 0 then
 				if seatIndex == s_MaxEntries - 1 then
 					self._VehicleWaitTimer = 0.5 -- Always wait a short time to check for free start.
-					self._VehicleTakeoffTimer = Registry.VEHICLES.JET_TAKEOFF_TIME
-					self._JetTakeoffActive = true
+					if Globals.IsAirSuperiority then
+						self._VehicleTakeoffTimer = 0.0
+						self._JetTakeoffActive = false
+					else
+						self._VehicleTakeoffTimer = Registry.VEHICLES.JET_TAKEOFF_TIME
+						self._JetTakeoffActive = true
+					end
 					g_GameDirector:_SetVehicleObjectiveState(p_Entity.transform.trans, false)
 				else
 					self._VehicleWaitTimer = Config.VehicleWaitForPassengersTime
