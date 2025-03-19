@@ -14,13 +14,14 @@ This is the changelog for the version V3.0 Don't forget to [join us on Discord](
 * original game-spawn-method by default (still a bit to do, till it works fine)
 * add two missing weapons
 * Info-Node in maps for future versioning and information
-* Preparation for pathless-jets TODO: rework transformation and aiming for air-vehicles
+* pathless-jets
+* pathless-choppers
 * Bots can use the gunships (TODO: separate state with separate distace and tragets)
 * Separate worsening values for different vehicle types (by MatiasPastori)
 * Make bots attack the gunship by themselves (by Tagener Noisu)
 * Bots can use every jet in conquest now (no more paths needed)
 * No more air-paths needed (only enter-paths for choppers)
-* Kind of Support for AirS uperiority (jets still too passive)
+* Kind of Support for AirSuperiority (jets still too passive)
 
 ### some open TODOs:
 * rework of raycasts for better performance
