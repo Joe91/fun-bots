@@ -682,14 +682,11 @@ function GameDirector:OnVehicleSpawnDone(p_Entity)
 	-- now check the other vehicles
 	local s_Objective = self:_SetVehicleObjectiveState(p_Entity.transform.trans, true)
 	if s_Objective ~= nil then
-		local s_Node = self:FindClosestPath(p_Entity.transform.trans, true, false, s_VehicleData.Terrain)
-
-		if s_Node ~= nil and s_Node.Position:Distance(p_Entity.transform.trans) < Registry.VEHICLES.MIN_DISTANCE_VEHICLE_ENTER then
-			if s_Objective.isSpawnPath then
-				self.m_SpawnableVehicles[s_Objective.team][#self.m_SpawnableVehicles[s_Objective.team] + 1] = p_Entity
-			else
-				self.m_AvailableVehicles[s_Objective.team][#self.m_AvailableVehicles[s_Objective.team] + 1] = p_Entity
-			end
+		-- don't make this dependant of the nodes
+		if s_Objective.isSpawnPath then
+			self.m_SpawnableVehicles[s_Objective.team][#self.m_SpawnableVehicles[s_Objective.team] + 1] = p_Entity
+		else
+			self.m_AvailableVehicles[s_Objective.team][#self.m_AvailableVehicles[s_Objective.team] + 1] = p_Entity
 		end
 	else
 		if Config.EnableParadrop and self.m_Gunship ~= nil then
