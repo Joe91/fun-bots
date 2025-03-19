@@ -36,14 +36,12 @@ function StateInVehicleChopperControl:Update(p_Bot, p_DeltaTime)
 
 	if s_IsAttacking then
 		m_VehicleAttacking:UpdateAttackingVehicle(p_DeltaTime, p_Bot)
-		m_VehicleMovement:UpdateShootMovementVehicle(p_Bot) -- todo: irrelevant for chopper?
 	else
-		m_VehicleMovement:UpdateNormalMovementVehicle(p_DeltaTime, p_Bot)
+		m_ChopperControl:UpdateMovementChopper(p_DeltaTime, p_Bot)
+		-- m_VehicleMovement:UpdateNormalMovementVehicle(p_DeltaTime, p_Bot)
 	end
 
-
 	-- Common things.
-	m_VehicleMovement:UpdateSpeedOfMovementVehicle(p_DeltaTime, p_Bot, false)
 	p_Bot:_UpdateInputs(p_DeltaTime)
 
 	-- transition
