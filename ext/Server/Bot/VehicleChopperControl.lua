@@ -116,6 +116,9 @@ function VehicleChopperControl:UpdateYawChopperPilot(p_Bot, p_Attacking) -- only
 	if p_Bot.m_Player.controlledControllable == nil then
 		return
 	end
+	if not p_Bot._TargetPoint then
+		return
+	end
 
 	-- YAW
 	local s_Output_Yaw = p_Bot._Pid_Drv_Yaw:Update(s_DeltaYaw)

@@ -147,10 +147,8 @@ function Bot:__init(p_Player)
 	self._VehicleDirBackPositive = false
 	self._JetAbortAttackActive = false
 	self._JetTakeoffActive = false
-	self._JetMidPosition = Vec3.zero
 	self._ExitVehicleHealth = 0.0
 	self._LastVehicleHealth = 0.0
-	self._TargetHeightAttack = 0.0
 	self._VehicleWeaponSlotToUse = 1
 	self._ActiveVehicleWeaponSlot = 0
 	---@type ControllableEntity|nil
@@ -998,7 +996,6 @@ function Bot:ResetSpawnVars()
 	self.m_DontRevive = false
 	self._JetAbortAttackActive = false
 	self._JetTakeoffActive = false
-	self._JetMidPosition = Vec3.zero
 	self._VehicleReadyToShoot = false
 	self._FullVehicleSteering = false
 	self._VehicleDirBackPositive = false
@@ -1175,14 +1172,13 @@ function Bot:FindVehiclePath(p_Position)
 		-- Set path.
 		self._TargetPoint = s_Node
 		self._NextTargetPoint = s_Node
-		-- Only for choppers.
-		self._TargetHeightAttack = p_Position.y
 	end
 end
 
 function Bot:UpdateVehicleMovableId()
 	local s_InVehicle = false
 	local s_OnVehicle = false
+	self:ResetSpawnVars() -- TODO: this might be too hard? Better solution? Only Inputs relevant?
 	if self.m_Player.controlledControllable ~= nil and not self.m_Player.controlledControllable:Is('ServerSoldierEntity') then
 		s_InVehicle = true
 		s_OnVehicle = false
