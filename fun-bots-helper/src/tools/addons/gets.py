@@ -28,6 +28,7 @@ ALL_GAME_MODES = [
     "Scavanger",
     "CTF",
     "Tank Superiority",
+    "Air Superiority",
 ]
 GAME_MODE_TRANSLATIONS = {
     "TDM": "TeamDeathMatch0",
@@ -45,6 +46,7 @@ GAME_MODE_TRANSLATIONS = {
     "Scavanger": "Scavenger0",
     "CTF": "CaptureTheFlag0",
     "Tank Superiority": "TankSuperiority0",
+    "Air Superiority": "AirSuperiority0",
 }
 DISTANCE_MAX = 80
 

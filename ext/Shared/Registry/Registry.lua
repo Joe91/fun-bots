@@ -107,7 +107,7 @@ Registry = {
 		-- Once a jet is that far away from a vehicle or person, he aborts.
 		ABORT_ATTACK_DISTANCE_JET = 100,
 		-- Once a jet is that far away from a jet or chopper, he aborts.
-		ABORT_ATTACK_AIR_DISTANCE_JET = 50,
+		ABORT_ATTACK_AIR_DISTANCE_JET = 30,
 		-- Once a chopper is that low above a vehicle or person, he aborts.
 		ABORT_ATTACK_HEIGHT_CHOPPER = 20,
 		-- In this time, a jet will not attack.

@@ -39,22 +39,22 @@ function VehicleJetControl:UpdateMovementJet(p_DeltaTime, p_Bot)
 		end
 	end
 
-	p_Bot._JetMidPosition = g_GameDirector:GetActiveTargetPointPosition(p_Bot.m_Player.teamId)
+	local s_TargetPosition = g_GameDirector:GetActiveTargetPointPosition(p_Bot.m_Player.teamId):Clone()
 	if Globals.IsAirSuperiority then
-		p_Bot._JetMidPosition.y = p_Bot._JetMidPosition.y + 0 -- no offset
+		s_TargetPosition.y = s_TargetPosition.y + 0 -- no offset
 	else
-		p_Bot._JetMidPosition.y = p_Bot._JetMidPosition.y + Registry.VEHICLES.JET_TARGET_HEIGHT
+		s_TargetPosition.y = s_TargetPosition.y + Registry.VEHICLES.JET_TARGET_HEIGHT
 	end
 	if (p_Bot.m_Player.teamId % 2) == 1 then
-		p_Bot._JetMidPosition.z = p_Bot._JetMidPosition.z + 100
+		s_TargetPosition.z = s_TargetPosition.z + 100
 	else
-		p_Bot._JetMidPosition.z = p_Bot._JetMidPosition.z - 100
+		s_TargetPosition.z = s_TargetPosition.z - 100
 	end
 
 	if p_Bot._VehicleTakeoffTimer > 0.0 then
 		p_Bot._VehicleTakeoffTimer = p_Bot._VehicleTakeoffTimer - p_DeltaTime
 		if p_Bot._JetTakeoffActive or
-			(p_Bot._JetAbortAttackActive and (p_Bot.m_Player.controlledControllable.transform.trans.y < (p_Bot._JetMidPosition.y - 45)))
+			(p_Bot._JetAbortAttackActive and (p_Bot.m_Player.controlledControllable.transform.trans.y < (s_TargetPosition.y - 45)))
 		then
 			local s_TargetPosition = p_Bot.m_Player.controlledControllable.transform.trans:Clone()
 			local s_Forward = p_Bot.m_Player.controlledControllable.transform.forward:Clone()
@@ -70,7 +70,7 @@ function VehicleJetControl:UpdateMovementJet(p_DeltaTime, p_Bot)
 		elseif p_Bot._JetAbortAttackActive then
 			-- don't move along paths with planes
 			local s_Waypoint = {
-				Position = p_Bot._JetMidPosition,
+				Position = s_TargetPosition,
 			}
 			p_Bot._TargetPoint = s_Waypoint
 			return
@@ -82,7 +82,7 @@ function VehicleJetControl:UpdateMovementJet(p_DeltaTime, p_Bot)
 
 	-- don't move along paths with planes
 	local s_Waypoint = {
-		Position = p_Bot._JetMidPosition,
+		Position = s_TargetPosition,
 	}
 	p_Bot._TargetPoint = s_Waypoint
 end
@@ -122,10 +122,10 @@ function VehicleJetControl:UpdateYawJet(p_Bot, p_Attacking)
 	if p_Attacking then
 		-- print({ p_Bot._AttackPosition, p_Bot.m_Player.controlledControllable.transform.trans })
 		s_DeltaYaw, s_DeltaPitch = self:CalculateDeviationRelativeToOrientation(p_Bot.m_Player.controlledControllable.transform:Clone(), p_Bot._AttackPosition)
-		if p_Bot.m_Player.controlledControllable.transform.trans.y > p_Bot._JetMidPosition.y + 120 then
+		if p_Bot.m_Player.controlledControllable.transform.trans.y > p_Bot._TargetPoint.Position.y + 120 then
 			p_Bot._JetTakeoffActive = false
 			p_Bot:AbortAttack()
-		elseif p_Bot.m_Player.controlledControllable.transform.trans.y < p_Bot._JetMidPosition.y - 75 then
+		elseif p_Bot.m_Player.controlledControllable.transform.trans.y < p_Bot._TargetPoint.Position.y - 75 then
 			p_Bot._JetTakeoffActive = false
 			p_Bot:AbortAttack()
 		end
@@ -136,7 +136,7 @@ function VehicleJetControl:UpdateYawJet(p_Bot, p_Attacking)
 	-- local s_FacingDown = p_Bot.m_Player.controlledControllable.transform.forward.y < 0.2
 	-- local s_FacingUp = p_Bot.m_Player.controlledControllable.transform.forward.y > 0.2
 	-- local s_IsUpwards = p_Bot.m_Player.controlledControllable.transform.up.y > 0.0
-	-- local s_IsBelowTarget = p_Bot.m_Player.controlledControllable.transform.up.y < p_Bot._JetMidPosition.y
+	-- local s_IsBelowTarget = p_Bot.m_Player.controlledControllable.transform.up.y < s_TargetPosition.y
 	-- if s_FacingDown then
 	-- 	if math.abs(s_DeltaPitch) > math.pi / 2 then
 	-- 		if s_IsBelowTarget then
