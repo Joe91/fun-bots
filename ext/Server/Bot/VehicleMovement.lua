@@ -613,7 +613,9 @@ function VehicleMovement:UpdateYawVehicle(p_Bot, p_Attacking, p_IsStationaryLaun
 	else -- Attacking.
 		-- Yaw
 		local s_Output = p_Bot._Pid_Att_Yaw:Update(s_DeltaYaw)
-		if Config.VehicleMoveWhileShooting and p_Bot.m_Player.controlledEntryId == 0 and not p_IsStationaryLauncher then -- Driver.
+		local s_Chance = Registry.BOT.PROBABILITY_VEHICLE_STOP_TO_SHOOT
+		local s_RandomNumber = MathUtils:GetRandomInt(0, 100)
+		if Config.VehicleMoveWhileShooting and s_RandomNumber <= s_Chance and p_Bot.m_Player.controlledEntryId == 0 and not p_IsStationaryLauncher then -- Driver.
 			s_Pos = p_Bot.m_Player.controlledControllable.transform.forward
 			local s_AtanDzDx = math.atan(s_Pos.z, s_Pos.x)
 			local s_Yaw = (s_AtanDzDx > math.pi / 2) and (s_AtanDzDx - math.pi / 2) or (s_AtanDzDx + 3 * math.pi / 2)
