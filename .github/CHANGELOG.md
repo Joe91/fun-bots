@@ -44,6 +44,9 @@ This is the changelog for the version V3.0 Don't forget to [join us on Discord](
 * MP12_ConquestSmall0 by ThyKingdomCome (with explore-paths)
 * MP17_ConquestLarge0 by ThyKingdomCome (with explore-paths)
 * MP01_ConquestLarge0 by MatiasPastori (with explore-paths)
+* XP1_003_ConquestAssaultLarge0 by MatiasPastori
+* XP3_Desert_ConquestLarge0 by MatiasPastori
+* MP01_ConquestLarge0 by MatiasPastori (with explore-paths)
 
 ### Documentation update
 

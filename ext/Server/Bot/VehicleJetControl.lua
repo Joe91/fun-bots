@@ -117,8 +117,11 @@ end
 ---@param p_Bot Bot
 ---@param p_Attacking boolean
 function VehicleJetControl:UpdateYawJet(p_Bot, p_Attacking)
-	local s_DeltaYaw, s_DeltaPitch = 0, 0
+	if p_Bot._TargetPoint == nil then
+		return
+	end
 
+	local s_DeltaYaw, s_DeltaPitch = 0, 0
 	if p_Attacking then
 		-- print({ p_Bot._AttackPosition, p_Bot.m_Player.controlledControllable.transform.trans })
 		s_DeltaYaw, s_DeltaPitch = self:CalculateDeviationRelativeToOrientation(p_Bot.m_Player.controlledControllable.transform:Clone(), p_Bot._AttackPosition)
@@ -129,7 +132,7 @@ function VehicleJetControl:UpdateYawJet(p_Bot, p_Attacking)
 			p_Bot._JetTakeoffActive = false
 			p_Bot:AbortAttack()
 		end
-	elseif p_Bot._TargetPoint then
+	else
 		s_DeltaYaw, s_DeltaPitch = self:CalculateDeviationRelativeToOrientation(p_Bot.m_Player.controlledControllable.transform:Clone(), p_Bot._TargetPoint.Position)
 	end
 
