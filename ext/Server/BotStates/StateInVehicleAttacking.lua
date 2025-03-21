@@ -18,6 +18,7 @@ local m_VehicleAiming = require('Bot/VehicleAiming')
 local m_VehicleAttacking = require('Bot/VehicleAttacking')
 local m_VehicleMovement = require('Bot/VehicleMovement')
 local m_VehicleWeaponHandling = require('Bot/VehicleWeaponHandling')
+local m_Utilities = require('__shared/Utilities')
 
 function StateInVehicleAttacking:__init()
 	-- Nothing to do.
@@ -40,6 +41,16 @@ end
 ---@param p_Bot Bot
 ---@param p_DeltaTime number
 function StateInVehicleAttacking:Update(p_Bot, p_DeltaTime)
+	-- use state-timer to change vehicle movement during attack
+	if p_Bot.m_StateTimer == 0.0 or p_Bot.m_StateTimer > 5.0 then
+		p_Bot.m_StateTimer = 0.0
+		if m_Utilities:CheckProbablity(Registry.VEHICLES.PROBABILITY_VEHICLE_STOP_TO_SHOOT) then
+			self._VehicleMoveWhileShooting = false
+		else
+			self._VehicleMoveWhileShooting = true
+		end
+	end
+
 	-- update state-timer
 	p_Bot.m_StateTimer = p_Bot.m_StateTimer + p_DeltaTime
 

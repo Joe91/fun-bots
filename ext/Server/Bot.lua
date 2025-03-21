@@ -11,8 +11,6 @@ local m_NodeCollection = require('NodeCollection')
 local m_Vehicles = require('Vehicles')
 ---@type Logger
 local m_Logger = Logger('Bot', Debug.Server.BOT)
----@type Utilities
-local m_Utilities = require('__shared/Utilities')
 
 
 ---@param p_Player Player
@@ -636,11 +634,6 @@ function Bot:ShootAt(p_Player, p_IgnoreYaw)
 			end
 			self._ActiveShootDuration = self._ShootModeTimer
 			if s_NewTarget then
-				if m_Utilities:CheckProbablity(Registry.VEHICLES.PROBABILITY_VEHICLE_STOP_TO_SHOOT) then
-					self._VehicleMoveWhileShooting = false
-				else
-					self._VehicleMoveWhileShooting = true
-				end
 				self._DoneShootDuration = 0.0
 				self._ShootPlayerName = p_Player.name
 				self._ShootPlayer = PlayerManager:GetPlayerByName(self._ShootPlayerName)
