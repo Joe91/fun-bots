@@ -1038,17 +1038,6 @@ SettingsDefinition = {
 			Category = "VEHICLE"
 		},
 		{
-			Name = "VehicleMoveWhileShooting",
-			Text = "Vehicles move while shooting",
-			---@type Type|integer
-			Type = Type.Boolean,
-			Value = Config.VehicleMoveWhileShooting,
-			Description = "Vehicles like tanks do not stop for shooting",
-			Default = true,
-			UpdateFlag = UpdateFlag.None,
-			Category = "VEHICLE"
-		},
-		{
 			Name = "AABots",
 			Text = "Activate Auto-AA",
 			---@type Type|integer

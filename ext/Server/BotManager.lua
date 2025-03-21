@@ -1377,7 +1377,7 @@ function BotManager:_CheckForBotBotAttack()
 		local s_BotIdToCheck = self._BotBotAttackList[i]
 		local s_Bot = self:GetBotById(s_BotIdToCheck)
 
-		if s_Bot and s_Bot.m_Player and s_Bot.m_Player.soldier and s_Bot:IsReadyToAttack(false, nil, false) then
+		if s_Bot and s_Bot.m_Player and s_Bot.m_Player.soldier and s_Bot:IsReadyToAttack(false, nil, false, false) then
 			local s_BotPosition = nil
 			if s_Bot.m_Player.controlledControllable then
 				s_BotPosition = s_Bot.m_Player.controlledControllable.transform.trans

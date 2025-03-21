@@ -49,7 +49,7 @@ function StateInVehicleAttacking:Update(p_Bot, p_DeltaTime)
 	m_VehicleWeaponHandling:UpdateWeaponSelectionVehicle(p_Bot)
 
 	m_VehicleAttacking:UpdateAttackingVehicle(p_DeltaTime, p_Bot)
-	if Config.VehicleMoveWhileShooting and m_Vehicles:IsNotVehicleTerrain(p_Bot.m_ActiveVehicle, VehicleTerrains.Air) then
+	if p_Bot._VehicleMoveWhileShooting and m_Vehicles:IsNotVehicleTerrain(p_Bot.m_ActiveVehicle, VehicleTerrains.Air) then
 		if p_Bot.m_Player.controlledEntryId == 0 and not s_IsStationaryLauncher then -- Only if driver.
 			m_VehicleMovement:UpdateNormalMovementVehicle(p_DeltaTime, p_Bot)
 		else
@@ -74,7 +74,7 @@ function StateInVehicleAttacking:UpdateFast(p_Bot, p_DeltaTime)
 	if m_Vehicles:IsAirVehicle(p_Bot.m_ActiveVehicle) then -- TODO: simplyfy once Gunship has own state and handling
 		m_VehicleAiming:UpdateAimingVehicle(p_Bot, true)
 	else
-		if Config.VehicleMoveWhileShooting and m_Vehicles:IsNotVehicleTerrain(p_Bot.m_ActiveVehicle, VehicleTerrains.Air) then
+		if p_Bot._VehicleMoveWhileShooting and m_Vehicles:IsNotVehicleTerrain(p_Bot.m_ActiveVehicle, VehicleTerrains.Air) then
 			if p_Bot.m_Player.controlledEntryId == 0 and not s_IsStationaryLauncher then -- Only if driver.
 				-- also update movement
 				m_VehicleMovement:UpdateTargetMovementVehicle(p_Bot, p_DeltaTime)

@@ -11,6 +11,8 @@ local m_NodeCollection = require('NodeCollection')
 local m_Vehicles = require('Vehicles')
 ---@type Logger
 local m_Logger = Logger('Bot', Debug.Server.BOT)
+---@type Utilities
+local m_Utilities = require('__shared/Utilities')
 
 
 ---@param p_Player Player
@@ -137,6 +139,7 @@ function Bot:__init(p_Player)
 	self._ObjectiveMode = BotObjectiveModes.Default
 	self._OnSwitch = false
 	self._ActiveDelay = 0.0
+	self._VehicleMoveWhileShooting = false
 
 	-- Vehicle stuff.
 	---@type integer|nil
@@ -316,12 +319,13 @@ end
 ---@param p_ShootBackAfterHit boolean
 ---@param p_Player Player | nil
 ---@param p_CheckShootTimer boolean
+---@param p_IsNewTarget boolean
 ---@return boolean
-function Bot:IsReadyToAttack(p_ShootBackAfterHit, p_Player, p_CheckShootTimer)
+function Bot:IsReadyToAttack(p_ShootBackAfterHit, p_Player, p_CheckShootTimer, p_IsNewTarget)
 	-- update timers first
 	if self._ShootPlayerName == '' then
 		self._DoneShootDuration = 0.0
-	elseif p_Player and self._ShootPlayerName == p_Player.name then
+	elseif p_Player and not p_IsNewTarget then
 		self._DoneShootDuration = self._DoneShootDuration + (self._ActiveShootDuration - self._ShootModeTimer)
 	end
 
@@ -340,7 +344,7 @@ function Bot:IsReadyToAttack(p_ShootBackAfterHit, p_Player, p_CheckShootTimer)
 
 	local s_InVehicle = g_BotStates:IsInVehicleState(self.m_ActiveState)
 	if self._ShootPlayerName == '' or
-		(p_Player and p_Player.name == self._ShootPlayerName) or -- if still the same enemy, you can trigger directly again
+		(p_Player and p_IsNewTarget) or -- if still the same enemy, you can trigger directly again
 		(s_InVehicle and (self._DoneShootDuration > Config.BotVehicleMinTimeShootAtPlayer)) or
 		(not s_InVehicle and (self._DoneShootDuration > Config.BotMinTimeShootAtPlayer)) or
 		(self.m_KnifeMode and self._ShootModeTimer > ((Config.BotMinTimeShootAtPlayer * 0.5))) then
@@ -498,8 +502,9 @@ function Bot:ShootAt(p_Player, p_IgnoreYaw)
 	end
 
 	local s_NewAttackPriority = self:GetAttackPriority(s_Type)
+	local s_NewTarget = self._ShootPlayerName ~= p_Player.name
 
-	local s_Ready = (s_NewAttackPriority > self.m_AttackPriority) or self:IsReadyToAttack(p_IgnoreYaw, p_Player, true)
+	local s_Ready = (s_NewAttackPriority > self.m_AttackPriority) or self:IsReadyToAttack(p_IgnoreYaw, p_Player, true, s_NewTarget)
 	if not s_Ready or self._Shoot == false then
 		return false
 	end
@@ -630,7 +635,12 @@ function Bot:ShootAt(p_Player, p_IgnoreYaw)
 				end
 			end
 			self._ActiveShootDuration = self._ShootModeTimer
-			if self._ShootPlayerName ~= p_Player.name then
+			if s_NewTarget then
+				if m_Utilities:CheckProbablity(Registry.VEHICLES.PROBABILITY_VEHICLE_STOP_TO_SHOOT) then
+					self._VehicleMoveWhileShooting = false
+				else
+					self._VehicleMoveWhileShooting = true
+				end
 				self._DoneShootDuration = 0.0
 				self._ShootPlayerName = p_Player.name
 				self._ShootPlayer = PlayerManager:GetPlayerByName(self._ShootPlayerName)
@@ -1001,6 +1011,7 @@ function Bot:ResetSpawnVars()
 	self._VehicleDirBackPositive = false
 	self._ExitVehicleActive = false
 	self._OnSwitch = false
+	self._VehicleMoveWhileShooting = false
 
 	self.m_AttackPriority = 1
 	self.m_DelayedInputs = {}

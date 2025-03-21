@@ -130,6 +130,8 @@ Registry = {
 		VEHICLE_PROPABILITY_THIRD_AIRTARGET = 25,
 		-- Seat-check cycle-time.
 		VEHICLE_SEAT_CHECK_CYCLE_TIME = 3.0,
+		-- Probability to stop in vehicle while shooting
+		PROBABILITY_VEHICLE_STOP_TO_SHOOT = 40,
 	},
 	-- Bot related.
 	BOT = {
@@ -179,7 +181,6 @@ Registry = {
 		NUMBER_NODES_TO_SCAN_AFTER_ATTACK = 20,
 		-- Delay on destroying several bots
 		BOT_DESTORY_DELAY = 0.05,
-		PROBABILITY_VEHICLE_STOP_TO_SHOOT = 60
 	},
 	-- Bot team balancing (only in keep_playercount - spawn-mode)
 	BOT_TEAM_BALANCING = {
