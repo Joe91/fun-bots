@@ -178,7 +178,8 @@ Registry = {
 		-- number of nodes in every direction to scan for best way back
 		NUMBER_NODES_TO_SCAN_AFTER_ATTACK = 20,
 		-- Delay on destroying several bots
-		BOT_DESTORY_DELAY = 0.05
+		BOT_DESTORY_DELAY = 0.05,
+		PROBABILITY_VEHICLE_STOP_TO_SHOOT = 60
 	},
 	-- Bot team balancing (only in keep_playercount - spawn-mode)
 	BOT_TEAM_BALANCING = {
