@@ -1,4 +1,4 @@
-const EntryType = {
+export const EntryType = {
 	Boolean:		'Boolean',
 	Integer:		'Integer',
 	Float:			'Float',
@@ -7,7 +7,7 @@ const EntryType = {
 	Password:		'Password'
 };
 
-const InputDeviceKeys	= {
+export const InputDeviceKeys	= {
 	IDK_Enter:	13,
 	IDK_F1:		112,
 	IDK_F2:		113,

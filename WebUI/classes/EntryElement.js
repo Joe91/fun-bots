@@ -1,3 +1,5 @@
+import { EntryType } from "./Constants";
+
 class EntryElement extends HTMLElement {
     constructor() {
         super();
