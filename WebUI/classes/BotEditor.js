@@ -60,7 +60,7 @@ const BotEditor = (new function BotEditor() {
 				callback(images);
 				return;
 			}
-		});
+		}, 0);
 	};
 
 	this.buildColor = function buildColor(string) {
