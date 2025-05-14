@@ -37,6 +37,7 @@ This is the changelog for the version V3.0 Don't forget to [join us on Discord](
 
 ### Bug fixes
 * fix stationary AA again...
+* fix horn-usage of jeeps #356
 
 ### New maps
 * 

@@ -357,7 +357,8 @@ end
 function Bot:GetAttackPriority(p_EnemyVehicleType)
 	local s_BotVehicleType = m_Vehicles:VehicleType(self.m_ActiveVehicle)
 
-	if self.m_SecondaryGadget ~= nil then
+	-- attack as soldier
+	if s_BotVehicleType == VehicleTypes.NoVehicle and self.m_SecondaryGadget ~= nil then
 		if self.m_SecondaryGadget.type == WeaponTypes.MissileAir
 			and m_Vehicles:IsAirVehicleType(p_EnemyVehicleType)
 		then
@@ -369,6 +370,7 @@ function Bot:GetAttackPriority(p_EnemyVehicleType)
 		end
 	end
 
+	-- attack as air-vehicle
 	if m_Vehicles:IsAirVehicleType(s_BotVehicleType) then
 		if m_Vehicles:IsAirVehicleType(p_EnemyVehicleType) then
 			return 3
@@ -377,6 +379,7 @@ function Bot:GetAttackPriority(p_EnemyVehicleType)
 		end
 	end
 
+	-- attack as ground-vehicle
 	if m_Vehicles:IsArmoredVehicleType(s_BotVehicleType)
 		and m_Vehicles:IsArmoredVehicleType(p_EnemyVehicleType)
 	then
@@ -503,7 +506,7 @@ function Bot:ShootAt(p_Player, p_IgnoreYaw)
 	local s_NewTarget = self._ShootPlayerName ~= p_Player.name
 
 	local s_Ready = (s_NewAttackPriority > self.m_AttackPriority) or self:IsReadyToAttack(p_IgnoreYaw, p_Player, true, s_NewTarget)
-	if not s_Ready or self._Shoot == false then
+	if not s_Ready or self._Shoot == false or self._DontAttackPlayers then
 		return false
 	end
 
@@ -539,6 +542,11 @@ function Bot:ShootAt(p_Player, p_IgnoreYaw)
 		end
 	end
 
+	-- in lightAA: only attack air-vehicles
+	if s_InVehicle and m_Vehicles:IsVehicleType(self.m_ActiveVehicle, VehicleTypes.LightAA) and not m_Vehicles:IsAirVehicleType(s_Type) then
+		return false
+	end
+
 	local s_AttackDistance = self:GetAttackDistance(p_IgnoreYaw, s_VehicleAttackMode)
 
 	-- Don't attack if too far away.
@@ -552,10 +560,6 @@ function Bot:ShootAt(p_Player, p_IgnoreYaw)
 	local s_Pitch = 0
 	local s_FovHalf = 0
 	local s_PitchHalf = 0
-
-	if s_InVehicle and m_Vehicles:IsVehicleType(self.m_ActiveVehicle, VehicleTypes.LightAA) and not m_Vehicles:IsAirVehicleType(s_Type) then
-		return false
-	end
 
 	-- If target is air-vehicle and bot is in AA → ignore yaw.
 	if m_Vehicles:IsAirVehicleType(s_Type) then
