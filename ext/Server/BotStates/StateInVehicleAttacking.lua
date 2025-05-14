@@ -42,12 +42,12 @@ end
 ---@param p_DeltaTime number
 function StateInVehicleAttacking:Update(p_Bot, p_DeltaTime)
 	-- use state-timer to change vehicle movement during attack
-	if p_Bot.m_StateTimer == 0.0 or p_Bot.m_StateTimer > 5.0 then
+	if p_Bot.m_StateTimer == 0.0 or p_Bot.m_StateTimer > 6.0 then
 		p_Bot.m_StateTimer = 0.0
 		if m_Utilities:CheckProbablity(Registry.VEHICLES.PROBABILITY_VEHICLE_STOP_TO_SHOOT) then
-			self._VehicleMoveWhileShooting = false
+			p_Bot._VehicleMoveWhileShooting = false
 		else
-			self._VehicleMoveWhileShooting = true
+			p_Bot._VehicleMoveWhileShooting = true
 		end
 	end
 

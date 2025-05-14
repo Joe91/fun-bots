@@ -56,7 +56,7 @@ function VehicleJetControl:UpdateMovementJet(p_DeltaTime, p_Bot)
 		if p_Bot._JetTakeoffActive or
 			(p_Bot._JetAbortAttackActive and (p_Bot.m_Player.controlledControllable.transform.trans.y < (s_TargetPosition.y - 45)))
 		then
-			local s_TargetPosition = p_Bot.m_Player.controlledControllable.transform.trans:Clone()
+			s_TargetPosition = p_Bot.m_Player.controlledControllable.transform.trans:Clone()
 			local s_Forward = p_Bot.m_Player.controlledControllable.transform.forward:Clone()
 			s_Forward.y = 0
 			s_Forward:Normalize()

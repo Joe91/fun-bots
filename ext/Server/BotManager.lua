@@ -1377,7 +1377,7 @@ function BotManager:_CheckForBotBotAttack()
 		local s_BotIdToCheck = self._BotBotAttackList[i]
 		local s_Bot = self:GetBotById(s_BotIdToCheck)
 
-		if s_Bot and s_Bot.m_Player and s_Bot.m_Player.soldier and s_Bot:IsReadyToAttack(false, nil, false, false) then
+		if s_Bot and s_Bot.m_Player and s_Bot.m_Player.soldier and s_Bot:IsReadyToAttack(false, nil, false, true) then
 			local s_BotPosition = nil
 			if s_Bot.m_Player.controlledControllable then
 				s_BotPosition = s_Bot.m_Player.controlledControllable.transform.trans
@@ -1420,10 +1420,6 @@ function BotManager:_CheckForBotBotAttack()
 							if s_MaxDistanceEnemyBot > s_MaxDistance then
 								s_MaxDistance = s_MaxDistanceEnemyBot
 							end
-
-							-- TODO: check FOV first?
-							-- local s_EnemyReady = s_EnemyBot:IsReadyToAttack(false)
-							-- local s_InFov = self:ChechFovBotBot(s_Bot, s_EnemyBot, s_EnemyReady)
 
 							if s_Distance <= s_MaxDistance then
 								table.insert(s_RaycastEntries, {
