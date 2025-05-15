@@ -290,7 +290,8 @@ end
 function Bot:_DoExitVehicle()
 	if self._ExitVehicleActive then
 		self:AbortAttack()
-		self.m_Player:ExitVehicle(false, false)
+		self.m_Player:ExitVehicle(true, false)
+		self.m_ActiveVehicle = nil
 		self:SetState(g_BotStates.States.Moving)
 		local s_Node = g_GameDirector:FindClosestPath(self.m_Player.soldier.worldTransform.trans, false, true, nil)
 
@@ -1191,6 +1192,7 @@ function Bot:UpdateVehicleMovableId()
 		s_InVehicle = true
 		s_OnVehicle = false
 
+		-- transition to vehicle state
 		if m_Vehicles:IsVehicleType(self.m_ActiveVehicle, VehicleTypes.Plane) then
 			self:SetState(g_BotStates.States.InVehicleJetControl)
 		elseif m_Vehicles:IsVehicleType(self.m_ActiveVehicle, VehicleTypes.StationaryAA) then
@@ -1276,12 +1278,10 @@ function Bot:_EnterVehicleEntity(p_Entity, p_PlayerIsDriver)
 		if p_Entity:GetPlayerInEntry(seatIndex) == nil or Globals.IsAirSuperiority then -- already in this seat in air superiority
 			self.m_Player:EnterVehicle(p_Entity, seatIndex)
 			self._ExitVehicleHealth = PhysicsEntity(p_Entity).internalHealth * (Registry.VEHICLES.VEHICLE_EXIT_HEALTH / 100.0)
-
 			-- Get ID.
 			self.m_ActiveVehicle = s_VehicleData
 			self._ActiveVehicleWeaponSlot = 0
-			self._VehicleMovableId = m_Vehicles:GetPartIdForSeat(self.m_ActiveVehicle, seatIndex, self._ActiveVehicleWeaponSlot)
-
+			self:UpdateVehicleMovableId()
 			if seatIndex == 0 then
 				if seatIndex == s_MaxEntries - 1 then
 					self._VehicleWaitTimer = 0.5 -- Always wait a short time to check for free start.
@@ -1309,21 +1309,6 @@ function Bot:_EnterVehicleEntity(p_Entity, p_PlayerIsDriver)
 						g_GameDirector:_SetVehicleObjectiveState(p_Entity.transform.trans, false)
 					end
 				end
-			end
-
-			-- transition to vehicle state
-			if self.m_Player.controlledControllable ~= nil and not self.m_Player.controlledControllable:Is('ServerSoldierEntity') then
-				if m_Vehicles:IsVehicleType(self.m_ActiveVehicle, VehicleTypes.Plane) then
-					self:SetState(g_BotStates.States.InVehicleJetControl)
-				elseif m_Vehicles:IsVehicleType(self.m_ActiveVehicle, VehicleTypes.StationaryAA) then
-					self:SetState(g_BotStates.States.InVehicleStationaryAaControl)
-				elseif m_Vehicles:IsChopper(self.m_ActiveVehicle) and self.m_Player.controlledEntryId == 0 then
-					self:SetState(g_BotStates.States.InVehicleChopperControl)
-				else
-					self:SetState(g_BotStates.States.InVehicleMoving)
-				end
-			elseif self.m_Player.attachedControllable ~= nil then
-				self:SetState(g_BotStates.States.OnVehicleIdle)
 			end
 
 			return 0, s_Position -- Everything fine.
