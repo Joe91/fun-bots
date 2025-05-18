@@ -28,6 +28,7 @@ function GameDirector:RegisterVars()
 
 	self.m_SpawnableStationaryAas = {}
 	self.m_SpawnableVehicles = {}
+	self.m_MobileRespawnVehicles = {}
 	self.m_AvailableVehicles = {}
 	self.m_Beacons = {}
 	self.m_Gunship = nil
@@ -57,6 +58,7 @@ function GameDirector:OnLevelLoaded()
 
 	for i = 0, Globals.NrOfTeams do
 		self.m_SpawnableVehicles[i] = {}
+		self.m_MobileRespawnVehicles[i] = {}
 		self.m_SpawnableStationaryAas[i] = {}
 		self.m_AvailableVehicles[i] = {}
 	end
@@ -560,6 +562,10 @@ function GameDirector:GetSpawnableVehicle(p_TeamId)
 	return self.m_SpawnableVehicles[p_TeamId]
 end
 
+function GameDirector:GetMobileRespawnVehicle(p_TeamId)
+	return self.m_MobileRespawnVehicles[p_TeamId]
+end
+
 function GameDirector:GetStationaryAas(p_TeamId)
 	return self.m_SpawnableStationaryAas[p_TeamId]
 end
@@ -683,9 +689,9 @@ function GameDirector:OnVehicleSpawnDone(p_Entity)
 	if s_Objective ~= nil then
 		-- don't make this dependant of the nodes
 		if s_Objective.isSpawnPath then
-			self:AddEntityToVehicleCollection(self.m_SpawnableVehicles, s_Objective.Team, p_Entity)
+			self:AddEntityToVehicleCollection(self.m_SpawnableVehicles, s_Objective.team, p_Entity)
 		else
-			self:AddEntityToVehicleCollection(self.m_AvailableVehicles, s_Objective.Team, p_Entity)
+			self:AddEntityToVehicleCollection(self.m_AvailableVehicles, s_Objective.team, p_Entity)
 		end
 	else
 		if Config.EnableParadrop and self.m_Gunship ~= nil then
@@ -756,6 +762,7 @@ function GameDirector:OnVehicleUnspawn(p_Entity, p_VehiclePoints, p_HotTeam)
 		else
 			self:RemoveEntityFromVehicleCollection(self.m_SpawnableVehicles, l_Team, p_Entity)
 			self:RemoveEntityFromVehicleCollection(self.m_AvailableVehicles, l_Team, p_Entity)
+			self:RemoveEntityFromVehicleCollection(self.m_MobileRespawnVehicles, l_Team, p_Entity)
 		end
 	end
 end
@@ -773,6 +780,13 @@ function GameDirector:OnVehicleExit(p_VehicleEntity, p_Player)
 		if m_Vehicles:IsVehicleType(s_VehicleData, VehicleTypes.StationaryAA) then
 			self:ReturnStationaryAaEntity(p_VehicleEntity, p_Player.teamId)
 		end
+
+		if m_Vehicles:IsTransportChopper(s_VehicleData)
+			and m_Vehicles:IsEmpty(p_VehicleEntity)
+		then
+			print("Remove transport chopper")
+			self:RemoveEntityFromVehicleCollection(self.m_MobileRespawnVehicles, p_Player.teamId, p_VehicleEntity)
+		end
 	end
 end
 
@@ -788,6 +802,14 @@ function GameDirector:OnVehicleEnter(p_Entity, p_Player)
 
 		if m_Vehicles:IsVehicleType(s_VehicleData, VehicleTypes.StationaryAA) then
 			self:RemoveEntityFromVehicleCollection(self.m_SpawnableStationaryAas, l_Team, p_Entity)
+		elseif m_Vehicles:IsTransportChopper(s_VehicleData) then
+			self:RemoveEntityFromVehicleCollection(self.m_SpawnableVehicles, l_Team, p_Entity)
+			self:RemoveEntityFromVehicleCollection(self.m_AvailableVehicles, l_Team, p_Entity)
+
+			if not self:IsEntityInVehicleCollection(self.m_MobileRespawnVehicles, l_Team, p_Entity) then
+				print("Add transport chopper")
+				self:AddEntityToVehicleCollection(self.m_MobileRespawnVehicles, l_Team, p_Entity)
+			end
 		else
 			self:RemoveEntityFromVehicleCollection(self.m_SpawnableVehicles, l_Team, p_Entity)
 			self:RemoveEntityFromVehicleCollection(self.m_AvailableVehicles, l_Team, p_Entity)
@@ -896,6 +918,21 @@ function GameDirector:RemoveEntityFromVehicleCollection(p_Collection, p_Team, p_
 			break -- should only happen once
 		end
 	end
+end
+
+---@param p_Collection table
+---@param p_Team integer
+---@param p_Entity ControllableEntity|Entity
+function GameDirector:IsEntityInVehicleCollection(p_Collection, p_Team, p_Entity)
+	for l_Index = 1, #p_Collection[p_Team] do
+		local l_Entity = p_Collection[p_Team][l_Index]
+
+		if (l_Entity.uniqueId == p_Entity.uniqueId) and (l_Entity.instanceId == p_Entity.instanceId) then
+			return true
+		end
+	end
+
+	return false
 end
 
 ---@param p_Point table

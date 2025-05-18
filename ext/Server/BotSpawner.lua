@@ -1276,6 +1276,16 @@ function BotSpawner:_SpawnSingleWayBot(p_Player, p_UseRandomWay, p_ActiveWayInde
 							break
 						end
 					end
+				elseif s_SpawnPoint == "SpawnAtMobileVehicle" then
+					local s_Vehicles = g_GameDirector:GetMobileRespawnVehicle(s_TeamId)
+
+					for l_Index = 1, #s_Vehicles do
+						local l_Vehicle = s_Vehicles[l_Index]
+						if l_Vehicle ~= nil and m_Vehicles:GetNrOfFreeSeats(l_Vehicle, true) then
+							s_SpawnEntity = l_Vehicle
+							break
+						end
+					end
 				elseif s_SpawnPoint == "SpawnInAa" then
 					local s_StationaryAas = g_GameDirector:GetStationaryAas(s_TeamId)
 
@@ -1499,6 +1509,10 @@ function BotSpawner:_GetSpawnPoint(p_TeamId, p_SquadId)
 
 	if Config.UseVehicles and self._DelayDirectSpawn <= 0.0 and #g_GameDirector:GetSpawnableVehicle(p_TeamId) > 0 then
 		return "SpawnAtVehicle"
+	end
+
+	if Config.UseVehicles and #g_GameDirector:GetMobileRespawnVehicle(p_TeamId) > 0 then
+		return "SpawnAtMobileVehicle"
 	end
 
 	if Config.AABots and #g_GameDirector:GetStationaryAas(p_TeamId) > 0 then

@@ -86,6 +86,11 @@ function Vehicles:GetNrOfFreeSeats(p_Entity, p_PlayerIsDriver)
 	return s_NrOfFreeSeats
 end
 
+---@param p_Entity ControllableEntity
+function Vehicles:IsEmpty(p_Entity)
+	return self:GetNrOfFreeSeats(p_Entity, true) == p_Entity.entryCount
+end
+
 ---@param p_VehicleData VehicleDataInner
 ---@param p_Index integer
 ---@param p_WeaponSelection integer
@@ -160,6 +165,12 @@ end
 function Vehicles:IsChopper(p_VehicleData)
 	return self:IsVehicleType(p_VehicleData, VehicleTypes.Chopper)
 		or self:IsVehicleType(p_VehicleData, VehicleTypes.ScoutChopper)
+end
+
+---@param p_VehicleData VehicleDataInner
+function Vehicles:IsTransportChopper(p_VehicleData)
+	return self:IsVehicleType(p_VehicleData, VehicleTypes.Chopper)
+		and (string.find(p_VehicleData.Name, "KOSATKA") or string.find(p_VehicleData.Name, "VENOM"))
 end
 
 ---@param p_VehicleData VehicleDataInner
