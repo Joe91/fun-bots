@@ -24,9 +24,11 @@ function StateInVehicleAttacking:__init()
 	-- Nothing to do.
 end
 
----update in every frame
+---default update-function
 ---@param p_Bot Bot
-function StateInVehicleAttacking:UpdatePrecheck(p_Bot)
+---@param p_DeltaTime number
+function StateInVehicleAttacking:Update(p_Bot, p_DeltaTime)
+	-- transitions
 	if not p_Bot.m_Player.soldier then
 		p_Bot:SetState(g_BotStates.States.Idle)
 		return
@@ -35,12 +37,7 @@ function StateInVehicleAttacking:UpdatePrecheck(p_Bot)
 		p_Bot:SetState(g_BotStates.States.InVehicleMoving)
 		return
 	end
-end
 
----default update-function
----@param p_Bot Bot
----@param p_DeltaTime number
-function StateInVehicleAttacking:Update(p_Bot, p_DeltaTime)
 	-- use state-timer to change vehicle movement during attack
 	if p_Bot.m_StateTimer == 0.0 or p_Bot.m_StateTimer > 6.0 then
 		p_Bot.m_StateTimer = 0.0
@@ -79,6 +76,10 @@ end
 ---@param p_Bot Bot
 ---@param p_DeltaTime number
 function StateInVehicleAttacking:UpdateFast(p_Bot, p_DeltaTime)
+	if not p_Bot.m_Player.soldier then
+		return
+	end
+
 	local s_IsStationaryLauncher = m_Vehicles:IsVehicleType(p_Bot.m_ActiveVehicle, VehicleTypes.StationaryLauncher)
 
 	-- Fast code.
@@ -100,6 +101,9 @@ end
 ---update in every frame
 ---@param p_Bot Bot
 function StateInVehicleAttacking:UpdateVeryFast(p_Bot)
+	if not p_Bot.m_Player.soldier then
+		return
+	end
 	-- update SingleStepEntry (Engine-requirement)
 	p_Bot.m_Player.soldier:SingleStepEntry(p_Bot.m_Player.controlledEntryId)
 end
@@ -108,6 +112,10 @@ end
 ---@param p_Bot Bot
 ---@param p_DeltaTime number
 function StateInVehicleAttacking:UpdateSlow(p_Bot, p_DeltaTime)
+	if not p_Bot.m_Player.soldier then
+		return
+	end
+
 	p_Bot:_CheckForVehicleActions(p_DeltaTime, true)
 	p_Bot:_DoExitVehicle()
 end

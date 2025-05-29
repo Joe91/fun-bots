@@ -184,7 +184,7 @@ end
 
 ---@param p_Bot Bot
 local function _DefaultAimingAction(p_Bot)
-	if not p_Bot._Shoot or p_Bot._ShootPlayer.soldier == nil or p_Bot.m_ActiveWeapon == nil then
+	if not p_Bot._Shoot or p_Bot._ShootPlayer.soldier == nil or p_Bot.m_ActiveWeapon == nil or p_Bot.m_Player.soldier == nil then
 		return
 	end
 

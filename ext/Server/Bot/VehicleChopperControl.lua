@@ -41,7 +41,7 @@ function VehicleChopperControl:UpdateMovementChopper(p_DeltaTime, p_Bot)
 end
 
 function VehicleChopperControl:UpdateTargetMovementChopper(p_Bot)
-	if not p_Bot._TargetPoint then
+	if not p_Bot._TargetPoint or not p_Bot.m_Player.controlledControllable then
 		return
 	end
 	local s_DifferenceY = p_Bot._TargetPoint.Position.z - p_Bot.m_Player.controlledControllable.transform.trans.z
@@ -54,6 +54,10 @@ end
 ---@param p_Bot Bot
 ---@param p_Attacking boolean
 function VehicleChopperControl:UpdateYawChopperPilot(p_Bot, p_Attacking) -- only for the driver of the chopper
+	if not p_Bot.m_Player.controlledControllable then
+		return
+	end
+
 	local s_DeltaYaw = 0
 	local s_DeltaPitch = 0
 	local s_Current_Roll = 0

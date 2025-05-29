@@ -117,7 +117,7 @@ end
 ---@param p_Bot Bot
 ---@param p_Attacking boolean
 function VehicleJetControl:UpdateYawJet(p_Bot, p_Attacking)
-	if p_Bot._TargetPoint == nil then
+	if p_Bot._TargetPoint == nil or p_Bot.m_Player.controlledControllable == nil then
 		return
 	end
 

@@ -678,6 +678,7 @@ end
 function Bot:_CheckForVehicleActions(p_DeltaTime, p_AttackActive)
 	local s_InVehicle = g_BotStates:IsInVehicleState(self.m_ActiveState)
 	local s_OnVehicle = g_BotStates:IsOnVehicleState(self.m_ActiveState)
+
 	-- Check if exit of vehicle is needed (because of low health).
 	if not self._ExitVehicleActive then
 		local s_CurrentVehicleHealth = 0

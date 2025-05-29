@@ -23,9 +23,11 @@ function StateAttacking:__init()
 	-- Nothing to do.
 end
 
----update in every frame
+---default update-function
 ---@param p_Bot Bot
-function StateAttacking:UpdatePrecheck(p_Bot)
+---@param p_DeltaTime number
+function StateAttacking:Update(p_Bot, p_DeltaTime)
+	-- transitions
 	if not p_Bot.m_Player.soldier then
 		p_Bot:SetState(g_BotStates.States.Idle)
 		return
@@ -34,12 +36,7 @@ function StateAttacking:UpdatePrecheck(p_Bot)
 		p_Bot:SetState(g_BotStates.States.Moving)
 		return
 	end
-end
 
----default update-function
----@param p_Bot Bot
----@param p_DeltaTime number
-function StateAttacking:Update(p_Bot, p_DeltaTime)
 	-- update state-timer
 	p_Bot.m_StateTimer = p_Bot.m_StateTimer + p_DeltaTime
 
@@ -60,11 +57,6 @@ function StateAttacking:Update(p_Bot, p_DeltaTime)
 
 	m_BotMovement:UpdateSpeedOfMovement(p_Bot)
 	p_Bot:_UpdateInputs(p_DeltaTime)
-
-
-
-	-- transition to revive
-	-- transition to repair
 end
 
 ---fast update-function
@@ -77,6 +69,9 @@ end
 ---update in every frame
 ---@param p_Bot Bot
 function StateAttacking:UpdateVeryFast(p_Bot)
+	if p_Bot.m_Player.soldier == nil then
+		return
+	end
 	-- update SingleStepEntry (Engine-requirement)
 	p_Bot.m_Player.soldier:SingleStepEntry(p_Bot.m_Player.controlledEntryId)
 	-- Update yaw of soldier every tick.

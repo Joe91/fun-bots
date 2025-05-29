@@ -20,28 +20,17 @@ local m_VehicleAiming = require('Bot/VehicleAiming')
 local m_VehicleWeaponHandling = require('Bot/VehicleWeaponHandling')
 
 function StateInVehicleStationaryAAControl:__init()
-	self.m_IsAttacking = false
-end
-
----update in every frame
----@param p_Bot Bot
-function StateInVehicleStationaryAAControl:UpdatePrecheck(p_Bot)
-	if not p_Bot.m_Player.soldier then
-		p_Bot:SetState(g_BotStates.States.Idle)
-		return
-	end
-
-	if p_Bot._ShootPlayer ~= nil then
-		self.m_IsAttacking = true
-	else
-		self.m_IsAttacking = false
-	end
 end
 
 ---default update-function
 ---@param p_Bot Bot
 ---@param p_DeltaTime number
 function StateInVehicleStationaryAAControl:Update(p_Bot, p_DeltaTime)
+	if not p_Bot.m_Player.soldier then
+		p_Bot:SetState(g_BotStates.States.Idle)
+		return
+	end
+
 	local s_IsAttacking = p_Bot._ShootPlayer ~= nil
 	-- update state-timer
 	p_Bot.m_StateTimer = p_Bot.m_StateTimer + p_DeltaTime
@@ -66,6 +55,10 @@ end
 ---@param p_Bot Bot
 ---@param p_DeltaTime number
 function StateInVehicleStationaryAAControl:UpdateFast(p_Bot, p_DeltaTime)
+	if not p_Bot.m_Player.soldier then
+		return
+	end
+
 	local s_IsAttacking = p_Bot._ShootPlayer ~= nil
 	-- Stationary AA needs separate handling.
 
@@ -99,6 +92,9 @@ end
 ---update in every frame
 ---@param p_Bot Bot
 function StateInVehicleStationaryAAControl:UpdateVeryFast(p_Bot)
+	if p_Bot.m_Player.soldier == nil then
+		return
+	end
 	-- update SingleStepEntry (Engine-requirement)
 	p_Bot.m_Player.soldier:SingleStepEntry(p_Bot.m_Player.controlledEntryId)
 end

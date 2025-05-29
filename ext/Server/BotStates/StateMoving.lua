@@ -19,19 +19,10 @@ function StateMoving:__init()
 	-- Nothing to do.
 end
 
----update in every frame
----@param p_Bot Bot
-function StateMoving:UpdatePrecheck(p_Bot)
-	-- todo: remove the precheck for better performance
-end
-
 ---default update-function
 ---@param p_Bot Bot
 ---@param p_DeltaTime number
 function StateMoving:Update(p_Bot, p_DeltaTime)
-	-- update state-timer
-	p_Bot.m_StateTimer = p_Bot.m_StateTimer + p_DeltaTime
-
 	-- transition to other states:
 	if not p_Bot.m_Player.soldier then
 		p_Bot:SetState(g_BotStates.States.Idle)
@@ -42,6 +33,9 @@ function StateMoving:Update(p_Bot, p_DeltaTime)
 		p_Bot:SetState(g_BotStates.States.Attacking)
 		return
 	end
+
+	-- update state-timer
+	p_Bot.m_StateTimer = p_Bot.m_StateTimer + p_DeltaTime
 
 	-- default-handling
 	m_BotWeaponHandling:UpdateWeaponSelection(p_Bot) -- TODO: maybe compbine with reload now?

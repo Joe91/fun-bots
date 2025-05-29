@@ -46,7 +46,7 @@ end
 ---@param p_Bot Bot
 ---@param p_AdvancedAlgorithm boolean
 function VehicleAiming:UpdateAimingVehicle(p_Bot, p_AdvancedAlgorithm)
-	if p_Bot._ShootPlayer == nil then
+	if p_Bot._ShootPlayer == nil or p_Bot.m_Player.soldier == nil then
 		return
 	end
 

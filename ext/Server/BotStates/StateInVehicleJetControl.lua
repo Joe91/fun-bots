@@ -11,22 +11,18 @@ local m_JetControl = require('Bot/VehicleJetControl')
 local m_VehicleWeaponHandling = require('Bot/VehicleWeaponHandling')
 
 function StateInVehicleJetControl:__init()
-	self.m_IsAttacking = false
-end
-
----update in every frame
----@param p_Bot Bot
-function StateInVehicleJetControl:UpdatePrecheck(p_Bot)
-	if not p_Bot.m_Player.soldier then
-		p_Bot:SetState(g_BotStates.States.Idle)
-		return
-	end
 end
 
 ---default update-function
 ---@param p_Bot Bot
 ---@param p_DeltaTime number
 function StateInVehicleJetControl:Update(p_Bot, p_DeltaTime)
+	-- transitions
+	if not p_Bot.m_Player.soldier then
+		p_Bot:SetState(g_BotStates.States.Idle)
+		return
+	end
+
 	local s_IsAttacking = p_Bot._ShootPlayer ~= nil
 	-- update state-timer
 	p_Bot.m_StateTimer = p_Bot.m_StateTimer + p_DeltaTime
@@ -82,6 +78,9 @@ end
 ---update in every frame
 ---@param p_Bot Bot
 function StateInVehicleJetControl:UpdateVeryFast(p_Bot)
+	if p_Bot.m_Player.soldier == nil then
+		return
+	end
 	-- update SingleStepEntry (Engine-requirement)
 	p_Bot.m_Player.soldier:SingleStepEntry(p_Bot.m_Player.controlledEntryId)
 end
@@ -90,6 +89,9 @@ end
 ---@param p_Bot Bot
 ---@param p_DeltaTime number
 function StateInVehicleJetControl:UpdateSlow(p_Bot, p_DeltaTime)
+	if not p_Bot.m_Player.soldier then
+		return
+	end
 	-- p_Bot:_CheckForVehicleActions(p_DeltaTime, true) -- don't exit vehicle on low health?
 	p_Bot:_DoExitVehicle()
 end

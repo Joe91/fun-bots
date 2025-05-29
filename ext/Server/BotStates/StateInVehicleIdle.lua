@@ -27,11 +27,6 @@ function StateInVehicleIdle:__init()
 	-- Nothing to do.
 end
 
----update in every frame
----@param p_Bot Bot
-function StateInVehicleIdle:UpdatePrecheck(p_Bot)
-end
-
 ---default update-function
 ---@param p_Bot Bot
 ---@param p_DeltaTime number

@@ -11,22 +11,18 @@ local m_ChopperControl = require('Bot/VehicleChopperControl')
 local m_VehicleWeaponHandling = require('Bot/VehicleWeaponHandling')
 
 function StateInVehicleChopperControl:__init()
-	self.m_IsAttacking = false
-end
-
----update in every frame
----@param p_Bot Bot
-function StateInVehicleChopperControl:UpdatePrecheck(p_Bot)
-	if not p_Bot.m_Player.soldier then
-		p_Bot:SetState(g_BotStates.States.Idle)
-		return
-	end
 end
 
 ---default update-function
 ---@param p_Bot Bot
 ---@param p_DeltaTime number
 function StateInVehicleChopperControl:Update(p_Bot, p_DeltaTime)
+	-- transitions
+	if not p_Bot.m_Player.soldier then
+		p_Bot:SetState(g_BotStates.States.Idle)
+		return
+	end
+
 	local s_IsAttacking = p_Bot._ShootPlayer ~= nil
 	-- update state-timer
 	p_Bot.m_StateTimer = p_Bot.m_StateTimer + p_DeltaTime
@@ -67,6 +63,9 @@ end
 ---update in every frame
 ---@param p_Bot Bot
 function StateInVehicleChopperControl:UpdateVeryFast(p_Bot)
+	if p_Bot.m_Player.soldier == nil then
+		return
+	end
 	-- update SingleStepEntry (Engine-requirement)
 	p_Bot.m_Player.soldier:SingleStepEntry(p_Bot.m_Player.controlledEntryId)
 end
@@ -75,6 +74,9 @@ end
 ---@param p_Bot Bot
 ---@param p_DeltaTime number
 function StateInVehicleChopperControl:UpdateSlow(p_Bot, p_DeltaTime)
+	if not p_Bot.m_Player.soldier then
+		return
+	end
 	local s_IsAttacking = p_Bot._ShootPlayer ~= nil
 	p_Bot:_CheckForVehicleActions(p_DeltaTime, true)
 	if not s_IsAttacking then

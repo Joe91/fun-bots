@@ -119,10 +119,6 @@ function BotManager:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 		return
 	end
 
-	for l_Index = 1, s_BotCount do
-		local l_Bot = self._Bots[l_Index]
-		l_Bot.m_ActiveState:UpdatePrecheck(l_Bot)
-	end
 
 	self:UpdateBotsInBatches(self._Bots, s_BotCount, self._L1Counter, self._RatioL0L2, "Update", self._L2CycleTime)
 
