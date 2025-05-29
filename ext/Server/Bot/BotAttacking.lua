@@ -189,7 +189,7 @@ local function _DefaultAttackingAction(p_DeltaTime, p_Bot)
 			s_IsSniper = true
 		end
 		local s_AttackMode = m_Vehicles:CheckForVehicleAttack(p_Bot._ShootPlayerVehicleType, p_Bot._DistanceToPlayer,
-			p_Bot.m_SecondaryGadget, false, s_IsSniper)
+			p_Bot.m_PrimaryGadget, p_Bot.m_SecondaryGadget, false, s_IsSniper)
 
 		if s_AttackMode ~= VehicleAttackModes.NoAttack then
 			if s_AttackMode == VehicleAttackModes.AttackWithNade then -- Grenade.
@@ -197,7 +197,8 @@ local function _DefaultAttackingAction(p_DeltaTime, p_Bot)
 			elseif s_AttackMode == VehicleAttackModes.AttackWithRocket or
 				s_AttackMode == VehicleAttackModes.AttackWithMissileAir or
 				s_AttackMode == VehicleAttackModes.AttackWithMissileLand then -- Rockets and missiles.
-				p_Bot._WeaponToUse = BotWeapons.Gadget2
+				p_Bot._WeaponToUse = BotWeapons.Gadget1
+
 				if p_Bot.m_Player.soldier.weaponsComponent.weapons[3] and p_Bot.m_Player.soldier.weaponsComponent.weapons[3].secondaryAmmo <= 0 then
 					p_Bot.m_Player.soldier.weaponsComponent.weapons[3].secondaryAmmo = 3
 					p_Bot._WeaponToUse = BotWeapons.Primary
@@ -222,8 +223,7 @@ local function _DefaultAttackingAction(p_DeltaTime, p_Bot)
 		-- Target not in vehicle.
 		-- Refill rockets if empty.
 		if p_Bot.m_ActiveWeapon and p_Bot.m_ActiveWeapon.type == WeaponTypes.Rocket and not Globals.IsGm then
-			if p_Bot.m_Player.soldier.weaponsComponent.weapons[3] and p_Bot.m_Player.soldier.weaponsComponent.weapons[3].primaryAmmo <= 0 then
-				p_Bot.m_Player.soldier.weaponsComponent.weapons[3].primaryAmmo = 1
+			if p_Bot.m_Player.soldier.weaponsComponent.weapons[3] and p_Bot.m_Player.soldier.weaponsComponent.weapons[3].secondaryAmmo <= 0 then
 				p_Bot.m_Player.soldier.weaponsComponent.weapons[3].secondaryAmmo = 3
 				p_Bot._WeaponToUse = BotWeapons.Primary
 			end
@@ -252,10 +252,10 @@ local function _DefaultAttackingAction(p_DeltaTime, p_Bot)
 							end
 							if (p_Bot._ShootModeTimer <= (s_TargetTimeValueRocket + 0.001)) and
 								(p_Bot._ShootModeTimer >= (s_TargetTimeValueRocket - p_DeltaTime - 0.001)) and
-								p_Bot.m_SecondaryGadget ~= nil and p_Bot.m_SecondaryGadget.type == WeaponTypes.Rocket and
+								p_Bot.m_PrimaryGadget ~= nil and p_Bot.m_PrimaryGadget.type == WeaponTypes.Rocket and
 								m_Utilities:CheckProbablity(s_ProbabilityRocket)
 							then
-								p_Bot._WeaponToUse = BotWeapons.Gadget2
+								p_Bot._WeaponToUse = BotWeapons.Gadget1
 							end
 						end
 					end

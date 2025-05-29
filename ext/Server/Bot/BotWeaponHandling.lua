@@ -13,7 +13,7 @@ end
 ---@param p_Bot Bot
 ---@param p_Deploy boolean
 function BotWeaponHandling:UpdateDeployAndReload(p_DeltaTime, p_Bot, p_Deploy)
-	if p_Bot._ActiveAction == BotActionFlags.MeleeActive or p_Bot._ActiveAction == BotActionFlags.OtherActionActive then
+	if p_Bot._ActiveAction == BotActionFlags.MeleeActive or p_Bot._ActiveAction == BotActionFlags.OtherActionActive or p_Bot.m_Player.soldier == nil then
 		return
 	end
 	p_Bot._WeaponToUse = BotWeapons.Primary
@@ -72,7 +72,7 @@ function BotWeaponHandling:UpdateWeaponSelection(p_Bot)
 					p_Bot.m_ActiveWeapon = p_Bot.m_Knife
 					p_Bot._ShotTimer = 0.0
 				end
-			elseif p_Bot._ActiveAction == BotActionFlags.ReviveActive or
+			elseif p_Bot._ActiveAction == BotActionFlags.ReviveActive or p_Bot._ActiveAction == BotActionFlags.RepairActive or
 				(p_Bot._WeaponToUse == BotWeapons.Gadget2 and Config.BotWeapon == BotWeapons.Auto) or
 				Config.BotWeapon == BotWeapons.Gadget2 then
 				if p_Bot.m_Player.soldier.weaponsComponent.currentWeaponSlot ~= WeaponSlot.WeaponSlot_5 then
@@ -80,8 +80,7 @@ function BotWeaponHandling:UpdateWeaponSelection(p_Bot)
 					p_Bot.m_ActiveWeapon = p_Bot.m_SecondaryGadget
 					p_Bot._ShotTimer = -p_Bot:GetFirstShotDelay(p_Bot._DistanceToPlayer, false)
 				end
-			elseif p_Bot._ActiveAction == BotActionFlags.RepairActive or
-				(p_Bot._WeaponToUse == BotWeapons.Gadget1 and Config.BotWeapon == BotWeapons.Auto) or
+			elseif (p_Bot._WeaponToUse == BotWeapons.Gadget1 and Config.BotWeapon == BotWeapons.Auto) or
 				Config.BotWeapon == BotWeapons.Gadget1 then
 				if p_Bot.m_Player.soldier.weaponsComponent.currentWeaponSlot ~= WeaponSlot.WeaponSlot_2 and
 					p_Bot.m_Player.soldier.weaponsComponent.currentWeaponSlot ~= WeaponSlot.WeaponSlot_4 then

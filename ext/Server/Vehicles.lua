@@ -304,7 +304,7 @@ end
 ---@param p_Gadget Weapon
 ---@param p_InVehicle boolean
 ---@param p_IsSniper boolean
-function Vehicles:CheckForVehicleAttack(p_VehicleType, p_Distance, p_Gadget, p_InVehicle, p_IsSniper)
+function Vehicles:CheckForVehicleAttack(p_VehicleType, p_Distance, p_Gadget1, p_Gadget2, p_InVehicle, p_IsSniper)
 	if p_InVehicle then
 		return VehicleAttackModes.AttackWithRifle -- Attack with main-weapon.
 	end
@@ -322,18 +322,18 @@ function Vehicles:CheckForVehicleAttack(p_VehicleType, p_Distance, p_Gadget, p_I
 		end
 	end
 
-	if p_VehicleType ~= VehicleTypes.MavBot and p_Gadget then                                                                           -- MAV or EOD always with rifle.
-		if p_Gadget.type == WeaponTypes.Rocket then
-			s_AttackMode = VehicleAttackModes.AttackWithRocket                                                                          -- Always use rocket if possible.
-		elseif p_Gadget.type == WeaponTypes.C4 and p_Distance < 25 then
+	if p_VehicleType ~= VehicleTypes.MavBot then      -- MAV or EOD always with rifle.
+		if p_Gadget1 and p_Gadget1.type == WeaponTypes.Rocket then
+			s_AttackMode = VehicleAttackModes.AttackWithRocket -- Always use rocket if possible.
+		elseif p_Gadget2 and p_Gadget2.type == WeaponTypes.C4 and p_Distance < 25 then
 			if not self:IsAirVehicleType(p_VehicleType) then
-				s_AttackMode = VehicleAttackModes.AttackWithC4                                                                          -- Always use C4 if possible.
+				s_AttackMode = VehicleAttackModes.AttackWithC4 -- Always use C4 if possible.
 			end
-		elseif p_Gadget.type == WeaponTypes.MissileAir then
+		elseif p_Gadget1 and p_Gadget1.type == WeaponTypes.MissileAir then
 			if self:IsAirVehicleType(p_VehicleType) then
 				s_AttackMode = VehicleAttackModes.AttackWithMissileAir
 			end
-		elseif p_Gadget.type == WeaponTypes.MissileLand then
+		elseif p_Gadget1 and p_Gadget1.type == WeaponTypes.MissileLand then
 			if not self:IsAirVehicleType(p_VehicleType) then
 				s_AttackMode = VehicleAttackModes.AttackWithMissileLand
 			end

@@ -359,12 +359,12 @@ function Bot:GetAttackPriority(p_EnemyVehicleType)
 	local s_BotVehicleType = m_Vehicles:VehicleType(self.m_ActiveVehicle)
 
 	-- attack as soldier
-	if s_BotVehicleType == VehicleTypes.NoVehicle and self.m_SecondaryGadget ~= nil then
-		if self.m_SecondaryGadget.type == WeaponTypes.MissileAir
+	if s_BotVehicleType == VehicleTypes.NoVehicle and self.m_PrimaryGadget ~= nil then
+		if self.m_PrimaryGadget.type == WeaponTypes.MissileAir
 			and m_Vehicles:IsAirVehicleType(p_EnemyVehicleType)
 		then
 			return 2
-		elseif self.m_SecondaryGadget.type == WeaponTypes.MissileLand
+		elseif self.m_PrimaryGadget.type == WeaponTypes.MissileLand
 			and m_Vehicles:IsArmoredVehicleType(p_EnemyVehicleType)
 		then
 			return 2
@@ -536,7 +536,7 @@ function Bot:ShootAt(p_Player, p_IgnoreYaw)
 	local s_VehicleAttackMode = nil
 	local s_InVehicle = g_BotStates:IsInVehicleState(self.m_ActiveState)
 	if s_Type ~= VehicleTypes.NoVehicle then
-		s_VehicleAttackMode = m_Vehicles:CheckForVehicleAttack(s_Type, self._DistanceToPlayer, self.m_SecondaryGadget,
+		s_VehicleAttackMode = m_Vehicles:CheckForVehicleAttack(s_Type, self._DistanceToPlayer, self.m_PrimaryGadget, self.m_SecondaryGadget,
 			s_InVehicle, s_IsSniper)
 		if s_VehicleAttackMode == VehicleAttackModes.NoAttack then
 			return false

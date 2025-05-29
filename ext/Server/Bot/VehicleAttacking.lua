@@ -30,7 +30,7 @@ function VehicleAttacking:UpdateAttackingVehicle(p_DeltaTime, p_Bot)
 
 			if p_Bot._ShootPlayerVehicleType ~= VehicleTypes.NoVehicle then
 				local s_AttackMode = m_Vehicles:CheckForVehicleAttack(p_Bot._ShootPlayerVehicleType, p_Bot._DistanceToPlayer,
-					p_Bot.m_SecondaryGadget, true, false)
+					p_Bot.m_PrimaryGadget, p_Bot.m_SecondaryGadget, true, false)
 
 				if s_AttackMode ~= VehicleAttackModes.NoAttack then
 					if s_WeaponSlots > 1 then

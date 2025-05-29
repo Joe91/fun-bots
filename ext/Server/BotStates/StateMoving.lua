@@ -22,15 +22,7 @@ end
 ---update in every frame
 ---@param p_Bot Bot
 function StateMoving:UpdatePrecheck(p_Bot)
-	if not p_Bot.m_Player.soldier then
-		p_Bot:SetState(g_BotStates.States.Idle)
-		return
-	end
-
-	if p_Bot._ShootPlayer ~= nil then
-		p_Bot:SetState(g_BotStates.States.Attacking)
-		return
-	end
+	-- todo: remove the precheck for better performance
 end
 
 ---default update-function
@@ -40,7 +32,16 @@ function StateMoving:Update(p_Bot, p_DeltaTime)
 	-- update state-timer
 	p_Bot.m_StateTimer = p_Bot.m_StateTimer + p_DeltaTime
 
-	-- transition back to idle already outside
+	-- transition to other states:
+	if not p_Bot.m_Player.soldier then
+		p_Bot:SetState(g_BotStates.States.Idle)
+		return
+	end
+
+	if p_Bot._ShootPlayer ~= nil then
+		p_Bot:SetState(g_BotStates.States.Attacking)
+		return
+	end
 
 	-- default-handling
 	m_BotWeaponHandling:UpdateWeaponSelection(p_Bot) -- TODO: maybe compbine with reload now?
@@ -61,6 +62,9 @@ end
 ---update in every frame
 ---@param p_Bot Bot
 function StateMoving:UpdateVeryFast(p_Bot)
+	if p_Bot.m_Player.soldier == nil then
+		return
+	end
 	-- update SingleStepEntry (Engine-requirement)
 	p_Bot.m_Player.soldier:SingleStepEntry(p_Bot.m_Player.controlledEntryId)
 	-- Update yaw of soldier every tick.
