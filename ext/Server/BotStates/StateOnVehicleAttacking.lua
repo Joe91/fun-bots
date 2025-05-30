@@ -39,7 +39,7 @@ function StateOnVehicleAttacking:Update(p_Bot, p_DeltaTime)
 	p_Bot.m_StateTimer = p_Bot.m_StateTimer + p_DeltaTime
 
 	-- Common part.
-	m_BotWeaponHandling:UpdateWeaponSelection(p_Bot)
+	m_BotWeaponHandling:UpdateWeaponSelection(p_DeltaTime, p_Bot)
 
 	m_BotAttacking:UpdateAttacking(p_DeltaTime, p_Bot)
 

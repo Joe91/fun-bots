@@ -33,7 +33,7 @@ function StateOnVehicleIdle:Update(p_Bot, p_DeltaTime)
 	p_Bot.m_StateTimer = p_Bot.m_StateTimer + p_DeltaTime
 
 
-	m_BotWeaponHandling:UpdateWeaponSelection(p_Bot)
+	m_BotWeaponHandling:UpdateWeaponSelection(p_DeltaTime, p_Bot)
 
 	m_BotWeaponHandling:UpdateDeployAndReload(p_DeltaTime, p_Bot, false)
 

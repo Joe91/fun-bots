@@ -94,6 +94,7 @@ function Bot:__init(p_Player)
 	self._DefendTimer = 0.0
 	self._SidewardsTimer = 0.0
 	self._KillYourselfTimer = 0.0
+	self._RocketCooldownTimer = 0.0
 
 	-- Shared movement vars.
 	---@type BotMoveModes
@@ -529,15 +530,10 @@ function Bot:ShootAt(p_Player, p_IgnoreYaw)
 
 	self._DistanceToPlayer = s_TargetPos:Distance(s_PlayerPos)
 
-	local s_IsSniper = false
-	if (self.m_ActiveWeapon and self.m_ActiveWeapon.type == WeaponTypes.Sniper) then
-		s_IsSniper = true
-	end
 	local s_VehicleAttackMode = nil
 	local s_InVehicle = g_BotStates:IsInVehicleState(self.m_ActiveState)
 	if s_Type ~= VehicleTypes.NoVehicle then
-		s_VehicleAttackMode = m_Vehicles:CheckForVehicleAttack(s_Type, self._DistanceToPlayer, self.m_PrimaryGadget, self.m_SecondaryGadget,
-			s_InVehicle, s_IsSniper)
+		s_VehicleAttackMode = m_Vehicles:CheckForVehicleAttack(s_Type, self)
 		if s_VehicleAttackMode == VehicleAttackModes.NoAttack then
 			return false
 		end
@@ -784,6 +780,7 @@ function Bot:ResetVars()
 	self._ShootWayPoints = {}
 	self._SpawnDelayTimer = 0.0
 	self._KillYourselfTimer = 0.0
+	self._RocketCooldownTimer = 0.0
 	self._SpawnProtectionTimer = 0.0
 	self._Objective = ''
 	self._WeaponToUse = BotWeapons.Primary
@@ -975,6 +972,7 @@ function Bot:ResetSpawnVars()
 	self._DefendTimer = 0.0
 	self._SidewardsTimer = 0.0
 	self._KillYourselfTimer = 0.0
+	self._RocketCooldownTimer = 0.0
 	self._SpawnProtectionTimer = 2.0
 	self._DeployTimer = MathUtils:GetRandomInt(1, Config.DeployCycle)
 

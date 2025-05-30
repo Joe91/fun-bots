@@ -160,6 +160,8 @@ Registry = {
 		PROBABILITY_SHOOT_ROCKET = 20,
 		-- The probability to use the rocket, if behavior of bot priorizes this
 		PROBABILITY_SHOOT_ROCKET_PRIO = 85,
+		-- Rocket reload cooldown-time
+		ROCKET_RELOAD_COOLDOWN = 13.0,
 		-- The probability to use the rifle to attack a chopper.
 		PROBABILITY_ATTACK_CHOPPER_WITH_RIFLE = 25,
 		-- If the game mode is Rush or Conquest, change direction if the bot is stuck on non-connecting paths.

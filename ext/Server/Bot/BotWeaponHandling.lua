@@ -61,8 +61,9 @@ function BotWeaponHandling:UpdateDeployAndReload(p_DeltaTime, p_Bot, p_Deploy)
 	end
 end
 
+---@param p_DeltaTime number
 ---@param p_Bot Bot
-function BotWeaponHandling:UpdateWeaponSelection(p_Bot)
+function BotWeaponHandling:UpdateWeaponSelection(p_DeltaTime, p_Bot)
 	-- Select weapon-slot.
 	if p_Bot._ActiveAction ~= BotActionFlags.MeleeActive then
 		if p_Bot.m_Player.soldier.weaponsComponent ~= nil then
@@ -127,6 +128,10 @@ function BotWeaponHandling:UpdateWeaponSelection(p_Bot)
 				end
 			end
 		end
+	end
+
+	if p_Bot._RocketCooldownTimer >= 0 then
+		p_Bot._RocketCooldownTimer = p_Bot._RocketCooldownTimer - p_DeltaTime
 	end
 end
 

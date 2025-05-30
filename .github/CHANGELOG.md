@@ -23,6 +23,7 @@ This is the changelog for the version V3.0 Don't forget to [join us on Discord](
 * No more air-paths needed (only enter-paths for choppers)
 * Kind of Support for AirSuperiority (jets still too passive)
 * Bots randomly move or stop while shooting in vehicles (by MatiasPastori)
+* Cooldown-time for rockets after refill
 
 ### some open TODOs:
 * rework of raycasts for better performance

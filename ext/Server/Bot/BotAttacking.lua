@@ -184,12 +184,7 @@ local function _DefaultAttackingAction(p_DeltaTime, p_Bot)
 
 	-- Target in vehicle.
 	if p_Bot._ShootPlayerVehicleType ~= VehicleTypes.NoVehicle then
-		local s_IsSniper = false
-		if (p_Bot.m_ActiveWeapon and p_Bot.m_ActiveWeapon.type == WeaponTypes.Sniper) then
-			s_IsSniper = true
-		end
-		local s_AttackMode = m_Vehicles:CheckForVehicleAttack(p_Bot._ShootPlayerVehicleType, p_Bot._DistanceToPlayer,
-			p_Bot.m_PrimaryGadget, p_Bot.m_SecondaryGadget, false, s_IsSniper)
+		local s_AttackMode = m_Vehicles:CheckForVehicleAttack(p_Bot._ShootPlayerVehicleType, p_Bot)
 
 		if s_AttackMode ~= VehicleAttackModes.NoAttack then
 			if s_AttackMode == VehicleAttackModes.AttackWithNade then -- Grenade.
@@ -201,6 +196,7 @@ local function _DefaultAttackingAction(p_DeltaTime, p_Bot)
 
 				if p_Bot.m_Player.soldier.weaponsComponent.weapons[3] and p_Bot.m_Player.soldier.weaponsComponent.weapons[3].secondaryAmmo <= 0 then
 					p_Bot.m_Player.soldier.weaponsComponent.weapons[3].secondaryAmmo = 3
+					p_Bot._RocketCooldownTimer = Registry.BOT.ROCKET_RELOAD_COOLDOWN
 					p_Bot._WeaponToUse = BotWeapons.Primary
 				end
 			elseif s_AttackMode == VehicleAttackModes.AttackWithC4 then -- C4
@@ -225,6 +221,7 @@ local function _DefaultAttackingAction(p_DeltaTime, p_Bot)
 		if p_Bot.m_ActiveWeapon and p_Bot.m_ActiveWeapon.type == WeaponTypes.Rocket and not Globals.IsGm then
 			if p_Bot.m_Player.soldier.weaponsComponent.weapons[3] and p_Bot.m_Player.soldier.weaponsComponent.weapons[3].secondaryAmmo <= 0 then
 				p_Bot.m_Player.soldier.weaponsComponent.weapons[3].secondaryAmmo = 3
+				p_Bot._RocketCooldownTimer = Registry.BOT.ROCKET_RELOAD_COOLDOWN
 				p_Bot._WeaponToUse = BotWeapons.Primary
 			end
 		end
@@ -253,6 +250,7 @@ local function _DefaultAttackingAction(p_DeltaTime, p_Bot)
 							if (p_Bot._ShootModeTimer <= (s_TargetTimeValueRocket + 0.001)) and
 								(p_Bot._ShootModeTimer >= (s_TargetTimeValueRocket - p_DeltaTime - 0.001)) and
 								p_Bot.m_PrimaryGadget ~= nil and p_Bot.m_PrimaryGadget.type == WeaponTypes.Rocket and
+								p_Bot._RocketCooldownTimer <= 0.0 and
 								m_Utilities:CheckProbablity(s_ProbabilityRocket)
 							then
 								p_Bot._WeaponToUse = BotWeapons.Gadget1

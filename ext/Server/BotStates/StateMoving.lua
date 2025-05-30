@@ -38,7 +38,7 @@ function StateMoving:Update(p_Bot, p_DeltaTime)
 	p_Bot.m_StateTimer = p_Bot.m_StateTimer + p_DeltaTime
 
 	-- default-handling
-	m_BotWeaponHandling:UpdateWeaponSelection(p_Bot) -- TODO: maybe compbine with reload now?
+	m_BotWeaponHandling:UpdateWeaponSelection(p_DeltaTime, p_Bot) -- TODO: maybe compbine with reload now?
 
 	m_BotMovement:UpdateNormalMovement(p_DeltaTime, p_Bot)
 

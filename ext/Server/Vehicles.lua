@@ -300,13 +300,19 @@ function Vehicles:GetSpeedAndDrop(p_VehicleData, p_Index, p_WeaponSelection)
 end
 
 ---@param p_VehicleType VehicleTypes
----@param p_Distance number
----@param p_Gadget Weapon
----@param p_InVehicle boolean
----@param p_IsSniper boolean
-function Vehicles:CheckForVehicleAttack(p_VehicleType, p_Distance, p_Gadget1, p_Gadget2, p_InVehicle, p_IsSniper)
-	if p_InVehicle then
+---@param p_Bot Bot
+function Vehicles:CheckForVehicleAttack(p_VehicleType, p_Bot)
+	local s_InVehicle = g_BotStates:IsInVehicleState(p_Bot.m_ActiveState)
+	if s_InVehicle then
 		return VehicleAttackModes.AttackWithRifle -- Attack with main-weapon.
+	end
+
+	local s_Distance = p_Bot._DistanceToPlayer
+	local s_Gadget1 = p_Bot.m_PrimaryGadget
+	local s_Gadget2 = p_Bot.m_SecondaryGadget
+	local s_IsSniper = false
+	if (p_Bot.m_ActiveWeapon and p_Bot.m_ActiveWeapon.type == WeaponTypes.Sniper) then
+		s_IsSniper = true
 	end
 
 	local s_AttackMode = VehicleAttackModes.NoAttack -- No attack.
@@ -316,24 +322,24 @@ function Vehicles:CheckForVehicleAttack(p_VehicleType, p_Distance, p_Gadget1, p_
 		p_VehicleType == VehicleTypes.Gadgets then                                               -- No idea what this might be.
 		s_AttackMode = VehicleAttackModes.AttackWithRifle                                        -- Attack with rifle.
 	end
-	if (p_IsSniper and p_VehicleType == VehicleTypes.Chopper and Config.SnipersAttackChoppers) then -- Don't attack planes. Too fast...
+	if (s_IsSniper and p_VehicleType == VehicleTypes.Chopper and Config.SnipersAttackChoppers) then -- Don't attack planes. Too fast...
 		if m_Utilities:CheckProbablity(Registry.BOT.PROBABILITY_ATTACK_CHOPPER_WITH_RIFLE) then
 			s_AttackMode = VehicleAttackModes.AttackWithRifle                                    -- Attack with rifle.
 		end
 	end
 
 	if p_VehicleType ~= VehicleTypes.MavBot then      -- MAV or EOD always with rifle.
-		if p_Gadget1 and p_Gadget1.type == WeaponTypes.Rocket then
+		if s_Gadget1 and s_Gadget1.type == WeaponTypes.Rocket and p_Bot._RocketCooldownTimer <= 0 then
 			s_AttackMode = VehicleAttackModes.AttackWithRocket -- Always use rocket if possible.
-		elseif p_Gadget2 and p_Gadget2.type == WeaponTypes.C4 and p_Distance < 25 then
+		elseif s_Gadget2 and s_Gadget2.type == WeaponTypes.C4 and s_Distance < 25 then
 			if not self:IsAirVehicleType(p_VehicleType) then
 				s_AttackMode = VehicleAttackModes.AttackWithC4 -- Always use C4 if possible.
 			end
-		elseif p_Gadget1 and p_Gadget1.type == WeaponTypes.MissileAir then
+		elseif s_Gadget1 and s_Gadget1.type == WeaponTypes.MissileAir and p_Bot._RocketCooldownTimer <= 0 then
 			if self:IsAirVehicleType(p_VehicleType) then
 				s_AttackMode = VehicleAttackModes.AttackWithMissileAir
 			end
-		elseif p_Gadget1 and p_Gadget1.type == WeaponTypes.MissileLand then
+		elseif s_Gadget1 and s_Gadget1.type == WeaponTypes.MissileLand and p_Bot._RocketCooldownTimer <= 0 then
 			if not self:IsAirVehicleType(p_VehicleType) then
 				s_AttackMode = VehicleAttackModes.AttackWithMissileLand
 			end
