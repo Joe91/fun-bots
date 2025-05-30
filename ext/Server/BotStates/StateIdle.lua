@@ -71,10 +71,6 @@ end
 ---update in every frame
 ---@param p_Bot Bot
 function StateIdle:UpdateVeryFast(p_Bot)
-	if not p_Bot.m_Player.soldier then return end
-
-	-- update SingleStepEntry (Engine-requirement)
-	p_Bot.m_Player.soldier:SingleStepEntry(p_Bot.m_Player.controlledEntryId)
 	-- Update yaw of soldier every tick.
 	m_BotMovement:UpdateYaw(p_Bot)
 end

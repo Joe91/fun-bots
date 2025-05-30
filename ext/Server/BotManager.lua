@@ -130,7 +130,10 @@ function BotManager:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 	-- Update every tick (base-update - needed every time)
 	for l_Index = 1, s_BotCount do
 		local l_Bot = self._Bots[l_Index]
-		l_Bot.m_ActiveState:UpdateVeryFast(l_Bot)
+		if l_Bot.m_Player.soldier then                                      -- only update bots with a soldier
+			l_Bot.m_Player.soldier:SingleStepEntry(l_Bot.m_Player.controlledEntryId) -- engine-requirement
+			l_Bot.m_ActiveState:UpdateVeryFast(l_Bot)
+		end
 	end
 
 	-- Optimize counter reset logic

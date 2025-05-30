@@ -18,7 +18,7 @@ end
 ---@param p_DeltaTime number
 function StateInVehicleJetControl:Update(p_Bot, p_DeltaTime)
 	-- transitions
-	if not p_Bot.m_Player.soldier then
+	if p_Bot.m_Player.soldier == nil then
 		p_Bot:SetState(g_BotStates.States.Idle)
 		return
 	end
@@ -78,18 +78,13 @@ end
 ---update in every frame
 ---@param p_Bot Bot
 function StateInVehicleJetControl:UpdateVeryFast(p_Bot)
-	if p_Bot.m_Player.soldier == nil then
-		return
-	end
-	-- update SingleStepEntry (Engine-requirement)
-	p_Bot.m_Player.soldier:SingleStepEntry(p_Bot.m_Player.controlledEntryId)
 end
 
 ---slow update-function
 ---@param p_Bot Bot
 ---@param p_DeltaTime number
 function StateInVehicleJetControl:UpdateSlow(p_Bot, p_DeltaTime)
-	if not p_Bot.m_Player.soldier then
+	if p_Bot.m_Player.soldier == nil then
 		return
 	end
 	-- p_Bot:_CheckForVehicleActions(p_DeltaTime, true) -- don't exit vehicle on low health?

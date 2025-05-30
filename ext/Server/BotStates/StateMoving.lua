@@ -24,7 +24,7 @@ end
 ---@param p_DeltaTime number
 function StateMoving:Update(p_Bot, p_DeltaTime)
 	-- transition to other states:
-	if not p_Bot.m_Player.soldier then
+	if p_Bot.m_Player.soldier == nil then
 		p_Bot:SetState(g_BotStates.States.Idle)
 		return
 	end
@@ -56,11 +56,6 @@ end
 ---update in every frame
 ---@param p_Bot Bot
 function StateMoving:UpdateVeryFast(p_Bot)
-	if p_Bot.m_Player.soldier == nil then
-		return
-	end
-	-- update SingleStepEntry (Engine-requirement)
-	p_Bot.m_Player.soldier:SingleStepEntry(p_Bot.m_Player.controlledEntryId)
 	-- Update yaw of soldier every tick.
 	m_BotMovement:UpdateYaw(p_Bot)
 end

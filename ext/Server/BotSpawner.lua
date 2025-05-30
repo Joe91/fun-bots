@@ -1428,7 +1428,7 @@ function BotSpawner:_SpawnBot(p_Bot, p_Transform, p_SetKit)
 
 	m_BotManager:SpawnBot(p_Bot, p_Transform, CharacterPoseType.CharacterPoseType_Stand) -- 20 ms
 
-	if not p_Bot.m_Player.soldier then
+	if p_Bot.m_Player.soldier == nil then
 		-- happens on the last ticket. round has ended.
 		return
 	end

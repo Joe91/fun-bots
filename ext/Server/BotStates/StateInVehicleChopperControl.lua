@@ -18,7 +18,7 @@ end
 ---@param p_DeltaTime number
 function StateInVehicleChopperControl:Update(p_Bot, p_DeltaTime)
 	-- transitions
-	if not p_Bot.m_Player.soldier then
+	if p_Bot.m_Player.soldier == nil then
 		p_Bot:SetState(g_BotStates.States.Idle)
 		return
 	end
@@ -63,18 +63,13 @@ end
 ---update in every frame
 ---@param p_Bot Bot
 function StateInVehicleChopperControl:UpdateVeryFast(p_Bot)
-	if p_Bot.m_Player.soldier == nil then
-		return
-	end
-	-- update SingleStepEntry (Engine-requirement)
-	p_Bot.m_Player.soldier:SingleStepEntry(p_Bot.m_Player.controlledEntryId)
 end
 
 ---slow update-function
 ---@param p_Bot Bot
 ---@param p_DeltaTime number
 function StateInVehicleChopperControl:UpdateSlow(p_Bot, p_DeltaTime)
-	if not p_Bot.m_Player.soldier then
+	if p_Bot.m_Player.soldier == nil then
 		return
 	end
 	local s_IsAttacking = p_Bot._ShootPlayer ~= nil
