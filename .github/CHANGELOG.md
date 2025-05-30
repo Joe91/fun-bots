@@ -35,6 +35,7 @@ This is the changelog for the version V3.0 Don't forget to [join us on Discord](
 * add logic for jets in rush
 * improve team-logic for AA and other vehicles (example AA on Rush)
 * improve node-editor
+* Vehicle/Tank: better aiming on steep slopes (compensate car-rotation)
 
 ### Bug fixes
 * fix stationary AA again...
