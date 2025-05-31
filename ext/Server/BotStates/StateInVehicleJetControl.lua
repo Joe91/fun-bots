@@ -49,6 +49,10 @@ end
 ---@param p_Bot Bot
 ---@param p_DeltaTime number
 function StateInVehicleJetControl:UpdateFast(p_Bot, p_DeltaTime)
+	if p_Bot.m_Player.soldier == nil then
+		return
+	end
+
 	local s_IsAttacking = p_Bot._ShootPlayer ~= nil
 
 	-- assign new target after some time

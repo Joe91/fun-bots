@@ -50,6 +50,10 @@ end
 ---@param p_Bot Bot
 ---@param p_DeltaTime number
 function StateInVehicleChopperControl:UpdateFast(p_Bot, p_DeltaTime)
+	if p_Bot.m_Player.soldier == nil then
+		return
+	end
+
 	local s_IsAttacking = p_Bot._ShootPlayer ~= nil
 	if s_IsAttacking then
 		m_VehicleAiming:UpdateAimingVehicle(p_Bot, true)
