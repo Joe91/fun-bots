@@ -27,7 +27,7 @@ function BotSpawner:RegisterVars()
 	self._LastRound = 0
 	self._PlayerUpdateTimer = 0.0
 	self._FirstSpawnInLevel = true
-	self._FirstSpawnDelay = Registry.BOT_SPAWN.FIRST_SPAWN_DELAY
+	self._FirstSpawnDelay = 10000000000.0
 	self._DelayDirectSpawn = Registry.BOT_SPAWN.DELAY_DIRECT_SPAWN
 	self._NrOfPlayers = 0
 	self._UpdateActive = false
@@ -81,7 +81,7 @@ function BotSpawner:OnLevelDestroy()
 	self._SpawnSets = {}
 	self._UpdateActive = false
 	self._FirstSpawnInLevel = true
-	self._FirstSpawnDelay = Registry.BOT_SPAWN.FIRST_SPAWN_DELAY
+	self._FirstSpawnDelay = 10000000000.0
 	self._DelayDirectSpawn = Registry.BOT_SPAWN.DELAY_DIRECT_SPAWN
 	self._PlayerUpdateTimer = 0.0
 	self._NrOfPlayers = 0
@@ -477,9 +477,8 @@ function BotSpawner:UpdateBotAmountAndTeam()
 
 	-- Kill and destroy bots, if no player left.
 	if s_PlayerCount == 0 then
-		if s_BotCount > 0 or self._FirstSpawnInLevel then
+		if s_BotCount > 0 then
 			m_BotManager:KillAll() -- Trigger once.
-			self._UpdateActive = true
 		else
 			self._UpdateActive = false
 		end
