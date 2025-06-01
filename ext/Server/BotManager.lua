@@ -912,7 +912,7 @@ end
 function BotManager:ResetAllBots()
 	for l_Index = 1, #self._Bots do
 		local l_Bot = self._Bots[l_Index]
-		l_Bot:ResetVars()
+		l_Bot:Kill() -- TODO: find out if this is needed
 	end
 end
 
