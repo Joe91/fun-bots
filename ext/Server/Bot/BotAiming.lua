@@ -184,7 +184,7 @@ end
 
 ---@param p_Bot Bot
 local function _DefaultAimingAction(p_Bot)
-	if not p_Bot._Shoot or p_Bot._ShootPlayer.soldier == nil or p_Bot.m_ActiveWeapon == nil or p_Bot.m_Player.soldier == nil then
+	if not p_Bot._Shoot or p_Bot._ShootPlayer.soldier == nil or p_Bot.m_ActiveWeapon == nil then
 		return
 	end
 
@@ -341,7 +341,7 @@ end
 
 ---@param p_Bot Bot
 local function _RepairAimingAction(p_Bot)
-	if p_Bot._ShootPlayer == nil or p_Bot._ShootPlayer.soldier == nil or p_Bot._RepairVehicleEntity == nil then
+	if p_Bot._ShootPlayer.soldier == nil or p_Bot._RepairVehicleEntity == nil then
 		return
 	end
 
@@ -366,7 +366,7 @@ end
 
 ---@param p_Bot Bot
 function BotAiming:UpdateAiming(p_Bot)
-	if p_Bot._ShootPlayer == nil then
+	if p_Bot._ShootPlayer == nil or p_Bot.m_Player.soldier == nil then
 		return
 	end
 

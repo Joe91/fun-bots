@@ -1522,6 +1522,11 @@ end
 ---@return Vec3
 function GameDirector:GetActiveTargetPointPosition(p_TeamId)
 	local s_TargetPos = Vec3.zero
+
+	if self.m_UpdateTimer < 0 then -- round over or not started yet
+		return s_TargetPos
+	end
+
 	if Globals.IsConquest then
 		local s_NeutralNode = nil
 		local s_EnemyNode = nil
