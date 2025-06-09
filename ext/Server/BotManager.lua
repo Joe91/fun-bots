@@ -114,6 +114,10 @@ function BotManager:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 		return
 	end
 
+	-- if not self._InitDone then
+	-- 	return -- TODO: Use this or not?
+	-- end
+
 	local s_BotCount = #self._Bots
 	if s_BotCount <= 0 then
 		return
@@ -734,19 +738,24 @@ function BotManager:GetPlayerCount()
 end
 
 ---Get the amount of bots using this kit
----@param p_Kit BotKits
----@return integer
-function BotManager:GetKitCount(p_Kit)
-	local s_Count = 0
+---@param p_TeamId TeamId|nil
+---@return table<BotKits, integer>
+function BotManager:GetKitCount(p_TeamId)
+	local s_AllCounts = {
+		[BotKits.Assault] = 0,
+		[BotKits.Support] = 0,
+		[BotKits.Engineer] = 0,
+		[BotKits.Recon] = 0,
+	}
 
 	for l_Index = 1, #self._Bots do
 		local l_Bot = self._Bots[l_Index]
-		if l_Bot.m_Kit == p_Kit then
-			s_Count = s_Count + 1
+		if p_TeamId == nil or p_TeamId == l_Bot.m_Player.teamId then
+			s_AllCounts[l_Bot.m_Kit] = s_AllCounts[l_Bot.m_Kit] + 1
 		end
 	end
 
-	return s_Count
+	return s_AllCounts
 end
 
 ---@param p_Player Player
@@ -912,7 +921,7 @@ end
 function BotManager:ResetAllBots()
 	for l_Index = 1, #self._Bots do
 		local l_Bot = self._Bots[l_Index]
-		l_Bot:Kill() -- TODO: find out if this is needed
+		l_Bot:Kill() -- this also will call l_Bot:ResetVars()
 	end
 end
 

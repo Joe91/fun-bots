@@ -24,6 +24,8 @@ This is the changelog for the version V3.0 Don't forget to [join us on Discord](
 * Kind of Support for AirSuperiority (jets still too passive)
 * Bots randomly move or stop while shooting in vehicles (by MatiasPastori)
 * Cooldown-time for rockets after refill
+* Max Bot-Kits now per team
+* Randomized spawn-order
 
 ### some open TODOs:
 * rework of raycasts for better performance
@@ -42,6 +44,7 @@ This is the changelog for the version V3.0 Don't forget to [join us on Discord](
 * fix stationary AA again...
 * fix horn-usage of jeeps #356
 * fix refill of rockets
+* fix keep same bot-players
 
 ### New maps
 * 

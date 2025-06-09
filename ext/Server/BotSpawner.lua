@@ -118,11 +118,12 @@ function BotSpawner:OnEngineUpdate(p_DeltaTime, p_SimulationDeltaTime)
 	end
 
 	if #self._SpawnSets > 0 then
-		if self._BotSpawnTimer > 0.5 then -- Time to wait between spawn. 0.2 works
+		if self._BotSpawnTimer > 0.3 then -- Time to wait between spawn. 0.2 works
 			-- g_Profiler:Start("BotSpawner:Spawn")
 			self._BotSpawnTimer = 0.0
+			local s_PosOfSetInTable = MathUtils:GetRandomInt(1, #self._SpawnSets)
 			---@type SpawnSet
-			local s_SpawnSet = table.remove(self._SpawnSets, 1)
+			local s_SpawnSet = table.remove(self._SpawnSets, s_PosOfSetInTable)
 			self:_SpawnSingleWayBot(s_SpawnSet.PlayerVarOfBot, s_SpawnSet.UseRandomWay, s_SpawnSet.ActiveWayIndex,
 				s_SpawnSet.IndexOnPath, s_SpawnSet.Bot, s_SpawnSet.Team)
 			-- g_Profiler:End("BotSpawner:Spawn")
@@ -736,13 +737,14 @@ end
 ---@param p_Length integer
 ---@param p_Spacing number
 function BotSpawner:SpawnBotRow(p_Player, p_Length, p_Spacing)
+	local s_TeamId = m_BotManager:GetBotTeam()
 	for i = 1, p_Length do
-		local s_Name = m_BotCreator:GetNextBotName(self:_GetSpawnBotKit(), m_BotManager:GetBotTeam())
+		local s_Name = m_BotCreator:GetNextBotName(self:_GetSpawnBotKit(s_TeamId), s_TeamId)
 
 		if s_Name ~= nil then
 			local s_Transform = LinearTransform()
 			s_Transform.trans = p_Player.soldier.worldTransform.trans + (p_Player.soldier.worldTransform.forward * i * p_Spacing)
-			local s_Bot = m_BotManager:CreateBot(s_Name, m_BotManager:GetBotTeam(), SquadId.SquadNone)
+			local s_Bot = m_BotManager:CreateBot(s_Name, s_TeamId, SquadId.SquadNone)
 
 			if not s_Bot then
 				return
@@ -757,8 +759,9 @@ end
 ---@param p_Player Player
 ---@param p_Height integer
 function BotSpawner:SpawnBotTower(p_Player, p_Height)
+	local s_TeamId = m_BotManager:GetBotTeam()
 	for i = 1, p_Height do
-		local s_Name = m_BotCreator:GetNextBotName(self:_GetSpawnBotKit(), m_BotManager:GetBotTeam())
+		local s_Name = m_BotCreator:GetNextBotName(self:_GetSpawnBotKit(s_TeamId), s_TeamId)
 
 		if s_Name ~= nil then
 			local s_Yaw = p_Player.input.authoritativeAimingYaw
@@ -766,7 +769,7 @@ function BotSpawner:SpawnBotTower(p_Player, p_Height)
 			s_Transform.trans.x = p_Player.soldier.worldTransform.trans.x + (math.cos(s_Yaw + (math.pi / 2)))
 			s_Transform.trans.y = p_Player.soldier.worldTransform.trans.y + ((i - 1) * 1.8)
 			s_Transform.trans.z = p_Player.soldier.worldTransform.trans.z + (math.sin(s_Yaw + (math.pi / 2)))
-			local s_Bot = m_BotManager:CreateBot(s_Name, m_BotManager:GetBotTeam(), SquadId.SquadNone)
+			local s_Bot = m_BotManager:CreateBot(s_Name, s_TeamId, SquadId.SquadNone)
 
 			if not s_Bot then
 				return
@@ -783,9 +786,10 @@ end
 ---@param p_Columns integer
 ---@param p_Spacing number
 function BotSpawner:SpawnBotGrid(p_Player, p_Rows, p_Columns, p_Spacing)
+	local s_TeamId = m_BotManager:GetBotTeam()
 	for i = 1, p_Rows do
 		for j = 1, p_Columns do
-			local s_Name = m_BotCreator:GetNextBotName(self:_GetSpawnBotKit(), m_BotManager:GetBotTeam())
+			local s_Name = m_BotCreator:GetNextBotName(self:_GetSpawnBotKit(s_TeamId), s_TeamId)
 
 			if s_Name ~= nil then
 				local s_Yaw = p_Player.input.authoritativeAimingYaw
@@ -795,7 +799,7 @@ function BotSpawner:SpawnBotGrid(p_Player, p_Rows, p_Columns, p_Spacing)
 				s_Transform.trans.y = p_Player.soldier.worldTransform.trans.y
 				s_Transform.trans.z = p_Player.soldier.worldTransform.trans.z + (i * math.sin(s_Yaw + (math.pi / 2)) * p_Spacing) +
 					((j - 1) * math.sin(s_Yaw) * p_Spacing)
-				local s_Bot = m_BotManager:CreateBot(s_Name, m_BotManager:GetBotTeam(), SquadId.SquadNone)
+				local s_Bot = m_BotManager:CreateBot(s_Name, s_TeamId, SquadId.SquadNone)
 
 				if not s_Bot then
 					return
@@ -1216,7 +1220,7 @@ function BotSpawner:_SpawnSingleWayBot(p_Player, p_UseRandomWay, p_ActiveWayInde
 
 	-- only new bot, if no respawn
 	if not s_IsRespawn or not p_ExistingBot then
-		s_Name = m_BotCreator:GetNextBotName(self:_GetSpawnBotKit(), s_TeamId)
+		s_Name = m_BotCreator:GetNextBotName(self:_GetSpawnBotKit(s_TeamId), s_TeamId)
 	end
 
 	local s_SquadId = self:_GetSquadToJoin(s_TeamId)
@@ -1966,8 +1970,9 @@ function BotSpawner:_GetCustomization(p_Bot, p_Kit)
 	return p_SoldierCustomization
 end
 
+---@param p_TeamId TeamId|integer
 ---@return BotKits|integer
-function BotSpawner:_GetSpawnBotKit()
+function BotSpawner:_GetSpawnBotKit(p_TeamId)
 	-- check for overwritten bot-kit
 	if Config.BotKit ~= BotKits.RANDOM_KIT then
 		return Config.BotKit
@@ -1976,22 +1981,22 @@ function BotSpawner:_GetSpawnBotKit()
 	local s_BotKit = MathUtils:GetRandomInt(1, BotKits.Count - 1) -- Kit enum goes from 1 to 4.
 	local s_ChangeKit = false
 	-- Find out, if possible.
-	local s_KitCount = m_BotManager:GetKitCount(s_BotKit)
+	local s_AllKitCounts = m_BotManager:GetKitCount(p_TeamId)
 
 	if s_BotKit == BotKits.Assault then
-		if Config.MaxAssaultBots >= 0 and s_KitCount >= Config.MaxAssaultBots then
+		if Config.MaxAssaultBots >= 0 and s_AllKitCounts[BotKits.Assault] >= Config.MaxAssaultBots then
 			s_ChangeKit = true
 		end
 	elseif s_BotKit == BotKits.Engineer then
-		if Config.MaxEngineerBots >= 0 and s_KitCount >= Config.MaxEngineerBots then
+		if Config.MaxEngineerBots >= 0 and s_AllKitCounts[BotKits.Engineer] >= Config.MaxEngineerBots then
 			s_ChangeKit = true
 		end
 	elseif s_BotKit == BotKits.Support then
-		if Config.MaxSupportBots >= 0 and s_KitCount >= Config.MaxSupportBots then
+		if Config.MaxSupportBots >= 0 and s_AllKitCounts[BotKits.Support] >= Config.MaxSupportBots then
 			s_ChangeKit = true
 		end
 	else -- s_BotKit == BotKits.Recon
-		if Config.MaxReconBots >= 0 and s_KitCount >= Config.MaxReconBots then
+		if Config.MaxReconBots >= 0 and s_AllKitCounts[BotKits.Recon] >= Config.MaxReconBots then
 			s_ChangeKit = true
 		end
 	end
@@ -1999,19 +2004,19 @@ function BotSpawner:_GetSpawnBotKit()
 	if s_ChangeKit then
 		local s_AvailableKitList = {}
 
-		if (Config.MaxAssaultBots == -1) or (m_BotManager:GetKitCount(BotKits.Assault) < Config.MaxAssaultBots) then
+		if (Config.MaxAssaultBots == -1) or (s_AllKitCounts[BotKits.Assault] < Config.MaxAssaultBots) then
 			s_AvailableKitList[#s_AvailableKitList + 1] = BotKits.Assault
 		end
 
-		if (Config.MaxEngineerBots == -1) or (m_BotManager:GetKitCount(BotKits.Engineer) < Config.MaxEngineerBots) then
+		if (Config.MaxEngineerBots == -1) or (s_AllKitCounts[BotKits.Engineer] < Config.MaxEngineerBots) then
 			s_AvailableKitList[#s_AvailableKitList + 1] = BotKits.Engineer
 		end
 
-		if (Config.MaxSupportBots == -1) or (m_BotManager:GetKitCount(BotKits.Support) < Config.MaxSupportBots) then
+		if (Config.MaxSupportBots == -1) or (s_AllKitCounts[BotKits.Support] < Config.MaxSupportBots) then
 			s_AvailableKitList[#s_AvailableKitList + 1] = BotKits.Support
 		end
 
-		if (Config.MaxReconBots == -1) or (m_BotManager:GetKitCount(BotKits.Recon) < Config.MaxReconBots) then
+		if (Config.MaxReconBots == -1) or (s_AllKitCounts[BotKits.Recon] < Config.MaxReconBots) then
 			s_AvailableKitList[#s_AvailableKitList + 1] = BotKits.Recon
 		end
 
