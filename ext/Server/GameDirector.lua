@@ -119,7 +119,8 @@ function GameDirector:OnCapturePointCaptured(p_CapturePoint)
 	local s_ObjectiveName = self:_TranslateObjective(p_CapturePoint.transform.trans, p_CapturePoint.name)
 	self:_UpdateObjective(s_ObjectiveName, {
 		team = p_CapturePoint.team,
-		isAttacked = p_CapturePoint.isAttacked
+		isAttacked = p_CapturePoint.isAttacked,
+		isGunshipCapturePoint = true
 	})
 
 	if self.m_GunshipObjectiveName ~= nil
@@ -1493,6 +1494,16 @@ function GameDirector:IsExplorePath(p_Objective)
 	return false
 end
 
+function GameDirector:IsGunshipPath(p_Objective)
+	local s_TempObjective = self:_GetObjectiveObject(p_Objective)
+
+	if s_TempObjective ~= nil and s_TempObjective.isGunshipCapturePoint then
+		return true
+	end
+
+	return false
+end
+
 ---@param p_BotId integer
 ---@param p_BotTeam TeamId
 ---@param p_Objective string
@@ -1616,6 +1627,7 @@ function GameDirector:_InitObjectives()
 			isEnterJetPath = false,
 			isBeaconPath = false,
 			isExplorePath = false,
+			isGunshipCapturePoint = false,
 			canBeCaptured = true,
 			destroyed = false,
 			active = true,

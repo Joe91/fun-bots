@@ -168,6 +168,12 @@ function PathSwitcher:GetNewPath(p_Bot, p_BotId, p_Point, p_Objective, p_InVehic
 					return true, s_NewPoint
 				end
 			end
+
+			if m_GameDirector:IsGunshipPath(s_PathNode.Data.Objectives[1]) then
+				if m_GameDirector:_GetObjectiveObject(s_PathNode.Data.Objectives[1]).isAttacked and m_Utilities:CheckProbablity(Registry.GAME_DIRECTOR.PROBABILITY_SWITCH_TO_GUNSHIP_OBJECTIVE) then
+					return true, s_NewPoint
+				end
+			end
 		end
 
 		-- This path has listed objectives.
