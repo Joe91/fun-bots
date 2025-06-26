@@ -27,6 +27,7 @@ This is the changelog for the version V3.0 Don't forget to [join us on Discord](
 * Max Bot-Kits now per team
 * Randomized spawn-order
 * Better distance-handling for attack
+* Registry-Option to still spawn bots on the last tickets added
 
 ### some open TODOs:
 * rework of raycasts for better performance
