@@ -444,3 +444,5 @@ Language:add(code, "Vehicle Plane Aim Worsening", "車両の飛行機の目的�
 Language:add(code, "See VehicleAimWorsening, only for Planes", "飛行機のみの車両を参照してください")
 Language:add(code, "Max Shoot Distance Air Missiles", "マックスシュート距離空気ミサイル")
 Language:add(code, "Meters before bots will start shooting with stingers", "ボットの前のメートルは、スティンガーで撮影を開始します")
+Language:add(code, "Max Raycast Distance for Gunships", "ガンシップのマックスレイキャスト距離")
+Language:add(code, "Meters bots in the Gunship start shooting at players", "ガンシップのメートルボットは、プレイヤーの射撃を開始します")

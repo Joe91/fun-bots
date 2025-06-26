@@ -96,6 +96,7 @@ Config = {
 	FovVerticleChopperForShooting = 80,	-- Degrees of pitch a chopper attacks 
 	FovVehicleAAForShooting = 360,		-- Degrees of FOV of AA - Vehicles 
 	FovVerticleVehicleAAForShooting = 160,	-- Degrees of FOV of AA - Vehicles 
+	MaxShootDistanceGunship = 700,		-- Meters bots in the Gunship start shooting at players 
 	MaxShootDistanceVehicles = 375,		-- Meters bots in Vehicles start shooting at players 
 	MaxShootDistanceNoAntiAir = 175,	-- Meters bots in vehicle (no Anti-Air) starts shooting at players 
 	VehicleWaitForPassengersTime = 7.0,	-- Seconds to wait for other passengers 

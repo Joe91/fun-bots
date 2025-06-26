@@ -991,6 +991,18 @@ SettingsDefinition = {
 			Category = "VEHICLE"
 		},
 		{
+			Name = "MaxShootDistanceGunship",
+			Text = "Max Raycast Distance for Gunships",
+			---@type Type|integer
+			Type = Type.Integer,
+			Value = Config.MaxShootDistanceGunship,
+			Description = "Meters bots in the Gunship start shooting at players",
+			Reference = Range(1.00, 2000.00, 5.0),
+			Default = 700,
+			UpdateFlag = UpdateFlag.None,
+			Category = "VEHICLE"
+		},
+		{
 			Name = "MaxShootDistanceVehicles",
 			Text = "Max Raycast Distance for Vehicles",
 			---@type Type|integer
