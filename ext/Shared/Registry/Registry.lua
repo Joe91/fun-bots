@@ -95,7 +95,9 @@ Registry = {
 		--- Weight for defending objectives
 		WEIGHT_DEFEND_OBJECTIVE = 1.0,
 		--- PathSwitch on same prio
-		PROBABILITY_SWITCH_SAME_PRIO = 20
+		PROBABILITY_SWITCH_SAME_PRIO = 20,
+		--- Allow bots to spawn on the last tickets in conquest.
+		DONT_SPAWN_BOTS_ON_LAST_TICKETS = true,
 	},
 	VEHICLES = {
 		-- Distance for the "enter vehicle" command.

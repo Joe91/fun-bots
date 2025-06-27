@@ -370,7 +370,7 @@ function BotSpawner:TriggerRespawnBot(p_Bot)
 	-- fix for end-of-round-crash
 	if Registry.COMMON.DONT_SPAWN_BOTS_ON_LAST_CONQUEST_TICKET and Globals.IsConquest then
 		local s_TicketsOfPlayerTeam = TicketManager:GetTicketCount(p_Bot.m_Player.teamId)
-		if s_TicketsOfPlayerTeam < 2 then
+		if Registry.GAME_DIRECTOR.DONT_SPAWN_BOTS_ON_LAST_TICKETS and s_TicketsOfPlayerTeam < 2 then
 			-- only one ticket remaining. Don't spawn
 			return
 		end
