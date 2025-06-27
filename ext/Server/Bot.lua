@@ -412,10 +412,15 @@ function Bot:GetAttackDistance(p_ShootBackAfterHit, p_VehicleAttackMode)
 			end
 		end
 	else
-		if not m_Vehicles:IsAirVehicle(self.m_ActiveVehicle)
+		if m_Vehicles:IsGunship(self.m_ActiveVehicle) then
+			if p_ShootBackAfterHit then
+				s_AttackDistance = Config.MaxShootDistanceGunship
+			else
+				s_AttackDistance = Config.MaxShootDistanceGunship
+			end
+		elseif not m_Vehicles:IsAirVehicle(self.m_ActiveVehicle)
 			and m_Vehicles:IsNotVehicleType(self.m_ActiveVehicle, VehicleTypes.MobileArtillery)
-			and not m_Vehicles:IsAAVehicle(self.m_ActiveVehicle)
-		then
+			and not m_Vehicles:IsAAVehicle(self.m_ActiveVehicle) then
 			if p_ShootBackAfterHit then
 				s_AttackDistance = Config.MaxShootDistanceNoAntiAir * 2
 			else
@@ -1254,10 +1259,15 @@ function Bot:_EnterVehicleEntity(p_Entity, p_PlayerIsDriver)
 	if s_VehicleData.Type == VehicleTypes.MobileArtillery then
 		s_MaxEntries = 1
 	end
+	-- The idea is to avoid the bots from seating in the 3rd slot of the tanks to be more useful somwhere else.
+	if s_VehicleData.Type == VehicleTypes.Tank then
+		s_MaxEntries = 2
+	end
 
+	--Now the bots may fully occupy a vehicle ( attack choppers, scout choppers, and some other transport vehicles.)
 	if not p_PlayerIsDriver then
 		-- Leave a place for a player if more than two seats are available.
-		if s_MaxEntries > 2 then
+		if s_MaxEntries > 2 and Config.KeepVehicleSeatForPlayer then
 			s_MaxEntries = s_MaxEntries - 1
 		end
 		-- Limit the bots per vehicle, if no player is the driver.

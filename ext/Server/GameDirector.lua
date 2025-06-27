@@ -1120,7 +1120,7 @@ end
 ---@return integer
 ---@return integer
 ---@return boolean|nil
----@return Entity|nil
+---@return ControllableEntity|nil
 function GameDirector:GetSpawnPath(p_TeamId, p_SquadId, p_OnlyBase)
 	-- Check for spawn at squad-mate.
 	local s_SquadMates = PlayerManager:GetPlayersBySquad(p_TeamId, p_SquadId)
@@ -1145,19 +1145,9 @@ function GameDirector:GetSpawnPath(p_TeamId, p_SquadId, p_OnlyBase)
 				if not s_SquadBot then
 					break -- this should not happen
 				end
-				if s_BotStates:IsSoldierState(s_SquadBot.m_ActiveState) then
-					local s_WayIndex = s_SquadBot:GetWayIndex()
-					local s_PointIndex = s_SquadBot:GetPointIndex()
-
-					if m_Utilities:CheckProbablity(Registry.BOT_SPAWN.PROBABILITY_SQUADMATE_SPAWN) then
-						m_Logger:Write("spawn at squad-mate")
-						return s_WayIndex, s_PointIndex, s_SquadBot._InvertPathDirection, nil -- Use same direction.
-					else
-						break
-					end
-				else -- Squad-bot in vehicle.
+				if s_BotStates:IsVehicleState(s_SquadBot.m_ActiveState) then
+					-- Squad-bot in vehicle.
 					local s_EntryId = s_SquadBot.m_Player.controlledEntryId
-
 					if s_EntryId == 0 then
 						---@type ControllableEntity
 						local s_Vehicle = s_SquadBot.m_Player.controlledControllable
@@ -1176,6 +1166,17 @@ function GameDirector:GetSpawnPath(p_TeamId, p_SquadId, p_OnlyBase)
 						else
 							break
 						end
+					end
+				elseif s_BotStates:IsSoldierState(s_SquadBot.m_ActiveState) then
+					-----------------
+					local s_WayIndex = s_SquadBot:GetWayIndex()
+					local s_PointIndex = s_SquadBot:GetPointIndex()
+
+					if m_Utilities:CheckProbablity(Registry.BOT_SPAWN.PROBABILITY_SQUADMATE_SPAWN) then
+						m_Logger:Write("spawn at squad-mate")
+						return s_WayIndex, s_PointIndex, s_SquadBot._InvertPathDirection, nil -- Use same direction.
+					else
+						break
 					end
 				end
 			else

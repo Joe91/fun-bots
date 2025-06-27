@@ -47,6 +47,7 @@ Config = {
 	MaxReconBots = -1,					-- Maximum number of Bots with Recon Kit. -1 = no limit 
 	AdditionalBotSpawnDelay = 0.5,		-- Additional time a bot waits to respawn 
 	BotMaxHealth = 100.0,				-- Max health of bot (default 100.0) 
+	KeepVehicleSeatForPlayer = true,	-- To keep a vehicle seat for the player always or not (default true) 
 
 	-- SPAWNLIMITS 
 	MaxBotsPerTeamDefault = 32,			-- Max number of bots in one team, if no other mode fits 
@@ -97,6 +98,7 @@ Config = {
 	FovVehicleAAForShooting = 360,		-- Degrees of FOV of AA - Vehicles 
 	FovVerticleVehicleAAForShooting = 160,	-- Degrees of FOV of AA - Vehicles 
 	MaxShootDistanceVehicles = 375,		-- Meters bots in Vehicles start shooting at players 
+	MaxShootDistanceGunship = 1000,		-- Meters bots in the Gunship starts shooting at players 
 	MaxShootDistanceNoAntiAir = 175,	-- Meters bots in vehicle (no Anti-Air) starts shooting at players 
 	VehicleWaitForPassengersTime = 7.0,	-- Seconds to wait for other passengers 
 	ChopperDriversAttack = false,		-- If false, choppers only attack without gunner on board 

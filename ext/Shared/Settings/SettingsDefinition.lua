@@ -482,6 +482,17 @@ SettingsDefinition = {
 			UpdateFlag = UpdateFlag.None,
 			Category = "SPAWN"
 		},
+		{
+			Name = "KeepVehicleSeatForPlayer",
+			Text = "Keep a Vehicle Seat For Player",
+			---@type Type|integer
+			Type = Type.Boolean,
+			Value = Config.KeepVehicleSeatForPlayer,
+			Description = "To keep a vehicle seat for the player always or not (default true)",
+			Default = true,
+			UpdateFlag = UpdateFlag.None,
+			Category = "SPAWN"
+		},
 
 		-- Spawn limits.
 		{
@@ -999,6 +1010,18 @@ SettingsDefinition = {
 			Description = "Meters bots in Vehicles start shooting at players",
 			Reference = Range(1.00, 1500.00, 5.0),
 			Default = 375,
+			UpdateFlag = UpdateFlag.None,
+			Category = "VEHICLE"
+		},
+		{
+			Name = "MaxShootDistanceGunship",
+			Text = "Max Shoot-Distance for Gunship",
+			---@type Type|integer
+			Type = Type.Integer,
+			Value = Config.MaxShootDistanceGunship,
+			Description = "Meters bots in the Gunship starts shooting at players",
+			Reference = Range(1.00, 1500.00, 5.0),
+			Default = 1000,
 			UpdateFlag = UpdateFlag.None,
 			Category = "VEHICLE"
 		},

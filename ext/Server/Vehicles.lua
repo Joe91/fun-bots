@@ -73,7 +73,7 @@ function Vehicles:GetNrOfFreeSeats(p_Entity, p_PlayerIsDriver)
 	local s_MaxEntries = p_Entity.entryCount
 
 	-- Keep one seat free, if enough available.
-	if not p_PlayerIsDriver and s_MaxEntries > 2 then
+	if Config.KeepVehicleSeatForPlayer and not p_PlayerIsDriver and s_MaxEntries > 2 then
 		s_MaxEntries = s_MaxEntries - 1
 	end
 

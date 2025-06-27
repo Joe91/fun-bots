@@ -12,7 +12,7 @@ require('__shared/Constants/VersionType')
 Registry = {
 	COMMON = {
 		-- Token Bots are marked with. Can also be " " or "". If it's "" players with names of the botlist can't join!
-		BOT_TOKEN = "BOT_",
+		BOT_TOKEN = "",
 		-- Allow players to use Bot-Names.
 		ALLOW_PLAYER_BOT_NAMES = true,
 		-- Collision-raycasts are another type of raycast. Needs some more testing...
@@ -205,13 +205,13 @@ Registry = {
 		-- Probability of a bot spawning on a member of the same squad.
 		PROBABILITY_SQUADMATE_SPAWN = 40,
 		-- Probability of a bot spawning in the vehicle of a bot of the same squad.
-		PROBABILITY_SQUADMATE_VEHICLE_SPAWN = 60,
+		PROBABILITY_SQUADMATE_VEHICLE_SPAWN = 100,
 		-- Probability of a bot spawning in the vehicle of a player of the same squad.
-		PROBABILITY_SQUADMATE_PLAYER_VEHICLE_SPAWN = 80,
+		PROBABILITY_SQUADMATE_PLAYER_VEHICLE_SPAWN = 100,
 		-- Probability of a bot spawning on the closest spawn point.
-		PROBABILITY_CLOSEST_SPAWN = 80,
+		PROBABILITY_CLOSEST_SPAWN = 40,
 		-- Probability of a bot spawning on an attacked spawn point.
-		PROBABILITY_ATTACKED_SPAWN = 80,
+		PROBABILITY_ATTACKED_SPAWN = 60,
 		-- Probability of a bot spawning on their deployment base.
 		PROBABILITY_BASE_SPAWN = 5,
 		-- Probability of a bot spawning on their deployment base.
