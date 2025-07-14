@@ -1009,7 +1009,7 @@ SettingsDefinition = {
 			Value = Config.MaxShootDistanceGunship,
 			Description = "Meters bots in the Gunship start shooting at players",
 			Reference = Range(1.00, 2000.00, 5.0),
-			Default = 700,
+			Default = 1000,
 			UpdateFlag = UpdateFlag.None,
 			Category = "VEHICLE"
 		},
@@ -1022,18 +1022,6 @@ SettingsDefinition = {
 			Description = "Meters bots in Vehicles start shooting at players",
 			Reference = Range(1.00, 1500.00, 5.0),
 			Default = 375,
-			UpdateFlag = UpdateFlag.None,
-			Category = "VEHICLE"
-		},
-		{
-			Name = "MaxShootDistanceGunship",
-			Text = "Max Shoot-Distance for Gunship",
-			---@type Type|integer
-			Type = Type.Integer,
-			Value = Config.MaxShootDistanceGunship,
-			Description = "Meters bots in the Gunship starts shooting at players",
-			Reference = Range(1.00, 1500.00, 5.0),
-			Default = 1000,
 			UpdateFlag = UpdateFlag.None,
 			Category = "VEHICLE"
 		},

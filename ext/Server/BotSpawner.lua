@@ -27,7 +27,7 @@ function BotSpawner:RegisterVars()
 	self._LastRound = 0
 	self._PlayerUpdateTimer = 0.0
 	self._FirstSpawnInLevel = true
-	self._FirstSpawnDelay = 10000000000.0
+	self._FirstSpawnDelay = Registry.BOT_SPAWN.FIRST_SPAWN_DELAY
 	self._DelayDirectSpawn = Registry.BOT_SPAWN.DELAY_DIRECT_SPAWN
 	self._NrOfPlayers = 0
 	self._UpdateActive = false
@@ -78,13 +78,14 @@ end
 
 ---VEXT Shared Level:Destroy Event
 function BotSpawner:OnLevelDestroy()
-	self._SpawnSets = {}
-	self._UpdateActive = false
-	self._FirstSpawnInLevel = true
-	self._FirstSpawnDelay = 10000000000.0
-	self._DelayDirectSpawn = Registry.BOT_SPAWN.DELAY_DIRECT_SPAWN
-	self._PlayerUpdateTimer = 0.0
-	self._NrOfPlayers = 0
+	-- self._SpawnSets = {}
+	-- self._UpdateActive = false
+	-- self._FirstSpawnInLevel = true
+	-- self._FirstSpawnDelay = Registry.BOT_SPAWN.FIRST_SPAWN_DELAY
+	-- self._DelayDirectSpawn = Registry.BOT_SPAWN.DELAY_DIRECT_SPAWN
+	-- self._PlayerUpdateTimer = 0.0
+	-- self._NrOfPlayers = 0
+	self:RegisterVars()
 end
 
 -- =============================================
@@ -946,8 +947,12 @@ function BotSpawner:_TriggerSpawn(p_Bot)
 		-- But it has vehicles.
 		self:_RushSpawn(p_Bot)
 	elseif s_CurrentGameMode:match("Conquest") then
-		-- event + target spawn ("ID_H_US_B", "_ID_H_US_HQ", etc.)
+		-- if self:CQMapSupportJetSpawnReinforncments() then
+		-- 	-- self:_AirSuperioritySpawn(p_Bot)
+		-- else
 		self:_ConquestSpawn(p_Bot)
+		-- end
+		-- event + target spawn ("ID_H_US_B", "_ID_H_US_HQ", etc.)
 	elseif s_CurrentGameMode:match("AirSuperiority") then
 		self:_AirSuperioritySpawn(p_Bot)
 	end
@@ -1183,6 +1188,13 @@ function BotSpawner:_FindTargetLocation(p_TeamId)
 	return s_TargetLocation
 end
 
+function BotSpawner:CQMapSupportJetSpawnReinforncments() -- Using this successfully spawn them in these maps but they follow no logic. So.. better off.
+	if #self._BotsWithoutPath < 4 and Globals.LevelName == "XP5_002" or Globals.LevelName == "XP5_004" then
+		return true
+	end
+	return false
+end
+
 -- =============================================
 -- Some more Functions
 -- =============================================
@@ -1235,9 +1247,10 @@ function BotSpawner:_SpawnSingleWayBot(p_Player, p_UseRandomWay, p_ActiveWayInde
 
 	local s_InverseDirection = nil
 
+	-- Meaning: if its not a new bot we do....:
 	if s_Name ~= nil or s_IsRespawn then
 		-- g_Profiler:Start("BotSpawner:SpawnPart2") -- about 60 ms on conquest (close to 0 on deathmatch)
-		if Globals.UsedSpawnMethod == SpawnMethod.Spawn then
+		if Globals.UsedSpawnMethod == SpawnMethod.Spawn then --or self:CQMapSupportJetSpawnReinforncments()
 			local s_Bot = self:GetBot(p_ExistingBot, s_Name, s_TeamId, s_SquadId)
 
 			if s_Bot == nil then
@@ -1258,7 +1271,7 @@ function BotSpawner:_SpawnSingleWayBot(p_Player, p_UseRandomWay, p_ActiveWayInde
 			s_SpawnPoint = m_NodeCollection:Get(s_Beacon.Point, s_Beacon.Path)
 			s_SquadSpawnVehicle = s_Beacon.Entity
 			s_InverseDirection = true
-		elseif p_UseRandomWay or p_ActiveWayIndex == nil or p_ActiveWayIndex == 0 then
+		elseif p_UseRandomWay or p_ActiveWayIndex == nil or p_ActiveWayIndex == 0 then -- If random way or no active way.
 			s_SpawnPoint, s_InverseDirection, s_SquadSpawnVehicle = self:_GetSpawnPoint(s_TeamId, s_SquadId)
 
 			-- Special spawn in vehicles.
@@ -1331,7 +1344,6 @@ function BotSpawner:_SpawnSingleWayBot(p_Player, p_UseRandomWay, p_ActiveWayInde
 		if s_SpawnPoint == nil then
 			if s_SquadSpawnVehicle ~= nil then
 				s_SpawnPoint = m_NodeCollection:Get()[1]
-
 				if s_SpawnPoint == nil then
 					return
 				end
@@ -1361,6 +1373,7 @@ function BotSpawner:_SpawnSingleWayBot(p_Player, p_UseRandomWay, p_ActiveWayInde
 		s_Transform.trans = s_SpawnPoint.Position
 
 		if p_ActiveWayIndex then
+			-- print(' There is an active way index, try to spawn in entity')
 			if s_IsRespawn and p_ExistingBot then
 				p_ExistingBot:SetVarsWay(p_Player, p_UseRandomWay, p_ActiveWayIndex, p_IndexOnPath, s_InverseDirection)
 				self:_SpawnInEntity(p_ExistingBot, s_SquadSpawnVehicle, s_Transform, false)
@@ -1395,7 +1408,6 @@ function BotSpawner:_SpawnInEntity(p_Bot, p_Entity, p_Transform, p_SetKit)
 	if p_Entity == nil then
 		return
 	end
-
 	p_Bot:_EnterVehicleEntity(p_Entity, false)
 end
 
@@ -1525,7 +1537,12 @@ function BotSpawner:_GetSpawnPoint(p_TeamId, p_SquadId)
 	if Globals.IsConquest then
 		s_ActiveWayIndex, s_IndexOnPath, s_InvertDirection, s_VehicleToSpawnIn = g_GameDirector:GetSpawnPath(p_TeamId,
 			p_SquadId, false)
-
+		-- if s_VehicleToSpawnIn then
+		-- 	local vehicleData = m_Vehicles:GetVehicle(s_VehicleToSpawnIn:GetPlayerInEntry(0))
+		-- 	if vehicleData then
+		-- 		print('recieved a spawn Path for the vehicle: ' .. vehicleData.Name)
+		-- 	end
+		-- end
 		if s_ActiveWayIndex == 0 then
 			-- Something went wrong. Use random path.
 			m_Logger:Write("no base or capturepoint found to spawn")

@@ -24,7 +24,7 @@ Registry = {
 		-- Distance commands are heard by bots.
 		COMMAND_DISTANCE = 20,
 		-- Use load of Bundle to fix Bug of weapons disappearing (thanks to Lesley!) !!! THIS MIGHT CAUSE CRASHES OR OTHER ISSUES!!!
-		USE_LOAD_BUNDLE_BUGFIX = true,
+		USE_LOAD_BUNDLE_BUGFIX = false,
 		-- Keep the last ticket in conquest for the gamemode counter
 		DONT_SPAWN_BOTS_ON_LAST_CONQUEST_TICKET = true,
 		-- Valid keys can be found here: https://docs.veniceunleashed.net/vext/ref/fb/inputdevicekeys/.
@@ -205,9 +205,13 @@ Registry = {
 		-- Additional delay for dirct-spawnable vehicles (set to 0 to disable this)
 		DELAY_DIRECT_SPAWN = 6.0,
 		-- Probability of a bot spawning on a member of the same squad.
-		PROBABILITY_SQUADMATE_SPAWN = 40,
+		PROBABILITY_SQUADMATE_SPAWN = 20,
 		-- Probability of a bot spawning in the vehicle of a bot of the same squad.
 		PROBABILITY_SQUADMATE_VEHICLE_SPAWN = 100,
+		-- Probability of a bot spawning on a random teammate
+		PROBABILITY_TEAMMATE_SPAWN = 20,
+		-- Probability of a bot spawning in a random teammate vehicle
+		PROBABILITY_TEAMMATE_VEHICLE_SPAWN = 100,
 		-- Probability of a bot spawning in the vehicle of a player of the same squad.
 		PROBABILITY_SQUADMATE_PLAYER_VEHICLE_SPAWN = 100,
 		-- Probability of a bot spawning on the closest spawn point.

@@ -677,6 +677,10 @@ function Bot:_CheckForVehicleActions(p_DeltaTime, p_AttackActive)
 	local s_OnVehicle = g_BotStates:IsOnVehicleState(self.m_ActiveState)
 
 	-- Check if exit of vehicle is needed (because of low health).
+	local s_VehicleEntity = self.m_Player.controlledControllable
+	if not s_VehicleEntity then
+		return
+	end
 	if not self._ExitVehicleActive then
 		local s_CurrentVehicleHealth = 0
 
@@ -694,10 +698,6 @@ function Bot:_CheckForVehicleActions(p_DeltaTime, p_AttackActive)
 		end
 	end
 
-	local s_VehicleEntity = self.m_Player.controlledControllable
-	if not s_VehicleEntity then
-		return
-	end
 
 	if m_Vehicles:IsVehicleType(self.m_ActiveVehicle, VehicleTypes.MobileArtillery)
 		or m_Vehicles:IsVehicleType(self.m_ActiveVehicle, VehicleTypes.LightAA)
@@ -1259,6 +1259,15 @@ function Bot:_EnterVehicleEntity(p_Entity, p_PlayerIsDriver)
 	if s_VehicleData.Type == VehicleTypes.Tank then
 		s_MaxEntries = 2
 	end
+	if s_VehicleData.Type == VehicleTypes.TransportChopper then
+		s_MaxEntries = 3
+	end
+	if s_VehicleData.Type == VehicleTypes.UnarmedGunship then
+		s_MaxEntries = 0
+	end
+	if s_VehicleData.Type == VehicleTypes.LightAA then
+		s_MaxEntries = 2
+	end
 
 	--Now the bots may fully occupy a vehicle ( attack choppers, scout choppers, and some other transport vehicles.)
 	if not p_PlayerIsDriver then
@@ -1283,6 +1292,7 @@ function Bot:_EnterVehicleEntity(p_Entity, p_PlayerIsDriver)
 		end
 		if p_Entity:GetPlayerInEntry(seatIndex) == nil or Globals.IsAirSuperiority then -- already in this seat in air superiority
 			self.m_Player:EnterVehicle(p_Entity, seatIndex)
+			print('Entered the vehicle : ' .. s_VehicleData.Name .. ' Max entries: ' .. s_MaxEntries .. ' seatIndex: ' .. seatIndex)
 			self._ExitVehicleHealth = PhysicsEntity(p_Entity).internalHealth * (Registry.VEHICLES.VEHICLE_EXIT_HEALTH / 100.0)
 			-- Get ID.
 			self.m_ActiveVehicle = s_VehicleData

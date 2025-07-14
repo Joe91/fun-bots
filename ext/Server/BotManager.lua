@@ -12,6 +12,10 @@ local m_BotCreator = require('BotCreator')
 local m_Logger = Logger("BotManager", Debug.Server.BOT)
 
 function BotManager:__init()
+	self:RegisterVars()
+end
+
+function BotManager:RegisterVars()
 	---@type Bot[]
 	self._Bots = {}
 	---@type table<string, Bot>
@@ -83,10 +87,8 @@ end
 ---VEXT Shared Level:Destroy Event
 function BotManager:OnLevelDestroy()
 	m_Logger:Write("destroyLevel")
-
-	self:ResetAllBots()
-	self._ActivePlayers = {}
-	self._InitDone = false
+	self:DestroyAll(nil, nil, true)
+	self:RegisterVars()
 end
 
 ---@param p_Bots Bot[]
