@@ -1,0 +1,24 @@
+-- ext/Shared/Names/packs/nz.lua
+-- Code by: JMDigital (https://github.com/JenkinsTR)
+-- New Zealand pack: mix of common NZ given names + light Māori/Pasifika (ASCII), subtle place handles. No bracket tags.
+return {
+  id = "nz",
+  meta = { region = "nz" },
+  names = {
+    -- Everyday / short handles
+    "KiwiKev","Jordy","Tane","Reuben","Beaudy","Rangi","Tui","Niko","Ashcroft","Bicko","Hammond",
+    "Westie","DunnerDan","Noah","Liam","Jack","Oliver","Lucas","Hunter","Riley","Logan","Cooper",
+    "Levi","Mason","Archer","Theo","Felix","Xavier","Asher","Quinn","Flynn","Blake","Leo","Miles",
+    "Fraser","Joel","Toby","Rhys","Oscar","Spencer","Eli","Hugo","Harley","Jonah","Nate","Ari","Kai",
+    "Micah","Max","Tate","Zac","Sam","Ben","Nick","Josh","Tom",
+
+    -- Māori / Pasifika (ASCII only)
+    "Tama","Manaia","Kahu","Wiremu","Hemi","Rawiri","Nikau","Taika","Kaia","Aroha","Kiri","Moana",
+    "Rongo","Tiare","Pania","Whetu","Hine","Manu","Maia","Ariki","Kauri","Tane","Rangi","Hana","Mere",
+
+    -- Place-flavoured (subtle)
+    "AucklandAce","WellyWills","RotoruaRex","TaupoTroy","WanakaWade","NelsonNash","TaranakiTom",
+    "CoromandelCory","QueenstownQ","BayOfPlentyBen","SouthlandSam","OtagoOwen","CanterburyCam",
+    "ManawatuMax","HawkesBayHawk",
+  }
+}
