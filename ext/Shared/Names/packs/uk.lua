@@ -1,0 +1,23 @@
+-- ext/Shared/Names/packs/uk.lua
+-- Code by: JMDigital (https://github.com/JenkinsTR)
+-- UK pack: contemporary UK given names + light nicknames and tasteful locality/animal calls. ASCII only.
+return {
+  id = "uk",
+  meta = { region = "uk" },
+  names = {
+    -- Nicknames / short
+    "Alfie","Archie","Harry","Jack","George","Oliver","Freddie","Theo","Finlay","Callum","Lewis",
+    "Jamie","Charlie","Ben","Tom","Sam","Joe","Reece","Harvey","Tyler","Dylan","Liam","Ethan",
+    "Oscar","Leo","Max","Toby","Ollie","Henry","Arthur","Nathan","Luke","Alex","Mason","Jay",
+    "Gaz","Baz","Kev","Ste","Jez","Loz","Tez",
+
+    -- Place-flavoured (subtle; avoid stereotypes)
+    "LondonLeo","ManchesterMax","BristolBen","LiverpoolLiam","LeedsLuke","KentKurt","SussexSam",
+    "EssexEli","SurreySeb","DevonDave","CornwallCam","NorfolkNate","SomersetSol","SuffolkSeth",
+    "WessexWes","YorkshireYorke","HighlandsHal","CotswoldsCol","MerseysideMerrin","TyneTrent",
+
+    -- Animal / nature calls common in UK
+    "Badger","RedFox","Otter","Heron","Kestrel","Buzzard","Peregrine","Stoat","Hedgehog","Rook",
+    "Wren","Robin","Pipit","Marten","Osprey","Cormorant",
+  }
+}
