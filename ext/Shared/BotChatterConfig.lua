@@ -1,6 +1,9 @@
 -- ext/Shared/BotChatterConfig.lua
 -- Code by: JMDigital (https://github.com/JenkinsTR)
 return {
+  -- Global toggle (server can still override via Registry; see BotChatter.lua)
+  enabled = true,
+  
   -- Which pack to use if no per-bot tag is matched.
   defaultPack = "Default",
 
@@ -46,5 +49,11 @@ return {
   rateLimit = {
     windowSec = 8.0,
     maxPerWindow = 2
-  }
+  },
+
+  -- NEW: chatter level
+  chatterLevel = "cafe", -- "billiard" | "cafe" | "twitch"
+
+  -- optional: allow chat command
+  commands = { prefix = "!bc" }
 }

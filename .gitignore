@@ -173,3 +173,5 @@ cython_debug/
 /ext/Shared/Names/nppBackup
 /ext/Shared/Names/packs/nppBackup
 /ext/Shared/nppBackup
+/ext/Shared/BotChatter/nppBackup
+/nppBackup
