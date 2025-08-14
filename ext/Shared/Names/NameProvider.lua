@@ -17,14 +17,21 @@ end)
 -- Choose packs and weights. Higher weight = more frequent.
 -- Add/remove packs by adding a require below.
 local PACK_CATALOG = {
-  ["global_default"] = function() return require("__shared/Names/packs/global_default") end,
-  ["au"]             = function() return require("__shared/Names/packs/au") end,
-  ["nz"]             = function() return require("__shared/Names/packs/nz") end,
-  ["uk"]             = function() return require("__shared/Names/packs/uk") end,
-  ["ca"]             = function() return require("__shared/Names/packs/ca") end,
-  ["mil_us"]         = function() return require("__shared/Names/packs/mil_us") end,
-  ["mil_ru"]         = function() return require("__shared/Names/packs/mil_ru") end,
-  ["gamer_tags"]     = function() return require("__shared/Names/packs/gamer_tags") end,
+  ["global_default"]      = function() return require("__shared/Names/packs/global_default") end,
+  ["au"]                  = function() return require("__shared/Names/packs/au") end,
+  ["nz"]                  = function() return require("__shared/Names/packs/nz") end,
+  ["uk"]                  = function() return require("__shared/Names/packs/uk") end,
+  ["ca"]                  = function() return require("__shared/Names/packs/ca") end,
+  ["mil_us"]              = function() return require("__shared/Names/packs/mil_us") end,
+  ["mil_ru"]              = function() return require("__shared/Names/packs/mil_ru") end,
+  ["gamer_tags"]          = function() return require("__shared/Names/packs/gamer_tags") end,
+  ["legacy_common"]       = function() return require("__shared/Names/packs/legacy_common") end,  -- from the legacy BotNames.lua
+  ["legacy_devs"]         = function() return require("__shared/Names/packs/legacy_devs") end,  -- from the legacy BotNames.lua
+  ["legacy_contributors"] = function() return require("__shared/Names/packs/legacy_contributors") end,  -- from the legacy BotNames.lua
+  ["legacy_supporters"]   = function() return require("__shared/Names/packs/legacy_supporters") end,  -- from the legacy BotNames.lua
+  ["legacy_handles"]      = function() return require("__shared/Names/packs/legacy_handles") end,  -- from the legacy BotNames.lua
+  ["mil_us_legacy"]       = function() return require("__shared/Names/packs/mil_us_legacy") end,  -- from the legacy BotNames.lua
+  ["mil_ru_legacy"]       = function() return require("__shared/Names/packs/mil_ru_legacy") end,  -- from the legacy BotNames.lua
 }
 
 -- Active mix (order doesn’t matter)
@@ -35,6 +42,14 @@ local ACTIVE_PACKS = {
   { id = "nz",             weight = 0.25 },
   { id = "uk",             weight = 0.25 },
   { id = "ca",             weight = 0.25 },
+
+  -- legacy adds (low impact for now, change weights as needed)
+  { id = "legacy_common",       weight = 0.35 },
+  { id = "legacy_handles",      weight = 0.10 },
+  { id = "legacy_devs",         weight = 0.03 },
+  { id = "legacy_contributors", weight = 0.03 },
+  { id = "legacy_supporters",   weight = 0.02 },
+  
   -- keep mil packs out of the general pool if you only want them for team-flavour
 }
 
@@ -82,6 +97,7 @@ local function pick_weighted(list)
   return list[#list]
 end
 
+-- This is unused now for the moment, replaced by the newer apply_tag function below
 local function maybe_tag(name)
   -- never tag if it already starts with any bracketed token
   if has_leading_tag(name) then return name end
@@ -91,7 +107,41 @@ local function maybe_tag(name)
   return region.tag .. name
 end
 
+-- Per-pack tag policy
+-- meta fields (all optional):
+--   allowRegionTag = true|false     -- default true
+--   forceTag       = "[DEV]"        -- if set, always apply unless name already has a tag
+--   tagProb        = 0..1           -- overrides TAG_APPLY_PROB for this pack
+local function apply_tag(name, pack)
+  local meta = (pack and pack.meta) or {}
+  -- never tag if prefix already looks like a tag
+  if has_leading_tag(name) then return name end
+
+  -- hard-coded tag for this pack (takes precedence)
+  if meta.forceTag and meta.forceTag ~= "" then
+    return tostring(meta.forceTag) .. name
+  end
+
+  -- allow/disallow normal regional tags per pack
+  local allow = (meta.allowRegionTag ~= false)
+  if not allow then return name end
+
+  -- regional tag with (per-pack) probability
+  local prob = (meta.tagProb ~= nil) and meta.tagProb or TAG_APPLY_PROB
+  if math.random() >= prob then return name end
+
+  local region = pick_weighted(REGION_TAGS)
+  if not region or not region.tag then return name end
+  return region.tag .. name
+end
+
 -- ---------------- Helpers ----------------
+local function merge_arrays(a, b)
+  local out = {}
+  if a then for i = 1, #a do out[#out+1] = a[i] end end
+  if b then for i = 1, #b do out[#out+1] = b[i] end end
+  return out
+end
 
 local function sanitize_ascii(s)
   if not s then return "" end
@@ -107,8 +157,12 @@ local function strip_clan_tag(name)
   if not name then return "" end
   -- remove one leading [TAG]/(TAG)/{TAG}, then trailing whitespace
   -- NOTE: %s* is OUTSIDE the class so it's real whitespace, not literal 's'/'*'
-  local stripped = name:gsub("^%s*[%(%[{][^%]%)}]+[%]%)}%s*", "")
-  return stripped:match("^%s*(.-)%s*$") or stripped
+  -- NEW: balanced-pair form is safer and clearer in Lua
+  local s = name
+  s = s:gsub("^%s*%b[]%s*", "")  -- leading [TAG]
+  s = s:gsub("^%s*%b()%s*", "")  -- leading (TAG)
+  s = s:gsub("^%s*%b{}%s*", "")  -- leading {TAG}
+  return s:match("^%s*(.-)%s*$") or s
 end
 
 local function strip_bot_token(name)
@@ -163,17 +217,26 @@ local function build_unified_pool()
   loadedPacks, unifiedPool, uniqueSet = {}, {}, {}
   local LIMIT = OPTIONS.maxUnified or 120
 
-  -- weighted copy pass
+  -- helper: should this pack contribute to the unified/generic pool?
+  local function include_pack(pack)
+    local meta = (pack and pack.meta) or {}
+    if meta.includeInUnified == false then return false end
+    return true
+  end
+
+  -- weighted copy pass (ACTIVE_PACKS)
   for _, ref in ipairs(ACTIVE_PACKS) do
     local pack = load_pack(ref.id)
     local w = math.max(0, ref.weight or 1)
 
-    if w > 0 and #pack.names > 0 then
+    -- skip excluded / empty packs
+    if include_pack(pack) and w > 0 and #pack.names > 0 then
       -- naive weighting: repeat sampling proportional to weight * size
       local budget = math.ceil(w * math.max(20, math.floor(#pack.names * 0.5)))
       for i = 1, budget do
         local name = pack.names[((i - 1) % #pack.names) + 1]
-        name = maybe_tag(name)           -- inject a regional tag sometimes
+        -- name = maybe_tag(name)           -- inject a regional tag sometimes (deprecated for now)
+        name = apply_tag(name, pack)
         push_unique(name)
         if #unifiedPool >= LIMIT then break end
       end
@@ -182,20 +245,23 @@ local function build_unified_pool()
     if #unifiedPool >= LIMIT then break end
   end
 
-  -- if pool undersized, backfill with any remaining pack content
+  -- if pool undersized, backfill with any remaining *eligible* pack content
   if #unifiedPool < LIMIT then
     for id, _ in pairs(PACK_CATALOG) do
       local p = load_pack(id)
-      for _, n in ipairs(p.names) do
-        push_unique(maybe_tag(n))
-        if #unifiedPool >= LIMIT then break end
+      if include_pack(p) and #p.names > 0 then
+        for _, n in ipairs(p.names) do
+        -- push_unique(maybe_tag(n))     -- deprecated for now
+          push_unique(apply_tag(n, p))
+          if #unifiedPool >= LIMIT then break end
+        end
       end
       if #unifiedPool >= LIMIT then break end
     end
   end
 end
 
--- For session unique “next name”
+-- For session unique "next name"
 local cursor = 1
 local function shuffle_in_place(t)
   for i = #t, 2, -1 do
@@ -225,15 +291,15 @@ end
 function M.ExportLegacyTables()
   if #unifiedPool == 0 then M.Init() end
 
-  -- generic names pool
   local generic = {}
   for i = 1, math.min(#unifiedPool, OPTIONS.maxUnified or 120) do
     generic[#generic + 1] = unifiedPool[i]
   end
 
   -- team-flavoured defaults for US/RU (override via packs)
-  local us = load_pack("mil_us").names
-  local ru = load_pack("mil_ru").names
+  -- NEW: merge legacy military lists if present
+  local us = merge_arrays(load_pack("mil_us").names, load_pack("mil_us_legacy").names)
+  local ru = merge_arrays(load_pack("mil_ru").names, load_pack("mil_ru_legacy").names)
 
   -- fallbacks if empty
   if not us or #us == 0 then us = { "Pvt. Walker", "Cpl. Nguyen", "Sgt. Patel" } end
