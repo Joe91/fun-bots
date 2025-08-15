@@ -676,11 +676,11 @@ function Bot:_CheckForVehicleActions(p_DeltaTime, p_AttackActive)
 	local s_InVehicle = g_BotStates:IsInVehicleState(self.m_ActiveState)
 	local s_OnVehicle = g_BotStates:IsOnVehicleState(self.m_ActiveState)
 
-	-- Check if exit of vehicle is needed (because of low health).
 	local s_VehicleEntity = self.m_Player.controlledControllable
 	if not s_VehicleEntity then
 		return
 	end
+	-- Check if exit of vehicle is needed (because of low health).
 	if not self._ExitVehicleActive then
 		local s_CurrentVehicleHealth = 0
 
@@ -1290,9 +1290,9 @@ function Bot:_EnterVehicleEntity(p_Entity, p_PlayerIsDriver)
 		if s_VehicleData.Type == VehicleTypes.Gunship then
 			seatIndex = seatIndex + 1
 		end
-		if p_Entity:GetPlayerInEntry(seatIndex) == nil or Globals.IsAirSuperiority then -- already in this seat in air superiority
+		if p_Entity:GetPlayerInEntry(seatIndex) == nil or Globals.IsAirSuperiority or (Globals.MapHasDynamiJetSpawns and m_Vehicles:IsVehicleType(s_VehicleData, VehicleTypes.Plane)) then -- already in this seat in air superiority
 			self.m_Player:EnterVehicle(p_Entity, seatIndex)
-			print('Entered the vehicle : ' .. s_VehicleData.Name .. ' Max entries: ' .. s_MaxEntries .. ' seatIndex: ' .. seatIndex)
+			print('Entered the vehicle : ' .. s_VehicleData.Name .. ' Type: ' .. s_VehicleData.Type .. ' Max entries: ' .. s_MaxEntries .. ' seatIndex: ' .. seatIndex)
 			self._ExitVehicleHealth = PhysicsEntity(p_Entity).internalHealth * (Registry.VEHICLES.VEHICLE_EXIT_HEALTH / 100.0)
 			-- Get ID.
 			self.m_ActiveVehicle = s_VehicleData
@@ -1301,7 +1301,7 @@ function Bot:_EnterVehicleEntity(p_Entity, p_PlayerIsDriver)
 			if seatIndex == 0 then
 				if seatIndex == s_MaxEntries - 1 then
 					self._VehicleWaitTimer = 0.5 -- Always wait a short time to check for free start.
-					if Globals.IsAirSuperiority then
+					if Globals.IsAirSuperiority or (Globals.MapHasDynamiJetSpawns and m_Vehicles:IsVehicleType(s_VehicleData, VehicleTypes.Plane)) then
 						self._VehicleTakeoffTimer = 0.0
 						self._JetTakeoffActive = false
 					else
@@ -1336,14 +1336,15 @@ function Bot:_EnterVehicleEntity(p_Entity, p_PlayerIsDriver)
 end
 
 ---@param p_PlayerIsDriver boolean
+---@param p_Distance integer|nil
 ---@return integer
 ---@return Vec3|nil
-function Bot:_EnterVehicle(p_PlayerIsDriver)
+function Bot:_EnterVehicle(p_PlayerIsDriver, p_Distance)
 	local s_Iterator = EntityManager:GetIterator('ServerVehicleEntity')
 	local s_Entity = s_Iterator:Next()
 
 	local s_ClosestEntity = nil
-	local s_ClosestDistance = Registry.VEHICLES.MIN_DISTANCE_VEHICLE_ENTER
+	local s_ClosestDistance = p_Distance or Registry.VEHICLES.MIN_DISTANCE_VEHICLE_ENTER
 
 	while s_Entity ~= nil do
 		s_Entity = ControllableEntity(s_Entity)

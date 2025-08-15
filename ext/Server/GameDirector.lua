@@ -27,7 +27,10 @@ function GameDirector:RegisterVars()
 	self.m_RushAttackingBase = ''
 
 	self.m_SpawnableStationaryAas = {}
-	self.m_SpawnableVehicles = {}
+	self.m_SpawnableVehicles = {
+		[TeamId.Team1] = {},
+		[TeamId.Team2] = {}
+	}
 	self.m_AvailableVehicles = {}
 	self.m_Beacons = {}
 	self.m_Gunship = nil
@@ -611,9 +614,11 @@ end
 function GameDirector:OnVehicleSpawnDone(p_Entity)
 	p_Entity = ControllableEntity(p_Entity)
 	local s_VehicleData = m_Vehicles:GetVehicleByEntity(p_Entity)
-
 	if s_VehicleData == nil then
 		return -- No vehicle found.
+	end
+	if m_Vehicles:IsVehicleType(s_VehicleData, VehicleTypes.Plane) then
+		print('The vehicle is a plane! : ' .. s_VehicleData.Name)
 	end
 
 	if m_Vehicles:IsVehicleType(s_VehicleData, VehicleTypes.Gadgets) then
@@ -738,6 +743,8 @@ function GameDirector:OnVehicleUnspawn(p_Entity, p_VehiclePoints, p_HotTeam)
 	p_Entity = ControllableEntity(p_Entity)
 	local s_VehicleData = m_Vehicles:GetVehicleByEntity(p_Entity)
 
+	-- Added the timer check since this could have been called right while we are switching rounds, causing issues while this tries to access variables
+	-- or tables that might be already wipedout
 	if s_VehicleData == nil or self.m_UpdateTimer == -1 then -- updateTimer being -1 means all vars where wipedout due to next round triggered.
 		return
 	end

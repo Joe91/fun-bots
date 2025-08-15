@@ -57,8 +57,48 @@ end
 -- Level Events
 -- =============================================
 
+-- Events:Subscribe('Partition:Loaded', function(partition)
+-- 	-- if (Globals.LevelName == "XP5_002" or Globals.LevelName == "XP5_004") then
+-- 	-- self:_DynamicVehicleSpawn()
+-- 	for _, p_Instance in pairs(partition.instances) do
+-- 		if p_Instance.typeInfo.name == "VehicleSpawnReferenceObjectData" then
+-- 			local s_EntityData = VehicleSpawnReferenceObjectData(p_Instance)
+-- 			if s_EntityData.blueprint.name == "Vehicles/F18-F/F18_SpawnInAir" or s_EntityData.blueprint.name == "Vehicles/SU-35BM-E/SU-35BM-E_SpawnInAir" then
+-- 				s_EntityData:MakeWritable()
+-- 				print('Printing some of its props after the cast.')
+-- 				print(s_EntityData.spawnDelay)
+-- 				print(s_EntityData.autoSpawn)
+-- 				print(s_EntityData.enabled)
+-- 				s_EntityData:MakeWritable()
+-- 				s_EntityData.autoSpawn = true
+-- 				s_EntityData.enabled = true
+-- 				s_EntityData.initialSpawnDelay = 0.0
+-- 				s_EntityData.spawnDelay = 0.0
+-- 				print('Printing some of its props after the EDIT.')
+-- 				print(s_EntityData.spawnDelay)
+-- 				print(s_EntityData.autoSpawn)
+-- 				print(s_EntityData.enabled)
+-- 				print('Lets try to print the blueprint data info.')
+-- 				print(s_EntityData.blueprint)
+-- 				print(s_EntityData.blueprint.name)
+-- 			end
+-- 		end
+-- 	end
+-- 	-- end
+-- end)
+
 ---@param p_Round integer
 function BotSpawner:OnLevelLoaded(p_Round)
+	s_CurrentGameMode = SharedUtils:GetCurrentGameMode()
+	if (Globals.LevelName == "XP5_002" or Globals.LevelName == "XP5_004") and s_CurrentGameMode:match("Conquest") then
+		print('Enabling dynamic jets to spawn.')
+		Globals.MapHasDynamiJetSpawns = true
+		-- self:_DynamicVehicleSpawn()
+		self._TeamDynamicBotsSpawned = {
+			[TeamId.Team1] = {},
+			[TeamId.Team2] = {}
+		}
+	end
 	m_Logger:Write("on level loaded on spawner")
 	self._FirstSpawnInLevel = true
 	self._PlayerUpdateTimer = 0.0
@@ -177,6 +217,10 @@ function BotSpawner:OnEngineUpdate(p_DeltaTime, p_SimulationDeltaTime)
 
 			if l_Bot.m_Player.soldier ~= nil then
 				local s_String, s_SpawnEntity = self:_GetSpecialSpawnEnity(l_Bot, l_Bot.m_Player.teamId)
+				if Globals.MapHasDynamiJetSpawns and s_SpawnEntity:Is("ServerSoldierEntity") then
+					-- l_Bot:Kill()
+					goto continue
+				end
 				if s_SpawnEntity then
 					table.remove(self._BotsWithoutPath, l_Index)
 					l_Bot:SetVarsWay(nil, true, 0, 0, false)
@@ -244,6 +288,7 @@ function BotSpawner:OnEngineUpdate(p_DeltaTime, p_SimulationDeltaTime)
 					break
 				end
 			end
+			::continue::
 		end
 		-- g_Profiler:End("BotSpawner:AfterSpawn")
 	end
@@ -947,11 +992,7 @@ function BotSpawner:_TriggerSpawn(p_Bot)
 		-- But it has vehicles.
 		self:_RushSpawn(p_Bot)
 	elseif s_CurrentGameMode:match("Conquest") then
-		-- if self:CQMapSupportJetSpawnReinforncments() then
-		-- 	-- self:_AirSuperioritySpawn(p_Bot)
-		-- else
 		self:_ConquestSpawn(p_Bot)
-		-- end
 		-- event + target spawn ("ID_H_US_B", "_ID_H_US_HQ", etc.)
 	elseif s_CurrentGameMode:match("AirSuperiority") then
 		self:_AirSuperioritySpawn(p_Bot)
@@ -1016,7 +1057,6 @@ function BotSpawner:_AirSuperioritySpawn(p_Bot)
 	while s_Entity do
 		if s_Entity.data:Is('CharacterSpawnReferenceObjectData') then
 			if CharacterSpawnReferenceObjectData(s_Entity.data).team == p_Bot.m_Player.teamId then
-				-- Skip if it is a vehicle spawn.
 				for l_Index = 1, #s_Entity.bus.entities do
 					local l_Entity = s_Entity.bus.entities[l_Index]
 					if l_Entity:Is("ServerVehicleSpawnEntity") then
@@ -1035,6 +1075,174 @@ function BotSpawner:_AirSuperioritySpawn(p_Bot)
 		s_Entity = s_EntityIterator:Next()
 	end
 end
+
+---@param p_Bot Bot|nil
+---@param p_Name string
+---@param p_TeamId TeamId|integer
+---@param p_SquadId SquadId|integer
+function BotSpawner:_DynamicJetSpawn(p_ExistingBot, p_Name, p_TeamId, p_SquadId)
+	local iter         = EntityManager:GetIterator("ServerCharacterSpawnEntity")
+	local spawn        = iter:Next()
+	local isValidSpawn = false
+	while spawn do
+		if spawn.data:Is('CharacterSpawnReferenceObjectData') then
+			local spawnData = CharacterSpawnReferenceObjectData(spawn.data)
+			if spawnData.team ~= p_TeamId then
+				goto skip
+			end
+			characterSpawnEntity = SpawnEntity(spawn)
+			-- print(" The characterSpawnEntity timer: " .. characterSpawnEntity.spawnTimer) -- Timer doesn't really seem to work, although sometimes its not 0. INVESTIGATE.
+			-- print(" The characterSpawnEntity is enabled ? : " .. tostring(characterSpawnEntity.enabled)) -- This one seems to work, it will tell us if the spawn entity is available.
+			-- print(" The characterSpawnEntity canSpawnMore ? : " .. tostring(characterSpawnEntity.canSpawnMore)) -- always true
+			-- print(" The characterSpawnEntity spawnedControllables: " .. #characterSpawnEntity.spawnedControllables)
+			-- print(" The characterSpawnEntity delay: " .. characterSpawnEntity.spawnDelay)
+			if not characterSpawnEntity.enabled then
+				goto skip
+			end
+			for index, child in ipairs(spawn.bus.entities) do
+				if child:Is('ServerVehicleSpawnEntity') then
+					-- print('Found ServerVehicleSpawnEntity')
+					local ref              = VehicleSpawnReferenceObjectData(child.data)
+					local bp               = ref.blueprint and ref.blueprint.name or ''
+					-- print('Blueprint: ' .. bp)
+					local childSpawnEntity = SpawnEntity(child)
+					-- print("The spawnedControllables: " .. #childSpawnEntity.spawnedControllables)
+					if ref.team == p_TeamId and childSpawnEntity.enabled and #childSpawnEntity.spawnedControllables == 0 and childSpawnEntity.spawnTimer == 0 then
+						-- print("The timer" .. childSpawnEntity.spawnTimer)
+						-- print('It is enabled: ')
+						-- print(childSpawnEntity.enabled)
+						-- print("The spawn entity canSpawnMore: ")
+						-- print(childSpawnEntity.canSpawnMore)
+						-- print("The childSpawnEntity spawnCount: " .. childSpawnEntity.spawnCount)
+						-- print("The childSpawnEntity spawnedControllables: " .. #childSpawnEntity.spawnedControllables)
+
+						-- print("The childSpawnEntity spawnDelay: " .. childSpawnEntity.spawnDelay)
+						-- print("The childSpawnEntity driverControlled: " .. tostring(childSpawnEntity.driverControlled)) -- Always false.
+						-- -- print("The isControlled: ")
+						-- print(childSpawnEntity.isControlled)
+						-- print("The spawnRequested: ")
+						-- print(childSpawnEntity.spawnRequested) -- Its always false
+
+						if childSpawnEntity.spawnTimer > 0 then
+							print('Skipping the timer its not 0')
+							goto continue
+						end
+						-- if not childSpawnEntity.enabled then
+						-- 	print('Skipping the spawn entity is not enabled')
+						-- 	goto skip
+						-- end
+						-- if not childSpawnEntity.canSpawnMore then
+						-- 	print('Skipping the spawn entity cannot spawn more') 					-- ALWAYS TRUE
+						-- 	goto skip
+						-- end
+						if bp == "Vehicles/F18-F/F18_SpawnInAir" or bp == "Vehicles/SU-35BM-E/SU-35BM-E_SpawnInAir" then
+							print('Spawning ' .. bp)
+							isValidSpawn = true
+							local s_Bot = self:GetBot(p_ExistingBot, p_Name, p_TeamId, p_SquadId)
+							if s_Bot == nil then
+								return
+							end
+							m_BotCreator:SetAttributesToBot(s_Bot)
+							self:_SelectLoadout(s_Bot)
+							local spawnEvent = ServerPlayerEvent('Spawn', s_Bot.m_Player, true, false, false, false, false, false,
+								s_Bot.m_Player.teamId)
+							spawn:FireEvent(spawnEvent)
+							self._BotsWithoutPath[#self._BotsWithoutPath + 1] = s_Bot
+							print('Triggered spawn on Jet')
+
+							-- s_Bot:_EnterVehicleEntity(childSpawnEntity.spawnedControllables[1], false)
+							break
+							-- elseif  and ref.team == p_Bot.m_Player.teamId and #childSpawnEntity.spawnedControllables == 0 then
+
+							-- 	print('Spawning SU-35')
+							-- 	isValidSpawn = true
+							-- 	break
+						end
+					end
+				end
+				::continue::
+			end
+			if isValidSpawn then
+				return
+			end
+		end
+
+		::skip::
+		spawn = iter:Next()
+	end
+end
+
+-- ---@param p_Bot Bot
+-- function BotSpawner:_DynamicVehicleSpawn(p_Bot)
+-- 	local s_Event = ServerPlayerEvent("Spawn", p_Bot.m_Player, true, false, false, false, false, false,
+-- 		p_Bot.m_Player.teamId)
+-- 	local s_EntityIterator = EntityManager:GetIterator("ServerCharacterSpawnEntity")
+-- 	local s_Entity = s_EntityIterator:Next()
+-- 	local s_ValidSpawn = false
+
+-- 	while s_Entity do
+-- 		if s_Entity.data:Is('CharacterSpawnReferenceObjectData') then
+-- 			if CharacterSpawnReferenceObjectData(s_Entity.data).team == p_Bot.m_Player.teamId then
+-- 				for l_Index = 1, #s_Entity.bus.entities do
+-- 					local l_Entity = s_Entity.bus.entities[l_Index]
+-- 					print('The blueprint name: ' .. l_Entity)
+-- 					if l_Entity:Is("ServerVehicleSpawnEntity") and l_Entity.data.blueprint.name == "Vehicles/F18-F/F18_SpawnInAir" or l_Entity.data.blueprint.name == "Vehicles/SU-35BM-E/SU-35BM-E_SpawnInAir" then
+-- 						s_ValidSpawn = true
+-- 						break
+-- 					end
+-- 				end
+
+-- 				if s_ValidSpawn then
+-- 					s_Entity:FireEvent(s_Event)
+-- 					p_Bot._ExitVehicleHealth = 0
+-- 				end
+-- 				return
+-- 			end
+-- 		end
+
+-- 		s_Entity = s_EntityIterator:Next()
+-- 	end
+-- end
+
+-- function BotSpawner:_DynamicVehicleSpawn()
+-- 	-- local s_Event = nil
+-- 	local s_EntityIterator = EntityManager:GetIterator("ServerVehicleSpawnEntity")
+-- 	local s_Entity = s_EntityIterator:Next()
+-- 	while s_Entity do
+-- 		if s_Entity.data:Is('VehicleSpawnReferenceObjectData') then
+-- 			-- if VehicleSpawnReferenceObjectData(s_Entity.data) then
+-- 			local s_EntityData = VehicleSpawnReferenceObjectData(s_Entity.data)
+-- 			if (s_EntityData.blueprint.name == "Vehicles/F18-F/F18_SpawnInAir" or s_EntityData.blueprint.name == "Vehicles/SU-35BM-E/SU-35BM-E_SpawnInAir") then
+-- 				print('Printing some of its props after the cast.')
+-- 				print(s_EntityData.spawnDelay)
+-- 				print(s_EntityData.autoSpawn)
+-- 				print(s_EntityData.enabled)
+-- 				s_EntityData:MakeWritable()
+-- 				s_EntityData.autoSpawn = true
+-- 				s_EntityData.enabled = true
+-- 				s_EntityData.initialSpawnDelay = 15.0
+-- 				s_EntityData.spawnDelay = 90.0
+-- 				s_EntityData.tryToSpawnOutOfSight = true
+-- 				print('Lets try to print the blueprint data info.')
+-- 				print(s_EntityData.blueprint)
+-- 				print(s_EntityData.blueprint.name)
+-- 				print('Firing event!!!!!!!!!!!!!!!!!!!!!!')
+-- 				s_Entity:FireEvent("SpawnWithPlayer")
+-- 			end
+-- 			-- s_Event = SpawnEntity(s_Entity)
+-- 			-- for l_Index = 1, #s_Entity.bus.entities do
+-- 			-- 	local l_Entity = s_Entity.bus.entities[l_Index]
+-- 			-- 	if l_Entity:Is("ServerVehicleSpawnEntity") then
+-- 			-- print("It was a ServerVehicleSpawnEntity")
+-- 			-- 		break
+-- 			-- 	end
+-- 			-- end
+-- 			-- end
+-- 		end
+
+-- 		s_Entity = s_EntityIterator:Next()
+-- 	end
+-- end
 
 ---@param p_Bot Bot
 --TODO: handle spawn-logic here as well (unify it?)
@@ -1188,12 +1396,45 @@ function BotSpawner:_FindTargetLocation(p_TeamId)
 	return s_TargetLocation
 end
 
-function BotSpawner:CQMapSupportJetSpawnReinforncments() -- Using this successfully spawn them in these maps but they follow no logic. So.. better off.
-	if #self._BotsWithoutPath < 4 and Globals.LevelName == "XP5_002" or Globals.LevelName == "XP5_004" then
+---comment
+---@param teamId TeamId|number
+---@return boolean
+function BotSpawner:CQMapSupportDynamicVehicleSpawnReinforncments(teamId)       -- Using this successfully spawn them in these maps but they follow no logic. So.. better off.
+	-- print('Checking if the map supports the spawn')
+	if Globals.MapHasDynamiJetSpawns and not self:_HasMaxPlanePlayers(teamId) then --  #self._BotsWithoutPath < 4 and not self:_HasMaxBotsFromTeam(teamId)
 		return true
 	end
 	return false
 end
+
+---@return boolean
+function BotSpawner:_HasMaxPlanePlayers(teamId)
+	-- print("Checking the playerData for planes for team " .. teamId)
+	local planeCount = 0
+	for playerName, playerData in pairs(g_PlayerData._Players) do
+		-- print(playerName .. " " .. playerData["Vehicle"] .. " " .. playerData["Team"])
+		if playerData.Vehicle == VehicleTypes.Plane and playerData.Team == teamId then
+			-- print("Plane found for " .. playerName)
+			planeCount = planeCount + 1
+			if planeCount == 2 then
+				return true
+			end
+		end
+	end
+	return false
+end
+
+-- ---@param p_TeamId TeamId|number
+-- ---@return boolean
+-- function BotSpawner:_HasMaxBotsFromTeam(p_TeamId)
+-- 	local s_TeamCount = 0
+-- 	for i, bot in ipairs(self._BotsWithoutPath) do
+-- 		if bot.teamId == p_TeamId then
+-- 			s_TeamCount = s_TeamCount + 1
+-- 		end
+-- 	end
+-- 	return s_TeamCount == 2
+-- end
 
 -- =============================================
 -- Some more Functions
@@ -1250,7 +1491,7 @@ function BotSpawner:_SpawnSingleWayBot(p_Player, p_UseRandomWay, p_ActiveWayInde
 	-- Meaning: if its not a new bot we do....:
 	if s_Name ~= nil or s_IsRespawn then
 		-- g_Profiler:Start("BotSpawner:SpawnPart2") -- about 60 ms on conquest (close to 0 on deathmatch)
-		if Globals.UsedSpawnMethod == SpawnMethod.Spawn then --or self:CQMapSupportJetSpawnReinforncments()
+		if Globals.UsedSpawnMethod == SpawnMethod.Spawn then
 			local s_Bot = self:GetBot(p_ExistingBot, s_Name, s_TeamId, s_SquadId)
 
 			if s_Bot == nil then
@@ -1263,6 +1504,12 @@ function BotSpawner:_SpawnSingleWayBot(p_Player, p_UseRandomWay, p_ActiveWayInde
 			self._BotsWithoutPath[#self._BotsWithoutPath + 1] = s_Bot
 			return
 		end
+		if self:CQMapSupportDynamicVehicleSpawnReinforncments(s_TeamId) then
+			print('Triggering the spawn of a bot for Air Superiority or for DynamicSpawn')
+			-- table.insert(self._TeamDynamicBotsSpawned[s_TeamId], s_Bot)
+			self:_DynamicJetSpawn(s_Bot, s_Name, s_TeamId, s_SquadId)
+			return
+		end
 
 		local s_Beacon = g_GameDirector:GetPlayerBeacon(s_Name)
 
@@ -1272,6 +1519,55 @@ function BotSpawner:_SpawnSingleWayBot(p_Player, p_UseRandomWay, p_ActiveWayInde
 			s_SquadSpawnVehicle = s_Beacon.Entity
 			s_InverseDirection = true
 		elseif p_UseRandomWay or p_ActiveWayIndex == nil or p_ActiveWayIndex == 0 then -- If random way or no active way.
+			-- 1. if we are on XP5 maps, try to fill the four DynamicSpawn jets first
+			-- ---------- XP5-002 / XP5-004 jet spawn integration ----------
+			-- only on XP5 maps and only if still missing jets
+			-- if (Globals.LevelName == "XP5_002" or Globals.LevelName == "XP5_004") then
+			-- 	local s_Bot = self:GetBot(p_ExistingBot, s_Name, s_TeamId, s_SquadId)
+			-- 	print('The bot name is: ' .. s_Bot.m_Name)
+			-- 	if s_Bot then
+			-- 		m_BotCreator:SetAttributesToBot(s_Bot)
+
+			-- 		self:_SelectLoadout(s_Bot)
+			-- 		local s_Event = ServerPlayerEvent("Spawn", s_Bot.m_Player, true, false, false, false, false, false,
+			-- 			s_Bot.m_Player.teamId)
+			-- 		local s_EntityIterator = EntityManager:GetIterator("ServerCharacterSpawnEntity")
+			-- 		local s_Entity = s_EntityIterator:Next()
+			-- 		local s_ValidSpawn = false
+
+			-- 		while s_Entity do
+			-- 			if s_Entity.data:Is('CharacterSpawnReferenceObjectData') then
+			-- 				if CharacterSpawnReferenceObjectData(s_Entity.data).team == s_Bot.m_Player.teamId then
+			-- 					for l_Index = 1, #s_Entity.bus.entities do
+			-- 						local l_Entity = s_Entity.bus.entities[l_Index]
+			-- 						if l_Entity:Is("ServerVehicleSpawnEntity") then
+			-- 							s_ValidSpawn = true
+			-- 							break
+			-- 						end
+			-- 					end
+
+			-- 					if s_ValidSpawn then
+			-- 						s_Entity:FireEvent(s_Event)
+			-- 						s_Bot:ExitVehicle()
+			-- 						s_Bot:_DoExitVehicle()
+			-- 						s_Bot:_EnterVehicle(false, 500)
+			-- 					end
+			-- 				end
+			-- 			end
+
+			-- 			s_Entity = s_EntityIterator:Next()
+			-- 		end
+			-- 	end
+			-- 	return
+			-- end
+
+			-- ---------- original random-way logic continues below …
+			-- ---------- end of jet spawn integration ----------
+
+			-- original random / no-active-way logic continues below …
+			-- self:_DynamicVehicleSpawn()
+			-- end
+
 			s_SpawnPoint, s_InverseDirection, s_SquadSpawnVehicle = self:_GetSpawnPoint(s_TeamId, s_SquadId)
 
 			-- Special spawn in vehicles.
@@ -1436,7 +1732,7 @@ function BotSpawner:_SpawnBot(p_Bot, p_Transform, p_SetKit)
 	-- Create kit and appearance.
 	if p_Bot.m_Player.selectedKit == nil then
 		-- SoldierBlueprint
-		p_Bot.m_Player.selectedKit = self:GetResourceDataContainer('Characters/Soldiers/MpSoldier') -- MpSoldier
+		p_Bot.m_Player.selectedKit = self:GetResourceDataContainer('Characters/Soldiers/MpSoldier')
 	end
 
 	self:_SetKitAndAppearance(p_Bot, s_BotKit, s_BotColor)
@@ -1462,7 +1758,7 @@ function BotSpawner:_ApplyCosumizationAfterSpawn(p_Bot)
 end
 
 function BotSpawner:_GetSpecialSpawnEnity(p_Bot, p_TeamId)
-	if Globals.IsAirSuperiority then
+	if Globals.IsAirSuperiority or Globals.MapHasDynamiJetSpawns then
 		return "SpawnInJet", p_Bot.m_Player.controlledControllable
 	end
 	if Config.UseVehicles and self._DelayDirectSpawn <= 0.0 and #g_GameDirector:GetSpawnableVehicle(p_TeamId) > 0 then

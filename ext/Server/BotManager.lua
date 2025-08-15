@@ -893,17 +893,26 @@ end
 ---@param p_Pose CharacterPoseType
 function BotManager:SpawnBot(p_Bot, p_Transform, p_Pose)
 	local s_BotPlayer = p_Bot.m_Player
-
+	-- s_BotPlayer.name = p_Bot.m_Name
 	-- Returns SoldierEntity.
 	local s_BotSoldier = s_BotPlayer:CreateSoldier(s_BotPlayer.selectedKit, p_Transform) -- ~3 ms
 	if not s_BotSoldier then
 		m_Logger:Error("CreateSoldier failed")
 		return nil
 	end
+	local s_BotSoldierData = SoldierEntityData(s_BotSoldier.data)
+	s_BotSoldierData:MakeWritable()
+	s_BotSoldierData.showNametag = true
+	s_BotSoldierData.humanPlayerControlled = true
+
 
 	-- Customization of health of bot.
 	s_BotSoldier.maxHealth = Config.BotMaxHealth
 	s_BotPlayer:SpawnSoldierAt(s_BotSoldier, p_Transform, p_Pose) -- ~17 ms
+	local s_SoldierData = SoldierEntityData(s_BotSoldier.data)
+	s_SoldierData:MakeWritable()
+	s_SoldierData.showNametag = true
+	s_BotSoldierData.humanPlayerControlled = true
 end
 
 ---@param p_Player Player
