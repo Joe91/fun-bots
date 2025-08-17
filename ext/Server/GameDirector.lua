@@ -1608,15 +1608,18 @@ function GameDirector:GetActiveTargetPointPosition(p_TeamId)
 		local s_FriendlyNode = nil
 		for l_Index = 1, #self._AllCaptuerPoints do
 			local l_CapturePoint = self._AllCaptuerPoints[l_Index]
-			local s_Pos = l_CapturePoint.transform.trans
-			if l_CapturePoint.team ~= p_TeamId then
-				s_NeutralNode = s_Pos
-			end
-			if l_CapturePoint.team == p_TeamId then
-				s_FriendlyNode = s_Pos
-			end
-			if l_CapturePoint.team == TeamId.TeamNeutral then
-				s_NeutralNode = s_Pos
+
+			if string.sub(l_CapturePoint.name, -2) ~= "HQ" then
+				local s_Pos = l_CapturePoint.transform.trans
+				if l_CapturePoint.team ~= p_TeamId then
+					s_NeutralNode = s_Pos
+				end
+				if l_CapturePoint.team == p_TeamId then
+					s_FriendlyNode = s_Pos
+				end
+				if l_CapturePoint.team == TeamId.TeamNeutral then
+					s_NeutralNode = s_Pos
+				end
 			end
 		end
 		-- first use enemy-nodes, then neutral, then friendly

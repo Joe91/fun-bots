@@ -18,7 +18,7 @@ This is the changelog for the version V3.0 Don't forget to [join us on Discord](
 * pathless-choppers
 * Bots can use the gunships (TODO: separate state with separate distace and tragets)
 * Separate worsening values for different vehicle types (by MatiasPastori)
-* Make bots attack the gunship by themselves (by Tagener Noisu)
+* Make bots attack the gunship by themselves (by ThyKingdomCome)
 * Bots can use every jet in conquest now (no more paths needed)
 * No more air-paths needed (only enter-paths for choppers)
 * Kind of Support for AirSuperiority (jets still too passive)
@@ -47,6 +47,7 @@ This is the changelog for the version V3.0 Don't forget to [join us on Discord](
 * fix horn-usage of jeeps #356
 * fix refill of rockets
 * fix keep same bot-players
+* fix air-vehicles attacking bases (by ThyKingdomCome)
 
 ### New maps
 * 
