@@ -694,6 +694,8 @@ function Bot:_CheckForVehicleActions(p_DeltaTime, p_AttackActive)
 		end
 	end
 
+	self:_CheckShouldExitVehicleIfPassenger()
+
 	local s_VehicleEntity = self.m_Player.controlledControllable
 	if not s_VehicleEntity then
 		return
@@ -756,6 +758,39 @@ function Bot:_CheckForVehicleActions(p_DeltaTime, p_AttackActive)
 					end
 				end
 			end
+		end
+	end
+end
+
+function Bot:_CheckShouldExitVehicleIfPassenger()
+	local s_VehicleEntity = self.m_Player.controlledControllable
+	if not s_VehicleEntity then
+		return
+	end
+
+	if not self._ExitVehicleActive
+		and m_Vehicles:IsPassengerSeat(self.m_ActiveVehicle, self.m_Player.controlledEntryId)
+	then
+		local s_ShouldExit = false
+		local s_ExitDistance = Registry.BOT.PASSENGER_EXIT_DISTANCE
+		local s_AllCapturePoints = g_GameDirector:GetAllCapturePoints()
+		local s_CurrentPosition = self.m_Player.soldier.worldTransform.trans:Clone()
+		s_CurrentPosition.y = 0
+
+		for l_Index = 1, #s_AllCapturePoints do
+			local l_CapturePoint = s_AllCapturePoints[l_Index]
+			local s_Position = l_CapturePoint.transform.trans:Clone()
+			s_Position.y = 0
+
+			if s_Position:Distance(s_CurrentPosition) < s_ExitDistance then
+				s_ShouldExit = true
+				break
+			end
+		end
+
+		if s_ShouldExit then
+			self:AbortAttack()
+			self:ExitVehicle()
 		end
 	end
 end

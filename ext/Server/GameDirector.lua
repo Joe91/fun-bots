@@ -896,6 +896,10 @@ function GameDirector:GetGunshipObjectiveName(p_LevelName, p_GameMode)
 	return nil
 end
 
+function GameDirector:GetAllCapturePoints()
+	return self._AllCapturePoints
+end
+
 ---@param p_Point table
 ---@param p_TeamId TeamId|integer
 ---@param p_InVehicle boolean
