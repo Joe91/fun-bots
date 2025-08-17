@@ -37,7 +37,6 @@ function GameDirector:RegisterVars()
 	self.m_MapCompletelyLoaded = false
 	self.m_SpawnedEntitiesToProcess = {}
 
-	self._MidMapPoint = nil
 	self._AllCaptuerPoints = {}
 	self._McomPositions = {}
 end
@@ -1534,17 +1533,15 @@ function GameDirector:GetActiveTargetPointPosition(p_TeamId)
 		for l_Index = 1, #self._AllCaptuerPoints do
 			local l_CapturePoint = self._AllCaptuerPoints[l_Index]
 
-			if string.sub(l_CapturePoint.name, -2) ~= "HQ" then
-				local s_Pos = l_CapturePoint.transform.trans
-				if l_CapturePoint.team ~= p_TeamId then
-					s_NeutralNode = s_Pos
-				end
-				if l_CapturePoint.team == p_TeamId then
-					s_FriendlyNode = s_Pos
-				end
-				if l_CapturePoint.team == TeamId.TeamNeutral then
-					s_NeutralNode = s_Pos
-				end
+			local s_Pos = l_CapturePoint.transform.trans
+			if l_CapturePoint.team ~= p_TeamId then
+				s_NeutralNode = s_Pos
+			end
+			if l_CapturePoint.team == p_TeamId then
+				s_FriendlyNode = s_Pos
+			end
+			if l_CapturePoint.team == TeamId.TeamNeutral then
+				s_NeutralNode = s_Pos
 			end
 		end
 		-- first use enemy-nodes, then neutral, then friendly
@@ -1713,7 +1710,6 @@ end
 
 function GameDirector:_InitFlagTeams()
 	self._AllCaptuerPoints = {}
-	self._MidMapPoint = Vec3.zero
 	if not Globals.IsConquest then -- Valid for all Conquest-types. TODO: check for rush?
 		return
 	end
@@ -1724,22 +1720,19 @@ function GameDirector:_InitFlagTeams()
 
 	while s_Entity ~= nil do
 		s_Entity = CapturePointEntity(s_Entity)
-		self._AllCaptuerPoints[#self._AllCaptuerPoints + 1] = s_Entity
-		print(s_Entity.name)
+
+		if string.sub(s_Entity.name, -2) ~= "HQ" then
+			self._AllCaptuerPoints[#self._AllCaptuerPoints + 1] = s_Entity
+			print(s_Entity.name)
+		end
 
 		s_Entity = s_Iterator:Next()
 	end
-	for l_Index = 1, #self._AllCaptuerPoints do
-		local s_Entity = self._AllCaptuerPoints[l_Index]
-		self._MidMapPoint = self._MidMapPoint + s_Entity.transform.trans
-	end
-	self._MidMapPoint = self._MidMapPoint / #self._AllCaptuerPoints
 
 	for l_Index = 1, #self._AllCaptuerPoints do
 		local s_Entity = self._AllCaptuerPoints[l_Index]
 
 		local s_ObjectiveName = self:_TranslateObjective(s_Entity.transform.trans, s_Entity.name)
-		self._AllCaptuerPoints[#self._AllCaptuerPoints + 1] = s_Entity
 		if s_ObjectiveName ~= "" then
 			local s_Objective = self:_GetObjectiveObject(s_ObjectiveName)
 
