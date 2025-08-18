@@ -910,14 +910,6 @@ function BotManager:SpawnBot(p_Bot, p_Transform, p_Pose)
 	-- Customization of health of bot.
 	s_BotSoldier.maxHealth = Config.BotMaxHealth
 	s_BotPlayer:SpawnSoldierAt(s_BotSoldier, p_Transform, p_Pose) -- ~17 ms
-
-	if Registry.COMMON.USE_EXPERIMENTAL_NAMETAGS then
-		-- TODO: Workaround - remove once supported by VU
-		local s_SoldierData = SoldierEntityData(s_BotSoldier.data)
-		s_SoldierData:MakeWritable()
-		s_SoldierData.showNametag = true
-		s_SoldierData.humanPlayerControlled = true
-	end
 end
 
 ---@param p_Player Player

@@ -155,6 +155,82 @@ end
 function FunBotClient:OnUIDrawHud()
 	m_ClientNodeEditor:OnUIDrawHud()
 	m_ClientSpawnPointHelper:OnUIDrawHud()
+
+	if Registry.COMMON.USE_EXPERIMENTAL_NAMETAGS then
+		-- Just adding custom nametags to see the names of the friendly bots ... needs some clean up and a config to enable and disable it
+		local FONT_SCALE   = 0.65 -- thinner / smaller
+		local VERT_OFFS    = Vec3(0, 2.0, 0)
+
+		-- retail colours (brightened a bit for clarity)
+		local COL_FRIENDLY = Vec4(0.75, 0.82, 0.95, 1) -- ice-blue
+		local COL_SQUAD    = Vec4(0.10, 1.00, 0.10, 1) -- squad green
+		local COL_ENEMY    = Vec4(1.00, 0.35, 0.35, 1) -- vivid red
+		local SHADOW       = Vec4(0.00, 0.00, 0.00, 0.65) -- soft shadow
+		local SHADOW_OFFS  = Vec2(0.75, 0.75)
+
+		local FADE_START   = 10
+		local FADE_END     = 20
+
+		local function colour(p, lp)
+			if p.squadId == lp.squadId and p.teamId == lp.teamId then
+				return COL_SQUAD
+			elseif p.teamId == lp.teamId then
+				return COL_FRIENDLY
+			else
+				return COL_ENEMY
+			end
+		end
+
+		local function alpha(dist)
+			if dist <= FADE_START then return 1 end
+			if dist >= FADE_END then return 0 end
+			return 1 - (dist - FADE_START) / (FADE_END - FADE_START)
+		end
+
+		local lp = PlayerManager:GetLocalPlayer()
+		if lp == nil or lp.soldier == nil then return end
+
+		for _, p in pairs(PlayerManager:GetPlayers()) do
+			if p == lp or not p.soldier or p.soldier.health <= 0 then goto skip end
+			if p.teamId ~= lp.teamId then goto skip end
+
+			local headPos = p.soldier.worldTransform.trans + VERT_OFFS
+
+			-- occlusion check
+			local hit = RaycastManager:Raycast(lp.soldier.worldTransform.trans,
+				headPos,
+				RayCastFlags.DontCheckWater |
+				RayCastFlags.DontCheckCharacter |
+				RayCastFlags.DontCheckRagdoll)
+			if hit ~= nil then goto skip end
+
+			local sp = ClientUtils:WorldToScreen(headPos)
+			if sp == nil then goto skip end
+
+			local dist = lp.soldier.worldTransform.trans:Distance(headPos)
+			local a    = alpha(dist)
+			if a <= 0 then goto skip end
+
+			-- subtle glow pulse
+			local pulse = math.sin(SharedUtils:GetTime() * 6) * 0.15 + 0.85
+			local col   = colour(p, lp)
+			col.w       = a * 0.9 * pulse
+
+			local x     = math.floor(sp.x + 0.5)
+			local y     = math.floor(sp.y + 0.5)
+
+			-- thin drop-shadow
+			DebugRenderer:DrawText2D(x + SHADOW_OFFS.x,
+				y + SHADOW_OFFS.y,
+				p.name,
+				SHADOW,
+				FONT_SCALE)
+
+			-- bright text on top
+			DebugRenderer:DrawText2D(x, y, p.name, col, FONT_SCALE)
+			::skip::
+		end
+	end
 end
 
 ---VEXT Shared Partition:Loaded Event
