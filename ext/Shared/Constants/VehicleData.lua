@@ -406,6 +406,7 @@ VehicleData = {
 		Parts = { { -2, -2 }, { 14, 14 } },
 		Speed = { { 300, 10000 }, { 600, 999 } },
 		Drop = { { 0.0, 0.0 }, { 0.0, 0.0 } },
+		FirstPassengerSeat = 3,
 		Offset = { { Vec3(3.374, 0.258, 1.802), Vec3(3.374, 0.258, 1.802) }, { Vec3(0.0, 0.0, 0.345), Vec3(0.0, 0.0, 0.345) } }
 	},
 	["AH1Z_coop"] = {
@@ -415,6 +416,7 @@ VehicleData = {
 		Parts = { { -2, -2 }, { 14, 14 } },
 		Speed = { { 300, 10000 }, { 600, 999 } },
 		Drop = { { 0.0, 0.0 }, { 0.0, 0.0 } },
+		FirstPassengerSeat = 3,
 		Offset = { { Vec3(3.374, 0.258, 1.802), Vec3(3.374, 0.258, 1.802) }, { Vec3(0.0, 0.0, 0.345), Vec3(0.0, 0.0, 0.345) } }
 	},
 	["AH6_Littlebird"] = {
@@ -451,6 +453,7 @@ VehicleData = {
 		Parts = { { -2, -2 }, { 6, 6 } },
 		Speed = { { 300, 10000 }, { 600, 999 } },
 		Drop = { { 0.0, 0.0 }, { 0.0, 0.0 } },
+		FirstPassengerSeat = 3,
 		Offset = { { Vec3(0.006, 0.499, 1.427), Vec3(0.006, 0.499, 1.427) }, { Vec3(0, -0.018, 0.427), Vec3(0, -0.018, 0.427) } }
 	},
 	["Venom"] = {
@@ -560,6 +563,7 @@ VehicleData = {
 		Parts = { -1, { 1, 3 }, { 0, 2 } },
 		Speed = { 300, { 600, 900 }, { 250, 900 } },
 		Drop = { 0.0, { 0.0, 0.0 }, { 0.0, 0.0 } },
+		FirstPassengerSeat = 3,
 		RotationOffset = { Vec3(0, 0, 0), { Vec3(math.pi / 2, 0.52, 0), Vec3(math.pi / 2, 0, 0) }, { Vec3(math.pi / 2, 0.375, 0), Vec3(math.pi / 2, 0, 0) } } -- use yaw and pitch as offset here
 	},
 	-- AA Stationary.

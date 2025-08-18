@@ -187,6 +187,8 @@ Registry = {
 		NUMBER_NODES_TO_SCAN_AFTER_ATTACK = 20,
 		-- Delay on destroying several bots
 		BOT_DESTORY_DELAY = 0.05,
+		-- Distance to closest objective on which passengers should exit vehicles
+		PASSENGER_EXIT_DISTANCE = 50,
 	},
 	-- Bot team balancing (only in keep_playercount - spawn-mode)
 	BOT_TEAM_BALANCING = {
