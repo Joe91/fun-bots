@@ -446,3 +446,5 @@ Language:add(code, "Max Shoot Distance Air Missiles", "Max Shoot Distance Air Mi
 Language:add(code, "Meters before bots will start shooting with stingers", "Meters before bots will start shooting with stingers")
 Language:add(code, "Max Raycast Distance for Gunships", "Max Raycast Distance for Gunships")
 Language:add(code, "Meters bots in the Gunship start shooting at players", "Meters bots in the Gunship start shooting at players")
+Language:add(code, "Keep a Vehicle Seat For Player", "Keep a Vehicle Seat For Player")
+Language:add(code, "To keep a vehicle seat for the player always or not (default true)", "To keep a vehicle seat for the player always or not (default true)")

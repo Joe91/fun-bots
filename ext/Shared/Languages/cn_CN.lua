@@ -446,3 +446,5 @@ Language:add(code, "Max Shoot Distance Air Missiles", "对空导弹的最远射�
 Language:add(code, "Meters before bots will start shooting with stingers", "BOT使用毒刺（指弹药类型）的射击起始距离")
 Language:add(code, "Max Raycast Distance for Gunships", "AC-130最远射击距离")
 Language:add(code, "Meters bots in the Gunship start shooting at players", "在AC-130的BOT射击玩家的最远距离")
+Language:add(code, "Keep a Vehicle Seat For Player", "为球员保留车辆座椅")
+Language:add(code, "To keep a vehicle seat for the player always or not (default true)", "始终为玩家保留车辆座椅（默认为true）")

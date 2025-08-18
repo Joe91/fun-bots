@@ -446,3 +446,5 @@ Language:add(code, "Max Shoot Distance Air Missiles", "マックスシュート�
 Language:add(code, "Meters before bots will start shooting with stingers", "ボットの前のメートルは、スティンガーで撮影を開始します")
 Language:add(code, "Max Raycast Distance for Gunships", "ガンシップのマックスレイキャスト距離")
 Language:add(code, "Meters bots in the Gunship start shooting at players", "ガンシップのメートルボットは、プレイヤーの射撃を開始します")
+Language:add(code, "Keep a Vehicle Seat For Player", "プレイヤー用の車両シートを保管してください")
+Language:add(code, "To keep a vehicle seat for the player always or not (default true)", "プレイヤーのために常に車両シートを保持するかどうか（デフォルトは真）")
