@@ -36,12 +36,10 @@ end
 ---@param p_Player Player
 function Vehicles:GetVehicle(p_Player)
 	local s_VehicleName = self:GetVehicleName(p_Player)
-	m_Logger:Write("s_VehicleName")
-
 	if s_VehicleName == nil then
 		return nil
 	end
-
+	m_Logger:Write("s_VehicleName: " .. s_VehicleName)
 	return VehicleData[s_VehicleName]
 end
 
@@ -69,19 +67,61 @@ end
 ---@param p_Entity ControllableEntity
 ---@param p_PlayerIsDriver boolean
 function Vehicles:GetNrOfFreeSeats(p_Entity, p_PlayerIsDriver)
-	local s_NrOfFreeSeats = 0
 	local s_MaxEntries = p_Entity.entryCount
+	local s_NrOfFreeSeats = 0
+	local s_NumBotsInVehicle = 0
 
-	-- Keep one seat free, if enough available.
-	if not p_PlayerIsDriver and s_MaxEntries > 2 then
+	if not p_Entity then
+		return 0
+	end
+
+	local vehicleData = self:GetVehicle(p_Entity:GetPlayerInEntry(0))
+	if not vehicleData then
+		return 0
+	end
+
+	if vehicleData.Type == VehicleTypes.Gunship then
+		s_MaxEntries = 2
+	end
+	if vehicleData.Type == VehicleTypes.MobileArtillery then
+		s_MaxEntries = 1
+	end
+	-- The idea is to avoid the bots from seating in the 3rd slot of the tanks to be more useful somwhere else.
+	if vehicleData.Type == VehicleTypes.Tank then
+		s_MaxEntries = 2
+	end
+
+	if vehicleData.Type == VehicleTypes.TransportChopper then
+		s_MaxEntries = 3
+	end
+	if vehicleData.Type == VehicleTypes.UnarmedGunship then
+		return 0
+	end
+
+	if vehicleData.Type == VehicleTypes.LightAA then
+		s_MaxEntries = 2
+	end
+
+	if Config.KeepVehicleSeatForPlayer and not p_PlayerIsDriver and s_MaxEntries > 2 then
 		s_MaxEntries = s_MaxEntries - 1
 	end
 
 	for i = 0, s_MaxEntries - 1 do
 		if p_Entity:GetPlayerInEntry(i) == nil then
 			s_NrOfFreeSeats = s_NrOfFreeSeats + 1
+		elseif m_Utilities:isBot(p_Entity:GetPlayerInEntry(i)) then
+			s_NumBotsInVehicle = s_NumBotsInVehicle + 1
+		end
+
+		-- If we've reached the MaxBotsPerVehicle limit, stop counting free seats
+		if s_NumBotsInVehicle >= Config.MaxBotsPerVehicle then
+			s_NrOfFreeSeats = 0
+			break
 		end
 	end
+
+	-- Cap the number of free seats at MaxBotsPerVehicle - s_NumBotsInVehicle
+	s_NrOfFreeSeats = math.min(s_NrOfFreeSeats, Config.MaxBotsPerVehicle - s_NumBotsInVehicle)
 
 	return s_NrOfFreeSeats
 end
@@ -157,9 +197,15 @@ function Vehicles:IsVehicleType(p_VehicleData, p_VehicleType)
 end
 
 ---@param p_VehicleData VehicleDataInner
+function Vehicles:IsTransportChopper(p_VehicleData)
+	return self:IsVehicleType(p_VehicleData, VehicleTypes.TransportChopper)
+end
+
+---@param p_VehicleData VehicleDataInner
 function Vehicles:IsChopper(p_VehicleData)
 	return self:IsVehicleType(p_VehicleData, VehicleTypes.Chopper)
 		or self:IsVehicleType(p_VehicleData, VehicleTypes.ScoutChopper)
+		or self:IsVehicleType(p_VehicleData, VehicleTypes.TransportChopper)
 end
 
 ---@param p_VehicleData VehicleDataInner
@@ -172,6 +218,7 @@ end
 ---@param p_VehicleData VehicleDataInner
 function Vehicles:IsGunship(p_VehicleData)
 	return self:IsVehicleType(p_VehicleData, VehicleTypes.Gunship)
+		or self:IsVehicleType(p_VehicleData, VehicleTypes.UnarmedGunship)
 end
 
 ---@param p_VehicleData VehicleDataInner
@@ -186,6 +233,7 @@ function Vehicles:IsAirVehicleType(p_VehicleType)
 		or p_VehicleType == VehicleTypes.ScoutChopper
 		or p_VehicleType == VehicleTypes.Plane
 		or p_VehicleType == VehicleTypes.Gunship
+		or p_VehicleType == VehicleTypes.TransportChopper
 end
 
 ---@param p_VehicleType VehicleTypes

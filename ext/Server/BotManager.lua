@@ -12,6 +12,10 @@ local m_BotCreator = require('BotCreator')
 local m_Logger = Logger("BotManager", Debug.Server.BOT)
 
 function BotManager:__init()
+	self:RegisterVars()
+end
+
+function BotManager:RegisterVars()
 	---@type Bot[]
 	self._Bots = {}
 	---@type table<string, Bot>
@@ -84,6 +88,11 @@ end
 function BotManager:OnLevelDestroy()
 	m_Logger:Write("destroyLevel")
 
+	-- TODO: Alternative by Beschützer:
+	-- self:DestroyAll(nil, nil, true)
+	-- self:RegisterVars()
+
+	-- original (crashes)
 	self:ResetAllBots()
 	self._ActivePlayers = {}
 	self._InitDone = false
@@ -114,9 +123,9 @@ function BotManager:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 		return
 	end
 
-	-- if not self._InitDone then
-	-- 	return -- TODO: Use this or not?
-	-- end
+	if not self._InitDone then
+		return
+	end
 
 	local s_BotCount = #self._Bots
 	if s_BotCount <= 0 then
@@ -147,7 +156,7 @@ function BotManager:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 
 
 	-- other checks and stuff
-	if Config.BotsAttackBots and self._InitDone then
+	if Config.BotsAttackBots then
 		if self._BotAttackBotTimer >= Registry.GAME_RAYCASTING.BOT_BOT_CHECK_INTERVAL then
 			self._BotAttackBotTimer = 0.0
 			self:_CheckForBotBotAttack()
@@ -157,7 +166,6 @@ function BotManager:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 	end
 
 	if Config.BotsReviveBots
-		and self._InitDone
 		and not Globals.IsGm
 	then
 		if self._BotReviveBotTimer >= Registry.GAME_RAYCASTING.BOT_BOT_REVICE_INTERVAL then
@@ -902,6 +910,14 @@ function BotManager:SpawnBot(p_Bot, p_Transform, p_Pose)
 	-- Customization of health of bot.
 	s_BotSoldier.maxHealth = Config.BotMaxHealth
 	s_BotPlayer:SpawnSoldierAt(s_BotSoldier, p_Transform, p_Pose) -- ~17 ms
+
+	if Registry.COMMON.USE_EXPERIMENTAL_NAMETAGS then
+		-- TODO: Workaround - remove once supported by VU
+		local s_SoldierData = SoldierEntityData(s_BotSoldier.data)
+		s_SoldierData:MakeWritable()
+		s_SoldierData.showNametag = true
+		s_SoldierData.humanPlayerControlled = true
+	end
 end
 
 ---@param p_Player Player

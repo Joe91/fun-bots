@@ -6,16 +6,18 @@ PlayerData = class('PlayerData')
 ---@field Vehicle VehicleTypes|integer
 ---@field ShootPlayerName string
 
-
 function PlayerData:__init()
 	---@type PlayerInformation[]
-	self._Players = {}
+	self._Players = { PlayerInformation }
 end
 
-function PlayerData:SetPlayerData(p_PlayerName)
-	self._Players[p_PlayerName] = {
+---comment
+---@param p_Player Player -- Server class
+function PlayerData:SetPlayerData(p_Player)
+	self._Players[p_Player.name] = {
 		Vehicle = VehicleTypes.NoVehicle,
-		ShootPlayerName = ''
+		ShootPlayerName = '',
+		Team = p_Player.teamId ---@type TeamId
 	}
 end
 
@@ -27,21 +29,22 @@ end
 ---@param p_VehicleEntity ControllableEntity @`ControllableEntity`
 ---@param p_Player Player
 function PlayerData:OnVehicleEnter(p_VehicleEntity, p_Player)
-	self:_UpdatePlayerData(p_Player.name, "Vehicle", g_Vehicles:GetVehicleByEntity(p_VehicleEntity).Type)
+	-- print(" Player " .. p_Player.name .. " entered vehicle " .. g_Vehicles:GetVehicleByEntity(p_VehicleEntity).Type)
+	self:_UpdatePlayerData(p_Player, "Vehicle", g_Vehicles:GetVehicleByEntity(p_VehicleEntity).Type)
 end
 
 ---VEXT Server Vehicle:Exit Event
 ---@param p_VehicleEntity Entity @`ControllableEntity`
 ---@param p_Player Player
 function PlayerData:OnVehicleExit(p_VehicleEntity, p_Player)
-	self:_UpdatePlayerData(p_Player.name, "Vehicle", VehicleTypes.NoVehicle)
+	self:_UpdatePlayerData(p_Player, "Vehicle", VehicleTypes.NoVehicle)
 end
 
-function PlayerData:_UpdatePlayerData(p_PlayerName, p_Attribute, p_Value)
-	if self._Players[p_PlayerName] == nil then
-		self:SetPlayerData(p_PlayerName)
+function PlayerData:_UpdatePlayerData(p_Player, p_Attribute, p_Value)
+	if self._Players[p_Player.name] == nil then
+		self:SetPlayerData(p_Player)
 	end
-	self._Players[p_PlayerName][p_Attribute] = p_Value
+	self._Players[p_Player.name][p_Attribute] = p_Value
 end
 
 function PlayerData:GetData(p_PlayerName)

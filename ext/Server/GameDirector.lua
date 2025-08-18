@@ -76,11 +76,7 @@ function GameDirector:OnLoadFinished()
 end
 
 function GameDirector:OnLevelDestroy()
-	self.m_MapCompletelyLoaded = false
-	self.m_SpawnedEntitiesToProcess = {}
-	self.m_AllObjectives = {}
-	self.m_ObjectivePositions = {}
-	self.m_Translations = {}
+	self:RegisterVars()
 end
 
 ---VEXT Server Server:RoundOver Event
@@ -558,7 +554,11 @@ end
 -- =============================================
 
 function GameDirector:GetSpawnableVehicle(p_TeamId)
-	return self.m_SpawnableVehicles[p_TeamId]
+	local spawnableVehiclesForTeamID = {}
+	if self.m_SpawnableVehicles[p_TeamId] then
+		spawnableVehiclesForTeamID = self.m_SpawnableVehicles[p_TeamId]
+	end
+	return spawnableVehiclesForTeamID
 end
 
 function GameDirector:GetStationaryAas(p_TeamId)
@@ -606,7 +606,6 @@ end
 function GameDirector:OnVehicleSpawnDone(p_Entity)
 	p_Entity = ControllableEntity(p_Entity)
 	local s_VehicleData = m_Vehicles:GetVehicleByEntity(p_Entity)
-
 	if s_VehicleData == nil then
 		return -- No vehicle found.
 	end
@@ -689,7 +688,7 @@ function GameDirector:OnVehicleSpawnDone(p_Entity)
 			self.m_AvailableVehicles[s_Objective.team][#self.m_AvailableVehicles[s_Objective.team] + 1] = p_Entity
 		end
 	else
-		if Config.EnableParadrop and self.m_Gunship ~= nil then
+		if Config.EnableParadrop and self.m_Gunship ~= nil and m_Vehicles:IsVehicleType(self.m_Gunship.Data, VehicleTypes.UnarmedGunship) then
 			if p_Entity.transform.trans.y > self.m_Gunship.Entity.transform.trans.y then
 				m_Logger:Write("Add spawnable vehicle at gunship: " .. s_VehicleData.Name)
 				self.m_SpawnableVehicles[self.m_Gunship.Team][#self.m_SpawnableVehicles[self.m_Gunship.Team] + 1] = p_Entity
@@ -701,7 +700,7 @@ function GameDirector:OnVehicleSpawnDone(p_Entity)
 		self.m_SpawnableStationaryAas[s_VehicleData.Team][#self.m_SpawnableStationaryAas[s_VehicleData.Team] + 1] = p_Entity
 	end
 
-	if m_Vehicles:IsVehicleType(s_VehicleData, VehicleTypes.Gunship)
+	if m_Vehicles:IsGunship(s_VehicleData)
 		and self.m_GunshipObjectiveTeam ~= nil
 	then
 		m_Logger:Write("Spawned gunship, team: " .. self.m_GunshipObjectiveTeam)
@@ -709,6 +708,7 @@ function GameDirector:OnVehicleSpawnDone(p_Entity)
 		local s_Gunship = {}
 		s_Gunship.Entity = p_Entity
 		s_Gunship.Team = self.m_GunshipObjectiveTeam
+		s_Gunship.Data = s_VehicleData
 
 		self.m_Gunship = s_Gunship
 	end
@@ -717,7 +717,7 @@ end
 ---@param p_TeamId TeamId|nil
 ---@return ControllableEntity|nil
 function GameDirector:GetGunship(p_TeamId)
-	if self.m_Gunship ~= nil then
+	if self.m_Gunship ~= nil and m_Vehicles:IsVehicleType(self.m_Gunship.Data, VehicleTypes.Gunship) then
 		if p_TeamId == nil or p_TeamId == self.m_Gunship.Team then
 			return self.m_Gunship.Entity
 		end
@@ -732,11 +732,13 @@ function GameDirector:OnVehicleUnspawn(p_Entity, p_VehiclePoints, p_HotTeam)
 	p_Entity = ControllableEntity(p_Entity)
 	local s_VehicleData = m_Vehicles:GetVehicleByEntity(p_Entity)
 
-	if s_VehicleData == nil then
+	-- Added the timer check since this could have been called right while we are switching rounds, causing issues while this tries to access variables
+	-- or tables that might be already wipedout
+	if s_VehicleData == nil or self.m_UpdateTimer == -1 then -- updateTimer being -1 means all vars where wipedout due to next round triggered.
 		return
 	end
 
-	if m_Vehicles:IsVehicleType(s_VehicleData, VehicleTypes.Gunship) then
+	if m_Vehicles:IsGunship(s_VehicleData) then
 		m_Logger:Write("Gunship unspawn")
 		self.m_Gunship = nil
 	end
@@ -1114,100 +1116,162 @@ function GameDirector:GetSpawnableBeaconOrMate(p_TeamId, p_SquadId)
 	end
 end
 
+function GameDirector:TrySpawnInVehicle(player, isBot, isSquadMate)
+	local vehicleSpawnProbability = isSquadMate and Registry.BOT_SPAWN.PROBABILITY_SQUADMATE_VEHICLE_SPAWN
+		or Registry.BOT_SPAWN.PROBABILITY_TEAMMATE_VEHICLE_SPAWN
+
+	local s_Vehicle = nil
+	local s_WayIndex, s_PointIndex, s_Invert = 1, 1, false
+
+	if isBot then
+		local bot = g_BotManager:GetBotById(player.id)
+		if not bot then return end
+		if not g_BotStates:IsVehicleState(bot.m_ActiveState) then return end
+		if bot.m_Player.controlledEntryId ~= 0 then return end
+
+		s_Vehicle = bot.m_Player.controlledControllable
+		if m_Vehicles:GetNrOfFreeSeats(s_Vehicle, false) == 0 then return end
+
+		-- If we use this then for some reason they don't spawn on Helicopters... :| Guessing their indexes are wrong and it breaks, but it doesn't really matter I think.
+		-- s_WayIndex = bot:GetWayIndex()
+		-- s_PointIndex = bot:GetPointIndex()
+		-- s_Invert = bot._InvertPathDirection
+	else
+		if not player.controlledControllable or player.controlledControllable:Is("ServerSoldierEntity") then return end
+		if player.controlledEntryId ~= 0 then return end
+
+		s_Vehicle = player.controlledControllable
+		if m_Vehicles:GetNrOfFreeSeats(s_Vehicle, true) == 0 then return end
+	end
+
+	if m_Utilities:CheckProbablity(vehicleSpawnProbability) then
+		m_Logger:Write("spawn at " .. (isSquadMate and "squad" or "team") .. "-mate's vehicle")
+		return s_WayIndex, s_PointIndex, s_Invert, s_Vehicle
+	end
+end
+
+function GameDirector:TrySpawnOnSoldier(player, isBot, isSquadMate)
+	local spawnProbability = isSquadMate and Registry.BOT_SPAWN.PROBABILITY_SQUADMATE_SPAWN
+		or Registry.BOT_SPAWN.PROBABILITY_TEAMMATE_SPAWN
+
+	if isBot then
+		local bot = g_BotManager:GetBotById(player.id)
+		if not bot then return end
+		if not g_BotStates:IsSoldierState(bot.m_ActiveState) and bot._Objective then return end
+
+		if m_Utilities:CheckProbablity(spawnProbability) then
+			m_Logger:Write("spawn at " .. (isSquadMate and "squad" or "team") .. "-mate (bot)")
+			return bot:GetWayIndex(), bot:GetPointIndex(), bot._InvertPathDirection, nil
+		end
+	else
+		if not player.soldier then return end
+		if m_Utilities:CheckProbablity(spawnProbability) then
+			local node = self:FindClosestPath(player.soldier.worldTransform.trans, false, true, nil)
+			if node and node.Position:Distance(player.soldier.worldTransform.trans) < 6.0 then
+				return node.PathIndex, node.PointIndex, false, nil
+			end
+		end
+	end
+end
+
+function GameDirector:TrySpawnOnBeacon(player, isSquadMate)
+	local spawnProbability = isSquadMate and Registry.BOT_SPAWN.PROBABILITY_SQUADMATE_SPAWN
+		or Registry.BOT_SPAWN.PROBABILITY_TEAMMATE_SPAWN
+
+	local beacon = self:GetPlayerBeacon(player.name)
+	if beacon and m_Utilities:CheckProbablity(spawnProbability) then
+		m_Logger:Write("spawn at beacon, owned by " .. player.name)
+		return beacon.Path, beacon.Point, true, beacon.Entity
+	end
+end
+
 ---@param p_TeamId TeamId|integer
 ---@param p_SquadId SquadId|integer
 ---@param p_OnlyBase boolean
 ---@return integer
 ---@return integer
 ---@return boolean|nil
----@return Entity|nil
+---@return ControllableEntity|nil
 function GameDirector:GetSpawnPath(p_TeamId, p_SquadId, p_OnlyBase)
-	-- Check for spawn at squad-mate.
-	local s_SquadMates = PlayerManager:GetPlayersBySquad(p_TeamId, p_SquadId)
+	-- Check squadmates
+	local squadPlayers = PlayerManager:GetPlayersBySquad(p_TeamId, p_SquadId)
+	local teamPlayers = PlayerManager:GetPlayersByTeam(p_TeamId)
 
-	local s_BotStates = g_BotStates
-	for l_Index = 1, #s_SquadMates do
-		local l_Player = s_SquadMates[l_Index]
-		local s_Beacon = self:GetPlayerBeacon(l_Player.name)
+	-- 1) Try squad-mate vehicle spawn
+	for _, player in ipairs(squadPlayers) do
+		if player.soldier and player.isAllowedToSpawnOn then
+			local isBot = m_Utilities:isBot(player)
+			local s_WayIndex, s_PointIndex, s_Invert, s_Vehicle = self:TrySpawnInVehicle(player, isBot, true)
+			if s_WayIndex and s_PointIndex and s_Vehicle then
+				-- print("Returning a SQUAD Vehicle Spawn")
 
-		if s_Beacon ~= nil then
-			if m_Utilities:CheckProbablity(Registry.BOT_SPAWN.PROBABILITY_SQUADMATE_SPAWN) then
-				m_Logger:Write("spawn at beacon, owned by " .. l_Player.name)
-				return s_Beacon.Path, s_Beacon.Point, true, s_Beacon.Entity
-			else
-				break
-			end
-		end
-
-		if l_Player.soldier and l_Player.isAllowedToSpawnOn then
-			if m_Utilities:isBot(l_Player) then
-				local s_SquadBot = g_BotManager:GetBotById(l_Player.id)
-				if not s_SquadBot then
-					break -- this should not happen
-				end
-				if s_BotStates:IsSoldierState(s_SquadBot.m_ActiveState) then
-					local s_WayIndex = s_SquadBot:GetWayIndex()
-					local s_PointIndex = s_SquadBot:GetPointIndex()
-
-					if m_Utilities:CheckProbablity(Registry.BOT_SPAWN.PROBABILITY_SQUADMATE_SPAWN) then
-						m_Logger:Write("spawn at squad-mate")
-						return s_WayIndex, s_PointIndex, s_SquadBot._InvertPathDirection, nil -- Use same direction.
-					else
-						break
-					end
-				else -- Squad-bot in vehicle.
-					local s_EntryId = s_SquadBot.m_Player.controlledEntryId
-
-					if s_EntryId == 0 then
-						---@type ControllableEntity
-						local s_Vehicle = s_SquadBot.m_Player.controlledControllable
-
-						-- Check for free seats.
-						if m_Vehicles:GetNrOfFreeSeats(s_Vehicle, false) > 0 then
-							local s_WayIndex = s_SquadBot:GetWayIndex()
-							local s_PointIndex = s_SquadBot:GetPointIndex()
-
-							if m_Utilities:CheckProbablity(Registry.BOT_SPAWN.PROBABILITY_SQUADMATE_VEHICLE_SPAWN) then
-								m_Logger:Write("spawn at squad-mate's vehicle")
-								return s_WayIndex, s_PointIndex, s_SquadBot._InvertPathDirection, s_Vehicle -- Use same direction.
-							else
-								break
-							end
-						else
-							break
-						end
-					end
-				end
-			else
-				-- Check for vehicle of real player.
-				if l_Player.controlledControllable ~= nil and not l_Player.controlledControllable:Is("ServerSoldierEntity") then
-					if l_Player.controlledEntryId == 0 then
-						---@type ControllableEntity
-						local s_Vehicle = l_Player.controlledControllable
-
-						-- Check for free seats.
-						if m_Vehicles:GetNrOfFreeSeats(s_Vehicle, true) > 0 then
-							if m_Utilities:CheckProbablity(Registry.BOT_SPAWN.PROBABILITY_SQUADMATE_PLAYER_VEHICLE_SPAWN) then
-								m_Logger:Write("spawn at squad-mate's vehicle")
-								return 1, 1, false, s_Vehicle
-							else
-								break
-							end
-						else
-							break
-						end
-					end
-				else
-					if m_Utilities:CheckProbablity(Registry.BOT_SPAWN.PROBABILITY_SQUADMATE_SPAWN) then
-						local s_Node = self:FindClosestPath(l_Player.soldier.worldTransform.trans, false, true, nil)
-						if s_Node and s_Node.Position:Distance(l_Player.soldier.worldTransform.trans) < 6.0 then
-							return s_Node.PathIndex, s_Node.PointIndex, false, nil -- Use same direction.
-						end
-					end
-				end
+				return s_WayIndex, s_PointIndex, s_Invert, s_Vehicle
 			end
 		end
 	end
+
+	-- 2) Try team-mate vehicle spawn
+	for _, player in ipairs(teamPlayers) do
+		if player.soldier and player.isAllowedToSpawnOn then
+			local isBot = m_Utilities:isBot(player)
+			local s_WayIndex, s_PointIndex, s_Invert, s_Vehicle = self:TrySpawnInVehicle(player, isBot, false)
+			if s_WayIndex and s_PointIndex and s_Vehicle then
+				-- print("Returning a TEAM Vehicle Spawn")
+
+				return s_WayIndex, s_PointIndex, s_Invert, s_Vehicle
+			end
+		end
+	end
+
+	-- 3) Try squad-mate soldier spawn
+	for _, player in ipairs(squadPlayers) do
+		if player.soldier and player.isAllowedToSpawnOn then
+			local isBot = m_Utilities:isBot(player)
+			local s_WayIndex, s_PointIndex, s_Invert, s_Vehicle = self:TrySpawnOnSoldier(player, isBot, true)
+			if s_WayIndex and s_PointIndex then
+				-- print("Returning a SQUAD Soldier Spawn")
+
+				return s_WayIndex, s_PointIndex, s_Invert, s_Vehicle
+			end
+		end
+	end
+
+	-- 4) Try team-mate soldier spawn
+	for _, player in ipairs(teamPlayers) do
+		if player.soldier and player.isAllowedToSpawnOn then
+			local isBot = m_Utilities:isBot(player)
+			local s_WayIndex, s_PointIndex, s_Invert, s_Vehicle = self:TrySpawnOnSoldier(player, isBot, false)
+			if s_WayIndex and s_PointIndex then
+				-- print("Returning a TEAM Soldier Spawn")
+
+				return s_WayIndex, s_PointIndex, s_Invert, s_Vehicle
+			end
+		end
+	end
+
+	-- 5) Try squad-mate beacon spawn
+	for _, player in ipairs(squadPlayers) do
+		if player.soldier and player.isAllowedToSpawnOn then
+			local s_WayIndex, s_PointIndex, s_Invert, s_Vehicle = self:TrySpawnOnBeacon(player, true)
+			if s_WayIndex then
+				-- print("Returning a SQUAD beacon Spawn")
+
+				return s_WayIndex, s_PointIndex, s_Invert, s_Vehicle
+			end
+		end
+	end
+
+	-- 6) Try team-mate beacon spawn
+	for _, player in ipairs(teamPlayers) do
+		if player.soldier and player.isAllowedToSpawnOn then
+			local s_WayIndex, s_PointIndex, s_Invert, s_Vehicle = self:TrySpawnOnBeacon(player, false)
+			if s_WayIndex then
+				-- print("Returning a TEAM beacon Spawn")
+				return s_WayIndex, s_PointIndex, s_Invert, s_Vehicle
+			end
+		end
+	end
+
 
 	-- Find reference-objective.
 	local s_ReferenceObjectivesNeutral = {}

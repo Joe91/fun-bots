@@ -8,6 +8,10 @@ local m_NodeCollection = require('NodeCollection')
 local m_Logger = Logger('NodeEditor', Debug.Server.NODEEDITOR)
 
 function NodeEditor:__init()
+	self:RegisterVars()
+end
+
+function NodeEditor:RegisterVars()
 	self.m_ActiveTracePlayers = {}
 
 	self.m_CustomTrace = {}
@@ -1101,11 +1105,7 @@ end
 ---VEXT Shared Level:Destroy Event
 function NodeEditor:OnLevelDestroy()
 	m_NodeCollection:Clear()
-	self.m_ActiveTracePlayers = {}
-	self.m_CustomTrace = {}
-	self.m_CustomTraceIndex = {}
-	self.m_CustomTraceTimer = {}
-	self.m_CustomTraceDistance = {}
+	self:RegisterVars()
 end
 
 -- =============================================

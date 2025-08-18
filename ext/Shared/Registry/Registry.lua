@@ -12,7 +12,7 @@ require('__shared/Constants/VersionType')
 Registry = {
 	COMMON = {
 		-- Token Bots are marked with. Can also be " " or "". If it's "" players with names of the botlist can't join!
-		BOT_TOKEN = "BOT_",
+		BOT_TOKEN = "",
 		-- Allow players to use Bot-Names.
 		ALLOW_PLAYER_BOT_NAMES = true,
 		-- Collision-raycasts are another type of raycast. Needs some more testing...
@@ -24,7 +24,7 @@ Registry = {
 		-- Distance commands are heard by bots.
 		COMMAND_DISTANCE = 20,
 		-- Use load of Bundle to fix Bug of weapons disappearing (thanks to Lesley!) !!! THIS MIGHT CAUSE CRASHES OR OTHER ISSUES!!!
-		USE_LOAD_BUNDLE_BUGFIX = true,
+		USE_LOAD_BUNDLE_BUGFIX = false,
 		-- Keep the last ticket in conquest for the gamemode counter
 		DONT_SPAWN_BOTS_ON_LAST_CONQUEST_TICKET = true,
 		-- Valid keys can be found here: https://docs.veniceunleashed.net/vext/ref/fb/inputdevicekeys/.
@@ -33,6 +33,8 @@ Registry = {
 		DESTROY_OBSTACLES_ON_START = true,
 		-- Number of Nodes to load in one cycle
 		MAX_NUMBER_OF_NODES_PER_CYCLE = 1024,
+		-- experimental nametags
+		USE_EXPERIMENTAL_NAMETAGS = false,
 	},
 	-- Version and Release related variables.
 	-- Variables related to the current build version, version and the type of version.
@@ -205,15 +207,19 @@ Registry = {
 		-- Additional delay for dirct-spawnable vehicles (set to 0 to disable this)
 		DELAY_DIRECT_SPAWN = 6.0,
 		-- Probability of a bot spawning on a member of the same squad.
-		PROBABILITY_SQUADMATE_SPAWN = 40,
+		PROBABILITY_SQUADMATE_SPAWN = 20,
 		-- Probability of a bot spawning in the vehicle of a bot of the same squad.
-		PROBABILITY_SQUADMATE_VEHICLE_SPAWN = 60,
+		PROBABILITY_SQUADMATE_VEHICLE_SPAWN = 70,
+		-- Probability of a bot spawning on a random teammate
+		PROBABILITY_TEAMMATE_SPAWN = 20,
+		-- Probability of a bot spawning in a random teammate vehicle
+		PROBABILITY_TEAMMATE_VEHICLE_SPAWN = 60,
 		-- Probability of a bot spawning in the vehicle of a player of the same squad.
-		PROBABILITY_SQUADMATE_PLAYER_VEHICLE_SPAWN = 80,
+		PROBABILITY_SQUADMATE_PLAYER_VEHICLE_SPAWN = 50,
 		-- Probability of a bot spawning on the closest spawn point.
-		PROBABILITY_CLOSEST_SPAWN = 80,
+		PROBABILITY_CLOSEST_SPAWN = 40,
 		-- Probability of a bot spawning on an attacked spawn point.
-		PROBABILITY_ATTACKED_SPAWN = 80,
+		PROBABILITY_ATTACKED_SPAWN = 60,
 		-- Probability of a bot spawning on their deployment base.
 		PROBABILITY_BASE_SPAWN = 5,
 		-- Probability of a bot spawning on their deployment base.
