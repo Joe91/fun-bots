@@ -57,10 +57,6 @@ function BotManager:RegisterVars()
 	self._InitDone = false
 
 	-- update-timers
-	self._UpdateTimerL1 = 0.0
-	self._UpdateTimerL2 = 0.0
-	self._UpdateTimerL3 = 0.0
-	--
 	self._CycleTimeL0 = 1.0 / SharedUtils:GetTickrate()
 	self._RatioL0L1 = math.floor(Registry.BOT.BOT_FAST_UPDATE_CYCLE / self._CycleTimeL0) + 1
 	self._RatioL0L2 = math.floor(Registry.BOT.BOT_UPDATE_CYCLE / self._CycleTimeL0) + 1
@@ -93,9 +89,28 @@ function BotManager:OnLevelDestroy()
 	-- self:RegisterVars()
 
 	-- original (crashes)
-	self:ResetAllBots()
-	self._ActivePlayers = {}
 	self._InitDone = false
+	self:ResetAllBots()
+
+
+	-- self._BotInputs = {}
+	self._ActivePlayers = {}
+	self._BotAttackBotTimer = 0.0
+	self._BotReviveBotTimer = 0.0
+	self._DestroyBotsTimer = 0.0
+	self._BotsToDestroy = {}
+	self._BotBotAttackList = {}
+	self._BotBotReviveList = {}
+	self._RaycastsPerActivePlayer = 0
+	self._BotCheckState = {}
+	self._ConnectionCheckState = {}
+	self._LastBotCheckIndex = 1
+	self._LastPlayerCheckIndex = 1
+
+	-- reset-timers
+	self._L0Counter = 0
+	self._L1Counter = 0
+	self._L2Counter = 0
 end
 
 ---@param p_Bots Bot[]
@@ -844,7 +859,7 @@ function BotManager:CreateBot(p_Name, p_TeamId, p_SquadId)
 	local s_Bot = self:GetBotByName(p_Name)
 
 	-- Bot exists, so just reset him.
-	if s_Bot ~= nil then
+	if s_Bot ~= nil and s_Bot.m_Player ~= nil and self._BotInputs[s_Bot.m_Player.id] ~= nil then
 		s_Bot.m_Player.teamId = p_TeamId
 		s_Bot.m_Player.squadId = p_SquadId
 		s_Bot:ResetVars()
