@@ -65,6 +65,7 @@ VehicleTypes = {
 	ScoutChopper = 13,
 	Gunship = 14,
 	LightAA = 15,
+	AMTRAC = 16,
 }
 
 ---@enum VehicleTerrains

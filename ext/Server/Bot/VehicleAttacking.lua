@@ -46,6 +46,7 @@ function VehicleAttacking:UpdateAttackingVehicle(p_DeltaTime, p_Bot)
 									or p_Bot._ShootPlayerVehicleType == VehicleTypes.MobileArtillery
 									or p_Bot._ShootPlayerVehicleType == VehicleTypes.AntiAir
 									or p_Bot._ShootPlayerVehicleType == VehicleTypes.LightVehicle
+									or p_Bot._ShootPlayerVehicleType == VehicleTypes.AMTRAC
 									or p_Bot._ShootPlayerVehicleType == VehicleTypes.LightAA
 									or p_Bot._ShootPlayerVehicleType == VehicleTypes.NoArmorVehicle
 									or p_Bot._ShootPlayerVehicleType == VehicleTypes.MavBot)
@@ -66,6 +67,7 @@ function VehicleAttacking:UpdateAttackingVehicle(p_DeltaTime, p_Bot)
 							if p_Bot.m_Player.controlledEntryId == 0 and
 								(p_Bot._ShootPlayerVehicleType == VehicleTypes.Tank
 									or p_Bot._ShootPlayerVehicleType == VehicleTypes.MobileArtillery
+									or p_Bot._ShootPlayerVehicleType == VehicleTypes.AMTRAC
 									or p_Bot._ShootPlayerVehicleType == VehicleTypes.AntiAir
 									or p_Bot._ShootPlayerVehicleType == VehicleTypes.IFV)
 							then
