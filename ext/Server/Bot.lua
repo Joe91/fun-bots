@@ -774,12 +774,21 @@ function Bot:_CheckShouldExitVehicleIfPassenger()
 		local s_ShouldExit = false
 		local s_ExitDistance = Registry.BOT.PASSENGER_EXIT_DISTANCE
 		local s_AllCapturePoints = g_GameDirector:GetAllCapturePoints()
+		local s_ActiveMcoms = g_GameDirector:GetActiveMcomPositions()
 		local s_CurrentPosition = self.m_Player.soldier.worldTransform.trans:Clone()
 		s_CurrentPosition.y = 0
 
+		s_Coordinates = {}
 		for l_Index = 1, #s_AllCapturePoints do
-			local l_CapturePoint = s_AllCapturePoints[l_Index]
-			local s_Position = l_CapturePoint.transform.trans:Clone()
+			s_Coordinates[#s_Coordinates + 1] = s_AllCapturePoints[l_Index].transform.trans
+		end
+		for l_Index = 1, #s_ActiveMcoms do
+			s_Coordinates[#s_Coordinates + 1] = s_ActiveMcoms[l_Index]
+		end
+
+		for l_Index = 1, #s_Coordinates do
+			local l_Coord = s_Coordinates[l_Index]
+			local s_Position = l_Coord:Clone()
 			s_Position.y = 0
 
 			if s_Position:Distance(s_CurrentPosition) < s_ExitDistance then
