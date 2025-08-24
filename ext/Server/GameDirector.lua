@@ -904,8 +904,12 @@ function GameDirector:GetActiveMcomPositions()
 	local s_Positions = {}
 
 	if Globals.IsRush then
-		s_Positions[0] = self._McomPositions[self.m_RushStageCounter * 2]
-		s_Positions[1] = self._McomPositions[self.m_RushStageCounter * 2 - 1]
+		if Globals.IsSquadRush then
+			s_Positions[0] = self._McomPositions[self.m_RushStageCounter]
+		else
+			s_Positions[0] = self._McomPositions[self.m_RushStageCounter * 2]
+			s_Positions[1] = self._McomPositions[self.m_RushStageCounter * 2 - 1]
+		end
 	end
 
 	return s_Positions
