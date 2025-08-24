@@ -172,6 +172,12 @@ function Vehicles:IsTransportChopper(p_VehicleData)
 	return self:IsVehicleType(p_VehicleData, VehicleTypes.Chopper)
 		and (string.find(p_VehicleData.Name, "KOSATKA") or string.find(p_VehicleData.Name, "VENOM"))
 end
+--
+---@param p_VehicleData VehicleDataInner
+function Vehicles:IsMobileRespawnVehicle(p_VehicleData)
+	return self:IsTransportChopper(p_VehicleData)
+		or self:IsVehicleType(p_VehicleData, VehicleTypes.AMTRAC)
+end
 
 ---@param p_VehicleData VehicleDataInner
 function Vehicles:IsAirVehicle(p_VehicleData)

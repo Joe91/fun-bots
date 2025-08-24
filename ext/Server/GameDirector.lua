@@ -562,8 +562,17 @@ function GameDirector:GetSpawnableVehicle(p_TeamId)
 	return self.m_SpawnableVehicles[p_TeamId]
 end
 
-function GameDirector:GetMobileRespawnVehicle(p_TeamId)
-	return self.m_MobileRespawnVehicles[p_TeamId]
+function GameDirector:GetMobileRespawnVehicles(p_TeamId)
+	local s_Vehicles = {}
+
+	for l_Index = 1, #self.m_MobileRespawnVehicles[p_TeamId] do
+		local l_Vehicle = self.m_MobileRespawnVehicles[p_TeamId][l_Index]
+		if l_Vehicle ~= nil and m_Vehicles:GetNrOfFreeSeats(l_Vehicle, false) > 0 then
+			s_Vehicles[#s_Vehicles + 1] = l_Vehicle
+		end
+	end
+
+	return s_Vehicles
 end
 
 function GameDirector:GetStationaryAas(p_TeamId)
@@ -781,10 +790,9 @@ function GameDirector:OnVehicleExit(p_VehicleEntity, p_Player)
 			self:ReturnStationaryAaEntity(p_VehicleEntity, p_Player.teamId)
 		end
 
-		if m_Vehicles:IsTransportChopper(s_VehicleData)
+		if m_Vehicles:IsMobileRespawnVehicle(s_VehicleData)
 			and m_Vehicles:IsEmpty(p_VehicleEntity)
 		then
-			print("Remove transport chopper")
 			self:RemoveEntityFromVehicleCollection(self.m_MobileRespawnVehicles, p_Player.teamId, p_VehicleEntity)
 		end
 	end
@@ -802,12 +810,11 @@ function GameDirector:OnVehicleEnter(p_Entity, p_Player)
 
 		if m_Vehicles:IsVehicleType(s_VehicleData, VehicleTypes.StationaryAA) then
 			self:RemoveEntityFromVehicleCollection(self.m_SpawnableStationaryAas, l_Team, p_Entity)
-		elseif m_Vehicles:IsTransportChopper(s_VehicleData) then
+		elseif m_Vehicles:IsMobileRespawnVehicle(s_VehicleData) then
 			self:RemoveEntityFromVehicleCollection(self.m_SpawnableVehicles, l_Team, p_Entity)
 			self:RemoveEntityFromVehicleCollection(self.m_AvailableVehicles, l_Team, p_Entity)
 
 			if not self:IsEntityInVehicleCollection(self.m_MobileRespawnVehicles, l_Team, p_Entity) then
-				print("Add transport chopper")
 				self:AddEntityToVehicleCollection(self.m_MobileRespawnVehicles, l_Team, p_Entity)
 			end
 		else
@@ -886,6 +893,29 @@ end
 
 function GameDirector:GetAllCapturePoints()
 	return self._AllCapturePoints
+end
+
+function GameDirector:CapturePointStats()
+	local s_Stats = {}
+	s_Stats["captured"] = {}
+	s_Stats["neutral"] = {}
+	s_Stats["all"] = self._AllCapturePoints
+
+	s_Stats.captured[TeamId.Team1] = {}
+	s_Stats.captured[TeamId.Team2] = {}
+
+	for l_Index = 1, #self._AllCapturePoints do
+		local l_CapturePoint = self._AllCapturePoints[l_Index]
+
+		if l_CapturePoint.team == TeamId.TeamNeutral then
+			s_Stats.neutral[#s_Stats.neutral + 1] = l_CapturePoint
+		else
+			local s_TeamCaptured = s_Stats.captured[l_CapturePoint.team]
+			s_TeamCaptured[#s_TeamCaptured + 1] = l_CapturePoint
+		end
+	end
+
+	return s_Stats
 end
 
 function GameDirector:GetActiveMcomPositions()

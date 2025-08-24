@@ -1083,6 +1083,17 @@ SettingsDefinition = {
 			UpdateFlag = UpdateFlag.None,
 			Category = "VEHICLE"
 		},
+		{
+			Name = "SpawnInMobileRespawnVehicles",
+			Text = "Spawn in Transport helicopters and AMTRACs",
+			---@type Type|integer
+			Type = Type.Boolean,
+			Value = Config.SpawnInMobileRespawnVehicles,
+			Description = "Bots can spawn in Transport helicopters and AMTRACs",
+			Default = true,
+			UpdateFlag = UpdateFlag.None,
+			Category = "VEHICLE"
+		},
 		-- Weapons.
 		{
 			Name = "UseRandomWeapon",
