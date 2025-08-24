@@ -1139,9 +1139,11 @@ function BotSpawner:_DynamicJetSpawn(p_ExistingBot, p_Name, p_TeamId, p_SquadId)
 							print('Spawning ' .. bp)
 							isValidSpawn = true
 							local s_Bot = self:GetBot(p_ExistingBot, p_Name, p_TeamId, p_SquadId)
-							if s_Bot == nil then
-								return
-							end
+							if s_Bot == nil then return end
+
+							-- CRITICAL: Force reset vehicle state for reused bot
+							s_Bot:ResetSpawnVars()
+
 							m_BotCreator:SetAttributesToBot(s_Bot)
 							self:_SelectLoadout(s_Bot)
 							local spawnEvent = ServerPlayerEvent('Spawn', s_Bot.m_Player, true, false, false, false, false, false,
@@ -1488,7 +1490,6 @@ function BotSpawner:_SpawnSingleWayBot(p_Player, p_UseRandomWay, p_ActiveWayInde
 
 	local s_InverseDirection = nil
 
-	-- Meaning: if its not a new bot we do....:
 	if s_Name ~= nil or s_IsRespawn then
 		-- g_Profiler:Start("BotSpawner:SpawnPart2") -- about 60 ms on conquest (close to 0 on deathmatch)
 		if Globals.UsedSpawnMethod == SpawnMethod.Spawn then
@@ -1507,7 +1508,7 @@ function BotSpawner:_SpawnSingleWayBot(p_Player, p_UseRandomWay, p_ActiveWayInde
 		if self:CQMapSupportDynamicVehicleSpawnReinforncments(s_TeamId) then
 			print('Triggering the spawn of a bot for Air Superiority or for DynamicSpawn')
 			-- table.insert(self._TeamDynamicBotsSpawned[s_TeamId], s_Bot)
-			self:_DynamicJetSpawn(s_Bot, s_Name, s_TeamId, s_SquadId)
+			self:_DynamicJetSpawn(p_ExistingBot, s_Name, s_TeamId, s_SquadId)
 			return
 		end
 

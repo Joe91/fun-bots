@@ -1012,6 +1012,20 @@ function Bot:ResetSpawnVars()
 	self._OnSwitch = false
 	self._VehicleMoveWhileShooting = false
 
+	self._VehicleMovableId = -1
+	self._LastVehicleYaw = 0.0
+	self._VehicleReadyToShoot = false
+	self._FullVehicleSteering = false
+	self._VehicleDirBackPositive = false
+	self._JetAbortAttackActive = false
+	self._JetTakeoffActive = false -- Critical for jet takeoff sequence
+
+	-- Reset PID controllers for new vehicle
+	self._Pid_Drv_Yaw:Reset()
+	self._Pid_Drv_Throttle:Reset()
+	self._Pid_Drv_Tilt:Reset()
+	self._Pid_Drv_Roll:Reset()
+
 	self.m_AttackPriority = 1
 	self.m_DelayedInputs = {}
 
@@ -1290,7 +1304,8 @@ function Bot:_EnterVehicleEntity(p_Entity, p_PlayerIsDriver)
 		if s_VehicleData.Type == VehicleTypes.Gunship then
 			seatIndex = seatIndex + 1
 		end
-		if p_Entity:GetPlayerInEntry(seatIndex) == nil or Globals.IsAirSuperiority or (Globals.MapHasDynamiJetSpawns and m_Vehicles:IsVehicleType(s_VehicleData, VehicleTypes.Plane)) then -- already in this seat in air superiority
+		if p_Entity:GetPlayerInEntry(seatIndex) == nil or Globals.IsAirSuperiority or
+			(Globals.MapHasDynamiJetSpawns and m_Vehicles:IsVehicleType(s_VehicleData, VehicleTypes.Plane)) then
 			self.m_Player:EnterVehicle(p_Entity, seatIndex)
 			print('Entered the vehicle : ' .. s_VehicleData.Name .. ' Type: ' .. s_VehicleData.Type .. ' Max entries: ' .. s_MaxEntries .. ' seatIndex: ' .. seatIndex)
 			self._ExitVehicleHealth = PhysicsEntity(p_Entity).internalHealth * (Registry.VEHICLES.VEHICLE_EXIT_HEALTH / 100.0)
