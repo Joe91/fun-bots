@@ -448,3 +448,5 @@ Language:add(code, "Max Raycast Distance for Gunships", "ガンシップのマ�
 Language:add(code, "Meters bots in the Gunship start shooting at players", "ガンシップのメートルボットは、プレイヤーの射撃を開始します")
 Language:add(code, "Keep a Vehicle Seat For Player", "プレイヤー用の車両シートを保管してください")
 Language:add(code, "To keep a vehicle seat for the player always or not (default true)", "プレイヤーのために常に車両シートを保持するかどうか（デフォルトは真）")
+Language:add(code, "Spawn in Transport helicopters and AMTRACs", "輸送ヘリコプターとamtracsに産卵します")
+Language:add(code, "Bots can spawn in Transport helicopters and AMTRACs", "ボットは、輸送ヘリコプターとamtracsで発生する可能性があります")

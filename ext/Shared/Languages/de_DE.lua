@@ -448,3 +448,5 @@ Language:add(code, "Max Raycast Distance for Gunships", "Max Raycast -Entfernung
 Language:add(code, "Meters bots in the Gunship start shooting at players", "Meter Bots im Waffenschiff beginnen auf Spieler zu schießen")
 Language:add(code, "Keep a Vehicle Seat For Player", "Halten Sie einen Fahrzeugsitz für Spieler")
 Language:add(code, "To keep a vehicle seat for the player always or not (default true)", "Um einen Fahrzeugsitz für den Spieler immer oder nicht zu halten (Standard True)")
+Language:add(code, "Spawn in Transport helicopters and AMTRACs", "Laichen in Transporthubschrauber und Amtracs")
+Language:add(code, "Bots can spawn in Transport helicopters and AMTRACs", "Bots können in Transporthubschrauber und Amtracs laichen")

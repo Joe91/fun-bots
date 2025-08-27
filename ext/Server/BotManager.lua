@@ -859,7 +859,7 @@ function BotManager:CreateBot(p_Name, p_TeamId, p_SquadId)
 	local s_Bot = self:GetBotByName(p_Name)
 
 	-- Bot exists, so just reset him.
-	if s_Bot ~= nil and s_Bot.m_Player ~= nil and self._BotInputs[s_Bot.m_Player.id] ~= nil then
+	if s_Bot ~= nil and s_Bot.m_Player ~= nil and s_Bot.m_Player.input ~= nil then
 		s_Bot.m_Player.teamId = p_TeamId
 		s_Bot.m_Player.squadId = p_SquadId
 		s_Bot:ResetVars()

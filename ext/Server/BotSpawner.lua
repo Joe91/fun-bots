@@ -1320,7 +1320,6 @@ function BotSpawner:_SpawnSingleWayBot(p_Player, p_UseRandomWay, p_ActiveWayInde
 
 	local s_InverseDirection = nil
 
-	-- Meaning: if its not a new bot we do....:
 	if s_Name ~= nil or s_IsRespawn then
 		-- g_Profiler:Start("BotSpawner:SpawnPart2") -- about 60 ms on conquest (close to 0 on deathmatch)
 		if Globals.UsedSpawnMethod == SpawnMethod.Spawn then

@@ -191,6 +191,8 @@ Language:add(code, "Max Distance Auto-AA", "")
 Language:add(code, "Max Range of Stationary AA", "")
 Language:add(code, "Enable vehicle paradrop", "")
 Language:add(code, "Bots can spawn on vehicles inside C-130 gunship", "")
+Language:add(code, "Spawn in Transport helicopters and AMTRACs", "")
+Language:add(code, "Bots can spawn in Transport helicopters and AMTRACs", "")
 
 -- WEAPONS
 Language:add(code, "Random Weapon usage", "")
