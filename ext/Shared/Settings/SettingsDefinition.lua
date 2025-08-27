@@ -482,6 +482,17 @@ SettingsDefinition = {
 			UpdateFlag = UpdateFlag.None,
 			Category = "SPAWN"
 		},
+		{
+			Name = "KeepVehicleSeatForPlayer",
+			Text = "Keep a Vehicle Seat For Player",
+			---@type Type|integer
+			Type = Type.Boolean,
+			Value = Config.KeepVehicleSeatForPlayer,
+			Description = "To keep a vehicle seat for the player always or not (default true)",
+			Default = true,
+			UpdateFlag = UpdateFlag.None,
+			Category = "SPAWN"
+		},
 
 		-- Spawn limits.
 		{
@@ -998,7 +1009,7 @@ SettingsDefinition = {
 			Value = Config.MaxShootDistanceGunship,
 			Description = "Meters bots in the Gunship start shooting at players",
 			Reference = Range(1.00, 2000.00, 5.0),
-			Default = 700,
+			Default = 1000,
 			UpdateFlag = UpdateFlag.None,
 			Category = "VEHICLE"
 		},
@@ -1080,6 +1091,17 @@ SettingsDefinition = {
 			Value = Config.EnableParadrop,
 			Description = "Bots can spawn on vehicles inside C-130 gunship",
 			Default = false,
+			UpdateFlag = UpdateFlag.None,
+			Category = "VEHICLE"
+		},
+		{
+			Name = "SpawnInMobileRespawnVehicles",
+			Text = "Spawn in Transport helicopters and AMTRACs",
+			---@type Type|integer
+			Type = Type.Boolean,
+			Value = Config.SpawnInMobileRespawnVehicles,
+			Description = "Bots can spawn in Transport helicopters and AMTRACs",
+			Default = true,
 			UpdateFlag = UpdateFlag.None,
 			Category = "VEHICLE"
 		},

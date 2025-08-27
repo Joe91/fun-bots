@@ -446,3 +446,7 @@ Language:add(code, "Max Shoot Distance Air Missiles", "Missiles d'air de distanc
 Language:add(code, "Meters before bots will start shooting with stingers", "Mètres avant que les bots commencent à tirer avec des Stingers")
 Language:add(code, "Max Raycast Distance for Gunships", "Distance Max Raycast pour les hélicoptères de combat")
 Language:add(code, "Meters bots in the Gunship start shooting at players", "Les bots de mètres dans le navire de combat commencent à tirer sur les joueurs")
+Language:add(code, "Keep a Vehicle Seat For Player", "Gardez un siège de véhicule pour le joueur")
+Language:add(code, "To keep a vehicle seat for the player always or not (default true)", "Pour garder un siège de véhicule pour le joueur toujours ou non (par défaut vrai)")
+Language:add(code, "Spawn in Transport helicopters and AMTRACs", "Spawn in Transport Helicopters and Amtracs")
+Language:add(code, "Bots can spawn in Transport helicopters and AMTRACs", "Les bots peuvent apparaître dans les hélicoptères de transport et les amtracs")

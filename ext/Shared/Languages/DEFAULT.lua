@@ -81,6 +81,8 @@ Language:add(code, "Additional Spawn Delay", "")
 Language:add(code, "Additional time a bot waits to respawn", "")
 Language:add(code, "Bot Health at spawn", "")
 Language:add(code, "Max health of bot (default 100.0)", "")
+Language:add(code, "Keep a Vehicle Seat For Player", "")
+Language:add(code, "To keep a vehicle seat for the player always or not (default true)", "")
 
 -- SPAWNLIMITS
 Language:add(code, "Max Bots Per Team (default)", "")
@@ -189,6 +191,8 @@ Language:add(code, "Max Distance Auto-AA", "")
 Language:add(code, "Max Range of Stationary AA", "")
 Language:add(code, "Enable vehicle paradrop", "")
 Language:add(code, "Bots can spawn on vehicles inside C-130 gunship", "")
+Language:add(code, "Spawn in Transport helicopters and AMTRACs", "")
+Language:add(code, "Bots can spawn in Transport helicopters and AMTRACs", "")
 
 -- WEAPONS
 Language:add(code, "Random Weapon usage", "")

@@ -12,6 +12,10 @@ local m_BotCreator = require('BotCreator')
 local m_Logger = Logger("BotManager", Debug.Server.BOT)
 
 function BotManager:__init()
+	self:RegisterVars()
+end
+
+function BotManager:RegisterVars()
 	---@type Bot[]
 	self._Bots = {}
 	---@type table<string, Bot>
@@ -53,10 +57,6 @@ function BotManager:__init()
 	self._InitDone = false
 
 	-- update-timers
-	self._UpdateTimerL1 = 0.0
-	self._UpdateTimerL2 = 0.0
-	self._UpdateTimerL3 = 0.0
-	--
 	self._CycleTimeL0 = 1.0 / SharedUtils:GetTickrate()
 	self._RatioL0L1 = math.floor(Registry.BOT.BOT_FAST_UPDATE_CYCLE / self._CycleTimeL0) + 1
 	self._RatioL0L2 = math.floor(Registry.BOT.BOT_UPDATE_CYCLE / self._CycleTimeL0) + 1
@@ -84,9 +84,33 @@ end
 function BotManager:OnLevelDestroy()
 	m_Logger:Write("destroyLevel")
 
-	self:ResetAllBots()
-	self._ActivePlayers = {}
+	-- TODO: Alternative by Beschützer:
+	-- self:DestroyAll(nil, nil, true)
+	-- self:RegisterVars()
+
+	-- close to original behaviour, but maybe improved
 	self._InitDone = false
+	self:ResetAllBots()
+
+
+	-- self._BotInputs = {} -- TODO: maybe clear those and fill them again?
+	self._ActivePlayers = {}
+	self._BotAttackBotTimer = 0.0
+	self._BotReviveBotTimer = 0.0
+	self._DestroyBotsTimer = 0.0
+	self._BotsToDestroy = {}
+	self._BotBotAttackList = {}
+	self._BotBotReviveList = {}
+	self._RaycastsPerActivePlayer = 0
+	self._BotCheckState = {}
+	self._ConnectionCheckState = {}
+	self._LastBotCheckIndex = 1
+	self._LastPlayerCheckIndex = 1
+
+	-- reset-timers
+	self._L0Counter = 0
+	self._L1Counter = 0
+	self._L2Counter = 0
 end
 
 ---@param p_Bots Bot[]
@@ -114,9 +138,9 @@ function BotManager:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 		return
 	end
 
-	-- if not self._InitDone then
-	-- 	return -- TODO: Use this or not?
-	-- end
+	if not self._InitDone then
+		return
+	end
 
 	local s_BotCount = #self._Bots
 	if s_BotCount <= 0 then
@@ -147,7 +171,7 @@ function BotManager:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 
 
 	-- other checks and stuff
-	if Config.BotsAttackBots and self._InitDone then
+	if Config.BotsAttackBots then
 		if self._BotAttackBotTimer >= Registry.GAME_RAYCASTING.BOT_BOT_CHECK_INTERVAL then
 			self._BotAttackBotTimer = 0.0
 			self:_CheckForBotBotAttack()
@@ -157,7 +181,6 @@ function BotManager:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 	end
 
 	if Config.BotsReviveBots
-		and self._InitDone
 		and not Globals.IsGm
 	then
 		if self._BotReviveBotTimer >= Registry.GAME_RAYCASTING.BOT_BOT_REVICE_INTERVAL then
@@ -836,7 +859,7 @@ function BotManager:CreateBot(p_Name, p_TeamId, p_SquadId)
 	local s_Bot = self:GetBotByName(p_Name)
 
 	-- Bot exists, so just reset him.
-	if s_Bot ~= nil then
+	if s_Bot ~= nil and s_Bot.m_Player ~= nil and s_Bot.m_Player.input ~= nil then
 		s_Bot.m_Player.teamId = p_TeamId
 		s_Bot.m_Player.squadId = p_SquadId
 		s_Bot:ResetVars()

@@ -47,6 +47,7 @@ Config = {
 	MaxReconBots = -1,					-- Maximum number of Bots with Recon Kit. -1 = no limit 
 	AdditionalBotSpawnDelay = 0.5,		-- Additional time a bot waits to respawn 
 	BotMaxHealth = 100.0,				-- Max health of bot (default 100.0) 
+	KeepVehicleSeatForPlayer = true,	-- To keep a vehicle seat for the player always or not (default true) 
 
 	-- SPAWNLIMITS 
 	MaxBotsPerTeamDefault = 32,			-- Max number of bots in one team, if no other mode fits 
@@ -96,7 +97,7 @@ Config = {
 	FovVerticleChopperForShooting = 80,	-- Degrees of pitch a chopper attacks 
 	FovVehicleAAForShooting = 360,		-- Degrees of FOV of AA - Vehicles 
 	FovVerticleVehicleAAForShooting = 160,	-- Degrees of FOV of AA - Vehicles 
-	MaxShootDistanceGunship = 700,		-- Meters bots in the Gunship start shooting at players 
+	MaxShootDistanceGunship = 1000,		-- Meters bots in the Gunship start shooting at players 
 	MaxShootDistanceVehicles = 375,		-- Meters bots in Vehicles start shooting at players 
 	MaxShootDistanceNoAntiAir = 175,	-- Meters bots in vehicle (no Anti-Air) starts shooting at players 
 	VehicleWaitForPassengersTime = 7.0,	-- Seconds to wait for other passengers 
@@ -104,6 +105,7 @@ Config = {
 	AABots = false,						-- Enable Auto-AA by NyScorpy 
 	MaxDistanceAABots = 375,			-- Max Range of Stationary AA 
 	EnableParadrop = false,				-- Bots can spawn on vehicles inside C-130 gunship 
+	SpawnInMobileRespawnVehicles = true,	-- Bots can spawn in Transport helicopters and AMTRACs 
 
 	-- WEAPONS 
 	UseRandomWeapon = true,				-- Use a random weapon out of the Weapon Set 

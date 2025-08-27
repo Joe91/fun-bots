@@ -241,7 +241,7 @@ VehicleData = {
 	-- Light Vehicle
 	["AAV-7A1"] = {
 		Name = "[AAV-7A1 AMTRAC]",
-		Type = VehicleTypes.LightVehicle,
+		Type = VehicleTypes.AMTRAC,
 		Terrain = VehicleTerrains.Amphibious,
 		Parts = { -1, 23, -1, -1, -1, -1 },
 		Speed = { 600, 80, 600, 600, 600, 600 },
@@ -439,7 +439,7 @@ VehicleData = {
 	},
 	["Ka-60"] = {
 		Name = "[KA-60 KASATKA]",
-		Type = VehicleTypes.Chopper,
+		Type = VehicleTypes.TransportChopper,
 		Terrain = VehicleTerrains.Air,
 		Parts = { -1, 18, 15, -1, -1 },
 		Speed = { 350, 900, 900, 350, 350 },
@@ -458,7 +458,7 @@ VehicleData = {
 	},
 	["Venom"] = {
 		Name = "[UH-1Y VENOM]",
-		Type = VehicleTypes.Chopper,
+		Type = VehicleTypes.TransportChopper,
 		Terrain = VehicleTerrains.Air,
 		Parts = { -1, 19, 16, -1, -1 },
 		Speed = { 350, 900, 900, 350, 350 },
@@ -467,7 +467,7 @@ VehicleData = {
 	},
 	["Venom_coop"] = {
 		Name = "[UH-1Y VENOM]",
-		Type = VehicleTypes.Chopper,
+		Type = VehicleTypes.TransportChopper,
 		Terrain = VehicleTerrains.Air,
 		Parts = { -1, 19, 16, -1, -1 },
 		Speed = { 350, 900, 900, 350, 350 },
@@ -548,13 +548,13 @@ VehicleData = {
 	["SkidLoader"] = { Name = "[SKID LOADER]", Type = VehicleTypes.NoArmorVehicle, Terrain = VehicleTerrains.Land, Parts = {} },
 
 	["C130"] = {
-		Name = "[GUNSHIP]",
-		Type = VehicleTypes.Gunship,
+		Name = "[UNARMED_GUNSHIP]",
+		Type = VehicleTypes.UnarmedGunship,
 		Terrain = VehicleTerrains.Air,
-		Parts = { -1, { 1, 3 }, { 0, 2 } },
-		Speed = { 300, { 600, 900 }, { 250, 900 } },
-		Drop = { 0.0, { 0.0, 0.0 }, { 0.0, 0.0 } },
-		RotationOffset = { Vec3(0, 0, 0), { Vec3(math.pi / 2, 0.52, 0), Vec3(math.pi / 2, 0, 0) }, { Vec3(math.pi / 2, 0.375, 0), Vec3(math.pi / 2, 0, 0) } } -- use yaw and pitch as offset here
+		Parts = { -1, },
+		Speed = { 300 },
+		Drop = { 0.0, },
+		RotationOffset = { Vec3(0, 0, 0) }
 	},
 	["AC130"] = {
 		Name = "[GUNSHIP]",
