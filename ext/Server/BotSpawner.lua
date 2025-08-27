@@ -1374,6 +1374,11 @@ function BotSpawner:_SpawnSingleWayBot(p_Player, p_UseRandomWay, p_ActiveWayInde
 							break
 						end
 					end
+				elseif s_SpawnPoint == "SpawnAtMobileVehicle" then
+					local s_Vehicles = g_GameDirector:GetMobileRespawnVehicles(s_TeamId)
+					if #s_Vehicles > 0 then
+						s_SpawnEntity = s_Vehicles[1]
+					end
 				elseif s_SpawnPoint == "SpawnInAa" then
 					local s_StationaryAas = g_GameDirector:GetStationaryAas(s_TeamId)
 
@@ -1596,6 +1601,27 @@ function BotSpawner:_GetSpawnPoint(p_TeamId, p_SquadId)
 
 	if Config.UseVehicles and self._DelayDirectSpawn <= 0.0 and #g_GameDirector:GetSpawnableVehicle(p_TeamId) > 0 then
 		return "SpawnAtVehicle"
+	end
+
+	if Config.UseVehicles and Config.SpawnInMobileRespawnVehicles then
+		local s_Vehicles = g_GameDirector:GetMobileRespawnVehicles(p_TeamId)
+		if #s_Vehicles > 0 then
+			local s_ProbabilityToSpawn = 0 -- percents
+
+			if Globals.IsConquest then
+				local s_CaptureStats = g_GameDirector:CapturePointStats()
+				local s_TotalCapturePoints = #s_CaptureStats.all
+				local s_Captured = #s_CaptureStats.captured[p_TeamId]
+				-- 100% if 0 flags captured, 10% if all flags captured
+				s_ProbabilityToSpawn = (-90 / s_TotalCapturePoints) * s_Captured + 100
+			else
+				s_ProbabilityToSpawn = 30
+			end
+
+			if m_Utilities:CheckProbablity(s_ProbabilityToSpawn) then
+				return "SpawnAtMobileVehicle"
+			end
+		end
 	end
 
 	if Config.AABots and #g_GameDirector:GetStationaryAas(p_TeamId) > 0 then

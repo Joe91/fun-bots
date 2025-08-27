@@ -28,6 +28,7 @@ function GameDirector:RegisterVars()
 
 	self.m_SpawnableStationaryAas = {}
 	self.m_SpawnableVehicles = {}
+	self.m_MobileRespawnVehicles = {}
 	self.m_AvailableVehicles = {}
 	self.m_Beacons = {}
 	self.m_Gunship = nil
@@ -57,6 +58,7 @@ function GameDirector:OnLevelLoaded()
 
 	for i = 0, Globals.NrOfTeams do
 		self.m_SpawnableVehicles[i] = {}
+		self.m_MobileRespawnVehicles[i] = {}
 		self.m_SpawnableStationaryAas[i] = {}
 		self.m_AvailableVehicles[i] = {}
 	end
@@ -560,6 +562,19 @@ function GameDirector:GetSpawnableVehicle(p_TeamId)
 	return spawnableVehiclesForTeamID
 end
 
+function GameDirector:GetMobileRespawnVehicles(p_TeamId)
+	local s_Vehicles = {}
+
+	for l_Index = 1, #self.m_MobileRespawnVehicles[p_TeamId] do
+		local l_Vehicle = self.m_MobileRespawnVehicles[p_TeamId][l_Index]
+		if l_Vehicle ~= nil and m_Vehicles:GetNrOfFreeSeats(l_Vehicle, false) > 0 then
+			s_Vehicles[#s_Vehicles + 1] = l_Vehicle
+		end
+	end
+
+	return s_Vehicles
+end
+
 function GameDirector:GetStationaryAas(p_TeamId)
 	return self.m_SpawnableStationaryAas[p_TeamId]
 end
@@ -575,7 +590,7 @@ function GameDirector:ReturnStationaryAaEntity(p_ControllableEntity, p_TeamId)
 			return
 		end
 	end
-	self.m_SpawnableStationaryAas[p_TeamId][#self.m_SpawnableStationaryAas[p_TeamId] + 1] = p_ControllableEntity
+	self:AddEntityToVehicleCollection(self.m_SpawnableStationaryAas, p_TeamId, p_ControllableEntity)
 end
 
 function GameDirector:GetGadgetOwner(p_Entity)
@@ -671,7 +686,7 @@ function GameDirector:OnVehicleSpawnDone(p_Entity)
 				end
 			end
 			if s_ClosestTeam then
-				self.m_SpawnableVehicles[s_ClosestTeam][#self.m_SpawnableVehicles[s_ClosestTeam] + 1] = p_Entity
+				self:AddEntityToVehicleCollection(self.m_SpawnableVehicles, s_ClosestTeam, p_Entity)
 			end
 		end
 		return
@@ -682,21 +697,21 @@ function GameDirector:OnVehicleSpawnDone(p_Entity)
 	if s_Objective ~= nil then
 		-- don't make this dependant of the nodes
 		if s_Objective.isSpawnPath then
-			self.m_SpawnableVehicles[s_Objective.team][#self.m_SpawnableVehicles[s_Objective.team] + 1] = p_Entity
+			self:AddEntityToVehicleCollection(self.m_SpawnableVehicles, s_Objective.team, p_Entity)
 		else
-			self.m_AvailableVehicles[s_Objective.team][#self.m_AvailableVehicles[s_Objective.team] + 1] = p_Entity
+			self:AddEntityToVehicleCollection(self.m_AvailableVehicles, s_Objective.team, p_Entity)
 		end
 	else
 		if Config.EnableParadrop and self.m_Gunship ~= nil and m_Vehicles:IsVehicleType(self.m_Gunship.Data, VehicleTypes.UnarmedGunship) then
 			if p_Entity.transform.trans.y > self.m_Gunship.Entity.transform.trans.y then
 				m_Logger:Write("Add spawnable vehicle at gunship: " .. s_VehicleData.Name)
-				self.m_SpawnableVehicles[self.m_Gunship.Team][#self.m_SpawnableVehicles[self.m_Gunship.Team] + 1] = p_Entity
+				self:AddEntityToVehicleCollection(self.m_SpawnableVehicles, self.m_Gunship.Team, p_Entity)
 			end
 		end
 	end
 
 	if m_Vehicles:IsVehicleType(s_VehicleData, VehicleTypes.StationaryAA) then
-		self.m_SpawnableStationaryAas[s_VehicleData.Team][#self.m_SpawnableStationaryAas[s_VehicleData.Team] + 1] = p_Entity
+		self:AddEntityToVehicleCollection(self.m_SpawnableStationaryAas, s_VehicleData.Team, p_Entity)
 	end
 
 	if m_Vehicles:IsGunship(s_VehicleData)
@@ -754,28 +769,11 @@ function GameDirector:OnVehicleUnspawn(p_Entity, p_VehiclePoints, p_HotTeam)
 
 	for l_Team = TeamId.Team1, Globals.NrOfTeams do
 		if m_Vehicles:IsVehicleType(s_VehicleData, VehicleTypes.StationaryAA) then
-			for l_Index = 1, #self.m_SpawnableStationaryAas[l_Team] do
-				local l_Entity = self.m_SpawnableStationaryAas[l_Team][l_Index]
-				if (l_Entity.uniqueId == p_Entity.uniqueId) and (l_Entity.instanceId == p_Entity.instanceId) then
-					table.remove(self.m_SpawnableStationaryAas[l_Team], l_Index)
-					break -- should only happen once
-				end
-			end
+			self:RemoveEntityFromVehicleCollection(self.m_SpawnableStationaryAas, l_Team, p_Entity)
 		else
-			for l_Index = 1, #self.m_SpawnableVehicles[l_Team] do
-				local l_Entity = self.m_SpawnableVehicles[l_Team][l_Index]
-				if (l_Entity.uniqueId == p_Entity.uniqueId) and (l_Entity.instanceId == p_Entity.instanceId) then
-					table.remove(self.m_SpawnableVehicles[l_Team], l_Index)
-					break -- should only happen once
-				end
-			end
-			for l_Index = 1, #self.m_AvailableVehicles[l_Team] do
-				local l_Entity = self.m_AvailableVehicles[l_Team][l_Index]
-				if (l_Entity.uniqueId == p_Entity.uniqueId) and (l_Entity.instanceId == p_Entity.instanceId) then
-					table.remove(self.m_AvailableVehicles[l_Team], l_Index)
-					break -- should only happen once
-				end
-			end
+			self:RemoveEntityFromVehicleCollection(self.m_SpawnableVehicles, l_Team, p_Entity)
+			self:RemoveEntityFromVehicleCollection(self.m_AvailableVehicles, l_Team, p_Entity)
+			self:RemoveEntityFromVehicleCollection(self.m_MobileRespawnVehicles, l_Team, p_Entity)
 		end
 	end
 end
@@ -793,6 +791,12 @@ function GameDirector:OnVehicleExit(p_VehicleEntity, p_Player)
 		if m_Vehicles:IsVehicleType(s_VehicleData, VehicleTypes.StationaryAA) then
 			self:ReturnStationaryAaEntity(p_VehicleEntity, p_Player.teamId)
 		end
+
+		if m_Vehicles:IsMobileRespawnVehicle(s_VehicleData)
+			and m_Vehicles:IsEmpty(p_VehicleEntity)
+		then
+			self:RemoveEntityFromVehicleCollection(self.m_MobileRespawnVehicles, p_Player.teamId, p_VehicleEntity)
+		end
 	end
 end
 
@@ -804,29 +808,20 @@ function GameDirector:OnVehicleEnter(p_Entity, p_Player)
 	local s_VehicleData = m_Vehicles:GetVehicleByEntity(p_Entity)
 
 	if s_VehicleData ~= nil then
+		local l_Team = p_Player.teamId
+
 		if m_Vehicles:IsVehicleType(s_VehicleData, VehicleTypes.StationaryAA) then
-			for l_Index = 1, #self.m_SpawnableStationaryAas[p_Player.teamId] do
-				local l_Entity = self.m_SpawnableStationaryAas[p_Player.teamId][l_Index]
-				if (l_Entity.uniqueId == p_Entity.uniqueId) and (l_Entity.instanceId == p_Entity.instanceId) then
-					table.remove(self.m_SpawnableStationaryAas[p_Player.teamId], l_Index)
-					break -- should only happen once
-				end
+			self:RemoveEntityFromVehicleCollection(self.m_SpawnableStationaryAas, l_Team, p_Entity)
+		elseif m_Vehicles:IsMobileRespawnVehicle(s_VehicleData) then
+			self:RemoveEntityFromVehicleCollection(self.m_SpawnableVehicles, l_Team, p_Entity)
+			self:RemoveEntityFromVehicleCollection(self.m_AvailableVehicles, l_Team, p_Entity)
+
+			if not self:IsEntityInVehicleCollection(self.m_MobileRespawnVehicles, l_Team, p_Entity) then
+				self:AddEntityToVehicleCollection(self.m_MobileRespawnVehicles, l_Team, p_Entity)
 			end
 		else
-			for l_Index = 1, #self.m_SpawnableVehicles[p_Player.teamId] do
-				local l_Entity = self.m_SpawnableVehicles[p_Player.teamId][l_Index]
-				if (l_Entity.uniqueId == p_Entity.uniqueId) and (l_Entity.instanceId == p_Entity.instanceId) then
-					table.remove(self.m_SpawnableVehicles[p_Player.teamId], l_Index)
-					break -- should only happen once
-				end
-			end
-			for l_Index = 1, #self.m_AvailableVehicles[p_Player.teamId] do
-				local l_Entity = self.m_AvailableVehicles[p_Player.teamId][l_Index]
-				if (l_Entity.uniqueId == p_Entity.uniqueId) and (l_Entity.instanceId == p_Entity.instanceId) then
-					table.remove(self.m_AvailableVehicles[p_Player.teamId], l_Index)
-					break -- should only happen once
-				end
-			end
+			self:RemoveEntityFromVehicleCollection(self.m_SpawnableVehicles, l_Team, p_Entity)
+			self:RemoveEntityFromVehicleCollection(self.m_AvailableVehicles, l_Team, p_Entity)
 		end
 	end
 
@@ -902,6 +897,29 @@ function GameDirector:GetAllCapturePoints()
 	return self._AllCapturePoints
 end
 
+function GameDirector:CapturePointStats()
+	local s_Stats = {}
+	s_Stats["captured"] = {}
+	s_Stats["neutral"] = {}
+	s_Stats["all"] = self._AllCapturePoints
+
+	s_Stats.captured[TeamId.Team1] = {}
+	s_Stats.captured[TeamId.Team2] = {}
+
+	for l_Index = 1, #self._AllCapturePoints do
+		local l_CapturePoint = self._AllCapturePoints[l_Index]
+
+		if l_CapturePoint.team == TeamId.TeamNeutral then
+			s_Stats.neutral[#s_Stats.neutral + 1] = l_CapturePoint
+		else
+			local s_TeamCaptured = s_Stats.captured[l_CapturePoint.team]
+			s_TeamCaptured[#s_TeamCaptured + 1] = l_CapturePoint
+		end
+	end
+
+	return s_Stats
+end
+
 function GameDirector:GetActiveMcomPositions()
 	local s_Positions = {}
 
@@ -915,6 +933,42 @@ function GameDirector:GetActiveMcomPositions()
 	end
 
 	return s_Positions
+end
+
+---@param p_Collection table
+---@param p_Team integer
+---@param p_Entity ControllableEntity|Entity
+function GameDirector:AddEntityToVehicleCollection(p_Collection, p_Team, p_Entity)
+	p_Collection[p_Team][#p_Collection[p_Team] + 1] = p_Entity
+end
+
+---@param p_Collection table
+---@param p_Team integer
+---@param p_Entity ControllableEntity|Entity
+function GameDirector:RemoveEntityFromVehicleCollection(p_Collection, p_Team, p_Entity)
+	for l_Index = 1, #p_Collection[p_Team] do
+		local l_Entity = p_Collection[p_Team][l_Index]
+
+		if (l_Entity.uniqueId == p_Entity.uniqueId) and (l_Entity.instanceId == p_Entity.instanceId) then
+			table.remove(p_Collection[p_Team], l_Index)
+			break -- should only happen once
+		end
+	end
+end
+
+---@param p_Collection table
+---@param p_Team integer
+---@param p_Entity ControllableEntity|Entity
+function GameDirector:IsEntityInVehicleCollection(p_Collection, p_Team, p_Entity)
+	for l_Index = 1, #p_Collection[p_Team] do
+		local l_Entity = p_Collection[p_Team][l_Index]
+
+		if (l_Entity.uniqueId == p_Entity.uniqueId) and (l_Entity.instanceId == p_Entity.instanceId) then
+			return true
+		end
+	end
+
+	return false
 end
 
 ---@param p_Point table

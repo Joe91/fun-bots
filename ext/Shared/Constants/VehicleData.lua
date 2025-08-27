@@ -241,7 +241,7 @@ VehicleData = {
 	-- Light Vehicle
 	["AAV-7A1"] = {
 		Name = "[AAV-7A1 AMTRAC]",
-		Type = VehicleTypes.LightVehicle,
+		Type = VehicleTypes.AMTRAC,
 		Terrain = VehicleTerrains.Amphibious,
 		Parts = { -1, 23, -1, -1, -1, -1 },
 		Speed = { 600, 80, 600, 600, 600, 600 },
