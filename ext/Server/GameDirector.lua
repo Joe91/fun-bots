@@ -40,6 +40,7 @@ function GameDirector:RegisterVars()
 
 	self._AllCapturePoints = {}
 	self._McomPositions = {}
+	self._AllBases = {}
 end
 
 -- =============================================
@@ -670,18 +671,33 @@ function GameDirector:OnVehicleSpawnDone(p_Entity)
 
 	-- spawn directly into jets
 	if m_Vehicles:IsVehicleType(s_VehicleData, VehicleTypes.Plane) then
-		-- find closest spawn --> team of jet
-		if self._AllCapturePoints then
+		-- find closest base or caputre-point --> team of jet
+		if self._AllBases then
 			local s_ClosestDistance = nil
 			local s_ClosestTeam = nil
 
-			for l_Index = 1, #self._AllCapturePoints do
-				local l_CapturePoint = self._AllCapturePoints[l_Index]
-				if l_CapturePoint.team ~= TeamId.TeamNeutral then
-					local s_Distance = l_CapturePoint.transform.trans:Distance(p_Entity.transform.trans)
+			-- try bases first
+			for l_Index = 1, #self._AllBases do
+				local l_BaseCapturePoint = self._AllBases[l_Index]
+				if l_BaseCapturePoint.team ~= TeamId.TeamNeutral then
+					local s_Distance = l_BaseCapturePoint.transform.trans:Distance(p_Entity.transform.trans)
 					if s_ClosestDistance == nil or s_ClosestDistance > s_Distance then
 						s_ClosestDistance = s_Distance
-						s_ClosestTeam = l_CapturePoint.team
+						s_ClosestTeam = l_BaseCapturePoint.team
+					end
+				end
+			end
+
+			-- then also consider other capture points
+			if self._AllCapturePoints then
+				for l_Index = 1, #self._AllCapturePoints do
+					local l_CapturePoint = self._AllCapturePoints[l_Index]
+					if l_CapturePoint.team ~= TeamId.TeamNeutral then
+						local s_Distance = l_CapturePoint.transform.trans:Distance(p_Entity.transform.trans)
+						if s_ClosestDistance == nil or s_ClosestDistance > s_Distance then
+							s_ClosestDistance = s_Distance
+							s_ClosestTeam = l_CapturePoint.team
+						end
 					end
 				end
 			end
@@ -1847,6 +1863,7 @@ end
 
 function GameDirector:_InitFlagTeams()
 	self._AllCapturePoints = {}
+	self._AllBases = {}
 	if not Globals.IsConquest then -- Valid for all Conquest-types. TODO: check for rush?
 		return
 	end
@@ -1860,6 +1877,8 @@ function GameDirector:_InitFlagTeams()
 
 		if string.sub(s_Entity.name, -2) ~= "HQ" then
 			self._AllCapturePoints[#self._AllCapturePoints + 1] = s_Entity
+		else
+			self._AllBases[#self._AllBases + 1] = s_Entity
 		end
 
 		s_Entity = s_Iterator:Next()
