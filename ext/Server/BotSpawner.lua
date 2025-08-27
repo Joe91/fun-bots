@@ -1328,9 +1328,9 @@ function BotSpawner:_SpawnSingleWayBot(p_Player, p_UseRandomWay, p_ActiveWayInde
 
 	-- Meaning: if its not a new bot we do....:
 	if s_Name ~= nil or s_IsRespawn then
-		local s_Bot = self:GetBot(p_ExistingBot, s_Name, s_TeamId, s_SquadId)
 		-- g_Profiler:Start("BotSpawner:SpawnPart2") -- about 60 ms on conquest (close to 0 on deathmatch)
 		if Globals.UsedSpawnMethod == SpawnMethod.Spawn then
+			local s_Bot = self:GetBot(p_ExistingBot, s_Name, s_TeamId, s_SquadId)
 			if s_Bot == nil then
 				return
 			end
@@ -1341,7 +1341,9 @@ function BotSpawner:_SpawnSingleWayBot(p_Player, p_UseRandomWay, p_ActiveWayInde
 			self._BotsWithoutPath[#self._BotsWithoutPath + 1] = s_Bot
 			return
 		end
+
 		if self:CQMapSupportDynamicVehicleSpawnReinforncments(s_TeamId) then
+			local s_Bot = self:GetBot(p_ExistingBot, s_Name, s_TeamId, s_SquadId)
 			if self:_DynamicJetSpawn(s_Bot, s_Name, s_TeamId, s_SquadId) then
 				return
 			end
@@ -1557,9 +1559,8 @@ function BotSpawner:_GetSpecialSpawnEnity(p_Bot, p_TeamId)
 		return "SpawnInAa", g_GameDirector:GetStationaryAas(p_TeamId)[1]
 	end
 
-	-- Gunships disabled for now! TODO: enable gunship again, once server-cameras are supported for aiming
 	local s_Gunship = g_GameDirector:GetGunship(p_TeamId)
-	if s_Gunship then -- TODO: Remove "false", once the aiming works
+	if s_Gunship then
 		local s_SeatsLeft = false
 		for i = 1, s_Gunship.entryCount - 1 do
 			if s_Gunship:GetPlayerInEntry(i) == nil then
