@@ -1302,9 +1302,6 @@ function Bot:_EnterVehicleEntity(p_Entity, p_PlayerIsDriver)
 	if s_VehicleData.Type == VehicleTypes.Tank then
 		s_MaxEntries = 2
 	end
-	if s_VehicleData.Type == VehicleTypes.TransportChopper then
-		s_MaxEntries = 3
-	end
 	if s_VehicleData.Type == VehicleTypes.UnarmedGunship then
 		s_MaxEntries = 0
 	end
