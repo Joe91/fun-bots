@@ -26,7 +26,7 @@ end
 
 ---@param p_Player Player
 function Vehicles:GetVehicleName(p_Player)
-	if p_Player.controlledControllable and not p_Player.controlledControllable:Is("ServerSoldierEntity") then
+	if p_Player and p_Player.controlledControllable and not p_Player.controlledControllable:Is("ServerSoldierEntity") then
 		return VehicleEntityData(p_Player.controlledControllable.data).controllableType:gsub(".+/.+/", "")
 	else
 		return nil

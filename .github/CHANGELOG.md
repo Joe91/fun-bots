@@ -29,6 +29,11 @@ This is the changelog for the version V3.0 Don't forget to [join us on Discord](
 * Better distance-handling for attack
 * Registry-Option to still spawn bots on the last tickets added
 * passengers now exit when close to objective in some vehicles (by ThyKingdomCome)
+* Spawn of bots in AMTRAC and Transport-Choppters (by ThyKingdomCome)
+* Option to disable KeepVehicleSeatForPlayer (by MatiasPastori)
+* Registry-Option to USE_EXPERIMENTAL_NAMETAGS (by MatiasPastori)
+* Bots don't use 3rd seat of Tanks anymore (by MatiasPastori)
+* Support for dynamic-jet-spawn (by MatiasPastori)
 
 ### some open TODOs:
 * rework of raycasts for better performance
@@ -49,6 +54,7 @@ This is the changelog for the version V3.0 Don't forget to [join us on Discord](
 * fix refill of rockets
 * fix keep same bot-players
 * fix air-vehicles attacking bases (by ThyKingdomCome)
+* fix Bots trying to spawn in unarmed Gunships (by MatiasPastori)
 
 ### New maps
 * 

@@ -59,11 +59,10 @@ end
 
 ---@param p_Round integer
 function BotSpawner:OnLevelLoaded(p_Round)
-	s_CurrentGameMode = SharedUtils:GetCurrentGameMode()
+	local s_CurrentGameMode = SharedUtils:GetCurrentGameMode()
 	if (Globals.LevelName == "XP5_002" or Globals.LevelName == "XP5_004") and s_CurrentGameMode:match("Conquest") then
 		print('Enabling dynamic jets to spawn.')
 		Globals.MapHasDynamiJetSpawns = true
-		-- self:_DynamicVehicleSpawn()
 	else
 		Globals.MapHasDynamiJetSpawns = false
 	end
@@ -179,10 +178,6 @@ function BotSpawner:OnEngineUpdate(p_DeltaTime, p_SimulationDeltaTime)
 
 			if l_Bot.m_Player.soldier ~= nil then
 				local s_String, s_SpawnEntity = self:_GetSpecialSpawnEnity(l_Bot, l_Bot.m_Player.teamId)
-				if Globals.MapHasDynamiJetSpawns and s_SpawnEntity and s_SpawnEntity:Is("ServerSoldierEntity") then -- TODO: is this really the inteded behavior?
-					-- l_Bot:Kill() TODO: what to do here?
-					goto continue
-				end
 				if s_SpawnEntity then
 					table.remove(self._BotsWithoutPath, l_Index)
 					l_Bot:SetVarsWay(nil, true, 0, 0, false)
@@ -250,7 +245,6 @@ function BotSpawner:OnEngineUpdate(p_DeltaTime, p_SimulationDeltaTime)
 					break
 				end
 			end
-			::continue::
 		end
 		-- g_Profiler:End("BotSpawner:AfterSpawn")
 	end
@@ -1342,6 +1336,7 @@ function BotSpawner:_SpawnSingleWayBot(p_Player, p_UseRandomWay, p_ActiveWayInde
 			return
 		end
 
+		-- special handling for dynamic jet spawns on conquest maps that support it
 		if self:CQMapSupportDynamicVehicleSpawnReinforncments(s_TeamId) then
 			local s_Bot = self:GetBot(p_ExistingBot, s_Name, s_TeamId, s_SquadId)
 			if self:_DynamicJetSpawn(s_Bot, s_Name, s_TeamId, s_SquadId) then
@@ -1628,9 +1623,8 @@ function BotSpawner:_GetSpawnPoint(p_TeamId, p_SquadId)
 		return "SpawnInAa"
 	end
 
-	-- Gunships disabled for now! TODO: enable gunship again, once server-cameras are supported for aiming
 	local s_Gunship = g_GameDirector:GetGunship(p_TeamId)
-	if s_Gunship then -- TODO: Remove "false", once the aiming works
+	if s_Gunship then
 		local s_SeatsLeft = false
 		for i = 1, s_Gunship.entryCount - 1 do
 			if s_Gunship:GetPlayerInEntry(i) == nil then

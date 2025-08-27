@@ -88,12 +88,12 @@ function BotManager:OnLevelDestroy()
 	-- self:DestroyAll(nil, nil, true)
 	-- self:RegisterVars()
 
-	-- original (crashes)
+	-- close to original behaviour, but maybe improved
 	self._InitDone = false
 	self:ResetAllBots()
 
 
-	-- self._BotInputs = {}
+	-- self._BotInputs = {} -- TODO: maybe clear those and fill them again?
 	self._ActivePlayers = {}
 	self._BotAttackBotTimer = 0.0
 	self._BotReviveBotTimer = 0.0
