@@ -1043,17 +1043,17 @@ end
 ---@param p_Name string
 ---@param p_TeamId TeamId|integer
 ---@param p_SquadId SquadId|integer
+---@return boolean
 function BotSpawner:_DynamicJetSpawn(p_ExistingBot, p_Name, p_TeamId, p_SquadId)
-	local iter         = EntityManager:GetIterator("ServerCharacterSpawnEntity")
-	local spawn        = iter:Next()
-	local isValidSpawn = false
+	local iter  = EntityManager:GetIterator("ServerCharacterSpawnEntity")
+	local spawn = iter:Next()
 	while spawn do
 		if spawn.data:Is('CharacterSpawnReferenceObjectData') then
 			local spawnData = CharacterSpawnReferenceObjectData(spawn.data)
 			if spawnData.team ~= p_TeamId then
 				goto skip
 			end
-			characterSpawnEntity = SpawnEntity(spawn)
+			local characterSpawnEntity = SpawnEntity(spawn)
 			if not characterSpawnEntity.enabled then
 				goto skip
 			end
@@ -1066,15 +1066,13 @@ function BotSpawner:_DynamicJetSpawn(p_ExistingBot, p_Name, p_TeamId, p_SquadId)
 
 					if ref.team == p_TeamId and childSpawnEntity.enabled and #childSpawnEntity.spawnedControllables == 0 and childSpawnEntity.spawnTimer == 0 then
 						if childSpawnEntity.spawnTimer > 0 then
-							print('Skipping the timer its not 0')
 							goto continue
 						end
 						if bp == "Vehicles/F18-F/F18_SpawnInAir" or bp == "Vehicles/SU-35BM-E/SU-35BM-E_SpawnInAir" then
-							print('Spawning ' .. bp)
-							isValidSpawn = true
+							-- print('Spawning ' .. bp)
 							local s_Bot = self:GetBot(p_ExistingBot, p_Name, p_TeamId, p_SquadId)
 							if s_Bot == nil then
-								return
+								return false
 							end
 							m_BotCreator:SetAttributesToBot(s_Bot)
 							self:_SelectLoadout(s_Bot)
@@ -1082,22 +1080,18 @@ function BotSpawner:_DynamicJetSpawn(p_ExistingBot, p_Name, p_TeamId, p_SquadId)
 								s_Bot.m_Player.teamId)
 							spawn:FireEvent(spawnEvent)
 							self._BotsWithoutPath[#self._BotsWithoutPath + 1] = s_Bot
-							print('Triggered spawn on Jet')
-
-							break
+							return true
 						end
 					end
 				end
 				::continue::
 			end
-			if isValidSpawn then
-				return
-			end
 		end
-
 		::skip::
 		spawn = iter:Next()
 	end
+
+	return false
 end
 
 ---@param p_Bot Bot
@@ -1334,10 +1328,9 @@ function BotSpawner:_SpawnSingleWayBot(p_Player, p_UseRandomWay, p_ActiveWayInde
 
 	-- Meaning: if its not a new bot we do....:
 	if s_Name ~= nil or s_IsRespawn then
+		local s_Bot = self:GetBot(p_ExistingBot, s_Name, s_TeamId, s_SquadId)
 		-- g_Profiler:Start("BotSpawner:SpawnPart2") -- about 60 ms on conquest (close to 0 on deathmatch)
 		if Globals.UsedSpawnMethod == SpawnMethod.Spawn then
-			local s_Bot = self:GetBot(p_ExistingBot, s_Name, s_TeamId, s_SquadId)
-
 			if s_Bot == nil then
 				return
 			end
@@ -1349,9 +1342,9 @@ function BotSpawner:_SpawnSingleWayBot(p_Player, p_UseRandomWay, p_ActiveWayInde
 			return
 		end
 		if self:CQMapSupportDynamicVehicleSpawnReinforncments(s_TeamId) then
-			print('Triggering the spawn of a bot for Air Superiority or for DynamicSpawn')
-			self:_DynamicJetSpawn(s_Bot, s_Name, s_TeamId, s_SquadId)
-			return
+			if self:_DynamicJetSpawn(s_Bot, s_Name, s_TeamId, s_SquadId) then
+				return
+			end
 		end
 
 		local s_Beacon = g_GameDirector:GetPlayerBeacon(s_Name)
