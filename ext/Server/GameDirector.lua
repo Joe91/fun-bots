@@ -55,7 +55,15 @@ function GameDirector:OnLevelLoaded()
 	self:_RegisterRushEventCallbacks()
 	-- To-do: assign weights to each objective.
 	self.m_UpdateTimer = 0
-	self.m_GunshipObjectiveName = self:GetGunshipObjectiveName(Globals.LevelName, Globals.GameMode)
+	if Globals.GameMode == "RushLarge0" then
+		self.m_GunshipObjectiveTeam = TeamId.Team1 -- only attacking team has the gunship in rush
+		self.m_GunshipObjectiveName = nil
+	else
+		self.m_GunshipObjectiveTeam = nil
+		self.m_GunshipObjectiveName = self:GetGunshipObjectiveName(Globals.LevelName, Globals.GameMode)
+	end
+
+
 
 	for i = 0, Globals.NrOfTeams do
 		self.m_SpawnableVehicles[i] = {}

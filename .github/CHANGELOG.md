@@ -34,6 +34,7 @@ This is the changelog for the version V3.0 Don't forget to [join us on Discord](
 * Registry-Option to USE_EXPERIMENTAL_NAMETAGS (by MatiasPastori)
 * Bots don't use 3rd seat of Tanks anymore (by MatiasPastori)
 * Support for dynamic-jet-spawn (by MatiasPastori)
+* Support of Gunship on Rush-Maps
 
 ### some open TODOs:
 * rework of raycasts for better performance
@@ -47,6 +48,7 @@ This is the changelog for the version V3.0 Don't forget to [join us on Discord](
 * improve node-editor
 * Vehicle/Tank: better aiming on steep slopes (compensate car-rotation)
 * unify soldier-nil-cheks in states and methods
+* Delay-Spawn-Timer: have a look at the initial value, if this is done right...
 
 ### Bug fixes
 * fix stationary AA again...
