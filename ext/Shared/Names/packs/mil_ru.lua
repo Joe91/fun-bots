@@ -1,0 +1,42 @@
+-- ext/Shared/Names/packs/mil_ru.lua
+-- Code by: JMDigital (https://github.com/JenkinsTR)
+-- Russian-style surnames paired with common ranks; ASCII only.
+return {
+  id = "mil_ru",
+  meta = { team = "RU" },
+  names = {
+    "Pvt. Ivanov", "Cpl. Ivanov", "Sgt. Ivanov", "Lt. Ivanov", "Capt. Ivanov", "Maj. Ivanov",
+    "Col. Ivanov", "Pvt. Petrov", "Cpl. Petrov", "Sgt. Petrov", "Lt. Petrov", "Capt. Petrov",
+    "Maj. Petrov", "Col. Petrov", "Pvt. Sidorov", "Cpl. Sidorov", "Sgt. Sidorov", "Lt. Sidorov",
+    "Capt. Sidorov", "Maj. Sidorov", "Col. Sidorov", "Pvt. Smirnov", "Cpl. Smirnov",
+    "Sgt. Smirnov", "Lt. Smirnov", "Capt. Smirnov", "Maj. Smirnov", "Col. Smirnov",
+    "Pvt. Kuznetsov", "Cpl. Kuznetsov", "Sgt. Kuznetsov", "Lt. Kuznetsov", "Capt. Kuznetsov",
+    "Maj. Kuznetsov", "Col. Kuznetsov", "Pvt. Popov", "Cpl. Popov", "Sgt. Popov", "Lt. Popov",
+    "Capt. Popov", "Maj. Popov", "Col. Popov", "Pvt. Sokolov", "Cpl. Sokolov", "Sgt. Sokolov",
+    "Lt. Sokolov", "Capt. Sokolov", "Maj. Sokolov", "Col. Sokolov", "Pvt. Lebedev", "Cpl. Lebedev",
+    "Sgt. Lebedev", "Lt. Lebedev", "Capt. Lebedev", "Maj. Lebedev", "Col. Lebedev", "Pvt. Morozov",
+    "Cpl. Morozov", "Sgt. Morozov", "Lt. Morozov", "Capt. Morozov", "Maj. Morozov", "Col. Morozov",
+    "Pvt. Volkov", "Cpl. Volkov", "Sgt. Volkov", "Lt. Volkov", "Capt. Volkov", "Maj. Volkov",
+    "Col. Volkov", "Pvt. Fedorov", "Cpl. Fedorov", "Sgt. Fedorov", "Lt. Fedorov", "Capt. Fedorov",
+    "Maj. Fedorov", "Col. Fedorov", "Pvt. Pavlov", "Cpl. Pavlov", "Sgt. Pavlov", "Lt. Pavlov",
+    "Capt. Pavlov", "Maj. Pavlov", "Col. Pavlov", "Pvt. Egorov", "Cpl. Egorov", "Sgt. Egorov",
+    "Lt. Egorov", "Capt. Egorov", "Maj. Egorov", "Col. Egorov", "Pvt. Vasiliev", "Cpl. Vasiliev",
+    "Sgt. Vasiliev", "Lt. Vasiliev", "Capt. Vasiliev", "Maj. Vasiliev", "Col. Vasiliev",
+    "Pvt. Mikhailov", "Cpl. Mikhailov", "Sgt. Mikhailov", "Lt. Mikhailov", "Capt. Mikhailov",
+    "Maj. Mikhailov", "Col. Mikhailov", "Pvt. Andreev", "Cpl. Andreev", "Sgt. Andreev",
+    "Lt. Andreev", "Capt. Andreev", "Maj. Andreev", "Col. Andreev", "Pvt. Alexandrov",
+    "Cpl. Alexandrov", "Sgt. Alexandrov", "Lt. Alexandrov", "Capt. Alexandrov", "Maj. Alexandrov",
+    "Col. Alexandrov", "Pvt. Nikolaev", "Cpl. Nikolaev", "Sgt. Nikolaev", "Lt. Nikolaev",
+    "Capt. Nikolaev", "Maj. Nikolaev", "Col. Nikolaev", "Pvt. Orlov", "Cpl. Orlov", "Sgt. Orlov",
+    "Lt. Orlov", "Capt. Orlov", "Maj. Orlov", "Col. Orlov", "Pvt. Belov", "Cpl. Belov",
+    "Sgt. Belov", "Lt. Belov", "Capt. Belov", "Maj. Belov", "Col. Belov", "Pvt. Medvedev",
+    "Cpl. Medvedev", "Sgt. Medvedev", "Lt. Medvedev", "Capt. Medvedev", "Maj. Medvedev",
+    "Col. Medvedev", "Pvt. Antonov", "Cpl. Antonov", "Sgt. Antonov", "Lt. Antonov",
+    "Capt. Antonov", "Maj. Antonov", "Col. Antonov", "Pvt. Tarasov", "Cpl. Tarasov",
+    "Sgt. Tarasov", "Lt. Tarasov", "Capt. Tarasov", "Maj. Tarasov", "Col. Tarasov", "Pvt. Gromov",
+    "Cpl. Gromov", "Sgt. Gromov", "Lt. Gromov", "Capt. Gromov", "Maj. Gromov", "Col. Gromov",
+    "Pvt. Zaitsev", "Cpl. Zaitsev", "Sgt. Zaitsev", "Lt. Zaitsev", "Capt. Zaitsev", "Maj. Zaitsev",
+    "Col. Zaitsev", "Pvt. Vinogradov", "Cpl. Vinogradov", "Sgt. Vinogradov", "Lt. Vinogradov",
+    "Capt. Vinogradov",
+  }
+}

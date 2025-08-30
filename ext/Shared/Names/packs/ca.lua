@@ -1,0 +1,24 @@
+-- ext/Shared/Names/packs/ca.lua
+-- Code by: JMDigital (https://github.com/JenkinsTR)
+-- Canada pack: English + French-leaning given names (ASCII), subtle place/nature handles. No bracket tags.
+return {
+  id = "ca",
+  meta = { region = "ca" },
+  names = {
+    -- Common CA given names (EN/FR mix, ASCII)
+    "Liam","Noah","William","James","Benjamin","Logan","Lucas","Jackson","Ethan","Jacob","Oliver",
+    "Daniel","Alexander","Nathan","Michael","Matthew","Ryan","Tyler","Connor","Dylan","Aiden",
+    "Gavin","Owen","Eli","Caleb","Mason","Leo","Max","Theo","Henry","Thomas","Samuel","Gabriel",
+    "Simon","Marc","Andre","Etienne","Luc","Louis","Sebastien","Olivier","Mathieu","Antoine",
+    "Hugo","Pierre","Xavier","Nicolas","Alexandre","Julien","Laurent",
+
+    -- Place-flavoured (light)
+    "TorontoTom","MontrealMax","QuebecQuinn","OttawaOwen","CalgaryCam","EdmontonEli","VancouverVic",
+    "WinnipegWes","SaskatoonSas","ReginaRex","HalifaxHank","HamiltonHale","KitchenerKit","LondonONLeo",
+    "WaterlooWalt","GatineauGabe","SherbrookeShae","TroisRivieresTroy","SudburySid","StJohnsJack",
+
+    -- Nature / symbols
+    "MapleMitch","LoonLuke","MooseMason","TimberTy","PrairiePaul","RockiesRafe","LaurentianLeo",
+    "MaritimesMax","CabotCory","GreatLakesGabe","TundraTom","BorealBen","CanoeKyle","PoutinePete",
+  }
+}

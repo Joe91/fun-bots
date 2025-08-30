@@ -38,6 +38,9 @@ require('UIPathMenu')
 require('Model/Globals')
 require('Constants/Permissions')
 
+-- load the chat hooks
+require('BotChatter') 
+
 ---@type Logger
 local m_Logger = Logger("FunBotServer", Debug.Server.INFO)
 

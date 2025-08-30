@@ -25,6 +25,8 @@ require('__shared/Constants/TeamSwitchModes')
 require('__shared/WeaponList')
 require('__shared/EbxEditUtils')
 
+-- load the chat config
+require('__shared/BotChatterConfig')
 
 ---@type Language
 local m_Language = require('__shared/Language')

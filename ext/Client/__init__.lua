@@ -27,6 +27,10 @@ require('__shared/WeaponList')
 require('__shared/EbxEditUtils')
 require('__shared/Utils/Logger')
 
+-- load the chat hooks
+require('BotChatterClient')
+-- require('BotChatterUI')   -- deprecated
+
 ---@type Logger
 local m_Logger                 = Logger("FunBotClient", Debug.Client.INFO)
 
