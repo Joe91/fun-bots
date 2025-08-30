@@ -20,23 +20,24 @@ local m_Vehicles = require('Vehicles')
 
 function BotSpawner:__init()
 	self:RegisterVars()
+	self:RegisterLoadHandlers()
 end
 
 function BotSpawner:RegisterVars()
-	self._BotSpawnTimer = 0.0
-	self._LastRound = 0
-	self._PlayerUpdateTimer = 0.0
-	self._FirstSpawnInLevel = true
-	self._FirstSpawnDelay = Registry.BOT_SPAWN.FIRST_SPAWN_DELAY
-	self._DelayDirectSpawn = Registry.BOT_SPAWN.DELAY_DIRECT_SPAWN
-	self._NrOfPlayers = 0
-	self._UpdateActive = false
+	self._BotSpawnTimer         = 0.0
+	self._LastRound             = 0
+	self._PlayerUpdateTimer     = 0.0
+	self._FirstSpawnInLevel     = true
+	self._FirstSpawnDelay       = Registry.BOT_SPAWN.FIRST_SPAWN_DELAY
+	self._DelayDirectSpawn      = Registry.BOT_SPAWN.DELAY_DIRECT_SPAWN
+	self._NrOfPlayers           = 0
+	self._UpdateActive          = false
 	---@type SpawnSet[]
-	self._SpawnSets = {}
+	self._SpawnSets             = {}
 	---@type string[]
-	self._KickPlayers = {}
+	self._KickPlayers           = {}
 	---@type Bot[]
-	self._BotsWithoutPath = {}
+	self._BotsWithoutPath       = {}
 	self._ResourceDataContainer = {}
 end
 
@@ -47,6 +48,67 @@ function BotSpawner:GetResourceDataContainer(p_ResourceName)
 		self._ResourceDataContainer[p_ResourceName] = s_Resource
 	end
 	return s_Resource
+end
+
+function BotSpawner:RegisterLoadHandlers()
+	-- ResourceManager:RegisterPartitionLoadHandler(Guid('EDBFB91A-F8EA-492D-A5FA-39D6AC2DC525'), self, self.OnCqlLoaded)
+	-- ResourceManager:RegisterPartitionLoadHandler(Guid('A87FD3BE-EF7F-487D-A90E-7208E956C6C6'), self, self.OnCqlGameplayLoaded)
+	ResourceManager:RegisterPartitionLoadHandler(Guid('1785F5EB-4AA5-4F4A-B90D-4C1115E49693'), self, self.OnSu35DynamicSpawnLoaded)
+end
+
+function BotSpawner:OnSu35DynamicSpawnLoaded(p_Partition)
+	local s_Blueprint = SpatialPrefabBlueprint(p_Partition.primaryInstance)
+	s_Blueprint:MakeWritable()
+
+	-- in Vanilla BF3, the "Enable" input does not get passed to the vehicle spawn reference
+	-- create a new connection to fix unexpected behaviour
+	local s_Connection = PropertyConnection()
+	s_Connection.source = p_Partition:FindInstance(Guid('B4B12CB3-C35C-4A89-9B3E-2D05E54A9C94'))
+	s_Connection.sourceFieldId = MathUtils:FNVHash('Enabled')
+	s_Connection.target = p_Partition:FindInstance(Guid('97A02D7B-1D8B-4841-9C1D-EBFF60F03520'))
+	s_Connection.targetFieldId = MathUtils:FNVHash('Enabled')
+
+	-- add the new connection
+	s_Blueprint.propertyConnections:add(s_Connection)
+
+	print("Patched missing property connection")
+end
+
+function BotSpawner:OnCqlLoaded(p_Partition)
+	local sw = SubWorldData(p_Partition.primaryInstance)
+	sw:MakeWritable()
+
+	-- 1) wipe every connection that starts from the RandomMultiEventEntity
+	for i = #sw.eventConnections, 1, -1 do
+		local c = sw.eventConnections[i]
+		if c.source and tostring(c.source.instanceGuid) ==
+			'EDBFB91A-F8EA-492D-A5FA-39D6AC2DC525' then
+			sw.eventConnections:erase(i)
+		end
+	end
+
+	-- 2) add ONE direct connection: Delay → chosen SyncedBool
+	--    Preset 1 uses B9CEADFC...
+	local conn       = EventConnection()
+	conn.source      = sw:FindInstance(Guid('2554B7E4-A0E7-4C9B-9D95-B33693754502'))
+	conn.sourceEvent = MathUtils:FNVHash('Out')
+	conn.target      = sw:FindInstance(Guid('B9CEADFC-38DD-4D59-A5CC-F0DF9CA1DB19'))
+	conn.targetEvent = MathUtils:FNVHash('SetTrue')
+	conn.targetType  = 3 -- Server
+	sw.eventConnections:add(conn)
+end
+
+function BotSpawner:OnCqlGameplayLoaded(p_Partition)
+	local wp = WorldPartData(p_Partition.primaryInstance)
+	wp:MakeWritable()
+
+	-- Preset 2 & 3 indices to turn off
+	local toKill = { 34, 35, 39, 40, 41, 42, 43, 44 }
+	for _, idx in ipairs(toKill) do
+		local ref = ReferenceObjectData(wp.objects[idx])
+		ref:MakeWritable()
+		ref.excluded = true
+	end
 end
 
 -- =============================================
@@ -98,7 +160,51 @@ function BotSpawner:OnLevelLoaded(p_Round)
 			[TeamId.Team1] = {},
 			[TeamId.Team2] = {}
 		}
+		Events:Subscribe('Vehicle:SpawnDone', self, self.OnVehicleSpawnDone)
+		Events:Subscribe('Vehicle:Unspawn', self, self.OnVehicleUnspawn)
 	end
+
+	local iter = EntityManager:GetIterator("ServerCharacterSpawnEntity")
+	local spawn = iter:Next()
+
+	while spawn do
+		if spawn.data:Is('CharacterSpawnReferenceObjectData') then
+			-- local spawnData = CharacterSpawnReferenceObjectData(spawn.data) -- the data attribs, meaning the EBX are always tatic, no need to check this really...
+			local spawnEntity = SpawnEntity(spawn)
+			for _, child in ipairs(spawn.bus.entities) do
+				if child:Is('ServerVehicleSpawnEntity') then
+					local vehicleSpawnRef = VehicleSpawnReferenceObjectData(child.data)
+					local bp = vehicleSpawnRef.blueprint.name
+					--print('Blueprint: ' .. bp) not needed anymore :)
+					local childVehicleSpawnEntity = SpawnEntity(child)
+					print(bp)
+					if string.find(bp, 'F18') or string.find(bp, 'SU%-35') then
+						print('Matched Blueprint: ' .. bp)
+
+						print('spawnEntity.enabled ' .. tostring(spawnEntity.enabled))
+						print('spawnEntity.spawnTimer ' .. spawnEntity.spawnTimer)
+						print('spawnEntity.locationNameSid' .. spawnEntity.locationNameSid)
+						print('spawnEntity.isControlled ' .. tostring(spawnEntity.isControlled))
+						print('spawnEntity.spawnCount ' .. spawnEntity.spawnCount)
+						print('spawnEntity.spawnDelay ' .. spawnEntity.spawnDelay)
+
+						print('childVehicleSpawnEntity.enabled ' .. tostring(childVehicleSpawnEntity.enabled))
+						print('childVehicleSpawnEntity.spawnTimer ' .. childVehicleSpawnEntity.spawnTimer)
+						-- local guid = vehicleSpawnRef.instanceGuid:ToString('D')
+						-- local endTime = self._JetSpawnCooldowns[guid]
+
+						-- if (not endTime or SharedUtils:GetTimeMS() >= endTime) and not self._ReservedSlotToEntity[guid] then
+						-- Reserve this slot
+						-- self._ReservedSlotToEntity[guid] = true
+						-- self._LastReservedSlotGuid = guid
+						-- end
+					end
+				end
+			end
+		end
+		spawn = iter:Next()
+	end
+
 	m_Logger:Write("on level loaded on spawner")
 	self._FirstSpawnInLevel = true
 	self._PlayerUpdateTimer = 0.0
@@ -217,10 +323,9 @@ function BotSpawner:OnEngineUpdate(p_DeltaTime, p_SimulationDeltaTime)
 
 			if l_Bot.m_Player.soldier ~= nil then
 				local s_String, s_SpawnEntity = self:_GetSpecialSpawnEnity(l_Bot, l_Bot.m_Player.teamId)
-				if Globals.MapHasDynamiJetSpawns and s_SpawnEntity:Is("ServerSoldierEntity") then
-					-- l_Bot:Kill()
-					goto continue
-				end
+				-- if Globals.MapHasDynamiJetSpawns and s_SpawnEntity:Is("ServerSoldierEntity") then
+				-- 	goto continue
+				-- end
 				if s_SpawnEntity then
 					table.remove(self._BotsWithoutPath, l_Index)
 					l_Bot:SetVarsWay(nil, true, 0, 0, false)
@@ -291,6 +396,13 @@ function BotSpawner:OnEngineUpdate(p_DeltaTime, p_SimulationDeltaTime)
 			::continue::
 		end
 		-- g_Profiler:End("BotSpawner:AfterSpawn")
+	end
+	-- remove expired cooldowns
+	local now = SharedUtils:GetTimeMS()
+	for spawn, endTime in pairs(self._JetSpawnCooldowns) do
+		if now >= endTime then
+			self._JetSpawnCooldowns[spawn] = nil
+		end
 	end
 end
 
@@ -449,6 +561,39 @@ function BotSpawner:TriggerRespawnBot(p_Bot)
 			Bot = p_Bot
 		}
 		self._SpawnSets[#self._SpawnSets + 1] = s_SpawnSet
+	end
+end
+
+-- =============================================
+-- Vehicle Events
+-- =============================================
+
+function BotSpawner:OnVehicleSpawnDone(vehicleEntity)
+	if not m_Vehicles:IsVehicleType(m_Vehicles:GetVehicleByEntity(vehicleEntity), VehicleTypes.Plane) then
+		return
+	end
+
+	local guid = self._LastReservedSlotGuid
+	if guid then
+		-- Link spawned vehicle to slot using instanceId
+		local entId = vehicleEntity.instanceId
+		self._EntityToSlotGuid[entId] = guid
+		self._ReservedSlotToEntity[guid] = nil
+		print("Jet spawned for slot GUID " .. guid .. " (entity " .. entId .. ")")
+	end
+end
+
+function BotSpawner:OnVehicleUnspawn(vehicleEntity)
+	if not m_Vehicles:IsVehicleType(m_Vehicles:GetVehicleByEntity(vehicleEntity), VehicleTypes.Plane) then
+		return
+	end
+
+	local entId = vehicleEntity.instanceId
+	local guid = self._EntityToSlotGuid[entId]
+	if guid then
+		self._JetSpawnCooldowns[guid] = SharedUtils:GetTimeMS() + 30000
+		self._EntityToSlotGuid[entId] = nil
+		print("Cooldown set for slot GUID " .. guid .. " (entity " .. entId .. ")")
 	end
 end
 
@@ -1076,102 +1221,25 @@ function BotSpawner:_AirSuperioritySpawn(p_Bot)
 	end
 end
 
----@param p_Bot Bot|nil
----@param p_Name string
----@param p_TeamId TeamId|integer
----@param p_SquadId SquadId|integer
-function BotSpawner:_DynamicJetSpawn(p_ExistingBot, p_Name, p_TeamId, p_SquadId)
-	local iter         = EntityManager:GetIterator("ServerCharacterSpawnEntity")
-	local spawn        = iter:Next()
-	local isValidSpawn = false
-	while spawn do
-		if spawn.data:Is('CharacterSpawnReferenceObjectData') then
-			local spawnData = CharacterSpawnReferenceObjectData(spawn.data)
-			if spawnData.team ~= p_TeamId then
-				goto skip
-			end
-			characterSpawnEntity = SpawnEntity(spawn)
-			-- print(" The characterSpawnEntity timer: " .. characterSpawnEntity.spawnTimer) -- Timer doesn't really seem to work, although sometimes its not 0. INVESTIGATE.
-			-- print(" The characterSpawnEntity is enabled ? : " .. tostring(characterSpawnEntity.enabled)) -- This one seems to work, it will tell us if the spawn entity is available.
-			-- print(" The characterSpawnEntity canSpawnMore ? : " .. tostring(characterSpawnEntity.canSpawnMore)) -- always true
-			-- print(" The characterSpawnEntity spawnedControllables: " .. #characterSpawnEntity.spawnedControllables)
-			-- print(" The characterSpawnEntity delay: " .. characterSpawnEntity.spawnDelay)
-			if not characterSpawnEntity.enabled then
-				goto skip
-			end
-			for index, child in ipairs(spawn.bus.entities) do
-				if child:Is('ServerVehicleSpawnEntity') then
-					-- print('Found ServerVehicleSpawnEntity')
-					local ref              = VehicleSpawnReferenceObjectData(child.data)
-					local bp               = ref.blueprint and ref.blueprint.name or ''
-					-- print('Blueprint: ' .. bp)
-					local childSpawnEntity = SpawnEntity(child)
-					-- print("The spawnedControllables: " .. #childSpawnEntity.spawnedControllables)
-					if ref.team == p_TeamId and childSpawnEntity.enabled and #childSpawnEntity.spawnedControllables == 0 and childSpawnEntity.spawnTimer == 0 then
-						-- print("The timer" .. childSpawnEntity.spawnTimer)
-						-- print('It is enabled: ')
-						-- print(childSpawnEntity.enabled)
-						-- print("The spawn entity canSpawnMore: ")
-						-- print(childSpawnEntity.canSpawnMore)
-						-- print("The childSpawnEntity spawnCount: " .. childSpawnEntity.spawnCount)
-						-- print("The childSpawnEntity spawnedControllables: " .. #childSpawnEntity.spawnedControllables)
-
-						-- print("The childSpawnEntity spawnDelay: " .. childSpawnEntity.spawnDelay)
-						-- print("The childSpawnEntity driverControlled: " .. tostring(childSpawnEntity.driverControlled)) -- Always false.
-						-- -- print("The isControlled: ")
-						-- print(childSpawnEntity.isControlled)
-						-- print("The spawnRequested: ")
-						-- print(childSpawnEntity.spawnRequested) -- Its always false
-
-						if childSpawnEntity.spawnTimer > 0 then
-							print('Skipping the timer its not 0')
-							goto continue
-						end
-						-- if not childSpawnEntity.enabled then
-						-- 	print('Skipping the spawn entity is not enabled')
-						-- 	goto skip
-						-- end
-						-- if not childSpawnEntity.canSpawnMore then
-						-- 	print('Skipping the spawn entity cannot spawn more') 					-- ALWAYS TRUE
-						-- 	goto skip
-						-- end
-						if bp == "Vehicles/F18-F/F18_SpawnInAir" or bp == "Vehicles/SU-35BM-E/SU-35BM-E_SpawnInAir" then
-							print('Spawning ' .. bp)
-							isValidSpawn = true
-							local s_Bot = self:GetBot(p_ExistingBot, p_Name, p_TeamId, p_SquadId)
-							if s_Bot == nil then return end
-
-							-- CRITICAL: Force reset vehicle state for reused bot
-							s_Bot:ResetSpawnVars()
-
-							m_BotCreator:SetAttributesToBot(s_Bot)
-							self:_SelectLoadout(s_Bot)
-							local spawnEvent = ServerPlayerEvent('Spawn', s_Bot.m_Player, true, false, false, false, false, false,
-								s_Bot.m_Player.teamId)
-							spawn:FireEvent(spawnEvent)
-							self._BotsWithoutPath[#self._BotsWithoutPath + 1] = s_Bot
-							print('Triggered spawn on Jet')
-
-							-- s_Bot:_EnterVehicleEntity(childSpawnEntity.spawnedControllables[1], false)
-							break
-							-- elseif  and ref.team == p_Bot.m_Player.teamId and #childSpawnEntity.spawnedControllables == 0 then
-
-							-- 	print('Spawning SU-35')
-							-- 	isValidSpawn = true
-							-- 	break
-						end
-					end
-				end
-				::continue::
-			end
-			if isValidSpawn then
-				return
-			end
-		end
-
-		::skip::
-		spawn = iter:Next()
+function BotSpawner:_DynamicJetSpawn(p_ExistingBot, p_Name, p_TeamId, p_SquadId, p_SpawnEntity, p_VehicleEntity)
+	local s_Bot = self:GetBot(p_ExistingBot, p_Name, p_TeamId, p_SquadId)
+	if s_Bot == nil then
+		return
 	end
+
+	s_Bot:ResetSpawnVars()
+	m_BotCreator:SetAttributesToBot(s_Bot)
+	self:_SelectLoadout(s_Bot)
+
+	-- Use the pre-found spawn entity (character spawn with vehicle attached)
+	local spawnEvent = ServerPlayerEvent('Spawn', s_Bot.m_Player, true, false, false, false, false, false,
+		s_Bot.m_Player.teamId)
+	p_SpawnEntity:FireEvent(spawnEvent)
+
+	-- Don't add to _BotsWithoutPath - let the spawn system handle vehicle assignment
+	-- The vehicle entity is already linked to the character spawn
+
+	print(string.format("Triggered dynamic jet spawn for bot %s in team %d", s_Bot.m_Name, p_TeamId))
 end
 
 -- ---@param p_Bot Bot
@@ -1401,9 +1469,9 @@ end
 ---comment
 ---@param teamId TeamId|number
 ---@return boolean
-function BotSpawner:CQMapSupportDynamicVehicleSpawnReinforncments(teamId)       -- Using this successfully spawn them in these maps but they follow no logic. So.. better off.
+function BotSpawner:CQMapSupportDynamicVehicleSpawnReinforncments(teamId) -- Using this successfully spawn them in these maps but they follow no logic. So.. better off.
 	-- print('Checking if the map supports the spawn')
-	if Globals.MapHasDynamiJetSpawns and not self:_HasMaxPlanePlayers(teamId) then --  #self._BotsWithoutPath < 4 and not self:_HasMaxBotsFromTeam(teamId)
+	if Globals.MapHasDynamiJetSpawns then                                 --and not self:_HasMaxPlanePlayers(teamId) then --  #self._BotsWithoutPath < 4 and not self:_HasMaxBotsFromTeam(teamId)
 		return true
 	end
 	return false
@@ -1424,6 +1492,79 @@ function BotSpawner:_HasMaxPlanePlayers(teamId)
 		end
 	end
 	return false
+end
+
+-- ===============================
+-- Per-jet cooldown helpers
+-- ===============================
+
+local XP5_JET_BLUEPRINTS = {
+	["XP5_002"] = {
+		[TeamId.Team1] = "Vehicles/F18-F/F18_SpawnInAir",
+		[TeamId.Team2] = "Vehicles/SU-35BM-E/SU-35BM-E_SpawnInAir"
+	},
+	["XP5_004"] = {
+		[TeamId.Team1] = "Vehicles/F18-F/F18_SpawnInAir",
+		[TeamId.Team2] = "Vehicles/SU-35BM-E/SU-35BM-E_SpawnInAir"
+	}
+}
+
+function BotSpawner:_CheckAndGetAvailableJetSpawn(p_TeamId)
+	local levelName = Globals.LevelName
+	local expectedBlueprint = XP5_JET_BLUEPRINTS[levelName] and XP5_JET_BLUEPRINTS[levelName][p_TeamId]
+
+	if not expectedBlueprint then
+		return false, nil
+	end
+
+	local iter = EntityManager:GetIterator("ServerCharacterSpawnEntity")
+	local spawn = iter:Next()
+
+	while spawn do
+		if spawn.data:Is('CharacterSpawnReferenceObjectData') then
+			-- local spawnData = CharacterSpawnReferenceObjectData(spawn.data) -- the data attribs, meaning the EBX are always tatic, no need to check this really...
+			local spawnEntity = SpawnEntity(spawn)
+			if spawnEntity.teamId == p_TeamId and spawnEntity.enabled and
+				spawnEntity.spawnTimer == 0 and
+				spawnEntity.spawnDelay == 0 then
+				for _, child in ipairs(spawn.bus.entities) do
+					-- local foundPlanesForTeam = 0
+					if child:Is('ServerVehicleSpawnEntity') then
+						local vehicleSpawnRef = VehicleSpawnReferenceObjectData(child.data)
+						local bp = vehicleSpawnRef.blueprint.name
+						--print('Blueprint: ' .. bp) not needed anymore :)
+						local childVehicleSpawnEntity = SpawnEntity(child)
+						if bp == expectedBlueprint and childVehicleSpawnEntity.enabled and childVehicleSpawnEntity.spawnTimer == 0 and childVehicleSpawnEntity.teamId == p_TeamId and childVehicleSpawnEntity.spawnDelay == 0 then
+							print('Matched Blueprint: ' .. expectedBlueprint)
+
+							print('spawnEntity.enabled ' .. tostring(spawnEntity.enabled))
+							print('spawnEntity.spawnTimer ' .. spawnEntity.spawnTimer)
+							print('spawnEntity.locationNameSid' .. spawnEntity.locationNameSid)
+							print('spawnEntity.isControlled ' .. tostring(spawnEntity.isControlled))
+							print('spawnEntity.spawnCount ' .. spawnEntity.spawnCount)
+							print('spawnEntity.spawnDelay ' .. spawnEntity.spawnDelay)
+
+							print('childVehicleSpawnEntity.enabled ' .. tostring(childVehicleSpawnEntity.enabled))
+							print('childVehicleSpawnEntity.spawnTimer ' .. childVehicleSpawnEntity.spawnTimer)
+							-- local guid = vehicleSpawnRef.instanceGuid:ToString('D')
+							-- local endTime = self._JetSpawnCooldowns[guid]
+
+							-- if (not endTime or SharedUtils:GetTimeMS() >= endTime) and not self._ReservedSlotToEntity[guid] then
+							-- Reserve this slot
+							-- self._ReservedSlotToEntity[guid] = true
+							-- self._LastReservedSlotGuid = guid
+							-- foundPlanesForTeam = foundPlanesForTeam + 1
+							return true, spawn
+							-- end
+						end
+					end
+				end
+			end
+		end
+		spawn = iter:Next()
+	end
+
+	return false, nil
 end
 
 -- ---@param p_TeamId TeamId|number
@@ -1505,11 +1646,36 @@ function BotSpawner:_SpawnSingleWayBot(p_Player, p_UseRandomWay, p_ActiveWayInde
 			self._BotsWithoutPath[#self._BotsWithoutPath + 1] = s_Bot
 			return
 		end
+		-- === Dynamic Jet Spawns for CQ maps / XP5 ===
 		if self:CQMapSupportDynamicVehicleSpawnReinforncments(s_TeamId) then
-			print('Triggering the spawn of a bot for Air Superiority or for DynamicSpawn')
-			-- table.insert(self._TeamDynamicBotsSpawned[s_TeamId], s_Bot)
-			self:_DynamicJetSpawn(p_ExistingBot, s_Name, s_TeamId, s_SquadId)
-			return
+			local hasJet, spawnEntity = self:_CheckAndGetAvailableJetSpawn(s_TeamId)
+			if hasJet and spawnEntity then
+				local s_Bot = self:GetBot(p_ExistingBot, s_Name, s_TeamId, s_SquadId)
+				if s_Bot == nil then return end
+
+				if not s_Bot.m_Player.isAllowedToSpawn then return end
+
+				s_Bot:ResetSpawnVars()
+				m_BotCreator:SetAttributesToBot(s_Bot)
+				self:_SelectLoadout(s_Bot)
+
+				local spawnEvent = ServerPlayerEvent(
+					'Spawn', s_Bot.m_Player,
+					true, false, false, false, false, false,
+					s_Bot.m_Player.teamId
+				)
+				spawnEntity:FireEvent(spawnEvent)
+
+				-- local guid = spawnEntity.data.instanceGuid:ToString('D')
+				-- self._JetSpawnEntity2Jet[guid] = nil -- will be filled by OnVehicleSpawnDone
+				print('Jet available and bot allowed to spawn, spawned bot for team ' .. tostring(s_TeamId))
+
+				self._BotsWithoutPath[#self._BotsWithoutPath + 1] = s_Bot
+
+				return
+			end
+
+			-- fall through to normal spawn if no jet available
 		end
 
 		local s_Beacon = g_GameDirector:GetPlayerBeacon(s_Name)

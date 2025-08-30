@@ -1012,14 +1012,6 @@ function Bot:ResetSpawnVars()
 	self._OnSwitch = false
 	self._VehicleMoveWhileShooting = false
 
-	self._VehicleMovableId = -1
-	self._LastVehicleYaw = 0.0
-	self._VehicleReadyToShoot = false
-	self._FullVehicleSteering = false
-	self._VehicleDirBackPositive = false
-	self._JetAbortAttackActive = false
-	self._JetTakeoffActive = false -- Critical for jet takeoff sequence
-
 	-- Reset PID controllers for new vehicle
 	self._Pid_Drv_Yaw:Reset()
 	self._Pid_Drv_Throttle:Reset()
