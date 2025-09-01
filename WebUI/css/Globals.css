@@ -1,57 +1,63 @@
 /* Globals */
 @font-face {
-	font-family:	'Purista';
-	font-weight:	normal;
-	src:			url('../fonts/Purista EA Medium.ttf');
+    font-family: "Purista";
+    font-weight: normal;
+    src: url("../fonts/Purista EA Medium.ttf");
 }
 
 @font-face {
-	font-family:	'Purista';
-	font-weight:	bold;
-	src:			url('../fonts/Purista EA Semibold.ttf');
+    font-family: "Purista";
+    font-weight: bold;
+    src: url("../fonts/Purista EA Semibold.ttf");
 }
 
 @font-face {
-	font-family:	'Venice';
-	font-weight:	normal;
-	src:			url('../fonts/Venice-Medium.ttf');
+    font-family: "Venice";
+    font-weight: normal;
+    src: url("../fonts/Venice-Medium.ttf");
 }
 
 @font-face {
-	font-family:	'Venice';
-	font-weight:	bold;
-	src:			url('../fonts/Venice-SemiBold.ttf');
+    font-family: "Venice";
+    font-weight: bold;
+    src: url("../fonts/Venice-SemiBold.ttf");
 }
 
 :root {
-	--color_white:					#FFFFFF;
-	--color_text:					#EAf7FF;
-	--color_text_shadow:			#BCE4FF;
-	--color_text_hover:				#000000;
-	--color_text_hover_shadow:		#000000;
-	--color_warning_from:			rgba(247,130, 16, 0.9);
-	--color_warning_to:				rgba(247,130, 16, 0.4);
-	--color_container_background:	rgba(0, 0, 0, 0.8);
-	--color_button_default_from:	rgba(41, 57, 67, 0.9);
-	--color_button_default_to:		rgba(41, 57, 67, 0.5);
-	--color_button_hover_from:		rgba(84, 134, 168, 0.9);
-	--color_button_hover_to:		rgba(84, 134, 168, 0.9);
-	--color_button_active_from:		rgba(230, 235, 240, 0.98);
-	--color_button_active_to:		rgba(190, 205, 215, 0.95);
+    --color_white: #ffffff;
+    --color_text: #eaf7ff;
+    --color_text_shadow: #bce4ff;
+    --color_text_hover: #000000;
+    --color_text_hover_shadow: #000000;
+    --color_warning_from: rgba(247, 130, 16, 0.9);
+    --color_warning_to: rgba(247, 130, 16, 0.4);
+    --color_container_background: rgba(0, 0, 0, 0.8);
+    --color_button_default_from: rgba(41, 57, 67, 0.9);
+    --color_button_default_to: rgba(41, 57, 67, 0.5);
+    --color_button_hover_from: rgba(84, 134, 168, 0.9);
+    --color_button_hover_to: rgba(84, 134, 168, 0.9);
+    --color_button_active_from: rgba(230, 235, 240, 0.98);
+    --color_button_active_to: rgba(190, 205, 215, 0.95);
 }
 
 * {
-	box-sizing: border-box;
-	-webkit-font-smoothing: antialiased;
-	font-smoothing: antialiased;
-	padding: 0;
-	margin: 0;
-	font-family: Purista, sans-serif, arial;
-	border-radius: 0;
-	outline: none;
-	border: none;
+    box-sizing: border-box;
+    -webkit-font-smoothing: antialiased;
+    font-smoothing: antialiased;
+    padding: 0;
+    margin: 0;
+    font-family: Purista, sans-serif, arial;
+    border-radius: 0;
+    outline: none;
+    border: none;
 }
 
 *:not([type="input"]) {
-	user-select: none;
+    user-select: none;
+}
+
+body {
+    width: 100vw;
+    height: 100vh;
+    position: relative;
 }

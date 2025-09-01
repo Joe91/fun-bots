@@ -21,6 +21,7 @@
   "homepage": "https://github.com/Joe91/fun-bots#readme",
   "devDependencies": {
     "@vextjs/vite-plugin": "^0.0.3",
+    "prettier": "^3.6.2",
     "vite": "^6.3.0"
   }
 }
