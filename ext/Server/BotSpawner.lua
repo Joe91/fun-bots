@@ -1031,27 +1031,6 @@ function BotSpawner:_AirSuperioritySpawn(p_Bot)
 	end
 end
 
-function BotSpawner:_DynamicJetSpawn(p_ExistingBot, p_Name, p_TeamId, p_SquadId, p_SpawnEntity, p_VehicleEntity)
-	local s_Bot = self:GetBot(p_ExistingBot, p_Name, p_TeamId, p_SquadId)
-	if s_Bot == nil then
-		return
-	end
-
-	s_Bot:ResetSpawnVars()
-	m_BotCreator:SetAttributesToBot(s_Bot)
-	self:_SelectLoadout(s_Bot)
-
-	-- Use the pre-found spawn entity (character spawn with vehicle attached)
-	local spawnEvent = ServerPlayerEvent('Spawn', s_Bot.m_Player, true, false, false, false, false, false,
-		s_Bot.m_Player.teamId)
-	p_SpawnEntity:FireEvent(spawnEvent)
-
-	-- Don't add to _BotsWithoutPath - let the spawn system handle vehicle assignment
-	-- The vehicle entity is already linked to the character spawn
-
-	print(string.format("Triggered dynamic jet spawn for bot %s in team %d", s_Bot.m_Name, p_TeamId))
-end
-
 ---@param p_Bot Bot
 --TODO: handle spawn-logic here as well (unify it?)
 function BotSpawner:_ConquestSpawn(p_Bot)
@@ -1355,6 +1334,7 @@ function BotSpawner:_SpawnSingleWayBot(p_Player, p_UseRandomWay, p_ActiveWayInde
 		if self:CQMapSupportDynamicVehicleSpawnReinforncments(s_TeamId) then
 			local hasJet, spawnEntity = self:_CheckAndGetAvailableJetSpawn(s_TeamId)
 			if hasJet and spawnEntity then
+				m_Logger:Write("Found a jet spawn for team " .. s_TeamId)
 				local s_Bot = self:GetBot(p_ExistingBot, s_Name, s_TeamId, s_SquadId)
 				if s_Bot == nil then return end
 				m_BotCreator:SetAttributesToBot(s_Bot)
@@ -1367,6 +1347,7 @@ function BotSpawner:_SpawnSingleWayBot(p_Player, p_UseRandomWay, p_ActiveWayInde
 				)
 				spawnEntity:FireEvent(spawnEvent)
 				self._BotsWithoutPath[#self._BotsWithoutPath + 1] = s_Bot
+				m_Logger:Write("Spawned bot " .. s_Bot.m_Name .. " in a jet")
 				return
 			end
 		end
