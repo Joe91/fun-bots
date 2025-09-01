@@ -43,7 +43,7 @@ function Vehicles:GetVehicle(p_Player)
 	return VehicleData[s_VehicleName]
 end
 
----@param p_Entity ControllableEntity
+---@param p_Entity ControllableEntity | Entity
 function Vehicles:GetVehicleByEntity(p_Entity)
 	local s_VehicleName = nil
 

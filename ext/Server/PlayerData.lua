@@ -26,10 +26,9 @@ function PlayerData:Clear()
 end
 
 ---VEXT Server Vehicle:Enter Event
----@param p_VehicleEntity ControllableEntity @`ControllableEntity`
+---@param p_VehicleEntity ControllableEntity | Entity @`ControllableEntity`
 ---@param p_Player Player
 function PlayerData:OnVehicleEnter(p_VehicleEntity, p_Player)
-	-- print(" Player " .. p_Player.name .. " entered vehicle " .. g_Vehicles:GetVehicleByEntity(p_VehicleEntity).Type)
 	self:_UpdatePlayerData(p_Player, "Vehicle", g_Vehicles:GetVehicleByEntity(p_VehicleEntity).Type)
 end
 

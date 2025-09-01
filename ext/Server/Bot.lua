@@ -1332,15 +1332,17 @@ function Bot:_EnterVehicleEntity(p_Entity, p_PlayerIsDriver)
 		end
 		if p_Entity:GetPlayerInEntry(seatIndex) == nil or Globals.IsAirSuperiority or (Globals.MapHasDynamiJetSpawns and m_Vehicles:IsVehicleType(s_VehicleData, VehicleTypes.Plane)) then -- already in this seat in air superiority
 			self.m_Player:EnterVehicle(p_Entity, seatIndex)
+			-- print('Entered the vehicle : ' .. s_VehicleData.Name .. ' Type: ' .. s_VehicleData.Type .. ' Max entries: ' .. s_MaxEntries .. ' seatIndex: ' .. seatIndex)
 			self._ExitVehicleHealth = PhysicsEntity(p_Entity).internalHealth * (Registry.VEHICLES.VEHICLE_EXIT_HEALTH / 100.0)
 			-- Get ID.
 			self.m_ActiveVehicle = s_VehicleData
 			self._ActiveVehicleWeaponSlot = 0
 			self:UpdateVehicleMovableId()
+			-- print("The bot satate: " .. tostring(self.m_ActiveState))
 			if seatIndex == 0 then
 				if seatIndex == s_MaxEntries - 1 then
 					self._VehicleWaitTimer = 0.5 -- Always wait a short time to check for free start.
-					if Globals.IsAirSuperiority or (Globals.MapHasDynamiJetSpawns and m_Vehicles:IsVehicleType(s_VehicleData, VehicleTypes.Plane)) then
+					if Globals.IsAirSuperiority then
 						self._VehicleTakeoffTimer = 0.0
 						self._JetTakeoffActive = false
 					else
