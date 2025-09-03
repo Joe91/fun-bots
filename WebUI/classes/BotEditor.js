@@ -1,6 +1,7 @@
 import { InputDeviceKeys, EntryType } from "./Constants.js";
 import { getClosest } from "./Utils.js";
 
+import "coherent-gameface-grid/style.css";
 import "../css/styles.css";
 
 let Language = {};

@@ -18,7 +18,6 @@ ui-view[data-name="settings"] ui-tabs nav {
 }
 
 ui-view[data-name="settings"] ui-tabs nav ul {
-    list-style: none;
     display: flex;
     justify-content: center;
 }
@@ -76,7 +75,6 @@ ui-view[data-name="settings"] ui-tabs nav ul li label.active {
 /* Tab Content */
 ui-view[data-name="settings"] ui-tabs figure {
     display: block;
-    clear: both;
     padding: 5px 10px;
     display: block;
 }
@@ -109,21 +107,6 @@ ui-view[data-name="settings"] ui-tabs figure ui-tab ui-entry ui-container {
     flex-direction: row;
     font-weight: 900;
     max-width: 200px;
-}
-
-ui-view[data-name="settings"] ui-tabs figure ui-tab ui-entry ui-restore {
-    flex: 0 30px;
-    cursor: pointer;
-    background-image: url("../../assets/restore.png");
-    background-size: 30px;
-    background-repeat: no-repeat;
-    background-position: 50% 50%;
-    filter: grayscale(100%) brightness(0.4);
-    margin: 0 0 0 10px;
-}
-
-ui-view[data-name="settings"] ui-tabs figure ui-tab ui-entry ui-restore:hover {
-    filter: unset;
 }
 
 ui-view[data-name="settings"] ui-tabs figure ui-tab ui-entry ui-container ui-arrow {
@@ -224,5 +207,6 @@ ui-view[data-name="settings"]
     ui-container
     ui-text
     input[type="password"] {
-    border: 1px solid;
+    border-width: 1px;
+    border-style: solid;
 }

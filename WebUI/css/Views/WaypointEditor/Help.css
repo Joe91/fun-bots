@@ -1,125 +1,76 @@
 ui-help {
-	display: block;
-	position: fixed;
+    display: block;
+    position: fixed;
 }
 
 ui-help[data-name="interaction"] {
-	bottom: 10px;
-	left: 50%;
-	transform: translateX(-50%);
-	display: flex;
-	flex-direction: row;
-	color: var(--color_text);
-	text-shadow: 0 0 6px var(--color_text_shadow);
-	text-transform: uppercase;
+    bottom: 10px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    flex-direction: row;
+    color: var(--color_text);
+    text-shadow: 0 0 6px var(--color_text_shadow);
+    text-transform: uppercase;
 }
 
 ui-help[data-name="interaction"] ui-key {
-	flex: 0 auto;
+    flex: 0 auto;
 }
 
 ui-help[data-name="interaction"] span {
-	flex: 1 auto;
-	align-self: center;
-	text-align: right;
+    flex: 1 auto;
+    align-self: center;
+    text-align: right;
 }
 
-
 ui-help[data-name="numpad"] {
-	right: 10px;
-	top: 50%;
-	transform: translateY(-50%);
-	display: grid;
-	grid-template-columns: auto auto auto;
-	grid-template-rows: auto auto auto;
-	gap: 0px 0px;
-	grid-template-areas:
-		"Title Title Title"
-		"K7 K8 K9"
-		"K4 K5 K6"
-		"K1 K2 K3"
-		". Other Other";
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
 }
 
 ui-help[data-name="numpad"] p {
-	grid-area: Title;
-	color: var(--color_text);
-	text-shadow: 0 0 6px var(--color_text_shadow);
-	text-transform: uppercase;
-	text-align: center;
-	display: block;
-	font-size: 12px;
-}
-
-ui-help[data-name="numpad"] [data-grid="K1"] {
-	grid-area: K1;
-}
-
-ui-help[data-name="numpad"] [data-grid="K2"] {
-	grid-area: K2;
-}
-
-ui-help[data-name="numpad"] [data-grid="K3"] {
-	grid-area: K3;
-}
-
-ui-help[data-name="numpad"] [data-grid="K4"] {
-	grid-area: K4;
-}
-
-ui-help[data-name="numpad"] [data-grid="K5"] {
-	grid-area: K5;
-}
-
-ui-help[data-name="numpad"] [data-grid="K6"] {
-	grid-area: K6;
-}
-
-ui-help[data-name="numpad"] [data-grid="K7"] {
-	grid-area: K7;
-}
-
-ui-help[data-name="numpad"] [data-grid="K8"] {
-	grid-area: K8;
-}
-
-ui-help[data-name="numpad"] [data-grid="K9"] {
-	grid-area: K9;
+    color: var(--color_text);
+    text-shadow: 0 0 6px var(--color_text_shadow);
+    text-transform: uppercase;
+    text-align: center;
+    display: block;
+    font-size: 12px;
 }
 
 ui-help[data-name="numpad"] [data-grid="Other"] {
-	grid-area: Other;
-	margin: 40px 0 0 0;
+    margin: 40px 0 0 0;
 }
 
 ui-help[data-name="numpad"] ui-entry {
-	display: flex;
-	flex-direction: column;
-	color: var(--color_text);
-	text-shadow: 0 0 6px var(--color_text_shadow);
-	text-transform: uppercase;
-	text-align: center;
+    display: flex;
+    flex-direction: column;
+    color: var(--color_text);
+    text-shadow: 0 0 6px var(--color_text_shadow);
+    text-transform: uppercase;
+    text-align: center;
 }
 
 ui-help[data-name="numpad"] ui-entry ui-key {
-	flex: 1 auto;
-	margin: 0 auto;
+    flex: 1 auto;
+    margin: 0 auto;
 }
 
 ui-help[data-name="numpad"] ui-entry span {
-	flex: 1 auto;
-	font-size: 12px;
+    flex: 1 auto;
+    font-size: 12px;
 }
 
 ui-help[data-name="numpad"] ui-entry ui-entry {
-	flex-direction: row;
+    flex-direction: row;
 }
 
 ui-help[data-name="numpad"] ui-entry ui-entry ui-key {
-	flex: 0 auto;
+    flex: 0 auto;
 }
 
 ui-help[data-name="numpad"] ui-entry ui-entry span {
-	align-self: center;
-	text-align: right;
+    align-self: center;
+    text-align: right;
 }

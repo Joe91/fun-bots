@@ -35,7 +35,6 @@ ui-view[data-type="toolbar"] ui-submenu {
 
 ui-view[data-type="toolbar"] ui-menu ul,
 ui-view[data-type="toolbar"] ui-submenu ul {
-    list-style: none;
 }
 
 ui-view[data-type="toolbar"] ui-menu ul.main,
@@ -159,6 +158,8 @@ ui-view[data-type="toolbar"] ui-submenu ul.main li a input[type="number"] {
     background-color: rgba(255, 255, 255, 0.1);
     width: 30px;
     text-align: center;
-    border: 1px solid rgba(255, 255, 255, 0.5);
+    border-width: 1px;
+    border-style: solid;
+    border-color: rgba(255, 255, 255, 0.5);
     color: rgba(255, 255, 255, 0.5);
 }

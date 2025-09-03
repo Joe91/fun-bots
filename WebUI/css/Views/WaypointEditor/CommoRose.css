@@ -25,7 +25,6 @@ ui-view[data-type="commorose"] ui-horizontal ul {
     flex: 1 auto;
     padding: 0;
     margin: 0;
-    list-style: none;
     align-self: center;
 }
 

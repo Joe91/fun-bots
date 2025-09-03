@@ -23,5 +23,8 @@
     "@vextjs/vite-plugin": "^0.0.3",
     "prettier": "^3.6.2",
     "vite": "^6.3.0"
+  },
+  "dependencies": {
+    "coherent-gameface-grid": "^2.0.1"
   }
 }
