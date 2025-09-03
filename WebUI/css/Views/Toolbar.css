@@ -1,150 +1,165 @@
 ui-view[data-type="toolbar"] {
-	padding: 10px;
-	flex-direction: row;
+    padding: 10px;
+    flex-direction: row;
 }
 
 ui-view[data-type="toolbar"][data-show="true"] {
-	display: flex;
+    display: flex;
 }
 
 /* Logo */
 ui-view[data-type="toolbar"] ui-logo {
-	flex: 0 auto;
-	display: block;
-	position: relative;
-	color: var(--color_text);
-	text-shadow: 0 0 6px var(--color_text_shadow);
-	font-weight: 900;
-	font-size: 24px;
+    flex: 0 auto;
+    display: flex;
+    position: relative;
+    color: var(--color_text);
+    text-shadow: 0 0 6px var(--color_text_shadow);
+    font-weight: 900;
+    font-size: 24px;
 }
 
 ui-view[data-type="toolbar"] ui-logo sub {
-	color: var(--color_white);
-	font-weight: 400;
-	font-size: 12px;
-	display: inline-block;
-	transform: translate(-22px, -20px);
+    color: var(--color_white);
+    font-weight: 400;
+    font-size: 12px;
+    transform: translate(-22px, -5px);
 }
 
 /* Menu */
 ui-view[data-type="toolbar"] ui-menu,
 ui-view[data-type="toolbar"] ui-submenu {
-	display: block;
-	position: relative;
-	flex: 1 auto;
+    display: block;
+    position: relative;
+    flex: 1 auto;
 }
 
 ui-view[data-type="toolbar"] ui-menu ul,
 ui-view[data-type="toolbar"] ui-submenu ul {
-	list-style: none;
+    list-style: none;
 }
 
 ui-view[data-type="toolbar"] ui-menu ul.main,
 ui-view[data-type="toolbar"] ui-submenu ul.main {
-	display: flex;
-	justify-content: flex-end;
+    display: flex;
+    justify-content: flex-end;
 }
 
 ui-view[data-type="toolbar"] ui-menu ul.main > li,
 ui-view[data-type="toolbar"] ui-submenu ul.main > li {
-	flex: 0 auto;
+    flex: 0 auto;
 }
 
 ui-view[data-type="toolbar"] ui-menu li.header {
-	color: var(--color_text);
-	text-shadow: 0 0 6px var(--color_text_shadow);
-	text-align: center;
-	font-size: 12px;
-	background: rgba(255, 255, 255, 0.1);
+    color: var(--color_text);
+    text-shadow: 0 0 6px var(--color_text_shadow);
+    text-align: center;
+    font-size: 12px;
+    background-color: rgba(255, 255, 255, 0.1);
 }
 
 ui-view[data-type="toolbar"] ui-menu ul.main > li > a,
 ui-view[data-type="toolbar"] ui-submenu.main > li > a {
-	display: block;
-	position: relative;
-	padding: 5px 15px;
-	min-width: 120px;
-	margin: 0 1px;
-	color: var(--color_text);
-	text-shadow: 0 0 6px var(--color_text_shadow);
-	cursor: pointer;
-	font-weight: 900;
-	font-size: 18px;
-	text-align: center;
-	text-transform: uppercase;
-	background: linear-gradient(180deg, var(--color_button_default_from) 0%, var(--color_button_default_to) 100%);
+    display: block;
+    position: relative;
+    padding: 5px 15px;
+    min-width: 120px;
+    margin: 0 1px;
+    color: var(--color_text);
+    text-shadow: 0 0 6px var(--color_text_shadow);
+    cursor: pointer;
+    font-weight: 900;
+    font-size: 18px;
+    text-align: center;
+    text-transform: uppercase;
+    background-image: linear-gradient(
+        180deg,
+        var(--color_button_default_from) 0%,
+        var(--color_button_default_to) 100%
+    );
 }
 
 ui-view[data-type="toolbar"] ui-menu ul.main > li > a[data-key]::before,
 ui-view[data-type="toolbar"] ui-submenu ul.main > li > a[data-key]::before {
-	content: attr(data-key);
-	color: var(--color_text);
-	text-shadow: 0 0 1px var(--color_text_shadow);
-	font-size: 10px;
-	font-weight: 100;
-	position: absolute;
-	bottom: 2px;
-	right: 2px;
+    content: attr(data-key);
+    color: var(--color_text);
+    text-shadow: 0 0 1px var(--color_text_shadow);
+    font-size: 10px;
+    font-weight: 100;
+    position: absolute;
+    bottom: 2px;
+    right: 2px;
 }
 
 ui-view[data-type="toolbar"] ui-menu ul.main > li:hover > a,
 ui-view[data-type="toolbar"] ui-submenu ul.main > li:hover > a {
-	background: linear-gradient(180deg, var(--color_button_hover_from) 0%, var(--color_button_hover_to) 100%);
+    background-image: linear-gradient(
+        180deg,
+        var(--color_button_hover_from) 0%,
+        var(--color_button_hover_to) 100%
+    );
 }
 
 ui-view[data-type="toolbar"] ui-menu ul.main > li:active > a,
 ui-view[data-type="toolbar"] ui-submenu ul.main > li:active > a {
-	color: var(--color_text_hover);
-	text-shadow: 0 0 6px var(--color_text_hover_shadow);
-	background: linear-gradient(180deg, var(--color_button_active_from) 0%, var(--color_button_active_to) 100%);
+    color: var(--color_text_hover);
+    text-shadow: 0 0 6px var(--color_text_hover_shadow);
+    background-image: linear-gradient(
+        180deg,
+        var(--color_button_active_from) 0%,
+        var(--color_button_active_to) 100%
+    );
 }
 
 ui-view[data-type="toolbar"] ui-menu ul.main > li > ul,
 ui-view[data-type="toolbar"] ui-submenu ul.main > li > ul {
-	display: none;
-	margin: 0 0 0 1px;
-	background: rgba(0, 0, 0, 0.8);
+    display: none;
+    margin: 0 0 0 1px;
+    background-color: rgba(0, 0, 0, 0.8);
 }
 
 ui-view[data-type="toolbar"] ui-menu ul.main > li:hover > ul,
 ui-view[data-type="toolbar"] ui-submenu ul.main > li:hover > ul {
-	display: block;
-	position: absolute;
+    display: block;
+    position: absolute;
 }
 
 ui-view[data-type="toolbar"] ui-menu ul.main > li > ul > li > a,
 ui-view[data-type="toolbar"] ui-submenu ul.main > li > ul > li > a {
-	display: block;
-	padding: 5px 15px;
-	min-width: 100px;
-	position: relative;
-	color: var(--color_text);
-	text-shadow: 0 0 6px var(--color_text_shadow);
+    display: block;
+    padding: 5px 15px;
+    min-width: 100px;
+    position: relative;
+    color: var(--color_text);
+    text-shadow: 0 0 6px var(--color_text_shadow);
 }
 
 ui-view[data-type="toolbar"] ui-menu ul.main > li > ul > li > a[data-key]::before,
 ui-view[data-type="toolbar"] ui-submenu ul.main > li > ul > li > a[data-key]::before {
-	content: attr(data-key);
-	color: var(--color_text);
-	text-shadow: 0 0 1px var(--color_text_shadow);
-	font-size: 10px;
-	font-weight: 100;
-	position: absolute;
-	bottom: 2px;
-	right: 2px;
+    content: attr(data-key);
+    color: var(--color_text);
+    text-shadow: 0 0 1px var(--color_text_shadow);
+    font-size: 10px;
+    font-weight: 100;
+    position: absolute;
+    bottom: 2px;
+    right: 2px;
 }
 
 ui-view[data-type="toolbar"] ui-menu ul.main > li:hover > ul > li:hover > a,
 ui-view[data-type="toolbar"] ui-submenu ul.main > li:hover > ul > li:hover > a {
-	cursor: pointer;
-	background: linear-gradient(180deg, var(--color_button_hover_from) 0%, var(--color_button_hover_to) 100%);
+    cursor: pointer;
+    background-image: linear-gradient(
+        180deg,
+        var(--color_button_hover_from) 0%,
+        var(--color_button_hover_to) 100%
+    );
 }
 
 ui-view[data-type="toolbar"] ui-menu ul.main li a input[type="number"],
 ui-view[data-type="toolbar"] ui-submenu ul.main li a input[type="number"] {
-	background: rgba(255, 255, 255, 0.1);
-	width: 30px;
-	text-align: center;
-	border: 1px solid rgba(255, 255, 255, 0.5);
-	color: rgba(255, 255, 255, 0.5);
+    background-color: rgba(255, 255, 255, 0.1);
+    width: 30px;
+    text-align: center;
+    border: 1px solid rgba(255, 255, 255, 0.5);
+    color: rgba(255, 255, 255, 0.5);
 }

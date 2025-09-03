@@ -1,56 +1,59 @@
 ui-view[data-type="dialog"] {
-	position: absolute;
-	top: 50%;
-	left: 50%;
-	transform: translate(-50%, -50%);
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
 }
 
 ui-view[data-type="dialog"] ui-header {
-	display: block;
-	position: relative;
-	padding: 10px;
-	background: var(--color_warning_from);
-	text-transform: uppercase;
-	background: linear-gradient(180deg, var(--color_warning_from) 0%, var(--color_warning_to) 100%);
+    display: block;
+    position: relative;
+    padding: 10px;
+    text-transform: uppercase;
+    background-image: linear-gradient(
+        180deg,
+        var(--color_warning_from) 0%,
+        var(--color_warning_to) 100%
+    );
 }
 
 ui-view[data-type="dialog"] ui-content {
-	display: block;
-	position: relative;
-	background: rgba(0, 0, 0, 0.8);
-	padding: 0 0 5px 0;
+    display: block;
+    position: relative;
+    background-color: rgba(0, 0, 0, 0.8);
+    padding: 0 0 5px 0;
 }
 
 ui-view[data-type="dialog"] ui-content ui-error {
-	color: rgba(255, 0, 0, 0.8);
-	text-shadow: 0 0 6px rgba(200, 0, 0, 0.8);
-	display: block;
-	position: relative;
-	text-align: center;
-	padding: 5px;
-	margin: -20px 0 5px 0;
+    color: rgba(255, 0, 0, 0.8);
+    text-shadow: 0 0 6px rgba(200, 0, 0, 0.8);
+    display: block;
+    position: relative;
+    text-align: center;
+    padding: 5px;
+    margin: -20px 0 5px 0;
 }
 
 ui-view[data-type="dialog"] ui-content ui-error:empty {
-	display: none;
+    display: none;
 }
 
 ui-view[data-type="dialog"] ui-content p {
-	padding: 15px;
-	color: var(--color_text);
-	text-shadow: 0 0 6px var(--color_text_shadow);
+    padding: 15px;
+    color: var(--color_text);
+    text-shadow: 0 0 6px var(--color_text_shadow);
 }
 
 ui-view[data-type="dialog"] ui-buttons {
-	display: flex;
-	position: relative;
-	background: var(--color_container_background);
-	padding: 10px;
-	text-align: center;
+    display: flex;
+    position: relative;
+    background-color: var(--color_container_background);
+    padding: 10px;
+    text-align: center;
 }
 
 ui-view[data-type="dialog"] ui-buttons ui-spacer {
-	display: block;
-	position: relative;
-	flex: 1 auto;
+    display: block;
+    position: relative;
+    flex: 1 auto;
 }
