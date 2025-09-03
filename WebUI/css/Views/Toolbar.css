@@ -120,7 +120,6 @@ ui-view[data-type="toolbar"] ui-submenu ul.main > li > ul {
 ui-view[data-type="toolbar"] ui-menu ul.main > li:hover > ul,
 ui-view[data-type="toolbar"] ui-submenu ul.main > li:hover > ul {
     display: block;
-    position: absolute;
 }
 
 ui-view[data-type="toolbar"] ui-menu ul.main > li > ul > li > a,
