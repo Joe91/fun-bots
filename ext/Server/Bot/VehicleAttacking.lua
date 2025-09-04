@@ -125,23 +125,11 @@ function VehicleAttacking:UpdateAttackingVehicle(p_DeltaTime, p_Bot)
 						self:Fire(p_Bot)
 					end
 				else
-					local baseResetTimer = 0.6
-					local increasedResetTimer = baseResetTimer
-					if math.random() < 0.2 then -- 20% chance of increased reset timer
-						increasedResetTimer = baseResetTimer * 1.5
-					end
-
-					if p_Bot._ShotTimer >= increasedResetTimer then
+					if p_Bot._ShotTimer >= (0.6 * p_Bot._FireCycleModifier) then
 						p_Bot._ShotTimer = 0.0
+						p_Bot._FireCycleModifier = 0.8 + (math.random() * 1.2) -- between 0.8 and 2.0
 					end
-
-					local baseFireTimer = 0.3
-					local increasedFireTimer = baseFireTimer
-					if math.random() < 0.5 then -- 50% chance of increased fire timer
-						increasedFireTimer = baseFireTimer * 2.0
-					end
-
-					if p_Bot._ShotTimer >= increasedFireTimer and p_Bot._VehicleReadyToShoot then
+					if p_Bot._ShotTimer >= (0.3 * p_Bot._FireCycleModifier) and p_Bot._VehicleReadyToShoot then
 						self:Fire(p_Bot)
 					end
 				end

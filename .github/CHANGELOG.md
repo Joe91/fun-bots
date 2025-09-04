@@ -35,6 +35,7 @@ This is the changelog for the version V3.0 Don't forget to [join us on Discord](
 * Bots don't use 3rd seat of Tanks anymore (by MatiasPastori)
 * Support for dynamic-jet-spawn (by MatiasPastori)
 * Support of Gunship on Rush-Maps
+* Variation in default fire-cycles (by MatiasPastori)
 
 ### some open TODOs:
 * rework of raycasts for better performance
