@@ -677,17 +677,19 @@ function Bot:_CheckForVehicleActions(p_DeltaTime, p_AttackActive)
 	local s_OnVehicle = g_BotStates:IsOnVehicleState(self.m_ActiveState)
 
 	local s_VehicleEntity = self.m_Player.controlledControllable
+	if s_VehicleEntity and s_VehicleEntity.typeInfo.name == "ServerSoldierEntity" then
+		s_VehicleEntity = self.m_Player.attachedControllable
+	end
+	-- No vehicle found.
 	if not s_VehicleEntity then
 		return
 	end
+
 	-- Check if exit of vehicle is needed (because of low health).
 	if not self._ExitVehicleActive then
 		local s_CurrentVehicleHealth = 0
-
-		if s_InVehicle then
-			s_CurrentVehicleHealth = PhysicsEntity(self.m_Player.controlledControllable).internalHealth
-		elseif s_OnVehicle then
-			s_CurrentVehicleHealth = PhysicsEntity(self.m_Player.attachedControllable).internalHealth
+		if s_VehicleEntity then
+			s_CurrentVehicleHealth = PhysicsEntity(s_VehicleEntity).internalHealth
 		end
 
 		if s_CurrentVehicleHealth <= self._ExitVehicleHealth then
@@ -735,13 +737,7 @@ function Bot:_CheckForVehicleActions(p_DeltaTime, p_AttackActive)
 					end
 				end
 			elseif s_OnVehicle then -- Only passenger.
-				local s_VehicleEntity = self.m_Player.attachedControllable
 				local s_LowestSeatIndex = -1
-
-				if not s_VehicleEntity then
-					return
-				end
-
 				for l_SeatIndex = 0, s_VehicleEntity.entryCount - 1 do
 					if s_VehicleEntity:GetPlayerInEntry(l_SeatIndex) == nil then
 						-- Maybe better seat available.
@@ -762,11 +758,6 @@ function Bot:_CheckForVehicleActions(p_DeltaTime, p_AttackActive)
 end
 
 function Bot:_CheckShouldExitVehicleIfPassenger()
-	local s_VehicleEntity = self.m_Player.controlledControllable
-	if not s_VehicleEntity then
-		return
-	end
-
 	if not self._ExitVehicleActive
 		and m_Vehicles:IsPassengerSeat(self.m_ActiveVehicle, self.m_Player.controlledEntryId)
 	then
