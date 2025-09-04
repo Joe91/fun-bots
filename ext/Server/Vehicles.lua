@@ -86,20 +86,8 @@ function Vehicles:GetNrOfFreeSeats(p_Entity, p_PlayerIsDriver)
 	if vehicleData.Type == VehicleTypes.MobileArtillery then
 		s_MaxEntries = 1
 	end
-	-- The idea is to avoid the bots from seating in the 3rd slot of the tanks to be more useful somwhere else.
-	if vehicleData.Type == VehicleTypes.Tank then
-		s_MaxEntries = 2
-	end
-
-	if vehicleData.Type == VehicleTypes.TransportChopper then
-		s_MaxEntries = 3
-	end
 	if vehicleData.Type == VehicleTypes.UnarmedGunship then
 		return 0
-	end
-
-	if vehicleData.Type == VehicleTypes.LightAA then
-		s_MaxEntries = 2
 	end
 
 	if Config.KeepVehicleSeatForPlayer and not p_PlayerIsDriver and s_MaxEntries > 2 then

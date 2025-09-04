@@ -677,12 +677,6 @@ function Bot:_CheckForVehicleActions(p_DeltaTime, p_AttackActive)
 	local s_OnVehicle = g_BotStates:IsOnVehicleState(self.m_ActiveState)
 
 	local s_VehicleEntity = self.m_Player.controlledControllable
-	-- if not s_VehicleEntity then
-	-- 	return
-	-- end
-	-- if not self.m_Player.attachedControllable then
-	-- 	return
-	-- end
 	-- Check if exit of vehicle is needed (because of low health).
 	if not self._ExitVehicleActive then
 		local s_CurrentVehicleHealth = 0
@@ -1302,14 +1296,8 @@ function Bot:_EnterVehicleEntity(p_Entity, p_PlayerIsDriver)
 		s_MaxEntries = 1
 	end
 	-- The idea is to avoid the bots from seating in the 3rd slot of the tanks to be more useful somwhere else.
-	if s_VehicleData.Type == VehicleTypes.Tank then
-		s_MaxEntries = 2
-	end
 	if s_VehicleData.Type == VehicleTypes.UnarmedGunship then
 		s_MaxEntries = 0
-	end
-	if s_VehicleData.Type == VehicleTypes.LightAA then
-		s_MaxEntries = 2
 	end
 
 	--Now the bots may fully occupy a vehicle ( attack choppers, scout choppers, and some other transport vehicles.)

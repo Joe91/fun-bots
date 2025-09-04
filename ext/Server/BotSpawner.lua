@@ -63,6 +63,8 @@ function BotSpawner:OnLevelLoaded(p_Round)
 	if (Globals.LevelName == "XP5_002" or Globals.LevelName == "XP5_004") and s_CurrentGameMode:match("Conquest") then
 		print('Enabling dynamic jets to spawn.')
 		Globals.MapHasDynamiJetSpawns = true
+	else
+		Globals.MapHasDynamiJetSpawns = false
 	end
 
 	m_Logger:Write("on level loaded on spawner")
@@ -1331,7 +1333,7 @@ function BotSpawner:_SpawnSingleWayBot(p_Player, p_UseRandomWay, p_ActiveWayInde
 		end
 
 		-- special handling for dynamic jet spawns on conquest maps that support it
-		if self:CQMapSupportDynamicVehicleSpawnReinforncments(s_TeamId) then
+		if self:CQMapSupportDynamicVehicleSpawnReinforncments(s_TeamId) and Config.UseAirVehicles then
 			local hasJet, spawnEntity = self:_CheckAndGetAvailableJetSpawn(s_TeamId)
 			if hasJet and spawnEntity then
 				m_Logger:Write("Found a jet spawn for team " .. s_TeamId)
