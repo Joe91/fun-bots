@@ -209,7 +209,7 @@ class BotEditor {
 
                 /* Bots */
                 case "bot_spawn_default":
-                    let count = document.querySelector(
+                    let count_enemy = document.querySelector(
                         '[data-action="bot_spawn_default"] input[type="number"]',
                     );
                     WebUI.Call(
@@ -217,13 +217,13 @@ class BotEditor {
                         "BotEditor",
                         JSON.stringify({
                             action: parent.dataset.action,
-                            value: count.value,
+                            value: count_enemy.value,
                         }),
                     );
-                    count.value = 1;
+                    count_enemy.value = 1;
                     break;
                 case "bot_spawn_friend":
-                    count = document.querySelector(
+                    let count_firend = document.querySelector(
                         '[data-action="bot_spawn_friend"] input[type="number"]',
                     );
                     WebUI.Call(
@@ -231,13 +231,13 @@ class BotEditor {
                         "BotEditor",
                         JSON.stringify({
                             action: parent.dataset.action,
-                            value: count.value,
+                            value: count_firend.value,
                         }),
                     );
-                    count.value = 1;
+                    count_firend.value = 1;
                     break;
                 case "bot_kick_team":
-                    count = document.querySelector(
+                    let kick_nr = document.querySelector(
                         '[data-action="bot_kick_team"] input[type="number"]',
                     );
                     WebUI.Call(
@@ -245,10 +245,10 @@ class BotEditor {
                         "BotEditor",
                         JSON.stringify({
                             action: parent.dataset.action,
-                            value: count.value,
+                            value: kick_nr.value,
                         }),
                     );
-                    count.value = 1;
+                    kick_nr.value = 1;
                     break;
                 case "bot_kick_all":
                 case "bot_kill_all":
@@ -838,8 +838,8 @@ class BotEditor {
             () => {
                 this._createLanguage(
                     "https://min.gitcdn.link/repo/Joe91/fun-bots/fun-bots-bizzi/WebUI/languages/" +
-                        string +
-                        ".js",
+                    string +
+                    ".js",
                     // Success callback
                     () => {
                         if (this.DEBUG) {
@@ -875,7 +875,7 @@ class BotEditor {
 
             try {
                 translated = Language[this._language][string];
-            } catch (e) {}
+            } catch (e) { }
 
             console.log("[Translate]", this._language, "=", string, "to", translated);
         }
