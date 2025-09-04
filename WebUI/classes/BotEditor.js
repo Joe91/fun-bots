@@ -5,6 +5,7 @@ import "coherent-gameface-grid/style.css";
 import "../css/styles.css";
 
 let Language = {};
+let settingsopenedonce = false;
 
 class BotEditor {
     constructor() {
@@ -736,7 +737,6 @@ class BotEditor {
             }
         });
     }
-
     openSettings(data) {
         let json;
         let container = document.querySelector('ui-view[data-name="settings"] figure');
@@ -777,6 +777,11 @@ class BotEditor {
             }
             element.appendChild(output.getElement());
         });
+
+        if (!settingsopenedonce) {
+            this.activateTab(null, "GENERAL");
+            settingsopenedonce = true;
+        }
     }
 
     activateTab(event, tabName) {
