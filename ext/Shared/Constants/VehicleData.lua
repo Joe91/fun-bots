@@ -428,6 +428,7 @@ VehicleData = {
 		Parts = { { -2, -2 }, -1, -1, -1 },
 		Speed = { { 900, 10000 }, 300, 300, 300 },
 		Drop = { { 0.0, 0.0 }, 9.81, 9.81, 9.81 },
+		FirstPassengerSeat = 2,
 		Offset = { { Vec3(0.453, -0.062, 0.848), Vec3(0.453, -0.062, 0.848) }, Vec3(0, 0, 0), Vec3(0, 0, 0), Vec3(0, 0, 0) }
 	},
 	["AH6_Littlebird_EQ"] = {
@@ -437,6 +438,7 @@ VehicleData = {
 		Parts = { { -2, -2 }, -1, -1, -1 },
 		Speed = { { 900, 10000 }, 300, 300, 300 },
 		Drop = { { 0.0, 0.0 }, 9.81, 9.81, 9.81 },
+		FirstPassengerSeat = 2,
 		Offset = { { Vec3(0.453, -0.062, 0.848), Vec3(0.453, -0.062, 0.848) }, Vec3(0, 0, 0), Vec3(0, 0, 0), Vec3(0, 0, 0) }
 	},
 	["Ka-60"] = {
@@ -446,6 +448,7 @@ VehicleData = {
 		Parts = { -1, 18, 15, -1, -1 },
 		Speed = { 350, 900, 900, 350, 350 },
 		Drop = { 9.81, 0.0, 0.0, 9.81, 9.81 },
+		FirstPassengerSeat = 4,
 		Offset = { Vec3(0, 0, 0), Vec3(0.0, 0.191, -0.360), Vec3(0.0, 0.191, -0.360), Vec3(0, 0, 0), Vec3(0, 0, 0) }
 	},
 	["Mi28"] = {
@@ -465,6 +468,7 @@ VehicleData = {
 		Parts = { -1, 19, 16, -1, -1 },
 		Speed = { 350, 900, 900, 350, 350 },
 		Drop = { 9.81, 0.0, 0.0, 9.81, 9.81 },
+		FirstPassengerSeat = 4,
 		Offset = { Vec3(0, 0, 0), Vec3(0.0, 0.239, -0.650), Vec3(0.0, 0.239, -0.650), Vec3(0, 0, 0), Vec3(0, 0, 0) }
 	},
 	["Venom_coop"] = {
@@ -474,6 +478,7 @@ VehicleData = {
 		Parts = { -1, 19, 16, -1, -1 },
 		Speed = { 350, 900, 900, 350, 350 },
 		Drop = { 9.81, 0.0, 0.0, 9.81, 9.81 },
+		FirstPassengerSeat = 4,
 		Offset = { Vec3(0, 0, 0), Vec3(0.0, 0.239, -0.650), Vec3(0.0, 0.239, -0.650), Vec3(0, 0, 0), Vec3(0, 0, 0) }
 	},
 	["Z-11w"] = {
@@ -483,6 +488,7 @@ VehicleData = {
 		Parts = { { -1, -1 }, -1, -1, -1 },
 		Speed = { { 900, 10000 }, 350, 350, 350 },
 		Drop = { { 0.0, 0.0 }, 9.81, 9.81, 9.81 },
+		FirstPassengerSeat = 2,
 		Offset = { { Vec3(0.495, -0.199, 2.158), Vec3(0.495, -0.199, 2.158) }, Vec3(0, 0, 0), Vec3(0, 0, 0), Vec3(0, 0, 0) }
 	},
 	["Wz11_SP_Paris"] = {
@@ -492,6 +498,7 @@ VehicleData = {
 		Parts = { { -1, -1 }, -1, -1, -1 },
 		Speed = { { 900, 10000 }, 350, 350, 350 },
 		Drop = { { 0.0, 0.0 }, 9.81, 9.81, 9.81 },
+		FirstPassengerSeat = 2,
 		Offset = { { Vec3(0.495, -0.199, 2.158), Vec3(0.495, -0.199, 2.158) }, Vec3(0, 0, 0), Vec3(0, 0, 0), Vec3(0, 0, 0) }
 	},
 
@@ -503,6 +510,7 @@ VehicleData = {
 		Parts = { -1, 47, -1 },
 		Speed = { 300, 610, 300 },
 		Drop = { 0.0, 9.81, 0.0 },
+		FirstPassengerSeat = 3,
 		Offset = { Vec3(0, 0, 0), Vec3(0, 0.239, -0.816), Vec3(0, 0, 0) }
 	},
 	["GrowlerITV_Valley"] = {
@@ -512,6 +520,7 @@ VehicleData = {
 		Parts = { -1, 47, -1 },
 		Speed = { 300, 610, 300 },
 		Drop = { 0.0, 9.81, 0.0 },
+		FirstPassengerSeat = 3,
 		Offset = { Vec3(0, 0, 0), Vec3(0, 0.239, -0.816), Vec3(0, 0, 0) }
 	},
 	["VDV Buggy"] = {
@@ -521,6 +530,7 @@ VehicleData = {
 		Parts = { -1, 7, -1 },
 		Speed = { 300, 610, 300 },
 		Drop = { 0.0, 9.81, 0.0 },
+		FirstPassengerSeat = 3,
 		Offset = { Vec3(0, 0, 0), Vec3(-0.037, 0.096, -0.624), Vec3(0, 0, 0) }
 	},
 	["DPV"] = {
@@ -530,6 +540,7 @@ VehicleData = {
 		Parts = { -1, 4, -1 },
 		Speed = { 300, 610, 300 },
 		Drop = { 0.0, 9.81, 0.0 },
+		FirstPassengerSeat = 3,
 		Offset = { Vec3(0, 0, 0), Vec3(-0.001, 0.189, -0.600), Vec3(0, 0, 0) }
 	},
 

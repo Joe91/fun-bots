@@ -23,6 +23,11 @@ function StateInVehicleJetControl:Update(p_Bot, p_DeltaTime)
 		return
 	end
 
+	if p_Bot.m_Player.controlledControllable == nil and p_Bot.m_Player.attachedControllable == nil then
+		p_Bot:SetState(g_BotStates.States.Moving)
+		return
+	end
+
 	local s_IsAttacking = p_Bot._ShootPlayer ~= nil
 	-- update state-timer
 	p_Bot.m_StateTimer = p_Bot.m_StateTimer + p_DeltaTime
@@ -50,9 +55,14 @@ end
 ---@param p_DeltaTime number
 function StateInVehicleJetControl:UpdateFast(p_Bot, p_DeltaTime)
 	if p_Bot.m_Player.soldier == nil then
+		p_Bot:SetState(g_BotStates.States.Idle)
 		return
 	end
 
+	if p_Bot.m_Player.controlledControllable == nil and p_Bot.m_Player.attachedControllable == nil then
+		p_Bot:SetState(g_BotStates.States.Moving)
+		return
+	end
 	local s_IsAttacking = p_Bot._ShootPlayer ~= nil
 
 	-- assign new target after some time
@@ -82,6 +92,14 @@ end
 ---update in every frame
 ---@param p_Bot Bot
 function StateInVehicleJetControl:UpdateVeryFast(p_Bot)
+	if p_Bot.m_Player.soldier == nil then
+		p_Bot:SetState(g_BotStates.States.Idle)
+		return
+	end
+	if p_Bot.m_Player.controlledControllable == nil and p_Bot.m_Player.attachedControllable == nil then
+		p_Bot:SetState(g_BotStates.States.Moving)
+		return
+	end
 end
 
 ---slow update-function
@@ -89,6 +107,11 @@ end
 ---@param p_DeltaTime number
 function StateInVehicleJetControl:UpdateSlow(p_Bot, p_DeltaTime)
 	if p_Bot.m_Player.soldier == nil then
+		p_Bot:SetState(g_BotStates.States.Idle)
+		return
+	end
+	if p_Bot.m_Player.controlledControllable == nil and p_Bot.m_Player.attachedControllable == nil then
+		p_Bot:SetState(g_BotStates.States.Moving)
 		return
 	end
 	-- p_Bot:_CheckForVehicleActions(p_DeltaTime, true) -- don't exit vehicle on low health?
