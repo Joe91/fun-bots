@@ -47,7 +47,7 @@ Registry = {
 		-- Patch version.
 		VERSION_PATCH = 0,
 		-- Additional label for pre-releases and build metadata.
-		VERSION_LABEL = "dev6",
+		VERSION_LABEL = "dev7",
 		-- Current version type of this build.
 		VERSION_TYPE = VersionType.DevBuild,
 		-- The Version used for the Update-Check.
@@ -213,9 +213,9 @@ Registry = {
 		-- Probability of a bot spawning in the vehicle of a bot of the same squad.
 		PROBABILITY_SQUADMATE_VEHICLE_SPAWN = 70,
 		-- Probability of a bot spawning on a random teammate
-		PROBABILITY_TEAMMATE_SPAWN = 20,
+		PROBABILITY_TEAMMATE_SPAWN = 1,
 		-- Probability of a bot spawning in a random teammate vehicle
-		PROBABILITY_TEAMMATE_VEHICLE_SPAWN = 60,
+		PROBABILITY_TEAMMATE_VEHICLE_SPAWN = 50,
 		-- Probability of a bot spawning in the vehicle of a player of the same squad.
 		PROBABILITY_SQUADMATE_PLAYER_VEHICLE_SPAWN = 50,
 		-- Probability of a bot spawning on the closest spawn point.

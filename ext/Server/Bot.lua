@@ -1292,14 +1292,8 @@ function Bot:_EnterVehicleEntity(p_Entity, p_PlayerIsDriver)
 		s_MaxEntries = 1
 	end
 	-- The idea is to avoid the bots from seating in the 3rd slot of the tanks to be more useful somwhere else.
-	if s_VehicleData.Type == VehicleTypes.Tank then
-		s_MaxEntries = 2
-	end
 	if s_VehicleData.Type == VehicleTypes.UnarmedGunship then
 		s_MaxEntries = 0
-	end
-	if s_VehicleData.Type == VehicleTypes.LightAA then
-		s_MaxEntries = 2
 	end
 
 	--Now the bots may fully occupy a vehicle ( attack choppers, scout choppers, and some other transport vehicles.)
@@ -1333,7 +1327,7 @@ function Bot:_EnterVehicleEntity(p_Entity, p_PlayerIsDriver)
 			if seatIndex == 0 then
 				if seatIndex == s_MaxEntries - 1 then
 					self._VehicleWaitTimer = 0.5 -- Always wait a short time to check for free start.
-					if Globals.IsAirSuperiority or (Globals.MapHasDynamiJetSpawns and m_Vehicles:IsVehicleType(s_VehicleData, VehicleTypes.Plane)) then
+					if Globals.IsAirSuperiority then
 						self._VehicleTakeoffTimer = 0.0
 						self._JetTakeoffActive = false
 					else

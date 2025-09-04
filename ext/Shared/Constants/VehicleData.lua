@@ -226,6 +226,7 @@ VehicleData = {
 		Parts = { -1, 12, -1, -1 },
 		Speed = { 300, 1000, 300, 300 },
 		Drop = { 9.81, 0.0, 9.82, 9.81 },
+		FirstPassengerSeat = 3,
 		Offset = { Vec3(0, 0, 0), Vec3(0.0, 0.224, 0.670), Vec3(0, 0, 0), Vec3(0, 0, 0) }
 	},
 	["Humvee_ASRAD"] = {
@@ -235,6 +236,7 @@ VehicleData = {
 		Parts = { -1, 25, -1, -1 },
 		Speed = { 300, 1000, 300, 300 },
 		Drop = { 300, 0.0, 300, 300 },
+		FirstPassengerSeat = 3,
 		Offset = { Vec3(0, 0, 0), Vec3(0.0, 0.0, 0.623), Vec3(0, 0, 0), Vec3(0, 0, 0) }
 	},
 
@@ -563,7 +565,8 @@ VehicleData = {
 		Parts = { -1, { 1, 3 }, { 0, 2 } },
 		Speed = { 300, { 600, 900 }, { 250, 900 } },
 		Drop = { 0.0, { 0.0, 0.0 }, { 0.0, 0.0 } },
-		FirstPassengerSeat = 3,
+		--FirstPassengerSeat = 3, although the 1st one should be the piolt one is disabled due to the auto driving logic in a certain orbit
+		FirstPassengerSeat = 4,                                                                                                                         --Lets try with 4 as its index ?
 		RotationOffset = { Vec3(0, 0, 0), { Vec3(math.pi / 2, 0.52, 0), Vec3(math.pi / 2, 0, 0) }, { Vec3(math.pi / 2, 0.375, 0), Vec3(math.pi / 2, 0, 0) } } -- use yaw and pitch as offset here
 	},
 	-- AA Stationary.
