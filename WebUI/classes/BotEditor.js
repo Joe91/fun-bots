@@ -754,7 +754,7 @@ class BotEditor {
         });
 
         json.forEach((entry) => {
-            let element = container.querySelector('ui-tab[class="' + entry.category + '"]');
+            let element = container.querySelector('ui-tab[data-name="' + entry.category + '"]');
             let output = document.createElement("ui-entry");
 
             output.setType(entry.types);
@@ -775,7 +775,6 @@ class BotEditor {
                 case EntryType.Password:
                     break;
             }
-
             element.appendChild(output.getElement());
         });
     }
