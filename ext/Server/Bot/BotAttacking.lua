@@ -337,17 +337,18 @@ local function _DefaultAttackingAction(p_DeltaTime, p_Bot)
 				end
 			end
 		else
-			if p_Bot._ShotTimer >= (p_Bot.m_ActiveWeapon.fireCycle + p_Bot.m_ActiveWeapon.pauseCycle) then
+			if p_Bot._ShotTimer >= ((p_Bot.m_ActiveWeapon.fireCycle + p_Bot.m_ActiveWeapon.pauseCycle) * p_Bot._FireCycleModifier) then
 				p_Bot._ShotTimer = 0.0
+				p_Bot._FireCycleModifier = 0.8 + (math.random() * 0.8) -- between 0.8 and 1.6
 			end
 
 			if p_Bot._ShotTimer >= 0.0 and p_Bot._ActiveAction ~= BotActionFlags.MeleeActive then
 				if p_Bot.m_ActiveWeapon.delayed == false then
-					if p_Bot._ShotTimer <= p_Bot.m_ActiveWeapon.fireCycle then
+					if p_Bot._ShotTimer <= (p_Bot.m_ActiveWeapon.fireCycle * p_Bot._FireCycleModifier) then
 						_Fire(p_Bot)
 					end
 				else -- Start with pause Cycle.
-					if p_Bot._ShotTimer >= p_Bot.m_ActiveWeapon.pauseCycle then
+					if p_Bot._ShotTimer >= (p_Bot.m_ActiveWeapon.pauseCycle * p_Bot._FireCycleModifier) then
 						_Fire(p_Bot)
 					end
 				end

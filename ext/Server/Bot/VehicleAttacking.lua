@@ -125,10 +125,11 @@ function VehicleAttacking:UpdateAttackingVehicle(p_DeltaTime, p_Bot)
 						self:Fire(p_Bot)
 					end
 				else
-					if p_Bot._ShotTimer >= 0.6 then
+					if p_Bot._ShotTimer >= (0.6 * p_Bot._FireCycleModifier) then
 						p_Bot._ShotTimer = 0.0
+						p_Bot._FireCycleModifier = 0.8 + (math.random() * 1.2) -- between 0.8 and 2.0
 					end
-					if p_Bot._ShotTimer >= 0.3 and p_Bot._VehicleReadyToShoot then
+					if p_Bot._ShotTimer >= (0.3 * p_Bot._FireCycleModifier) and p_Bot._VehicleReadyToShoot then
 						self:Fire(p_Bot)
 					end
 				end
