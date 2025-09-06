@@ -12,21 +12,34 @@ local m_Vehicles = require('Vehicles')
 ---@type Logger
 local m_Logger = Logger('Bot', Debug.Server.BOT)
 
-
+-- Create a new bot.
 ---@param p_Player Player
 function Bot:__init(p_Player)
 	-- Player Object.
 	---@type Player
 	self.m_Player = p_Player
+	-- The player name.
 	---@type string
 	self.m_Name = p_Player.name
+	-- The ID of the player.
 	---@type integer
 	self.m_Id = p_Player.id
 
 	-- statemachine-part
+	-- The active state object.
+	-- TODO: think about making use of subclasses which work like `class ("StateAttacking", BaseSoldierState)` & `class ("StateInVehicleAttacking", BaseInVehicleState)` & `class ("BaseInVehicleState", BaseVehicleState)`.
+	---@type StateAttacking|StateIdle|StateInVehicleAttacking|StateInVehicleChopperControl|StateInVehicleIdle|StateInVehicleJetControl|StateInVehicleMoving|StateInVehicleStationaryAAControl|StateMoving|StateOnVehicleAttacking|StateOnVehicleIdle
 	self.m_ActiveState = g_BotStates.States.Idle
+	-- TODO: only used in StateInVehicleAttacking. Might make sense to move it to that class. Or move it to a BaseState class and inherit that in every other state as a subclass.
+	-- The timer of the current state.
 	self.m_StateTimer = 0.0
 
+	--[[
+		TODO: move this to an inner class. Like `Bot.Persona = class('Bot.Persona')` or `Bot.Attributes = class('Bot.Attributes')` and have there all the attributes.
+		If it is going to be persona you can add even more stuff to it like name, clan tag, dog tags etc.
+		Percentage kit choice, percentage weapon choice, behaviors like "TriesToRevengeAfterXDeaths" by pulling out the noobtube or "PlayForKills", "PlayForObjective" etc etc.
+		This can get a huge thing in the future if it gets fed with data.
+	]]
 	-- create some character proporties
 	---@type BotBehavior
 	self.m_Behavior = nil
@@ -44,9 +57,12 @@ function Bot:__init(p_Player)
 	---@type BotMoveModes
 	self._MoveMode = BotMoveModes.Standstill
 	self._ForcedMovement = false
+
+	-- TODO: this whole block could be moved to an inner class `Bot.Loadout = class('Bot.Loadout')`.
 	---@type BotKits|integer
 	self.m_Kit = nil
 	-- Only used in BotSpawner.
+	-- The bot color is the soldier camo (color).
 	---@type BotColors|integer
 	self.m_Color = nil
 	---@type Weapon|nil
@@ -65,6 +81,7 @@ function Bot:__init(p_Player)
 	self.m_Grenade = nil
 	---@type Weapon|nil
 	self.m_Knife = nil
+
 	self._Respawning = false
 	self.m_HasBeacon = false
 	self.m_DontRevive = false
@@ -216,25 +233,42 @@ end
 -- Public Functions
 -- =============================================
 
----@param p_Player Player
+-- Initialize a revive on a teammate.
+---@param p_Player Player the player to revive.
 function Bot:Revive(p_Player)
-	if self.m_Kit == BotKits.Assault and
-		p_Player.corpse and
-		not p_Player.corpse.isDead and
-		not Globals.IsGm and
-		not Globals.IsScavenger and
-		self.m_Player.soldier ~= nil and
-		self.m_Player.soldier.weaponsComponent.weapons[6] and
+	-- Config for revives disabled.
+	if not Config.BotsRevive then return end
+
+	-- TODO: if some mod allows defib in other kits then this isn't accurate.
+	-- Only Assaults can revive.
+	if self.m_Kit ~= BotKits.Assault then return end
+
+	-- TODO: if some mod allows defib in one of these modes then this isn't accurate.
+	-- These gamemodes don't allow revives.
+	if Globals.IsGm or Globals.IsScavenger then return end
+
+	-- The player to revive is not revivable. Could be already alive or dead.
+	if not p_Player.corpse or p_Player.corpse.isDead then return end
+
+	-- The bot is not alive.
+	if not self.m_Player.soldier then return end
+
+	--[[
+		TODO: if some mod allows defib in other weapon slots then this isn't accurate.
+		Might make sense to create a m_HasDefibrillator bool inside the non-existing Bot.Loadout class.
+		And then get rid of all other checks that are not needed.
+	]]
+	-- Make sure the bot has a defibrillator.
+	if self.m_Player.soldier.weaponsComponent.weapons[6] and
 		string.find(self.m_Player.soldier.weaponsComponent.weapons[6].name, "Defibrillator") then
-		if Config.BotsRevive then
-			self._ActiveAction = BotActionFlags.ReviveActive
-			self._ShootPlayerName = p_Player.name
-			self._ShootPlayer = PlayerManager:GetPlayerByName(self._ShootPlayerName)
-			self._ShootPlayerVehicleType = VehicleTypes.NoVehicle -- does not matter here
-		end
+		self._ActiveAction = BotActionFlags.ReviveActive
+		self._ShootPlayerName = p_Player.name
+		self._ShootPlayer = PlayerManager:GetPlayerByName(self._ShootPlayerName)
+		self._ShootPlayerVehicleType = VehicleTypes.NoVehicle -- does not matter here
 	end
 end
 
+-- For vehicles to block missiles this fires a flare or smoke.
 ---@param p_TimeDelay number
 function Bot:FireFlareSmoke(p_TimeDelay)
 	self:_SetDelayedInput(EntryInputActionEnum.EIAFireCountermeasure, 1, p_TimeDelay)

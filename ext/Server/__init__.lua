@@ -74,6 +74,7 @@ PermissionManager = require('PermissionManager')
 
 
 function FunBotServer:__init()
+	-- Used to calculate the respawn delay.
 	self.m_PlayerKilledDelay = 0
 	Events:Subscribe('Engine:Init', self, self.OnEngineInit)
 	Events:Subscribe('Extension:Loaded', self, self.OnExtensionLoaded)
@@ -101,6 +102,7 @@ function FunBotServer:OnExtensionLoaded()
 	self:OnModReloaded()
 end
 
+-- Register all events
 function FunBotServer:RegisterEvents()
 	Events:Subscribe('Extension:Unloading', self, self.OnExtensionUnloading)
 
@@ -136,17 +138,18 @@ function FunBotServer:RegisterEvents()
 	Events:Subscribe('CombatArea:PlayerDeserting', self, self.OnCombatAreaDeserting)
 	Events:Subscribe('CombatArea:PlayerReturning', self, self.OnCombatAreaReturning)
 	Events:Subscribe('LifeCounter:BaseDestroyed', self, self.OnLifeCounterBaseDestoyed)
-
-	Events:Subscribe('NodeCollection:FinishedLoading', self, self.OnFinishedLoading)
 end
 
+-- Register all hooks.
 function FunBotServer:RegisterHooks()
 	Hooks:Install('Soldier:Damage', 100, self, self.OnSoldierDamage)
 	Hooks:Install('EntityFactory:Create', 100, self, self.OnEntityFactoryCreate)
 	Hooks:Install('BulletEntity:Collision', 1, self, self.OnBulletEntityCollision)
 end
 
+-- Register all custom events.
 function FunBotServer:RegisterCustomEvents()
+	Events:Subscribe('NodeCollection:FinishedLoading', self, self.OnFinishedLoading)
 	NetEvents:Subscribe("Botmanager:RaycastResults", self, self.OnClientRaycastResults)
 	Events:Subscribe('Bot:AbortWait', self, self.OnBotAbortWait)
 	Events:Subscribe('Bot:ExitVehicle', self, self.OnBotExitVehicle)
@@ -162,6 +165,7 @@ function FunBotServer:RegisterCustomEvents()
 	m_NodeEditor:RegisterCustomEvents()
 end
 
+-- Register instance callbacks.
 function FunBotServer:RegisterCallbacks()
 	-- Use server-sided bullet damage.
 	ResourceManager:RegisterInstanceLoadHandler(Guid('C4DCACFF-ED8F-BC87-F647-0BC8ACE0D9B4'),
@@ -704,6 +708,7 @@ end
 -- Register Callbacks.
 -- =============================================
 
+-- TODO: what is this doing? add a comment.
 ---@param p_ServerSettings ServerSettings|DataContainer
 function FunBotServer:OnServerSettingsCallback(p_ServerSettings)
 	p_ServerSettings = ServerSettings(p_ServerSettings)
@@ -712,6 +717,7 @@ function FunBotServer:OnServerSettingsCallback(p_ServerSettings)
 	m_Logger:Write("Changed ServerSettings")
 end
 
+-- Set up if the game should use server sided bullet damage for all players or just for bots.
 ---@param p_SyncedGameSettings SyncedGameSettings|DataContainer
 function FunBotServer:OnSyncedGameSettingsCallback(p_SyncedGameSettings)
 	p_SyncedGameSettings = SyncedGameSettings(p_SyncedGameSettings)
@@ -736,6 +742,8 @@ function FunBotServer:OnStationaryAACallback(p_FiringFunctionData)
 	-- p_FiringFunctionData.fireLogic.clientFireRateMultiplier = Config.clientFireRateMultiplier
 end
 
+-- Tweak team setup.
+-- TODO: this will require some tweaks once the runtime branch releases.
 ---@param p_AutoTeamEntityData AutoTeamEntityData|DataContainer
 function FunBotServer:OnAutoTeamEntityDataCallback(p_AutoTeamEntityData)
 	p_AutoTeamEntityData = AutoTeamEntityData(p_AutoTeamEntityData)
@@ -748,6 +756,7 @@ function FunBotServer:OnAutoTeamEntityDataCallback(p_AutoTeamEntityData)
 	p_AutoTeamEntityData.forceIntoSquad = true
 end
 
+-- Store the respawn delay.
 ---@param p_HumanPlayerEntityData HumanPlayerEntityData|DataContainer
 function FunBotServer:OnHumanPlayerEntityDataCallback(p_HumanPlayerEntityData)
 	p_HumanPlayerEntityData = HumanPlayerEntityData(p_HumanPlayerEntityData)
@@ -758,6 +767,7 @@ end
 -- Functions.
 -- =============================================
 
+-- Support loading the mod mid game.
 function FunBotServer:OnModReloaded()
 	local s_FullLevelPath = SharedUtils:GetLevelName()
 
@@ -775,6 +785,7 @@ function FunBotServer:OnModReloaded()
 	end
 end
 
+-- Set up the used respawn time, which gets calculated by value * rcon multiplier.
 function FunBotServer:SetRespawnDelay()
 	local s_RconResponseTable = RCON:SendCommand('vars.playerRespawnTime')
 	local s_RespawnTimeModifier = tonumber(s_RconResponseTable[2]) / 100
@@ -786,10 +797,12 @@ function FunBotServer:SetRespawnDelay()
 	end
 end
 
+-- Give each bot a persona through generated attributes.
 function FunBotServer:CreateBotAttributes()
 	m_BotCreator:CreateBotAttributes()
 end
 
+-- Compatibility with other mods.
 function FunBotServer:DetectSpecialMods()
 	local s_RconResponseTable = RCON:SendCommand('modlist.ListRunning')
 	Globals.IsInputRestrictionDisabled = false
@@ -808,6 +821,7 @@ function FunBotServer:DetectSpecialMods()
 	end
 end
 
+-- Handle engine input restrictions by subscribing to relevant entity events.
 function FunBotServer:RegisterInputRestrictionEventCallbacks()
 	-- Disable inputs on start of round.
 	Globals.IsInputAllowed = true
@@ -847,6 +861,8 @@ function FunBotServer:RegisterInputRestrictionEventCallbacks()
 	end
 end
 
+-- Set up the amount of bots per team to create based on the settings for the current gamemode.
+---@param p_GameMode string
 function FunBotServer:SetMaxBotsPerTeam(p_GameMode)
 	if p_GameMode == 'TeamDeathMatchC0' then
 		Globals.MaxBotsPerTeam = Config.MaxBotsPerTeamTdmc
@@ -877,6 +893,7 @@ function FunBotServer:SetMaxBotsPerTeam(p_GameMode)
 	end
 end
 
+-- Update number of teams and current gamemode.
 function FunBotServer:SetGameMode(p_GameMode, p_LevelName)
 	Globals.NrOfTeams = 2
 	if p_GameMode == 'TeamDeathMatchC0' or p_GameMode == 'TeamDeathMatch0' then
