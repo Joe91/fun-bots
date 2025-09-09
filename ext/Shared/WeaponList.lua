@@ -582,6 +582,8 @@ function WeaponList:UpdateWeaponList()
 	end
 end
 
+---@param p_Name string
+---@return Weapon?
 function WeaponList:getWeapon(p_Name)
 	local s_RetWeapon = nil
 	local s_AllPossibleWeapons = {}
