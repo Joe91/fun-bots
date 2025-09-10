@@ -2,7 +2,7 @@
 ---@overload fun():BotManager
 BotManager = class('BotManager')
 
-require('Bot')
+require('Bot/Bot')
 
 ---@type Utilities
 local m_Utilities = require('__shared/Utilities')

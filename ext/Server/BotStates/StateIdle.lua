@@ -11,9 +11,6 @@ StateIdle = class('StateIdle')
 -- - moving
 -- (- vehicle-idle?)
 
--- bot-methods
-local m_BotMovement = require('Bot/BotMovement')
-
 function StateIdle:__init()
 	-- Nothing to do.
 end
@@ -38,8 +35,8 @@ function StateIdle:Update(p_Bot, p_DeltaTime)
 			p_Bot._SpawnProtectionTimer = p_Bot._SpawnProtectionTimer - p_DeltaTime
 		end
 
-		m_BotMovement:UpdateYaw(p_Bot)
-		m_BotMovement:LookAround(p_Bot, p_DeltaTime)
+		p_Bot:UpdateYaw()
+		p_Bot:LookAround(p_DeltaTime)
 		p_Bot:_UpdateInputs(p_DeltaTime)
 		return
 	end
@@ -72,7 +69,7 @@ end
 ---@param p_Bot Bot
 function StateIdle:UpdateVeryFast(p_Bot)
 	-- Update yaw of soldier every tick.
-	m_BotMovement:UpdateYaw(p_Bot)
+	p_Bot:UpdateYaw()
 end
 
 ---slow update-function
