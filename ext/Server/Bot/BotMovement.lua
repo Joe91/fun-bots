@@ -23,6 +23,7 @@ function Bot:UpdateNormalMovement(p_DeltaTime)
 
 		if #self._ShootWayPoints > 0 then -- We need to go back to the path first.		
 			s_Point = m_NodeCollection:Get(s_ActivePointIndex, self._PathIndex)
+			---@cast s_Point -nil
 			local s_ClosestDistance = self.m_Player.soldier.worldTransform.trans:Distance(s_Point.Position)
 			local s_ClosestNode = s_ActivePointIndex
 			for i = 1, Registry.BOT.NUMBER_NODES_TO_SCAN_AFTER_ATTACK, 2 do
@@ -104,6 +105,7 @@ function Bot:UpdateNormalMovement(p_DeltaTime)
 					if Config.UseVehicles then
 						local s_RetCode, s_Position = self:_EnterVehicle(false)
 						if s_RetCode == 0 then
+							---@cast s_Position -nil
 							self:_ResetActionFlag(BotActionFlags.OtherActionActive)
 							local s_Node = g_GameDirector:FindClosestPath(s_Position, true, false, self.m_ActiveVehicle.Terrain)
 

@@ -35,7 +35,7 @@ function BotManager:RegisterVars()
 	self._BotAttackBotTimer = 0.0
 	self._BotReviveBotTimer = 0.0
 	self._DestroyBotsTimer = 0.0
-	---@type integer[]
+	---@type string[]
 	---`BotId[]`
 	self._BotsToDestroy = {}
 
@@ -1556,9 +1556,9 @@ function BotManager:_CheckForBotBotRevive()
 	end
 
 	local s_NrOfRaycastsDone = 0
-	---@type MaterialFlags
+	---@type MaterialFlags|integer
 	local s_MaterialFlags = 0
-	---@type RayCastFlags
+	---@type RayCastFlags|integer
 	local s_RaycastFlags = RayCastFlags.DontCheckWater | RayCastFlags.DontCheckCharacter
 
 	if #s_MedicBots > 0 and #s_BotsToRevive > 0 then

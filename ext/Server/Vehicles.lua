@@ -24,7 +24,7 @@ function Vehicles:FindOutVehicleType(p_Player)
 	return s_VehicleType
 end
 
----@param p_Player Player
+---@param p_Player Player?
 function Vehicles:GetVehicleName(p_Player)
 	if p_Player and p_Player.controlledControllable and not p_Player.controlledControllable:Is("ServerSoldierEntity") then
 		return VehicleEntityData(p_Player.controlledControllable.data).controllableType:gsub(".+/.+/", "")
@@ -33,7 +33,7 @@ function Vehicles:GetVehicleName(p_Player)
 	end
 end
 
----@param p_Player Player
+---@param p_Player Player?
 function Vehicles:GetVehicle(p_Player)
 	local s_VehicleName = self:GetVehicleName(p_Player)
 	if s_VehicleName == nil then
@@ -64,16 +64,16 @@ function Vehicles:GetVehicleByEntity(p_Entity)
 	return s_VehicleData
 end
 
----@param p_Entity ControllableEntity
+---@param p_Entity ControllableEntity?
 ---@param p_PlayerIsDriver boolean
 function Vehicles:GetNrOfFreeSeats(p_Entity, p_PlayerIsDriver)
-	local s_MaxEntries = p_Entity.entryCount
-	local s_NrOfFreeSeats = 0
-	local s_NumBotsInVehicle = 0
-
 	if not p_Entity then
 		return 0
 	end
+
+	local s_MaxEntries = p_Entity.entryCount
+	local s_NrOfFreeSeats = 0
+	local s_NumBotsInVehicle = 0
 
 	local vehicleData = self:GetVehicle(p_Entity:GetPlayerInEntry(0))
 	if not vehicleData then
@@ -95,9 +95,11 @@ function Vehicles:GetNrOfFreeSeats(p_Entity, p_PlayerIsDriver)
 	end
 
 	for i = 0, s_MaxEntries - 1 do
-		if p_Entity:GetPlayerInEntry(i) == nil then
+		local s_Player = p_Entity:GetPlayerInEntry(i)
+
+		if s_Player == nil then
 			s_NrOfFreeSeats = s_NrOfFreeSeats + 1
-		elseif m_Utilities:isBot(p_Entity:GetPlayerInEntry(i)) then
+		elseif m_Utilities:isBot(s_Player) then
 			s_NumBotsInVehicle = s_NumBotsInVehicle + 1
 		end
 

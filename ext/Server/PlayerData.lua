@@ -5,10 +5,11 @@ PlayerData = class('PlayerData')
 ---@class PlayerInformation
 ---@field Vehicle VehicleTypes|integer
 ---@field ShootPlayerName string
+---@field Team TeamId
 
 function PlayerData:__init()
 	---@type PlayerInformation[]
-	self._Players = { PlayerInformation }
+	self._Players = {}
 end
 
 ---comment
@@ -17,7 +18,7 @@ function PlayerData:SetPlayerData(p_Player)
 	self._Players[p_Player.name] = {
 		Vehicle = VehicleTypes.NoVehicle,
 		ShootPlayerName = '',
-		Team = p_Player.teamId ---@type TeamId
+		Team = p_Player.teamId
 	}
 end
 

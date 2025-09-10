@@ -203,22 +203,24 @@ function string:isDigit(p_Value)
 	return tonumber(p_Value) ~= nil
 end
 
+---@param p_Str string
 ---@param p_Sep string
 ---@return table<string>
-function string:split(p_Sep)
+function string.split(p_Str, p_Sep)
 	local s_Fields = nil
 	p_Sep, s_Fields = p_Sep or ':', {}
 	local s_Pattern = string.format("([^%s]+)", p_Sep)
 
-	self:gsub(s_Pattern, function(c) s_Fields[#s_Fields + 1] = c end)
+	p_Str:gsub(s_Pattern, function(c) s_Fields[#s_Fields + 1] = c end)
 
 	return s_Fields
 end
 
+---@param p_Str string
 ---@param p_Start string
 ---@return boolean
-function string:starts(p_Start)
-	return string.sub(self, 1, string.len(p_Start)) == p_Start
+function string.starts(p_Str, p_Start)
+	return string.sub(p_Str, 1, string.len(p_Start)) == p_Start
 end
 
 function requireExists(p_Module)

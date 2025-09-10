@@ -59,7 +59,7 @@ end
 
 ---@param p_Round integer
 function BotSpawner:OnLevelLoaded(p_Round)
-	local s_CurrentGameMode = SharedUtils:GetCurrentGameMode()
+	local s_CurrentGameMode = SharedUtils:GetCurrentGameMode() or ""
 	if (Globals.LevelName == "XP5_002" or Globals.LevelName == "XP5_004") and s_CurrentGameMode:match("Conquest") then
 		print('Enabling dynamic jets to spawn.')
 		Globals.MapHasDynamiJetSpawns = true
@@ -1059,7 +1059,6 @@ function BotSpawner:_FindAttackedSpawnPoint(p_TeamId)
 	local s_BestSpawnPoint = nil
 	local s_LowestFlagLocation = 100.0
 	local s_EntityIterator = EntityManager:GetIterator("ServerCapturePointEntity")
-	---@type CapturePointEntity
 	local s_Entity = s_EntityIterator:Next()
 
 	while s_Entity do
@@ -1105,7 +1104,6 @@ function BotSpawner:_FindClosestSpawnPoint(p_TeamId)
 	-- Enemy and Neutralized CapturePoints.
 	local s_TargetLocation = self:_FindTargetLocation(p_TeamId)
 	local s_EntityIterator = EntityManager:GetIterator("ServerCapturePointEntity")
-	---@type CapturePointEntity
 	local s_Entity = s_EntityIterator:Next()
 
 	while s_Entity do
@@ -1154,7 +1152,6 @@ function BotSpawner:_FindTargetLocation(p_TeamId)
 	---@type Vec3|nil
 	local s_TargetLocation = nil
 	local s_EntityIterator = EntityManager:GetIterator("ServerCapturePointEntity")
-	---@type CapturePointEntity
 	local s_Entity = s_EntityIterator:Next()
 
 	while s_Entity do
@@ -1318,6 +1315,7 @@ function BotSpawner:_SpawnSingleWayBot(p_Player, p_UseRandomWay, p_ActiveWayInde
 	local s_InverseDirection = nil
 
 	if s_Name ~= nil or s_IsRespawn then
+		---@cast s_Name -nil
 		-- g_Profiler:Start("BotSpawner:SpawnPart2") -- about 60 ms on conquest (close to 0 on deathmatch)
 		if Globals.UsedSpawnMethod == SpawnMethod.Spawn then
 			local s_Bot = self:GetBot(p_ExistingBot, s_Name, s_TeamId, s_SquadId)
@@ -1560,8 +1558,8 @@ end
 ---comment
 ---@param p_Bot Bot
 ---@param p_TeamId TeamId
----@return string
----@return unknown
+---@return string?
+---@return ControllableEntity?
 function BotSpawner:_GetSpecialSpawnEnity(p_Bot, p_TeamId)
 	if Globals.IsAirSuperiority or Globals.MapHasDynamiJetSpawns then
 		return "SpawnInJet", p_Bot.m_Player.controlledControllable
@@ -1696,6 +1694,7 @@ function BotSpawner:_GetSpawnPoint(p_TeamId, p_SquadId)
 			end
 
 			s_TargetNode = m_NodeCollection:Get(s_IndexOnPath, s_ActiveWayIndex)
+			---@cast s_TargetNode -nil
 			local s_SpawnPoint = s_TargetNode.Position
 
 			-- Check for nearby player.

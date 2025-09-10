@@ -647,8 +647,8 @@ function FunBotUIServer:_writeSettings(p_Player, p_Request)
 				end
 			elseif l_Item.Type == Type.Integer or l_Item.Type == Type.Float then
 				s_Value = tonumber(p_Request[l_Item.Name])
-				---@type Range
 				local s_Reference = l_Item.Reference
+				---@cast s_Reference Range
 
 				if s_Reference:IsValid(s_Value) then
 					s_Valid = true
