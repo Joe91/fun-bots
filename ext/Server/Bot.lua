@@ -790,7 +790,7 @@ function Bot:_CheckShouldExitVehicleIfPassenger()
 		end
 
 		if s_ShouldExit then
-			--self:AbortAttack()  I understand it should be needed because when _DoExitVehicle gets executed it will also do this too
+			self:AbortAttack()
 			self:ExitVehicle()
 		end
 	end

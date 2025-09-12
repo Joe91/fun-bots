@@ -28,10 +28,6 @@ function StateOnVehicleIdle:Update(p_Bot, p_DeltaTime)
 		p_Bot:SetState(g_BotStates.States.Idle)
 		return
 	end
-	if p_Bot.m_Player.controlledControllable == nil and p_Bot.m_Player.attachedControllable == nil then
-		p_Bot:SetState(g_BotStates.States.Moving)
-		return
-	end
 
 	-- update state-timer
 	p_Bot.m_StateTimer = p_Bot.m_StateTimer + p_DeltaTime
@@ -51,14 +47,6 @@ end
 ---@param p_Bot Bot
 ---@param p_DeltaTime number
 function StateOnVehicleIdle:UpdateFast(p_Bot, p_DeltaTime)
-	if p_Bot.m_Player.soldier == nil then
-		p_Bot:SetState(g_BotStates.States.Idle)
-		return
-	end
-	if p_Bot.m_Player.controlledControllable == nil and p_Bot.m_Player.attachedControllable == nil then
-		p_Bot:SetState(g_BotStates.States.Moving)
-		return
-	end
 	-- trasition to attack
 	if p_Bot._ShootPlayer ~= nil then
 		p_Bot:SetState(g_BotStates.States.OnVehicleAttacking)
@@ -68,14 +56,6 @@ end
 ---update in every frame
 ---@param p_Bot Bot
 function StateOnVehicleIdle:UpdateVeryFast(p_Bot)
-	if p_Bot.m_Player.soldier == nil then
-		p_Bot:SetState(g_BotStates.States.Idle)
-		return
-	end
-	if p_Bot.m_Player.controlledControllable == nil and p_Bot.m_Player.attachedControllable == nil then
-		p_Bot:SetState(g_BotStates.States.Moving)
-		return
-	end
 	-- Update yaw of soldier every tick.
 	m_BotMovement:UpdateYaw(p_Bot)
 end
@@ -85,11 +65,6 @@ end
 ---@param p_DeltaTime number
 function StateOnVehicleIdle:UpdateSlow(p_Bot, p_DeltaTime)
 	if p_Bot.m_Player.soldier == nil then
-		p_Bot:SetState(g_BotStates.States.Idle)
-		return
-	end
-	if p_Bot.m_Player.controlledControllable == nil and p_Bot.m_Player.attachedControllable == nil then
-		p_Bot:SetState(g_BotStates.States.Moving)
 		return
 	end
 	p_Bot:_CheckForVehicleActions(p_DeltaTime, false)

@@ -22,10 +22,6 @@ function StateInVehicleChopperControl:Update(p_Bot, p_DeltaTime)
 		p_Bot:SetState(g_BotStates.States.Idle)
 		return
 	end
-	if p_Bot.m_Player.controlledControllable == nil and p_Bot.m_Player.attachedControllable == nil then
-		p_Bot:SetState(g_BotStates.States.Moving)
-		return
-	end
 
 	local s_IsAttacking = p_Bot._ShootPlayer ~= nil
 	-- update state-timer
@@ -55,11 +51,6 @@ end
 ---@param p_DeltaTime number
 function StateInVehicleChopperControl:UpdateFast(p_Bot, p_DeltaTime)
 	if p_Bot.m_Player.soldier == nil then
-		p_Bot:SetState(g_BotStates.States.Idle)
-		return
-	end
-	if p_Bot.m_Player.controlledControllable == nil and p_Bot.m_Player.attachedControllable == nil then
-		p_Bot:SetState(g_BotStates.States.Moving)
 		return
 	end
 
@@ -83,13 +74,9 @@ end
 ---@param p_DeltaTime number
 function StateInVehicleChopperControl:UpdateSlow(p_Bot, p_DeltaTime)
 	if p_Bot.m_Player.soldier == nil then
-		p_Bot:SetState(g_BotStates.States.Idle)
 		return
 	end
-	if p_Bot.m_Player.controlledControllable == nil and p_Bot.m_Player.attachedControllable == nil then
-		p_Bot:SetState(g_BotStates.States.Moving)
-		return
-	end
+
 	local s_IsAttacking = p_Bot._ShootPlayer ~= nil
 	p_Bot:_CheckForVehicleActions(p_DeltaTime, true)
 	if not s_IsAttacking then

@@ -33,15 +33,10 @@ function StateInVehicleAttacking:Update(p_Bot, p_DeltaTime)
 		p_Bot:SetState(g_BotStates.States.Idle)
 		return
 	end
-	if p_Bot.m_Player.controlledControllable == nil and p_Bot.m_Player.attachedControllable == nil then
-		p_Bot:SetState(g_BotStates.States.Moving)
-		return
-	end
 	if p_Bot._ShootPlayer == nil then
 		p_Bot:SetState(g_BotStates.States.InVehicleMoving)
 		return
 	end
-
 
 	-- use state-timer to change vehicle movement during attack
 	if not m_Vehicles:IsGunship(p_Bot.m_ActiveVehicle) then
@@ -86,11 +81,6 @@ end
 ---@param p_DeltaTime number
 function StateInVehicleAttacking:UpdateFast(p_Bot, p_DeltaTime)
 	if p_Bot.m_Player.soldier == nil then
-		p_Bot:SetState(g_BotStates.States.Idle)
-		return
-	end
-	if p_Bot.m_Player.controlledControllable == nil and p_Bot.m_Player.attachedControllable == nil then
-		p_Bot:SetState(g_BotStates.States.Moving)
 		return
 	end
 
@@ -115,26 +105,18 @@ end
 ---update in every frame
 ---@param p_Bot Bot
 function StateInVehicleAttacking:UpdateVeryFast(p_Bot)
-	if p_Bot.m_Player.controlledControllable == nil and p_Bot.m_Player.attachedControllable == nil then
-		p_Bot:SetState(g_BotStates.States.Moving)
-		return
-	end
+
 end
 
 ---slow update-function
 ---@param p_Bot Bot
 ---@param p_DeltaTime number
 function StateInVehicleAttacking:UpdateSlow(p_Bot, p_DeltaTime)
-	if p_Bot.m_Player.soldier == nil then
-		p_Bot:SetState(g_BotStates.States.Idle)
+	if p_Bot.m_Player.soldier then
+		p_Bot:_CheckForVehicleActions(p_DeltaTime, true)
+		p_Bot:_DoExitVehicle()
 		return
 	end
-	if p_Bot.m_Player.controlledControllable == nil and p_Bot.m_Player.attachedControllable == nil then
-		p_Bot:SetState(g_BotStates.States.Moving)
-		return
-	end
-	p_Bot:_CheckForVehicleActions(p_DeltaTime, true)
-	p_Bot:_DoExitVehicle()
 end
 
 if g_StateInVehicleAttacking == nil then
