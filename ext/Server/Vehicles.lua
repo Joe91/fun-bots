@@ -67,13 +67,13 @@ end
 ---@param p_Entity ControllableEntity
 ---@param p_PlayerIsDriver boolean
 function Vehicles:GetNrOfFreeSeats(p_Entity, p_PlayerIsDriver)
-	local s_MaxEntries = p_Entity.entryCount
-	local s_NrOfFreeSeats = 0
-	local s_NumBotsInVehicle = 0
-
 	if not p_Entity then
 		return 0
 	end
+
+	local s_MaxEntries = p_Entity.entryCount
+	local s_NrOfFreeSeats = 0
+	local s_NumBotsInVehicle = 0
 
 	local vehicleData = self:GetVehicle(p_Entity:GetPlayerInEntry(0))
 	if not vehicleData then

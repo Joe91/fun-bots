@@ -127,7 +127,14 @@ function VehicleAttacking:UpdateAttackingVehicle(p_DeltaTime, p_Bot)
 				else
 					if p_Bot._ShotTimer >= (0.6 * p_Bot._FireCycleModifier) then
 						p_Bot._ShotTimer = 0.0
-						p_Bot._FireCycleModifier = 0.8 + (math.random() * 1.2) -- between 0.8 and 2.0
+						local behaviorFactor = 1.0
+						if p_Bot.m_Behavior == BotBehavior.LongerAttacking then
+							behaviorFactor = 0.8
+						elseif p_Bot.m_Behavior == BotBehavior.AbortAttackFast then
+							behaviorFactor = 1.4
+						end
+						local spread = 0.7 - (p_Bot.m_Skill * 0.4 * behaviorFactor)
+						p_Bot._FireCycleModifier = math.max(0.7, math.min(2.0, Utilities:RandomNormal(1.0, spread)))
 					end
 					if p_Bot._ShotTimer >= (0.3 * p_Bot._FireCycleModifier) and p_Bot._VehicleReadyToShoot then
 						self:Fire(p_Bot)

@@ -139,6 +139,7 @@ function Bot:__init(p_Player)
 	self._OnSwitch = false
 	self._ActiveDelay = 0.0
 	self._VehicleMoveWhileShooting = false
+	self._OnFootStopMovingWhenAttacking = false
 	self._FireCycleModifier = 1.0
 
 	-- Vehicle stuff.
@@ -1046,7 +1047,9 @@ function Bot:ResetSpawnVars()
 	self._ExitVehicleActive = false
 	self._OnSwitch = false
 	self._VehicleMoveWhileShooting = false
+	self._OnFootStopMovingWhenAttacking = false
 	self._FireCycleModifier = 1.0 -- don't init it at all on spawn?
+
 
 	self.m_AttackPriority = 1
 	self.m_DelayedInputs = {}
