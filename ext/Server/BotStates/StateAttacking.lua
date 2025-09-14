@@ -36,6 +36,14 @@ function StateAttacking:Update(p_Bot, p_DeltaTime)
 		p_Bot:SetState(g_BotStates.States.Moving)
 		return
 	end
+	if p_Bot.m_StateTimer == 0.0 or p_Bot.m_StateTimer > 5.0 then
+		p_Bot.m_StateTimer = 0.0
+		if m_Utilities:CheckProbablity(Registry.BOT.PROBABILITY_BOT_STOP_TO_SHOOT) then
+			p_Bot._OnFootStopMovingWhenAttacking = true
+		else
+			p_Bot._OnFootStopMovingWhenAttacking = false
+		end
+	end
 
 	-- update state-timer
 	p_Bot.m_StateTimer = p_Bot.m_StateTimer + p_DeltaTime

@@ -34,7 +34,7 @@ Registry = {
 		-- Number of Nodes to load in one cycle
 		MAX_NUMBER_OF_NODES_PER_CYCLE = 1024,
 		-- experimental nametags
-		USE_EXPERIMENTAL_NAMETAGS = false,
+		USE_EXPERIMENTAL_NAMETAGS = true,
 	},
 	-- Version and Release related variables.
 	-- Variables related to the current build version, version and the type of version.
@@ -189,6 +189,7 @@ Registry = {
 		BOT_DESTORY_DELAY = 0.05,
 		-- Distance to closest objective on which passengers should exit vehicles
 		PASSENGER_EXIT_DISTANCE = 50,
+		PROBABILITY_BOT_STOP_TO_SHOOT = 80,
 	},
 	-- Bot team balancing (only in keep_playercount - spawn-mode)
 	BOT_TEAM_BALANCING = {

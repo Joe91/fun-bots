@@ -43,9 +43,9 @@ function StateInVehicleAttacking:Update(p_Bot, p_DeltaTime)
 		if p_Bot.m_StateTimer == 0.0 or p_Bot.m_StateTimer > 5.0 then
 			p_Bot.m_StateTimer = 0.0
 			if m_Utilities:CheckProbablity(Registry.VEHICLES.PROBABILITY_VEHICLE_STOP_TO_SHOOT) then
-				p_Bot._VehicleMoveWhileShooting = false
-			else
 				p_Bot._VehicleMoveWhileShooting = true
+			else
+				p_Bot._VehicleMoveWhileShooting = false
 			end
 		end
 	else
@@ -105,6 +105,7 @@ end
 ---update in every frame
 ---@param p_Bot Bot
 function StateInVehicleAttacking:UpdateVeryFast(p_Bot)
+
 end
 
 ---slow update-function
@@ -114,6 +115,7 @@ function StateInVehicleAttacking:UpdateSlow(p_Bot, p_DeltaTime)
 	if p_Bot.m_Player.soldier then
 		p_Bot:_CheckForVehicleActions(p_DeltaTime, true)
 		p_Bot:_DoExitVehicle()
+		return
 	end
 end
 

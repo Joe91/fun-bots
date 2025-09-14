@@ -82,6 +82,7 @@ end
 ---update in every frame
 ---@param p_Bot Bot
 function StateInVehicleJetControl:UpdateVeryFast(p_Bot)
+
 end
 
 ---slow update-function

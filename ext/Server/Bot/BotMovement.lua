@@ -546,16 +546,24 @@ function BotMovement:UpdateShootMovement(p_DeltaTime, p_Bot)
 		end
 
 		-- Do some sidewards movement from time to time.
-		if p_Bot._AttackModeMoveTimer > 20.0 then
-			p_Bot._AttackModeMoveTimer = 0.0
-		elseif p_Bot._AttackModeMoveTimer > 17.0 then
-			p_Bot:_SetInput(EntryInputActionEnum.EIAStrafe, -0.5 * Config.SpeedFactorAttack)
-		elseif p_Bot._AttackModeMoveTimer > 12.0 and p_Bot._AttackModeMoveTimer <= 13.0 then
-			p_Bot:_SetInput(EntryInputActionEnum.EIAStrafe, 0.5 * Config.SpeedFactorAttack)
-		elseif p_Bot._AttackModeMoveTimer > 7.0 and p_Bot._AttackModeMoveTimer <= 9.0 then
-			p_Bot:_SetInput(EntryInputActionEnum.EIAStrafe, 0.5 * Config.SpeedFactorAttack)
-		end
+		local movementIntensity = Config.SpeedFactorAttack
 
+		-- More frequent but still substantial movements (every 2.5 seconds, move for 1.0s)
+		if p_Bot._AttackModeMoveTimer > 15.0 then
+			p_Bot._AttackModeMoveTimer = 0.0
+		elseif p_Bot._AttackModeMoveTimer > 14.0 and p_Bot._AttackModeMoveTimer <= 15.0 then
+			p_Bot:_SetInput(EntryInputActionEnum.EIAStrafe, -movementIntensity)
+		elseif p_Bot._AttackModeMoveTimer > 12.0 and p_Bot._AttackModeMoveTimer <= 13.0 then
+			p_Bot:_SetInput(EntryInputActionEnum.EIAStrafe, movementIntensity)
+		elseif p_Bot._AttackModeMoveTimer > 9.5 and p_Bot._AttackModeMoveTimer <= 10.5 then
+			p_Bot:_SetInput(EntryInputActionEnum.EIAStrafe, -movementIntensity)
+		elseif p_Bot._AttackModeMoveTimer > 7.0 and p_Bot._AttackModeMoveTimer <= 8.0 then
+			p_Bot:_SetInput(EntryInputActionEnum.EIAStrafe, movementIntensity)
+		elseif p_Bot._AttackModeMoveTimer > 4.5 and p_Bot._AttackModeMoveTimer <= 5.5 then
+			p_Bot:_SetInput(EntryInputActionEnum.EIAStrafe, -movementIntensity)
+		elseif p_Bot._AttackModeMoveTimer > 2.0 and p_Bot._AttackModeMoveTimer <= 3.0 then
+			p_Bot:_SetInput(EntryInputActionEnum.EIAStrafe, movementIntensity)
+		end
 		p_Bot._AttackModeMoveTimer = p_Bot._AttackModeMoveTimer + p_DeltaTime
 	end
 end
@@ -598,7 +606,11 @@ function BotMovement:UpdateSpeedOfMovement(p_Bot)
 	-- Do not reduce speed if sprinting.
 	if s_SpeedVal > 0 and p_Bot._ShootPlayer ~= nil and p_Bot._ShootPlayer.soldier ~= nil and
 		p_Bot.m_ActiveSpeedValue <= BotMoveSpeeds.Normal then
-		s_SpeedVal = s_SpeedVal * Config.SpeedFactorAttack
+		if p_Bot._OnFootStopMovingWhenAttacking then -- Check for stats to stop for shoot
+			s_SpeedVal = 0
+		else
+			s_SpeedVal = s_SpeedVal * Config.SpeedFactorAttack
+		end
 	end
 
 	-- Movent speed.

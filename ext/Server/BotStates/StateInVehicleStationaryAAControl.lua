@@ -92,6 +92,7 @@ end
 ---update in every frame
 ---@param p_Bot Bot
 function StateInVehicleStationaryAAControl:UpdateVeryFast(p_Bot)
+
 end
 
 ---slow update-function

@@ -34,7 +34,6 @@ function StateOnVehicleAttacking:Update(p_Bot, p_DeltaTime)
 		p_Bot:SetState(g_BotStates.States.OnVehicleIdle)
 		return
 	end
-
 	-- update state-timer
 	p_Bot.m_StateTimer = p_Bot.m_StateTimer + p_DeltaTime
 

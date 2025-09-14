@@ -76,6 +76,7 @@ function StateInVehicleChopperControl:UpdateSlow(p_Bot, p_DeltaTime)
 	if p_Bot.m_Player.soldier == nil then
 		return
 	end
+
 	local s_IsAttacking = p_Bot._ShootPlayer ~= nil
 	p_Bot:_CheckForVehicleActions(p_DeltaTime, true)
 	if not s_IsAttacking then
