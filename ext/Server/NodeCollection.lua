@@ -584,18 +584,18 @@ function NodeCollection:Link(p_SelectionId, p_Waypoints, p_LinkID, p_OneWay)
 	local s_Selection = p_Waypoints or g_NodeCollection:GetSelected(p_SelectionId)
 	p_OneWay = p_OneWay or false
 
-	-- not used right now. Keep for future-spawn-point-handling
-	local s_SelectedSpawn = g_NodeCollection:GetSelectedSpawn(p_SelectionId)
-	if s_SelectedSpawn then
-		local s_SecetedId = s_SelectedSpawn.ID
-		if not self._SpawnPointTable[s_SelectedSpawn].Data then
-			self._SpawnPointTable[s_SelectedSpawn].Data = {}
-		end
-		local s_Links = self._SpawnPointTable[s_SelectedSpawn].Data.Links or {}
-		s_Links[#s_Links + 1] = s_SecetedId
-		self._SpawnPointTable[s_SelectedSpawn].Data.Links = s_Links
-		return true, 'Success'
-	end
+	-- -- not used right now. Keep for future-spawn-point-handling
+	-- local s_SelectedSpawn = g_NodeCollection:GetSelectedSpawn(p_SelectionId)
+	-- if s_SelectedSpawn then
+	-- 	local s_SecetedId = s_SelectedSpawn.ID
+	-- 	if not self._SpawnPointTable[s_SelectedSpawn].Data then
+	-- 		self._SpawnPointTable[s_SelectedSpawn].Data = {}
+	-- 	end
+	-- 	local s_Links = self._SpawnPointTable[s_SelectedSpawn].Data.Links or {}
+	-- 	s_Links[#s_Links + 1] = s_SecetedId
+	-- 	self._SpawnPointTable[s_SelectedSpawn].Data.Links = s_Links
+	-- 	return true, 'Success'
+	-- end
 
 	if #s_Selection == 2 then
 		-- Special case, nodes link to each other.
@@ -1278,7 +1278,7 @@ function NodeCollection:ParseSingleSpawn(p_SpawnPoint)
 				goto continue
 			end
 		end
-		if l_Path[1].Data and l_Path[1].Data.Vehicles and #l_Path[1].Data.Vehicles ~= 0 and (table.has(l_Path[1].Data.Vehicles, "air") or table.has(l_Path[1].Data.Vehicles, "water")) then
+		if l_Path[1] and l_Path[1].Data and l_Path[1].Data.Vehicles and #l_Path[1].Data.Vehicles ~= 0 and (table.has(l_Path[1].Data.Vehicles, "air") or table.has(l_Path[1].Data.Vehicles, "water")) then
 			goto continue
 		end
 
