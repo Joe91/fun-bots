@@ -327,7 +327,7 @@ function Bot:_CheckForVehicleActions(p_DeltaTime, p_AttackActive)
 		end
 	end
 
-	self:_CheckShouldExitVehicleIfPassenger()
+	self:_CheckShouldExitVehicleIfPassenger(s_VehicleEntity, s_OnVehicle)
 
 	if m_Vehicles:IsVehicleType(self.m_ActiveVehicle, VehicleTypes.MobileArtillery)
 		or m_Vehicles:IsVehicleType(self.m_ActiveVehicle, VehicleTypes.LightAA)
@@ -384,40 +384,46 @@ function Bot:_CheckForVehicleActions(p_DeltaTime, p_AttackActive)
 	end
 end
 
-function Bot:_CheckShouldExitVehicleIfPassenger()
-	if not self._ExitVehicleActive
-		and m_Vehicles:IsPassengerSeat(self.m_ActiveVehicle, self.m_Player.controlledEntryId)
+function Bot:_CheckShouldExitVehicleIfPassenger(p_VehicleEntity, p_OnVehicle)
+	if self._ExitVehicleActive then
+		return
+	end
+
+	if not p_OnVehicle
+		and not m_Vehicles:IsPassengerSeat(p_VehicleEntity, self.m_Player.controlledEntryId)
 	then
-		local s_ShouldExit = false
-		local s_ExitDistance = Registry.BOT.PASSENGER_EXIT_DISTANCE
-		local s_AllCapturePoints = g_GameDirector:GetAllCapturePoints()
-		local s_ActiveMcoms = g_GameDirector:GetActiveMcomPositions()
-		local s_CurrentPosition = self.m_Player.soldier.worldTransform.trans:Clone()
-		s_CurrentPosition.y = 0
+		return
+	end
 
-		s_Coordinates = {}
-		for l_Index = 1, #s_AllCapturePoints do
-			s_Coordinates[#s_Coordinates + 1] = s_AllCapturePoints[l_Index].transform.trans
-		end
-		for l_Index = 1, #s_ActiveMcoms do
-			s_Coordinates[#s_Coordinates + 1] = s_ActiveMcoms[l_Index]
-		end
+	local s_ShouldExit = false
+	local s_ExitDistance = Registry.BOT.PASSENGER_EXIT_DISTANCE
+	local s_AllCapturePoints = g_GameDirector:GetAllCapturePoints()
+	local s_ActiveMcoms = g_GameDirector:GetActiveMcomPositions()
+	local s_CurrentPosition = self.m_Player.soldier.worldTransform.trans:Clone()
+	s_CurrentPosition.y = 0
 
-		for l_Index = 1, #s_Coordinates do
-			local l_Coord = s_Coordinates[l_Index]
-			local s_Position = l_Coord:Clone()
-			s_Position.y = 0
+	s_Coordinates = {}
+	for l_Index = 1, #s_AllCapturePoints do
+		s_Coordinates[#s_Coordinates + 1] = s_AllCapturePoints[l_Index].transform.trans
+	end
+	for l_Index = 1, #s_ActiveMcoms do
+		s_Coordinates[#s_Coordinates + 1] = s_ActiveMcoms[l_Index]
+	end
 
-			if s_Position:Distance(s_CurrentPosition) < s_ExitDistance then
-				s_ShouldExit = true
-				break
-			end
-		end
+	for l_Index = 1, #s_Coordinates do
+		local l_Coord = s_Coordinates[l_Index]
+		local s_Position = l_Coord:Clone()
+		s_Position.y = 0
 
-		if s_ShouldExit then
-			self:AbortAttack()
-			self:ExitVehicle()
+		if s_Position:Distance(s_CurrentPosition) < s_ExitDistance then
+			s_ShouldExit = true
+			break
 		end
+	end
+
+	if s_ShouldExit then
+		self:AbortAttack()
+		self:ExitVehicle()
 	end
 end
 
