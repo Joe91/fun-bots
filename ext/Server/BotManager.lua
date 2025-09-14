@@ -1133,7 +1133,10 @@ function BotManager:ExitVehicle(p_Player)
 	local s_BotStates = g_BotStates
 	for l_Index = 1, #self._BotsByTeam[p_Player.teamId + 1] do
 		local l_Bot = self._BotsByTeam[p_Player.teamId + 1][l_Index]
-		if (s_BotStates:IsInVehicleState(l_Bot.m_ActiveState)) and l_Bot.m_Player.soldier then
+		local s_InVehicle = s_BotStates:IsInVehicleState(l_Bot.m_ActiveState)
+			or s_BotStates:IsOnVehicleState(l_Bot.m_ActiveState)
+
+		if s_InVehicle and l_Bot.m_Player.soldier then
 			local s_BotSoldierPosition = nil
 			if l_Bot.m_Player.controlledControllable then
 				s_BotSoldierPosition = l_Bot.m_Player.controlledControllable.transform.trans
@@ -1162,6 +1165,10 @@ function BotManager:ExitVehicle(p_Player)
 
 	if s_ClosestBot and s_ClosestDistance < Registry.COMMON.COMMAND_DISTANCE then
 		local s_VehicleEntity = s_ClosestBot.m_Player.controlledControllable
+
+		if not s_VehicleEntity then
+			s_VehicleEntity = s_ClosestBot.m_Player.attachedControllable
+		end
 
 		if s_VehicleEntity then
 			for l_EntryId = 0, s_VehicleEntity.entryCount - 1 do
