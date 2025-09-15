@@ -24,6 +24,7 @@
 ---@field Team TeamId|integer|nil
 ---@field Offset Vec3[]
 ---@field FirstPassengerSeat integer
+---@field RotationOffset Vec3[]|nil
 
 ---@class VehicleData
 ---@type VehicleDataInner[]

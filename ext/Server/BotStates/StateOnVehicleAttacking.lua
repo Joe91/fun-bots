@@ -11,12 +11,6 @@ StateOnVehicleAttacking = class('StateOnVehicleAttacking')
 -- - enter vehicle
 -- - idle (on death)
 
--- bot-methods
-local m_BotAiming = require('Bot/BotAiming')
-local m_BotAttacking = require('Bot/BotAttacking')
-local m_BotMovement = require('Bot/BotMovement')
-local m_BotWeaponHandling = require('Bot/BotWeaponHandling')
-
 function StateOnVehicleAttacking:__init()
 	-- Nothing to do.
 end
@@ -39,9 +33,9 @@ function StateOnVehicleAttacking:Update(p_Bot, p_DeltaTime)
 	p_Bot.m_StateTimer = p_Bot.m_StateTimer + p_DeltaTime
 
 	-- Common part.
-	m_BotWeaponHandling:UpdateWeaponSelection(p_DeltaTime, p_Bot)
+	p_Bot:UpdateWeaponSelection(p_DeltaTime)
 
-	m_BotAttacking:UpdateAttacking(p_DeltaTime, p_Bot)
+	p_Bot:UpdateAttacking(p_DeltaTime)
 
 	p_Bot:_UpdateInputs(p_DeltaTime)
 end
@@ -50,14 +44,14 @@ end
 ---@param p_Bot Bot
 ---@param p_DeltaTime number
 function StateOnVehicleAttacking:UpdateFast(p_Bot, p_DeltaTime)
-	m_BotAiming:UpdateAiming(p_Bot)
+	p_Bot:UpdateAiming()
 end
 
 ---update in every frame
 ---@param p_Bot Bot
 function StateOnVehicleAttacking:UpdateVeryFast(p_Bot)
 	-- Update yaw of soldier every tick.
-	m_BotMovement:UpdateYaw(p_Bot)
+	p_Bot:UpdateYaw()
 end
 
 ---slow update-function

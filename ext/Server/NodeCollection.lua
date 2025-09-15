@@ -377,6 +377,7 @@ function NodeCollection:RecalculateIndexes(p_Waypoint)
 		end
 
 		while p_Waypoint do
+			---@cast p_Waypoint Waypoint
 			self._Waypoints[p_Waypoint.Index] = self:_processWaypointRecalc(p_Waypoint)
 			p_Waypoint = p_Waypoint[s_Direction]
 			s_Counter = s_Counter + 1
@@ -455,8 +456,10 @@ function NodeCollection:_processWaypointMetadata(p_Waypoint)
 		p_Waypoint.Data = {}
 	end
 
-	if type(p_Waypoint.Data) == 'string' then
-		p_Waypoint.Data = json.decode(p_Waypoint.Data)
+	local s_WaypointData = p_Waypoint.Data
+
+	if type(s_WaypointData) == 'string' then
+		p_Waypoint.Data = json.decode(s_WaypointData)
 	end
 	-- -----
 
@@ -653,6 +656,7 @@ function NodeCollection:LinkSpawn(p_SpawnPoint, p_Node)
 	return true
 end
 
+-- TODO: Finish this, or remove this.
 ---@param p_SelectionId integer
 ---@return boolean
 ---@return string
@@ -1256,8 +1260,9 @@ end
 function NodeCollection:ParseSingleSpawn(p_SpawnPoint)
 	local s_PositionSpawn = p_SpawnPoint.Transform.trans
 
+	---@type MaterialFlags|integer
 	local s_MaterialFlags = 0
-	---@type RayCastFlags
+	---@type RayCastFlags|integer
 	local s_RaycastFlags = RayCastFlags.DontCheckWater | RayCastFlags.DontCheckCharacter | RayCastFlags.DontCheckRagdoll | RayCastFlags.CheckDetailMesh
 
 	local s_Paths = self:GetPaths()

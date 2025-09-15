@@ -1,15 +1,7 @@
----@class BotAttacking
----@overload fun():BotAttacking
-BotAttacking = class('BotAttacking')
-
 ---@type Utilities
 local m_Utilities = require('__shared/Utilities')
 ---@type Vehicles
 local m_Vehicles = require("Vehicles")
-
-function BotAttacking:__init()
-	-- Nothing to do.
-end
 
 local function _Fire(p_Bot)
 	p_Bot._SoundTimer = 0.0
@@ -361,28 +353,20 @@ local function _DefaultAttackingAction(p_DeltaTime, p_Bot)
 end
 
 ---@param p_DeltaTime number
----@param p_Bot Bot
-function BotAttacking:UpdateAttacking(p_DeltaTime, p_Bot)
+function Bot:UpdateAttacking(p_DeltaTime)
 	-- Reset if enemy is dead or attack is disabled.
-	if not p_Bot._ShootPlayer then
-		p_Bot:AbortAttack()
+	if not self._ShootPlayer then
+		self:AbortAttack()
 		return
 	end
 
-	if p_Bot._ActiveAction == BotActionFlags.ReviveActive then
-		_ReviveAttackingAction(p_DeltaTime, p_Bot)
-	elseif p_Bot._ActiveAction == BotActionFlags.EnterVehicleActive then
-		_EnterVehicleAttackingAction(p_DeltaTime, p_Bot)
-	elseif p_Bot._ActiveAction == BotActionFlags.RepairActive then
-		_RepairAttackingAction(p_DeltaTime, p_Bot)
+	if self._ActiveAction == BotActionFlags.ReviveActive then
+		_ReviveAttackingAction(p_DeltaTime, self)
+	elseif self._ActiveAction == BotActionFlags.EnterVehicleActive then
+		_EnterVehicleAttackingAction(p_DeltaTime, self)
+	elseif self._ActiveAction == BotActionFlags.RepairActive then
+		_RepairAttackingAction(p_DeltaTime, self)
 	else
-		_DefaultAttackingAction(p_DeltaTime, p_Bot)
+		_DefaultAttackingAction(p_DeltaTime, self)
 	end
 end
-
-if g_BotAttacking == nil then
-	---@type BotAttacking
-	g_BotAttacking = BotAttacking()
-end
-
-return g_BotAttacking

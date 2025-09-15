@@ -11,14 +11,6 @@ StateAttacking = class('StateAttacking')
 -- - enter vehicle
 -- - idle (on death)
 
----@type Utilities
-local m_Utilities = require('__shared/Utilities')
--- bot-methods
-local m_BotAiming = require('Bot/BotAiming')
-local m_BotAttacking = require('Bot/BotAttacking')
-local m_BotMovement = require('Bot/BotMovement')
-local m_BotWeaponHandling = require('Bot/BotWeaponHandling')
-
 function StateAttacking:__init()
 	-- Nothing to do.
 end
@@ -41,21 +33,21 @@ function StateAttacking:Update(p_Bot, p_DeltaTime)
 	p_Bot.m_StateTimer = p_Bot.m_StateTimer + p_DeltaTime
 
 	-- default-handling
-	m_BotWeaponHandling:UpdateWeaponSelection(p_DeltaTime, p_Bot) -- TODO: maybe compbine with reload now?
+	p_Bot:UpdateWeaponSelection(p_DeltaTime) -- TODO: maybe compbine with reload now?
 
 	-- TODO: split revive, repari, c4 and so on
-	m_BotAttacking:UpdateAttacking(p_DeltaTime, p_Bot)
+	p_Bot:UpdateAttacking(p_DeltaTime)
 	if p_Bot._ActiveAction == BotActionFlags.ReviveActive or
 		p_Bot._ActiveAction == BotActionFlags.EnterVehicleActive or
 		p_Bot._ActiveAction == BotActionFlags.RepairActive or
 		p_Bot._ActiveAction == BotActionFlags.C4Active then
-		m_BotMovement:UpdateMovementSprintToTarget(p_DeltaTime, p_Bot)
+		p_Bot:UpdateMovementSprintToTarget(p_DeltaTime)
 	else
-		m_BotMovement:UpdateShootMovement(p_DeltaTime, p_Bot)
+		p_Bot:UpdateShootMovement(p_DeltaTime)
 	end
 
 
-	m_BotMovement:UpdateSpeedOfMovement(p_Bot)
+	p_Bot:UpdateSpeedOfMovement()
 	p_Bot:_UpdateInputs(p_DeltaTime)
 end
 
@@ -63,14 +55,14 @@ end
 ---@param p_Bot Bot
 ---@param p_DeltaTime number
 function StateAttacking:UpdateFast(p_Bot, p_DeltaTime)
-	m_BotAiming:UpdateAiming(p_Bot)
+	p_Bot:UpdateAiming()
 end
 
 ---update in every frame
 ---@param p_Bot Bot
 function StateAttacking:UpdateVeryFast(p_Bot)
 	-- Update yaw of soldier every tick.
-	m_BotMovement:UpdateYaw(p_Bot)
+	p_Bot:UpdateYaw()
 end
 
 ---slow update-function

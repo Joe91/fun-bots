@@ -1,13 +1,5 @@
----@class BotAiming
----@overload fun():BotAiming
-BotAiming = class('BotAiming')
-
 ---@type Utilities
 local m_Utilities = require('__shared/Utilities')
-
-function BotAiming:__init()
-	-- Nothing to do.
-end
 
 ---@param p_Distance number
 ---@return number
@@ -364,24 +356,16 @@ local function _RepairAimingAction(p_Bot)
 	p_Bot._TargetYaw = s_Yaw
 end
 
----@param p_Bot Bot
-function BotAiming:UpdateAiming(p_Bot)
-	if p_Bot._ShootPlayer == nil or p_Bot.m_Player.soldier == nil then
+function Bot:UpdateAiming()
+	if self._ShootPlayer == nil or self.m_Player.soldier == nil then
 		return
 	end
 
-	if p_Bot._ActiveAction == BotActionFlags.ReviveActive then
-		_ReviveAimingAction(p_Bot)
-	elseif p_Bot._ActiveAction == BotActionFlags.RepairActive then
-		_RepairAimingAction(p_Bot)
+	if self._ActiveAction == BotActionFlags.ReviveActive then
+		_ReviveAimingAction(self)
+	elseif self._ActiveAction == BotActionFlags.RepairActive then
+		_RepairAimingAction(self)
 	else
-		_DefaultAimingAction(p_Bot)
+		_DefaultAimingAction(self)
 	end
 end
-
-if g_BotAiming == nil then
-	---@type BotAiming
-	g_BotAiming = BotAiming()
-end
-
-return g_BotAiming

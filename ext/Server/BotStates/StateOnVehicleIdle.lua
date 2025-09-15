@@ -11,10 +11,6 @@ StateOnVehicleIdle = class('StateOnVehicleIdle')
 -- - moving
 -- (- vehicle-idle?)
 
--- bot-methods
-local m_BotMovement = require('Bot/BotMovement')
-local m_BotWeaponHandling = require('Bot/BotWeaponHandling')
-
 function StateOnVehicleIdle:__init()
 	-- Nothing to do.
 end
@@ -33,9 +29,9 @@ function StateOnVehicleIdle:Update(p_Bot, p_DeltaTime)
 	p_Bot.m_StateTimer = p_Bot.m_StateTimer + p_DeltaTime
 
 
-	m_BotWeaponHandling:UpdateWeaponSelection(p_DeltaTime, p_Bot)
+	p_Bot:UpdateWeaponSelection(p_DeltaTime)
 
-	m_BotWeaponHandling:UpdateDeployAndReload(p_DeltaTime, p_Bot, false)
+	p_Bot:UpdateDeployAndReload(p_DeltaTime, false)
 
 	p_Bot:_UpdateInputs(p_DeltaTime)
 
@@ -57,7 +53,7 @@ end
 ---@param p_Bot Bot
 function StateOnVehicleIdle:UpdateVeryFast(p_Bot)
 	-- Update yaw of soldier every tick.
-	m_BotMovement:UpdateYaw(p_Bot)
+	p_Bot:UpdateYaw()
 end
 
 ---slow update-function

@@ -226,8 +226,8 @@ function SettingsManager:UpdateSetting(p_Name, p_Value)
 		if l_Item.Name == p_Name then
 			if l_Item.Type == Type.Integer or l_Item.Type == Type.Float then
 				s_ConvertedValue = tonumber(p_Value)
-				---@type Range
 				local s_Reference = l_Item.Reference
+				---@cast s_Reference Range
 
 				-- Check for Range.
 				if s_Reference:GetMax() >= s_ConvertedValue and s_Reference:GetMin() <= s_ConvertedValue then

@@ -1877,7 +1877,6 @@ function GameDirector:_InitFlagTeams()
 	end
 
 	local s_Iterator = EntityManager:GetIterator('ServerCapturePointEntity')
-	---@type CapturePointEntity
 	local s_Entity = s_Iterator:Next()
 
 	while s_Entity ~= nil do
