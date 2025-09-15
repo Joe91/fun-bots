@@ -36,6 +36,7 @@ This is the changelog for the version V3.0 Don't forget to [join us on Discord](
 * Support for dynamic-jet-spawn + fixes for some special cases (by MatiasPastori)
 * Support of Gunship on Rush-Maps
 * Variation in default fire-cycles (by MatiasPastori)
+* Refactoring of lots of Bot-stuff (by Bree_Arnold)
 
 ### some open TODOs:
 * rework of raycasts for better performance
