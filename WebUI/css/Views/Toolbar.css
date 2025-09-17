@@ -58,7 +58,8 @@ ui-view[data-type="toolbar"] ui-menu li.header {
 
 ui-view[data-type="toolbar"] ui-menu ul.main > li > a,
 ui-view[data-type="toolbar"] ui-submenu.main > li > a {
-    display: block;
+    display: flex;
+    align-items: center;
     position: relative;
     padding: 5px 15px;
     min-width: 120px;
@@ -123,7 +124,6 @@ ui-view[data-type="toolbar"] ui-submenu ul.main > li:hover > ul {
 
 ui-view[data-type="toolbar"] ui-menu ul.main > li > ul > li > a,
 ui-view[data-type="toolbar"] ui-submenu ul.main > li > ul > li > a {
-    display: block;
     padding: 5px 15px;
     min-width: 100px;
     position: relative;
