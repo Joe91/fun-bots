@@ -178,23 +178,6 @@ ui-view[data-name="settings"]
     ui-tabs
     figure
     ui-tab
-    ui-entry
-    ui-container
-    input[type="number"]::-webkit-outer-spin-button,
-ui-view[data-name="settings"]
-    ui-tabs
-    figure
-    ui-tab
-    ui-entry
-    ui-container
-    input[type="number"]::-webkit-inner-spin-button {
-    -webkit-appearance: none;
-}
-
-ui-view[data-name="settings"]
-    ui-tabs
-    figure
-    ui-tab
     ui-entry[data-type="Text"]
     ui-container
     ui-text
