@@ -64,383 +64,72 @@ ui-view[data-type="commorose"] ui-horizontal ul li:empty {
     background: none;
 }
 
-/* Two */
-ui-view[data-type="commorose"] ui-horizontal ul.left li:first-child:nth-last-child(2) {
+/* Four items */
+ui-view[data-type="commorose"] ui-horizontal ul.left li:first-child {
     transform: skewX(-25deg);
 }
 
-ui-view[data-type="commorose"] ui-horizontal ul.left li:first-child:nth-last-child(2) span {
+ui-view[data-type="commorose"] ui-horizontal ul.left li:first-child span {
     transform: skewX(25deg);
 }
 
-ui-view[data-type="commorose"]
-    ui-horizontal
-    ul.left
-    li:first-child:nth-last-child(2)
-    ~ li:nth-last-child(1) {
-    transform: skewX(25deg);
-}
-
-ui-view[data-type="commorose"]
-    ui-horizontal
-    ul.left
-    li:first-child:nth-last-child(2)
-    ~ li:nth-last-child(1)
-    span {
-    transform: skewX(-25deg);
-}
-
-ui-view[data-type="commorose"] ui-horizontal ul.right li:first-child:nth-last-child(2) {
-    transform: skewX(25deg);
-}
-
-ui-view[data-type="commorose"] ui-horizontal ul.right li:first-child:nth-last-child(2) span {
-    transform: skewX(-25deg);
-}
-
-ui-view[data-type="commorose"]
-    ui-horizontal
-    ul.right
-    li:first-child:nth-last-child(2)
-    ~ li:nth-last-child(1) {
-    transform: skewX(-25deg);
-}
-
-ui-view[data-type="commorose"]
-    ui-horizontal
-    ul.right
-    li:first-child:nth-last-child(2)
-    ~ li:nth-last-child(1)
-    span {
-    transform: skewX(25deg);
-}
-
-/* Three */
-ui-view[data-type="commorose"] ui-horizontal ul.left li:first-child:nth-last-child(3) {
-    transform: skewX(-25deg);
-}
-
-ui-view[data-type="commorose"] ui-horizontal ul.left li:first-child:nth-last-child(3) span {
-    transform: skewX(25deg);
-}
-
-ui-view[data-type="commorose"]
-    ui-horizontal
-    ul.left
-    li:first-child:nth-last-child(3)
-    ~ li:nth-last-child(2) {
-    margin: 5px 6px 5px -6px;
-}
-
-ui-view[data-type="commorose"]
-    ui-horizontal
-    ul.left
-    li:first-child:nth-last-child(3)
-    ~ li:nth-last-child(1) {
-    transform: skewX(25deg);
-}
-
-ui-view[data-type="commorose"]
-    ui-horizontal
-    ul.left
-    li:first-child:nth-last-child(3)
-    ~ li:nth-last-child(1)
-    span {
-    transform: skewX(-25deg);
-}
-
-ui-view[data-type="commorose"] ui-horizontal ul.right li:first-child:nth-last-child(3) {
-    transform: skewX(25deg);
-}
-
-ui-view[data-type="commorose"] ui-horizontal ul.right li:first-child:nth-last-child(3) span {
-    transform: skewX(-25deg);
-}
-
-ui-view[data-type="commorose"]
-    ui-horizontal
-    ul.right
-    li:first-child:nth-last-child(3)
-    ~ li:nth-last-child(2) {
-    margin: 5px -6px 5px 6px;
-}
-
-ui-view[data-type="commorose"]
-    ui-horizontal
-    ul.right
-    li:first-child:nth-last-child(3)
-    ~ li:nth-last-child(1) {
-    transform: skewX(-25deg);
-}
-
-ui-view[data-type="commorose"]
-    ui-horizontal
-    ul.right
-    li:first-child:nth-last-child(3)
-    ~ li:nth-last-child(1)
-    span {
-    transform: skewX(25deg);
-}
-
-/* Four */
-ui-view[data-type="commorose"] ui-horizontal ul.left li:first-child:nth-last-child(4) {
-    transform: skewX(-25deg);
-}
-
-ui-view[data-type="commorose"] ui-horizontal ul.left li:first-child:nth-last-child(4) span {
-    transform: skewX(25deg);
-}
-
-ui-view[data-type="commorose"]
-    ui-horizontal
-    ul.left
-    li:first-child:nth-last-child(4)
-    ~ li:nth-last-child(3) {
+ui-view[data-type="commorose"] ui-horizontal ul.left li:nth-child(2) {
     margin: 5px 15px 5px -15px;
     transform: skewX(-25deg);
 }
 
-ui-view[data-type="commorose"]
-    ui-horizontal
-    ul.left
-    li:first-child:nth-last-child(4)
-    ~ li:nth-last-child(3)
-    span {
+ui-view[data-type="commorose"] ui-horizontal ul.left li:nth-child(2) span {
     transform: skewX(25deg);
 }
 
-ui-view[data-type="commorose"]
-    ui-horizontal
-    ul.left
-    li:first-child:nth-last-child(4)
-    ~ li:nth-last-child(2) {
+ui-view[data-type="commorose"] ui-horizontal ul.left li:nth-child(3) {
     margin: 5px 15px 5px -15px;
     transform: skewX(25deg);
 }
 
-ui-view[data-type="commorose"]
-    ui-horizontal
-    ul.left
-    li:first-child:nth-last-child(4)
-    ~ li:nth-last-child(2)
-    span {
+ui-view[data-type="commorose"] ui-horizontal ul.left li:nth-child(3) span {
     transform: skewX(-25deg);
 }
 
-ui-view[data-type="commorose"]
-    ui-horizontal
-    ul.left
-    li:first-child:nth-last-child(4)
-    ~ li:nth-last-child(1) {
+ui-view[data-type="commorose"] ui-horizontal ul.left li:nth-child(4) {
     transform: skewX(25deg);
 }
 
-ui-view[data-type="commorose"]
-    ui-horizontal
-    ul.left
-    li:first-child:nth-last-child(4)
-    ~ li:nth-last-child(1)
-    span {
+ui-view[data-type="commorose"] ui-horizontal ul.left li:nth-child(4) span {
     transform: skewX(-25deg);
 }
 
-ui-view[data-type="commorose"] ui-horizontal ul.right li:first-child:nth-last-child(4) {
+ui-view[data-type="commorose"] ui-horizontal ul.right li:first-child {
     transform: skewX(25deg);
 }
 
-ui-view[data-type="commorose"] ui-horizontal ul.right li:first-child:nth-last-child(4) span {
+ui-view[data-type="commorose"] ui-horizontal ul.right li:first-child span {
     transform: skewX(-25deg);
 }
 
-ui-view[data-type="commorose"]
-    ui-horizontal
-    ul.right
-    li:first-child:nth-last-child(4)
-    ~ li:nth-last-child(3) {
+ui-view[data-type="commorose"] ui-horizontal ul.right li:nth-child(2) {
     margin: 5px -15px 5px 15px;
     transform: skewX(25deg);
 }
 
-ui-view[data-type="commorose"]
-    ui-horizontal
-    ul.right
-    li:first-child:nth-last-child(4)
-    ~ li:nth-last-child(3)
-    span {
+ui-view[data-type="commorose"] ui-horizontal ul.right li:nth-child(2) span {
     transform: skewX(-25deg);
 }
 
-ui-view[data-type="commorose"]
-    ui-horizontal
-    ul.right
-    li:first-child:nth-last-child(4)
-    ~ li:nth-last-child(2) {
+ui-view[data-type="commorose"] ui-horizontal ul.right li:nth-child(3) {
     margin: 5px -15px 5px 15px;
     transform: skewX(-25deg);
 }
 
-ui-view[data-type="commorose"]
-    ui-horizontal
-    ul.right
-    li:first-child:nth-last-child(4)
-    ~ li:nth-last-child(2)
-    span {
+ui-view[data-type="commorose"] ui-horizontal ul.right li:nth-child(3) span {
     transform: skewX(25deg);
 }
 
-ui-view[data-type="commorose"]
-    ui-horizontal
-    ul.right
-    li:first-child:nth-last-child(4)
-    ~ li:nth-last-child(1) {
+ui-view[data-type="commorose"] ui-horizontal ul.right li:nth-child(4) {
     transform: skewX(-25deg);
 }
 
-ui-view[data-type="commorose"]
-    ui-horizontal
-    ul.right
-    li:first-child:nth-last-child(4)
-    ~ li:nth-last-child(1)
-    span {
-    transform: skewX(25deg);
-}
-
-/* Five */
-ui-view[data-type="commorose"] ui-horizontal ul.left li:first-child:nth-last-child(5) {
-    transform: skewX(-25deg);
-}
-
-ui-view[data-type="commorose"] ui-horizontal ul.left li:first-child:nth-last-child(5) span {
-    transform: skewX(25deg);
-}
-
-ui-view[data-type="commorose"]
-    ui-horizontal
-    ul.left
-    li:first-child:nth-last-child(5)
-    ~ li:nth-last-child(4) {
-    margin: 5px 15px 5px -15px;
-    transform: skewX(-25deg);
-}
-
-ui-view[data-type="commorose"]
-    ui-horizontal
-    ul.left
-    li:first-child:nth-last-child(5)
-    ~ li:nth-last-child(4)
-    span {
-    transform: skewX(25deg);
-}
-
-ui-view[data-type="commorose"]
-    ui-horizontal
-    ul.left
-    li:first-child:nth-last-child(5)
-    ~ li:nth-last-child(3) {
-    margin: 5px 21px 5px -21px;
-}
-
-ui-view[data-type="commorose"]
-    ui-horizontal
-    ul.left
-    li:first-child:nth-last-child(5)
-    ~ li:nth-last-child(2) {
-    margin: 5px 15px 5px -15px;
-    transform: skewX(25deg);
-}
-
-ui-view[data-type="commorose"]
-    ui-horizontal
-    ul.left
-    li:first-child:nth-last-child(5)
-    ~ li:nth-last-child(2)
-    span {
-    transform: skewX(-25deg);
-}
-
-ui-view[data-type="commorose"]
-    ui-horizontal
-    ul.left
-    li:first-child:nth-last-child(5)
-    ~ li:nth-last-child(1) {
-    transform: skewX(25deg);
-}
-
-ui-view[data-type="commorose"]
-    ui-horizontal
-    ul.left
-    li:first-child:nth-last-child(5)
-    ~ li:nth-last-child(1)
-    span {
-    transform: skewX(-25deg);
-}
-
-ui-view[data-type="commorose"] ui-horizontal ul.right li:first-child:nth-last-child(5) {
-    transform: skewX(25deg);
-}
-
-ui-view[data-type="commorose"] ui-horizontal ul.right li:first-child:nth-last-child(5) span {
-    transform: skewX(-25deg);
-}
-
-ui-view[data-type="commorose"]
-    ui-horizontal
-    ul.right
-    li:first-child:nth-last-child(5)
-    ~ li:nth-last-child(4) {
-    margin: 5px -15px 5px 15px;
-    transform: skewX(25deg);
-}
-
-ui-view[data-type="commorose"]
-    ui-horizontal
-    ul.right
-    li:first-child:nth-last-child(5)
-    ~ li:nth-last-child(4)
-    span {
-    transform: skewX(-25deg);
-}
-
-ui-view[data-type="commorose"]
-    ui-horizontal
-    ul.right
-    li:first-child:nth-last-child(5)
-    ~ li:nth-last-child(3) {
-    margin: 5px -21px 5px 21px;
-}
-
-ui-view[data-type="commorose"]
-    ui-horizontal
-    ul.right
-    li:first-child:nth-last-child(5)
-    ~ li:nth-last-child(2) {
-    margin: 5px -15px 5px 15px;
-    transform: skewX(-25deg);
-}
-
-ui-view[data-type="commorose"]
-    ui-horizontal
-    ul.right
-    li:first-child:nth-last-child(5)
-    ~ li:nth-last-child(2)
-    span {
-    transform: skewX(25deg);
-}
-
-ui-view[data-type="commorose"]
-    ui-horizontal
-    ul.right
-    li:first-child:nth-last-child(5)
-    ~ li:nth-last-child(1) {
-    transform: skewX(-25deg);
-}
-
-ui-view[data-type="commorose"]
-    ui-horizontal
-    ul.right
-    li:first-child:nth-last-child(5)
-    ~ li:nth-last-child(1)
-    span {
+ui-view[data-type="commorose"] ui-horizontal ul.right li:nth-child(4) span {
     transform: skewX(25deg);
 }
 
@@ -460,7 +149,7 @@ ui-view[data-type="commorose"] ui-bottom {
     display: block;
     flex: 1 auto;
     margin: 5px 100px;
-    padding: 2px 40px;
+    min-height: 2px;
     text-align: center;
     position: relative;
 }
