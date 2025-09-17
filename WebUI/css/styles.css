@@ -6,6 +6,6 @@
 @import url("./Views/Toolbar.css");
 @import url("./Views/Settings.css");
 @import url("./Views/WaypointEditor/WaypointToolbar.css");
-/* @import url("./Views/WaypointEditor/CommoRose.css"); */
+@import url("./Views/WaypointEditor/CommoRose.css");
 @import url("./Views/WaypointEditor/Key.css");
 @import url("./Views/WaypointEditor/Help.css");
