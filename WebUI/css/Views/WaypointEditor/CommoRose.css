@@ -189,11 +189,11 @@ ui-view[data-type="commorose"] ui-bottom:hover:before {
 }
 
 ui-view[data-type="commorose"] ui-top:before {
-    transform: perspective(200px) rotateX(40deg);
+    clip-path: polygon(3% 0%, 97% 0%, 100% 100%, 0% 100%);
 }
 
 ui-view[data-type="commorose"] ui-bottom:before {
-    transform: perspective(200px) rotateX(-40deg);
+    clip-path: polygon(0% 0%, 100% 0%, 97% 100%, 3% 100%);
 }
 
 ui-view[data-type="commorose"] ui-top span,
