@@ -46,6 +46,7 @@ ui-view[data-type="toolbar"] ui-submenu ul.main {
 ui-view[data-type="toolbar"] ui-menu ul.main > li,
 ui-view[data-type="toolbar"] ui-submenu ul.main > li {
     flex: 0 auto;
+    position: relative;
 }
 
 ui-view[data-type="toolbar"] ui-menu li.header {
@@ -60,7 +61,6 @@ ui-view[data-type="toolbar"] ui-menu ul.main > li > a,
 ui-view[data-type="toolbar"] ui-submenu.main > li > a {
     display: flex;
     align-items: center;
-    position: relative;
     padding: 5px 15px;
     min-width: 120px;
     margin: 0 1px;
@@ -113,13 +113,16 @@ ui-view[data-type="toolbar"] ui-submenu ul.main > li:active > a {
 ui-view[data-type="toolbar"] ui-menu ul.main > li > ul,
 ui-view[data-type="toolbar"] ui-submenu ul.main > li > ul {
     display: none;
-    margin: 0 0 0 1px;
+    margin: 3px 0 0 1px;
     background-color: rgba(0, 0, 0, 0.8);
+    position: absolute;
+    top: 35px;
 }
 
 ui-view[data-type="toolbar"] ui-menu ul.main > li:hover > ul,
 ui-view[data-type="toolbar"] ui-submenu ul.main > li:hover > ul {
-    display: block;
+    display: flex;
+    flex-direction: column;
 }
 
 ui-view[data-type="toolbar"] ui-menu ul.main > li > ul > li > a,
