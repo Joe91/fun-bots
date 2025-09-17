@@ -8,73 +8,73 @@ ui-key[data-name] {
 }
 
 ui-key[data-name="0"] {
-	background-image: url('../../../assets/key/0.svg');
+	background-image: url('../../../assets/key/0.png');
 }
 
 ui-key[data-name="1"] {
-	background-image: url('../../../assets/key/1.svg');
+	background-image: url('../../../assets/key/1.png');
 }
 
 ui-key[data-name="2"] {
-	background-image: url('../../../assets/key/2.svg');
+	background-image: url('../../../assets/key/2.png');
 }
 
 ui-key[data-name="3"] {
-	background-image: url('../../../assets/key/3.svg');
+	background-image: url('../../../assets/key/3.png');
 }
 
 ui-key[data-name="4"] {
-	background-image: url('../../../assets/key/4.svg');
+	background-image: url('../../../assets/key/4.png');
 }
 
 ui-key[data-name="5"] {
-	background-image: url('../../../assets/key/5.svg');
+	background-image: url('../../../assets/key/5.png');
 }
 
 ui-key[data-name="6"] {
-	background-image: url('../../../assets/key/6.svg');
+	background-image: url('../../../assets/key/6.png');
 }
 
 ui-key[data-name="7"] {
-	background-image: url('../../../assets/key/7.svg');
+	background-image: url('../../../assets/key/7.png');
 }
 
 ui-key[data-name="8"] {
-	background-image: url('../../../assets/key/8.svg');
+	background-image: url('../../../assets/key/8.png');
 }
 
 ui-key[data-name="9"] {
-	background-image: url('../../../assets/key/9.svg');
+	background-image: url('../../../assets/key/9.png');
 }
 
 ui-key[data-name="Q"] {
-	background-image: url('../../../assets/key/Q.svg');
+	background-image: url('../../../assets/key/Q.png');
 }
 
 ui-key[data-name="F12"] {
-	background-image: url('../../../assets/key/F12.svg');
+	background-image: url('../../../assets/key/F12.png');
 }
 
 ui-key[data-name="BS"] {
-	background-image: url('../../../assets/key/BS.svg');
+	background-image: url('../../../assets/key/BS.png');
 }
 
 ui-key[data-name="INS"] {
-	background-image: url('../../../assets/key/INS.svg');
+	background-image: url('../../../assets/key/INS.png');
 }
 
 ui-key[data-name="KP_PLUS"] {
-	background-image: url('../../../assets/key/KP_PLUS.svg');
+	background-image: url('../../../assets/key/KP_PLUS.png');
 }
 
 ui-key[data-name="KP_MINUS"] {
-	background-image: url('../../../assets/key/KP_MINUS.svg');
+	background-image: url('../../../assets/key/KP_MINUS.png');
 }
 
 ui-key[data-name="ALT"] {
-	background-image: url('../../../assets/key/ALT.svg');
+	background-image: url('../../../assets/key/ALT.png');
 }
 
 ui-key[data-name="T"] {
-	background-image: url('../../../assets/key/T.svg');
+	background-image: url('../../../assets/key/T.png');
 }
