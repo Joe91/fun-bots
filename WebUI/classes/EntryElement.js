@@ -1,203 +1,251 @@
-const EntryElement = function EntryElement() {
-	let _element		= null;
-	let _type			= null;
-	let _name			= null;
-	let _title			= null;
-	let _value			= null;
-	let _default		= null;
-	let _list			= null;
-	let _list_index		= 0;
-	let _description	= null;
-	let _container		= null;
+import { EntryType } from "./Constants";
 
-	this.__constructor = function __constructor() {
-		_element	= document.createElement('ui-entry');
-		_container	= document.createElement('ui-container');
+class EntryElement extends HTMLElement {
+  constructor() {
+    super();
+    this._container = document.createElement("ui-container");
 
-		_element.onPrevious			= this.onPrevious.bind(this);
-		_element.onNext				= this.onNext.bind(this);
-		_element.resetToDefault		= this.resetToDefault.bind(this);
-	};
+    this._type = null;
+    this._name = null;
+    this._title = null;
+    this._value = null;
+    this._default = null;
+    this._list = null;
+    this._list_index = 0;
+    this._description = null;
+  }
 
-	this.setType = function setType(type) {
-		_type					= type;
-		_element.dataset.type	= type;
+  setType(type) {
+    this._type = type;
 
-		let arrow_left			= this._createArrow('left');
-		let arrow_right			= this._createArrow('right');
-		
-		switch(_type) {
-			case EntryType.Boolean:
-				let yes	= 'Yes';
-				let no	= 'No';
-				
-				_container.appendChild(arrow_left);
-				_container.appendChild(this._createText(_value == null ? (_default == null ? '' : (_default ? yes : no)) : (_value ? yes : no)));
-				_container.appendChild(arrow_right);
-			break;
-			case EntryType.Integer:
-			case EntryType.Float:
-				_container.appendChild(arrow_left);
-				_container.appendChild(this._createInput('number', _value == null ? (_default == null ? '' : _default) : _value));
-				_container.appendChild(arrow_right);
-			break;
-			case EntryType.List:
-				_container.appendChild(arrow_left);
-				_container.appendChild(this._createText(_value == null ? (_default == null ? '' : _default) : _value));
-				_container.appendChild(arrow_right);
-			break;
-			case EntryType.Text:
-				_container.appendChild(this._createInput('text', _value == null ? (_default == null ? '' : _default) : _value));
-			break;
-			case EntryType.Password:
-				_container.appendChild(this._createInput('password', _value == null ? (_default == null ? '' : _default) : _value));
-			break;
-		}
-	};
+    this.dataset.type = type;
 
-	this._createText = function _createText(text) {
-		let element			= document.createElement('ui-text');
-		element.innerHTML	= text;
-		return element;
-	};
+    let arrow_left = this._createArrow("left");
+    let arrow_right = this._createArrow("right");
 
-	this._createInput = function _createInput(type, value) {
-		let element			= document.createElement('input');
-		element.type		= type;
-		element.value		= value;
-		return element;
-	};
+    switch (this._type) {
+      case EntryType.Boolean:
+        let yes = "Yes";
+        let no = "No";
 
-	this._createRestore = function _createRestore() {
-		let restore						= document.createElement('ui-restore');
-		restore.dataset.description		= BotEditor.I18N('Restore this value to Default');
-		return restore;
-	};
-	
-	this._createArrow = function _createArrow(direction) {
-		let arrow				= document.createElement('ui-arrow');
-		arrow.dataset.direction	= direction;
-		return arrow;
-	};
+        this._container.appendChild(arrow_left);
+        this._container.appendChild(
+          this._createText(
+            this._value == null
+              ? this._default == null
+                ? ""
+                : this._default
+                ? yes
+                : no
+              : this._value
+              ? yes
+              : no
+          )
+        );
+        this._container.appendChild(arrow_right);
+        break;
+      case EntryType.Integer:
+      case EntryType.Float:
+        this._container.appendChild(arrow_left);
+        this._container.appendChild(
+          this._createInput(
+            "number",
+            this._value == null
+              ? this._default == null
+                ? ""
+                : this._default
+              : this._value
+          )
+        );
+        this._container.appendChild(arrow_right);
+        break;
+      case EntryType.List:
+        this._container.appendChild(arrow_left);
+        this._container.appendChild(
+          this._createText(
+            this._value == null
+              ? this._default == null
+                ? ""
+                : this._default
+              : this._value
+          )
+        );
+        this._container.appendChild(arrow_right);
+        break;
+      case EntryType.Text:
+        this._container.appendChild(
+          this._createInput(
+            "text",
+            this._value == null
+              ? this._default == null
+                ? ""
+                : this._default
+              : this._value
+          )
+        );
+        break;
+      case EntryType.Password:
+        this._container.appendChild(
+          this._createInput(
+            "password",
+            this._value == null
+              ? this._default == null
+                ? ""
+                : this._default
+              : this._value
+          )
+        );
+        break;
+    }
+  }
 
-	this.setName = function setName(name) {
-		_name					= name;
-		_element.dataset.name	= name;
-	};
+  _createText(text) {
+    let element = document.createElement("ui-text");
+    element.innerHTML = text;
+    return element;
+  }
 
-	this.setTitle = function setTitle(title) {
-		_title			= title;
-		let name		= document.createElement('ui-name');
-		name.innerHTML	= _title;
-		_element.appendChild(name);
-	};
+  _createInput(type, value) {
+    let element = document.createElement("input");
+    element.type = type;
+    element.value = value;
+    return element;
+  }
 
-	this.resetToDefault = function resetToDefault() {
-		this.setValue(_default);
-	};
-	
-	this.onPrevious = function onPrevious() {
-		switch(_type) {
-			case EntryType.Boolean:
-				this.setValue(!_value);
-			break;
-			case EntryType.Integer:
-				this.setValue(_value - 1);
-			break;
-			case EntryType.Float:
-				this.setValue(_value - 0.1);
-			break;
-			case EntryType.List:
-				console.log(_list);
-				console.log('Old list index', _list_index);
-				--_list_index;
+  _createRestore() {
+    let restore = document.createElement("ui-restore");
+    restore.dataset.description = BotEditor.I18N(
+      "Restore this value to Default"
+    );
+    return restore;
+  }
 
-				console.log('New list index', _list_index);
-				
-				if(_list_index < 0) {
-					_list_index = _list.length - 1;
-				}
-				
-				console.log('Updated list index', _list_index);
+  _createArrow(direction) {
+    let arrow = document.createElement("ui-arrow");
+    arrow.dataset.direction = direction;
+    return arrow;
+  }
 
-				this.setValue(_list[_list_index]);
-			break;
-		}
-	};
+  setName(name) {
+    this._name = name;
+    this.dataset.name = name;
+  }
 
-	this.onNext = function onNext() {
-		switch(_type) {
-			case EntryType.Boolean:
-				this.setValue(!_value);
-			break;
-			case EntryType.Integer:
-				this.setValue(_value + 1);
-			break;
-			case EntryType.Float:
-				this.setValue(_value + 0.1);
-			break;
-			case EntryType.List:
-				console.log(_list);
-				console.log('Old list index', _list_index);
-				++_list_index;
-				console.log('New list index', _list_index);
+  setTitle(title) {
+    this._title = title;
+    let name = document.createElement("ui-name");
+    name.innerHTML = this._title;
+    this.appendChild(name);
+  }
 
-				if(_list_index >= _list.length) {
-					_list_index = 0;
-				}
-				console.log('Updated list index', _list_index);
-				this.setValue(_list[_list_index]);
-			break;
-		}
-	};
+  resetToDefault() {
+    this.setValue(this._default);
+  }
 
-	this.setValue = function setValue(value) {
-		_value = value;
+  onPrevious() {
+    switch (this._type) {
+      case EntryType.Boolean:
+        this.setValue(!this._value);
+        break;
+      case EntryType.Integer:
+        this.setValue(this._value - 1);
+        break;
+      case EntryType.Float:
+        this.setValue(this._value - 0.1);
+        break;
+      case EntryType.List:
+        console.log(this._list);
+        console.log("Old list index", this._list_index);
+        --this._list_index;
 
-		switch(_type) {
-			case EntryType.Boolean:
-				let yes	= 'Yes';
-				let no	= 'No';
-				
-				_container.querySelector('ui-text').innerHTML = (_value ? yes : no);
-			break;
-			case EntryType.Integer:
-				_value = parseInt(value, 10);
-				_container.querySelector('input[type="number"]').value = _value;
-			break;
-			case EntryType.Float:
-				_value = parseFloat(value);
-				_container.querySelector('input[type="number"]').value = _value.toFixed(2);
-			break;
-			case EntryType.List:
-				_container.querySelector('ui-text').innerHTML = _value;
-			break;
-		}
-	};
+        console.log("New list index", this._list_index);
 
-	this.setDefault = function setDefault(value) {
-		_default					= value;
-		_element.dataset.default	= value;
-	};
+        if (this._list_index < 0) {
+          this._list_index = this._list.length - 1;
+        }
 
-	this.setList = function setList(list) {
-		_list		= list;
-		_list_index	= 0;
-	};
+        console.log("Updated list index", this._list_index);
 
-	this.setDescription = function setDescription(description) {
-		_description 					= description;
-		_element.dataset.description	= description;
-	};
+        this.setValue(this._list[this._list_index]);
+        break;
+    }
+  }
 
-	this.getElement = function getElement() {
-		_element.appendChild(_container);
-		_element.appendChild(this._createRestore());
-		
-		return _element;
-	};
+  onNext() {
+    switch (this._type) {
+      case EntryType.Boolean:
+        this.setValue(!this._value);
+        break;
+      case EntryType.Integer:
+        this.setValue(this._value + 1);
+        break;
+      case EntryType.Float:
+        this.setValue(this._value + 0.1);
+        break;
+      case EntryType.List:
+        console.log(this._list);
+        console.log("Old list index", this._list_index);
+        ++this._list_index;
+        console.log("New list index", this._list_index);
 
-	this.__constructor.apply(this, arguments);
-};
+        if (this._list_index >= this._list.length) {
+          this._list_index = 0;
+        }
+        console.log("Updated list index", this._list_index);
+        this.setValue(this._list[this._list_index]);
+        break;
+    }
+  }
 
-customElements.define('ui-entry', EntryElement, { extends: 'div' });
+  setValue(value) {
+    this._value = value;
+
+    switch (this._type) {
+      case EntryType.Boolean:
+        let yes = "Yes";
+        let no = "No";
+
+        this._container.querySelector("ui-text").innerHTML = this._value
+          ? yes
+          : no;
+        break;
+      case EntryType.Integer:
+        this._value = parseInt(value, 10);
+        this._container.querySelector('input[type="number"]').value =
+          this._value;
+        break;
+      case EntryType.Float:
+        this._value = parseFloat(value);
+        this._container.querySelector('input[type="number"]').value =
+          this._value.toFixed(2);
+        break;
+      case EntryType.List:
+        this._container.querySelector("ui-text").innerHTML = this._value;
+        break;
+    }
+  }
+
+  setDefault(value) {
+    this._default = value;
+    this.dataset.default = value;
+  }
+
+  setList(list) {
+    this._list = list;
+    this._list_index = 0;
+  }
+
+  setDescription(description) {
+    this._description = description;
+    this.dataset.description = description;
+  }
+
+  getElement() {
+    this.appendChild(this._container);
+    this.appendChild(this._createRestore());
+
+    return this;
+  }
+}
+
+customElements.define("ui-entry", EntryElement);

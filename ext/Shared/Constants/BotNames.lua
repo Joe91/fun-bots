@@ -147,7 +147,7 @@ BotNames = {
 	'Kiwi',
 	'NoFaTe',
 	'Paul',
-	'Beschützer',
+	'Beschuetzer',
 	-- Contributors.
 	'BOB',
 	'MeisterPeitsche',

@@ -1,283 +1,422 @@
-<!DOCTYPE html>
+<!doctype html>
 <html>
-	<head>
-		<meta charset="utf-8" />
-		<link rel="stylesheet" href="css/Icons.css" />
-		<link rel="stylesheet" href="css/Globals.css" />
-		<link rel="stylesheet" href="css/Forms.css" />
-		<link rel="stylesheet" href="css/View.css" />
-		<link rel="stylesheet" href="css/Views/Dialog.css" />
-		<link rel="stylesheet" href="css/Views/Toolbar.css" />
-		<link rel="stylesheet" href="css/Views/SettingsTabs.css" />
-		<link rel="stylesheet" href="css/Views/Settings.css" />
-		<link rel="stylesheet" href="css/Views/WaypointEditor/WaypointToolbar.css" />
-		<link rel="stylesheet" href="css/Views/WaypointEditor/CommoRose.css" />
-		<link rel="stylesheet" href="css/Views/WaypointEditor/Key.css" />
-		<link rel="stylesheet" href="css/Views/WaypointEditor/Help.css" />
-	</head>
-	<body>
-		<!-- Toolbar -->
-		<ui-view data-name="toolbar" data-type="toolbar">
-			<ui-logo>
-				Bot-Editor<sub>fun-bots</sub>
-			</ui-logo>
-			<ui-menu>
-				<ul class="main">
-					<li>
-						<a><span data-lang="Bots">Bots</span></a>
-						<ul>
-							<li data-action="bot_spawn_default"><a data-key="F2"><input type="number" name="bots" value="1" /> <span data-lang="Spawn Enemy Bots">Spawn Enemy Bots</span></a></li>
-							<li data-action="bot_spawn_friend"><a ><input type="number" name="bots_friend" value="1" /> <span data-lang="Spawn Friend Bots">Spawn Friend Bots</span></a></li>
-							<li data-action="bot_kick_all"><a data-key="F3"><span data-lang="Kick All">Kick All</span></a></li>
-							<li data-action="bot_kick_team"><a><input type="number" name="team" value="1" /><span data-lang="Kick Team">Kick Team</span></a></li>
-							<li data-action="bot_kill_all"><a data-key="F4"><span data-lang="Kill All">Kill All</span></a></li>
-							<li data-action="bot_respawn"><a><span data-lang="Toggle Respawn">Toggle Respawn</span></a></li>
-							<li data-action="bot_attack"><a><span data-lang="Toggle Attack">Toggle Attack</span></a></li>
-						</ul>
-					</li>
-					<li data-action="request_waypoints_editor"><a><span data-lang="Waypoint-Editor">Waypoints-Editor</span></a></li>
-					<li data-action="request_settings"><a data-key="F10"><span data-lang="Settings">Settings</span></a></li>
-					<li data-action="exit"><a data-key="F12"><span data-lang="Exit">Exit</span></a></li>
-				</ul>
-			</ui-menu>
-		</ui-view>
+    <head>
+        <meta charset="utf-8" />
+    </head>
+    <body>
+        <!-- Toolbar -->
+        <ui-view data-name="toolbar" data-type="toolbar">
+            <ui-logo> Bot-Editor<sub>fun-bots</sub> </ui-logo>
+            <ui-menu>
+                <ul class="main">
+                    <li>
+                        <a><span data-lang="Bots">Bots</span></a>
+                        <ul>
+                            <li data-action="bot_spawn_default">
+                                <a data-key="F2">
+                                    <input type="number" name="bots" value="1" />
+                                    <span data-lang="Spawn Enemy Bots">Spawn Enemy Bots</span>
+                                </a>
+                            </li>
+                            <li data-action="bot_spawn_friend">
+                                <a>
+                                    <input type="number" name="bots_friend" value="1" />
+                                    <span data-lang="Spawn Friend Bots">Spawn Friend Bots</span>
+                                </a>
+                            </li>
+                            <li data-action="bot_kick_all">
+                                <a data-key="F3"><span data-lang="Kick All">Kick All</span></a>
+                            </li>
+                            <li data-action="bot_kick_team">
+                                <a>
+                                    <input type="number" name="team" value="1" />
+                                    <span data-lang="Kick Team">Kick Team</span>
+                                </a>
+                            </li>
+                            <li data-action="bot_kill_all">
+                                <a data-key="F4"><span data-lang="Kill All">Kill All</span></a>
+                            </li>
+                            <li data-action="bot_respawn">
+                                <a><span data-lang="Toggle Respawn">Toggle Respawn</span></a>
+                            </li>
+                            <li data-action="bot_attack">
+                                <a><span data-lang="Toggle Attack">Toggle Attack</span></a>
+                            </li>
+                        </ul>
+                    </li>
+                    <li data-action="request_waypoints_editor">
+                        <a><span data-lang="Waypoint-Editor">Waypoints-Editor</span></a>
+                    </li>
+                    <li data-action="request_settings">
+                        <a data-key="F10"><span data-lang="Settings">Settings</span></a>
+                    </li>
+                    <li data-action="exit">
+                        <a data-key="F12"><span data-lang="Exit">Exit</span></a>
+                    </li>
+                </ul>
+            </ui-menu>
+        </ui-view>
 
-		<!-- Waypoint-Editor -->
-		<ui-view data-name="waypoint_toolbar" data-type="toolbar">
-			<ui-logo>
-				Waypoints-Editor<sub>fun-bots</sub>
-			</ui-logo>
-			<ui-menu data-name="waypoints">
-				<ul class="main">
-					<li>
-						<a><span data-lang="[Save / Load]">[Save / Load]</span></a>
-						<ul>
-							<li data-action="waypoints_server_save"><a data-key="F9"><span data-lang="Save">Save</span><i data-name="server_save"></i> </a></li>
-							<li data-action="waypoints_server_load"><a data-key="F11"><span data-lang="Load">Load</span><i data-name="server_load"></i></a></li>
-						</ul>
-					</li>
-					<li>
-						<a><span data-lang="View">View</span></a>
-						<ul>
-							<li class="header"><span data-lang="Waypoints">Waypoints</span></li>
-							<li data-action="waypoints_show_spawns"><a><i data-name="show_spawns"></i> <span data-lang="Toggle Spawns">Toggle Spawns</span></a></li>
-							<li data-action="waypoints_show_lines"><a><i data-name="show_lines"></i> <span data-lang="Toggle Lines">Toggle Lines</span></a></li>
-							<li data-action="waypoints_show_labels"><a><i data-name="show_labels"></i> <span data-lang="Toggle Labels">Toggle Labels</span></a></li>
-						</ul>
-					</li>
-					<li data-action="data_menu"><a data-key="TAB"><span data-lang="[Paths]">[Paths]</span></a></li>
-					<li data-action="continue"><a><span data-lang="continue">continue</span></a></li>
-					<li data-action="back"><a><span data-lang="Back">Back</span></a></li>
-				</ul>
-				<ui-menu>
-					<ul class="main">
-						<li data-action="trace_start"><a data-key="F5"><i data-name="start"></i> <span data-lang="Start Trace">Start Trace</span></a></li>
-						<li data-action="trace_save"><a><i data-name="save"></i> <span data-lang="Save Trace">Save Trace</span></a></li>
-						<li data-action="trace_clear"><a data-key="F7"><i data-name="clear"></i> <span data-lang="Clear Trace">Clear Trace</span></a></li>
-						<li data-action="trace_reset_all"><a data-key="F8"><i data-name="trash"></i> <span data-lang="Reset all Traces">Reset all Traces</span></a></li>
-					</ul>
-				</ui-menu>
-			</ui-menu>
-			
-			<ui-box data-name="info">
-				<ui-entry>
-					<label data-lang="Current Trace Index">Current Trace Index</label>
-					<ui-container>
-						<ui-arrow data-direction="left"></ui-arrow>
-						<input type="number" name="trace_index" value="0" />
-						<ui-arrow data-direction="right"></ui-arrow>
-					</ui-container>
-				</ui-entry>
-				<ui-entry>
-					<label data-lang="Waypoints">Waypoints</label>
-					<ui-value data-name="waypoints">0</ui-value>
-				</ui-entry>
-				<ui-entry>
-					<label data-lang="Total Distance">Total Distance</label>
-					<ui-value data-name="distance" data-prefix=" m">0</ui-value>
-				</ui-entry>
-			</ui-box>
-			
-			<ui-box data-name="record" data-color="red" dataset-show="false">
-				Recording...
-			</ui-box>
-			
-			<ui-help data-name="numpad">
-				<p data-lang="Node Operation Controls">Node Operation Controls</p>
-				<ui-entry data-grid="K7">
-					<ui-key data-name="7"></ui-key>
-					<span data-lang="Merge">Merge</span>
-				</ui-entry>
-				<ui-entry data-grid="K8">
-					<ui-key data-name="8"></ui-key>
-					<span data-lang="Link">Link</span>
-				</ui-entry>
-				<ui-entry data-grid="K9">
-					<ui-key data-name="9"></ui-key>
-					<span data-lang="Split">Split</span>
-				</ui-entry>
-				<ui-entry data-grid="K4">
-					<ui-key data-name="4"></ui-key>
-					<span data-lang="Move">Move</span>
-				</ui-entry>
-				<ui-entry data-grid="K5">
-					<ui-key data-name="5"></ui-key>
-					<span data-lang="Select">Select</span>
-				</ui-entry>
-				<ui-entry data-grid="K6">
-					<ui-key data-name="6"></ui-key>
-					<span data-lang="Input">Input</span>
-				</ui-entry>
-				<ui-entry data-grid="K1">
-					<ui-key data-name="1"></ui-key>
-					<span data-lang="Remove">Remove</span>
-				</ui-entry>
-				<ui-entry data-grid="K2">
-					<ui-key data-name="2"></ui-key>
-					<span data-lang="Unlink">Unlink</span>
-				</ui-entry>
-				<ui-entry data-grid="K3">
-					<ui-key data-name="3"></ui-key>
-					<span data-lang="Add">Add</span>
-				</ui-entry>
-				<ui-entry data-grid="Other">
-					<ui-entry>
-						<ui-key data-name="F12"></ui-key>
-						<span data-lang="Settings">Settings</span>
-					</ui-entry>
-					<ui-entry>
-						<ui-key data-name="Q"></ui-key>
-						<span data-lang="Select">Select</span>
-					</ui-entry>
-					<ui-entry>
-						<ui-key data-name="BS"></ui-key>
-						<span data-lang="Clear Select">Clear Select</span>
-					</ui-entry>
-					<ui-entry>
-						<ui-key data-name="INS"></ui-key>
-						<span data-lang="Spawn Bot">Spawn Bot</span>
-					</ui-entry>
-				</ui-entry>
-			</ui-help>
-			
-			<ui-help data-name="interaction">
-				<span data-lang="Press ALT for Interaction with the Editor">Press ALT for Interaction with the Editor</span>
-			</ui-help>
-		</ui-view>
-		
-		<!-- CommoRose -->
-		<ui-view data-name="commorose" data-type="commorose">
-			<ui-top>
-				<a data-action="not_implemented"><a><span data-lang=""></span></a>
-			</ui-top>
-			<ui-horizontal>
-				<ul class="left">
-					<li data-action="not_implemented"><a><span data-lang=""></span></a></li>
-					<li data-action="not_implemented"><a><span data-lang=""></span></a></li>
-					<li data-action="not_implemented"><a><span data-lang=""></span></a></li>
-					<li data-action="not_implemented"><a><span data-lang=""></span></a></li>
-				</ul>
-				<ui-hexagon>
-					<span data-lang="Commands">Commands</span>
-				</ui-hexagon>
-				<ul class="right">
-					<li data-action="not_implemented"><a><span data-lang=""></span></a></li>
-					<li data-action="not_implemented"><a><span data-lang=""></span></a></li>
-					<li data-action="not_implemented"><a><span data-lang=""></span></a></li>
-					<li data-action="not_implemented"><a><span data-lang=""></span></a></li>
-				</ul>
-			</ui-horizontal>
-			<ui-bottom>
-				<a data-action="not_implemented"><a><span data-lang=""></span></a>
-			</ui-bottom>
-		</ui-view>
+        <!-- Waypoint-Editor -->
+        <ui-view data-name="waypoint_toolbar" data-type="toolbar">
+            <ui-logo> Waypoints-Editor<sub>fun-bots</sub> </ui-logo>
+            <ui-menu data-name="waypoints">
+                <ul class="main">
+                    <li>
+                        <a><span data-lang="[Save / Load]">[Save / Load]</span></a>
+                        <ul>
+                            <li data-action="waypoints_server_save">
+                                <a data-key="F9">
+                                    <span data-lang="Save">Save</span>
+                                    <i data-name="server_save"></i>
+                                </a>
+                            </li>
+                            <li data-action="waypoints_server_load">
+                                <a data-key="F11">
+                                    <span data-lang="Load">Load</span>
+                                    <i data-name="server_load"></i>
+                                </a>
+                            </li>
+                        </ul>
+                    </li>
+                    <li>
+                        <a><span data-lang="View">View</span></a>
+                        <ul>
+                            <li class="header">
+                                <span data-lang="Waypoints">Waypoints</span>
+                            </li>
+                            <li data-action="waypoints_show_spawns">
+                                <a>
+                                    <i data-name="show_spawns"></i>
+                                    <span data-lang="Toggle Spawns">Toggle Spawns</span>
+                                </a>
+                            </li>
+                            <li data-action="waypoints_show_lines">
+                                <a>
+                                    <i data-name="show_lines"></i>
+                                    <span data-lang="Toggle Lines">Toggle Lines</span>
+                                </a>
+                            </li>
+                            <li data-action="waypoints_show_labels">
+                                <a>
+                                    <i data-name="show_labels"></i>
+                                    <span data-lang="Toggle Labels">Toggle Labels</span>
+                                </a>
+                            </li>
+                        </ul>
+                    </li>
+                    <li data-action="data_menu">
+                        <a data-key="TAB"><span data-lang="[Paths]">[Paths]</span></a>
+                    </li>
+                    <li data-action="continue">
+                        <a><span data-lang="continue">continue</span></a>
+                    </li>
+                    <li data-action="back">
+                        <a><span data-lang="Back">Back</span></a>
+                    </li>
+                </ul>
+                <ui-menu>
+                    <ul class="main">
+                        <li data-action="trace_start">
+                            <a data-key="F5">
+                                <i data-name="start"></i>
+                                <span data-lang="Start Trace">Start Trace</span>
+                            </a>
+                        </li>
+                        <li data-action="trace_save">
+                            <a>
+                                <i data-name="save"></i>
+                                <span data-lang="Save Trace">Save Trace</span>
+                            </a>
+                        </li>
+                        <li data-action="trace_clear">
+                            <a data-key="F7">
+                                <i data-name="clear"></i>
+                                <span data-lang="Clear Trace">Clear Trace</span>
+                            </a>
+                        </li>
+                        <li data-action="trace_reset_all">
+                            <a data-key="F8">
+                                <i data-name="trash"></i>
+                                <span data-lang="Reset all Traces">Reset all Traces</span>
+                            </a>
+                        </li>
+                    </ul>
+                </ui-menu>
+            </ui-menu>
 
-		<!-- Settings -->
-		<ui-view data-name="settings" data-type="dialog">
-			<ui-header>
-				<span data-lang="Settings">Settings</span>
-			</ui-header>
-			<ui-content data-type="form" data-action="UI_Save_Settings">
-				<ui-tabs>
-					<input checked="checked" id="GENERAL" type="radio" name="tabs" />
-					<input id="DIFFICULTY" type="radio" name="tabs" />
-					<input id="SPAWN" type="radio" name="tabs" />
-					<input id="SPAWNLIMITS" type="radio" name="tabs" />
-					<input id="WEAPONS" type="radio" name="tabs" />
-					<input id="BEHAVIOUR" type="radio" name="tabs" />
-					<input id="VEHICLE" type="radio" name="tabs" />
-					<input id="TRACE" type="radio" name="tabs" />
-					<input id="ADVANCED" type="radio" name="tabs" />
-					<input id="EXPERT" type="radio" name="tabs" />
-					<input id="OTHER" type="radio" name="tabs" />
+            <ui-box data-name="info">
+                <ui-entry>
+                    <label data-lang="Current Trace Index">Current Trace Index</label>
+                    <ui-container>
+                        <ui-arrow data-direction="left"></ui-arrow>
+                        <input type="number" name="trace_index" value="0" />
+                        <ui-arrow data-direction="right"></ui-arrow>
+                    </ui-container>
+                </ui-entry>
+                <ui-entry>
+                    <label data-lang="Waypoints">Waypoints</label>
+                    <ui-value data-name="waypoints">0</ui-value>
+                </ui-entry>
+                <ui-entry>
+                    <label data-lang="Total Distance">Total Distance</label>
+                    <ui-value data-name="distance" data-prefix=" m">0</ui-value>
+                </ui-entry>
+            </ui-box>
 
-					<nav>
-						<ul class="main">
-							<li>
-								<label for="GENERAL"><span data-lang="General">General</span></label>
-							</li>
-							<li>
-								<label for="DIFFICULTY"><span data-lang="Difficulty">Difficulty</span></label>
-							</li>
-							<li>
-								<label for="SPAWN"><span data-lang="Spawn">Spawn</span></label>
-							</li>
-							<li>
-								<label for="SPAWNLIMITS"><span data-lang="Spawnlimits">Spawnlimits</span></label>
-							</li>
-							<li>
-								<label for="WEAPONS"><span data-lang="Weapons">Weapons</span></label>
-							</li>
-							<li>
-								<label for="BEHAVIOUR"><span data-lang="Behaviour">Behaviour</span></label>
-							</li>
-							<li>
-								<label for="VEHICLE"><span data-lang="Vehicle">Vehicle</span></label>
-							</li>
-							<li>
-								<label for="TRACE"><span data-lang="Trace">Trace</span></label>
-							</li>
-							<li>
-								<label for="ADVANCED"><span data-lang="Advanced">Advanced</span></label>
-							</li>
-							<li>
-								<label for="EXPERT"><span data-lang="Expert">Expert</span></label>
-							</li>
-							<li>
-								<label for="OTHER"><span data-lang="Other">Other</span></label>
-							</li>
-						</ul>
-					</nav>
+            <ui-box data-name="record" data-color="red" dataset-show="false"> Recording... </ui-box>
 
-					<figure>
-						<ui-tab class="GENERAL"></ui-tab>
-						<ui-tab class="DIFFICULTY"></ui-tab>
-						<ui-tab class="SPAWN"></ui-tab>
-						<ui-tab class="SPAWNLIMITS"></ui-tab>
-						<ui-tab class="WEAPONS"></ui-tab>
-						<ui-tab class="BEHAVIOUR"></ui-tab>
-						<ui-tab class="VEHICLE"></ui-tab>
-						<ui-tab class="TRACE"></ui-tab>
-						<ui-tab class="ADVANCED"></ui-tab>
-						<ui-tab class="EXPERT"></ui-tab>
-						<ui-tab class="OTHER"></ui-tab>
-					</figure>
-				</ui-tabs>
+            <ui-help data-name="numpad">
+                <p data-lang="Node Operation Controls">Node Operation Controls</p>
 
-				<ui-description></ui-description>
-			</ui-content>
-			<ui-buttons>
-				<button data-action="close"><span data-lang="Cancel">Cancel</span></button>
-				<button data-action="restore"><span data-lang="Restore all to Default">Restore all to Default</span></button>
-				<ui-spacer></ui-spacer>
-				<button data-action="submit_temp"><span data-lang="Save temporarily">Save temporarily</span></button>
-				<button data-action="submit"><span data-lang="Save">Save</span></button>
-			</ui-buttons>
-		</ui-view>
+                <div class="guic-row">
+                    <ui-entry class="guic-col-4">
+                        <ui-key data-name="7"></ui-key>
+                        <span data-lang="Merge">Merge</span>
+                    </ui-entry>
+                    <ui-entry class="guic-col-4">
+                        <ui-key data-name="8"></ui-key>
+                        <span data-lang="Link">Link</span>
+                    </ui-entry>
+                    <ui-entry class="guic-col-4">
+                        <ui-key data-name="9"></ui-key>
+                        <span data-lang="Split">Split</span>
+                    </ui-entry>
+                </div>
 
-		<script src="classes/Utils.js"></script>
-		<script src="classes/Constants.js"></script>
-		<script src="classes/EntryElement.js"></script>
-		<script src="classes/BotEditor.js"></script>
-	</body>
+                <div class="guic-row">
+                    <ui-entry class="guic-col-4">
+                        <ui-key data-name="4"></ui-key>
+                        <span data-lang="Move">Move</span>
+                    </ui-entry>
+                    <ui-entry class="guic-col-4">
+                        <ui-key data-name="5"></ui-key>
+                        <span data-lang="Select">Select</span>
+                    </ui-entry>
+                    <ui-entry class="guic-col-4">
+                        <ui-key data-name="6"></ui-key>
+                        <span data-lang="Input">Input</span>
+                    </ui-entry>
+                </div>
+                <div class="guic-row">
+                    <ui-entry class="guic-col-4">
+                        <ui-key data-name="1"></ui-key>
+                        <span data-lang="Remove">Remove</span>
+                    </ui-entry>
+                    <ui-entry class="guic-col-4">
+                        <ui-key data-name="2"></ui-key>
+                        <span data-lang="Unlink">Unlink</span>
+                    </ui-entry>
+                    <ui-entry class="guic-col-4">
+                        <ui-key data-name="3"></ui-key>
+                        <span data-lang="Add">Add</span>
+                    </ui-entry>
+                </div>
+                <ui-entry data-grid="Other">
+                    <ui-entry>
+                        <ui-key data-name="F12"></ui-key>
+                        <span data-lang="Settings">Settings</span>
+                    </ui-entry>
+                    <ui-entry>
+                        <ui-key data-name="Q"></ui-key>
+                        <span data-lang="Select">Select</span>
+                    </ui-entry>
+                    <ui-entry>
+                        <ui-key data-name="BS"></ui-key>
+                        <span data-lang="Clear Select">Clear Select</span>
+                    </ui-entry>
+                    <ui-entry>
+                        <ui-key data-name="INS"></ui-key>
+                        <span data-lang="Spawn Bot">Spawn Bot</span>
+                    </ui-entry>
+                </ui-entry>
+            </ui-help>
+
+            <ui-help data-name="interaction">
+                <span data-lang="Press ALT for Interaction with the Editor">
+                    Press ALT for Interaction with the Editor
+                </span>
+            </ui-help>
+        </ui-view>
+
+        <!-- CommoRose -->
+        <ui-view data-name="commorose" data-type="commorose">
+            <ui-top>
+                <a data-action="not_implemented"><span data-lang=""></span></a>
+            </ui-top>
+            <ui-horizontal>
+                <ul class="left">
+                    <li data-action="not_implemented">
+                        <a><span data-lang=""></span></a>
+                    </li>
+                    <li data-action="not_implemented">
+                        <a><span data-lang=""></span></a>
+                    </li>
+                    <li data-action="not_implemented">
+                        <a><span data-lang=""></span></a>
+                    </li>
+                    <li data-action="not_implemented">
+                        <a><span data-lang=""></span></a>
+                    </li>
+                </ul>
+                <ui-hexagon>
+                    <span data-lang="Commands">Commands</span>
+                </ui-hexagon>
+                <ul class="right">
+                    <li data-action="not_implemented">
+                        <a><span data-lang=""></span></a>
+                    </li>
+                    <li data-action="not_implemented">
+                        <a><span data-lang=""></span></a>
+                    </li>
+                    <li data-action="not_implemented">
+                        <a><span data-lang=""></span></a>
+                    </li>
+                    <li data-action="not_implemented">
+                        <a><span data-lang=""></span></a>
+                    </li>
+                </ul>
+            </ui-horizontal>
+            <ui-bottom>
+                <a data-action="not_implemented"><span data-lang=""></span></a>
+            </ui-bottom>
+        </ui-view>
+
+        <!-- Settings -->
+        <ui-view data-name="settings" data-type="dialog">
+            <ui-header>
+                <span data-lang="Settings">Settings</span>
+            </ui-header>
+            <ui-content data-type="form" data-action="UI_Save_Settings">
+                <ui-tabs>
+                    <nav>
+                        <ul class="main">
+                            <li>
+                                <label
+                                    data-name="GENERAL"
+                                    onclick="BotEditor.activateTab(event, 'GENERAL')"
+                                >
+                                    <span data-lang="General">General</span>
+                                </label>
+                            </li>
+                            <li>
+                                <label
+                                    data-name="DIFFICULTY"
+                                    onclick="BotEditor.activateTab(event, 'DIFFICULTY')"
+                                >
+                                    <span data-lang="Difficulty">Difficulty</span>
+                                </label>
+                            </li>
+                            <li>
+                                <label
+                                    data-name="SPAWN"
+                                    onclick="BotEditor.activateTab(event, 'SPAWN')"
+                                >
+                                    <span data-lang="Spawn">Spawn</span>
+                                </label>
+                            </li>
+                            <li>
+                                <label
+                                    data-name="SPAWNLIMITS"
+                                    onclick="BotEditor.activateTab(event, 'SPAWNLIMITS')"
+                                >
+                                    <span data-lang="Spawnlimits">Spawnlimits</span>
+                                </label>
+                            </li>
+                            <li>
+                                <label
+                                    data-name="WEAPONS"
+                                    onclick="BotEditor.activateTab(event, 'WEAPONS')"
+                                >
+                                    <span data-lang="Weapons">Weapons</span>
+                                </label>
+                            </li>
+                            <li>
+                                <label
+                                    data-name="BEHAVIOUR"
+                                    onclick="BotEditor.activateTab(event, 'BEHAVIOUR')"
+                                >
+                                    <span data-lang="Behaviour">Behaviour</span>
+                                </label>
+                            </li>
+                            <li>
+                                <label
+                                    data-name="VEHICLE"
+                                    onclick="BotEditor.activateTab(event, 'VEHICLE')"
+                                >
+                                    <span data-lang="Vehicle">Vehicle</span>
+                                </label>
+                            </li>
+                            <li>
+                                <label
+                                    data-name="TRACE"
+                                    onclick="BotEditor.activateTab(event, 'TRACE')"
+                                >
+                                    <span data-lang="Trace">Trace</span>
+                                </label>
+                            </li>
+                            <li>
+                                <label
+                                    data-name="ADVANCED"
+                                    onclick="BotEditor.activateTab(event, 'ADVANCED')"
+                                >
+                                    <span data-lang="Advanced">Advanced</span>
+                                </label>
+                            </li>
+                            <li>
+                                <label
+                                    data-name="EXPERT"
+                                    onclick="BotEditor.activateTab(event, 'EXPERT')"
+                                >
+                                    <span data-lang="Expert">Expert</span>
+                                </label>
+                            </li>
+                            <li>
+                                <label
+                                    data-name="OTHER"
+                                    onclick="BotEditor.activateTab(event, 'OTHER')"
+                                >
+                                    <span data-lang="Other">Other</span>
+                                </label>
+                            </li>
+                        </ul>
+                    </nav>
+
+                    <figure>
+                        <ui-tab data-name="GENERAL"></ui-tab>
+                        <ui-tab data-name="DIFFICULTY"></ui-tab>
+                        <ui-tab data-name="SPAWN"></ui-tab>
+                        <ui-tab data-name="SPAWNLIMITS"></ui-tab>
+                        <ui-tab data-name="WEAPONS"></ui-tab>
+                        <ui-tab data-name="BEHAVIOUR"></ui-tab>
+                        <ui-tab data-name="VEHICLE"></ui-tab>
+                        <ui-tab data-name="TRACE"></ui-tab>
+                        <ui-tab data-name="ADVANCED"></ui-tab>
+                        <ui-tab data-name="EXPERT"></ui-tab>
+                        <ui-tab data-name="OTHER"></ui-tab>
+                    </figure>
+                </ui-tabs>
+
+                <ui-description></ui-description>
+            </ui-content>
+            <ui-buttons>
+                <button data-action="close">
+                    <span data-lang="Cancel">Cancel</span>
+                </button>
+                <button data-action="restore">
+                    <span data-lang="Restore all to Default">Restore all to Default</span>
+                </button>
+                <ui-spacer></ui-spacer>
+                <button data-action="submit_temp">
+                    <span data-lang="Save temporarily">Save temporarily</span>
+                </button>
+                <button data-action="submit">
+                    <span data-lang="Save">Save</span>
+                </button>
+            </ui-buttons>
+        </ui-view>
+
+        <script src="/classes/EntryElement.js" type="module"></script>
+        <script src="/classes/BotEditor.js" type="module"></script>
+    </body>
 </html>
