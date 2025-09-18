@@ -10,12 +10,10 @@ ui-view[data-name="settings"] ui-content ui-description {
     display: block;
 }
 
-ui-view[data-name="settings"] ui-tabs {
-}
+ui-view[data-name="settings"] ui-tabs {}
 
 /* Menu */
-ui-view[data-name="settings"] ui-tabs nav {
-}
+ui-view[data-name="settings"] ui-tabs nav {}
 
 ui-view[data-name="settings"] ui-tabs nav ul {
     display: flex;
@@ -39,11 +37,9 @@ ui-view[data-name="settings"] ui-tabs nav ul li label {
     font-size: 18px;
     text-align: center;
     text-transform: uppercase;
-    background-image: linear-gradient(
-        180deg,
-        var(--color_button_default_from) 0%,
-        var(--color_button_default_to) 100%
-    );
+    background-image: linear-gradient(180deg,
+            var(--color_button_default_from) 0%,
+            var(--color_button_default_to) 100%);
 }
 
 ui-view[data-name="settings"] ui-tabs nav ul li:first-child label {
@@ -55,21 +51,17 @@ ui-view[data-name="settings"] ui-tabs nav ul li:last-child label {
 }
 
 ui-view[data-name="settings"] ui-tabs nav ul li:hover label {
-    background-image: linear-gradient(
-        180deg,
-        var(--color_button_hover_from) 0%,
-        var(--color_button_hover_to) 100%
-    );
+    background-image: linear-gradient(180deg,
+            var(--color_button_hover_from) 0%,
+            var(--color_button_hover_to) 100%);
 }
 
 ui-view[data-name="settings"] ui-tabs nav ul li label.active {
     color: var(--color_text_hover);
     text-shadow: 0 0 6px var(--color_text_hover_shadow);
-    background-image: linear-gradient(
-        180deg,
-        var(--color_button_active_from) 0%,
-        var(--color_button_active_to) 100%
-    );
+    background-image: linear-gradient(180deg,
+            var(--color_button_active_from) 0%,
+            var(--color_button_active_to) 100%);
 }
 
 /* Tab Content */
@@ -79,12 +71,12 @@ ui-view[data-name="settings"] ui-tabs figure {
     display: block;
 }
 
-ui-view[data-name="settings"] ui-tabs figure > ui-tab {
+ui-view[data-name="settings"] ui-tabs figure>ui-tab {
     display: none;
     padding: 20px;
 }
 
-ui-view[data-name="settings"] ui-tabs figure > ui-tab.active {
+ui-view[data-name="settings"] ui-tabs figure>ui-tab.active {
     display: block;
 }
 
@@ -115,24 +107,12 @@ ui-view[data-name="settings"] ui-tabs figure ui-tab ui-entry ui-container ui-arr
     font-size: 30px;
 }
 
-ui-view[data-name="settings"]
-    ui-tabs
-    figure
-    ui-tab
-    ui-entry
-    ui-container
-    ui-arrow[data-direction="left"]:before {
-    content: "❰";
+ui-view[data-name="settings"] ui-tabs figure ui-tab ui-entry ui-container ui-arrow[data-direction="left"]:before {
+    content: "<";
 }
 
-ui-view[data-name="settings"]
-    ui-tabs
-    figure
-    ui-tab
-    ui-entry
-    ui-container
-    ui-arrow[data-direction="right"]:after {
-    content: "❱";
+ui-view[data-name="settings"] ui-tabs figure ui-tab ui-entry ui-container ui-arrow[data-direction="right"]:after {
+    content: ">";
 }
 
 ui-view[data-name="settings"] ui-tabs figure ui-tab ui-entry ui-container ui-text {
@@ -143,22 +123,8 @@ ui-view[data-name="settings"] ui-tabs figure ui-tab ui-entry ui-container ui-tex
     font-size: 16px;
 }
 
-ui-view[data-name="settings"]
-    ui-tabs
-    figure
-    ui-tab
-    ui-entry
-    ui-container
-    ui-text
-    input[type="text"],
-ui-view[data-name="settings"]
-    ui-tabs
-    figure
-    ui-tab
-    ui-entry
-    ui-container
-    ui-text
-    input[type="password"],
+ui-view[data-name="settings"] ui-tabs figure ui-tab ui-entry ui-container ui-text input[type="text"],
+ui-view[data-name="settings"] ui-tabs figure ui-tab ui-entry ui-container ui-text input[type="password"],
 ui-view[data-name="settings"] ui-tabs figure ui-tab ui-entry ui-container input[type="number"] {
     border: none;
     width: 100%;
@@ -174,22 +140,8 @@ ui-view[data-name="settings"] ui-tabs figure ui-tab ui-entry ui-container input[
     text-shadow: 0 0 6px var(--color_text_shadow);
 }
 
-ui-view[data-name="settings"]
-    ui-tabs
-    figure
-    ui-tab
-    ui-entry[data-type="Text"]
-    ui-container
-    ui-text
-    input[type="text"],
-ui-view[data-name="settings"]
-    ui-tabs
-    figure
-    ui-tab
-    ui-entry[data-type="Password"]
-    ui-container
-    ui-text
-    input[type="password"] {
+ui-view[data-name="settings"] ui-tabs figure ui-tab ui-entry[data-type="Text"] ui-container ui-text input[type="text"],
+ui-view[data-name="settings"] ui-tabs figure ui-tab ui-entry[data-type="Password"] ui-container ui-text input[type="password"] {
     border-width: 1px;
     border-style: solid;
 }

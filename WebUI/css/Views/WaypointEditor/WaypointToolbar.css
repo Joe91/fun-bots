@@ -137,8 +137,7 @@ ui-view[data-name="waypoint_toolbar"] ui-box[data-name="record"]:before {
     background-image: url("../../../assets/stop.svg");
 }
 
-ui-view[data-name="waypoint_toolbar"] ui-box[data-name="info"] {
-}
+ui-view[data-name="waypoint_toolbar"] ui-box[data-name="info"] {}
 
 ui-view[data-name="waypoint_toolbar"] ui-box[data-name="info"] ui-entry {
     display: flex;
@@ -158,10 +157,7 @@ ui-view[data-name="waypoint_toolbar"] ui-box[data-name="info"] ui-entry ui-value
     text-align: center;
 }
 
-ui-view[data-name="waypoint_toolbar"]
-    ui-box[data-name="info"]
-    ui-entry
-    ui-value[data-prefix]:after {
+ui-view[data-name="waypoint_toolbar"] ui-box[data-name="info"] ui-entry ui-value[data-prefix]:after {
     content: attr(data-prefix);
 }
 
@@ -180,20 +176,12 @@ ui-view[data-name="waypoint_toolbar"] ui-box[data-name="info"] ui-entry ui-conta
     align-self: center;
 }
 
-ui-view[data-name="waypoint_toolbar"]
-    ui-box[data-name="info"]
-    ui-entry
-    ui-container
-    ui-arrow[data-direction="left"]:before {
-    content: "❰";
+ui-view[data-name="waypoint_toolbar"] ui-box[data-name="info"] ui-entry ui-container ui-arrow[data-direction="left"]:before {
+    content: "<";
 }
 
-ui-view[data-name="waypoint_toolbar"]
-    ui-box[data-name="info"]
-    ui-entry
-    ui-container
-    ui-arrow[data-direction="right"]:after {
-    content: "❱";
+ui-view[data-name="waypoint_toolbar"] ui-box[data-name="info"] ui-entry ui-container ui-arrow[data-direction="right"]:after {
+    content: ">";
 }
 
 ui-view[data-name="waypoint_toolbar"] ui-box[data-name="info"] ui-entry ui-container input {
