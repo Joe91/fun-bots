@@ -31,11 +31,9 @@ ui-view[data-type="commorose"] ui-horizontal ul {
 ui-view[data-type="commorose"] ui-horizontal ul li {
     margin: 5px 0;
     padding: 2px 40px;
-    background-image: linear-gradient(
-        180deg,
-        rgba(15, 50, 65, 0.25) 0%,
-        rgba(20, 50, 78, 0.65) 100%
-    );
+    background-image: linear-gradient(180deg,
+            rgba(15, 50, 65, 0.25) 0%,
+            rgba(20, 50, 78, 0.65) 100%);
     border-bottom: 1px solid rgba(20, 50, 78, 0.8);
     text-align: center;
 }
@@ -43,11 +41,9 @@ ui-view[data-type="commorose"] ui-horizontal ul li {
 ui-view[data-type="commorose"] ui-horizontal ul li:hover {
     margin: 5px 0;
     padding: 2px 40px;
-    background-image: linear-gradient(
-        180deg,
-        rgba(83, 117, 132, 0.25) 0%,
-        rgba(110, 149, 185, 0.65) 100%
-    );
+    background-image: linear-gradient(180deg,
+            rgba(83, 117, 132, 0.25) 0%,
+            rgba(110, 149, 185, 0.65) 100%);
     border-bottom: 1px solid rgba(20, 50, 78, 0.8);
     text-align: center;
 }
@@ -66,78 +62,47 @@ ui-view[data-type="commorose"] ui-horizontal ul li:empty {
 
 /* Four items */
 ui-view[data-type="commorose"] ui-horizontal ul.left li:first-child {
-    transform: skewX(-25deg);
-}
-
-ui-view[data-type="commorose"] ui-horizontal ul.left li:first-child span {
-    transform: skewX(25deg);
+    clip-path: polygon(5% 0%, 100% 0%, 95% 100%, 0% 100%);
 }
 
 ui-view[data-type="commorose"] ui-horizontal ul.left li:nth-child(2) {
     margin: 5px 15px 5px -15px;
-    transform: skewX(-25deg);
-}
-
-ui-view[data-type="commorose"] ui-horizontal ul.left li:nth-child(2) span {
-    transform: skewX(25deg);
+    clip-path: polygon(5% 0%, 100% 0%, 95% 100%, 0% 100%);
 }
 
 ui-view[data-type="commorose"] ui-horizontal ul.left li:nth-child(3) {
     margin: 5px 15px 5px -15px;
-    transform: skewX(25deg);
-}
-
-ui-view[data-type="commorose"] ui-horizontal ul.left li:nth-child(3) span {
-    transform: skewX(-25deg);
+    clip-path: polygon(0% 0%, 95% 0%, 100% 100%, 5% 100%);
 }
 
 ui-view[data-type="commorose"] ui-horizontal ul.left li:nth-child(4) {
-    transform: skewX(25deg);
-}
-
-ui-view[data-type="commorose"] ui-horizontal ul.left li:nth-child(4) span {
-    transform: skewX(-25deg);
+    clip-path: polygon(0% 0%, 95% 0%, 100% 100%, 5% 100%);
 }
 
 ui-view[data-type="commorose"] ui-horizontal ul.right li:first-child {
-    transform: skewX(25deg);
-}
-
-ui-view[data-type="commorose"] ui-horizontal ul.right li:first-child span {
-    transform: skewX(-25deg);
+    clip-path: polygon(0% 0%, 95% 0%, 100% 100%, 5% 100%);
 }
 
 ui-view[data-type="commorose"] ui-horizontal ul.right li:nth-child(2) {
     margin: 5px -15px 5px 15px;
-    transform: skewX(25deg);
-}
-
-ui-view[data-type="commorose"] ui-horizontal ul.right li:nth-child(2) span {
-    transform: skewX(-25deg);
+    clip-path: polygon(0% 0%, 95% 0%, 100% 100%, 5% 100%);
 }
 
 ui-view[data-type="commorose"] ui-horizontal ul.right li:nth-child(3) {
     margin: 5px -15px 5px 15px;
-    transform: skewX(-25deg);
-}
-
-ui-view[data-type="commorose"] ui-horizontal ul.right li:nth-child(3) span {
-    transform: skewX(25deg);
+    clip-path: polygon(5% 0%, 100% 0%, 95% 100%, 0% 100%);
 }
 
 ui-view[data-type="commorose"] ui-horizontal ul.right li:nth-child(4) {
-    transform: skewX(-25deg);
+    clip-path: polygon(5% 0%, 100% 0%, 95% 100%, 0% 100%);
 }
 
-ui-view[data-type="commorose"] ui-horizontal ul.right li:nth-child(4) span {
-    transform: skewX(25deg);
-}
 
 ui-view[data-type="commorose"] ui-horizontal ui-hexagon {
     text-align: center;
     width: 100px;
-    line-height: 200px;
-    height: 200px;
+    line-height: 160px;
+    height: 160px;
     background-size: 100px;
     background-repeat: no-repeat;
     background-position: 50% 50%;
@@ -148,7 +113,7 @@ ui-view[data-type="commorose"] ui-top,
 ui-view[data-type="commorose"] ui-bottom {
     display: block;
     flex: 1 auto;
-    margin: 5px 100px;
+    margin: 5px 110px;
     min-height: 2px;
     text-align: center;
     position: relative;
@@ -158,14 +123,12 @@ ui-view[data-type="commorose"] ui-top:before,
 ui-view[data-type="commorose"] ui-bottom:before {
     content: "";
     position: absolute;
-    background-image: linear-gradient(
-        180deg,
-        rgba(15, 50, 65, 0.25) 0%,
-        rgba(20, 50, 78, 0.65) 100%
-    );
+    background-image: linear-gradient(180deg,
+            rgba(15, 50, 65, 0.25) 0%,
+            rgba(20, 50, 78, 0.65) 100%);
     border-bottom: 1px solid rgba(20, 50, 78, 0.8);
-    top: -4px;
-    bottom: -4px;
+    top: -2px;
+    bottom: -2px;
     left: 0;
     right: 0;
     z-index: -1;
@@ -175,25 +138,23 @@ ui-view[data-type="commorose"] ui-top:hover:before,
 ui-view[data-type="commorose"] ui-bottom:hover:before {
     content: "";
     position: absolute;
-    background-image: linear-gradient(
-        180deg,
-        rgba(83, 117, 132, 0.25) 0%,
-        rgba(110, 149, 185, 0.65) 100%
-    );
+    background-image: linear-gradient(180deg,
+            rgba(83, 117, 132, 0.25) 0%,
+            rgba(110, 149, 185, 0.65) 100%);
     border-bottom: 1px solid rgba(20, 50, 78, 0.8);
-    top: -4px;
-    bottom: -4px;
+    top: -2px;
+    bottom: -2px;
     left: 0;
     right: 0;
     z-index: -1;
 }
 
 ui-view[data-type="commorose"] ui-top:before {
-    clip-path: polygon(3% 0%, 97% 0%, 100% 100%, 0% 100%);
+    clip-path: polygon(5% 0%, 95% 0%, 100% 100%, 0% 100%);
 }
 
 ui-view[data-type="commorose"] ui-bottom:before {
-    clip-path: polygon(0% 0%, 100% 0%, 97% 100%, 3% 100%);
+    clip-path: polygon(0% 0%, 100% 0%, 95% 100%, 5% 100%);
 }
 
 ui-view[data-type="commorose"] ui-top span,
