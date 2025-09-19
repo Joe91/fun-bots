@@ -111,6 +111,11 @@ ui-view[data-type="toolbar"] ui-submenu ul.main>li>ul {
     background-color: rgba(0, 0, 0, 0.8);
     position: absolute;
     top: 35px;
+    width: auto;
+    min-width: 150px;
+    max-width: 400px;
+    white-space: nowrap;
+    z-index: 1000;
 }
 
 ui-view[data-type="toolbar"] ui-menu ul.main>li:hover>ul,
@@ -122,10 +127,15 @@ ui-view[data-type="toolbar"] ui-submenu ul.main>li:hover>ul {
 ui-view[data-type="toolbar"] ui-menu ul.main>li>ul>li>a,
 ui-view[data-type="toolbar"] ui-submenu ul.main>li>ul>li>a {
     padding: 5px 15px;
-    min-width: 150px;
+    width: 100%;
+    min-width: auto;
     position: relative;
     color: var(--color_text);
     text-shadow: 0 0 6px var(--color_text_shadow);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    box-sizing: border-box;
 }
 
 ui-view[data-type="toolbar"] ui-menu ul.main>li>ul>li>a[data-key]::before,
