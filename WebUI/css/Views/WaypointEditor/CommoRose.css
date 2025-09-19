@@ -53,12 +53,12 @@ ui-view[data-type="commorose"] ui-horizontal ul li span {
     margin: 0 10px;
 }
 
-ui-view[data-type="commorose"] ui-horizontal ul li:empty {
+/* ui-view[data-type="commorose"] ui-horizontal ul li:empty {
     content: "";
     height: 20px;
     border-bottom: none;
     background: none;
-}
+} */
 
 /* Four items */
 ui-view[data-type="commorose"] ui-horizontal ul.left li:first-child {

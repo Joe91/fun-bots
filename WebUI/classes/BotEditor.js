@@ -45,6 +45,14 @@ class BotEditor {
         this.bindMouseEvents();
         this.bindKeyboardEvents();
         this.bindKeyUpEvents();
+
+        document.querySelectorAll('a[data-key]').forEach(el => {
+            el.style.setProperty('--key-content', `"${el.dataset.key}"`);
+        });
+        document.querySelectorAll('ui-view[data-name="waypoint_toolbar"] ui-box[data-name="info"] ui-entry ui-value[data-prefix]').forEach(el => {
+            const prefixValue = el.getAttribute('data-prefix');
+            el.style.setProperty('--prefix-content', `"${prefixValue}"`);
+        });
     }
 
     Hide() {
@@ -1028,10 +1036,14 @@ class BotEditor {
         if (json.Top) {
             if (json.Top.Action) {
                 top.dataset.action = json.Top.Action;
+            } else {
+                top.dataset.action = "";
             }
 
             if (json.Top.Label) {
                 top.innerHTML = json.Top.Label;
+            } else {
+                top.innerHTML = "";
             }
         } else {
             top.dataset.action = "";
@@ -1044,10 +1056,14 @@ class BotEditor {
         if (json.Bottom) {
             if (json.Bottom.Action) {
                 bottom.dataset.action = json.Bottom.Action;
+            } else {
+                bottom.dataset.action = "";
             }
 
             if (json.Bottom.Label) {
                 bottom.innerHTML = json.Bottom.Label;
+            } else {
+                bottom.innerHTML = "";
             }
         } else {
             bottom.dataset.action = "";
@@ -1060,10 +1076,14 @@ class BotEditor {
         if (json.Center) {
             if (json.Center.Action) {
                 center.dataset.action = json.Center.Action;
+            } else {
+                center.dataset.action = "";
             }
 
             if (json.Center.Label) {
                 center.innerHTML = json.Center.Label;
+            } else {
+                center.innerHTML = "";
             }
         } else {
             center.dataset.action = "";

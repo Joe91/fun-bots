@@ -26,19 +26,15 @@ button {
     font-size: 16px;
     text-align: center;
     text-transform: uppercase;
-    background-image: linear-gradient(
-        180deg,
-        var(--color_button_default_from) 0%,
-        var(--color_button_default_to) 100%
-    );
+    background-image: linear-gradient(180deg,
+            var(--color_button_default_from) 0%,
+            var(--color_button_default_to) 100%);
 }
 
 button:hover {
-    background-image: linear-gradient(
-        180deg,
-        var(--color_button_hover_from) 0%,
-        var(--color_button_hover_to) 100%
-    );
+    background-image: linear-gradient(180deg,
+            var(--color_button_hover_from) 0%,
+            var(--color_button_hover_to) 100%);
 }
 
 ui-checkbox input[type="checkbox"] {
@@ -54,11 +50,11 @@ ui-checkbox:after {
     width: 15px;
     height: 15px;
     background-color: #eee;
-    display: inline-block;
+    display: block;
 }
 
 ui-checkbox:hover:after,
-a:hover > ui-checkbox:after {
+a:hover>ui-checkbox:after {
     background-color: #ccc;
     box-shadow: 0 0 10px 1px rgb(182, 239, 255);
 }
