@@ -818,23 +818,24 @@ class BotEditor {
         let script = document.createElement("script");
         script.type = "text/javascript";
         script.src = url;
-
         script.onload = () => {
             success();
         };
-
         script.onerror = () => {
             error();
         };
-
         document.body.appendChild(script);
     }
 
     loadLanguage(string) {
+        // Initialize Language object if it doesn't exist
+        if (typeof window.Language === 'undefined') {
+            window.Language = {};
+        }
+
         if (this.DEBUG) {
             console.log("Trying to loading language file:", string);
         }
-
         this._createLanguage(
             "languages/" + string + ".js",
             // Success callback
@@ -842,7 +843,6 @@ class BotEditor {
                 if (this.DEBUG) {
                     console.log("Language file was loaded:", string);
                 }
-
                 this._language = string;
                 this.reloadLanguageStrings();
             },
@@ -857,21 +857,15 @@ class BotEditor {
                         if (this.DEBUG) {
                             console.log("Language file was loaded:", string);
                         }
-
                         this._language = string;
                         this.reloadLanguageStrings();
                     },
-                    // Error callback
+                    // Error callback for fallback URL
                     () => {
-                        if (this.DEBUG) {
-                            console.log("Fallback-Language file was loaded:", string);
-                        }
-
-                        this._language = string;
-                        this.reloadLanguageStrings();
-                    },
+                        console.error("Failed to load language file:", string);
+                    }
                 );
-            },
+            }
         );
     }
 
@@ -884,22 +878,18 @@ class BotEditor {
     I18N(string) {
         if (this.DEBUG) {
             let translated = null;
-
             try {
-                translated = Language[this._language][string];
+                translated = window.Language[this._language][string]; // Add window.
             } catch (e) { }
-
             console.log("[Translate]", this._language, "=", string, "to", translated);
         }
-
         /* If Language exists */
-        if (typeof Language[this._language] !== "undefined") {
+        if (typeof window.Language[this._language] !== "undefined") { // Add window.
             /* If translation exists */
-            if (typeof Language[this._language][string] !== "undefined") {
-                return Language[this._language][string];
+            if (typeof window.Language[this._language][string] !== "undefined") { // Add window.
+                return window.Language[this._language][string]; // Add window.
             }
         }
-
         return string;
     }
 
