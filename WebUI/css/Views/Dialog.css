@@ -10,11 +10,9 @@ ui-view[data-type="dialog"] ui-header {
     position: relative;
     padding: 10px;
     text-transform: uppercase;
-    background-image: linear-gradient(
-        180deg,
-        var(--color_warning_from) 0%,
-        var(--color_warning_to) 100%
-    );
+    background-image: linear-gradient(180deg,
+            var(--color_warning_from) 0%,
+            var(--color_warning_to) 100%);
 }
 
 ui-view[data-type="dialog"] ui-content {
@@ -34,9 +32,9 @@ ui-view[data-type="dialog"] ui-content ui-error {
     margin: -20px 0 5px 0;
 }
 
-ui-view[data-type="dialog"] ui-content ui-error:empty {
+/* ui-view[data-type="dialog"] ui-content ui-error:empty {
     display: none;
-}
+} */
 
 ui-view[data-type="dialog"] ui-content p {
     padding: 15px;
