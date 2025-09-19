@@ -118,7 +118,9 @@ ui-view[data-name="settings"] ui-tabs figure ui-tab ui-entry ui-container ui-arr
 ui-view[data-name="settings"] ui-tabs figure ui-tab ui-entry ui-container ui-text {
     flex: 0 170px;
     text-align: center;
-    vertical-align: middle;
+    /* vertical-align: middle; */
+    align-items: center;
+    justify-content: center;
     align-self: center;
     font-size: 16px;
 }

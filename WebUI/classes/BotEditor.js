@@ -49,8 +49,9 @@ class BotEditor {
         document.querySelectorAll('a[data-key]').forEach(el => {
             el.style.setProperty('--key-content', `"${el.dataset.key}"`);
         });
-        document.querySelectorAll('a[data-prefix]').forEach(el => {
-            el.style.setProperty('--prefix-content', `"${el.dataset.key}"`);
+        document.querySelectorAll('ui-view[data-name="waypoint_toolbar"] ui-box[data-name="info"] ui-entry ui-value[data-prefix]').forEach(el => {
+            const prefixValue = el.getAttribute('data-prefix');
+            el.style.setProperty('--prefix-content', `"${prefixValue}"`);
         });
     }
 
