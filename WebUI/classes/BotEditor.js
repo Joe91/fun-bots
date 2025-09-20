@@ -4,14 +4,13 @@ import { getClosest } from "./Utils.js";
 import "coherent-gameface-grid/style.css";
 import "../css/styles.css";
 
-let Language = {};
 let settingsopenedonce = false;
 
 class BotEditor {
     constructor() {
         this.DEBUG = false;
         this.VERSION = "1.0.0-Beta";
-        this._language = "en_US";
+        this._language = "en_EN";
 
         console.log(`Init BotEditor UI (v${this.VERSION}) by https://github.com/Bizarrus.`);
 
@@ -53,6 +52,18 @@ class BotEditor {
             const prefixValue = el.getAttribute('data-prefix');
             el.style.setProperty('--prefix-content', `"${prefixValue}"`);
         });
+
+        // Initialize Language object
+        if (typeof window.Language === 'undefined') {
+            window.Language = {};
+        }
+        import('../languages/cn_CN.js');
+        import('../languages/de_DE.js');
+        import('../languages/en_EN.js');
+        import('../languages/es_ES.js');
+        import('../languages/fr_FR.js');
+        import('../languages/ja_JA.js');
+        import('../languages/pt_PT.js');
     }
 
     Hide() {
@@ -814,59 +825,12 @@ class BotEditor {
     }
 
     /* Translate */
-    _createLanguage(url, success, error) {
-        let script = document.createElement("script");
-        script.type = "text/javascript";
-        script.src = url;
-        script.onload = () => {
-            success();
-        };
-        script.onerror = () => {
-            error();
-        };
-        document.body.appendChild(script);
-    }
-
     loadLanguage(string) {
-        // Initialize Language object if it doesn't exist
-        if (typeof window.Language === 'undefined') {
-            window.Language = {};
-        }
-
         if (this.DEBUG) {
             console.log("Trying to loading language file:", string);
         }
-        this._createLanguage(
-            "languages/" + string + ".js",
-            // Success callback
-            () => {
-                if (this.DEBUG) {
-                    console.log("Language file was loaded:", string);
-                }
-                this._language = string;
-                this.reloadLanguageStrings();
-            },
-            // Error callback
-            () => {
-                this._createLanguage(
-                    "https://min.gitcdn.link/repo/Joe91/fun-bots/fun-bots-bizzi/WebUI/languages/" +
-                    string +
-                    ".js",
-                    // Success callback
-                    () => {
-                        if (this.DEBUG) {
-                            console.log("Language file was loaded:", string);
-                        }
-                        this._language = string;
-                        this.reloadLanguageStrings();
-                    },
-                    // Error callback for fallback URL
-                    () => {
-                        console.error("Failed to load language file:", string);
-                    }
-                );
-            }
-        );
+        this._language = string;
+        this.reloadLanguageStrings();
     }
 
     reloadLanguageStrings() {

@@ -104,15 +104,15 @@ ui-view[data-name="settings"] ui-tabs figure ui-tab ui-entry ui-container {
 ui-view[data-name="settings"] ui-tabs figure ui-tab ui-entry ui-container ui-arrow {
     flex: 0 13px;
     cursor: pointer;
-    font-size: 30px;
+    font-size: 20px;
 }
 
 ui-view[data-name="settings"] ui-tabs figure ui-tab ui-entry ui-container ui-arrow[data-direction="left"]:before {
-    content: "<";
+    content: "❰";
 }
 
 ui-view[data-name="settings"] ui-tabs figure ui-tab ui-entry ui-container ui-arrow[data-direction="right"]:after {
-    content: ">";
+    content: "❱";
 }
 
 ui-view[data-name="settings"] ui-tabs figure ui-tab ui-entry ui-container ui-text {

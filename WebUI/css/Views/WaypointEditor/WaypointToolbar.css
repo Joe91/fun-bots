@@ -178,11 +178,11 @@ ui-view[data-name="waypoint_toolbar"] ui-box[data-name="info"] ui-entry ui-conta
 }
 
 ui-view[data-name="waypoint_toolbar"] ui-box[data-name="info"] ui-entry ui-container ui-arrow[data-direction="left"]:before {
-    content: "<";
+    content: "❰";
 }
 
 ui-view[data-name="waypoint_toolbar"] ui-box[data-name="info"] ui-entry ui-container ui-arrow[data-direction="right"]:after {
-    content: ">";
+    content: "❱";
 }
 
 ui-view[data-name="waypoint_toolbar"] ui-box[data-name="info"] ui-entry ui-container input {
