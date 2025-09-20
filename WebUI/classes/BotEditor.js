@@ -879,17 +879,31 @@ class BotEditor {
         if (this.DEBUG) {
             let translated = null;
             try {
-                translated = window.Language[this._language][string]; // Add window.
+                translated = window.Language[this._language][string];
             } catch (e) { }
             console.log("[Translate]", this._language, "=", string, "to", translated);
         }
-        /* If Language exists */
-        if (typeof window.Language[this._language] !== "undefined") { // Add window.
-            /* If translation exists */
-            if (typeof window.Language[this._language][string] !== "undefined") { // Add window.
-                return window.Language[this._language][string]; // Add window.
+        // Check if Language object exists
+        if (typeof window.Language === "undefined") {
+            if (this.DEBUG) {
+                console.warn("Language object not initialized");
             }
+            return string;
         }
+
+        // Check if language exists
+        if (typeof window.Language[this._language] === "undefined") {
+            if (this.DEBUG) {
+                console.warn(`Language '${this._language}' not loaded`);
+            }
+            return string;
+        }
+
+        // Check if translation exists
+        if (typeof window.Language[this._language][string] !== "undefined") {
+            return window.Language[this._language][string];
+        }
+
         return string;
     }
 
