@@ -640,6 +640,7 @@ function FunBotServer:OnRequestClientSettings(p_Player)
 	NetEvents:SendToLocal('WriteClientSettings', p_Player, Config, true)
 	m_Console:RegisterConsoleCommands(p_Player)
 	m_BotManager:RegisterActivePlayer(p_Player)
+	m_NodeEditor:RegisterActivePlayer(p_Player)
 end
 
 function FunBotServer:OnRequestEnterVehicle(p_Player, p_BotName)

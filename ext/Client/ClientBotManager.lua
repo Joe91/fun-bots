@@ -14,14 +14,14 @@ function ClientBotManager:__init()
 end
 
 function ClientBotManager:RegisterVars()
+	self.m_ReadyToUpdate = false
 	self.m_RaycastTimer = 0
 	self.m_AliveTimer = 0
 	self.m_LastIndex = 0
-	self.m_Player = nil
-	self.m_ReadyToUpdate = false
+
 	---@type RaycastRequests[]
 	self.m_BotBotRaycastsToDo = {}
-
+	self.m_Player = nil
 	-- Inputs for change of seats (1-8).
 	self.m_LastInputLevelsPos = { 0, 0, 0, 0, 0, 0, 0, 0 }
 end
@@ -33,6 +33,9 @@ end
 ---VEXT Client Client:UpdateInput Event
 ---@param p_DeltaTime number
 function ClientBotManager:OnClientUpdateInput(p_DeltaTime)
+	if not self.m_ReadyToUpdate then
+		return
+	end
 	-- To-do: find a better solution for that!!!
 	if InputManager:WentKeyDown(InputDeviceKeys.IDK_Q) then
 		-- Execute Vehicle Enter Detection here.
@@ -76,6 +79,10 @@ end
 ---@param p_Cache ConceptCache
 ---@param p_DeltaTime number
 function ClientBotManager:OnInputPreUpdate(p_HookCtx, p_Cache, p_DeltaTime)
+	if not self.m_ReadyToUpdate then
+		return
+	end
+
 	if self.m_Player ~= nil and self.m_Player.inVehicle then
 		for i = 1, 8 do
 			local s_Varname = "ConceptSelectPosition" .. tostring(i)
@@ -94,15 +101,17 @@ end
 ---VEXT Shared Engine:Message Event
 ---@param p_Message Message
 function ClientBotManager:OnEngineMessage(p_Message)
-	if p_Message.type == MessageType.ClientLevelFinalizedMessage then
+	if p_Message.type == MessageType.ClientStateEnteredIngameMessage then --MessageType.ClientLevelFinalizedMessage then
 		NetEvents:SendLocal('Client:RequestSettings')
-		self.m_ReadyToUpdate = true
+		self:RegisterVars()
 		m_Logger:Write("level loaded on Client")
 	end
 
 	if p_Message.type == MessageType.ClientConnectionUnloadLevelMessage or
-		p_Message.type == MessageType.ClientCharacterLocalPlayerDeletedMessage then
-		self:RegisterVars()
+		p_Message.type == MessageType.ClientCharacterLocalPlayerDeletedMessage or
+		p_Message.type == MessageType.UIRequestEndOfRoundMessage then
+		print("End: " .. tostring(p_Message.type))
+		self.m_ReadyToUpdate = false
 	end
 end
 
@@ -416,12 +425,12 @@ end
 
 ---VEXT Shared Extension:Unloading Event
 function ClientBotManager:OnExtensionUnloading()
-	self:RegisterVars()
+	self.m_ReadyToUpdate = false
 end
 
 ---VEXT Shared Level:Destroy Event
 function ClientBotManager:OnLevelDestroy()
-	self:RegisterVars()
+	self.m_ReadyToUpdate = false
 end
 
 -- =============================================
@@ -441,6 +450,7 @@ function ClientBotManager:OnWriteClientSettings(p_NewConfig, p_UpdateWeaponSets)
 	end
 
 	self.m_Player = PlayerManager:GetLocalPlayer()
+	self.m_ReadyToUpdate = true
 end
 
 function ClientBotManager:CheckForBotBotAttack(p_RaycastData)

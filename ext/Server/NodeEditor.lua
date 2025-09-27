@@ -13,6 +13,7 @@ end
 
 function NodeEditor:RegisterVars()
 	self.m_ActiveTracePlayers = {}
+	self.m_ActivePlayers = {}
 
 	self.m_CustomTrace = {}
 	self.m_NodeWaitTimer = {}
@@ -1126,6 +1127,13 @@ end
 ---@param p_Player Player
 function NodeEditor:OnPlayerLeft(p_Player)
 	self.m_CustomTrace[p_Player.onlineId] = nil
+
+	for l_Index = 1, #self.m_ActivePlayers do
+		if self.m_ActivePlayers[l_Index] == p_Player.onlineId then
+			table.remove(self.m_ActivePlayers, l_Index)
+			break
+		end
+	end
 end
 
 ---VEXT Server Player:Destroyed Event
@@ -1463,15 +1471,22 @@ end
 -- Functions
 -- =============================================
 
+function NodeEditor:RegisterActivePlayer(p_Player)
+	-- Check if the player is already listed
+	if table.has(self.m_ActivePlayers, p_Player.onlineId) then
+		return
+	end
+
+	self.m_ActivePlayers[#self.m_ActivePlayers + 1] = p_Player.onlineId
+end
+
 function NodeEditor:Log(p_Player, ...)
 	local s_MessageString = Language:I18N(...)
 	m_Logger:Write(s_MessageString)
 	-- Send message to client as well.
-	if p_Player then
+	if p_Player and table.has(self.m_ActivePlayers, p_Player.onlineId) then
+		-- Check if the player is already listed
 		ChatManager:SendMessage('TRACE: ' .. s_MessageString, p_Player)
-		NetEvents:SendUnreliableToLocal('ClientNodeEditor:PrintLog', p_Player, s_MessageString)
-	else
-		NetEvents:BroadcastUnreliableLocal('ClientNodeEditor:PrintLog', s_MessageString)
 	end
 end
 

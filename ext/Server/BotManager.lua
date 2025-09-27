@@ -29,8 +29,7 @@ function BotManager:RegisterVars()
 	---@type table<integer, EntryInput>
 	---`[Player.id] -> EntryInput`
 	self._BotInputs = {}
-	---@type string[]
-	---`playerName:string[]`
+	---@type integer[]
 	self._ActivePlayers = {}
 	self._BotAttackBotTimer = 0.0
 	self._BotReviveBotTimer = 0.0
@@ -210,9 +209,9 @@ function BotManager:OnPlayerLeft(p_Player)
 		self._Bots[l_Index]:ClearPlayer(p_Player)
 	end
 
+	-- Remove from active-players list.
 	for l_Index = 1, #self._ActivePlayers do
-		local l_PlayerName = self._ActivePlayers[l_Index]
-		if l_PlayerName == p_Player.name then
+		if self._ActivePlayers[l_Index] == p_Player.onlineId then
 			table.remove(self._ActivePlayers, l_Index)
 			break
 		end
@@ -563,15 +562,12 @@ end
 ---@param p_Player Player
 function BotManager:RegisterActivePlayer(p_Player)
 	-- Check if the player is already listed
-	for l_Index = 1, #self._ActivePlayers do
-		local l_PlayerName = self._ActivePlayers[l_Index]
-		if l_PlayerName == p_Player.name then
-			return
-		end
+	if table.has(self._ActivePlayers, p_Player.onlineId) then
+		return
 	end
 
 	-- Not listed, add to the list.
-	self._ActivePlayers[#self._ActivePlayers + 1] = p_Player.name
+	self._ActivePlayers[#self._ActivePlayers + 1] = p_Player.onlineId
 end
 
 ---Returns the teamId for the team that has the most real players
@@ -1322,7 +1318,7 @@ function BotManager:_DistributeRaycastsBotBotAttack(p_RaycastData)
 
 	for i = 0, (s_ActivePlayerCount - 1) do
 		local s_Index = ((self._LastPlayerCheckIndex + i) % s_ActivePlayerCount) + 1
-		local s_ActivePlayer = PlayerManager:GetPlayerByName(self._ActivePlayers[s_Index])
+		local s_ActivePlayer = PlayerManager:GetPlayerByOnlineId(self._ActivePlayers[s_Index])
 
 		if s_ActivePlayer ~= nil then
 			local s_RaycastsToSend = {}
