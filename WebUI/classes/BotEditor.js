@@ -11,6 +11,7 @@ class BotEditor {
         this.DEBUG = false;
         this.VERSION = "1.0.0-Beta";
         this._language = "en_EN";
+        this.isProcessingSettings = false;
 
         console.log(`Init BotEditor UI (v${this.VERSION}) by https://github.com/Bizarrus.`);
 
@@ -757,18 +758,22 @@ class BotEditor {
         });
     }
     openSettings(data) {
+        // Guard to prevent multiple simultaneous calls
+        if (this.isProcessingSettings) return;
+        this.isProcessingSettings = true;
+
         let json;
         let container = document.querySelector('ui-view[data-name="settings"] figure');
-
         try {
             json = JSON.parse(data);
         } catch (e) {
             console.error(e, data);
+            this.isProcessingSettings = false;
             return;
         }
 
-        /* Clear/Remove previous Data */
-        [].map.call(container.querySelectorAll("ui-tab[class]"), (element) => {
+        /* Clear/Remove previous Data - Fixed selector to catch all tabs */
+        [].map.call(container.querySelectorAll("ui-tab[data-name]"), (element) => {
             element.innerHTML = "";
         });
 
@@ -801,6 +806,8 @@ class BotEditor {
             this.activateTab(null, "GENERAL");
             settingsopenedonce = true;
         }
+
+        this.isProcessingSettings = false;
     }
 
     activateTab(event, tabName) {
