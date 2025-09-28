@@ -66,9 +66,9 @@ function StateInVehicleStationaryAAControl:UpdateFast(p_Bot, p_DeltaTime)
 	if p_Bot._DeployTimer > 3.0 then
 		local s_Target = m_AirTargets:GetTarget(p_Bot.m_Player, Config.MaxDistanceAABots)
 		if s_Target ~= nil then
-			p_Bot._ShootPlayerName = s_Target.name
-			p_Bot._ShootPlayer = PlayerManager:GetPlayerByName(p_Bot._ShootPlayerName)
-			p_Bot._ShootPlayerVehicleType = g_PlayerData:GetData(p_Bot._ShootPlayerName).Vehicle
+			p_Bot._ShootPlayerId = s_Target.id
+			p_Bot._ShootPlayer = PlayerManager:GetPlayerById(p_Bot._ShootPlayerId)
+			p_Bot._ShootPlayerVehicleType = g_PlayerData:GetData(p_Bot._ShootPlayerId).Vehicle
 		elseif s_IsAttacking then
 			p_Bot:AbortAttack()
 		end

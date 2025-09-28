@@ -264,7 +264,7 @@ function ChatCommands:Execute(p_Parts, p_Player)
 		end
 		for l_Index = 1, #m_BotManager:GetBots() do
 			local l_Bot = m_BotManager:GetBots()[l_Index]
-			print("Objecitve: " .. l_Bot._Objective .. " - " .. l_Bot._ObjectiveMode .. " of Bot" .. l_Bot.m_Name)
+			print("Objecitve: " .. l_Bot._Objective .. " - " .. l_Bot._ObjectiveMode .. " of Bot" .. l_Bot.m_Player.name)
 		end
 		print(g_Utilities:dump(p_Player.selectedUnlocks, true, 4))
 	elseif p_Parts[1] == '!cardiff' then

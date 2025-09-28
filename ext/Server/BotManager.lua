@@ -34,8 +34,7 @@ function BotManager:RegisterVars()
 	self._BotAttackBotTimer = 0.0
 	self._BotReviveBotTimer = 0.0
 	self._DestroyBotsTimer = 0.0
-	---@type string[]
-	---`BotId[]`
+	---@type integer[]
 	self._BotsToDestroy = {}
 
 	---@type integer[]
@@ -43,9 +42,6 @@ function BotManager:RegisterVars()
 	self._BotBotAttackList = {}
 	self._BotBotReviveList = {}
 	self._RaycastsPerActivePlayer = 0
-	---@type table<string, boolean>
-	---`[BotName] -> boolean`
-	self._BotCheckState = {}
 
 	---@type table<string, boolean>
 	---`[botPlayer.id .. "-" .. enemyBotPlayer.id] -> boolean`
@@ -101,7 +97,6 @@ function BotManager:OnLevelDestroy()
 	self._BotBotAttackList = {}
 	self._BotBotReviveList = {}
 	self._RaycastsPerActivePlayer = 0
-	self._BotCheckState = {}
 	self._ConnectionCheckState = {}
 	self._LastBotCheckIndex = 1
 	self._LastPlayerCheckIndex = 1
@@ -399,13 +394,8 @@ function BotManager:OnBotShootAtBot(p_BotId1, p_BotId2)
 		return
 	end
 
-	if s_Bot1:ShootAt(s_Bot2.m_Player, false) then
-		self._BotCheckState[s_Bot1.m_Player.name] = true
-	end
-
-	if s_Bot2:ShootAt(s_Bot1.m_Player, false) then
-		self._BotCheckState[s_Bot2.m_Player.name] = true
-	end
+	s_Bot1:ShootAt(s_Bot2.m_Player, false)
+	s_Bot2:ShootAt(s_Bot1.m_Player, false)
 end
 
 ---@param p_MissileEntity Entity
@@ -992,7 +982,7 @@ function BotManager:DestroyAll(p_Amount, p_TeamId, p_Force)
 		if p_Force then
 			self:DestroyBot(l_Bot)
 		else
-			self._BotsToDestroy[#self._BotsToDestroy + 1] = l_Bot.m_Name
+			self._BotsToDestroy[#self._BotsToDestroy + 1] = l_Bot.m_Player.id
 		end
 
 		p_Amount = p_Amount - 1
@@ -1016,7 +1006,7 @@ function BotManager:DestroyDisabledBots(p_ProtectBots)
 			if p_ProtectBots and (s_ProtectedBots[s_TeamId] < #g_GameDirector:GetSpawnableVehicle(s_TeamId)) then
 				s_ProtectedBots[s_TeamId] = s_ProtectedBots[s_TeamId] + 1
 			else
-				self._BotsToDestroy[#self._BotsToDestroy + 1] = l_Bot.m_Name
+				self._BotsToDestroy[#self._BotsToDestroy + 1] = l_Bot.m_Player.id
 			end
 		end
 	end
@@ -1040,7 +1030,7 @@ function BotManager:DestroyPlayerBots(p_Player)
 	for l_Index = 1, #self._Bots do
 		local l_Bot = self._Bots[l_Index]
 		if l_Bot:GetTargetPlayer() == p_Player then
-			self._BotsToDestroy[#self._BotsToDestroy + 1] = l_Bot.m_Name
+			self._BotsToDestroy[#self._BotsToDestroy + 1] = l_Bot.m_Player.id
 		end
 	end
 end
@@ -1071,7 +1061,7 @@ end
 function BotManager:DestroyBot(p_Bot)
 	if type(p_Bot) == 'string' then
 		p_Bot = self._BotsByName[p_Bot]
-	elseif type(p_Bot) == 'integer' then
+	elseif type(p_Bot) == 'number' then
 		p_Bot = self._BotsByPlayerId[p_Bot]
 	end
 
@@ -1083,7 +1073,7 @@ function BotManager:DestroyBot(p_Bot)
 	for l_Index = #self._Bots, 1, -1 do
 		local s_Bot = self._Bots[l_Index]
 
-		if p_Bot.m_Name == s_Bot.m_Name then
+		if p_Bot.m_Id == s_Bot.m_Id then
 			table.remove(self._Bots, l_Index)
 		end
 
@@ -1096,15 +1086,15 @@ function BotManager:DestroyBot(p_Bot)
 	for l_Index = #s_BotTeam, 1, -1 do
 		local s_Bot = s_BotTeam[l_Index]
 
-		if p_Bot.m_Name == s_Bot.m_Name then
+		if p_Bot.m_Id == s_Bot.m_Id then
 			table.remove(s_BotTeam, l_Index)
 		end
 	end
 
-	self._BotsByName[p_Bot.m_Name] = nil
+	self._BotsByName[p_Bot.m_Player.name] = nil
 	self._BotsByPlayerId[p_Bot.m_Id] = nil
 	self._BotInputs[p_Bot.m_Id] = nil
-	m_BotCreator:RemoveActiveBot(p_Bot.m_Name);
+	m_BotCreator:RemoveActiveBot(p_Bot.m_Player.name);
 
 	p_Bot:Destroy()
 	---@diagnostic disable-next-line: cast-local-type
@@ -1490,7 +1480,6 @@ function BotManager:_CheckForBotBotAttack()
 	-- Should only reach here if every connection has been checked.
 	-- Clear the cache and start over.
 	self._LastBotCheckIndex = 1
-	self._BotCheckState = {}
 	self._ConnectionCheckState = {}
 	self._BotBotAttackList = {}
 end
@@ -1523,8 +1512,8 @@ function BotManager:_CheckForBotBotRevive()
 				string.find(l_Bot.m_Player.soldier.weaponsComponent.weapons[6].name, "Defibrillator") then
 				if l_Bot._ActiveAction ~= BotActionFlags.ReviveActive then
 					s_MedicBots[#s_MedicBots + 1] = l_Bot
-				elseif l_Bot._ShootPlayerName ~= '' then
-					s_BotsAlreadInRevive[#s_BotsAlreadInRevive + 1] = l_Bot._ShootPlayerName
+				elseif l_Bot._ShootPlayerId ~= -1 then
+					s_BotsAlreadInRevive[#s_BotsAlreadInRevive + 1] = l_Bot._ShootPlayerId
 				end
 			end
 		end
@@ -1536,8 +1525,8 @@ function BotManager:_CheckForBotBotRevive()
 		local l_DeadBot = s_DeadBots[l_Index0]
 		local s_BotFound = false
 		for l_Index1 = 1, #s_BotsAlreadInRevive do
-			local l_BotName = s_BotsAlreadInRevive[l_Index1]
-			if l_BotName == l_DeadBot.m_Name then
+			local l_BotId = s_BotsAlreadInRevive[l_Index1]
+			if l_BotId == l_DeadBot.m_Id then
 				s_BotFound = true
 				break
 			end

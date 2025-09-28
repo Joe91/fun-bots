@@ -10,7 +10,7 @@ local m_NodeCollection = require('NodeCollection')
 ---@return boolean
 function Bot:IsReadyToAttack(p_ShootBackAfterHit, p_Player, p_CheckShootTimer, p_IsNewTarget)
 	-- update timers first
-	if self._ShootPlayerName == '' then
+	if self._ShootPlayerId == -1 then
 		self._DoneShootDuration = 0.0
 	elseif p_Player and not p_IsNewTarget then
 		self._DoneShootDuration = self._DoneShootDuration + (self._ActiveShootDuration - self._ShootModeTimer)
@@ -30,7 +30,7 @@ function Bot:IsReadyToAttack(p_ShootBackAfterHit, p_Player, p_CheckShootTimer, p
 	end
 
 	local s_InVehicle = g_BotStates:IsInVehicleState(self.m_ActiveState)
-	if self._ShootPlayerName == '' or
+	if self._ShootPlayerId == -1 or
 		(p_Player and p_IsNewTarget) or -- if still the same enemy, you can trigger directly again
 		(s_InVehicle and (self._DoneShootDuration > Config.BotVehicleMinTimeShootAtPlayer)) or
 		(not s_InVehicle and (self._DoneShootDuration > Config.BotMinTimeShootAtPlayer)) or

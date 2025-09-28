@@ -30,8 +30,8 @@ function Bot:Revive(p_Player)
 	if self.m_Player.soldier.weaponsComponent.weapons[6] and
 		string.find(self.m_Player.soldier.weaponsComponent.weapons[6].name, "Defibrillator") then
 		self._ActiveAction = BotActionFlags.ReviveActive
-		self._ShootPlayerName = p_Player.name
-		self._ShootPlayer = PlayerManager:GetPlayerByName(self._ShootPlayerName)
+		self._ShootPlayerId = p_Player.id
+		self._ShootPlayer = PlayerManager:GetPlayerById(self._ShootPlayerId)
 		self._ShootPlayerVehicleType = VehicleTypes.NoVehicle -- does not matter here
 	end
 end
@@ -42,8 +42,8 @@ function Bot:Repair(p_Player)
 		self._ActiveAction = BotActionFlags.RepairActive
 		self._RepairVehicleEntity = p_Player.controlledControllable
 		self._LastVehicleHealth = 0.0
-		self._ShootPlayerName = p_Player.name
-		self._ShootPlayer = PlayerManager:GetPlayerByName(self._ShootPlayerName)
+		self._ShootPlayerId = p_Player.id
+		self._ShootPlayer = PlayerManager:GetPlayerById(self._ShootPlayerId)
 		self._ShootPlayerVehicleType = VehicleTypes.NoVehicle -- does not matter here
 		self._ShootModeTimer = Registry.BOT.MAX_TIME_TRY_REPAIR
 	end
@@ -52,8 +52,8 @@ end
 ---@param p_Player Player
 function Bot:EnterVehicleOfPlayer(p_Player)
 	self._ActiveAction = BotActionFlags.EnterVehicleActive
-	self._ShootPlayerName = p_Player.name
-	self._ShootPlayer = PlayerManager:GetPlayerByName(self._ShootPlayerName)
+	self._ShootPlayerId = p_Player.id
+	self._ShootPlayer = PlayerManager:GetPlayerById(self._ShootPlayerId)
 	self._ShootPlayerVehicleType = VehicleTypes.NoVehicle -- does not matter here
 	self._ShootModeTimer = 12.0
 end
@@ -92,7 +92,7 @@ function Bot:ShootAt(p_Player, p_IgnoreYaw)
 	end
 
 	local s_NewAttackPriority = self:GetAttackPriority(s_Type)
-	local s_NewTarget = self._ShootPlayerName ~= p_Player.name
+	local s_NewTarget = self._ShootPlayerId ~= p_Player.id
 
 	local s_Ready = (s_NewAttackPriority > self.m_AttackPriority) or self:IsReadyToAttack(p_IgnoreYaw, p_Player, true, s_NewTarget)
 	if not s_Ready or self._Shoot == false or self._DontAttackPlayers then
@@ -223,9 +223,9 @@ function Bot:ShootAt(p_Player, p_IgnoreYaw)
 			self._ActiveShootDuration = self._ShootModeTimer
 			if s_NewTarget then
 				self._DoneShootDuration = 0.0
-				self._ShootPlayerName = p_Player.name
-				self._ShootPlayer = PlayerManager:GetPlayerByName(self._ShootPlayerName)
-				local s_PlayerData = g_PlayerData:GetData(self._ShootPlayerName)
+				self._ShootPlayerId = p_Player.id
+				self._ShootPlayer = PlayerManager:GetPlayerById(self._ShootPlayerId)
+				local s_PlayerData = g_PlayerData:GetData(self._ShootPlayerId)
 				if s_PlayerData then
 					self._ShootPlayerVehicleType = s_PlayerData.Vehicle
 				else
@@ -247,7 +247,7 @@ function Bot:ShootAt(p_Player, p_IgnoreYaw)
 			self.m_AttackPriority = s_NewAttackPriority
 			return true
 		else
-			self._ShootPlayerName = ''
+			self._ShootPlayerId = -1
 			self._ShootPlayer = nil
 			self._ShootModeTimer = 0.0
 			return false

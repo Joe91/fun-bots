@@ -1285,14 +1285,14 @@ function BotSpawner:_SpawnSingleWayBot(p_Player, p_UseRandomWay, p_ActiveWayInde
 
 	if p_ExistingBot ~= nil then
 		s_IsRespawn = true
-		s_Name = p_ExistingBot.m_Name
+		s_Name = p_ExistingBot.m_Player.name
 		s_TeamId = p_ExistingBot.m_Player.teamId
 	elseif Registry.BOT_SPAWN.KEEP_BOTS_ON_NEW_ROUND and m_BotManager:GetInactiveBotCount(s_TeamId) > 0 then
 		local s_Bot = m_BotManager:GetInactiveBot(s_TeamId)
 		if s_Bot then
 			p_ExistingBot = s_Bot
 			s_IsRespawn = true
-			s_Name = p_ExistingBot.m_Name
+			s_Name = p_ExistingBot.m_Player.name
 			s_TeamId = p_ExistingBot.m_Player.teamId
 		end
 	end
@@ -1347,7 +1347,7 @@ function BotSpawner:_SpawnSingleWayBot(p_Player, p_UseRandomWay, p_ActiveWayInde
 				)
 				spawnEntity:FireEvent(spawnEvent)
 				self._BotsWithoutPath[#self._BotsWithoutPath + 1] = s_Bot
-				m_Logger:Write("Spawned bot " .. s_Bot.m_Name .. " in a jet")
+				m_Logger:Write("Spawned bot " .. s_Bot.m_Player.name .. " in a jet")
 				return
 			end
 		end

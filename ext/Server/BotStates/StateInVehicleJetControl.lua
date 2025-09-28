@@ -59,9 +59,9 @@ function StateInVehicleJetControl:UpdateFast(p_Bot, p_DeltaTime)
 	if p_Bot._DeployTimer > (Config.BotVehicleFireModeDuration - 0.5) and p_Bot._VehicleTakeoffTimer <= 0.0 then
 		local s_Target = m_AirTargets:GetTarget(p_Bot.m_Player, Registry.VEHICLES.MAX_ATTACK_DISTANCE_JET)
 		if s_Target ~= nil then
-			p_Bot._ShootPlayerName = s_Target.name
-			p_Bot._ShootPlayer = PlayerManager:GetPlayerByName(p_Bot._ShootPlayerName)
-			p_Bot._ShootPlayerVehicleType = g_PlayerData:GetData(p_Bot._ShootPlayerName).Vehicle
+			p_Bot._ShootPlayerId = s_Target.id
+			p_Bot._ShootPlayer = PlayerManager:GetPlayerById(p_Bot._ShootPlayerId)
+			p_Bot._ShootPlayerVehicleType = g_PlayerData:GetData(p_Bot._ShootPlayerId).Vehicle
 			p_Bot._ShootModeTimer = Config.BotVehicleFireModeDuration
 		elseif s_IsAttacking then
 			p_Bot:AbortAttack()

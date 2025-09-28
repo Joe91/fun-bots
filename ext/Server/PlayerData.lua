@@ -15,7 +15,7 @@ end
 ---comment
 ---@param p_Player Player -- Server class
 function PlayerData:SetPlayerData(p_Player)
-	self._Players[p_Player.name] = {
+	self._Players[p_Player.id] = {
 		Vehicle = VehicleTypes.NoVehicle,
 		ShootPlayerName = '',
 		Team = p_Player.teamId
@@ -41,14 +41,17 @@ function PlayerData:OnVehicleExit(p_VehicleEntity, p_Player)
 end
 
 function PlayerData:_UpdatePlayerData(p_Player, p_Attribute, p_Value)
-	if self._Players[p_Player.name] == nil then
+	if self._Players[p_Player.id] == nil then
 		self:SetPlayerData(p_Player)
 	end
-	self._Players[p_Player.name][p_Attribute] = p_Value
+	self._Players[p_Player.id][p_Attribute] = p_Value
 end
 
-function PlayerData:GetData(p_PlayerName)
-	return self._Players[p_PlayerName]
+---comment
+---@param p_PlayerId integer
+---@return PlayerInformation
+function PlayerData:GetData(p_PlayerId)
+	return self._Players[p_PlayerId]
 end
 
 if g_PlayerData == nil then

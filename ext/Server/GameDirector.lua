@@ -216,7 +216,7 @@ function GameDirector:OnEngineUpdate(p_DeltaTime)
 						l_Bot.m_DontRevive = true
 						l_Bot.m_Player.soldier:Kill()
 						l_Bot._KillYourselfTimer = 0.0
-						m_Logger:Write("kill " .. l_Bot.m_Name .. " because of inactivity on wrong paths")
+						m_Logger:Write("kill " .. l_Bot.m_Player.name .. " because of inactivity on wrong paths")
 					end
 				end
 			end
@@ -377,7 +377,7 @@ function GameDirector:OnEngineUpdate(p_DeltaTime)
 					local s_Objective = self:_GetObjectiveObject(s_ClosestObjective)
 					l_Bot:SetObjective(s_ClosestObjective, s_ClosestObjectiveMode)
 					m_Logger:Write("Team " ..
-						tostring(l_BotTeam) .. " with " .. l_Bot.m_Name .. " gets this objective: " .. s_ClosestObjective)
+						tostring(l_BotTeam) .. " with " .. l_Bot.m_Player.name .. " gets this objective: " .. s_ClosestObjective)
 					---@diagnostic disable-next-line: need-check-nil
 					s_Objective.assigned[l_BotTeam] = s_Objective.assigned[l_BotTeam] + 1
 				end

@@ -56,7 +56,7 @@ function AirTargets:GetTarget(p_Player, p_MaxDistance)
 
 	for l_Index = 1, #self._Targets do
 		local l_Target = self._Targets[l_Index]
-		local s_TargetPlayer = PlayerManager:GetPlayerByName(l_Target)
+		local s_TargetPlayer = PlayerManager:GetPlayerById(l_Target)
 
 		if s_TargetPlayer ~= nil and s_TargetPlayer.teamId ~= s_Team and s_TargetPlayer.soldier ~= nil then
 			local s_CurrentDistance = p_Player.controlledControllable.transform.trans:Distance(s_TargetPlayer.controlledControllable
@@ -96,7 +96,7 @@ function AirTargets:_CreateTarget(p_Player)
 	if p_Player.controlledEntryId == 0 then
 		local s_Vehicle = m_Vehicles:GetVehicle(p_Player)
 		if s_Vehicle and m_Vehicles:IsAirVehicle(s_Vehicle) then
-			self._Targets[#self._Targets + 1] = p_Player.name
+			self._Targets[#self._Targets + 1] = p_Player.id
 		end
 	end
 end
@@ -105,7 +105,7 @@ end
 function AirTargets:_RemoveTarget(p_Player)
 	for l_Index = 1, #self._Targets do
 		local l_Target = self._Targets[l_Index]
-		if l_Target == p_Player.name then
+		if l_Target == p_Player.id then
 			table.remove(self._Targets, l_Index)
 			break
 		end

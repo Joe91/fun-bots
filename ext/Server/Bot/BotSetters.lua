@@ -115,7 +115,7 @@ end
 function Bot:_SetActiveVarsSlow()
 	if self._ShootPlayer ~= nil then
 		-- only needed on change
-		local s_PlayerData = g_PlayerData:GetData(self._ShootPlayerName)
+		local s_PlayerData = g_PlayerData:GetData(self._ShootPlayerId)
 		if s_PlayerData then
 			self._ShootPlayerVehicleType = s_PlayerData.Vehicle
 		else
@@ -153,7 +153,7 @@ function Bot:ResetVars()
 	self._Shoot = false
 	self._TargetPlayer = nil
 	self._ShootPlayer = nil
-	self._ShootPlayerName = ''
+	self._ShootPlayerId = -1
 	self._InvertPathDirection = false
 	self._ExitVehicleActive = false
 	self._ShotTimer = 0.0
@@ -206,7 +206,7 @@ function Bot:ResetSpawnVars()
 	self._LastWayDistance = 1000.0
 	self._ShootPlayer = nil
 	self._DontAttackPlayers = false
-	self._ShootPlayerName = ''
+	self._ShootPlayerId = -1
 	self._AttackMode = BotAttackModes.RandomNotSet
 	self._ShootWayPoints = {}
 

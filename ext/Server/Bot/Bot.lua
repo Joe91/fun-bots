@@ -29,9 +29,6 @@ function Bot:__init(p_Player)
 	-- Player Object.
 	---@type Player
 	self.m_Player = p_Player
-	-- The player name.
-	---@type string
-	self.m_Name = p_Player.name
 	-- The ID of the player.
 	---@type integer
 	self.m_Id = p_Player.id
@@ -210,7 +207,7 @@ function Bot:__init(p_Player)
 	self._DontAttackPlayers = false
 	---@type VehicleTypes
 	self._ShootPlayerVehicleType = VehicleTypes.NoVehicle
-	self._ShootPlayerName = ''
+	self._ShootPlayerId = -1
 	self._DistanceToPlayer = 0.0
 	---@type BotWeapons
 	self._WeaponToUse = BotWeapons.Primary
@@ -437,10 +434,10 @@ function Bot:ClearPlayer(p_Player)
 		self._TargetPlayer = nil
 	end
 
-	local s_CurrentShootPlayer = PlayerManager:GetPlayerByName(self._ShootPlayerName)
+	local s_CurrentShootPlayer = PlayerManager:GetPlayerById(self._ShootPlayerId)
 
 	if s_CurrentShootPlayer == p_Player then
-		self._ShootPlayerName = ''
+		self._ShootPlayerId = -1
 		self._ShootPlayer = nil
 	end
 end
@@ -616,7 +613,7 @@ end
 
 function Bot:AbortAttack()
 	if m_Vehicles:IsVehicleType(self.m_ActiveVehicle, VehicleTypes.Plane) and
-		self._ShootPlayerName ~= '' then
+		self._ShootPlayerId ~= -1 then
 		if self._ShootPlayerVehicleType ~= VehicleTypes.Plane then
 			self._VehicleTakeoffTimer = Registry.VEHICLES.JET_ABORT_ATTACK_TIME
 		else
@@ -630,7 +627,7 @@ function Bot:AbortAttack()
 	end
 
 	self.m_Player.input.zoomLevel = 0
-	self._ShootPlayerName = ''
+	self._ShootPlayerId = -1
 	self._ShootPlayer = nil
 	self._ShootModeTimer = 0.0
 	self._AttackMode = BotAttackModes.RandomNotSet
