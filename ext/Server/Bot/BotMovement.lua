@@ -15,6 +15,143 @@ function BotMovement:__init()
 	-- Nothing to do.
 end
 
+local flags = RayCastFlags.DontCheckWater |
+	RayCastFlags.DontCheckCharacter |
+	RayCastFlags.DontCheckRagdoll |
+	RayCastFlags.DontCheckTerrain
+
+-- >>> SMART PATH OFFSET (with zig-zag and stairs fixes)
+local function ApplyPathOffset(p_Bot, p_OriginalPoint, p_NextPoint)
+	-- PRIORITY 1: Recovery mode - disable offset
+	if p_Bot.m_PathSide == 0 and p_Bot.m_OffsetRecoveryNodes and p_Bot.m_OffsetRecoveryNodes > 0 then
+		p_Bot.m_OffsetRecoveryNodes = p_Bot.m_OffsetRecoveryNodes - 1
+		if p_Bot.m_OffsetRecoveryNodes == 0 then
+			p_Bot.m_PathSide = math.random(-1, 1)
+		end
+		return p_OriginalPoint
+	end
+
+	-- PRIORITY 2: Validate inputs
+	if not p_OriginalPoint or not p_NextPoint or
+		(p_OriginalPoint.Data and (p_OriginalPoint.Data.Action or p_OriginalPoint.Data.Links)) then
+		return p_OriginalPoint
+	end
+
+	-- Initialize side once per path
+	if not p_Bot.m_PathSide or p_Bot.m_LastPathIndex ~= p_Bot._PathIndex then
+		p_Bot.m_PathSide = math.random(-1, 1)          -- -1 left, 0 center, 1 right
+		p_Bot.m_LastPathIndex = p_Bot._PathIndex
+		p_Bot.m_OffsetDistance = 0.8 + (math.random() * 0.4) -- 0.8-1.2m
+		p_Bot.m_LastStuckCheck = 0
+		p_Bot.m_ForceCenter = false
+		p_Bot.m_OffsetRight = nil
+	end
+
+	-- Emergency fallback
+	if p_Bot._ObstacleSequenceTimer ~= 0 and p_Bot.m_PathSide ~= 0 then
+		p_Bot.m_ForceCenter = true
+		return p_OriginalPoint
+	end
+	if p_Bot.m_ForceCenter and p_Bot._ObstacleSequenceTimer == 0 then
+		p_Bot.m_ForceCenter = false
+	end
+	if p_Bot.m_PathSide == 0 or p_Bot.m_ForceCenter then
+		return p_OriginalPoint
+	end
+
+	-- Calculate delta and direction
+	local delta = p_NextPoint.Position - p_OriginalPoint.Position
+	local length2D = math.sqrt(delta.x * delta.x + delta.z * delta.z)
+	if length2D < 0.1 then return p_OriginalPoint end
+
+	local dir = Vec3(delta.x / length2D, 0, delta.z / length2D)
+	local right = Vec3(dir.z, 0, -dir.x)
+
+	-- >>> FIX 1: soften lateral direction (avoid zig-zag)
+	if not p_Bot.m_OffsetRight then
+		p_Bot.m_OffsetRight = right
+	else
+		local smoothed = Vec3(
+			p_Bot.m_OffsetRight.x * 0.8 + right.x * 0.2,
+			0,
+			p_Bot.m_OffsetRight.z * 0.8 + right.z * 0.2
+		)
+		smoothed:Normalize()
+		p_Bot.m_OffsetRight = smoothed
+	end
+	right = p_Bot.m_OffsetRight
+
+	-- >>> FIX 2: stairs/passages vertical → center
+	local verticalDelta = math.abs(p_NextPoint.Position.y - p_OriginalPoint.Position.y)
+	if verticalDelta > 0.5 then
+		p_Bot.m_OffsetRecoveryNodes = 3 -- force center for 3 nodes
+		return p_OriginalPoint
+	end
+
+
+	-- >>> Smart check width (once per node or every 1s)
+	local currentTime = SharedUtils:GetTimeMS()
+	if currentTime - (p_Bot.m_LastStuckCheck or 0) > 1000 then
+		p_Bot.m_LastStuckCheck = currentTime
+
+		local rayOrigin = p_OriginalPoint.Position + Vec3(0, 0.5, 0)
+
+		local leftHits = RaycastManager:CollisionRaycast(
+			rayOrigin - right * 1.5,
+			rayOrigin - right * 0.5,
+			1, 0, flags
+		)
+		local rightHits = RaycastManager:CollisionRaycast(
+			rayOrigin + right * 0.5,
+			rayOrigin + right * 1.5,
+			1, 0, flags
+		)
+
+		if #leftHits > 0 and #rightHits > 0 then
+			return p_OriginalPoint -- narrow corridor → center
+		end
+
+		-- >>> FIX 3: limit offset based on free space
+		local leftClear = (#leftHits > 0) and leftHits[1].distance or 2.0
+		local rightClear = (#rightHits > 0) and rightHits[1].distance or 2.0
+		local maxOffset = math.min(leftClear, rightClear) - 0.3
+		if maxOffset < p_Bot.m_OffsetDistance then
+			p_Bot.m_OffsetDistance = math.max(0.3, maxOffset)
+		end
+	end
+
+	-- Calculate offset position
+	local offsetPosition = p_OriginalPoint.Position + right * (p_Bot.m_PathSide * p_Bot.m_OffsetDistance)
+
+	-- >>> FIX 4: check ground under the offset (avoid falling)
+	local footOrigin = offsetPosition + Vec3(0, 0.2, 0)
+	local footTarget = offsetPosition - Vec3(0, 2.0, 0)
+	local downHits = RaycastManager:CollisionRaycast(footOrigin, footTarget, 1, 0, flags)
+	if #downHits == 0 then
+		p_Bot.m_OffsetRecoveryNodes = 2
+		return p_OriginalPoint
+	end
+
+	-- Wall-slide check
+	local sideCheck = RaycastManager:CollisionRaycast(
+		p_OriginalPoint.Position + right * (p_Bot.m_PathSide * 0.3),
+		offsetPosition,
+		1, 0,
+		flags
+	)
+	if #sideCheck > 0 and sideCheck[1].position then
+		local comfortableDistance = 0.4
+		offsetPosition = p_OriginalPoint.Position + right * (p_Bot.m_PathSide * comfortableDistance)
+	end
+
+	return {
+		Position = offsetPosition,
+		SpeedMode = p_OriginalPoint.SpeedMode,
+		ExtraMode = p_OriginalPoint.ExtraMode,
+		OptValue = p_OriginalPoint.OptValue,
+		Data = p_OriginalPoint.Data
+	}
+end
 ---comment
 ---@param p_DeltaTime number
 ---@param p_Bot Bot
@@ -63,6 +200,9 @@ function BotMovement:UpdateNormalMovement(p_DeltaTime, p_Bot)
 			return
 		end
 
+		if s_Point and s_NextPoint then
+			s_Point = ApplyPathOffset(p_Bot, s_Point, s_NextPoint) or s_Point
+		end
 
 		-- Do defense, if needed
 		if p_Bot._ObjectiveMode == BotObjectiveModes.Defend and g_GameDirector:IsAtTargetObjective(p_Bot._PathIndex, p_Bot._Objective) then
@@ -236,6 +376,30 @@ function BotMovement:UpdateNormalMovement(p_DeltaTime, p_Bot)
 			-- Detect obstacle and move over or around. To-do: Move before normal jump.
 			local s_CurrentWayPointDistance = p_Bot.m_Player.soldier.worldTransform.trans:Distance(s_Point.Position)
 
+			-- >>> OFFSET-AWARE STUCK RECOVERY (improved)
+			-- >>> PATCH: Hard reroute when stuck
+			if p_Bot._StuckTimer > 6.0 then
+				local soldier = p_Bot.m_Player.soldier
+				if soldier ~= nil then
+					local s_Node = g_GameDirector:FindClosestPath(soldier.worldTransform.trans, false, true, nil)
+
+					if s_Node ~= nil then
+						p_Bot._InvertPathDirection = false
+						p_Bot._PathIndex = s_Node.PathIndex
+						p_Bot._CurrentWayPoint = s_Node.PointIndex
+						p_Bot._LastWayDistance = 1000.0
+					end
+
+					p_Bot.m_PathSide = 0 -- reset offset
+					p_Bot.m_OffsetRecoveryNodes = 10 -- lock center for a while
+					p_Bot._StuckTimer = 0.0
+
+					-- print("Bot rerouted " .. p_Bot.m_Name)
+					return
+				end
+			end
+			-- >>> END OFFSET RECOVERY
+
 			if s_CurrentWayPointDistance > p_Bot._LastWayDistance + 0.02 and p_Bot._ObstacleSequenceTimer == 0 then
 				-- Skip one point.
 				s_DistanceFromTarget = 0
@@ -284,6 +448,13 @@ function BotMovement:UpdateNormalMovement(p_DeltaTime, p_Bot)
 
 				p_Bot._ObstacleSequenceTimer = p_Bot._ObstacleSequenceTimer + p_DeltaTime
 				p_Bot._StuckTimer = p_Bot._StuckTimer + p_DeltaTime
+				-- >>> PATCH 2: vertical stuck acceleration
+				local soldierPos = p_Bot.m_Player.soldier.worldTransform.trans
+				if s_Point and (s_Point.Position.y - soldierPos.y > 1.5) then
+					-- If bot is too low compared to target (stairs/roof cases), speed up stuck timer
+					p_Bot._StuckTimer = p_Bot._StuckTimer + (p_DeltaTime * 2.0)
+				end
+				-- <<< END PATCH 2
 
 				if p_Bot._ObstacleRetryCounter >= 2 then -- Try next waypoint.
 					p_Bot._ObstacleRetryCounter = 0
@@ -502,7 +673,8 @@ function BotMovement:UpdateShootMovement(p_DeltaTime, p_Bot)
 
 	if (p_Bot.m_ActiveWeapon and (p_Bot.m_ActiveWeapon.type == WeaponTypes.Sniper or
 				p_Bot.m_ActiveWeapon.type == WeaponTypes.MissileAir or
-				p_Bot.m_ActiveWeapon.type == WeaponTypes.MissileLand) and
+				p_Bot.m_ActiveWeapon.type == WeaponTypes.MissileLand or
+				p_Bot.m_ActiveWeapon.type == WeaponTypes.LMG) and
 			not p_Bot.m_KnifeMode) then -- Don't move while shooting some weapons.
 		if p_Bot._AttackMode == BotAttackModes.Crouch then
 			if p_Bot.m_Player.soldier.pose ~= CharacterPoseType.CharacterPoseType_Crouch then
@@ -548,21 +720,30 @@ function BotMovement:UpdateShootMovement(p_DeltaTime, p_Bot)
 		-- Do some sidewards movement from time to time.
 		local movementIntensity = Config.SpeedFactorAttack
 
-		-- More frequent but still substantial movements (every 2.5 seconds, move for 1.0s)
-		if p_Bot._AttackModeMoveTimer > 15.0 then
-			p_Bot._AttackModeMoveTimer = 0.0
-		elseif p_Bot._AttackModeMoveTimer > 14.0 and p_Bot._AttackModeMoveTimer <= 15.0 then
-			p_Bot:_SetInput(EntryInputActionEnum.EIAStrafe, -movementIntensity)
-		elseif p_Bot._AttackModeMoveTimer > 12.0 and p_Bot._AttackModeMoveTimer <= 13.0 then
-			p_Bot:_SetInput(EntryInputActionEnum.EIAStrafe, movementIntensity)
-		elseif p_Bot._AttackModeMoveTimer > 9.5 and p_Bot._AttackModeMoveTimer <= 10.5 then
-			p_Bot:_SetInput(EntryInputActionEnum.EIAStrafe, -movementIntensity)
-		elseif p_Bot._AttackModeMoveTimer > 7.0 and p_Bot._AttackModeMoveTimer <= 8.0 then
-			p_Bot:_SetInput(EntryInputActionEnum.EIAStrafe, movementIntensity)
-		elseif p_Bot._AttackModeMoveTimer > 4.5 and p_Bot._AttackModeMoveTimer <= 5.5 then
-			p_Bot:_SetInput(EntryInputActionEnum.EIAStrafe, -movementIntensity)
-		elseif p_Bot._AttackModeMoveTimer > 2.0 and p_Bot._AttackModeMoveTimer <= 3.0 then
-			p_Bot:_SetInput(EntryInputActionEnum.EIAStrafe, movementIntensity)
+		-- wrap timer every 15 s (keeps the old behaviour)
+		if p_Bot._AttackModeMoveTimer >= 15.0 then
+			p_Bot._AttackModeMoveTimer = p_Bot._AttackModeMoveTimer - 15.0
+		end
+
+		-- which 2.5-second sub-cycle are we in?  (0-2.499, 2.5-4.999 …)
+		local cycle  = p_Bot._AttackModeMoveTimer % 2.5
+		local inMove = (cycle <= 1.0) -- we move for the first 1 s
+
+		-- store the direction for the whole 1-second window
+		if p_Bot._MoveDirection == nil then
+			p_Bot._MoveDirection = 1 -- init once
+		end
+
+		-- entering a new 1-second window?  pick a new random direction
+		local justEntered = (cycle - p_DeltaTime <= 0.0)
+		if justEntered then
+			p_Bot._MoveDirection = (math.random() < 0.5) and 1 or -1
+		end
+
+		-- apply movement
+		if inMove then
+			p_Bot:_SetInput(EntryInputActionEnum.EIAStrafe,
+				p_Bot._MoveDirection * movementIntensity)
 		end
 		p_Bot._AttackModeMoveTimer = p_Bot._AttackModeMoveTimer + p_DeltaTime
 	end
