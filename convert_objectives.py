@@ -6,6 +6,21 @@ safe_words = [
     "explore", "vehicle", "beacon", "spawn", "explore"
 ]
 
+
+def sort_dict_and_string_lists(data):
+    if isinstance(data, dict):
+        return {k: sort_dict_and_string_lists(data[k]) for k in sorted(data)}
+    elif isinstance(data, list):
+        if all(isinstance(item, str) for item in data):
+            return sorted(data)
+        elif all(isinstance(item, (int, float)) for item in data):
+            return data
+        else:
+            return [sort_dict_and_string_lists(item) for item in data]
+    else:
+        return data
+
+
 def main():
     mapfiles_dir = 'mapfiles'
 
@@ -41,7 +56,7 @@ def main():
             for node in nodes:
                 if node['pointIndex'] == "1":
                     first_nodes[path_index] = node
-                    print(node['pathIndex'])
+                    # print(node['pathIndex'])
                     break
         
         for path_index, node in first_nodes.items():
@@ -57,7 +72,10 @@ def main():
                     objectives = data_json["Objectives"]
                     if isinstance(objectives, list) and len(objectives) > 2 and "Vehicles" not in data_json:
                         del data_json["Objectives"]
-                        node['data'] = json.dumps(data_json,  separators=(',', ':'))
+                        if data_json == {}:
+                            node['data'] = ""
+                        else:
+                            node['data'] = json.dumps(data_json,  separators=(',', ':'))
         
         single_objective_paths = []
         for path_index, node in first_nodes.items():
@@ -74,7 +92,7 @@ def main():
                     if isinstance(objectives, list) and len(objectives) == 1:
                         #if not "explore" in objectives[0] and not "vehicle" in objectives[0] and not "beacon" in objectives[0] and not "spawn" in objectives[0]:
                         single_objective_paths.append((path_index, objectives[0]))
-                        print(f"Single objective path: {path_index} with objective: {objectives[0]}")
+                        # print(f"Single objective path: {path_index} with objective: {objectives[0]}")
                 
         for path_index, objective in single_objective_paths:
             if path_index not in paths_dict:
@@ -82,7 +100,7 @@ def main():
             skip_path = False
             for word in safe_words:
                 if word in objective:
-                    print(f"Skipping path {path_index} with objective {objective} due to safe word")
+                    # print(f"Skipping path {path_index} with objective {objective} due to safe word")
                     skip_path = True
                     break
             if skip_path:
@@ -108,11 +126,11 @@ def main():
                         linked_path_index = str(link[0])
                         if linked_path_index not in first_nodes:
                             continue
-                        print(f"Linking {path_index} to {linked_path_index} with objective {objective}")
+                        # print(f"Linking {path_index} to {linked_path_index} with objective {objective}")
                         skip_link = False
                         for single_objective_path in single_objective_paths:
                             if int(single_objective_path[0]) == int(linked_path_index): #or "vehicle" in single_objective_path[1] or "beacon" in single_objective_path[1]  or "explore" in single_objective_path[1] or "spawn" in single_objective_path[1]
-                                print(f"Skipping link to single objective path: {linked_path_index}")
+                                # print(f"Skipping link to single objective path: {linked_path_index}")
                                 skip_link = True
                                 break
                         if skip_link:
@@ -135,7 +153,11 @@ def main():
                             linked_data_json["Objectives"] = objectives_list
                         if objective not in objectives_list:
                             objectives_list.append(objective)
-                        linked_first_node['data'] = json.dumps(linked_data_json, separators=(',', ':'))
+                        linked_data_json = sort_dict_and_string_lists(linked_data_json)
+                        if linked_data_json == {}:
+                            linked_first_node['data'] = ""
+                        else:
+                            linked_first_node['data'] = json.dumps(linked_data_json, separators=(',', ':'))
         # TODO:                
         # now check, if a new objective was added to a first-node, that now only has one objective, if so, remove the objective
         for path_index, node in first_nodes.items():
@@ -159,8 +181,11 @@ def main():
                                 break
                         if remove_objective:
                             del data_json["Objectives"]
-                            node['data'] = json.dumps(data_json, separators=(',', ':'))
-                            print("removed single objective from path:", path_index)
+                            if data_json == {}:
+                                node['data'] = ""
+                            else:
+                                node['data'] = json.dumps(data_json, separators=(',', ':'))
+                            # print("removed single objective from path:", path_index)
         
         with open(input_file, 'w') as f:
             for node in nodes_list:

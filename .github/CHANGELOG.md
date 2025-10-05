@@ -71,6 +71,7 @@ This is the changelog for the version V3.0 Don't forget to [join us on Discord](
 * XP1_003_ConquestAssaultLarge0 by MatiasPastori
 * XP3_Desert_ConquestLarge0 by MatiasPastori
 * MP01_ConquestLarge0 by MatiasPastori (with explore-paths)
+* XP4 ConquestLarge0 by MatiasPastori
 
 ### Documentation update
 
