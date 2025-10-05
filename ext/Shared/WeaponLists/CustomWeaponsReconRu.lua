@@ -30,7 +30,7 @@ CustomWeaponsReconRu = {
 	-- 'UMP45', -- US
 	-- 'MP5K', -- US
 	-- 'MagpulPDR', -- US
-	'Crossbow', -- Both
+	-- 'Crossbow', -- Both
 
 	-- Pistols
 	-- 'Glock17', -- US

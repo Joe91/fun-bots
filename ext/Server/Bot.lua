@@ -17,186 +17,186 @@ local m_Logger = Logger('Bot', Debug.Server.BOT)
 function Bot:__init(p_Player)
 	-- Player Object.
 	---@type Player
-	self.m_Player = p_Player
+	self.m_Player                       = p_Player
 	---@type string
-	self.m_Name = p_Player.name
+	self.m_Name                         = p_Player.name
 	---@type integer
-	self.m_Id = p_Player.id
+	self.m_Id                           = p_Player.id
 
 	-- statemachine-part
-	self.m_ActiveState = g_BotStates.States.Idle
-	self.m_StateTimer = 0.0
+	self.m_ActiveState                  = g_BotStates.States.Idle
+	self.m_StateTimer                   = 0.0
 
 	-- create some character proporties
 	---@type BotBehavior
-	self.m_Behavior = nil
-	self.m_Reaction = 0.0
-	self.m_Accuracy = 0.0
-	self.m_Skill = 0.0
-	self.m_PrefWeapon = ""
-	self.m_PrefVehicle = ""
+	self.m_Behavior                     = nil
+	self.m_Reaction                     = 0.0
+	self.m_Accuracy                     = 0.0
+	self.m_Skill                        = 0.0
+	self.m_PrefWeapon                   = ""
+	self.m_PrefVehicle                  = ""
 
-	self._AttackPosition = Vec3.zero
+	self._AttackPosition                = Vec3.zero
 
 	-- Common settings.
 	---@type BotSpawnModes
-	self._SpawnMode = BotSpawnModes.NoRespawn
+	self._SpawnMode                     = BotSpawnModes.NoRespawn
 	---@type BotMoveModes
-	self._MoveMode = BotMoveModes.Standstill
-	self._ForcedMovement = false
+	self._MoveMode                      = BotMoveModes.Standstill
+	self._ForcedMovement                = false
 	---@type BotKits|integer
-	self.m_Kit = nil
+	self.m_Kit                          = nil
 	-- Only used in BotSpawner.
 	---@type BotColors|integer
-	self.m_Color = nil
+	self.m_Color                        = nil
 	---@type Weapon|nil
-	self.m_ActiveWeapon = nil
-	self.m_ActiveVehicle = nil
-	self.m_ActiveGmWeaponName = nil
+	self.m_ActiveWeapon                 = nil
+	self.m_ActiveVehicle                = nil
+	self.m_ActiveGmWeaponName           = nil
 	---@type Weapon|nil
-	self.m_Primary = nil
+	self.m_Primary                      = nil
 	---@type Weapon|nil
-	self.m_Pistol = nil
+	self.m_Pistol                       = nil
 	---@type Weapon|nil
-	self.m_PrimaryGadget = nil
+	self.m_PrimaryGadget                = nil
 	---@type Weapon|nil
-	self.m_SecondaryGadget = nil
+	self.m_SecondaryGadget              = nil
 	---@type Weapon|nil
-	self.m_Grenade = nil
+	self.m_Grenade                      = nil
 	---@type Weapon|nil
-	self.m_Knife = nil
-	self._Respawning = false
-	self.m_HasBeacon = false
-	self.m_DontRevive = false
-	self.m_AttackPriority = 1
+	self.m_Knife                        = nil
+	self._Respawning                    = false
+	self.m_HasBeacon                    = false
+	self.m_DontRevive                   = false
+	self.m_AttackPriority               = 1
 
 	-- Timers.
-	self._SpawnDelayTimer = 0.0
-	self._WayWaitTimer = 0.0
-	self._VehicleWaitTimer = 0.0
-	self._VehicleSeatTimer = 0.0
-	self._VehicleTakeoffTimer = 0.0
-	self._WayWaitYawTimer = 0.0
-	self._ObstacleSequenceTimer = 0.0
-	self._StuckTimer = 0.0
-	self._ShotTimer = 0.0
-	self._SoundTimer = 30.0
-	self._VehicleSecondaryWeaponTimer = 0.0
-	self._ShootModeTimer = 0.0
-	self._ReloadTimer = 0.0
-	self._DeployTimer = 0.0
-	self._AttackModeMoveTimer = 0.0
-	self._MeleeCooldownTimer = 0.0
-	self._ShootTraceTimer = 0.0
-	self._ActionTimer = 0.0
-	self._BrakeTimer = 0.0
-	self._SpawnProtectionTimer = 0.0
-	self._DefendTimer = 0.0
-	self._SidewardsTimer = 0.0
-	self._KillYourselfTimer = 0.0
-	self._RocketCooldownTimer = 0.0
+	self._SpawnDelayTimer               = 0.0
+	self._WayWaitTimer                  = 0.0
+	self._VehicleWaitTimer              = 0.0
+	self._VehicleSeatTimer              = 0.0
+	self._VehicleTakeoffTimer           = 0.0
+	self._WayWaitYawTimer               = 0.0
+	self._ObstacleSequenceTimer         = 0.0
+	self._StuckTimer                    = 0.0
+	self._ShotTimer                     = 0.0
+	self._SoundTimer                    = 30.0
+	self._VehicleSecondaryWeaponTimer   = 0.0
+	self._ShootModeTimer                = 0.0
+	self._ReloadTimer                   = 0.0
+	self._DeployTimer                   = 0.0
+	self._AttackModeMoveTimer           = 0.0
+	self._MeleeCooldownTimer            = 0.0
+	self._ShootTraceTimer               = 0.0
+	self._ActionTimer                   = 0.0
+	self._BrakeTimer                    = 0.0
+	self._SpawnProtectionTimer          = 0.0
+	self._DefendTimer                   = 0.0
+	self._SidewardsTimer                = 0.0
+	self._KillYourselfTimer             = 0.0
+	self._RocketCooldownTimer           = 0.0
 
 	-- Shared movement vars.
 	---@type BotMoveModes
-	self.m_ActiveMoveMode = BotMoveModes.Standstill
+	self.m_ActiveMoveMode               = BotMoveModes.Standstill
 	---@type BotMoveSpeeds
-	self.m_ActiveSpeedValue = BotMoveSpeeds.NoMovement
-	self.m_KnifeMode = false
+	self.m_ActiveSpeedValue             = BotMoveSpeeds.NoMovement
+	self.m_KnifeMode                    = false
 
 	---@class ActiveInput
 	---@field value number
 	---@field reset boolean
 
 	---@type table<integer|EntryInputActionEnum, ActiveInput>
-	self.m_ActiveInputs = {}
-	self.m_DelayedInputs = {}
+	self.m_ActiveInputs                 = {}
+	self.m_DelayedInputs                = {}
 
 	-- Sidewards movement.
-	self.m_YawOffset = 0.0
-	self.m_StrafeValue = 0.0
+	self.m_YawOffset                    = 0.0
+	self.m_StrafeValue                  = 0.0
 
 	-- Advanced movement.
 	---@type BotAttackModes
-	self._AttackMode = BotAttackModes.RandomNotSet
+	self._AttackMode                    = BotAttackModes.RandomNotSet
 	---@type BotActionFlags
-	self._ActiveAction = BotActionFlags.NoActionActive
+	self._ActiveAction                  = BotActionFlags.NoActionActive
 	---@type Waypoint|nil
-	self._CurrentWayPoint = nil
-	self._TargetYaw = 0.0
-	self._TargetYawMovementVehicle = 0.0
-	self._TargetPitch = 0.0
+	self._CurrentWayPoint               = nil
+	self._TargetYaw                     = 0.0
+	self._TargetYawMovementVehicle      = 0.0
+	self._TargetPitch                   = 0.0
 	---@type Waypoint|nil
-	self._TargetPoint = nil
+	self._TargetPoint                   = nil
 	---@type Waypoint|nil
-	self._NextTargetPoint = nil
-	self._PathIndex = 0
-	self._LastWayDistance = 0.0
-	self._InvertPathDirection = false
-	self._ExitVehicleActive = false
-	self._ObstacleRetryCounter = 0
-	self._Objective = ''
-	self._ObjectiveMode = BotObjectiveModes.Default
-	self._OnSwitch = false
-	self._ActiveDelay = 0.0
-	self._VehicleMoveWhileShooting = false
+	self._NextTargetPoint               = nil
+	self._PathIndex                     = 0
+	self._LastWayDistance               = 0.0
+	self._InvertPathDirection           = false
+	self._ExitVehicleActive             = false
+	self._ObstacleRetryCounter          = 0
+	self._Objective                     = ''
+	self._ObjectiveMode                 = BotObjectiveModes.Default
+	self._OnSwitch                      = false
+	self._ActiveDelay                   = 0.0
+	self._VehicleMoveWhileShooting      = false
 	self._OnFootStopMovingWhenAttacking = false
-	self._FireCycleModifier = 1.0
+	self._FireCycleModifier             = 1.0
 
 	-- Vehicle stuff.
 	---@type integer|nil
-	self._VehicleMovableId = -1
-	self._LastVehicleYaw = 0.0
-	self._VehicleReadyToShoot = false
-	self._FullVehicleSteering = false
-	self._VehicleDirBackPositive = false
-	self._JetAbortAttackActive = false
-	self._JetTakeoffActive = false
-	self._ExitVehicleHealth = 0.0
-	self._LastVehicleHealth = 0.0
-	self._VehicleWeaponSlotToUse = 1
-	self._ActiveVehicleWeaponSlot = 0
+	self._VehicleMovableId              = -1
+	self._LastVehicleYaw                = 0.0
+	self._VehicleReadyToShoot           = false
+	self._FullVehicleSteering           = false
+	self._VehicleDirBackPositive        = false
+	self._JetAbortAttackActive          = false
+	self._JetTakeoffActive              = false
+	self._ExitVehicleHealth             = 0.0
+	self._LastVehicleHealth             = 0.0
+	self._VehicleWeaponSlotToUse        = 1
+	self._ActiveVehicleWeaponSlot       = 0
 	---@type ControllableEntity|nil
-	self._RepairVehicleEntity = nil
+	self._RepairVehicleEntity           = nil
 	-- PID Controllers.
 	-- Normal driving.
 	---@type PidController
-	self._Pid_Drv_Yaw = PidController(5, 0.05, 0.2, 1.0)
+	self._Pid_Drv_Yaw                   = PidController(5, 0.05, 0.2, 1.0)
 	-- Chopper / Plane
 	---@type PidController
-	self._Pid_Drv_Throttle = PidController(3, 0.05, 0.2, 1.0)
+	self._Pid_Drv_Throttle              = PidController(3, 0.05, 0.2, 1.0)
 	---@type PidController
-	self._Pid_Drv_Tilt = PidController(6, 0.1, 0.2, 1.0)
+	self._Pid_Drv_Tilt                  = PidController(6, 0.1, 0.2, 1.0)
 	---@type PidController
-	self._Pid_Drv_Roll = PidController(6, 0.1, 0.2, 1.0)
+	self._Pid_Drv_Roll                  = PidController(6, 0.1, 0.2, 1.0)
 	-- Guns.
 	---@type PidController
-	self._Pid_Att_Yaw = PidController(10, 2.0, 2.0, 1.0)
+	self._Pid_Att_Yaw                   = PidController(10, 2.0, 2.0, 1.0)
 	---@type PidController
-	self._Pid_Att_Pitch = PidController(10, 2.0, 2.0, 1.0)
+	self._Pid_Att_Pitch                 = PidController(10, 2.0, 2.0, 1.0)
 
 	-- Shooting.
-	self._Shoot = false
+	self._Shoot                         = false
 	---@type Player|nil
-	self._ShootPlayer = nil
-	self._ActiveShootDuration = 0.0
-	self._DoneShootDuration = 0.0
-	self._DontAttackPlayers = false
+	self._ShootPlayer                   = nil
+	self._ActiveShootDuration           = 0.0
+	self._DoneShootDuration             = 0.0
+	self._DontAttackPlayers             = false
 	---@type VehicleTypes
-	self._ShootPlayerVehicleType = VehicleTypes.NoVehicle
-	self._ShootPlayerName = ''
-	self._DistanceToPlayer = 0.0
+	self._ShootPlayerVehicleType        = VehicleTypes.NoVehicle
+	self._ShootPlayerName               = ''
+	self._DistanceToPlayer              = 0.0
 	---@type BotWeapons
-	self._WeaponToUse = BotWeapons.Primary
+	self._WeaponToUse                   = BotWeapons.Primary
 	-- To-do: add emmylua type.
-	self._ShootWayPoints = {}
+	self._ShootWayPoints                = {}
 	---@type Vec3[]
-	self._KnifeWayPositions = {}
-	self._Accuracy = 0.0
-	self._AccuracySniper = 0.0
-	self._SkillFound = false
+	self._KnifeWayPositions             = {}
+	self._Accuracy                      = 0.0
+	self._AccuracySniper                = 0.0
+	self._SkillFound                    = false
 
 	---@type Player|nil
-	self._TargetPlayer = nil
+	self._TargetPlayer                  = nil
 end
 
 ---@param p_State any

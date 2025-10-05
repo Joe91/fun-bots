@@ -258,6 +258,7 @@ VehicleData = {
 		Parts = { -1, 19, -1, -1 },
 		Speed = { 300, 610, 300, 300 },
 		Drop = { 0.0, 9.81, 0.0, 0.0 },
+		FirstPassengerSeat = 3,
 		Offset = { Vec3(0, 0, 0), Vec3(0.252, -0.098, 0.450), Vec3(0, 0, 0), Vec3(0, 0, 0) }
 	},
 	["Humvee"] = {
@@ -267,6 +268,7 @@ VehicleData = {
 		Parts = { -1, 19, -1, -1 },
 		Speed = { 300, 610, 300, 300 },
 		Drop = { 0.0, 9.81, 0.0, 0.0 },
+		FirstPassengerSeat = 3,
 		Offset = { Vec3(0, 0, 0), Vec3(0.252, -0.098, 0.450), Vec3(0, 0, 0), Vec3(0, 0, 0) }
 	},
 	["HumveeArmored_hmg"] = {
@@ -276,6 +278,7 @@ VehicleData = {
 		Parts = { -1, 19, -1, -1 },
 		Speed = { 300, 610, 300, 300 },
 		Drop = { 0.0, 9.81, 0.0, 0.0 },
+		FirstPassengerSeat = 3,
 		Offset = { Vec3(0, 0, 0), Vec3(0.252, -0.098, 0.450), Vec3(0, 0, 0), Vec3(0, 0, 0) }
 	},
 	["GAZ-3937_Vodnik"] = {
@@ -285,6 +288,7 @@ VehicleData = {
 		Parts = { -1, 23, -1, -1 },
 		Speed = { 300, 600, 300, 300 },
 		Drop = { 0.0, 9.81, 0.0, 0.0 },
+		FirstPassengerSeat = 3,
 		Offset = { Vec3(0, 0, 0), Vec3(0.574, -0.196, 0.302), Vec3(0, 0, 0), Vec3(0, 0, 0) }
 	},
 	["VodnikModified_V2"] = {
@@ -294,6 +298,7 @@ VehicleData = {
 		Parts = { -1, 6, 16 },
 		Speed = { 300, 80, 600 },
 		Drop = { 0.0, 7.0, 9.81 },
+		FirstPassengerSeat = 4,
 		Offset = { Vec3(0, 0, 0), Vec3(-0.003, 0.243, -0.492), Vec3(0.0, 0.272, -0.708) }
 	},
 	["HumveeModified"] = {
@@ -303,6 +308,7 @@ VehicleData = {
 		Parts = { -1, 1, 18 },
 		Speed = { 300, 600, 80 },
 		Drop = { 0.0, 15, 7.0 },
+		FirstPassengerSeat = 4,
 		Offset = { Vec3(0, 0, 0), Vec3(-0.076, 0.285, -0.933), Vec3(-0.003, 0.243, -0.581) }
 	},
 
