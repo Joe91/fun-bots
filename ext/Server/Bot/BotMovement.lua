@@ -924,6 +924,263 @@ function BotMovement:UpdateStaticMovement(p_Bot)
 	end
 end
 
+-- VU-safe 3-D distance (squared-root is already provided by MathUtils)
+local function GetDistance3D(v1, v2)
+	local dx = v1.x - v2.x
+	local dy = v1.y - v2.y
+	local dz = v1.z - v2.z
+	return math.sqrt(dx * dx + dy * dy + dz * dz)
+end
+
+local function GetDistance2D(a, b)
+	local dx = a.x - b.x
+	local dz = a.z - b.z
+	return math.sqrt(dx * dx + dz * dz)
+end
+
+local NARROW_RADIUS = 0.7
+local DOOR_THRESHOLD = 0.8
+local CAPSULE_H = 0.2
+local RAYS = 8
+
+local function MeasureFreeRadius(botPos)
+	local CAPSULE_H = 0.2
+	local RAYS = 8 -- cardinal + diagonal
+	local minFree = 999
+
+	for i = 0, RAYS - 1 do
+		local ang = math.rad(i * 360 / RAYS)
+		local dir = Vec3(math.sin(ang), 0, math.cos(ang))
+		local from = botPos + Vec3(0, CAPSULE_H, 0)
+		local to = from + dir * 5.0
+		local hits = RaycastManager:CollisionRaycast(from, to, 0.2, 0,
+			RayCastFlags.DontCheckWater | RayCastFlags.DontCheckCharacter)
+		local dist = #hits > 0 and GetDistance2D(from, hits[1].position) or 5.0
+		minFree = math.min(minFree, dist)
+	end
+
+	return minFree
+end
+
+---@param p_DeltaTime number
+---@param p_Bot Bot
+function BotMovement:UpdateFollowingMovement(p_DeltaTime, p_Bot)
+	if p_Bot._FollowTargetPlayer == nil or
+		p_Bot._FollowTargetPlayer.id == nil or
+		p_Bot._FollowTargetPlayer.alive == false or
+		p_Bot._FollowTargetPlayer.soldier == nil then
+		return
+	end
+
+	local s_TargetPlayer        = p_Bot._FollowTargetPlayer
+	local s_BotPosition         = p_Bot.m_Player.soldier.worldTransform.trans
+	local s_PlayerPosition      = s_TargetPlayer.soldier.worldTransform.trans
+
+	-- initialize anchor if needed
+	p_Bot._FollowAnchor         = p_Bot._FollowAnchor or Vec3(s_PlayerPosition.x, s_PlayerPosition.y, s_PlayerPosition.z)
+	p_Bot._FollowAnchorTime     = p_Bot._FollowAnchorTime or SharedUtils:GetTime()
+
+	local ANCHOR_TIMEOUT        = 5.0
+	local PLAYER_MOVE_THRESHOLD = 3.0
+
+	local playerMoved           = GetDistance2D(s_PlayerPosition, p_Bot._FollowAnchor) > PLAYER_MOVE_THRESHOLD
+	local anchorExpired         = (SharedUtils:GetTime() - p_Bot._FollowAnchorTime) >= ANCHOR_TIMEOUT
+
+	if playerMoved or anchorExpired then
+		p_Bot._FollowAnchor = Vec3(s_PlayerPosition.x, s_PlayerPosition.y, s_PlayerPosition.z)
+		p_Bot._FollowAnchorTime = SharedUtils:GetTime()
+		p_Bot._FollowAngle = math.random() * 360
+	end
+
+	-- measure free space
+	local freeRadius = MeasureFreeRadius(s_BotPosition)
+
+	-- desired follow radius
+	local desiredRadius = p_Bot._FollowDistance or (2.5 + math.random() * 3.0)
+	local clampedRadius = math.min(desiredRadius, freeRadius - 0.3)
+
+	local s_TargetPosition = nil
+
+	-- Tight corridor / door snap
+	local DOOR_THRESHOLD = 0.8
+	if clampedRadius < DOOR_THRESHOLD then
+		local plyYaw = s_TargetPlayer.input.authoritativeAimingYaw
+		local back = Vec3(-math.sin(plyYaw), 0, math.cos(plyYaw))
+
+		-- side offset so multiple bots don’t stack
+		local sideOffset = 0
+		if p_Bot._FollowAngle then
+			sideOffset = math.cos(math.rad(p_Bot._FollowAngle)) * 0.3
+		end
+
+		s_TargetPosition = s_PlayerPosition + back * 0.9 + Vec3(sideOffset, 0, 0)
+		p_Bot._FollowDistance = 0.6
+	else
+		local angleRad = math.rad(p_Bot._FollowAngle or math.random() * 360)
+		s_TargetPosition = Vec3(
+			p_Bot._FollowAnchor.x + math.cos(angleRad) * clampedRadius,
+			p_Bot._FollowAnchor.y,
+			p_Bot._FollowAnchor.z + math.sin(angleRad) * clampedRadius
+		)
+		p_Bot._FollowDistance = clampedRadius
+	end
+
+	local s_Direction = s_TargetPosition - s_BotPosition
+	local s_Distance  = math.sqrt(s_Direction.x ^ 2 + s_Direction.y ^ 2 + s_Direction.z ^ 2)
+
+	-- defensive if close
+	if s_Distance <= 0.8 then
+		p_Bot.m_ActiveSpeedValue = BotMoveSpeeds.NoMovement
+		self:UpdateFollowingDefensive(p_Bot, p_DeltaTime)
+		return
+	end
+
+	if s_Distance > 0.1 then
+		s_Direction.x = s_Direction.x / s_Distance
+		s_Direction.y = s_Direction.y / s_Distance
+		s_Direction.z = s_Direction.z / s_Distance
+
+		-- speed
+		if s_Distance > 8.0 then
+			p_Bot.m_ActiveSpeedValue = BotMoveSpeeds.Sprint
+		elseif s_Distance > 3.0 then
+			p_Bot.m_ActiveSpeedValue = BotMoveSpeeds.Normal
+		else
+			p_Bot.m_ActiveSpeedValue = BotMoveSpeeds.SlowCrouch
+		end
+
+		-- obstacle check
+		local flags = RayCastFlags.DontCheckWater | RayCastFlags.DontCheckCharacter |
+			RayCastFlags.DontCheckRagdoll | RayCastFlags.DontCheckTerrain
+		local rayOrigin = s_BotPosition + Vec3(0, 0.5, 0)
+		local rayTarget = s_TargetPosition + Vec3(0, 0.5, 0)
+		local s_ObstacleHits = RaycastManager:CollisionRaycast(rayOrigin, rayTarget, 1, 0, flags)
+
+		-- jump only when appropriate
+		local canJump = false
+		if #s_ObstacleHits > 0 then
+			local firstHit = s_ObstacleHits[1]
+			local distToHit = GetDistance2D(s_BotPosition, firstHit.position)
+			local heightDiff = firstHit.position.y - s_BotPosition.y
+			if distToHit < 1.0 and heightDiff < 0.7 then
+				canJump = true
+			end
+		end
+
+		if canJump or math.abs(s_TargetPosition.y - s_BotPosition.y) > 1.5 or p_Bot._ObstacleSequenceTimer ~= 0 then
+			p_Bot._ObstacleSequenceTimer = p_Bot._ObstacleSequenceTimer + p_DeltaTime
+			p_Bot._StuckTimer = p_Bot._StuckTimer + p_DeltaTime
+
+			-- quick jump
+			if p_Bot._ObstacleSequenceTimer <= 0.2 then
+				p_Bot:_SetInput(EntryInputActionEnum.EIAQuicktimeJumpClimb, 1)
+				p_Bot:_SetInput(EntryInputActionEnum.EIAJump, 1)
+				p_Bot.m_ActiveSpeedValue = BotMoveSpeeds.Sprint
+			elseif p_Bot._ObstacleSequenceTimer <= 1.0 then
+				p_Bot._TargetPitch = 0
+				if MathUtils:GetRandomInt(0, 1) == 1 then
+					p_Bot:_SetInput(EntryInputActionEnum.EIAStrafe, 1.0 * Config.SpeedFactor)
+				else
+					p_Bot:_SetInput(EntryInputActionEnum.EIAStrafe, -1.0 * Config.SpeedFactor)
+				end
+			elseif p_Bot._ObstacleSequenceTimer <= 0.8 then
+				if p_Bot._ObstacleRetryCounter == 0 then
+					p_Bot:_SetInput(EntryInputActionEnum.EIAQuicktimeFastMelee, 1)
+					p_Bot:_SetInput(EntryInputActionEnum.EIAMeleeAttack, 1)
+					p_Bot.m_ActiveWeapon = p_Bot.m_Knife
+				else
+					p_Bot:_SetInput(EntryInputActionEnum.EIAFire, 1)
+				end
+			end
+
+			p_Bot.m_ActiveSpeedValue = BotMoveSpeeds.Sprint
+
+			if p_Bot._ObstacleSequenceTimer > 0.8 then
+				p_Bot._ObstacleSequenceTimer = 0
+				p_Bot:_ResetActionFlag(BotActionFlags.MeleeActive)
+				p_Bot._ObstacleRetryCounter = p_Bot._ObstacleRetryCounter + 1
+			end
+
+			return
+		else
+			-- clear obstacle state
+			p_Bot._ObstacleSequenceTimer = 0
+			p_Bot:_ResetActionFlag(BotActionFlags.MeleeActive)
+			p_Bot._ObstacleRetryCounter = 0
+			p_Bot._StuckTimer = 0
+		end
+
+		-- compute yaw
+		local s_AtanDzDx = math.atan(s_TargetPosition.z - s_BotPosition.z, s_TargetPosition.x - s_BotPosition.x)
+		p_Bot._TargetYaw = (s_AtanDzDx > math.pi / 2) and (s_AtanDzDx - math.pi / 2) or (s_AtanDzDx + 3 * math.pi / 2)
+
+		-- alive behaviors
+		self:UpdateFollowingBehaviors(p_Bot, p_DeltaTime, s_Distance)
+	else
+		-- defensive if in place
+		p_Bot.m_ActiveSpeedValue = BotMoveSpeeds.NoMovement
+		self:UpdateFollowingDefensive(p_Bot, p_DeltaTime)
+	end
+end
+
+---@param p_Bot Bot
+---@param p_DeltaTime number
+---@param p_Distance number
+function BotMovement:UpdateFollowingBehaviors(p_Bot, p_DeltaTime, p_Distance)
+	-- Strafing behavior
+	p_Bot._FollowStrafeTimer = (p_Bot._FollowStrafeTimer or 0) + p_DeltaTime
+
+	if p_Distance < 3.0 and p_Bot._FollowStrafeTimer > 3.0 then
+		p_Bot._FollowStrafeTimer = 0.0
+
+		-- Random strafe for variety
+		if math.random() < 0.3 then
+			local s_StrafeDirection = (math.random() < 0.5) and 1.0 or -1.0
+			p_Bot:_SetInput(EntryInputActionEnum.EIAStrafe, s_StrafeDirection)
+
+			-- Update follow angle
+			p_Bot._FollowAngle = ((p_Bot._FollowAngle or 0) + (s_StrafeDirection * 15)) % 360
+		end
+	end
+
+	-- Look around behavior
+	p_Bot._FollowLookTimer = (p_Bot._FollowLookTimer or 0) + p_DeltaTime
+
+	if p_Bot._FollowLookTimer > 5.0 then
+		p_Bot._FollowLookTimer = 0.0
+
+		-- Random look around
+		if math.random() < 0.4 then
+			local s_LookOffset = (math.random() - 0.5) * 1.0
+			p_Bot._TargetYaw = p_Bot._TargetYaw + s_LookOffset
+		end
+	end
+end
+
+---@param p_Bot Bot
+---@param p_DeltaTime number
+function BotMovement:UpdateFollowingDefensive(p_Bot, p_DeltaTime)
+	-- Defensive behaviors when in position
+
+	-- Occasional stance changes
+	if math.random() < 0.005 then
+		local s_RandomPose = math.random(0, 2)
+		if s_RandomPose == 0 then
+			p_Bot.m_Player.soldier:SetPose(CharacterPoseType.CharacterPoseType_Stand, true, true)
+		elseif s_RandomPose == 1 then
+			p_Bot.m_Player.soldier:SetPose(CharacterPoseType.CharacterPoseType_Crouch, true, true)
+		else
+			p_Bot.m_Player.soldier:SetPose(CharacterPoseType.CharacterPoseType_Prone, true, true)
+		end
+	end
+
+	-- Periodic scanning
+	if math.random() < 0.003 then
+		local s_ScanOffset = (math.random() - 0.5) * 2.0
+		p_Bot._TargetYaw = p_Bot._TargetYaw + s_ScanOffset
+	end
+end
+
 if g_BotMovement == nil then
 	---@type BotMovement
 	g_BotMovement = BotMovement()

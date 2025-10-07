@@ -199,6 +199,47 @@ function BotManager:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 
 		self._DestroyBotsTimer = self._DestroyBotsTimer + p_DeltaTime
 	end
+
+	-- Check for followers that should return to following (runs every 2 seconds)
+	if self._FollowerReturnTimer == nil then
+		self._FollowerReturnTimer = 0.0
+	end
+
+	self._FollowerReturnTimer = self._FollowerReturnTimer + p_DeltaTime
+
+	if self._FollowerReturnTimer > 2.0 then
+		self._FollowerReturnTimer = 0.0
+
+		-- Check all bots for ones that should return to following
+		for i = 1, #self._Bots do
+			local s_Bot = self._Bots[i]
+
+			-- Check if bot was following someone and is now in attacking state with no target
+			if s_Bot._PersistentFollowTarget and
+				s_Bot.m_ActiveState == g_BotStates.States.Attacking and
+				s_Bot._ShootPlayer == nil and
+				s_Bot._FollowReturnTimer then
+				s_Bot._FollowReturnTimer = s_Bot._FollowReturnTimer + 2.0 -- Add the 2 second interval
+
+				if s_Bot._FollowReturnTimer > 3.0 then       -- 3 seconds of no combat
+					local s_TargetPlayer = s_Bot._PersistentFollowTarget
+
+					-- Verify target is still valid
+					if s_TargetPlayer.soldier and
+						s_TargetPlayer.teamId == s_Bot.m_Player.teamId then
+						-- Return to following
+						s_Bot._FollowTargetPlayer = s_TargetPlayer
+						s_Bot:SetState(g_BotStates.States.Following)
+						s_Bot._FollowReturnTimer = 0.0
+					else
+						-- Target no longer valid, clear follow memory
+						s_Bot._PersistentFollowTarget = nil
+						s_Bot._FollowReturnTimer = nil
+					end
+				end
+			end
+		end
+	end
 	-- g_Profiler:End("Botmanager:Update")
 end
 
@@ -1646,6 +1687,95 @@ function BotManager:_GetDamageValue(p_Damage, p_Bot, p_Soldier)
 	end
 
 	return p_Damage * s_DamageFactor
+end
+
+---@param p_Player Player
+function BotManager:CommandBotsToFollow(p_Player)
+	if not p_Player or not p_Player.soldier then
+		return
+	end
+
+	local s_NearbyBots = {}
+	local s_PlayerPosition = p_Player.soldier.worldTransform.trans
+	local s_MaxFollowers = 2
+	local s_MaxDistance = 30
+
+	-- Get bots on same team
+	local s_BotsOnTeam = self._BotsByTeam[p_Player.teamId + 1]
+
+	for i = 1, #s_BotsOnTeam do
+		local s_Bot = s_BotsOnTeam[i]
+		if s_Bot.m_Player.soldier and
+			s_Bot.m_ActiveState ~= g_BotStates.States.Following and
+			not g_BotStates:IsInVehicleState(s_Bot.m_ActiveState) then
+			local s_BotPosition = s_Bot.m_Player.soldier.worldTransform.trans
+			local s_Distance = s_BotPosition:Distance(s_PlayerPosition)
+
+			if s_Distance < s_MaxDistance then
+				table.insert(s_NearbyBots, {
+					Bot = s_Bot,
+					Distance = s_Distance
+				})
+			end
+		end
+	end
+
+	-- Sort by distance and take closest
+	table.sort(s_NearbyBots, function(a, b) return a.Distance < b.Distance end)
+
+	local s_FollowersAssigned = 0
+	for i = 1, math.min(#s_NearbyBots, s_MaxFollowers) do
+		local s_BotData = s_NearbyBots[i]
+		local s_Bot = s_BotData.Bot
+
+		-- Set up following
+		self:SetupBotFollowing(s_Bot, p_Player, i)
+		s_FollowersAssigned = s_FollowersAssigned + 1
+	end
+
+	if s_FollowersAssigned > 0 then
+		ChatManager:SendMessage(string.format('%d bot(s) are now following you!', s_FollowersAssigned), p_Player)
+	else
+		ChatManager:SendMessage('No nearby bots available to follow you.', p_Player)
+	end
+end
+
+---@param p_Player Player
+function BotManager:CommandBotsToStopFollowing(p_Player)
+	local s_FollowersStopped = 0
+	local s_BotsOnTeam = self._BotsByTeam[p_Player.teamId + 1]
+
+	for i = 1, #s_BotsOnTeam do
+		local s_Bot = s_BotsOnTeam[i]
+		if s_Bot.m_ActiveState == g_BotStates.States.Following and
+			s_Bot._FollowTargetPlayer == p_Player then
+			s_Bot:SetState(g_BotStates.States.Moving)
+			s_Bot._FollowTargetPlayer = nil
+			s_Bot._PersistentFollowTarget = nil
+			s_FollowersStopped = s_FollowersStopped + 1
+		end
+	end
+
+	if s_FollowersStopped > 0 then
+		ChatManager:SendMessage(string.format('%d bot(s) stopped following you.', s_FollowersStopped), p_Player)
+	else
+		ChatManager:SendMessage('No bots were following you.', p_Player)
+	end
+end
+
+---@param p_Bot Bot
+---@param p_Player Player
+---@param p_Index integer
+function BotManager:SetupBotFollowing(p_Bot, p_Player, p_Index)
+	p_Bot._FollowTargetPlayer = p_Player
+	p_Bot._PersistentFollowTarget = p_Player
+	p_Bot._FollowDistance = 3.0 + math.random() * 2.0                  -- 3-5 meters
+	p_Bot._FollowAngle = (p_Index - 1) * (180 / 2) + math.random(-30, 30) -- Spread them in front
+	p_Bot._FollowStrafeTimer = 0.0
+	p_Bot._FollowLookTimer = 0.0
+	p_Bot._FollowReturnTimer = 0.0
+
+	p_Bot:SetState(g_BotStates.States.Following)
 end
 
 if g_BotManager == nil then
