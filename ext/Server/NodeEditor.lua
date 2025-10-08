@@ -943,7 +943,7 @@ function NodeEditor:SaveTrace(p_Player, p_PathIndex)
 
 	self.m_NodeOperation = 'Custom Trace'
 
-	local s_PathCount = #m_NodeCollection:GetPaths()
+	local s_PathCount = m_NodeCollection:GetNrOfPaths()
 	p_PathIndex = tonumber(p_PathIndex) or self:_getNewIndex()
 	local s_CurrentWaypoint = self.m_CustomTrace[p_Player.onlineId]:GetFirst()
 	local s_ReferrenceWaypoint = nil
