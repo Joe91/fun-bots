@@ -939,12 +939,12 @@ local function GetDistance2D(a, b)
 end
 
 local NARROW_RADIUS = 0.7
-local DOOR_THRESHOLD = 0.8
+local DOOR_THRESHOLD = 0.4
 local CAPSULE_H = 0.2
 local RAYS = 8
 
 local function MeasureFreeRadius(botPos)
-	local CAPSULE_H = 0.2
+	local CAPSULE_H = 0.1
 	local RAYS = 8 -- cardinal + diagonal
 	local minFree = 999
 
@@ -952,10 +952,10 @@ local function MeasureFreeRadius(botPos)
 		local ang = math.rad(i * 360 / RAYS)
 		local dir = Vec3(math.sin(ang), 0, math.cos(ang))
 		local from = botPos + Vec3(0, CAPSULE_H, 0)
-		local to = from + dir * 5.0
+		local to = from + dir * 2.0
 		local hits = RaycastManager:CollisionRaycast(from, to, 0.2, 0,
 			RayCastFlags.DontCheckWater | RayCastFlags.DontCheckCharacter)
-		local dist = #hits > 0 and GetDistance2D(from, hits[1].position) or 5.0
+		local dist = #hits > 0 and GetDistance2D(from, hits[1].position) or 2.0
 		minFree = math.min(minFree, dist)
 	end
 
@@ -996,25 +996,20 @@ function BotMovement:UpdateFollowingMovement(p_DeltaTime, p_Bot)
 	local freeRadius = MeasureFreeRadius(s_BotPosition)
 
 	-- desired follow radius
-	local desiredRadius = p_Bot._FollowDistance or (2.5 + math.random() * 3.0)
+	local desiredRadius = p_Bot._FollowDistance or (1 + math.random() * 3.0)
 	local clampedRadius = math.min(desiredRadius, freeRadius - 0.3)
 
 	local s_TargetPosition = nil
 
-	-- Tight corridor / door snap
-	local DOOR_THRESHOLD = 0.8
+	-- 🔹 IMPROVED DOOR / TIGHT AREA HANDLING
 	if clampedRadius < DOOR_THRESHOLD then
 		local plyYaw = s_TargetPlayer.input.authoritativeAimingYaw
 		local back = Vec3(-math.sin(plyYaw), 0, math.cos(plyYaw))
+		local sideOffset = (p_Bot._FollowAngle or 0) % 2 == 0 and 0.4 or -0.4
 
-		-- side offset so multiple bots don’t stack
-		local sideOffset = 0
-		if p_Bot._FollowAngle then
-			sideOffset = math.cos(math.rad(p_Bot._FollowAngle)) * 0.3
-		end
-
-		s_TargetPosition = s_PlayerPosition + back * 0.9 + Vec3(sideOffset, 0, 0)
-		p_Bot._FollowDistance = 0.6
+		-- stay behind player in tight spaces
+		s_TargetPosition = s_PlayerPosition + back * (1.2 + math.random() * 0.2) + Vec3(sideOffset, 0, 0)
+		p_Bot._FollowDistance = 0.4
 	else
 		local angleRad = math.rad(p_Bot._FollowAngle or math.random() * 360)
 		s_TargetPosition = Vec3(
@@ -1040,6 +1035,11 @@ function BotMovement:UpdateFollowingMovement(p_DeltaTime, p_Bot)
 		s_Direction.y = s_Direction.y / s_Distance
 		s_Direction.z = s_Direction.z / s_Distance
 
+		-- 🔹 reset stuck timer when moving properly
+		if s_Distance > 1.0 then
+			p_Bot._StuckTimer = 0.0
+		end
+
 		-- speed
 		if s_Distance > 8.0 then
 			p_Bot.m_ActiveSpeedValue = BotMoveSpeeds.Sprint
@@ -1056,7 +1056,6 @@ function BotMovement:UpdateFollowingMovement(p_DeltaTime, p_Bot)
 		local rayTarget = s_TargetPosition + Vec3(0, 0.5, 0)
 		local s_ObstacleHits = RaycastManager:CollisionRaycast(rayOrigin, rayTarget, 1, 0, flags)
 
-		-- jump only when appropriate
 		local canJump = false
 		if #s_ObstacleHits > 0 then
 			local firstHit = s_ObstacleHits[1]
@@ -1067,11 +1066,26 @@ function BotMovement:UpdateFollowingMovement(p_DeltaTime, p_Bot)
 			end
 		end
 
+		-- 🔹 Prevent infinite retries
+		if p_Bot._ObstacleRetryCounter and p_Bot._ObstacleRetryCounter > 3 then
+			p_Bot._ObstacleSequenceTimer = 0
+			p_Bot._ObstacleRetryCounter = 0
+			p_Bot._StuckTimer = (p_Bot._StuckTimer or 0) + p_DeltaTime
+
+			if MathUtils:GetRandomInt(0, 1) == 1 then
+				p_Bot:_SetInput(EntryInputActionEnum.EIAStrafe, 1.0)
+			else
+				p_Bot:_SetInput(EntryInputActionEnum.EIAStrafe, -1.0)
+			end
+
+			return
+		end
+
+		-- 🔹 JUMP / OBSTACLE HANDLING
 		if canJump or math.abs(s_TargetPosition.y - s_BotPosition.y) > 1.5 or p_Bot._ObstacleSequenceTimer ~= 0 then
 			p_Bot._ObstacleSequenceTimer = p_Bot._ObstacleSequenceTimer + p_DeltaTime
-			p_Bot._StuckTimer = p_Bot._StuckTimer + p_DeltaTime
+			p_Bot._StuckTimer = (p_Bot._StuckTimer or 0) + p_DeltaTime
 
-			-- quick jump
 			if p_Bot._ObstacleSequenceTimer <= 0.2 then
 				p_Bot:_SetInput(EntryInputActionEnum.EIAQuicktimeJumpClimb, 1)
 				p_Bot:_SetInput(EntryInputActionEnum.EIAJump, 1)
@@ -1098,26 +1112,36 @@ function BotMovement:UpdateFollowingMovement(p_DeltaTime, p_Bot)
 			if p_Bot._ObstacleSequenceTimer > 0.8 then
 				p_Bot._ObstacleSequenceTimer = 0
 				p_Bot:_ResetActionFlag(BotActionFlags.MeleeActive)
-				p_Bot._ObstacleRetryCounter = p_Bot._ObstacleRetryCounter + 1
+				p_Bot._ObstacleRetryCounter = (p_Bot._ObstacleRetryCounter or 0) + 1
 			end
 
 			return
 		else
-			-- clear obstacle state
 			p_Bot._ObstacleSequenceTimer = 0
 			p_Bot:_ResetActionFlag(BotActionFlags.MeleeActive)
 			p_Bot._ObstacleRetryCounter = 0
-			p_Bot._StuckTimer = 0
 		end
 
 		-- compute yaw
 		local s_AtanDzDx = math.atan(s_TargetPosition.z - s_BotPosition.z, s_TargetPosition.x - s_BotPosition.x)
 		p_Bot._TargetYaw = (s_AtanDzDx > math.pi / 2) and (s_AtanDzDx - math.pi / 2) or (s_AtanDzDx + 3 * math.pi / 2)
 
-		-- alive behaviors
 		self:UpdateFollowingBehaviors(p_Bot, p_DeltaTime, s_Distance)
+
+		-- 🔹 STUCK HANDLING (final fallback)
+		p_Bot._StuckTimer = (p_Bot._StuckTimer or 0.0) + p_DeltaTime
+		if p_Bot._StuckTimer > 3.0 then
+			local plyYaw = s_TargetPlayer.input.authoritativeAimingYaw
+			local back = Vec3(-math.sin(plyYaw), 0, math.cos(plyYaw))
+			local safePos = s_PlayerPosition + back * (1.5 + math.random() * 0.5)
+
+			p_Bot.m_Player.soldier:SetPosition(safePos)
+			p_Bot._StuckTimer = 0.0
+			p_Bot._ObstacleSequenceTimer = 0
+			p_Bot._ObstacleRetryCounter = 0
+			return
+		end
 	else
-		-- defensive if in place
 		p_Bot.m_ActiveSpeedValue = BotMoveSpeeds.NoMovement
 		self:UpdateFollowingDefensive(p_Bot, p_DeltaTime)
 	end
