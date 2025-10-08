@@ -33,7 +33,7 @@ function Bot:ApplyPathOffset(p_OriginalPoint, p_NextPoint)
 	if not self.m_PathSide or self.m_LastPathIndex ~= self._PathIndex then
 		self.m_PathSide = math.random(-1, 1) -- -1 left, 0 center, 1 right
 		self.m_LastPathIndex = self._PathIndex
-		print('Bot ' .. self.m_Player.name .. ' path offset side: ' .. tostring(self.m_PathSide))
+		-- print('Bot ' .. self.m_Player.name .. ' path offset side: ' .. tostring(self.m_PathSide))
 		self.m_OffsetDistance = 0.8 + (math.random() * 0.4) -- 0.8-1.2m
 		self.m_LastStuckCheck = 0
 		self.m_ForceCenter = false
@@ -57,7 +57,7 @@ function Bot:ApplyPathOffset(p_OriginalPoint, p_NextPoint)
 	local delta = p_NextPoint.Position - p_OriginalPoint.Position
 	local length2D = math.sqrt(delta.x * delta.x + delta.z * delta.z)
 	if length2D < 0.01 then
-		print("return - too short segment")
+		-- print("return - too short segment")
 		return p_OriginalPoint, p_NextPoint
 	end
 
@@ -66,9 +66,9 @@ function Bot:ApplyPathOffset(p_OriginalPoint, p_NextPoint)
 
 	-- >>> FIX 2: stairs/passages vertical → center
 	local verticalDelta = math.abs(p_NextPoint.Position.y - p_OriginalPoint.Position.y)
-	if verticalDelta > 0.5 then
+	if verticalDelta > 0.4 then
 		self.m_OffsetRecoveryNodes = 3 -- force center for 3 nodes
-		print("return - vertical")
+		-- print("return - vertical")
 		return p_OriginalPoint, p_NextPoint
 	end
 
@@ -119,17 +119,19 @@ function Bot:ApplyPathOffset(p_OriginalPoint, p_NextPoint)
 	-- 	return p_OriginalPoint, p_NextPoint
 	-- end
 
-	-- -- Wall-slide check
-	-- local sideCheck = RaycastManager:CollisionRaycast(
-	-- 	p_OriginalPoint.Position + right * (self.m_PathSide * 0.3),
-	-- 	offsetPosition,
-	-- 	1, 0,
-	-- 	flags
-	-- )
-	-- if #sideCheck > 0 and sideCheck[1].position then
-	-- 	local comfortableDistance = 0.4
-	-- 	offsetPosition = p_OriginalPoint.Position + right * (self.m_PathSide * comfortableDistance)
-	-- end
+	-- Wall-slide check
+	local rayOrigin = p_OriginalPoint.Position + Vec3(0, 0.5, 0)
+	local sideCheck = RaycastManager:CollisionRaycast(
+		rayOrigin + right * (self.m_PathSide * 0.3),
+		offsetPosition + Vec3(0, 0.5, 0),
+		1, 0,
+		flags
+	)
+	if #sideCheck > 0 and sideCheck[1].position then
+		local comfortableDistance = sideCheck[1].position:Distance(rayOrigin) - 0.3
+		offsetPosition = p_OriginalPoint.Position + right * (self.m_PathSide * comfortableDistance)
+		offsetPositionNext = p_NextPoint.Position + right * (self.m_PathSide * comfortableDistance)
+	end
 
 	return {
 			Position = offsetPosition,
