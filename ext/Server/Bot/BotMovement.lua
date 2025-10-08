@@ -20,129 +20,131 @@ function Bot:ApplyPathOffset(p_OriginalPoint, p_NextPoint)
 		if self.m_OffsetRecoveryNodes == 0 then
 			self.m_PathSide = math.random(-1, 1)
 		end
-		return p_OriginalPoint
+		return p_OriginalPoint, p_NextPoint
 	end
 
 	-- PRIORITY 2: Validate inputs
 	if not p_OriginalPoint or not p_NextPoint or
-		(p_OriginalPoint.Data and (p_OriginalPoint.Data.Action or p_OriginalPoint.Data.Links)) then
-		return p_OriginalPoint
+		(p_OriginalPoint.Data and p_OriginalPoint.Data.Action) then
+		return p_OriginalPoint, p_NextPoint
 	end
 
 	-- Initialize side once per path
 	if not self.m_PathSide or self.m_LastPathIndex ~= self._PathIndex then
-		self.m_PathSide = math.random(-1, 1)          -- -1 left, 0 center, 1 right
+		self.m_PathSide = math.random(-1, 1) -- -1 left, 0 center, 1 right
 		self.m_LastPathIndex = self._PathIndex
+		print('Bot ' .. self.m_Player.name .. ' path offset side: ' .. tostring(self.m_PathSide))
 		self.m_OffsetDistance = 0.8 + (math.random() * 0.4) -- 0.8-1.2m
 		self.m_LastStuckCheck = 0
 		self.m_ForceCenter = false
-		self.m_OffsetRight = nil
 	end
 
 	-- Emergency fallback
 	if self._ObstacleSequenceTimer ~= 0 and self.m_PathSide ~= 0 then
 		self.m_ForceCenter = true
-		return p_OriginalPoint
+		-- print("return - obstacle sequence")
+		return p_OriginalPoint, p_NextPoint
 	end
 	if self.m_ForceCenter and self._ObstacleSequenceTimer == 0 then
 		self.m_ForceCenter = false
 	end
 	if self.m_PathSide == 0 or self.m_ForceCenter then
-		return p_OriginalPoint
+		-- print("return - center")
+		return p_OriginalPoint, p_NextPoint
 	end
 
 	-- Calculate delta and direction
 	local delta = p_NextPoint.Position - p_OriginalPoint.Position
 	local length2D = math.sqrt(delta.x * delta.x + delta.z * delta.z)
-	if length2D < 0.1 then return p_OriginalPoint end
+	if length2D < 0.01 then
+		print("return - too short segment")
+		return p_OriginalPoint, p_NextPoint
+	end
 
 	local dir = Vec3(delta.x / length2D, 0, delta.z / length2D)
 	local right = Vec3(dir.z, 0, -dir.x)
-
-	-- >>> FIX 1: soften lateral direction (avoid zig-zag)
-	if not self.m_OffsetRight then
-		self.m_OffsetRight = right
-	else
-		local smoothed = Vec3(
-			self.m_OffsetRight.x * 0.8 + right.x * 0.2,
-			0,
-			self.m_OffsetRight.z * 0.8 + right.z * 0.2
-		)
-		smoothed:Normalize()
-		self.m_OffsetRight = smoothed
-	end
-	right = self.m_OffsetRight
 
 	-- >>> FIX 2: stairs/passages vertical → center
 	local verticalDelta = math.abs(p_NextPoint.Position.y - p_OriginalPoint.Position.y)
 	if verticalDelta > 0.5 then
 		self.m_OffsetRecoveryNodes = 3 -- force center for 3 nodes
-		return p_OriginalPoint
+		print("return - vertical")
+		return p_OriginalPoint, p_NextPoint
 	end
 
 
-	-- >>> Smart check width (once per node or every 1s)
-	local currentTime = SharedUtils:GetTimeMS()
-	if currentTime - (self.m_LastStuckCheck or 0) > 1000 then
-		self.m_LastStuckCheck = currentTime
+	-- -- >>> Smart check width (once per node or every 1s)
+	-- local currentTime = SharedUtils:GetTimeMS()
+	-- if currentTime - (self.m_LastStuckCheck or 0) > 1000 then
+	-- 	self.m_LastStuckCheck = currentTime
 
-		local rayOrigin = p_OriginalPoint.Position + Vec3(0, 0.5, 0)
+	-- 	local rayOrigin = p_OriginalPoint.Position + Vec3(0, 0.5, 0)
 
-		local leftHits = RaycastManager:CollisionRaycast(
-			rayOrigin - right * 1.5,
-			rayOrigin - right * 0.5,
-			1, 0, flags
-		)
-		local rightHits = RaycastManager:CollisionRaycast(
-			rayOrigin + right * 0.5,
-			rayOrigin + right * 1.5,
-			1, 0, flags
-		)
+	-- 	local leftHits = RaycastManager:CollisionRaycast(
+	-- 		rayOrigin - right * 1.5,
+	-- 		rayOrigin - right * 0.5,
+	-- 		1, 0, flags
+	-- 	)
+	-- 	local rightHits = RaycastManager:CollisionRaycast(
+	-- 		rayOrigin + right * 0.5,
+	-- 		rayOrigin + right * 1.5,
+	-- 		1, 0, flags
+	-- 	)
 
-		if #leftHits > 0 and #rightHits > 0 then
-			return p_OriginalPoint -- narrow corridor → center
-		end
+	-- 	-- if #leftHits > 0 and #rightHits > 0 then
+	-- 	-- 	print("return - narrow corridor")
+	-- 	-- 	return p_OriginalPoint, p_NextPoint -- narrow corridor → center
+	-- 	-- end
 
-		-- >>> FIX 3: limit offset based on free space
-		local leftClear = (#leftHits > 0) and leftHits[1].distance or 2.0
-		local rightClear = (#rightHits > 0) and rightHits[1].distance or 2.0
-		local maxOffset = math.min(leftClear, rightClear) - 0.3
-		if maxOffset < self.m_OffsetDistance then
-			self.m_OffsetDistance = math.max(0.3, maxOffset)
-		end
-	end
+	-- 	-- >>> FIX 3: limit offset based on free space
+	-- 	local leftClear = (#leftHits > 0) and leftHits[1].position:Distance(rayOrigin) or 2.0
+	-- 	local rightClear = (#rightHits > 0) and rightHits[1].position:Distance(rayOrigin) or 2.0
+	-- 	local maxOffset = math.min(leftClear, rightClear) - 0.3
+	-- 	if maxOffset < self.m_OffsetDistance then
+	-- 		self.m_OffsetDistance = math.max(0.3, maxOffset)
+	-- 	end
+	-- end
 
 	-- Calculate offset position
 	local offsetPosition = p_OriginalPoint.Position + right * (self.m_PathSide * self.m_OffsetDistance)
+	local offsetPositionNext = p_NextPoint.Position + right * (self.m_PathSide * self.m_OffsetDistance)
 
-	-- >>> FIX 4: check ground under the offset (avoid falling)
-	local footOrigin = offsetPosition + Vec3(0, 0.2, 0)
-	local footTarget = offsetPosition - Vec3(0, 2.0, 0)
-	local downHits = RaycastManager:CollisionRaycast(footOrigin, footTarget, 1, 0, flags)
-	if #downHits == 0 then
-		self.m_OffsetRecoveryNodes = 2
-		return p_OriginalPoint
-	end
+	-- -- >>> FIX 4: check ground under the offset (avoid falling)
+	-- local footOrigin = offsetPosition + Vec3(0, 0.2, 0)
+	-- local footTarget = offsetPosition - Vec3(0, 2.0, 0)
+	-- local downHits = RaycastManager:CollisionRaycast(footOrigin, footTarget, 1, 0, flags)
+	-- if #downHits == 0 then
+	-- 	self.m_OffsetRecoveryNodes = 2
+	-- 	print("return - no ground")
+	-- 	return p_OriginalPoint, p_NextPoint
+	-- end
 
-	-- Wall-slide check
-	local sideCheck = RaycastManager:CollisionRaycast(
-		p_OriginalPoint.Position + right * (self.m_PathSide * 0.3),
-		offsetPosition,
-		1, 0,
-		flags
-	)
-	if #sideCheck > 0 and sideCheck[1].position then
-		local comfortableDistance = 0.4
-		offsetPosition = p_OriginalPoint.Position + right * (self.m_PathSide * comfortableDistance)
-	end
+	-- -- Wall-slide check
+	-- local sideCheck = RaycastManager:CollisionRaycast(
+	-- 	p_OriginalPoint.Position + right * (self.m_PathSide * 0.3),
+	-- 	offsetPosition,
+	-- 	1, 0,
+	-- 	flags
+	-- )
+	-- if #sideCheck > 0 and sideCheck[1].position then
+	-- 	local comfortableDistance = 0.4
+	-- 	offsetPosition = p_OriginalPoint.Position + right * (self.m_PathSide * comfortableDistance)
+	-- end
 
 	return {
-		Position = offsetPosition,
-		SpeedMode = p_OriginalPoint.SpeedMode,
-		ExtraMode = p_OriginalPoint.ExtraMode,
-		OptValue = p_OriginalPoint.OptValue,
-		Data = p_OriginalPoint.Data
-	}
+			Position = offsetPosition,
+			SpeedMode = p_OriginalPoint.SpeedMode,
+			ExtraMode = p_OriginalPoint.ExtraMode,
+			OptValue = p_OriginalPoint.OptValue,
+			Data = p_OriginalPoint.Data
+		},
+		{
+			Position = offsetPositionNext,
+			SpeedMode = p_NextPoint.SpeedMode,
+			ExtraMode = p_NextPoint.ExtraMode,
+			OptValue = p_NextPoint.OptValue,
+			Data = p_NextPoint.Data
+		}
 end
 
 ---@param p_DeltaTime number
@@ -193,7 +195,7 @@ function Bot:UpdateNormalMovement(p_DeltaTime)
 		end
 
 		if s_Point and s_NextPoint then
-			s_Point = self:ApplyPathOffset(s_Point, s_NextPoint) or s_Point
+			s_Point, s_NextPoint = self:ApplyPathOffset(s_Point, s_NextPoint)
 		end
 
 		-- Do defense, if needed
