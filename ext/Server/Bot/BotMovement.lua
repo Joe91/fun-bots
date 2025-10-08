@@ -10,7 +10,7 @@ local m_NodeCollection = require('NodeCollection')
 local flags = RayCastFlags.DontCheckWater |
 	RayCastFlags.DontCheckCharacter |
 	RayCastFlags.DontCheckRagdoll |
-	RayCastFlags.DontCheckTerrain
+	RayCastFlags.CheckDetailMesh
 
 -- >>> SMART PATH OFFSET (with zig-zag and stairs fixes)
 function Bot:ApplyPathOffset(p_OriginalPoint, p_NextPoint)
@@ -81,13 +81,13 @@ function Bot:ApplyPathOffset(p_OriginalPoint, p_NextPoint)
 	-- Wall-slide check
 	local rayOrigin = p_OriginalPoint.Position + Vec3(0, 0.5, 0)
 	local sideCheck = RaycastManager:CollisionRaycast(
-		rayOrigin + right * (self.m_PathSide * 0.3),
-		offsetPosition + Vec3(0, 0.5, 0),
+		rayOrigin + Vec3(0, 0.5, 0),
+		offsetPosition + Vec3(0, 0.5, 0) + right * (self.m_PathSide * 0.4),
 		1, 0,
 		flags
 	)
 	if #sideCheck > 0 and sideCheck[1].position then
-		local comfortableDistance = sideCheck[1].position:Distance(rayOrigin) - 0.3
+		local comfortableDistance = sideCheck[1].position:Distance(rayOrigin) - 0.4
 		offsetPosition = p_OriginalPoint.Position + right * (self.m_PathSide * comfortableDistance)
 		offsetPositionNext = p_NextPoint.Position + right * (self.m_PathSide * comfortableDistance)
 	end
