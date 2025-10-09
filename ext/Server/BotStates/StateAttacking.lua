@@ -32,6 +32,17 @@ function StateAttacking:Update(p_Bot, p_DeltaTime)
 	-- update state-timer
 	p_Bot.m_StateTimer = p_Bot.m_StateTimer + p_DeltaTime
 
+	-- use state-timer to change bot movement during attack
+	if p_Bot.m_StateTimer == 0.0 or p_Bot.m_StateTimer > 5.0 then
+		p_Bot.m_StateTimer = 0.0
+		if m_Utilities:CheckProbablity(Registry.BOT.PROBABILITY_STOP_TO_SHOOT) then
+			p_Bot._MoveWhileShooting = false
+		else
+			p_Bot._MoveWhileShooting = true
+		end
+	end
+
+
 	-- default-handling
 	p_Bot:UpdateWeaponSelection(p_DeltaTime) -- TODO: maybe compbine with reload now?
 

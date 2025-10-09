@@ -25,7 +25,8 @@ function Bot:ApplyPathOffset(p_OriginalPoint, p_NextPoint)
 
 	-- PRIORITY 2: Validate inputs
 	if not p_OriginalPoint or not p_NextPoint or
-		(p_OriginalPoint.Data and p_OriginalPoint.Data.Action) then
+		(p_OriginalPoint.Data and p_OriginalPoint.Data.Action) or
+		(p_OriginalPoint.Data and p_OriginalPoint.Data.Links) then
 		return p_OriginalPoint, p_NextPoint
 	end
 
@@ -72,52 +73,10 @@ function Bot:ApplyPathOffset(p_OriginalPoint, p_NextPoint)
 		return p_OriginalPoint, p_NextPoint
 	end
 
-
-	-- -- >>> Smart check width (once per node or every 1s)
-	-- local currentTime = SharedUtils:GetTimeMS()
-	-- if currentTime - (self.m_LastStuckCheck or 0) > 1000 then
-	-- 	self.m_LastStuckCheck = currentTime
-
-	-- 	local rayOrigin = p_OriginalPoint.Position + Vec3(0, 0.5, 0)
-
-	-- 	local leftHits = RaycastManager:CollisionRaycast(
-	-- 		rayOrigin - right * 1.5,
-	-- 		rayOrigin - right * 0.5,
-	-- 		1, 0, flags
-	-- 	)
-	-- 	local rightHits = RaycastManager:CollisionRaycast(
-	-- 		rayOrigin + right * 0.5,
-	-- 		rayOrigin + right * 1.5,
-	-- 		1, 0, flags
-	-- 	)
-
-	-- 	-- if #leftHits > 0 and #rightHits > 0 then
-	-- 	-- 	print("return - narrow corridor")
-	-- 	-- 	return p_OriginalPoint, p_NextPoint -- narrow corridor → center
-	-- 	-- end
-
-	-- 	-- >>> FIX 3: limit offset based on free space
-	-- 	local leftClear = (#leftHits > 0) and leftHits[1].position:Distance(rayOrigin) or 2.0
-	-- 	local rightClear = (#rightHits > 0) and rightHits[1].position:Distance(rayOrigin) or 2.0
-	-- 	local maxOffset = math.min(leftClear, rightClear) - 0.3
-	-- 	if maxOffset < self.m_OffsetDistance then
-	-- 		self.m_OffsetDistance = math.max(0.3, maxOffset)
-	-- 	end
-	-- end
-
 	-- Calculate offset position
 	local offsetPosition = p_OriginalPoint.Position + right * (self.m_PathSide * self.m_OffsetDistance)
 	local offsetPositionNext = p_NextPoint.Position + right * (self.m_PathSide * self.m_OffsetDistance)
 
-	-- -- >>> FIX 4: check ground under the offset (avoid falling)
-	-- local footOrigin = offsetPosition + Vec3(0, 0.2, 0)
-	-- local footTarget = offsetPosition - Vec3(0, 2.0, 0)
-	-- local downHits = RaycastManager:CollisionRaycast(footOrigin, footTarget, 1, 0, flags)
-	-- if #downHits == 0 then
-	-- 	self.m_OffsetRecoveryNodes = 2
-	-- 	print("return - no ground")
-	-- 	return p_OriginalPoint, p_NextPoint
-	-- end
 
 	-- Wall-slide check
 	local rayOrigin = p_OriginalPoint.Position + Vec3(0, 0.5, 0)
@@ -780,10 +739,14 @@ function Bot:UpdateSpeedOfMovement()
 	-- Do not reduce speed if sprinting.
 	if s_SpeedVal > 0 and self._ShootPlayer ~= nil and self._ShootPlayer.soldier ~= nil and
 		self.m_ActiveSpeedValue <= BotMoveSpeeds.Normal then
-		s_SpeedVal = s_SpeedVal * Config.SpeedFactorAttack
+		if self._MoveWhileShooting then
+			s_SpeedVal = s_SpeedVal * Config.SpeedFactorAttack
+		else
+			s_SpeedVal = 0
+		end
 	end
 
-	-- Movent speed.
+	-- Movement speed.
 	if self.m_ActiveSpeedValue ~= BotMoveSpeeds.Sprint then
 		self:_SetInput(EntryInputActionEnum.EIAThrottle, s_SpeedVal * Config.SpeedFactor)
 	else
