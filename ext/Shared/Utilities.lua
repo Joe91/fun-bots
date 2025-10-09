@@ -238,6 +238,11 @@ function requireExists(p_Module)
 	return s_Status
 end
 
+function Utilities:RandomNormal(mu, sigma)
+	local u, v = math.random(), math.random()
+	return math.sqrt(-2 * math.log(u)) * math.cos(2 * math.pi * v) * sigma + mu
+end
+
 if g_Utilities == nil then
 	---@type Utilities
 	g_Utilities = Utilities()
