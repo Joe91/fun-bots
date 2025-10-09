@@ -2,6 +2,9 @@
 ---@overload fun():StateAttacking
 StateAttacking = class('StateAttacking')
 
+local m_Utilities = require('__shared/Utilities')
+
+
 -- this class handles the following things:
 -- - moving along paths
 -- - overcome obstacles
