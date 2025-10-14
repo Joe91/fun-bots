@@ -38,7 +38,7 @@ This is the changelog for the version V3.0 Don't forget to [join us on Discord](
 * Variation in default fire-cycles (by MatiasPastori)
 * Refactoring of lots of Bot-stuff (by Bree_Arnold)
 * Switch to new Web-UI-Backend (by Paul)
-* path-offsets for bots (by MatiasPastori)
+* path-offsets for bots (by MatiasPastori) - still wip
 
 ### some open TODOs:
 * rework of raycasts for better performance
