@@ -40,8 +40,8 @@ function StateInVehicleAttacking:Update(p_Bot, p_DeltaTime)
 
 	-- use state-timer to change vehicle movement during attack
 	if not m_Vehicles:IsGunship(p_Bot.m_ActiveVehicle) then
-		if p_Bot.m_StateTimer == 0.0 or p_Bot.m_StateTimer > 5.0 then
-			p_Bot.m_StateTimer = 0.0
+		if p_Bot.m_StateTimer <= 0.0 then
+			p_Bot.m_StateTimer = 5.0 + MathUtils:GetRandom(-1.0, 3.0)
 			if m_Utilities:CheckProbablity(Registry.VEHICLES.PROBABILITY_VEHICLE_STOP_TO_SHOOT) then
 				p_Bot._VehicleMoveWhileShooting = false
 			else
@@ -53,7 +53,7 @@ function StateInVehicleAttacking:Update(p_Bot, p_DeltaTime)
 	end
 
 	-- update state-timer
-	p_Bot.m_StateTimer = p_Bot.m_StateTimer + p_DeltaTime
+	p_Bot.m_StateTimer = p_Bot.m_StateTimer - p_DeltaTime
 
 	local s_IsStationaryLauncher = m_Vehicles:IsVehicleType(p_Bot.m_ActiveVehicle, VehicleTypes.StationaryLauncher)
 

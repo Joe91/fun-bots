@@ -38,7 +38,7 @@ This is the changelog for the version V3.0 Don't forget to [join us on Discord](
 * Variation in default fire-cycles (by MatiasPastori)
 * Refactoring of lots of Bot-stuff (by Bree_Arnold)
 * Switch to new Web-UI-Backend (by Paul)
-* Sometimes Stop for shooting of bots
+* Sometimes Stop for shooting of bots (by MatiasPastori)
 
 ### some open TODOs:
 * rework of raycasts for better performance

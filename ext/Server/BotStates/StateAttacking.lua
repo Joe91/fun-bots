@@ -32,18 +32,17 @@ function StateAttacking:Update(p_Bot, p_DeltaTime)
 		return
 	end
 
-	-- update state-timer
-	p_Bot.m_StateTimer = p_Bot.m_StateTimer + p_DeltaTime
-
 	-- use state-timer to change bot movement during attack
-	if p_Bot.m_StateTimer == 0.0 or p_Bot.m_StateTimer > 3.0 then
-		p_Bot.m_StateTimer = 0.0
+	if p_Bot.m_StateTimer <= 0.0 then
+		p_Bot.m_StateTimer = 3.0 + MathUtils:GetRandom(-1.0, 2.0)
 		if m_Utilities:CheckProbablity(Registry.BOT.PROBABILITY_STOP_TO_SHOOT) then
 			p_Bot._MoveWhileShooting = false
 		else
 			p_Bot._MoveWhileShooting = true
 		end
 	end
+	-- update state-timer
+	p_Bot.m_StateTimer = p_Bot.m_StateTimer - p_DeltaTime
 
 
 	-- default-handling
