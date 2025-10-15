@@ -164,6 +164,7 @@ function Bot:__init(p_Player)
 	self._OnSwitch = false
 	self._ActiveDelay = 0.0
 	self._VehicleMoveWhileShooting = false
+	self._MoveWhileShooting = false
 	self._FireCycleModifier = 1.0
 
 	-- Vehicle stuff.
