@@ -2,6 +2,9 @@
 ---@overload fun():StateAttacking
 StateAttacking = class('StateAttacking')
 
+local m_Utilities = require('__shared/Utilities')
+
+
 -- this class handles the following things:
 -- - moving along paths
 -- - overcome obstacles
@@ -29,8 +32,18 @@ function StateAttacking:Update(p_Bot, p_DeltaTime)
 		return
 	end
 
+	-- use state-timer to change bot movement during attack
+	if p_Bot.m_StateTimer <= 0.0 then
+		p_Bot.m_StateTimer = 3.0 + MathUtils:GetRandom(-1.0, 2.0)
+		if m_Utilities:CheckProbablity(Registry.BOT.PROBABILITY_STOP_TO_SHOOT) then
+			p_Bot._MoveWhileShooting = false
+		else
+			p_Bot._MoveWhileShooting = true
+		end
+	end
 	-- update state-timer
-	p_Bot.m_StateTimer = p_Bot.m_StateTimer + p_DeltaTime
+	p_Bot.m_StateTimer = p_Bot.m_StateTimer - p_DeltaTime
+
 
 	-- default-handling
 	p_Bot:UpdateWeaponSelection(p_DeltaTime) -- TODO: maybe compbine with reload now?

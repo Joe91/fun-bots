@@ -587,7 +587,11 @@ function Bot:UpdateSpeedOfMovement()
 	-- Do not reduce speed if sprinting.
 	if s_SpeedVal > 0 and self._ShootPlayer ~= nil and self._ShootPlayer.soldier ~= nil and
 		self.m_ActiveSpeedValue <= BotMoveSpeeds.Normal then
-		s_SpeedVal = s_SpeedVal * Config.SpeedFactorAttack
+		if self._MoveWhileShooting then
+			s_SpeedVal = s_SpeedVal * Config.SpeedFactorAttack
+		else
+			s_SpeedVal = 0
+		end
 	end
 
 	-- Movent speed.
