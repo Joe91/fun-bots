@@ -860,6 +860,10 @@ function NodeCollection:GetPaths()
 	return self._WaypointsByPathIndex
 end
 
+function NodeCollection:GetNrOfPaths()
+	return self._LoadPathCount
+end
+
 function NodeCollection:ParseSpawnsToNodes()
 	local s_Nodes = {}
 	for l_Index = 1, #self._SpawnPointTable do

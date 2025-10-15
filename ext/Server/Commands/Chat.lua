@@ -376,7 +376,7 @@ function ChatCommands:Execute(p_Parts, p_Player)
 
 		local s_Amount = tonumber(p_Parts[2]) or 1
 		local s_ActiveWayIndex = tonumber(p_Parts[3]) or 1
-		s_ActiveWayIndex = math.min(math.max(s_ActiveWayIndex, 1), #m_NodeCollection:GetPaths())
+		s_ActiveWayIndex = math.min(math.max(s_ActiveWayIndex, 1), m_NodeCollection:GetNrOfPaths())
 
 		m_BotSpawner:SpawnWayBots(p_Player, s_Amount, false, s_ActiveWayIndex)
 	elseif p_Parts[1] == '!spawnbots' then

@@ -821,7 +821,8 @@ end
 ---@param p_IndexOnPath? integer
 ---@param p_TeamId? TeamId|integer
 function BotSpawner:SpawnWayBots(p_Amount, p_UseRandomWay, p_ActiveWayIndex, p_IndexOnPath, p_TeamId)
-	if #m_NodeCollection:GetPaths() <= 0 then
+	if m_NodeCollection:GetNrOfPaths() <= 0 then
+		m_Logger:Warning("No paths found. Can't spawn way-bots.")
 		return
 	end
 
@@ -1681,7 +1682,15 @@ function BotSpawner:_GetSpawnPoint(p_TeamId, p_SquadId)
 	else
 		while not s_ValidPointFound and s_TrysDone < s_MaximumTrys do
 			-- Get new point.
-			s_ActiveWayIndex = MathUtils:GetRandomInt(1, #m_NodeCollection:GetPaths())
+			s_ActiveWayIndex = MathUtils:GetRandomInt(1, m_NodeCollection:GetNrOfPaths())
+			local s_Count = 1
+			for l_Index, _ in pairs(m_NodeCollection:GetPaths()) do
+				if s_ActiveWayIndex == s_Count then
+					s_ActiveWayIndex = l_Index
+					break
+				end
+				s_Count = s_Count + 1
+			end
 
 			if s_ActiveWayIndex == 0 then
 				return
