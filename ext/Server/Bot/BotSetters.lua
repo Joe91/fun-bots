@@ -250,6 +250,9 @@ function Bot:ResetSpawnVars()
 		}
 		self.m_Player.input:SetLevel(l_EIA, 0.0)
 	end
+
+	self._FollowReturnTimer = 0.0
+	self._PersistentFollowTarget = nil
 end
 
 ---@param p_FlagValue integer|BotActionFlags|nil
