@@ -67,8 +67,8 @@ function Bot:ApplyPathOffset(p_OriginalPoint, p_NextPoint)
 
 	-- >>> FIX 2: stairs/passages vertical → center
 	local verticalDelta = math.abs(p_NextPoint.Position.y - p_OriginalPoint.Position.y)
-	if verticalDelta > 0.4 then
-		self.m_OffsetRecoveryNodes = 3 -- force center for 3 nodes
+	if verticalDelta > 0.35 then
+		self.m_OffsetRecoveryNodes = 5 -- force center for 5 nodes
 		-- print("return - vertical")
 		return p_OriginalPoint, p_NextPoint
 	end
@@ -87,9 +87,12 @@ function Bot:ApplyPathOffset(p_OriginalPoint, p_NextPoint)
 		flags
 	)
 	if #sideCheck > 0 and sideCheck[1].position then
-		local comfortableDistance = sideCheck[1].position:Distance(rayOrigin) - 0.4
-		offsetPosition = p_OriginalPoint.Position + right * (self.m_PathSide * comfortableDistance)
-		offsetPositionNext = p_NextPoint.Position + right * (self.m_PathSide * comfortableDistance)
+		-- local comfortableDistance = sideCheck[1].position:Distance(rayOrigin) - 0.4
+		-- offsetPosition = p_OriginalPoint.Position + right * (self.m_PathSide * comfortableDistance)
+		-- offsetPositionNext = p_NextPoint.Position + right * (self.m_PathSide * comfortableDistance)
+
+		self.m_OffsetRecoveryNodes = 5 -- force center for 3 nodes
+		return p_OriginalPoint, p_NextPoint
 	end
 
 	return {
