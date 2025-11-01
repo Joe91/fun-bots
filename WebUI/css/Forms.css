@@ -1,59 +1,69 @@
 input[type="text"],
 input[type="password"] {
-	background: var(--color_button_default_from);
-	display: block;
-	border: 1px solid var(--color_white);
-	color: var(--color_white);
-	margin: 0 auto;
-	padding: 5px;
+    background-color: var(--color_button_default_from);
+    display: block;
+    border-width: 1px;
+    border-style: solid;
+    border-top-color: var(--color_white);
+    border-bottom-color: var(--color_white);
+    border-left-color: var(--color_white);
+    border-right-color: var(--color_white);
+    color: var(--color_white);
+    margin: 0 auto;
+    padding: 5px;
 }
 
 button {
-	padding: 5px 15px;
-	min-width: 100px;
-	margin: 0 1px;
-	border: 1px solid;
-	color: var(--color_text);
-	text-shadow: 0 0 6px var(--color_text_shadow);
-	cursor: pointer;
-	font-weight: 900;
-	font-size: 16px;
-	text-align: center;
-	text-transform: uppercase;
-	background: linear-gradient(180deg, var(--color_button_default_from) 0%, var(--color_button_default_to) 100%);
+    padding: 5px 15px;
+    min-width: 100px;
+    margin: 0 1px;
+    border-width: 1px;
+    border-style: solid;
+    color: var(--color_text);
+    text-shadow: 0 0 6px var(--color_text_shadow);
+    cursor: pointer;
+    font-weight: 900;
+    font-size: 16px;
+    text-align: center;
+    text-transform: uppercase;
+    background-image: linear-gradient(180deg,
+            var(--color_button_default_from) 0%,
+            var(--color_button_default_to) 100%);
 }
 
 button:hover {
-	background: linear-gradient(180deg, var(--color_button_hover_from) 0%, var(--color_button_hover_to) 100%);
+    background-image: linear-gradient(180deg,
+            var(--color_button_hover_from) 0%,
+            var(--color_button_hover_to) 100%);
 }
 
 ui-checkbox input[type="checkbox"] {
-	position: absolute;
-	opacity: 0;
-	cursor: pointer;
-	height: 0;
-	width: 0;
+    position: absolute;
+    opacity: 0;
+    cursor: pointer;
+    height: 0;
+    width: 0;
 }
 
 ui-checkbox:after {
-	content: "";
-	width: 15px;
-	height: 15px;
-	background-color: #eee;
-	display: inline-block;
+    content: "";
+    width: 15px;
+    height: 15px;
+    background-color: #eee;
+    display: block;
 }
 
 ui-checkbox:hover:after,
-a:hover > ui-checkbox:after {
-	background-color: #ccc;
-	box-shadow: 0 0 10px 1px rgb(182,239,255);
+a:hover>ui-checkbox:after {
+    background-color: #ccc;
+    box-shadow: 0 0 10px 1px rgb(182, 239, 255);
 }
 
 ui-checkbox[data-checked="true"]:after {
-	background-color: rgb(118, 226, 255);
-	box-shadow: 0 0 10px 1px rgb(182,239,255);
-	content: "✘";
-	line-height: 12px;
-	font-size: 14px;
-	text-align: center;
+    background-color: rgb(118, 226, 255);
+    box-shadow: 0 0 10px 1px rgb(182, 239, 255);
+    content: "✘";
+    line-height: 12px;
+    font-size: 14px;
+    text-align: center;
 }
