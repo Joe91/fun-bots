@@ -3,7 +3,7 @@ name: publish to VUMM
 on:
   push:
     tags:
-      - 'v*.*.*-Release'
+      - 'V*.*.*-release'
       - 'v*.*.*-dev*'
 
 jobs:
