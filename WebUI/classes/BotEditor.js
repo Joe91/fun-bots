@@ -20,27 +20,27 @@ class BotEditor {
             view.dataset.show = false;
         });
 
-        /* Coloring */
-        [].map.call(document.querySelectorAll("ui-box"), (box) => {
-            const prop = window.getComputedStyle(box).getPropertyValue("background-image");
-            const re = /url\((['"])?(.*?)\1\)/gi;
-            const images = [];
-            let matches;
+        // /* Coloring */
+        // [].map.call(document.querySelectorAll("ui-box"), (box) => {
+        //     const prop = window.getComputedStyle(box).getPropertyValue("background-image");
+        //     const re = /url\((['"])?(.*?)\1\)/gi;
+        //     const images = [];
+        //     let matches;
 
-            while ((matches = re.exec(prop)) !== null) {
-                images.push(matches[2]);
-            }
+        //     while ((matches = re.exec(prop)) !== null) {
+        //         images.push(matches[2]);
+        //     }
 
-            this.imagesHandler(images, (results) => {
-                let build = [];
+        //     this.imagesHandler(images, (results) => {
+        //         let build = [];
 
-                results.forEach((entry) => {
-                    build.push("url(" + entry + ")");
-                });
+        //         results.forEach((entry) => {
+        //             build.push("url(" + entry + ")");
+        //         });
 
-                box.style.backgroundImage = build.join(", ");
-            });
-        });
+        //         box.style.backgroundImage = build.join(", ");
+        //     });
+        // });
 
         this.bindMouseEvents();
         this.bindKeyboardEvents();

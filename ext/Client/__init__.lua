@@ -297,6 +297,7 @@ end
 ---@param p_StateNodeGuid Guid|nil
 function FunBotClient:OnUIPushScreen(p_HookCtx, p_Screen, p_Priority, p_ParentGraph, p_StateNodeGuid)
 	m_ClientNodeEditor:OnUIPushScreen(p_HookCtx, p_Screen, p_Priority, p_ParentGraph, p_StateNodeGuid)
+	m_FunBotUIClient:OnPushScreen()
 end
 
 return FunBotClient()
