@@ -1,4 +1,5 @@
-WebUI/
-mapfiles/
-permission_and_config/
+.vu/
+mapfiles/*.map
+permission_and_config/*.cfg
 fun-bots-helper/build/
+*vua.code-workspace
