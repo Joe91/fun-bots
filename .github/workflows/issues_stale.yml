@@ -1,4 +1,4 @@
-name: 'Close stale issues'
+name: 'Issues - Close stales'
 on:
   schedule:
     - cron: '30 1 * * *'
