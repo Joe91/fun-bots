@@ -1,7 +1,7 @@
 import os
 import json
 
-mapfiles_dir = 'mapfiles'
+mapfiles_dir = './../mapfiles'
 
 for filename in os.listdir(mapfiles_dir):
     if not filename.endswith('.map'):

@@ -22,7 +22,7 @@ def sort_dict_and_string_lists(data):
 
 
 def main():
-    mapfiles_dir = 'mapfiles'
+    mapfiles_dir = './../mapfiles'
 
     for filename in os.listdir(mapfiles_dir):
         if not filename.endswith('.map'):
