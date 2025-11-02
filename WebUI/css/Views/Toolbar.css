@@ -71,7 +71,7 @@ ui-view[data-type="toolbar"] ui-submenu.main>li>a {
     text-align: center;
     text-transform: uppercase;
     background-image: linear-gradient(180deg,
-            var(--color_button_default_from) 0%,
+            var(--color_button_default_from) 100%,
             var(--color_button_default_to) 100%);
 }
 
@@ -91,7 +91,7 @@ ui-view[data-type="toolbar"] ui-submenu ul.main>li>a[data-key]::before {
 ui-view[data-type="toolbar"] ui-menu ul.main>li:hover>a,
 ui-view[data-type="toolbar"] ui-submenu ul.main>li:hover>a {
     background-image: linear-gradient(180deg,
-            var(--color_button_hover_from) 0%,
+            var(--color_button_hover_from) 100%,
             var(--color_button_hover_to) 100%);
 }
 
@@ -100,7 +100,7 @@ ui-view[data-type="toolbar"] ui-submenu ul.main>li:active>a {
     color: var(--color_text_hover);
     text-shadow: 0 0 6px var(--color_text_hover_shadow);
     background-image: linear-gradient(180deg,
-            var(--color_button_active_from) 0%,
+            var(--color_button_active_from) 100%,
             var(--color_button_active_to) 100%);
 }
 
@@ -155,7 +155,7 @@ ui-view[data-type="toolbar"] ui-menu ul.main>li:hover>ul>li:hover>a,
 ui-view[data-type="toolbar"] ui-submenu ul.main>li:hover>ul>li:hover>a {
     cursor: pointer;
     background-image: linear-gradient(180deg,
-            var(--color_button_hover_from) 0%,
+            var(--color_button_hover_from) 100%,
             var(--color_button_hover_to) 100%);
 }
 

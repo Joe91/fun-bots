@@ -11,7 +11,7 @@ ui-view[data-type="dialog"] ui-header {
     padding: 10px;
     text-transform: uppercase;
     background-image: linear-gradient(180deg,
-            var(--color_warning_from) 0%,
+            var(--color_warning_from) 100%,
             var(--color_warning_to) 100%);
 }
 
