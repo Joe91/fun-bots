@@ -73,9 +73,9 @@ ui-view[data-name="waypoint_toolbar"] ui-box {
     position: absolute;
     left: 10px;
     top: 50px;
-    width: 256px;
-    height: 128px;
-    opacity: 0.6;
+    width: 300px;
+    height: 150px;
+    opacity: 0.8;
     padding: 20px;
     color: #fbfdfe;
     text-shadow:
@@ -83,7 +83,7 @@ ui-view[data-name="waypoint_toolbar"] ui-box {
         0 0 5px rgb(39 164 236 / 80%);
 }
 
-ui-view[data-name="waypoint_toolbar"] ui-box {
+/* ui-view[data-name="waypoint_toolbar"] ui-box {
     background-image:
         url("../../../assets/bgContainerBox.png#176,176,176,0.6"),
         url("../../../assets/bgContainer.png#180,228,249,0.8");
@@ -93,9 +93,9 @@ ui-view[data-name="waypoint_toolbar"] ui-box {
     background-position:
         0% 0%,
         100% 0%;
-}
+} */
 
-ui-view[data-name="waypoint_toolbar"] ui-box[data-color="red"] {
+/* ui-view[data-name="waypoint_toolbar"] ui-box[data-color="red"] {
     background-image:
         url("../../../assets/bgContainerBox.png#176,176,176,0.6"),
         url("../../../assets/bgContainer.png#255,138,138,0.8");
@@ -105,24 +105,24 @@ ui-view[data-name="waypoint_toolbar"] ui-box[data-color="red"] {
     background-position:
         0% 0%,
         100% 0%;
-}
+} */
 
 ui-view[data-name="waypoint_toolbar"] ui-box[data-name="record"] {
     display: none;
-    top: 170px;
+    top: 160px;
     height: 40px;
-    padding: 10px;
+    padding: 5px;
     padding-left: 40px;
     line-height: 18px;
 }
 
 ui-view[data-name="waypoint_toolbar"] ui-box[data-name="record"][data-show="true"] {
-    display: block;
+    display: flex;
 }
 
 ui-view[data-name="waypoint_toolbar"] ui-box[data-name="record"]:before {
     content: "";
-    display: block;
+    display: flex;
     position: absolute;
     left: 10px;
     top: 50%;
@@ -151,7 +151,9 @@ ui-view[data-name="waypoint_toolbar"] ui-box[data-name="info"] ui-entry label {
 
 ui-view[data-name="waypoint_toolbar"] ui-box[data-name="info"] ui-entry ui-value {
     flex: 0 auto;
-    display: block;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     min-width: 60px;
     max-width: 60px;
     text-align: center;
@@ -173,7 +175,7 @@ ui-view[data-name="waypoint_toolbar"] ui-box[data-name="info"] ui-entry ui-conta
 ui-view[data-name="waypoint_toolbar"] ui-box[data-name="info"] ui-entry ui-container ui-arrow {
     flex: 0 13px;
     cursor: pointer;
-    font-size: 22px;
+    font-size: 10px;
     align-self: center;
 }
 

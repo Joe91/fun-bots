@@ -339,6 +339,10 @@ function FunBotUIClient:OnExtensionUnloading()
 	self._views:OnExtensionUnloading()
 end
 
+function FunBotUIClient:OnPushScreen()
+	self._views:disable()
+end
+
 if g_FunBotUIClient == nil then
 	---@type FunBotUIClient
 	g_FunBotUIClient = FunBotUIClient()

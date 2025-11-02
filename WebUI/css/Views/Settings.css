@@ -38,7 +38,7 @@ ui-view[data-name="settings"] ui-tabs nav ul li label {
     text-align: center;
     text-transform: uppercase;
     background-image: linear-gradient(180deg,
-            var(--color_button_default_from) 0%,
+            var(--color_button_default_from) 100%,
             var(--color_button_default_to) 100%);
 }
 
@@ -52,7 +52,7 @@ ui-view[data-name="settings"] ui-tabs nav ul li:last-child label {
 
 ui-view[data-name="settings"] ui-tabs nav ul li:hover label {
     background-image: linear-gradient(180deg,
-            var(--color_button_hover_from) 0%,
+            var(--color_button_hover_from) 100%,
             var(--color_button_hover_to) 100%);
 }
 
@@ -60,7 +60,7 @@ ui-view[data-name="settings"] ui-tabs nav ul li label.active {
     color: var(--color_text_hover);
     text-shadow: 0 0 6px var(--color_text_hover_shadow);
     background-image: linear-gradient(180deg,
-            var(--color_button_active_from) 0%,
+            var(--color_button_active_from) 100%,
             var(--color_button_active_to) 100%);
 }
 
@@ -133,7 +133,7 @@ ui-view[data-name="settings"] ui-tabs figure ui-tab ui-entry ui-container input[
     flex: 0 170px;
     min-width: 1px;
     max-width: 100%;
-    background-color: rgba(0, 0, 0, 0);
+    background-color: rgba(0, 0, 0, 0.5);
     text-align: center;
     color: var(--color_text);
     font-weight: 900;
