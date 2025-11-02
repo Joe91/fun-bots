@@ -9,7 +9,7 @@ This is the changelog for the version V2.9 Don't forget to [join us on Discord](
 ## Changelog
 
 ### New features / improvements
-* Update of the UI to work with new Backend (mouse might get lost / won't dissapear until using the UI again)
+* Update of the UI to work with new Backend
 * Merged pull request #318 from tagener-noisu Navigation fixes
 * Merged pull request #325 form tagener-noisu several small improvements
 * POI Implementation with beacon as first usage by tagener-noisu

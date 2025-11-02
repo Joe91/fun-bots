@@ -1,0 +1,22 @@
+name: publish
+
+on:
+  push:
+    tags:
+      - 'v*.*.*-Release'
+      - 'v*.*.*-dev*'
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+      - name: Publish
+        uses: BF3RM/vumm-action@v1
+        with:
+          tag: ${{ contains(github.ref_name, '-dev') && 'dev' || 'latest' }}
+        env:
+          VUMM_TOKEN: ${{ secrets.VUMM_TOKEN }}
