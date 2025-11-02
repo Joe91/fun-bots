@@ -1,4 +1,4 @@
-name: No Response
+name: Issues - No Response
 
 # **What it does**: Closes issues where the original author doesn't respond to a request for information.
 # **Why we have it**: To remove the need for maintainers to remember to check back on issues periodically to see if contributors have responded.
