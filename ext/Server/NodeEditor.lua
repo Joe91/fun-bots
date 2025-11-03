@@ -74,6 +74,8 @@ function NodeEditor:RegisterCustomEvents()
 
 	NetEvents:Subscribe('NodeEditor:JumpDetected', self, self.OnJumpDetected)
 
+	NetEvents:Subscribe('NodeEditor:RequestData', self, self.OnRequestData)
+
 
 	-- To-do: fill.
 end
@@ -574,6 +576,33 @@ function NodeEditor:OnRemoveData(p_Player)
 		s_Selection[i].Data = {}
 		self:Log(p_Player, 'Updated Waypoint: %s', s_Selection[i].ID)
 	end
+end
+
+function NodeEditor:OnRequestData(p_Player)
+	local s_AllNodes = m_NodeCollection:Get()
+
+	local s_SerializedNodes = {}
+
+	if not s_AllNodes then
+		return
+	end
+
+	for _, l_Node in pairs(s_AllNodes) do
+		s_SerializedNodes[#s_SerializedNodes + 1] = {
+			ID = l_Node.ID,
+			Index = l_Node.Index,
+			PathIndex = l_Node.PathIndex,
+			PointIndex = l_Node.PointIndex,
+			InputVar = l_Node.InputVar,
+			Position = l_Node.Position,
+			Data = l_Node.Data
+		}
+	end
+
+	print('[NodeEditor] Sending ' .. tostring(#s_SerializedNodes) .. ' waypoints to client.')
+
+	NetEvents:SendToLocal('ClientNodeEditor:RevieveNodes', p_Player, s_SerializedNodes)
+	print('[NodeEditor] Sent waypoints to client.')
 end
 
 function NodeEditor:OnRemoveNode(p_Player)
@@ -1249,7 +1278,6 @@ function NodeEditor:OnEngineUpdate(p_DeltaTime, p_SimulationDeltaTime)
 								math.floor(self.m_NodeWaitTimer[l_PlayerGuid]))
 						end
 
-						-- To-do: Send to Client UI.
 						local s_TotalTraceDistance = self.m_CustomTraceDistance[l_PlayerGuid]
 						local s_TotalTraceNodes = #self.m_CustomTrace[l_PlayerGuid]:Get()
 						NetEvents:SendUnreliableToLocal('UI_ClientNodeEditor_TraceData', s_Player, s_TotalTraceNodes, s_TotalTraceDistance)
@@ -1265,13 +1293,18 @@ function NodeEditor:OnEngineUpdate(p_DeltaTime, p_SimulationDeltaTime)
 		end
 	end
 
+	-- Only send updates to the client, not the nodes themselves.
+
+	if true then
+		return
+	end
+
 	-- Visible NODE distribution-handling.
 	if self.m_NodeSendUpdateTimer < 1.0 then
 		self.m_NodeSendUpdateTimer = self.m_NodeSendUpdateTimer + p_DeltaTime
 	else
 		self.m_NodeSendUpdateTimer = 0.0
 
-		-- To-do: distribute load equally (multiple Players).
 		for l_PlayerGuid, l_Active in pairs(self.m_ActiveTracePlayers) do
 			local s_Player = PlayerManager:GetPlayerByOnlineId(l_PlayerGuid)
 			local s_FirstPath = true
