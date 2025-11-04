@@ -908,9 +908,10 @@ function ClientNodeEditor:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 	if self.m_WayPointUpdateTimer >= 0.03 and s_Player and s_Player.soldier then -- TODO: Adjust update interval for performance vs update speed
 		self.m_WayPointUpdateTimer = 0
 
+		local s_MaxIndex = #self.m_WayPoints + #self.m_CurrentTrace
+
 		local s_LastIndexToUpdate = self.m_LastUpdateIndex + 1024 -- TODO: Adjust this value for performance vs update speed
 		-- TOOD: maybe only count if point is drawn? Or only count every 5 not drawn points as one drawn point?
-		local s_MaxIndex = #self.m_WayPoints + #self.m_CurrentTrace
 		if s_LastIndexToUpdate > s_MaxIndex then
 			s_LastIndexToUpdate = s_MaxIndex
 		end
@@ -1062,6 +1063,8 @@ function ClientNodeEditor:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 		end
 
 		self.m_LastUpdateIndex = s_LastIndexToUpdate
+
+		-- check if we need to update the values
 		if self.m_LastUpdateIndex >= s_MaxIndex then
 			self.m_LastUpdateIndex = 0
 

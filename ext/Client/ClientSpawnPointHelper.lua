@@ -3,6 +3,7 @@
 ClientSpawnPointHelper = class 'ClientSpawnPointHelper'
 
 require('__shared/Config')
+local m_Utilities = require('__shared/Utilities')
 
 function ClientSpawnPointHelper:__init()
 	self.m_Enabled = false
@@ -45,7 +46,7 @@ function ClientSpawnPointHelper:FindSpawn(p_Position)
 
 	for l_Index = 1, #self.m_SpawnPointTable do
 		local s_Transform = self.m_SpawnPointTable[l_Index]
-		local s_Distance = s_Transform.trans:Distance(p_Position)
+		local s_Distance = m_Utilities:DistanceFast(s_Transform.trans, p_Position)
 		if s_Distance < s_ClosestDistance then
 			s_ClosestIndex = l_Index
 			s_ClosestDistance = s_Distance
@@ -81,7 +82,7 @@ function ClientSpawnPointHelper:OnUIDrawHud()
 
 	for l_Index = 1, #self.m_SpawnPointTable do
 		local l_Transform = self.m_SpawnPointTable[l_Index]
-		if l_Transform.trans:Distance(s_LocalPlayer.soldier.worldTransform.trans) <= Config.SpawnPointRange then
+		if m_Utilities:DistanceFast(l_Transform.trans, s_LocalPlayer.soldier.worldTransform.trans) <= Config.SpawnPointRange then
 			self:DrawSpawnPoint(l_Transform, l_Index)
 		end
 	end
