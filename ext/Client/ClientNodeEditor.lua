@@ -11,13 +11,9 @@ local m_ClientSpawnPointHelper = require('ClientSpawnPointHelper')
 local m_Utilities = require('__shared/Utilities')
 
 function ClientNodeEditor:__init()
-	-- Data Points.
-	self.m_LastDataPoint = nil
-	self.m_DataPoints = {}
-	self.m_TempDataPoints = {}
-
 	-- new Mode stuff
 	self.m_WayPoints = {}
+	self.m_WayPointsById = {}
 	self.m_CurrentTrace = {}
 	self.m_Selections = {}
 	self.m_Links = {}
@@ -95,7 +91,6 @@ function ClientNodeEditor:OnRegisterEvents()
 	if self.m_EventsReady then return end
 
 	NetEvents:Subscribe('UI_ClientNodeEditor_TraceData', self, self._OnUiTraceData)
-	NetEvents:Subscribe('ClientNodeEditor:DrawNodes', self, self._OnDrawNodes)
 	NetEvents:Subscribe('ClientNodeEditor:PrintLog', self, self._OnPrintServerLog)
 	NetEvents:Subscribe('ClientNodeEditor:RevieveNodes', self, self._OnRecieveNodes)
 	NetEvents:Subscribe('ClientNodeEditor:UpdateNodes', self, self._OnUpdateNodes)
@@ -211,7 +206,9 @@ function ClientNodeEditor:_OnRecieveNodes(p_WayPoints)
 	self.m_WayPoints = p_WayPoints or {}
 	print('[ClientNodeEditor] Recieved ' .. tostring(#self.m_WayPoints) .. ' waypoints from server.')
 	self.m_FirstNodeInPath = {}
+	self.m_WayPointsById = {}
 	for i = 1, #self.m_WayPoints do
+		self.m_WayPointsById[self.m_WayPoints[i].ID] = self.m_WayPoints[i]
 		local l_Node = self.m_WayPoints[i]
 		if self.m_FirstNodeInPath[l_Node.PathIndex] == nil and l_Node.PointIndex == 1 then
 			self.m_FirstNodeInPath[l_Node.PathIndex] = l_Node
@@ -222,26 +219,6 @@ end
 function ClientNodeEditor:_OnUpdateSelection(p_Data)
 	self.m_Selections = p_Data or {}
 end
-
--- function ClientNodeEditor:_OnSetLinks(p_Data)
--- 	for l_Index = 1, #p_Data do
--- 		local l_LinkData = p_Data[l_Index]
--- 		self.m_Links[#self.m_Links] = l_LinkData
--- 	end
--- end
-
--- function ClientNodeEditor:_OnRemoveLinks(p_Data)
--- 	for l_Index = 1, #p_Data do
--- 		local l_LinkData = p_Data[l_Index]
--- 		for l_LinkIndex, l_Link in pairs(self.m_Links) do
--- 			if self.m_Links[l_LinkIndex].FromNodeId == l_LinkData.FromNodeId and
--- 				self.m_Links[l_LinkIndex].ToNodeId == l_LinkData.ToNodeId then
--- 				table.remove(self.m_Links, l_LinkIndex)
--- 				break
--- 			end
--- 		end
--- 	end
--- end
 
 function ClientNodeEditor:_OnAddToCustomTrace(p_Data)
 	for l_Index = 1, #p_Data do
@@ -261,6 +238,7 @@ function ClientNodeEditor:_OnAddNodes(p_Data)
 		if l_NodeData.PointIndex == 1 then
 			self.m_FirstNodeInPath[l_NodeData.PathIndex] = l_NodeData
 		end
+		self.m_WayPointsById[l_NodeData.ID] = l_NodeData
 	end
 end
 
@@ -279,41 +257,7 @@ end
 function ClientNodeEditor:_OnUpdateNodes(p_Data)
 	for l_Index = 1, #p_Data do
 		local l_NodeId = p_Data[l_Index].ID
-		for l_WaypointIndex = 1, #self.m_WayPoints do
-			local l_Waypoint = self.m_WayPoints[l_WaypointIndex]
-			if l_Waypoint.ID == l_NodeId then
-				self.m_WayPoints[l_WaypointIndex] = p_Data[l_Index]
-				break
-			end
-		end
-	end
-end
-
-function ClientNodeEditor:_OnDrawNodes(p_NodesToDraw, p_UpdateView)
-	for l_Index = 1, #p_NodesToDraw do
-		local l_NodeData = p_NodesToDraw[l_Index]
-		self:_DrawData(l_NodeData)
-		self.m_TempDataPoints[#self.m_TempDataPoints + 1] = l_NodeData
-	end
-
-	if p_UpdateView then
-		-- Copy tables.
-		self.m_NodesToDraw = self.m_NodesToDraw_temp
-		self.m_NodesToDraw_temp = {}
-		self.m_LinesToDraw = self.m_LinesToDraw_temp
-		self.m_LinesToDraw_temp = {}
-		self.m_TextToDraw = self.m_TextToDraw_temp
-		self.m_TextToDraw_temp = {}
-		self.m_TextPosToDraw = self.m_TextPosToDraw_temp
-		self.m_TextPosToDraw_temp = {}
-		self.m_ObbToDraw = self.m_ObbToDraw_temp
-		self.m_ObbToDraw_temp = {}
-
-		self.m_DataPoints = self.m_TempDataPoints
-		self.m_TempDataPoints = {}
-
-		-- Clear last node.
-		self.m_LastDataPoint = nil
+		m_Utilities:mergeKeys(self.m_WayPointsById[l_NodeId], p_Data[l_Index])
 	end
 end
 
@@ -362,173 +306,7 @@ function ClientNodeEditor:GetIsSelected(p_NodeId, p_IsTracePath)
 end
 
 function ClientNodeEditor:GetLinkNode(p_LinkID)
-	-- TODO: extract links separately before? to be faster?
-	for l_Index = 1, #self.m_WayPoints do
-		local l_Node = self.m_WayPoints[l_Index]
-		if l_Node.ID == p_LinkID then
-			return l_Node
-		end
-	end
-end
-
-function ClientNodeEditor:_DrawData(p_DataPoint)
-	--[[local s_DataNode = {
-		Node = l_Node,
-		DrawNode = s_DrawNode,
-		DrawLine = s_DrawLine,
-		DrawText = s_DrawText,
-		IsSelected = s_IsSelected,
-		Objectives = s_FirstNode.Data.Objectives,
-		Vehicles = s_FirstNode.Data.Vehicles,
-		Reverse = (s_FirstNode.OptValue == 0XFF),
-		Links = s_LinkPositions,
-		NextPos = nil,
-		IsTrace = false,
-		IsOthersTrace = false
-	}
-	--]]
-
-	local s_IsSelected = p_DataPoint.IsSelected
-	local s_QualityAtRange = p_DataPoint.DrawLine
-	local s_IsTracePath = p_DataPoint.IsTrace
-	local s_Waypoint = p_DataPoint.Node
-
-	-- Setup node colour information.
-	local s_Color = self.m_Colors.Orphan
-
-	-- Happens after the 20th path --To-do: add more colours?
-	if s_Waypoint.PathIndex > 0 then
-		if self.m_Colors[s_Waypoint.PathIndex] == nil then
-			local r, g, b = (math.random(20, 100) / 100), (math.random(20, 100) / 100), (math.random(20, 100) / 100)
-			self.m_Colors[s_Waypoint.PathIndex] = {
-				Node = Vec4(r, g, b, 0.25),
-				Line = Vec4(r, g, b, 1),
-			}
-		end
-
-		s_Color = self.m_Colors[s_Waypoint.PathIndex]
-	else
-		-- print("node with index 0")
-		-- print(s_Waypoint)
-		s_Color = {
-			Node = self.m_Colors.Red,
-			Line = self.m_Colors.Red,
-		}
-	end
-
-	if s_IsTracePath then
-		s_Color = {
-			Node = self.m_Colors.White,
-			Line = self.m_Colors.White,
-		}
-	end
-
-	-- Draw the node for the waypoint itself.
-	if p_DataPoint.DrawNode then
-		self:DrawSphere(s_Waypoint.Position, 0.05, s_Color.Node, false, (not s_QualityAtRange))
-
-		if self.m_ScanForNode then
-			local s_PointScreenPos = ClientUtils:WorldToScreen(s_Waypoint.Position)
-
-			-- Skip to the next point if this one isn't in view.
-			if s_PointScreenPos ~= nil then
-				local s_Center = ClientUtils:GetWindowSize() / 2
-
-				-- Select point if it's close to the hitPosition.
-				if s_Center:Distance(s_PointScreenPos) < 20 then
-					self.m_ScanForNode = false
-
-					if s_IsSelected then
-						self:Log('Deselect -> %s', s_Waypoint.ID)
-						NetEvents:SendLocal('NodeEditor:Deselect', s_Waypoint.ID)
-						return
-					else
-						self:Log('Select -> %s', s_Waypoint.ID)
-						NetEvents:SendLocal('NodeEditor:Select', s_Waypoint.ID)
-						return
-					end
-				end
-			end
-		end
-	end
-
-	-- If selected, draw bigger node and transform helper.
-	if not s_IsTracePath and s_IsSelected and p_DataPoint.DrawNode then
-		-- Node selection indicator.
-		self:DrawSphere(s_Waypoint.Position, 0.08, s_Color.Node, false, (not s_QualityAtRange))
-
-		-- Transform marker.
-		self:DrawLine(s_Waypoint.Position, s_Waypoint.Position + (Vec3.up), self.m_Colors.Red, self.m_Colors.Red)
-		self:DrawLine(s_Waypoint.Position, s_Waypoint.Position + (Vec3.right * 0.5), self.m_Colors.Green, self.m_Colors.Green)
-		self:DrawLine(s_Waypoint.Position, s_Waypoint.Position + (Vec3.forward * 0.5), self.m_Colors.Blue, self.m_Colors.Blue)
-	end
-
-	-- Draw connection lines.
-	if Config.DrawWaypointLines and p_DataPoint.DrawLine then
-		-- Try to find a previous node and draw a line to it.
-		if p_DataPoint.NextPos then
-			self:DrawLine(p_DataPoint.NextPos, s_Waypoint.Position, s_Color.Line, s_Color.Line)
-		end
-
-		-- Draw Links.
-		if s_Waypoint.Data and s_Waypoint.Data.Links ~= nil then
-			for l_Index = 1, #p_DataPoint.Links do
-				local l_LinkPos = p_DataPoint.Links[l_Index]
-				self:DrawLine(l_LinkPos, s_Waypoint.Position, self.m_Colors.Purple, self.m_Colors.Purple)
-			end
-		end
-	end
-
-	-- Draw debugging text.
-	if Config.DrawWaypointIDs and p_DataPoint.DrawText then
-		if s_IsSelected then
-			local s_SpeedMode = 'N/A'
-
-			if s_Waypoint.SpeedMode == 0 then s_SpeedMode = 'Wait' end
-
-			if s_Waypoint.SpeedMode == 1 then s_SpeedMode = 'Prone' end
-
-			if s_Waypoint.SpeedMode == 2 then s_SpeedMode = 'Crouch' end
-
-			if s_Waypoint.SpeedMode == 3 then s_SpeedMode = 'Walk' end
-
-			if s_Waypoint.SpeedMode == 4 then s_SpeedMode = 'Sprint' end
-
-			local s_ExtraMode = 'N/A'
-
-			if s_Waypoint.ExtraMode == 1 then s_ExtraMode = 'Jump' end
-
-			local s_OptionValue = 'N/A'
-
-			if s_Waypoint.SpeedMode == 0 then
-				s_OptionValue = tostring(s_Waypoint.OptValue) .. ' Seconds'
-			end
-
-			local s_PathMode = 'Loops'
-			if p_DataPoint.Reverse then
-				s_PathMode = 'Reverses'
-			end
-
-			local s_Text = ''
-			-- s_Text = s_Text .. string.format("(%s)Pevious [ %s ] Next(%s)\n", s_PreviousNode, p_Waypoint.ID, s_NextNode)
-			s_Text = s_Text .. string.format('Index[%d]\n', s_Waypoint.Index)
-			s_Text = s_Text .. string.format('Path[%d][%d] (%s)\n', s_Waypoint.PathIndex, s_Waypoint.PointIndex, s_PathMode)
-			s_Text = s_Text .. string.format('Path Objectives: %s\n', g_Utilities:dump(p_DataPoint.Objectives, false))
-			s_Text = s_Text .. string.format('Vehicles: %s\n', g_Utilities:dump(p_DataPoint.Vehicles, false))
-			s_Text = s_Text .. string.format('InputVar: %d\n', s_Waypoint.InputVar)
-			s_Text = s_Text .. string.format('SpeedMode: %s (%d)\n', s_SpeedMode, s_Waypoint.SpeedMode)
-			s_Text = s_Text .. string.format('ExtraMode: %s (%d)\n', s_ExtraMode, s_Waypoint.ExtraMode)
-			s_Text = s_Text .. string.format('OptValue: %s (%d)\n', s_OptionValue, s_Waypoint.OptValue)
-			s_Text = s_Text .. 'Data: ' .. g_Utilities:dump(s_Waypoint.Data, true)
-
-			self:DrawPosText2D(s_Waypoint.Position + Vec3.up, s_Text, self.m_Colors.Text, 1.2)
-		else
-			-- Don't try to pre-calculate this value like with the distance, another memory leak crash awaits you.
-			self:DrawPosText2D(s_Waypoint.Position + (Vec3.up * 0.05), tostring(s_Waypoint.ID), self.m_Colors.Text, 1)
-		end
-	end
-
-	self.m_LastDataPoint = p_DataPoint -- To-do: check if we need to perform a deep copy.
+	return self.m_WayPointsById[p_LinkID]
 end
 
 function ClientNodeEditor:OnUISettings(p_Data)
@@ -624,12 +402,10 @@ end
 
 function ClientNodeEditor:GetSelectedNodes()
 	local s_Selection = {}
-	for l_Index = 1, #self.m_DataPoints do
-		local l_Node = self.m_DataPoints[l_Index]
-		if l_Node.IsSelected then
-			s_Selection[#s_Selection + 1] = l_Node
-		end
+	for s_Index = 1, #self.m_Selections do
+		s_Selection[#s_Selection + 1] = self.m_WayPointsById[self.m_Selections[s_Index]]
 	end
+
 	return s_Selection
 end
 
@@ -651,8 +427,8 @@ function ClientNodeEditor:_onToggleMoveNode(p_Args)
 
 			for i = 1, #s_Selection do
 				local s_UpdateNode = {
-					ID = s_Selection[i].Node.ID,
-					Pos = self.m_EditNodeStartPos[s_Selection[i].Node.ID],
+					ID = s_Selection[i].ID,
+					Pos = self.m_EditNodeStartPos[s_Selection[i].ID],
 				}
 				s_UpdateData[#s_UpdateData + 1] = s_UpdateNode
 			end
@@ -698,8 +474,8 @@ function ClientNodeEditor:_onToggleMoveNode(p_Args)
 		self.m_EditNodeStartPos = {}
 
 		for i = 1, #s_Selection do
-			self.m_EditNodeStartPos[i] = s_Selection[i].Node.Position:Clone()
-			self.m_EditNodeStartPos[s_Selection[i].Node.ID] = s_Selection[i].Node.Position:Clone()
+			self.m_EditNodeStartPos[i] = s_Selection[i].Position:Clone()
+			self.m_EditNodeStartPos[s_Selection[i].ID] = s_Selection[i].Position:Clone()
 		end
 
 		self.m_EditMode = 'move'
@@ -833,10 +609,6 @@ function ClientNodeEditor:OnLevelDestroy()
 end
 
 function ClientNodeEditor:_onUnload()
-	self.m_LastDataPoint = nil
-	self.m_DataPoints = {}
-	self.m_TempDataPoints = {}
-
 	-- new Mode stuff
 	self.m_WayPoints = {}
 	self.m_CurrentTrace = {} -- TODO: Fill it
@@ -1106,7 +878,7 @@ function ClientNodeEditor:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 						local s_UpdateData = {}
 
 						for i = 1, #s_Selection do
-							local s_AdjustedPosition = self.m_EditNodeStartPos[s_Selection[i].Node.ID] + self.m_EditModeManualOffset
+							local s_AdjustedPosition = self.m_EditNodeStartPos[s_Selection[i].ID] + self.m_EditModeManualOffset
 
 							if self.m_EditPositionMode == 'relative' then
 								s_AdjustedPosition = s_AdjustedPosition + (self.editRayHitRelative or Vec3.zero)
@@ -1117,7 +889,7 @@ function ClientNodeEditor:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 							end
 
 							local s_UpdateNode = {
-								ID = s_Selection[i].Node.ID,
+								ID = s_Selection[i].ID,
 								Pos = s_AdjustedPosition,
 							}
 							s_UpdateData[#s_UpdateData + 1] = s_UpdateNode
