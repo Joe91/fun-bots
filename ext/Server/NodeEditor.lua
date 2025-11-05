@@ -102,7 +102,9 @@ function NodeEditor:OnAddNode(p_Player)
 		m_NodeCollection:ClearSelection(p_Player.onlineId)
 		m_NodeCollection:Select(p_Player.onlineId, s_Result)
 
-		NetEvents:SendToLocal('ClientNodeEditor:SelectNewNode', p_Player, s_Result.Index)
+		local s_NewNodes = self:GetNodesForPlayer({ s_Result })
+		NetEvents:SendToLocal('ClientNodeEditor:AddNodes', p_Player, s_NewNodes)
+		NetEvents:SendToLocal('ClientNodeEditor:SelectNewNode', p_Player, s_Result.ID)
 	end
 
 	return true
@@ -119,6 +121,12 @@ function NodeEditor:OnUpdatePos(p_Player, p_UpdateData)
 			})
 		end
 	end
+
+	local s_NodesToSend = {}
+	for _, l_UpdateItem in pairs(p_UpdateData) do
+		s_NodesToSend[#s_NodesToSend + 1] = m_NodeCollection:Get(l_UpdateItem.ID)
+	end
+	NetEvents:SendToLocal('ClientNodeEditor:UpdateNodes', p_Player, self:GetNodesForPlayer(s_NodesToSend))
 end
 
 ---@param p_Player Player
@@ -148,6 +156,8 @@ function NodeEditor:OnAddMcom(p_Player)
 		s_Selection[i].Data.Action = action
 		self:Log(p_Player, 'Updated Waypoint: %s', s_Selection[i].ID)
 	end
+
+	NetEvents:SendToLocal('ClientNodeEditor:UpdateNodes', p_Player, self:GetNodesForPlayer(s_Selection))
 
 	return true
 end
@@ -494,6 +504,8 @@ function NodeEditor:OnSetLoopMode(p_Player, p_Args)
 		end
 	end
 
+	NetEvents:SendToLocal('ClientNodeEditor:UpdateNodes', p_Player, self:GetNodesForPlayer(s_Selection))
+
 	return true
 end
 
@@ -579,16 +591,9 @@ function NodeEditor:OnRemoveData(p_Player)
 	end
 end
 
-function NodeEditor:OnRequestData(p_Player)
-	local s_AllNodes = m_NodeCollection:Get()
-
+function NodeEditor:GetNodesForPlayer(p_Nodes)
 	local s_SerializedNodes = {}
-
-	if not s_AllNodes then
-		return
-	end
-
-	for _, l_Node in pairs(s_AllNodes) do
+	for _, l_Node in pairs(p_Nodes) do
 		s_SerializedNodes[#s_SerializedNodes + 1] = {
 			ID = l_Node.ID,
 			Index = l_Node.Index,
@@ -599,6 +604,17 @@ function NodeEditor:OnRequestData(p_Player)
 			Data = l_Node.Data
 		}
 	end
+	return s_SerializedNodes
+end
+
+function NodeEditor:OnRequestData(p_Player)
+	local s_AllNodes = m_NodeCollection:Get()
+
+	if not s_AllNodes then
+		return
+	end
+
+	local s_SerializedNodes = self:GetNodesForPlayer(s_AllNodes)
 
 	print('[NodeEditor] Sending ' .. tostring(#s_SerializedNodes) .. ' waypoints to client.')
 
@@ -607,6 +623,9 @@ function NodeEditor:OnRequestData(p_Player)
 end
 
 function NodeEditor:OnRemoveNode(p_Player)
+	local s_Selection = m_NodeCollection:GetSelected(p_Player.onlineId)
+	NetEvents:SendToLocal('ClientNodeEditor:RemoveNodes', p_Player, self:GetNodesForPlayer(s_Selection))
+
 	local s_Result, s_Message = m_NodeCollection:Remove(p_Player.onlineId)
 	if not s_Result then
 		self:Log(p_Player, s_Message)
@@ -643,6 +662,9 @@ function NodeEditor:OnUnlinkNodes(p_Player)
 	if not s_Result then
 		self:Log(p_Player, s_Message)
 	end
+
+	local s_Selection = m_NodeCollection:GetSelected(p_Player.onlineId)
+	NetEvents:SendToLocal('ClientNodeEditor:UpdateNodes', p_Player, self:GetNodesForPlayer(s_Selection))
 end
 
 ---@param p_Player Player
@@ -651,6 +673,9 @@ function NodeEditor:OnLinkNodes(p_Player)
 	if not s_Result then
 		self:Log(p_Player, s_Message)
 	end
+
+	local s_Selection = m_NodeCollection:GetSelected(p_Player.onlineId)
+	NetEvents:SendToLocal('ClientNodeEditor:UpdateNodes', p_Player, self:GetNodesForPlayer(s_Selection))
 end
 
 ---@param p_Player Player
@@ -670,6 +695,9 @@ function NodeEditor:OnSetInputNode(p_Player, p_Arg1, p_Arg2, p_Arg3)
 	if not s_Result then
 		self:Log(p_Player, s_Message)
 	end
+
+	local s_Selection = m_NodeCollection:GetSelected(p_Player.onlineId)
+	NetEvents:SendToLocal('ClientNodeEditor:UpdateNodes', p_Player, self:GetNodesForPlayer(s_Selection))
 end
 
 ---@param p_Player Player
@@ -1077,8 +1105,9 @@ function NodeEditor:SaveTrace(p_Player, p_PathIndex)
 
 	-- TODO: only send updated nodes? TODO: send to all active Players
 	NetEvents:SendToLocal('ClientNodeEditor:ClearCustomTrace', p_Player)
-	self:OnRequestData(p_Player)
 
+	local s_NewPathNodes = m_NodeCollection:Get(nil, p_PathIndex)
+	NetEvents:SendToLocal('ClientNodeEditor:AddNodes', p_Player, self:GetNodesForPlayer(s_NewPathNodes))
 	return true
 end
 

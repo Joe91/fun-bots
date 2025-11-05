@@ -16,11 +16,12 @@ function ClientNodeEditor:__init()
 	self.m_WayPointsById = {}
 	self.m_CurrentTrace = {}
 	self.m_Selections = {}
-	self.m_Links = {}
 	self.m_RequestDataSent = false
 	self.m_WayPointUpdateTimer = 0
 	self.m_LastUpdateIndex = 0
 	self.m_FirstNodeInPath = {}
+	self.m_PathsToSkipForCycles = {}
+	self.m_MinDistanceToPath = {}
 
 	self.m_ScanForNode = false
 
@@ -212,6 +213,7 @@ function ClientNodeEditor:_OnRecieveNodes(p_WayPoints)
 		local l_Node = self.m_WayPoints[i]
 		if self.m_FirstNodeInPath[l_Node.PathIndex] == nil and l_Node.PointIndex == 1 then
 			self.m_FirstNodeInPath[l_Node.PathIndex] = l_Node
+			self.m_PathsToSkipForCycles[l_Node.PathIndex] = 0
 		end
 	end
 end
@@ -237,6 +239,7 @@ function ClientNodeEditor:_OnAddNodes(p_Data)
 		self.m_WayPoints[#self.m_WayPoints + 1] = l_NodeData
 		if l_NodeData.PointIndex == 1 then
 			self.m_FirstNodeInPath[l_NodeData.PathIndex] = l_NodeData
+			self.m_PathsToSkipForCycles[l_NodeData.PathIndex] = 0
 		end
 		self.m_WayPointsById[l_NodeData.ID] = l_NodeData
 	end
@@ -248,6 +251,7 @@ function ClientNodeEditor:_OnRemoveNodes(p_Data)
 		for l_WaypointIndex, l_Waypoint in pairs(self.m_WayPoints) do
 			if l_Waypoint.ID == l_NodeId then
 				table.remove(self.m_WayPoints, l_WaypointIndex)
+				self.m_WayPointsById[l_NodeId] = nil
 				break
 			end
 		end
@@ -350,6 +354,7 @@ function ClientNodeEditor:_onSelectNode(p_Args)
 
 	if s_Hit == nil then
 		self.m_ScanForNode = true
+		print("Scan for node started")
 		return
 	end
 
@@ -361,19 +366,25 @@ function ClientNodeEditor:_onSelectNode(p_Args)
 		else
 			NetEvents:SendLocal('NodeEditor:Select', s_HitPoint.ID)
 		end
+		return
 	end
 
 	local s_HitSpawn = m_ClientSpawnPointHelper:FindSpawn(s_Hit.position)
 	if s_HitSpawn then
 		print(s_HitSpawn)
 		NetEvents:SendLocal('NodeEditor:SelectSpawn', s_HitSpawn)
+		return
 	end
 
 	local s_SelectedSpawn = m_ClientSpawnPointHelper:GetSelectedSpawn()
 	if s_SelectedSpawn then
 		print(s_SelectedSpawn)
 		NetEvents:SendLocal('NodeEditor:SelectSpawn', s_SelectedSpawn)
+		return
 	end
+
+	-- TODO: don't always do this?
+	self.m_ScanForNode = true
 end
 
 function ClientNodeEditor:_onRemoveNode()
@@ -514,6 +525,7 @@ function ClientNodeEditor:_onAddNode(p_Args)
 end
 
 function ClientNodeEditor:_onSelectNewNode(p_NewDataNodeId)
+	self.m_Selections = { p_NewDataNodeId }
 	self.m_EditPositionMode = 'absolute'
 	self:_onToggleMoveNode()
 end
@@ -611,13 +623,14 @@ end
 function ClientNodeEditor:_onUnload()
 	-- new Mode stuff
 	self.m_WayPoints = {}
-	self.m_CurrentTrace = {} -- TODO: Fill it
-	self.m_Selections = {} -- TODO: Fill it
-	self.m_Links = {}     -- TODO: Fill it
+	self.m_CurrentTrace = {}
+	self.m_Selections = {}
 	self.m_RequestDataSent = false
 	self.m_WayPointUpdateTimer = 0
 	self.m_LastUpdateIndex = 0
 	self.m_FirstNodeInPath = {}
+	self.m_PathsToSkipForCycles = {}
+	self.m_MinDistanceToPath = {}
 
 	self.m_NodesToDraw = {}
 	self.m_NodesToDraw_temp = {}
@@ -912,6 +925,7 @@ function ClientNodeEditor:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 
 		local s_LastIndexToUpdate = self.m_LastUpdateIndex + 1024 -- TODO: Adjust this value for performance vs update speed
 		-- TOOD: maybe only count if point is drawn? Or only count every 5 not drawn points as one drawn point?
+
 		if s_LastIndexToUpdate > s_MaxIndex then
 			s_LastIndexToUpdate = s_MaxIndex
 		end
@@ -933,9 +947,15 @@ function ClientNodeEditor:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 				end
 			end
 
-			local s_IsSelected = self:GetIsSelected(l_Node.ID, s_IsTracePath)
+			if not s_IsTracePath and self.m_PathsToSkipForCycles[l_Node.PathIndex] > 0 then
+				goto continue
+			end
 
 			local s_Distance = m_Utilities:DistanceFast(l_Node.Position, self.m_PlayerPos)
+			if not s_IsTracePath and (self.m_MinDistanceToPath[l_Node.PathIndex] == nil or s_Distance < self.m_MinDistanceToPath[l_Node.PathIndex]) then
+				self.m_MinDistanceToPath[l_Node.PathIndex] = s_Distance
+			end
+
 			local s_DrawNode = false
 			local s_DrawLine = false
 			local s_DrawText = false
@@ -953,8 +973,10 @@ function ClientNodeEditor:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 				-- only draw if in front of player
 				-- local s_DiffPos = l_Node.Position - self.m_PlayerPos
 				-- local s_DotProduct = s_DiffPos:Dot(s_Player.soldier.worldTransform.forward)
-				-- local s_DotProduct = 1 -- just do it always for now, to avoid issues with nodes behind the player
+				-- -- local s_DotProduct = 1 -- just do it always for now, to avoid issues with nodes behind the player
 				-- if s_DotProduct > 0 then
+				local s_IsSelected = self:GetIsSelected(l_Node.ID, s_IsTracePath)
+
 				local s_Color = self:GetColor(l_Node, s_IsTracePath)
 				local s_QualityAtRange = s_DrawText or s_IsSelected -- higher quality if text is drawn or is selected
 				local s_Size = 0.05
@@ -978,6 +1000,7 @@ function ClientNodeEditor:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 						-- Select point if it's close to the hitPosition.
 						if s_Center:Distance(s_PointScreenPos) < 20 then
 							self.m_ScanForNode = false
+							print("San for node ended")
 
 							if s_IsSelected then
 								self:Log('Deselect -> %s', l_Node.ID)
@@ -1058,15 +1081,26 @@ function ClientNodeEditor:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 						self:DrawPosText2D(l_Node.Position + (Vec3.up * 0.05), tostring(l_Node.ID), self.m_Colors.Text, 1)
 					end
 				end
-				-- end
 			end
+			-- end
+			::continue::
 		end
 
 		self.m_LastUpdateIndex = s_LastIndexToUpdate
 
-		-- check if we need to update the values
 		if self.m_LastUpdateIndex >= s_MaxIndex then
 			self.m_LastUpdateIndex = 0
+			-- check if we need to update the values
+			local s_MaxDrawDistance = math.max(Config.WaypointRange, Config.LineRange)
+			for l_Index, _ in pairs(self.m_PathsToSkipForCycles) do
+				if self.m_PathsToSkipForCycles[l_Index] > 0 then
+					self.m_PathsToSkipForCycles[l_Index] = self.m_PathsToSkipForCycles[l_Index] - 1
+				else
+					if self.m_MinDistanceToPath[l_Index] and (self.m_MinDistanceToPath[l_Index] > s_MaxDrawDistance) then
+						self.m_PathsToSkipForCycles[l_Index] = math.floor((self.m_MinDistanceToPath[l_Index] / s_MaxDrawDistance) * 10)
+					end
+				end
+			end
 
 			self.m_NodesToDraw = self.m_NodesToDraw_temp
 			self.m_NodesToDraw_temp = {}
