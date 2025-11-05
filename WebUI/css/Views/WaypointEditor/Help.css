@@ -27,6 +27,8 @@ ui-help[data-name="interaction"] span {
 ui-help[data-name="numpad"] {
     right: 10px;
     top: 50%;
+    background: var(--color_container_background);
+    padding: 5px;
     transform: translateY(-50%);
 }
 

@@ -955,15 +955,17 @@ class BotEditor {
 
         if (json.Numpad) {
             json.Numpad.forEach((entry) => {
-                let keyElement = document.querySelector(
-                    'ui-entry[data-grid="' + entry.Grid + '"] ui-key',
+                // Find ui-key by its data-name, then navigate to parent ui-entry
+                let keyElement = container.querySelector(
+                    'ui-key[data-name="' + entry.Key + '"]'
                 );
-                let spanElement = document.querySelector(
-                    'ui-entry[data-grid="' + entry.Grid + '"] span',
-                );
-                keyElement.dataset.name = entry.Key;
-                spanElement.dataset.lang = entry.Name;
-                spanElement.innerHTML = entry.Name;
+                if (keyElement) {
+                    let spanElement = keyElement.nextElementSibling;
+                    if (spanElement && spanElement.tagName === 'SPAN') {
+                        spanElement.dataset.lang = entry.Name;
+                        spanElement.innerHTML = entry.Name;
+                    }
+                }
             });
         }
 
