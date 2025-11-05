@@ -189,6 +189,8 @@ function NodeEditor:OnAddVehicle(p_Player)
 		s_Selection[i].Data.Action = action
 		self:Log(p_Player, 'Updated Waypoint: %s', s_Selection[i].ID)
 	end
+
+	NetEvents:SendToLocal('ClientNodeEditor:UpdateNodes', p_Player, self:GetNodesForPlayer(s_Selection))
 end
 
 ---@param p_Player Player
@@ -222,6 +224,8 @@ function NodeEditor:OnExitVehicle(p_Player, p_Args)
 		s_Selection[i].Data.Action = action
 		self:Log(p_Player, 'Updated Waypoint: %s', s_Selection[i].ID)
 	end
+
+	NetEvents:SendToLocal('ClientNodeEditor:UpdateNodes', p_Player, self:GetNodesForPlayer(s_Selection))
 
 	return
 end
@@ -260,6 +264,8 @@ function NodeEditor:OnCustomAction(p_Player, p_Args)
 		s_Selection[i].Data.Action = action
 		self:Log(p_Player, 'Updated Waypoint: %s', s_Selection[i].ID)
 	end
+
+	NetEvents:SendToLocal('ClientNodeEditor:UpdateNodes', p_Player, self:GetNodesForPlayer(s_Selection))
 end
 
 ---@param p_Player Player
@@ -276,6 +282,7 @@ function NodeEditor:OnAddVehiclePath(p_Player, p_Args)
 	end
 
 	local s_DonePaths = {}
+	local s_UpdatedNodes = {}
 	self:Log(p_Player, 'Updating %d Possible Waypoints', (#s_Selection))
 
 	for i = 1, #s_Selection do
@@ -287,6 +294,7 @@ function NodeEditor:OnAddVehiclePath(p_Player, p_Args)
 			if s_Data == "clear" then
 				s_Waypoint.Data.Vehicles = {}
 				self:Log(p_Player, 'Updated Waypoint: %s', s_Waypoint.ID)
+				s_UpdatedNodes[#s_UpdatedNodes + 1] = s_Waypoint
 			else
 				local s_Vehicles = s_Waypoint.Data.Vehicles or {}
 				local s_InTable = false
@@ -302,10 +310,13 @@ function NodeEditor:OnAddVehiclePath(p_Player, p_Args)
 					s_Vehicles[#s_Vehicles + 1] = s_Data
 					s_Waypoint.Data.Vehicles = s_Vehicles
 					self:Log(p_Player, 'Updated Waypoint: %s', s_Waypoint.ID)
+					s_UpdatedNodes[#s_UpdatedNodes + 1] = s_Waypoint
 				end
 			end
 		end
 	end
+
+	NetEvents:SendToLocal('ClientNodeEditor:UpdateNodes', p_Player, self:GetNodesForPlayer(s_UpdatedNodes))
 
 	return true
 end
@@ -320,6 +331,7 @@ function NodeEditor:OnSetVehicleSpawn(p_Player)
 	end
 
 	local s_DonePaths = {}
+	local s_UpdatedNodes = {}
 	self:Log(p_Player, 'Updating %d Possible Waypoints', (#s_Selection))
 
 	for i = 1, #s_Selection do
@@ -333,6 +345,7 @@ function NodeEditor:OnSetVehicleSpawn(p_Player)
 				if string.find(s_Objectives[1], "spawn") == nil then
 					s_Waypoint.Data.Objectives = { "spawn " .. s_Objectives[1] }
 					self:Log(p_Player, 'Updated Waypoint: %s', s_Waypoint.ID)
+					s_UpdatedNodes[#s_UpdatedNodes + 1] = s_Waypoint
 				else
 					self:Log(p_Player, 'Path is already spawnable')
 				end
@@ -342,6 +355,7 @@ function NodeEditor:OnSetVehicleSpawn(p_Player)
 		end
 	end
 
+	NetEvents:SendToLocal('ClientNodeEditor:UpdateNodes', p_Player, self:GetNodesForPlayer(s_UpdatedNodes))
 	return true
 end
 
@@ -361,6 +375,7 @@ function NodeEditor:OnAddObjective(p_Player, p_Args)
 	end
 
 	local s_DonePaths = {}
+	local s_UpdatedNodes = {}
 	self:Log(p_Player, 'Updating %d Possible Waypoints', (#s_Selection))
 
 	for i = 1, #s_Selection do
@@ -382,10 +397,12 @@ function NodeEditor:OnAddObjective(p_Player, p_Args)
 			if not s_InTable then
 				s_Objectives[#s_Objectives + 1] = s_Data
 				s_Waypoint.Data.Objectives = s_Objectives
+				s_UpdatedNodes[#s_UpdatedNodes + 1] = s_Waypoint
 				self:Log(p_Player, 'Updated Waypoint: %s', s_Waypoint.ID)
 			end
 		end
 	end
+	NetEvents:SendToLocal('ClientNodeEditor:UpdateNodes', p_Player, self:GetNodesForPlayer(s_UpdatedNodes))
 
 	return true
 end
@@ -410,6 +427,7 @@ function NodeEditor:OnRemoveObjective(p_Player, p_Args)
 	end
 
 	local s_DonePaths = {}
+	local s_UpdatedNodes = {}
 	self:Log(p_Player, 'Updating %d Possible Waypoints', (#s_Selection))
 
 	for i = 1, #s_Selection do
@@ -428,10 +446,11 @@ function NodeEditor:OnRemoveObjective(p_Player, p_Args)
 			end
 
 			s_Waypoint.Data.Objectives = s_NewObjectives
+			s_UpdatedNodes[#s_UpdatedNodes + 1] = s_Waypoint
 			self:Log(p_Player, 'Updated Waypoint: %s', s_Waypoint.ID)
 		end
 	end
-
+	NetEvents:SendToLocal('ClientNodeEditor:UpdateNodes', p_Player, self:GetNodesForPlayer(s_UpdatedNodes))
 	return true
 end
 
@@ -451,6 +470,7 @@ function NodeEditor:OnRemoveAllObjectives(p_Player, p_Args)
 	end
 
 	local s_DonePaths = {}
+	local s_UpdatedNodes = {}
 	self:Log(p_Player, 'Updating %d Possible Waypoints', (#s_Selection))
 
 	for i = 1, #s_Selection do
@@ -459,9 +479,12 @@ function NodeEditor:OnRemoveAllObjectives(p_Player, p_Args)
 		if not s_DonePaths[s_Waypoint.PathIndex] then
 			s_DonePaths[s_Waypoint.PathIndex] = true
 			s_Waypoint.Data.Objectives = {}
+			s_UpdatedNodes[#s_UpdatedNodes + 1] = s_Waypoint
 			self:Log(p_Player, 'Updated Waypoint: %s', s_Waypoint.ID)
 		end
 	end
+
+	NetEvents:SendToLocal('ClientNodeEditor:UpdateNodes', p_Player, self:GetNodesForPlayer(s_UpdatedNodes))
 
 	return true
 end
@@ -485,6 +508,7 @@ function NodeEditor:OnSetLoopMode(p_Player, p_Args)
 	end
 
 	local s_DonePaths = {}
+	local s_UpdatedNodes = {}
 	self:Log(p_Player, 'Updating %d Possible Waypoints', (#s_Selection))
 
 	for i = 1, #s_Selection do
@@ -499,12 +523,12 @@ function NodeEditor:OnSetLoopMode(p_Player, p_Args)
 				s_Waypoint.OptValue = 0XFF
 			end
 			m_NodeCollection:UpdateInputVar(s_Waypoint)
-
+			s_UpdatedNodes[#s_UpdatedNodes + 1] = s_Waypoint
 			self:Log(p_Player, 'Updated Waypoint: %s', s_Waypoint.ID)
 		end
 	end
 
-	NetEvents:SendToLocal('ClientNodeEditor:UpdateNodes', p_Player, self:GetNodesForPlayer(s_Selection))
+	NetEvents:SendToLocal('ClientNodeEditor:UpdateNodes', p_Player, self:GetNodesForPlayer(s_UpdatedNodes))
 
 	return true
 end
@@ -525,6 +549,7 @@ function NodeEditor:OnSetSpawnPath(p_Player, p_Args)
 	end
 
 	local s_DonePaths = {}
+	local s_UpdatedNodes = {}
 	self:Log(p_Player, 'Updating %d Possible Waypoints', (#s_Selection))
 
 	for i = 1, #s_Selection do
@@ -550,7 +575,7 @@ function NodeEditor:OnSetSpawnPath(p_Player, p_Args)
 						local s_SpawnObjective = "spawn " .. s_TargetObjective
 						-- Add new objective to current path.
 						s_FirstWaypoint.Data.Objectives = { s_SpawnObjective }
-
+						s_UpdatedNodes[#s_UpdatedNodes + 1] = s_FirstWaypoint
 						self:Log(p_Player, 'Updated Waypoint: %s', s_FirstWaypoint.ID)
 					else
 						self:Log(p_Player, 'Path must have one connection to target-objective on last node')
@@ -566,6 +591,7 @@ function NodeEditor:OnSetSpawnPath(p_Player, p_Args)
 			end
 		end
 	end
+	NetEvents:SendToLocal('ClientNodeEditor:UpdateNodes', p_Player, self:GetNodesForPlayer(s_UpdatedNodes))
 	return true
 end
 
@@ -589,6 +615,7 @@ function NodeEditor:OnRemoveData(p_Player)
 		s_Selection[i].Data = {}
 		self:Log(p_Player, 'Updated Waypoint: %s', s_Selection[i].ID)
 	end
+	NetEvents:SendToLocal('ClientNodeEditor:UpdateNodes', p_Player, self:GetNodesForPlayer(s_Selection))
 end
 
 function NodeEditor:GetNodesForPlayer(p_Nodes)
@@ -640,6 +667,7 @@ function NodeEditor:OnTeleportToEdge(p_Player)
 	end
 end
 
+--TODO: Client Handling
 ---@param p_Player Player
 function NodeEditor:OnSplitNode(p_Player)
 	local s_Result, s_Message = m_NodeCollection:SplitSelection(p_Player.onlineId)
@@ -648,6 +676,7 @@ function NodeEditor:OnSplitNode(p_Player)
 	end
 end
 
+--TODO: Client Handling
 ---@param p_Player Player
 function NodeEditor:OnMergeNodes(p_Player)
 	local s_Result, s_Message = m_NodeCollection:MergeSelection(p_Player.onlineId)
@@ -678,6 +707,7 @@ function NodeEditor:OnLinkNodes(p_Player)
 	NetEvents:SendToLocal('ClientNodeEditor:UpdateNodes', p_Player, self:GetNodesForPlayer(s_Selection))
 end
 
+--TODO: Client Handling
 ---@param p_Player Player
 function NodeEditor:OnSpitNode(p_Player)
 	local s_Result, s_Message = m_NodeCollection:SplitSelection(p_Player.onlineId)

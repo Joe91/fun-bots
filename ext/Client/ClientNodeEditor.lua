@@ -918,18 +918,17 @@ function ClientNodeEditor:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 
 	-- prepare data to draw
 	self.m_WayPointUpdateTimer = self.m_WayPointUpdateTimer + p_DeltaTime
-	if self.m_WayPointUpdateTimer >= 0.03 and s_Player and s_Player.soldier then -- TODO: Adjust update interval for performance vs update speed
-		self.m_WayPointUpdateTimer = 0
+	if s_Player and s_Player.soldier then -- self.m_WayPointUpdateTimer >= 0.03 and  --  TODO: Adjust update interval for performance vs update speed
+		-- self.m_WayPointUpdateTimer = 0
 
 		local s_MaxIndex = #self.m_WayPoints + #self.m_CurrentTrace
 
-		local s_LastIndexToUpdate = self.m_LastUpdateIndex + 1024 -- TODO: Adjust this value for performance vs update speed
-		-- TOOD: maybe only count if point is drawn? Or only count every 5 not drawn points as one drawn point?
+		local s_LastUpdatedIndex = 0
+		local s_UpdateCount = 0
 
-		if s_LastIndexToUpdate > s_MaxIndex then
-			s_LastIndexToUpdate = s_MaxIndex
-		end
-		for l_Index = self.m_LastUpdateIndex + 1, s_LastIndexToUpdate do
+		for l_Index = self.m_LastUpdateIndex + 1, s_MaxIndex do
+			s_LastUpdatedIndex = l_Index
+
 			local s_IsTracePath = false
 			local l_Node = nil
 			local l_LastNode = nil
@@ -988,6 +987,7 @@ function ClientNodeEditor:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 					self:DrawLine(l_Node.Position, l_Node.Position + (Vec3.forward * 0.5), self.m_Colors.Blue, self.m_Colors.Blue)
 				end
 				self:DrawSphere(l_Node.Position, s_Size, s_Color.Node, false, (not s_QualityAtRange))
+				s_UpdateCount = s_UpdateCount + 1
 
 				-- Check if we are scanning for a node to select.
 				if not s_IsTracePath and self.m_ScanForNode then
@@ -1017,6 +1017,7 @@ function ClientNodeEditor:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 
 				if Config.DrawWaypointLines and s_DrawLine and l_LastNode and (s_IsTracePath or l_LastNode.PathIndex == l_Node.PathIndex) then
 					self:DrawLine(l_Node.Position, l_LastNode.Position, s_Color.Line, s_Color.Line)
+					s_UpdateCount = s_UpdateCount + 1
 				end
 				if l_Node.Data and l_Node.Data.Links then
 					for l_LinkIndex = 1, #l_Node.Data.Links do
@@ -1024,6 +1025,7 @@ function ClientNodeEditor:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 						local l_LinkNode = self:GetLinkNode(l_LinkID)
 						if l_LinkNode then
 							self:DrawLine(l_Node.Position, l_LinkNode.Position, self.m_Colors.Purple, self.m_Colors.Purple)
+							s_UpdateCount = s_UpdateCount + 1
 						end
 					end
 				end
@@ -1080,15 +1082,18 @@ function ClientNodeEditor:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 						-- Don't try to pre-calculate this value like with the distance, another memory leak crash awaits you.
 						self:DrawPosText2D(l_Node.Position + (Vec3.up * 0.05), tostring(l_Node.ID), self.m_Colors.Text, 1)
 					end
+					s_UpdateCount = s_UpdateCount + 1
 				end
+			end
+			s_UpdateCount = s_UpdateCount + 1
+			if s_UpdateCount >= Config.NodesPerCycle then
+				break
 			end
 			-- end
 			::continue::
 		end
 
-		self.m_LastUpdateIndex = s_LastIndexToUpdate
-
-		if self.m_LastUpdateIndex >= s_MaxIndex then
+		if s_LastUpdatedIndex >= s_MaxIndex then
 			self.m_LastUpdateIndex = 0
 			-- check if we need to update the values
 			local s_MaxDrawDistance = math.max(Config.WaypointRange, Config.LineRange)
@@ -1116,6 +1121,8 @@ function ClientNodeEditor:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 
 			self.m_ObbToDraw = self.m_ObbToDraw_temp
 			self.m_ObbToDraw_temp = {}
+		else
+			self.m_LastUpdateIndex = s_LastUpdatedIndex
 		end
 	end
 end
