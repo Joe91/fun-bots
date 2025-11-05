@@ -122,15 +122,15 @@ function ClientSpawnPointHelper:DrawSpawnPoint(p_Transform, p_Index)
 		end
 	end
 
-	local s_Up = Vec3(0, 1.5, 0)
-	local s_Offset = self:GetForwardOffsetFromLT(p_Transform)
+	-- local s_Up = Vec3(0, 1.5, 0)
+	-- local s_Offset = self:GetForwardOffsetFromLT(p_Transform)
 
 	DebugRenderer:DrawSphere(p_Transform.trans, 0.3, s_Color, true, false)
-	DebugRenderer:DrawSphere(p_Transform.trans + s_Up, 0.15, s_Color, true, false)
-	DebugRenderer:DrawSphere(s_Offset + s_Up, 0.1, s_Color, true, false)
+	-- DebugRenderer:DrawSphere(p_Transform.trans + s_Up, 0.15, s_Color, true, false)
+	-- DebugRenderer:DrawSphere(s_Offset + s_Up, 0.1, s_Color, true, false)
 
-	DebugRenderer:DrawLine(p_Transform.trans, p_Transform.trans + s_Up, s_Color, s_Color)
-	DebugRenderer:DrawLine(p_Transform.trans + s_Up, s_Offset + s_Up, s_Color, s_Color)
+	-- DebugRenderer:DrawLine(p_Transform.trans, p_Transform.trans + s_Up, s_Color, s_Color)
+	-- DebugRenderer:DrawLine(p_Transform.trans + s_Up, s_Offset + s_Up, s_Color, s_Color)
 end
 
 -- Returns a Vec3 that's offset in the direction of the linearTransform.

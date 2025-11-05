@@ -987,7 +987,7 @@ function ClientNodeEditor:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 					self:DrawLine(l_Node.Position, l_Node.Position + (Vec3.forward * 0.5), self.m_Colors.Blue, self.m_Colors.Blue)
 				end
 				self:DrawSphere(l_Node.Position, s_Size, s_Color.Node, false, (not s_QualityAtRange))
-				s_UpdateCount = s_UpdateCount + 1
+				s_UpdateCount = s_UpdateCount + 3
 
 				-- Check if we are scanning for a node to select.
 				if not s_IsTracePath and self.m_ScanForNode then
@@ -1017,7 +1017,7 @@ function ClientNodeEditor:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 
 				if Config.DrawWaypointLines and s_DrawLine and l_LastNode and (s_IsTracePath or l_LastNode.PathIndex == l_Node.PathIndex) then
 					self:DrawLine(l_Node.Position, l_LastNode.Position, s_Color.Line, s_Color.Line)
-					s_UpdateCount = s_UpdateCount + 1
+					s_UpdateCount = s_UpdateCount + 2
 				end
 				if l_Node.Data and l_Node.Data.Links then
 					for l_LinkIndex = 1, #l_Node.Data.Links do
