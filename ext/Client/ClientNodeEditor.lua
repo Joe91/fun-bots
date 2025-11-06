@@ -17,7 +17,6 @@ function ClientNodeEditor:__init()
 	self.m_CurrentTrace = {}
 	self.m_Selections = {}
 	self.m_RequestDataSent = false
-	self.m_WayPointUpdateTimer = 0
 	self.m_LastUpdateIndex = 0
 	self.m_FirstNodeInPath = {}
 	self.m_PathsToSkipForCycles = {}
@@ -626,7 +625,6 @@ function ClientNodeEditor:_onUnload()
 	self.m_CurrentTrace = {}
 	self.m_Selections = {}
 	self.m_RequestDataSent = false
-	self.m_WayPointUpdateTimer = 0
 	self.m_LastUpdateIndex = 0
 	self.m_FirstNodeInPath = {}
 	self.m_PathsToSkipForCycles = {}
@@ -917,10 +915,7 @@ function ClientNodeEditor:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 
 
 	-- prepare data to draw
-	self.m_WayPointUpdateTimer = self.m_WayPointUpdateTimer + p_DeltaTime
-	if s_Player and s_Player.soldier then -- self.m_WayPointUpdateTimer >= 0.03 and  --  TODO: Adjust update interval for performance vs update speed
-		-- self.m_WayPointUpdateTimer = 0
-
+	if s_Player and s_Player.soldier then
 		local s_MaxIndex = #self.m_WayPoints + #self.m_CurrentTrace
 
 		local s_LastUpdatedIndex = 0
@@ -972,7 +967,6 @@ function ClientNodeEditor:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 				-- only draw if in front of player
 				-- local s_DiffPos = l_Node.Position - self.m_PlayerPos
 				-- local s_DotProduct = s_DiffPos:Dot(s_Player.soldier.worldTransform.forward)
-				-- -- local s_DotProduct = 1 -- just do it always for now, to avoid issues with nodes behind the player
 				-- if s_DotProduct > 0 then
 				local s_IsSelected = self:GetIsSelected(l_Node.ID, s_IsTracePath)
 
