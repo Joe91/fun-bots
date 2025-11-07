@@ -235,18 +235,24 @@ end
 function ClientNodeEditor:_OnAddNodes(p_Data)
 	for l_Index = 1, #p_Data do
 		local l_NodeData = p_Data[l_Index]
+		local l_NodeId = l_NodeData.ID
+		-- already listed
+		if self.m_WayPointsById[l_NodeId] then
+			goto continue
+		end
 		self.m_WayPoints[#self.m_WayPoints + 1] = l_NodeData
 		if l_NodeData.PointIndex == 1 then
 			self.m_FirstNodeInPath[l_NodeData.PathIndex] = l_NodeData
 			self.m_PathsToSkipForCycles[l_NodeData.PathIndex] = 0
 		end
 		self.m_WayPointsById[l_NodeData.ID] = l_NodeData
+		::continue::
 	end
 end
 
 function ClientNodeEditor:_OnRemoveNodes(p_Data)
 	for l_Index = 1, #p_Data do
-		local l_NodeId = p_Data[l_Index]
+		local l_NodeId = p_Data[l_Index].ID
 		for l_WaypointIndex, l_Waypoint in pairs(self.m_WayPoints) do
 			if l_Waypoint.ID == l_NodeId then
 				table.remove(self.m_WayPoints, l_WaypointIndex)
@@ -387,6 +393,7 @@ function ClientNodeEditor:_onSelectNode(p_Args)
 end
 
 function ClientNodeEditor:_onRemoveNode()
+	print("trigger remove node")
 	NetEvents:SendLocal('NodeEditor:RemoveNode')
 end
 

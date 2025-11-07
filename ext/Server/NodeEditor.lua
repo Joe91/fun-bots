@@ -667,21 +667,27 @@ function NodeEditor:OnTeleportToEdge(p_Player)
 	end
 end
 
---TODO: Client Handling
 ---@param p_Player Player
 function NodeEditor:OnSplitNode(p_Player)
 	local s_Result, s_Message = m_NodeCollection:SplitSelection(p_Player.onlineId)
 	if not s_Result then
 		self:Log(p_Player, s_Message)
+	else
+		local s_Selection = self:GetNodesForPlayer(m_NodeCollection:GetSelected(p_Player.onlineId))
+		NetEvents:SendToLocal("ClientNodeEditor:AddNodes", p_Player, s_Selection)
 	end
 end
 
---TODO: Client Handling
 ---@param p_Player Player
 function NodeEditor:OnMergeNodes(p_Player)
+	local s_Selection = self:GetNodesForPlayer(m_NodeCollection:GetSelected(p_Player.onlineId))
 	local s_Result, s_Message = m_NodeCollection:MergeSelection(p_Player.onlineId)
 	if not s_Result then
 		self:Log(p_Player, s_Message)
+	else
+		NetEvents:SendToLocal("ClientNodeEditor:UpdateNodes", p_Player, { s_Selection[1] })
+		table.remove(s_Selection, 1) -- first node is only updated, rest is removed
+		NetEvents:SendToLocal("ClientNodeEditor:RemoveNodes", p_Player, s_Selection)
 	end
 end
 
@@ -705,15 +711,6 @@ function NodeEditor:OnLinkNodes(p_Player)
 
 	local s_Selection = m_NodeCollection:GetSelected(p_Player.onlineId)
 	NetEvents:SendToLocal('ClientNodeEditor:UpdateNodes', p_Player, self:GetNodesForPlayer(s_Selection))
-end
-
---TODO: Client Handling
----@param p_Player Player
-function NodeEditor:OnSpitNode(p_Player)
-	local s_Result, s_Message = m_NodeCollection:SplitSelection(p_Player.onlineId)
-	if not s_Result then
-		self:Log(p_Player, s_Message)
-	end
 end
 
 ---@param p_Player Player
@@ -1133,9 +1130,7 @@ function NodeEditor:SaveTrace(p_Player, p_PathIndex)
 	self:Log(p_Player, 'Custom Trace Saved to Path: %d', p_PathIndex)
 	self.m_NodeOperation = ''
 
-	-- TODO: only send updated nodes? TODO: send to all active Players
 	NetEvents:SendToLocal('ClientNodeEditor:ClearCustomTrace', p_Player)
-
 	local s_NewPathNodes = m_NodeCollection:Get(nil, p_PathIndex)
 	NetEvents:SendToLocal('ClientNodeEditor:AddNodes', p_Player, self:GetNodesForPlayer(s_NewPathNodes))
 	return true
@@ -1391,8 +1386,6 @@ function NodeEditor:OnEngineUpdate(p_DeltaTime, p_SimulationDeltaTime)
 			end
 		end
 	end
-
-	-- TODO: Only send updates to the client, not the nodes themselves.
 end
 
 -- =============================================
