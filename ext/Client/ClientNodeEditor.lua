@@ -1095,6 +1095,7 @@ function ClientNodeEditor:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 		end
 
 		if s_LastUpdatedIndex >= s_MaxIndex then
+			m_ClientSpawnPointHelper:Update(self.m_PlayerPos, self.m_NodesToDraw_temp, self.m_LinesToDraw_temp)
 			self.m_LastUpdateIndex = 0
 			-- check if we need to update the values
 			local s_MaxDrawDistance = math.max(Config.WaypointRange, Config.LineRange)

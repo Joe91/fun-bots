@@ -154,7 +154,7 @@ end
 ---VEXT Client UI:DrawHud Event
 function FunBotClient:OnUIDrawHud()
 	m_ClientNodeEditor:OnUIDrawHud()
-	m_ClientSpawnPointHelper:OnUIDrawHud()
+	-- m_ClientSpawnPointHelper:OnUIDrawHud()
 
 	if Registry.COMMON.USE_EXPERIMENTAL_NAMETAGS then
 		-- Just adding custom nametags to see the names of the friendly bots ... needs some clean up and a config to enable and disable it

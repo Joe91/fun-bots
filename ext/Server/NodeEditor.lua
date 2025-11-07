@@ -103,7 +103,7 @@ function NodeEditor:OnAddNode(p_Player)
 		m_NodeCollection:Select(p_Player.onlineId, s_Result)
 
 		local s_NewNodes = self:GetNodesForPlayer({ s_Result })
-		NetEvents:SendToLocal('ClientNodeEditor:AddNodes', p_Player, s_NewNodes)
+		self:SendToAllPlayers('ClientNodeEditor:AddNodes', s_NewNodes)
 		NetEvents:SendToLocal('ClientNodeEditor:SelectNewNode', p_Player, s_Result.ID)
 	end
 
@@ -126,7 +126,7 @@ function NodeEditor:OnUpdatePos(p_Player, p_UpdateData)
 	for _, l_UpdateItem in pairs(p_UpdateData) do
 		s_NodesToSend[#s_NodesToSend + 1] = m_NodeCollection:Get(l_UpdateItem.ID)
 	end
-	NetEvents:SendToLocal('ClientNodeEditor:UpdateNodes', p_Player, self:GetNodesForPlayer(s_NodesToSend))
+	self:SendToAllPlayers('ClientNodeEditor:UpdateNodes', self:GetNodesForPlayer(s_NodesToSend))
 end
 
 ---@param p_Player Player
@@ -157,7 +157,7 @@ function NodeEditor:OnAddMcom(p_Player)
 		self:Log(p_Player, 'Updated Waypoint: %s', s_Selection[i].ID)
 	end
 
-	NetEvents:SendToLocal('ClientNodeEditor:UpdateNodes', p_Player, self:GetNodesForPlayer(s_Selection))
+	self:SendToAllPlayers('ClientNodeEditor:UpdateNodes', self:GetNodesForPlayer(s_Selection))
 
 	return true
 end
@@ -190,7 +190,7 @@ function NodeEditor:OnAddVehicle(p_Player)
 		self:Log(p_Player, 'Updated Waypoint: %s', s_Selection[i].ID)
 	end
 
-	NetEvents:SendToLocal('ClientNodeEditor:UpdateNodes', p_Player, self:GetNodesForPlayer(s_Selection))
+	self:SendToAllPlayers('ClientNodeEditor:UpdateNodes', self:GetNodesForPlayer(s_Selection))
 end
 
 ---@param p_Player Player
@@ -225,7 +225,7 @@ function NodeEditor:OnExitVehicle(p_Player, p_Args)
 		self:Log(p_Player, 'Updated Waypoint: %s', s_Selection[i].ID)
 	end
 
-	NetEvents:SendToLocal('ClientNodeEditor:UpdateNodes', p_Player, self:GetNodesForPlayer(s_Selection))
+	self:SendToAllPlayers('ClientNodeEditor:UpdateNodes', self:GetNodesForPlayer(s_Selection))
 
 	return
 end
@@ -265,7 +265,7 @@ function NodeEditor:OnCustomAction(p_Player, p_Args)
 		self:Log(p_Player, 'Updated Waypoint: %s', s_Selection[i].ID)
 	end
 
-	NetEvents:SendToLocal('ClientNodeEditor:UpdateNodes', p_Player, self:GetNodesForPlayer(s_Selection))
+	self:SendToAllPlayers('ClientNodeEditor:UpdateNodes', self:GetNodesForPlayer(s_Selection))
 end
 
 ---@param p_Player Player
@@ -316,7 +316,7 @@ function NodeEditor:OnAddVehiclePath(p_Player, p_Args)
 		end
 	end
 
-	NetEvents:SendToLocal('ClientNodeEditor:UpdateNodes', p_Player, self:GetNodesForPlayer(s_UpdatedNodes))
+	self:SendToAllPlayers('ClientNodeEditor:UpdateNodes', self:GetNodesForPlayer(s_UpdatedNodes))
 
 	return true
 end
@@ -355,7 +355,7 @@ function NodeEditor:OnSetVehicleSpawn(p_Player)
 		end
 	end
 
-	NetEvents:SendToLocal('ClientNodeEditor:UpdateNodes', p_Player, self:GetNodesForPlayer(s_UpdatedNodes))
+	self:SendToAllPlayers('ClientNodeEditor:UpdateNodes', self:GetNodesForPlayer(s_UpdatedNodes))
 	return true
 end
 
@@ -402,7 +402,7 @@ function NodeEditor:OnAddObjective(p_Player, p_Args)
 			end
 		end
 	end
-	NetEvents:SendToLocal('ClientNodeEditor:UpdateNodes', p_Player, self:GetNodesForPlayer(s_UpdatedNodes))
+	self:SendToAllPlayers('ClientNodeEditor:UpdateNodes', self:GetNodesForPlayer(s_UpdatedNodes))
 
 	return true
 end
@@ -450,7 +450,7 @@ function NodeEditor:OnRemoveObjective(p_Player, p_Args)
 			self:Log(p_Player, 'Updated Waypoint: %s', s_Waypoint.ID)
 		end
 	end
-	NetEvents:SendToLocal('ClientNodeEditor:UpdateNodes', p_Player, self:GetNodesForPlayer(s_UpdatedNodes))
+	self:SendToAllPlayers('ClientNodeEditor:UpdateNodes', self:GetNodesForPlayer(s_UpdatedNodes))
 	return true
 end
 
@@ -484,7 +484,7 @@ function NodeEditor:OnRemoveAllObjectives(p_Player, p_Args)
 		end
 	end
 
-	NetEvents:SendToLocal('ClientNodeEditor:UpdateNodes', p_Player, self:GetNodesForPlayer(s_UpdatedNodes))
+	self:SendToAllPlayers('ClientNodeEditor:UpdateNodes', self:GetNodesForPlayer(s_UpdatedNodes))
 
 	return true
 end
@@ -528,7 +528,7 @@ function NodeEditor:OnSetLoopMode(p_Player, p_Args)
 		end
 	end
 
-	NetEvents:SendToLocal('ClientNodeEditor:UpdateNodes', p_Player, self:GetNodesForPlayer(s_UpdatedNodes))
+	self:SendToAllPlayers('ClientNodeEditor:UpdateNodes', self:GetNodesForPlayer(s_UpdatedNodes))
 
 	return true
 end
@@ -591,7 +591,7 @@ function NodeEditor:OnSetSpawnPath(p_Player, p_Args)
 			end
 		end
 	end
-	NetEvents:SendToLocal('ClientNodeEditor:UpdateNodes', p_Player, self:GetNodesForPlayer(s_UpdatedNodes))
+	self:SendToAllPlayers('ClientNodeEditor:UpdateNodes', self:GetNodesForPlayer(s_UpdatedNodes))
 	return true
 end
 
@@ -615,7 +615,7 @@ function NodeEditor:OnRemoveData(p_Player)
 		s_Selection[i].Data = {}
 		self:Log(p_Player, 'Updated Waypoint: %s', s_Selection[i].ID)
 	end
-	NetEvents:SendToLocal('ClientNodeEditor:UpdateNodes', p_Player, self:GetNodesForPlayer(s_Selection))
+	self:SendToAllPlayers('ClientNodeEditor:UpdateNodes', self:GetNodesForPlayer(s_Selection))
 end
 
 function NodeEditor:GetNodesForPlayer(p_Nodes)
@@ -634,6 +634,15 @@ function NodeEditor:GetNodesForPlayer(p_Nodes)
 	return s_SerializedNodes
 end
 
+function NodeEditor:SendToAllPlayers(p_EventName, p_Data)
+	for l_Index = 1, #self.m_ActivePlayers do
+		local s_Player = PlayerManager:GetPlayerByOnlineId(self.m_ActivePlayers[l_Index])
+		if s_Player then
+			NetEvents:SendToLocal(p_EventName, s_Player, p_Data)
+		end
+	end
+end
+
 function NodeEditor:OnRequestData(p_Player)
 	local s_AllNodes = m_NodeCollection:Get()
 
@@ -645,13 +654,14 @@ function NodeEditor:OnRequestData(p_Player)
 
 	print('[NodeEditor] Sending ' .. tostring(#s_SerializedNodes) .. ' waypoints to client.')
 
+	-- TODO: better handling here for all Players
 	NetEvents:SendToLocal('ClientNodeEditor:RevieveNodes', p_Player, s_SerializedNodes)
 	print('[NodeEditor] Sent waypoints to client.')
 end
 
 function NodeEditor:OnRemoveNode(p_Player)
 	local s_Selection = m_NodeCollection:GetSelected(p_Player.onlineId)
-	NetEvents:SendToLocal('ClientNodeEditor:RemoveNodes', p_Player, self:GetNodesForPlayer(s_Selection))
+	self:SendToAllPlayers('ClientNodeEditor:RemoveNodes', self:GetNodesForPlayer(s_Selection))
 
 	local s_Result, s_Message = m_NodeCollection:Remove(p_Player.onlineId)
 	if not s_Result then
@@ -674,20 +684,20 @@ function NodeEditor:OnSplitNode(p_Player)
 		self:Log(p_Player, s_Message)
 	else
 		local s_Selection = self:GetNodesForPlayer(m_NodeCollection:GetSelected(p_Player.onlineId))
-		NetEvents:SendToLocal("ClientNodeEditor:AddNodes", p_Player, s_Selection)
+		self:SendToAllPlayers("ClientNodeEditor:AddNodes", s_Selection)
 	end
 end
 
 ---@param p_Player Player
 function NodeEditor:OnMergeNodes(p_Player)
-	local s_Selection = self:GetNodesForPlayer(m_NodeCollection:GetSelected(p_Player.onlineId))
+	local s_OriginalSelectionToRemove = self:GetNodesForPlayer(m_NodeCollection:GetSelected(p_Player.onlineId))
 	local s_Result, s_Message = m_NodeCollection:MergeSelection(p_Player.onlineId)
 	if not s_Result then
 		self:Log(p_Player, s_Message)
 	else
-		NetEvents:SendToLocal("ClientNodeEditor:UpdateNodes", p_Player, { s_Selection[1] })
-		table.remove(s_Selection, 1) -- first node is only updated, rest is removed
-		NetEvents:SendToLocal("ClientNodeEditor:RemoveNodes", p_Player, s_Selection)
+		self:SendToAllPlayers("ClientNodeEditor:UpdateNodes", { self:GetNodesForPlayer(m_NodeCollection:GetSelected(p_Player.onlineId)) })
+		table.remove(s_OriginalSelectionToRemove, 1) -- first node is only updated, rest is removed
+		self:SendToAllPlayers("ClientNodeEditor:RemoveNodes", s_OriginalSelectionToRemove)
 	end
 end
 
@@ -699,7 +709,7 @@ function NodeEditor:OnUnlinkNodes(p_Player)
 	end
 
 	local s_Selection = m_NodeCollection:GetSelected(p_Player.onlineId)
-	NetEvents:SendToLocal('ClientNodeEditor:UpdateNodes', p_Player, self:GetNodesForPlayer(s_Selection))
+	self:SendToAllPlayers('ClientNodeEditor:UpdateNodes', self:GetNodesForPlayer(s_Selection))
 end
 
 ---@param p_Player Player
@@ -710,7 +720,7 @@ function NodeEditor:OnLinkNodes(p_Player)
 	end
 
 	local s_Selection = m_NodeCollection:GetSelected(p_Player.onlineId)
-	NetEvents:SendToLocal('ClientNodeEditor:UpdateNodes', p_Player, self:GetNodesForPlayer(s_Selection))
+	self:SendToAllPlayers('ClientNodeEditor:UpdateNodes', self:GetNodesForPlayer(s_Selection))
 end
 
 ---@param p_Player Player
@@ -724,7 +734,7 @@ function NodeEditor:OnSetInputNode(p_Player, p_Arg1, p_Arg2, p_Arg3)
 	end
 
 	local s_Selection = m_NodeCollection:GetSelected(p_Player.onlineId)
-	NetEvents:SendToLocal('ClientNodeEditor:UpdateNodes', p_Player, self:GetNodesForPlayer(s_Selection))
+	self:SendToAllPlayers('ClientNodeEditor:UpdateNodes', self:GetNodesForPlayer(s_Selection))
 end
 
 ---@param p_Player Player
@@ -1132,7 +1142,7 @@ function NodeEditor:SaveTrace(p_Player, p_PathIndex)
 
 	NetEvents:SendToLocal('ClientNodeEditor:ClearCustomTrace', p_Player)
 	local s_NewPathNodes = m_NodeCollection:Get(nil, p_PathIndex)
-	NetEvents:SendToLocal('ClientNodeEditor:AddNodes', p_Player, self:GetNodesForPlayer(s_NewPathNodes))
+	self:SendToAllPlayers('ClientNodeEditor:AddNodes', self:GetNodesForPlayer(s_NewPathNodes))
 	return true
 end
 
