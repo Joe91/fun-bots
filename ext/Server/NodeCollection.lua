@@ -1347,10 +1347,6 @@ end
 -----------------------------
 -- Save/Load.
 
-function NodeCollection:Load(p_LevelName, p_GameMode)
-
-end
-
 function NodeCollection:UpdateSaving()
 	if self._SaveActive then
 		self:ProcessAllDataToSave()
@@ -1364,6 +1360,13 @@ function NodeCollection:StartLoad(p_Level, p_Gamemode)
 	self._GameModeToLoad = p_Gamemode
 	self._LoadStateMachineCounter = 0
 	self._LoadActive = true
+end
+
+function NodeCollection:Reload()
+	if not self._LoadActive then
+		self._LoadStateMachineCounter = 0
+		self._LoadActive = true
+	end
 end
 
 function NodeCollection:UpdateLoading()

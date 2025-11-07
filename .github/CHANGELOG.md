@@ -39,6 +39,7 @@ This is the changelog for the version V3.0 Don't forget to [join us on Discord](
 * Refactoring of lots of Bot-stuff (by Bree_Arnold)
 * Switch to new Web-UI-Backend (by Paul)
 * Sometimes Stop for shooting of bots (by MatiasPastori)
+* performance of node-editor
 
 ### some open TODOs:
 * rework of raycasts for better performance
@@ -46,7 +47,6 @@ This is the changelog for the version V3.0 Don't forget to [join us on Discord](
 * further performance increses
 * chopper: handle different hights and positions depending on capture-points
 * performance of spawn-point parsing -> save those?
-* performance of node-editor
 * add logic for jets in rush
 * improve team-logic for AA and other vehicles (example AA on Rush)
 * improve node-editor

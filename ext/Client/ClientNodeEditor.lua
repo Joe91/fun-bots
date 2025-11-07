@@ -98,6 +98,7 @@ function ClientNodeEditor:OnRegisterEvents()
 	NetEvents:Subscribe('ClientNodeEditor:AddNodes', self, self._OnAddNodes)
 	NetEvents:Subscribe('ClientNodeEditor:UpdateSelection', self, self._OnUpdateSelection)
 	NetEvents:Subscribe('ClientNodeEditor:ClearCustomTrace', self, self._OnClearCustomTrace)
+	NetEvents:Subscribe('ClientNodeEditor:ClearAll', self, self._OnClearAll)
 
 	NetEvents:Subscribe('UI_CommoRose_Action_Select', self, self._onSelectNode)
 	NetEvents:Subscribe('UI_CommoRose_Action_Remove', self, self._onRemoveNode)
@@ -230,6 +231,10 @@ end
 
 function ClientNodeEditor:_OnClearCustomTrace()
 	self.m_CurrentTrace = {}
+end
+
+function ClientNodeEditor:_OnClearAll()
+	self:_onUnload()
 end
 
 function ClientNodeEditor:_OnAddNodes(p_Data)

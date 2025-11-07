@@ -127,6 +127,7 @@ function FunBotClient:OnLevelDestroy()
 	m_ClientBotManager:OnLevelDestroy()
 	m_ClientNodeEditor:OnLevelDestroy()
 	m_ClientSpawnPointHelper:OnLevelDestroy()
+	m_FunBotUIClient:OnLevelDestroy()
 end
 
 ---VEXT Client Player:Deleted Event

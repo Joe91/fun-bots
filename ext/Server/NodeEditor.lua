@@ -14,6 +14,7 @@ end
 function NodeEditor:RegisterVars()
 	self.m_ActiveTracePlayers = {}
 	self.m_ActivePlayers = {}
+	self.m_DataWasRequested = false
 
 	self.m_CustomTrace = {}
 	self.m_NodeWaitTimer = {}
@@ -644,6 +645,7 @@ function NodeEditor:SendToAllPlayers(p_EventName, p_Data)
 end
 
 function NodeEditor:OnRequestData(p_Player)
+	self.m_DataWasRequested = true
 	local s_AllNodes = m_NodeCollection:Get()
 
 	if not s_AllNodes then
@@ -655,7 +657,7 @@ function NodeEditor:OnRequestData(p_Player)
 	print('[NodeEditor] Sending ' .. tostring(#s_SerializedNodes) .. ' waypoints to client.')
 
 	-- TODO: better handling here for all Players
-	NetEvents:SendToLocal('ClientNodeEditor:RevieveNodes', p_Player, s_SerializedNodes)
+	self:SendToAllPlayers('ClientNodeEditor:RevieveNodes', s_SerializedNodes)
 	print('[NodeEditor] Sent waypoints to client.')
 end
 
@@ -683,8 +685,8 @@ function NodeEditor:OnSplitNode(p_Player)
 	if not s_Result then
 		self:Log(p_Player, s_Message)
 	else
-		local s_Selection = self:GetNodesForPlayer(m_NodeCollection:GetSelected(p_Player.onlineId))
-		self:SendToAllPlayers("ClientNodeEditor:AddNodes", s_Selection)
+		local s_Selection = m_NodeCollection:GetSelected(p_Player.onlineId)
+		self:SendToAllPlayers("ClientNodeEditor:AddNodes", self:GetNodesForPlayer(s_Selection))
 	end
 end
 
@@ -695,9 +697,10 @@ function NodeEditor:OnMergeNodes(p_Player)
 	if not s_Result then
 		self:Log(p_Player, s_Message)
 	else
-		self:SendToAllPlayers("ClientNodeEditor:UpdateNodes", { self:GetNodesForPlayer(m_NodeCollection:GetSelected(p_Player.onlineId)) })
 		table.remove(s_OriginalSelectionToRemove, 1) -- first node is only updated, rest is removed
 		self:SendToAllPlayers("ClientNodeEditor:RemoveNodes", s_OriginalSelectionToRemove)
+		local s_Selection = m_NodeCollection:GetSelected(p_Player.onlineId)
+		self:SendToAllPlayers("ClientNodeEditor:UpdateNodes", self:GetNodesForPlayer(s_Selection))
 	end
 end
 
@@ -1204,6 +1207,11 @@ function NodeEditor:OnPartitionLoaded(p_Partition)
 	end
 end
 
+function NodeEditor:Reload()
+	self:Clear()
+	m_NodeCollection:Reload()
+end
+
 function NodeEditor:EndOfLoad()
 	m_NodeCollection:ParseObjectives()
 	local s_Counter = 0
@@ -1222,10 +1230,18 @@ function NodeEditor:EndOfLoad()
 	end
 
 	self:Log(nil, 'Load -> Stale Nodes: %d', s_Counter)
+	if self.m_DataWasRequested then
+		self:OnRequestData() -- send nodes to all players
+	end
 end
 
 function NodeEditor:ParseAllSpawns()
 	m_NodeCollection:ParseAllSpawns()
+end
+
+function NodeEditor:Clear()
+	m_NodeCollection:Clear()
+	self:SendToAllPlayers('ClientNodeEditor:ClearAll')
 end
 
 ---VEXT Shared Level:Destroy Event
