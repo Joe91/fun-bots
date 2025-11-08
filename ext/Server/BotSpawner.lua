@@ -937,6 +937,10 @@ function BotSpawner:_TriggerSpawn(p_Bot)
 		return
 	end
 
+	if Globals.IsInputAllowed == false then
+		return
+	end
+
 	if s_CurrentGameMode:match("DeathMatch") or
 		s_CurrentGameMode:match("Domination") or
 		s_CurrentGameMode:match("GunMaster") or
