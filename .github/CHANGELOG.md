@@ -40,6 +40,7 @@ This is the changelog for the version V3.0 Don't forget to [join us on Discord](
 * Switch to new Web-UI-Backend (by Paul)
 * Sometimes Stop for shooting of bots (by MatiasPastori)
 * performance of node-editor
+* Don't exit vehicle, if player is driver
 
 ### some open TODOs:
 * rework of raycasts for better performance
