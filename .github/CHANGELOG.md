@@ -41,9 +41,10 @@ This is the changelog for the version V3.0 Don't forget to [join us on Discord](
 * Sometimes Stop for shooting of bots (by MatiasPastori)
 * performance of node-editor
 * Don't exit vehicle, if player is driver
-* Messed-up first spawn in TDM fixed
+* Attempt to fix Messed-up first spawn in TDM
 
 ### some open TODOs:
+* identify and fix the stability issues of this mod or VU
 * rework of raycasts for better performance
 * fully support default-sapwn-method (for now only on TDM/GM/SDM by default)
 * further performance increses
