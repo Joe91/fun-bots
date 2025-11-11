@@ -340,7 +340,9 @@ function FunBotUIClient:OnExtensionUnloading()
 end
 
 function FunBotUIClient:OnLevelDestroy()
-	-- TODO: what to do here?
+end
+
+function FunBotUIClient:OnLevelLoaded()
 end
 
 function FunBotUIClient:OnPushScreen()

@@ -46,10 +46,12 @@ local m_FunBotUIClient = require('UIClient')
 function FunBotClient:__init()
 	Events:Subscribe('Extension:Loaded', self, self.OnExtensionLoaded)
 	self._SettingsValid = false
+	self._ReadyToUpdate = false
 end
 
 function FunBotClient:OnExtensionLoaded()
 	self._SettingsValid = false
+	self._ReadyToUpdate = true
 	self:RegisterEvents()
 	self:RegisterHooks()
 
@@ -64,6 +66,7 @@ function FunBotClient:RegisterEvents()
 	Events:Subscribe('Engine:Message', self, self.OnEngineMessage)
 	Events:Subscribe('UpdateManager:Update', self, self.OnUpdateManagerUpdate)
 	Events:Subscribe('Level:Destroy', self, self.OnLevelDestroy)
+	Events:Subscribe('Level:Loaded', self, self.OnLevelLoaded)
 	Events:Subscribe('Player:Deleted', self, self.OnPlayerDeleted)
 	Events:Subscribe('Client:UpdateInput', self, self.OnClientUpdateInput)
 	Events:Subscribe('Engine:Update', self, self.OnEngineUpdate)
@@ -128,6 +131,12 @@ function FunBotClient:OnLevelDestroy()
 	m_ClientNodeEditor:OnLevelDestroy()
 	m_ClientSpawnPointHelper:OnLevelDestroy()
 	m_FunBotUIClient:OnLevelDestroy()
+	self._ReadyToUpdate = false
+end
+
+function FunBotClient:OnLevelLoaded()
+	self._ReadyToUpdate = true
+	m_FunBotUIClient:OnLevelLoaded()
 end
 
 ---VEXT Client Player:Deleted Event
@@ -154,6 +163,9 @@ end
 
 ---VEXT Client UI:DrawHud Event
 function FunBotClient:OnUIDrawHud()
+	if not self._ReadyToUpdate then
+		return
+	end
 	m_ClientNodeEditor:OnUIDrawHud()
 	-- m_ClientSpawnPointHelper:OnUIDrawHud()
 
@@ -297,6 +309,9 @@ end
 ---@param p_ParentGraph DataContainer
 ---@param p_StateNodeGuid Guid|nil
 function FunBotClient:OnUIPushScreen(p_HookCtx, p_Screen, p_Priority, p_ParentGraph, p_StateNodeGuid)
+	if not self._ReadyToUpdate then
+		return
+	end
 	m_ClientNodeEditor:OnUIPushScreen(p_HookCtx, p_Screen, p_Priority, p_ParentGraph, p_StateNodeGuid)
 	m_FunBotUIClient:OnPushScreen()
 end
