@@ -120,7 +120,7 @@ function BotSpawner:OnEngineUpdate(p_DeltaTime, p_SimulationDeltaTime)
 	end
 
 	if #self._SpawnSets > 0 then
-		if self._BotSpawnTimer > 0.3 then -- Time to wait between spawn. 0.2 works
+		if self._BotSpawnTimer > 0.5 then -- Time to wait between spawn. 0.2 works
 			-- g_Profiler:Start("BotSpawner:Spawn")
 			self._BotSpawnTimer = 0.0
 			local s_PosOfSetInTable = MathUtils:GetRandomInt(1, #self._SpawnSets)

@@ -130,7 +130,7 @@ Config = {
 	DrawSpawnPoints = false,			-- Draw the Points where players can spawn 
 	DrawParsedSpawns = false,			-- Draw the parsed spawn-points with parsed links 
 	SpawnPointRange = 150,				-- Set how far away spawn points are visible (meters) 
-	TraceDelta = 0.3,					-- Update interval of trace 
+	TraceDelta = 0.4,					-- Update interval of trace 
 	NodesPerCycle = 2048,				-- Set how many nodes get drawn per cycle. Affects performance 
 
 	-- ADVANCED 

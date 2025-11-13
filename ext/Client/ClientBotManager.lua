@@ -83,7 +83,7 @@ function ClientBotManager:OnInputPreUpdate(p_HookCtx, p_Cache, p_DeltaTime)
 		return
 	end
 
-	if self.m_Player ~= nil and self.m_Player.inVehicle then
+	if self.m_Player ~= nil and self.m_Player.alive and self.m_Player.inVehicle then
 		for i = 1, 8 do
 			local s_Varname = "ConceptSelectPosition" .. tostring(i)
 			local s_LevelId = InputConceptIdentifiers[s_Varname]
@@ -108,7 +108,7 @@ function ClientBotManager:OnEngineMessage(p_Message)
 	end
 
 	if p_Message.type == MessageType.ClientConnectionUnloadLevelMessage or
-		p_Message.type == MessageType.ClientCharacterLocalPlayerDeletedMessage or
+		-- p_Message.type == MessageType.ClientCharacterLocalPlayerDeletedMessage or
 		p_Message.type == MessageType.UIRequestEndOfRoundMessage then
 		print("End: " .. tostring(p_Message.type))
 		self.m_ReadyToUpdate = false
@@ -279,7 +279,7 @@ function ClientBotManager:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 	self.m_RaycastTimer = 0
 	local s_CheckCount = 0
 
-	if self.m_Player.soldier ~= nil then                       -- Alive. Check for enemy bots.
+	if self.m_Player.alive and self.m_Player.soldier ~= nil then -- Alive. Check for enemy bots.
 		if self.m_AliveTimer < Registry.CLIENT.SPAWN_PROTECTION then -- Wait 2s (spawn-protection).
 			self.m_AliveTimer = self.m_AliveTimer + p_DeltaTime
 			self:SendRaycastResults(s_RaycastResultsToSend)

@@ -47,7 +47,7 @@ Registry = {
 		-- Patch version.
 		VERSION_PATCH = 0,
 		-- Additional label for pre-releases and build metadata.
-		VERSION_LABEL = "dev8",
+		VERSION_LABEL = "dev9",
 		-- Current version type of this build.
 		VERSION_TYPE = VersionType.DevBuild,
 		-- The Version used for the Update-Check.
@@ -207,7 +207,7 @@ Registry = {
 		KEEP_BOTS_ON_NEW_ROUND = true,
 		-- Time between a level loading and the first bot spawning.
 		-- Note: Must be big enough to register inputActiveEvents (> 1.0)
-		FIRST_SPAWN_DELAY = 5.0,
+		FIRST_SPAWN_DELAY = 7.0,
 		-- Additional delay for dirct-spawnable vehicles (set to 0 to disable this)
 		DELAY_DIRECT_SPAWN = 6.0,
 		-- Probability of a bot spawning on a member of the same squad.

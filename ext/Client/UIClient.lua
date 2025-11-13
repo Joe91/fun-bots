@@ -339,6 +339,12 @@ function FunBotUIClient:OnExtensionUnloading()
 	self._views:OnExtensionUnloading()
 end
 
+function FunBotUIClient:OnLevelDestroy()
+end
+
+function FunBotUIClient:OnLevelLoaded()
+end
+
 function FunBotUIClient:OnPushScreen()
 	self._views:disable()
 end
