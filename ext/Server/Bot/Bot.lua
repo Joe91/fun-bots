@@ -392,14 +392,23 @@ function Bot:_CheckForVehicleActions(p_DeltaTime, p_AttackActive)
 	end
 end
 
+---comment
+---@param p_VehicleEntity ControllableEntity
+---@param p_OnVehicle boolean
 function Bot:_CheckShouldExitVehicleIfPassenger(p_VehicleEntity, p_OnVehicle)
 	if self._ExitVehicleActive then
 		return
 	end
 
 	if not p_OnVehicle
-		and not m_Vehicles:IsPassengerSeat(p_VehicleEntity, self.m_Player.controlledEntryId)
+		and not m_Vehicles:IsPassengerSeat(self.m_ActiveVehicle, self.m_Player.controlledEntryId)
 	then
+		return
+	end
+
+	-- don't exit near objectives if the driver is a real-player
+	local s_PlayerInDriverSeat = p_VehicleEntity:GetPlayerInEntry(0)
+	if s_PlayerInDriverSeat and s_PlayerInDriverSeat.onlineId ~= 0 then
 		return
 	end
 

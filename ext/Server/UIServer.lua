@@ -407,7 +407,7 @@ function FunBotUIServer:_onBotEditorEvent(p_Player, p_Data)
 			ChatManager:SendMessage('You have no permissions for this action.', p_Player)
 			return
 		end
-		m_NodeCollection:Clear()
+		m_NodeEditor:Clear()
 		NetEvents:BroadcastLocal('NodeCollection:Clear')
 		return
 	elseif request.action == 'waypoints_server_load' then
@@ -415,7 +415,7 @@ function FunBotUIServer:_onBotEditorEvent(p_Player, p_Data)
 			ChatManager:SendMessage('You have no permissions for this action.', p_Player)
 			return
 		end
-		m_NodeCollection:Load()
+		m_NodeEditor:Reload()
 		return
 	elseif request.action == 'waypoints_server_save' then
 		if PermissionManager:HasPermission(p_Player, 'UserInterface.WaypointEditor.SaveLoad') == false then

@@ -165,7 +165,9 @@ class App(customtkinter.CTk):
         self.button_fix_nodes.grid(row=4, column=2)
 
         get_to_root()
-        self.values = os.listdir("mapfiles")
+        self.values = []
+        if os.path.exists("mapfiles"):
+            self.values = os.listdir("mapfiles")
         combobox_properties = {
             "master": self,
             "values": self.values,
@@ -176,11 +178,17 @@ class App(customtkinter.CTk):
 
         self.merge_file_1 = customtkinter.CTkComboBox(**combobox_properties)
         self.merge_file_1.grid(row=5, column=2)
-        self.merge_file_1.set(self.values[0])
+        file_1 = ""
+        if len(self.values) > 0:
+            file_1 = self.values[0]
+        self.merge_file_1.set(file_1)
 
         self.merge_file_2 = customtkinter.CTkComboBox(**combobox_properties)
         self.merge_file_2.grid(row=6, column=2)
-        self.merge_file_1.set(self.values[-1])
+        file_2 = ""
+        if len(self.values) > 0:
+            file_2 = self.values[-1]
+        self.merge_file_2.set(file_2)
 
         self.button_merge_mapfiles = customtkinter.CTkButton(
             text="Merge Mapfiles",

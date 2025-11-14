@@ -47,7 +47,7 @@ Registry = {
 		-- Patch version.
 		VERSION_PATCH = 0,
 		-- Additional label for pre-releases and build metadata.
-		VERSION_LABEL = "dev8",
+		VERSION_LABEL = "dev9",
 		-- Current version type of this build.
 		VERSION_TYPE = VersionType.DevBuild,
 		-- The Version used for the Update-Check.
@@ -178,6 +178,8 @@ Registry = {
 		MIN_DISTANCE_NADE = 12,
 		-- Advanced aiming makes a difference on huge distances, but costs more performance.
 		USE_ADVANCED_AIMING = false,
+		-- Use of path-Offset
+		USE_PATH_OFFSETS = true,
 		-- Worsening bots on larger distances. Factor 1.0 = no worsening, always same offset
 		WORSENING_FACOTR_DISTANCE = 0.9,
 		PROBABILITY_SWITCH_TO_BEACON_PATH = 80,
@@ -207,7 +209,7 @@ Registry = {
 		KEEP_BOTS_ON_NEW_ROUND = true,
 		-- Time between a level loading and the first bot spawning.
 		-- Note: Must be big enough to register inputActiveEvents (> 1.0)
-		FIRST_SPAWN_DELAY = 5.0,
+		FIRST_SPAWN_DELAY = 7.0,
 		-- Additional delay for dirct-spawnable vehicles (set to 0 to disable this)
 		DELAY_DIRECT_SPAWN = 6.0,
 		-- Probability of a bot spawning on a member of the same squad.

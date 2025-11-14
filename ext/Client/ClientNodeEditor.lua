@@ -8,16 +8,21 @@ require('__shared/Config')
 local m_Logger = Logger('ClientNodeEditor', Debug.Client.NODEEDITOR)
 ---@type ClientSpawnPointHelper
 local m_ClientSpawnPointHelper = require('ClientSpawnPointHelper')
+local m_Utilities = require('__shared/Utilities')
 
 function ClientNodeEditor:__init()
-	-- Data Points.
-	self.m_LastDataPoint = nil
-	self.m_DataPoints = {}
-	self.m_TempDataPoints = {}
+	-- new Mode stuff
+	self.m_WayPoints = {}
+	self.m_WayPointsById = {}
+	self.m_CurrentTrace = {}
+	self.m_Selections = {}
+	self.m_RequestDataSent = false
+	self.m_LastUpdateIndex = 0
+	self.m_FirstNodeInPath = {}
+	self.m_PathsToSkipForCycles = {}
+	self.m_MinDistanceToPath = {}
 
 	self.m_ScanForNode = false
-	self.m_NewNodeId = -1
-	self.m_NodeIdFound = false
 
 	-- Caching values for drawing performance.
 	self.m_PlayerPos = nil
@@ -86,8 +91,14 @@ function ClientNodeEditor:OnRegisterEvents()
 	if self.m_EventsReady then return end
 
 	NetEvents:Subscribe('UI_ClientNodeEditor_TraceData', self, self._OnUiTraceData)
-	NetEvents:Subscribe('ClientNodeEditor:DrawNodes', self, self._OnDrawNodes)
 	NetEvents:Subscribe('ClientNodeEditor:PrintLog', self, self._OnPrintServerLog)
+	NetEvents:Subscribe('ClientNodeEditor:RevieveNodes', self, self._OnRecieveNodes)
+	NetEvents:Subscribe('ClientNodeEditor:UpdateNodes', self, self._OnUpdateNodes)
+	NetEvents:Subscribe('ClientNodeEditor:RemoveNodes', self, self._OnRemoveNodes)
+	NetEvents:Subscribe('ClientNodeEditor:AddNodes', self, self._OnAddNodes)
+	NetEvents:Subscribe('ClientNodeEditor:UpdateSelection', self, self._OnUpdateSelection)
+	NetEvents:Subscribe('ClientNodeEditor:ClearCustomTrace', self, self._OnClearCustomTrace)
+	NetEvents:Subscribe('ClientNodeEditor:ClearAll', self, self._OnClearAll)
 
 	NetEvents:Subscribe('UI_CommoRose_Action_Select', self, self._onSelectNode)
 	NetEvents:Subscribe('UI_CommoRose_Action_Remove', self, self._onRemoveNode)
@@ -145,6 +156,7 @@ function ClientNodeEditor:OnRegisterEvents()
 
 
 	self.m_EventsReady = true
+	self.m_RequestDataSent = false
 	-- self:Log('Register Events')
 end
 
@@ -171,7 +183,7 @@ function ClientNodeEditor:OnSetEnabled(p_Args)
 	end
 end
 
-function ClientNodeEditor:_OnUiTraceData(p_TotalTraceNodes, p_TotalTraceDistance, p_TraceIndex, p_Enable)
+function ClientNodeEditor:_OnUiTraceData(p_TotalTraceNodes, p_TotalTraceDistance, p_TraceIndex, p_Enable, p_TraceNodes)
 	if p_Enable ~= nil then
 		g_FunBotUIClient:_onUITrace(p_Enable)
 	end
@@ -184,82 +196,104 @@ function ClientNodeEditor:_OnUiTraceData(p_TotalTraceNodes, p_TotalTraceDistance
 	if p_TotalTraceDistance ~= nil then
 		g_FunBotUIClient:_onUITraceWaypointsDistance(p_TotalTraceDistance)
 	end
-end
 
-function ClientNodeEditor:_OnDrawNodes(p_NodesToDraw, p_UpdateView)
-	for l_Index = 1, #p_NodesToDraw do
-		local l_NodeData = p_NodesToDraw[l_Index]
-		self:_DrawData(l_NodeData)
-		self.m_TempDataPoints[#self.m_TempDataPoints + 1] = l_NodeData
-
-		if self.m_NewNodeId > 0 and l_NodeData.Node.Index == self.m_NewNodeId then
-			self.m_NodeIdFound = true
-		end
-	end
-
-	if p_UpdateView then
-		-- Copy tables.
-		self.m_NodesToDraw = self.m_NodesToDraw_temp
-		self.m_NodesToDraw_temp = {}
-		self.m_LinesToDraw = self.m_LinesToDraw_temp
-		self.m_LinesToDraw_temp = {}
-		self.m_TextToDraw = self.m_TextToDraw_temp
-		self.m_TextToDraw_temp = {}
-		self.m_TextPosToDraw = self.m_TextPosToDraw_temp
-		self.m_TextPosToDraw_temp = {}
-		self.m_ObbToDraw = self.m_ObbToDraw_temp
-		self.m_ObbToDraw_temp = {}
-
-		self.m_DataPoints = self.m_TempDataPoints
-		self.m_TempDataPoints = {}
-
-		if self.m_NewNodeId > 0 and self.m_NodeIdFound then
-			self.m_NodeIdFound = false
-			self.m_NewNodeId = -1
-			self.m_EditPositionMode = 'absolute'
-			self:_onToggleMoveNode()
-		end
-		-- Clear last node.
-		self.m_LastDataPoint = nil
+	if p_TraceNodes ~= nil then
+		self:_OnAddToCustomTrace(p_TraceNodes)
 	end
 end
 
-function ClientNodeEditor:_DrawData(p_DataPoint)
-	--[[local s_DataNode = {
-		Node = l_Node,
-		DrawNode = s_DrawNode,
-		DrawLine = s_DrawLine,
-		DrawText = s_DrawText,
-		IsSelected = s_IsSelected,
-		Objectives = s_FirstNode.Data.Objectives,
-		Vehicles = s_FirstNode.Data.Vehicles,
-		Reverse = (s_FirstNode.OptValue == 0XFF),
-		Links = s_LinkPositions,
-		NextPos = nil,
-		IsTrace = false,
-		IsOthersTrace = false
-	}
-	--]]
+function ClientNodeEditor:_OnRecieveNodes(p_WayPoints)
+	print('[ClientNodeEditor] Receiving waypoints from server...')
+	self.m_WayPoints = p_WayPoints or {}
+	print('[ClientNodeEditor] Recieved ' .. tostring(#self.m_WayPoints) .. ' waypoints from server.')
+	self.m_FirstNodeInPath = {}
+	self.m_WayPointsById = {}
+	for i = 1, #self.m_WayPoints do
+		self.m_WayPointsById[self.m_WayPoints[i].ID] = self.m_WayPoints[i]
+		local l_Node = self.m_WayPoints[i]
+		if self.m_FirstNodeInPath[l_Node.PathIndex] == nil and l_Node.PointIndex == 1 then
+			self.m_FirstNodeInPath[l_Node.PathIndex] = l_Node
+			self.m_PathsToSkipForCycles[l_Node.PathIndex] = 0
+		end
+	end
+end
 
-	local s_IsSelected = p_DataPoint.IsSelected
-	local s_QualityAtRange = p_DataPoint.DrawLine
-	local s_IsTracePath = p_DataPoint.IsTrace
-	local s_Waypoint = p_DataPoint.Node
+function ClientNodeEditor:_OnUpdateSelection(p_Data)
+	self.m_Selections = p_Data or {}
+end
 
-	-- Setup node colour information.
-	local s_Color = self.m_Colors.Orphan
+function ClientNodeEditor:_OnAddToCustomTrace(p_Data)
+	for l_Index = 1, #p_Data do
+		local l_TraceNode = p_Data[l_Index]
+		self.m_CurrentTrace[#self.m_CurrentTrace + 1] = l_TraceNode
+	end
+end
 
-	-- Happens after the 20th path --To-do: add more colours?
-	if s_Waypoint.PathIndex > 0 then
-		if self.m_Colors[s_Waypoint.PathIndex] == nil then
+function ClientNodeEditor:_OnClearCustomTrace()
+	self.m_CurrentTrace = {}
+end
+
+function ClientNodeEditor:_OnClearAll()
+	self:_onUnload()
+end
+
+function ClientNodeEditor:_OnAddNodes(p_Data)
+	for l_Index = 1, #p_Data do
+		local l_NodeData = p_Data[l_Index]
+		local l_NodeId = l_NodeData.ID
+		-- already listed
+		if self.m_WayPointsById[l_NodeId] then
+			goto continue
+		end
+		self.m_WayPoints[#self.m_WayPoints + 1] = l_NodeData
+		if l_NodeData.PointIndex == 1 then
+			self.m_FirstNodeInPath[l_NodeData.PathIndex] = l_NodeData
+			self.m_PathsToSkipForCycles[l_NodeData.PathIndex] = 0
+		end
+		self.m_WayPointsById[l_NodeData.ID] = l_NodeData
+		::continue::
+	end
+end
+
+function ClientNodeEditor:_OnRemoveNodes(p_Data)
+	for l_Index = 1, #p_Data do
+		local l_NodeId = p_Data[l_Index].ID
+		for l_WaypointIndex, l_Waypoint in pairs(self.m_WayPoints) do
+			if l_Waypoint.ID == l_NodeId then
+				table.remove(self.m_WayPoints, l_WaypointIndex)
+				self.m_WayPointsById[l_NodeId] = nil
+				break
+			end
+		end
+	end
+end
+
+function ClientNodeEditor:_OnUpdateNodes(p_Data)
+	for l_Index = 1, #p_Data do
+		local l_NodeId = p_Data[l_Index].ID
+		m_Utilities:mergeKeys(self.m_WayPointsById[l_NodeId], p_Data[l_Index])
+	end
+end
+
+function ClientNodeEditor:GetColor(p_Node, p_IsTracePath)
+	local s_Color = {}
+	if p_IsTracePath then
+		s_Color = {
+			Node = self.m_Colors.White,
+			Line = self.m_Colors.White,
+		}
+		return s_Color
+	end
+	if p_Node.PathIndex > 0 then
+		if self.m_Colors[p_Node.PathIndex] == nil then
 			local r, g, b = (math.random(20, 100) / 100), (math.random(20, 100) / 100), (math.random(20, 100) / 100)
-			self.m_Colors[s_Waypoint.PathIndex] = {
+			self.m_Colors[p_Node.PathIndex] = {
 				Node = Vec4(r, g, b, 0.25),
 				Line = Vec4(r, g, b, 1),
 			}
 		end
 
-		s_Color = self.m_Colors[s_Waypoint.PathIndex]
+		s_Color = self.m_Colors[p_Node.PathIndex]
 	else
 		-- print("node with index 0")
 		-- print(s_Waypoint)
@@ -269,119 +303,24 @@ function ClientNodeEditor:_DrawData(p_DataPoint)
 		}
 	end
 
-	if s_IsTracePath then
-		s_Color = {
-			Node = self.m_Colors.White,
-			Line = self.m_Colors.White,
-		}
+	return s_Color
+end
+
+function ClientNodeEditor:GetIsSelected(p_NodeId, p_IsTracePath)
+	if p_IsTracePath then
+		return false
 	end
-
-	-- Draw the node for the waypoint itself.
-	if p_DataPoint.DrawNode then
-		self:DrawSphere(s_Waypoint.Position, 0.05, s_Color.Node, false, (not s_QualityAtRange))
-
-		if self.m_ScanForNode then
-			local s_PointScreenPos = ClientUtils:WorldToScreen(s_Waypoint.Position)
-
-			-- Skip to the next point if this one isn't in view.
-			if s_PointScreenPos ~= nil then
-				local s_Center = ClientUtils:GetWindowSize() / 2
-
-				-- Select point if it's close to the hitPosition.
-				if s_Center:Distance(s_PointScreenPos) < 20 then
-					self.m_ScanForNode = false
-
-					if s_IsSelected then
-						self:Log('Deselect -> %s', s_Waypoint.ID)
-						NetEvents:SendLocal('NodeEditor:Deselect', s_Waypoint.ID)
-						return
-					else
-						self:Log('Select -> %s', s_Waypoint.ID)
-						NetEvents:SendLocal('NodeEditor:Select', s_Waypoint.ID)
-						return
-					end
-				end
-			end
+	for l_Index = 1, #self.m_Selections do
+		local l_SelectionId = self.m_Selections[l_Index]
+		if l_SelectionId == p_NodeId then
+			return true
 		end
 	end
+	return false
+end
 
-	-- If selected, draw bigger node and transform helper.
-	if not s_IsTracePath and s_IsSelected and p_DataPoint.DrawNode then
-		-- Node selection indicator.
-		self:DrawSphere(s_Waypoint.Position, 0.08, s_Color.Node, false, (not s_QualityAtRange))
-
-		-- Transform marker.
-		self:DrawLine(s_Waypoint.Position, s_Waypoint.Position + (Vec3.up), self.m_Colors.Red, self.m_Colors.Red)
-		self:DrawLine(s_Waypoint.Position, s_Waypoint.Position + (Vec3.right * 0.5), self.m_Colors.Green, self.m_Colors.Green)
-		self:DrawLine(s_Waypoint.Position, s_Waypoint.Position + (Vec3.forward * 0.5), self.m_Colors.Blue, self.m_Colors.Blue)
-	end
-
-	-- Draw connection lines.
-	if Config.DrawWaypointLines and p_DataPoint.DrawLine then
-		-- Try to find a previous node and draw a line to it.
-		if p_DataPoint.NextPos then
-			self:DrawLine(p_DataPoint.NextPos, s_Waypoint.Position, s_Color.Line, s_Color.Line)
-		end
-
-		-- Draw Links.
-		if s_Waypoint.Data and s_Waypoint.Data.Links ~= nil then
-			for l_Index = 1, #p_DataPoint.Links do
-				local l_LinkPos = p_DataPoint.Links[l_Index]
-				self:DrawLine(l_LinkPos, s_Waypoint.Position, self.m_Colors.Purple, self.m_Colors.Purple)
-			end
-		end
-	end
-
-	-- Draw debugging text.
-	if Config.DrawWaypointIDs and p_DataPoint.DrawText then
-		if s_IsSelected then
-			local s_SpeedMode = 'N/A'
-
-			if s_Waypoint.SpeedMode == 0 then s_SpeedMode = 'Wait' end
-
-			if s_Waypoint.SpeedMode == 1 then s_SpeedMode = 'Prone' end
-
-			if s_Waypoint.SpeedMode == 2 then s_SpeedMode = 'Crouch' end
-
-			if s_Waypoint.SpeedMode == 3 then s_SpeedMode = 'Walk' end
-
-			if s_Waypoint.SpeedMode == 4 then s_SpeedMode = 'Sprint' end
-
-			local s_ExtraMode = 'N/A'
-
-			if s_Waypoint.ExtraMode == 1 then s_ExtraMode = 'Jump' end
-
-			local s_OptionValue = 'N/A'
-
-			if s_Waypoint.SpeedMode == 0 then
-				s_OptionValue = tostring(s_Waypoint.OptValue) .. ' Seconds'
-			end
-
-			local s_PathMode = 'Loops'
-			if p_DataPoint.Reverse then
-				s_PathMode = 'Reverses'
-			end
-
-			local s_Text = ''
-			-- s_Text = s_Text .. string.format("(%s)Pevious [ %s ] Next(%s)\n", s_PreviousNode, p_Waypoint.ID, s_NextNode)
-			s_Text = s_Text .. string.format('Index[%d]\n', s_Waypoint.Index)
-			s_Text = s_Text .. string.format('Path[%d][%d] (%s)\n', s_Waypoint.PathIndex, s_Waypoint.PointIndex, s_PathMode)
-			s_Text = s_Text .. string.format('Path Objectives: %s\n', g_Utilities:dump(p_DataPoint.Objectives, false))
-			s_Text = s_Text .. string.format('Vehicles: %s\n', g_Utilities:dump(p_DataPoint.Vehicles, false))
-			s_Text = s_Text .. string.format('InputVar: %d\n', s_Waypoint.InputVar)
-			s_Text = s_Text .. string.format('SpeedMode: %s (%d)\n', s_SpeedMode, s_Waypoint.SpeedMode)
-			s_Text = s_Text .. string.format('ExtraMode: %s (%d)\n', s_ExtraMode, s_Waypoint.ExtraMode)
-			s_Text = s_Text .. string.format('OptValue: %s (%d)\n', s_OptionValue, s_Waypoint.OptValue)
-			s_Text = s_Text .. 'Data: ' .. g_Utilities:dump(s_Waypoint.Data, true)
-
-			self:DrawPosText2D(s_Waypoint.Position + Vec3.up, s_Text, self.m_Colors.Text, 1.2)
-		else
-			-- Don't try to pre-calculate this value like with the distance, another memory leak crash awaits you.
-			self:DrawPosText2D(s_Waypoint.Position + (Vec3.up * 0.05), tostring(s_Waypoint.ID), self.m_Colors.Text, 1)
-		end
-	end
-
-	self.m_LastDataPoint = p_DataPoint -- To-do: check if we need to perform a deep copy.
+function ClientNodeEditor:GetLinkNode(p_LinkID)
+	return self.m_WayPointsById[p_LinkID]
 end
 
 function ClientNodeEditor:OnUISettings(p_Data)
@@ -408,9 +347,9 @@ end
 function ClientNodeEditor:FindNode(p_Position)
 	local s_ClosestNode = nil
 	local s_ClosestDistance = 0.6 -- Maximum 0.6 meter.
-	for l_Index = 1, #self.m_DataPoints do
-		local l_DataNode = self.m_DataPoints[l_Index]
-		local s_Distance = self:GetDistance(l_DataNode.Node.Position, p_Position)
+	for l_Index = 1, #self.m_WayPoints do
+		local l_DataNode = self.m_WayPoints[l_Index]
+		local s_Distance = m_Utilities:DistanceFast(l_DataNode.Position, p_Position) -- was: self:GetDistance
 		if s_ClosestDistance > s_Distance then
 			s_ClosestDistance = s_Distance
 			s_ClosestNode = l_DataNode
@@ -425,33 +364,41 @@ function ClientNodeEditor:_onSelectNode(p_Args)
 
 	if s_Hit == nil then
 		self.m_ScanForNode = true
+		print("Scan for node started")
 		return
 	end
 
 	local s_HitPoint = self:FindNode(s_Hit.position)
 
 	if s_HitPoint then
-		if s_HitPoint.IsSelected then
-			NetEvents:SendLocal('NodeEditor:Deselect', s_HitPoint.Node.ID)
+		if self:GetIsSelected(s_HitPoint.ID) then
+			NetEvents:SendLocal('NodeEditor:Deselect', s_HitPoint.ID)
 		else
-			NetEvents:SendLocal('NodeEditor:Select', s_HitPoint.Node.ID)
+			NetEvents:SendLocal('NodeEditor:Select', s_HitPoint.ID)
 		end
+		return
 	end
 
 	local s_HitSpawn = m_ClientSpawnPointHelper:FindSpawn(s_Hit.position)
 	if s_HitSpawn then
 		print(s_HitSpawn)
 		NetEvents:SendLocal('NodeEditor:SelectSpawn', s_HitSpawn)
+		return
 	end
 
 	local s_SelectedSpawn = m_ClientSpawnPointHelper:GetSelectedSpawn()
 	if s_SelectedSpawn then
 		print(s_SelectedSpawn)
 		NetEvents:SendLocal('NodeEditor:SelectSpawn', s_SelectedSpawn)
+		return
 	end
+
+	-- TODO: don't always do this?
+	self.m_ScanForNode = true
 end
 
 function ClientNodeEditor:_onRemoveNode()
+	print("trigger remove node")
 	NetEvents:SendLocal('NodeEditor:RemoveNode')
 end
 
@@ -477,12 +424,10 @@ end
 
 function ClientNodeEditor:GetSelectedNodes()
 	local s_Selection = {}
-	for l_Index = 1, #self.m_DataPoints do
-		local l_Node = self.m_DataPoints[l_Index]
-		if l_Node.IsSelected then
-			s_Selection[#s_Selection + 1] = l_Node
-		end
+	for s_Index = 1, #self.m_Selections do
+		s_Selection[#s_Selection + 1] = self.m_WayPointsById[self.m_Selections[s_Index]]
 	end
+
 	return s_Selection
 end
 
@@ -504,8 +449,8 @@ function ClientNodeEditor:_onToggleMoveNode(p_Args)
 
 			for i = 1, #s_Selection do
 				local s_UpdateNode = {
-					ID = s_Selection[i].Node.ID,
-					Pos = self.m_EditNodeStartPos[s_Selection[i].Node.ID],
+					ID = s_Selection[i].ID,
+					Pos = self.m_EditNodeStartPos[s_Selection[i].ID],
 				}
 				s_UpdateData[#s_UpdateData + 1] = s_UpdateNode
 			end
@@ -551,8 +496,8 @@ function ClientNodeEditor:_onToggleMoveNode(p_Args)
 		self.m_EditNodeStartPos = {}
 
 		for i = 1, #s_Selection do
-			self.m_EditNodeStartPos[i] = s_Selection[i].Node.Position:Clone()
-			self.m_EditNodeStartPos[s_Selection[i].Node.ID] = s_Selection[i].Node.Position:Clone()
+			self.m_EditNodeStartPos[i] = s_Selection[i].Position:Clone()
+			self.m_EditNodeStartPos[s_Selection[i].ID] = s_Selection[i].Position:Clone()
 		end
 
 		self.m_EditMode = 'move'
@@ -591,8 +536,9 @@ function ClientNodeEditor:_onAddNode(p_Args)
 end
 
 function ClientNodeEditor:_onSelectNewNode(p_NewDataNodeId)
-	self.m_NodeIdFound = false
-	self.m_NewNodeId = p_NewDataNodeId
+	self.m_Selections = { p_NewDataNodeId }
+	self.m_EditPositionMode = 'absolute'
+	self:_onToggleMoveNode()
 end
 
 function ClientNodeEditor:_onLinkNode()
@@ -686,9 +632,15 @@ function ClientNodeEditor:OnLevelDestroy()
 end
 
 function ClientNodeEditor:_onUnload()
-	self.m_LastDataPoint = nil
-	self.m_DataPoints = {}
-	self.m_TempDataPoints = {}
+	-- new Mode stuff
+	self.m_WayPoints = {}
+	self.m_CurrentTrace = {}
+	self.m_Selections = {}
+	self.m_RequestDataSent = false
+	self.m_LastUpdateIndex = 0
+	self.m_FirstNodeInPath = {}
+	self.m_PathsToSkipForCycles = {}
+	self.m_MinDistanceToPath = {}
 
 	self.m_NodesToDraw = {}
 	self.m_NodesToDraw_temp = {}
@@ -908,6 +860,13 @@ function ClientNodeEditor:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 		return
 	end
 
+	-- request data if not done yet
+	if not self.m_RequestDataSent then
+		NetEvents:SendLocal('NodeEditor:RequestData')
+		self.m_RequestDataSent = true
+		return
+	end
+
 	-- Doing this here and not in UI:DrawHud prevents a memory leak that crashes you in under a minute.
 	local s_Player = PlayerManager:GetLocalPlayer()
 	if s_Player and s_Player.soldier and s_Player.soldier.worldTransform then
@@ -942,7 +901,7 @@ function ClientNodeEditor:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 						local s_UpdateData = {}
 
 						for i = 1, #s_Selection do
-							local s_AdjustedPosition = self.m_EditNodeStartPos[s_Selection[i].Node.ID] + self.m_EditModeManualOffset
+							local s_AdjustedPosition = self.m_EditNodeStartPos[s_Selection[i].ID] + self.m_EditModeManualOffset
 
 							if self.m_EditPositionMode == 'relative' then
 								s_AdjustedPosition = s_AdjustedPosition + (self.editRayHitRelative or Vec3.zero)
@@ -953,7 +912,7 @@ function ClientNodeEditor:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 							end
 
 							local s_UpdateNode = {
-								ID = s_Selection[i].Node.ID,
+								ID = s_Selection[i].ID,
 								Pos = s_AdjustedPosition,
 							}
 							s_UpdateData[#s_UpdateData + 1] = s_UpdateNode
@@ -963,6 +922,214 @@ function ClientNodeEditor:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 					end
 				end
 			end
+		end
+	end
+
+
+	-- prepare data to draw
+	if s_Player and s_Player.soldier then
+		local s_MaxIndex = #self.m_WayPoints + #self.m_CurrentTrace
+
+		local s_LastUpdatedIndex = 0
+		local s_UpdateCount = 0
+
+		for l_Index = self.m_LastUpdateIndex + 1, s_MaxIndex do
+			s_LastUpdatedIndex = l_Index
+
+			local s_IsTracePath = false
+			local l_Node = nil
+			local l_LastNode = nil
+			if l_Index <= #self.m_WayPoints then
+				l_Node = self.m_WayPoints[l_Index]
+				if l_Index > 1 then
+					l_LastNode = self.m_WayPoints[l_Index - 1]
+				end
+			else
+				s_IsTracePath = true
+				local l_TraceIndex = l_Index - #self.m_WayPoints
+				l_Node = self.m_CurrentTrace[l_TraceIndex]
+				if l_TraceIndex > 1 then
+					l_LastNode = self.m_CurrentTrace[l_TraceIndex - 1]
+				end
+			end
+
+			if not s_IsTracePath and self.m_PathsToSkipForCycles[l_Node.PathIndex] > 0 then
+				goto continue
+			end
+
+			local s_Distance = m_Utilities:DistanceFast(l_Node.Position, self.m_PlayerPos)
+			if not s_IsTracePath and (self.m_MinDistanceToPath[l_Node.PathIndex] == nil or s_Distance < self.m_MinDistanceToPath[l_Node.PathIndex]) then
+				self.m_MinDistanceToPath[l_Node.PathIndex] = s_Distance
+			end
+
+			local s_DrawNode = false
+			local s_DrawLine = false
+			local s_DrawText = false
+			if s_Distance <= Config.WaypointRange then
+				s_DrawNode = true
+			end
+			if s_Distance <= Config.LineRange then
+				s_DrawLine = true
+			end
+			if s_Distance <= Config.TextRange then
+				s_DrawText = true
+			end
+
+			if s_DrawNode or s_DrawLine then
+				-- only draw if in front of player
+				-- local s_DiffPos = l_Node.Position - self.m_PlayerPos
+				-- local s_DotProduct = s_DiffPos:Dot(s_Player.soldier.worldTransform.forward)
+				-- if s_DotProduct > 0 then
+				local s_IsSelected = self:GetIsSelected(l_Node.ID, s_IsTracePath)
+
+				local s_Color = self:GetColor(l_Node, s_IsTracePath)
+				local s_QualityAtRange = s_DrawText or s_IsSelected -- higher quality if text is drawn or is selected
+				local s_Size = 0.05
+				if s_IsSelected then
+					s_Size = 0.08
+					-- Transform marker.
+					self:DrawLine(l_Node.Position, l_Node.Position + (Vec3.up), self.m_Colors.Red, self.m_Colors.Red)
+					self:DrawLine(l_Node.Position, l_Node.Position + (Vec3.right * 0.5), self.m_Colors.Green, self.m_Colors.Green)
+					self:DrawLine(l_Node.Position, l_Node.Position + (Vec3.forward * 0.5), self.m_Colors.Blue, self.m_Colors.Blue)
+				end
+				self:DrawSphere(l_Node.Position, s_Size, s_Color.Node, false, (not s_QualityAtRange))
+				s_UpdateCount = s_UpdateCount + 3
+
+				-- Check if we are scanning for a node to select.
+				if not s_IsTracePath and self.m_ScanForNode then
+					local s_PointScreenPos = ClientUtils:WorldToScreen(l_Node.Position)
+
+					-- Skip to the next point if this one isn't in view.
+					if s_PointScreenPos ~= nil then
+						local s_Center = ClientUtils:GetWindowSize() / 2
+
+						-- Select point if it's close to the hitPosition.
+						if s_Center:Distance(s_PointScreenPos) < 20 then
+							self.m_ScanForNode = false
+							print("San for node ended")
+
+							if s_IsSelected then
+								self:Log('Deselect -> %s', l_Node.ID)
+								NetEvents:SendLocal('NodeEditor:Deselect', l_Node.ID)
+								return
+							else
+								self:Log('Select -> %s', l_Node.ID)
+								NetEvents:SendLocal('NodeEditor:Select', l_Node.ID)
+								return
+							end
+						end
+					end
+				end
+
+				if Config.DrawWaypointLines and s_DrawLine and l_LastNode and (s_IsTracePath or l_LastNode.PathIndex == l_Node.PathIndex) then
+					self:DrawLine(l_Node.Position, l_LastNode.Position, s_Color.Line, s_Color.Line)
+					s_UpdateCount = s_UpdateCount + 2
+				end
+				if l_Node.Data and l_Node.Data.Links then
+					for l_LinkIndex = 1, #l_Node.Data.Links do
+						local l_LinkID = l_Node.Data.Links[l_LinkIndex]
+						local l_LinkNode = self:GetLinkNode(l_LinkID)
+						if l_LinkNode then
+							self:DrawLine(l_Node.Position, l_LinkNode.Position, self.m_Colors.Purple, self.m_Colors.Purple)
+							s_UpdateCount = s_UpdateCount + 1
+						end
+					end
+				end
+				if Config.DrawWaypointIDs and s_DrawText and not s_IsTracePath then
+					-- Draw debugging text.
+					if s_IsSelected then
+						local s_FirstNode = self.m_FirstNodeInPath[l_Node.PathIndex]
+						local s_SpeedMode = 'N/A'
+
+						local SpeedMode = l_Node.InputVar & 0xF -- 0 = wait, 1 = prone, 2 = crouch, 3 = walk, 4 run.
+						local ExtraMode = (l_Node.InputVar >> 4) & 0xF
+						local OptValue = (l_Node.InputVar >> 8) & 0xFF
+
+						if SpeedMode == 0 then s_SpeedMode = 'Wait' end
+
+						if SpeedMode == 1 then s_SpeedMode = 'Prone' end
+
+						if SpeedMode == 2 then s_SpeedMode = 'Crouch' end
+
+						if SpeedMode == 3 then s_SpeedMode = 'Walk' end
+
+						if SpeedMode == 4 then s_SpeedMode = 'Sprint' end
+
+						local s_ExtraMode = 'N/A'
+
+						if ExtraMode == 1 then s_ExtraMode = 'Jump' end
+
+						local s_OptionValue = 'N/A'
+
+						if SpeedMode == 0 then
+							s_OptionValue = tostring(OptValue) .. ' Seconds'
+						end
+
+						local s_PathMode = 'Loops'
+						local s_Reverses = (s_FirstNode.InputVar >> 8) & 0xFF == 0XFF
+						if s_Reverses then
+							s_PathMode = 'Reverses'
+						end
+
+						local s_Text = ''
+						-- s_Text = s_Text .. string.format("(%s)Pevious [ %s ] Next(%s)\n", s_PreviousNode, p_Waypoint.ID, s_NextNode)
+						s_Text = s_Text .. string.format('Index[%d]\n', l_Node.Index)
+						s_Text = s_Text .. string.format('Path[%d][%d] (%s)\n', l_Node.PathIndex, l_Node.PointIndex, s_PathMode)
+						s_Text = s_Text .. string.format('Path Objectives: %s\n', g_Utilities:dump(s_FirstNode.Data.Objectives, false))
+						s_Text = s_Text .. string.format('Vehicles: %s\n', g_Utilities:dump(s_FirstNode.Data.Vehicles, false))
+						s_Text = s_Text .. string.format('InputVar: %d\n', l_Node.InputVar)
+						s_Text = s_Text .. string.format('SpeedMode: %s (%d)\n', s_SpeedMode, SpeedMode)
+						s_Text = s_Text .. string.format('ExtraMode: %s (%d)\n', s_ExtraMode, ExtraMode)
+						s_Text = s_Text .. string.format('OptValue: %s (%d)\n', s_OptionValue, OptValue)
+						s_Text = s_Text .. 'Data: ' .. g_Utilities:dump(l_Node.Data, true)
+
+						self:DrawPosText2D(l_Node.Position + Vec3.up, s_Text, self.m_Colors.Text, 1.2)
+					else
+						-- Don't try to pre-calculate this value like with the distance, another memory leak crash awaits you.
+						self:DrawPosText2D(l_Node.Position + (Vec3.up * 0.05), tostring(l_Node.ID), self.m_Colors.Text, 1)
+					end
+					s_UpdateCount = s_UpdateCount + 1
+				end
+			end
+			s_UpdateCount = s_UpdateCount + 1
+			if s_UpdateCount >= Config.NodesPerCycle then
+				break
+			end
+			-- end
+			::continue::
+		end
+
+		if s_LastUpdatedIndex >= s_MaxIndex then
+			m_ClientSpawnPointHelper:Update(self.m_PlayerPos, self.m_NodesToDraw_temp, self.m_LinesToDraw_temp)
+			self.m_LastUpdateIndex = 0
+			-- check if we need to update the values
+			local s_MaxDrawDistance = math.max(Config.WaypointRange, Config.LineRange)
+			for l_Index, _ in pairs(self.m_PathsToSkipForCycles) do
+				if self.m_PathsToSkipForCycles[l_Index] > 0 then
+					self.m_PathsToSkipForCycles[l_Index] = self.m_PathsToSkipForCycles[l_Index] - 1
+				else
+					if self.m_MinDistanceToPath[l_Index] and (self.m_MinDistanceToPath[l_Index] > s_MaxDrawDistance) then
+						self.m_PathsToSkipForCycles[l_Index] = math.floor((self.m_MinDistanceToPath[l_Index] / s_MaxDrawDistance) * 10)
+					end
+				end
+			end
+
+			self.m_NodesToDraw = self.m_NodesToDraw_temp
+			self.m_NodesToDraw_temp = {}
+
+			self.m_LinesToDraw = self.m_LinesToDraw_temp
+			self.m_LinesToDraw_temp = {}
+
+			self.m_TextToDraw = self.m_TextToDraw_temp
+			self.m_TextToDraw_temp = {}
+
+			self.m_TextPosToDraw = self.m_TextPosToDraw_temp
+			self.m_TextPosToDraw_temp = {}
+
+			self.m_ObbToDraw = self.m_ObbToDraw_temp
+			self.m_ObbToDraw_temp = {}
+		else
+			self.m_LastUpdateIndex = s_LastUpdatedIndex
 		end
 	end
 end

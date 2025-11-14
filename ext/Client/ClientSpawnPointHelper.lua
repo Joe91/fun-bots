@@ -3,6 +3,7 @@
 ClientSpawnPointHelper = class 'ClientSpawnPointHelper'
 
 require('__shared/Config')
+local m_Utilities = require('__shared/Utilities')
 
 function ClientSpawnPointHelper:__init()
 	self.m_Enabled = false
@@ -45,7 +46,7 @@ function ClientSpawnPointHelper:FindSpawn(p_Position)
 
 	for l_Index = 1, #self.m_SpawnPointTable do
 		local s_Transform = self.m_SpawnPointTable[l_Index]
-		local s_Distance = s_Transform.trans:Distance(p_Position)
+		local s_Distance = m_Utilities:DistanceFast(s_Transform.trans, p_Position)
 		if s_Distance < s_ClosestDistance then
 			s_ClosestIndex = l_Index
 			s_ClosestDistance = s_Distance
@@ -61,28 +62,67 @@ function ClientSpawnPointHelper:GetSelectedSpawn()
 	return self.m_SelectedSpawnPointIndex
 end
 
----VEXT Client UI:DrawHud Event
-function ClientSpawnPointHelper:OnUIDrawHud()
-	self.m_SelectedSpawnPoint = nil
-
+function ClientSpawnPointHelper:Update(p_PlayerPos, p_NodesToDraw, p_LinesToDraw)
 	if not Config.DrawSpawnPoints or not self.m_Enabled then
-		return
-	end
-
-	local s_LocalPlayer = PlayerManager:GetLocalPlayer()
-
-	if s_LocalPlayer == nil then
-		return
-	end
-
-	if s_LocalPlayer.soldier == nil then
 		return
 	end
 
 	for l_Index = 1, #self.m_SpawnPointTable do
 		local l_Transform = self.m_SpawnPointTable[l_Index]
-		if l_Transform.trans:Distance(s_LocalPlayer.soldier.worldTransform.trans) <= Config.SpawnPointRange then
-			self:DrawSpawnPoint(l_Transform, l_Index)
+		if m_Utilities:DistanceFast(l_Transform.trans, p_PlayerPos) <= Config.SpawnPointRange then
+			-- self:DrawSpawnPoint(l_Transform, l_Index)
+			local s_Color = Vec4(1, 1, 1, 0.5)
+			local s_PointScreenPos = ClientUtils:WorldToScreen(l_Transform.trans)
+
+			-- Skip to the next point if this one isn't in view.
+			-- if s_PointScreenPos ~= nil then
+			local s_Center = ClientUtils:GetWindowSize() / 2
+
+			-- Select point if it's close to the hitPosition.
+			if s_PointScreenPos and s_Center:Distance(s_PointScreenPos) < 20 then
+				self.m_SelectedSpawnPoint = l_Transform
+				self.m_SelectedSpawnPointIndex = l_Index
+				s_Color = Vec4(0, 0, 1, 0.5)
+			end
+			-- end
+
+			-- local s_Up = Vec3(0, 1.5, 0)
+			-- local s_Offset = self:GetForwardOffsetFromLT(p_Transform)
+
+			table.insert(p_NodesToDraw, {
+				pos = l_Transform.trans,
+				radius = 0.3,
+				color = s_Color,
+				renderLines = true,
+				smallSizeSegmentDecrease = false,
+			})
+			-- table.insert(p_NodesToDraw, {
+			-- 	pos = l_Transform.trans + s_Up,
+			-- 	radius = 0.3,
+			-- 	color = s_Color,
+			-- 	renderLines = true,
+			-- 	smallSizeSegmentDecrease = false,
+			-- })
+			-- table.insert(p_NodesToDraw, {
+			-- 	pos = s_Offset + s_Up,
+			-- 	radius = 0.1,
+			-- 	color = s_Color,
+			-- 	renderLines = true,
+			-- 	smallSizeSegmentDecrease = false,
+			-- })
+
+			-- table.insert(p_LinesToDraw, {
+			-- 	from = l_Transform.trans,
+			-- 	to = l_Transform.trans + s_Up,
+			-- 	colorFrom = s_Color,
+			-- 	colorTo = s_Color,
+			-- })
+			-- table.insert(p_LinesToDraw, {
+			-- 	from = l_Transform.trans + s_Up,
+			-- 	to = s_Offset + s_Up,
+			-- 	colorFrom = s_Color,
+			-- 	colorTo = s_Color,
+			-- })
 		end
 	end
 end
@@ -103,33 +143,6 @@ function ClientSpawnPointHelper:OnClientUpdateInput(p_DeltaTime)
 
 		NetEvents:SendLocal("SpawnPointHelper:TeleportTo", self.m_SelectedSpawnPoint)
 	end
-end
-
-function ClientSpawnPointHelper:DrawSpawnPoint(p_Transform, p_Index)
-	local s_Color = Vec4(1, 1, 1, 0.5)
-	local s_PointScreenPos = ClientUtils:WorldToScreen(p_Transform.trans)
-
-	-- Skip to the next point if this one isn't in view.
-	if s_PointScreenPos ~= nil then
-		local s_Center = ClientUtils:GetWindowSize() / 2
-
-		-- Select point if it's close to the hitPosition.
-		if s_Center:Distance(s_PointScreenPos) < 20 then
-			self.m_SelectedSpawnPoint = p_Transform
-			self.m_SelectedSpawnPointIndex = p_Index
-			s_Color = Vec4(0, 0, 1, 0.5)
-		end
-	end
-
-	local s_Up = Vec3(0, 1.5, 0)
-	local s_Offset = self:GetForwardOffsetFromLT(p_Transform)
-
-	DebugRenderer:DrawSphere(p_Transform.trans, 0.3, s_Color, true, false)
-	DebugRenderer:DrawSphere(p_Transform.trans + s_Up, 0.15, s_Color, true, false)
-	DebugRenderer:DrawSphere(s_Offset + s_Up, 0.1, s_Color, true, false)
-
-	DebugRenderer:DrawLine(p_Transform.trans, p_Transform.trans + s_Up, s_Color, s_Color)
-	DebugRenderer:DrawLine(p_Transform.trans + s_Up, s_Offset + s_Up, s_Color, s_Color)
 end
 
 -- Returns a Vec3 that's offset in the direction of the linearTransform.
