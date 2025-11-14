@@ -214,6 +214,7 @@ function Bot:__init(p_Player)
 	self._WeaponToUse = BotWeapons.Primary
 	-- To-do: add emmylua type.
 	self._ShootWayPoints = {}
+	self._FollowWayPoints = {}
 	---@type Vec3[]
 	self._KnifeWayPositions = {}
 	self._Accuracy = 0.0
@@ -225,6 +226,7 @@ function Bot:__init(p_Player)
 
 	-- Following player functionality
 	self._FollowTargetPlayer = nil
+	self._FollowingTraceTimer = 0.0
 	self._PersistentFollowTarget = nil
 	self._FollowDistance = 3.0
 	self._FollowAngle = 0

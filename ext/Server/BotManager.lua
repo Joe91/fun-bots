@@ -194,46 +194,6 @@ function BotManager:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 		self._DestroyBotsTimer = self._DestroyBotsTimer + p_DeltaTime
 	end
 
-	-- Check for followers that should return to following (runs every 2 seconds)
-	if self._FollowerReturnTimer == nil then
-		self._FollowerReturnTimer = 0.0
-	end
-
-	self._FollowerReturnTimer = self._FollowerReturnTimer + p_DeltaTime
-
-	if self._FollowerReturnTimer > 2.0 then
-		self._FollowerReturnTimer = 0.0
-
-		-- Check all bots for ones that should return to following
-		for i = 1, #self._Bots do
-			local s_Bot = self._Bots[i]
-
-			-- Check if bot was following someone and is now in attacking state with no target
-			if s_Bot._PersistentFollowTarget and
-				s_Bot.m_ActiveState == g_BotStates.States.Attacking and
-				s_Bot._ShootPlayer == nil and
-				s_Bot._FollowReturnTimer then
-				s_Bot._FollowReturnTimer = s_Bot._FollowReturnTimer + 2.0 -- Add the 2 second interval
-
-				if s_Bot._FollowReturnTimer > 3.0 then       -- 3 seconds of no combat
-					local s_TargetPlayer = s_Bot._PersistentFollowTarget
-
-					-- Verify target is still valid
-					if s_TargetPlayer.soldier and
-						s_TargetPlayer.teamId == s_Bot.m_Player.teamId then
-						-- Return to following
-						s_Bot._FollowTargetPlayer = s_TargetPlayer
-						s_Bot:SetState(g_BotStates.States.Following)
-						s_Bot._FollowReturnTimer = 0.0
-					else
-						-- Target no longer valid, clear follow memory
-						s_Bot._PersistentFollowTarget = nil
-						s_Bot._FollowReturnTimer = nil
-					end
-				end
-			end
-		end
-	end
 	-- g_Profiler:End("Botmanager:Update")
 end
 
@@ -1741,8 +1701,9 @@ function BotManager:CommandBotsToStopFollowing(p_Player)
 		local s_Bot = s_BotsOnTeam[i]
 		if s_Bot.m_ActiveState == g_BotStates.States.Following and
 			s_Bot._FollowTargetPlayer == p_Player then
-			s_Bot:SetState(g_BotStates.States.Moving)
+			-- s_Bot:SetState(g_BotStates.States.Moving)
 			s_Bot._FollowTargetPlayer = nil
+			s_Bot._FollowWayPoints = {}
 			s_Bot._PersistentFollowTarget = nil
 			s_FollowersStopped = s_FollowersStopped + 1
 		end
@@ -1767,7 +1728,7 @@ function BotManager:SetupBotFollowing(p_Bot, p_Player, p_Index)
 	p_Bot._FollowLookTimer = 0.0
 	p_Bot._FollowReturnTimer = 0.0
 
-	p_Bot:SetState(g_BotStates.States.Following)
+	-- p_Bot:SetState(g_BotStates.States.Following)
 end
 
 if g_BotManager == nil then

@@ -174,6 +174,41 @@ function Bot:UpdateNormalMovement(p_DeltaTime)
 		end
 
 
+		-- Overwrite Nodes if bot is following a player:
+		if self._FollowTargetPlayer and self._FollowTargetPlayer.soldier then
+			local s_TracePlayer = self._FollowTargetPlayer
+			self._FollowingTraceTimer = self._FollowingTraceTimer + p_DeltaTime
+			if self._FollowingTraceTimer > Config.TraceDelta then
+				self._FollowingTraceTimer = 0.0
+				local s_SpeedInput = math.abs(s_TracePlayer.input:GetLevel(EntryInputActionEnum.EIAThrottle))
+				local s_Speed
+				if s_SpeedInput > 0 then
+					s_Speed = BotMoveSpeeds.Normal
+					if s_TracePlayer.input:GetLevel(EntryInputActionEnum.EIASprint) == 1 then
+						s_Speed = BotMoveSpeeds.Sprint
+					end
+				elseif s_SpeedInput == 0 then
+					s_Speed = BotMoveSpeeds.SlowCrouch
+				end
+
+				if s_TracePlayer.input:GetLevel(EntryInputActionEnum.EIABrake) > 0 then
+					s_Speed = BotMoveSpeeds.VerySlowProne
+				end
+
+				self._FollowWayPoints[#self._FollowWayPoints + 1] = {
+					SpeedMode = s_Speed,
+					Position = self._FollowTargetPlayer.soldier.worldTransform.trans
+				}
+			end
+			if #self._FollowWayPoints > 2 then
+				s_Point = self._FollowWayPoints[1]
+				s_NextPoint = self._FollowWayPoints[2]
+				s_NextToNextPoint = self._FollowWayPoints[3]
+			else
+				return -- wait for more nodes?
+			end
+		end
+
 
 		if Registry.BOT.USE_PATH_OFFSETS and s_Point and s_NextPoint and s_NextToNextPoint then
 			s_Point, s_NextPoint = self:ApplyPathOffset(s_Point, s_NextPoint, s_NextToNextPoint)
@@ -510,7 +545,9 @@ function Bot:UpdateNormalMovement(p_DeltaTime)
 				if not s_NoStuckReset then
 					self._StuckTimer = 0.0
 				end
-
+				if self._FollowTargetPlayer then
+					table.remove(self._FollowWayPoints, 1)
+				end
 
 				-- CHECK FOR ACTION.
 				if s_Point.Data.Action ~= nil then

@@ -507,8 +507,8 @@ function FunBotUIServer:_onUIRequestCommoRoseShow(p_Player, p_Data)
 
 	NetEvents:SendTo('UI_CommoRose', p_Player, {
 		Top = {
-			Action = 'not_implemented',
-			Label = Language:I18N(''),
+			Action = 'follow_me',
+			Label = Language:I18N('Follow Me')
 		},
 		Left = {
 			{
@@ -526,10 +526,6 @@ function FunBotUIServer:_onUIRequestCommoRoseShow(p_Player, p_Data)
 			{
 				Action = 'drop_medkit',
 				Label = Language:I18N('Drop Medkit')
-			},
-			{
-				Action = 'follow_me',
-				Label = Language:I18N('Follow Me')
 			},
 		},
 		Center = {
@@ -550,17 +546,13 @@ function FunBotUIServer:_onUIRequestCommoRoseShow(p_Player, p_Data)
 				Label = Language:I18N('Repair Vehicle')
 			},
 			{
-				Action = 'stop_follow',
-				Label = Language:I18N('Stop Follow')
-			},
-			{
 				Action = 'not_implemented',
 				Label = Language:I18N('')
 			}
 		},
 		Bottom = {
-			Action = 'not_implemented',
-			Label = Language:I18N(''),
+			Action = 'stop_follow',
+			Label = Language:I18N('Stop Follow')
 		}
 	})
 end

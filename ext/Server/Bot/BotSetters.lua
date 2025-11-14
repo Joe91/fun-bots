@@ -163,6 +163,7 @@ function Bot:ResetVars()
 	self._NextTargetPoint = nil
 	self._KnifeWayPositions = {}
 	self._ShootWayPoints = {}
+	self._FollowWayPoints = {}
 	self._SpawnDelayTimer = 0.0
 	self._KillYourselfTimer = 0.0
 	self._RocketCooldownTimer = 0.0
@@ -209,6 +210,7 @@ function Bot:ResetSpawnVars()
 	self._ShootPlayerId = -1
 	self._AttackMode = BotAttackModes.RandomNotSet
 	self._ShootWayPoints = {}
+	self._FollowWayPoints = {}
 
 	-- Skill.
 	if not self._SkillFound then
