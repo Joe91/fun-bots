@@ -932,6 +932,7 @@ function NodeCollection:Clear()
 	self._InfoNode = {}
 
 	self._PrintDiagOnInvalidPointindex = false
+	self._LoadPathCount = 0
 end
 
 -----------------------------
