@@ -42,6 +42,7 @@ This is the changelog for the version V3.0 Don't forget to [join us on Discord](
 * performance of node-editor
 * Don't exit vehicle, if player is driver
 * Attempt to fix Messed-up first spawn in TDM, still not working
+* Bots now can use a path-offset sidewards (by MatiasPastori)
 
 ### some open TODOs:
 * rework of raycasts for better performance
