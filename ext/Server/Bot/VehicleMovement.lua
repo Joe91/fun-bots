@@ -37,7 +37,7 @@ function VehicleMovement:UpdateNormalMovementVehicle(p_DeltaTime, p_Bot)
 	-- Move along points.
 	if m_NodeCollection:Get(1, p_Bot._PathIndex) ~= nil then -- Check for valid point.
 		-- Get next point.
-		local s_ActivePointIndex = p_Bot:_GetWayIndex(p_Bot._CurrentWayPoint)
+		local s_ActivePointIndex = p_Bot:_GetWayIndex(0)
 
 		local s_Point = nil
 		local s_NextPoint = nil
@@ -46,9 +46,9 @@ function VehicleMovement:UpdateNormalMovementVehicle(p_DeltaTime, p_Bot)
 		s_Point = m_NodeCollection:Get(s_ActivePointIndex, p_Bot._PathIndex)
 
 		if not p_Bot._InvertPathDirection then
-			s_NextPoint = m_NodeCollection:Get(p_Bot:_GetWayIndex(p_Bot._CurrentWayPoint + 1), p_Bot._PathIndex)
+			s_NextPoint = m_NodeCollection:Get(p_Bot:_GetWayIndex(1), p_Bot._PathIndex)
 		else
-			s_NextPoint = m_NodeCollection:Get(p_Bot:_GetWayIndex(p_Bot._CurrentWayPoint - 1), p_Bot._PathIndex)
+			s_NextPoint = m_NodeCollection:Get(p_Bot:_GetWayIndex(-1), p_Bot._PathIndex)
 		end
 
 		if s_Point == nil then

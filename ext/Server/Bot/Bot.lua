@@ -224,16 +224,8 @@ function Bot:__init(p_Player)
 	---@type Player|nil
 	self._TargetPlayer = nil
 
-	-- Following player functionality
 	self._FollowTargetPlayer = nil
 	self._FollowingTraceTimer = 0.0
-	self._PersistentFollowTarget = nil
-	self._FollowDistance = 3.0
-	self._FollowAngle = 0
-	self._FollowStrafeTimer = 0.0
-	self._FollowLookTimer = 0.0
-	self._FollowReturnTimer = 0.0
-	self._FollowLastDist = 0.0
 end
 
 -- =============================================

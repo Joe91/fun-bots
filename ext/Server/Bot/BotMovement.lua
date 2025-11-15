@@ -137,7 +137,7 @@ function Bot:_ExecuteActionIfNeeded(p_Point, p_NextPoint, p_DeltaTime)
 							self._InvertPathDirection = false
 							self._PathIndex = s_Node.PathIndex
 							self._CurrentWayPoint = s_Node.PointIndex
-							p_NextPoint = m_NodeCollection:Get(self:_GetWayIndex(self._CurrentWayPoint + 1), self._PathIndex)
+							p_NextPoint = m_NodeCollection:Get(self:_GetWayIndex(1), self._PathIndex)
 						end
 					end
 				end
@@ -482,10 +482,8 @@ function Bot:UpdateNormalMovement(p_DeltaTime)
 	self._AttackModeMoveTimer = 0.0
 
 
-	if self._FollowTargetPlayer == nil then
-		-- default movement
-
-		local s_ActivePointIndex = self:_GetWayIndex()
+	if self._FollowTargetPlayer == nil then -- default movement
+		local s_ActivePointIndex = self:_GetWayIndex(0)
 
 		local s_Point = nil
 		local s_NextPoint = nil
@@ -521,14 +519,14 @@ function Bot:UpdateNormalMovement(p_DeltaTime)
 			return
 		end
 		if not self._InvertPathDirection then
-			s_NextPoint = m_NodeCollection:Get(self:_GetWayIndex(self._CurrentWayPoint + 1), self._PathIndex)
+			s_NextPoint = m_NodeCollection:Get(self:_GetWayIndex(1), self._PathIndex)
 			if s_NextPoint then
-				s_NextToNextPoint = m_NodeCollection:Get(self:_GetWayIndex(self._CurrentWayPoint + 2), self._PathIndex)
+				s_NextToNextPoint = m_NodeCollection:Get(self:_GetWayIndex(2), self._PathIndex)
 			end
 		else
-			s_NextPoint = m_NodeCollection:Get(self:_GetWayIndex(self._CurrentWayPoint - 1), self._PathIndex)
+			s_NextPoint = m_NodeCollection:Get(self:_GetWayIndex(-1), self._PathIndex)
 			if s_NextPoint then
-				s_NextToNextPoint = m_NodeCollection:Get(self:_GetWayIndex(self._CurrentWayPoint - 2), self._PathIndex)
+				s_NextToNextPoint = m_NodeCollection:Get(self:_GetWayIndex(-2), self._PathIndex)
 			end
 		end
 

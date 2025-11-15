@@ -1704,7 +1704,6 @@ function BotManager:CommandBotsToStopFollowing(p_Player)
 			-- s_Bot:SetState(g_BotStates.States.Moving)
 			s_Bot._FollowTargetPlayer = nil
 			s_Bot._FollowWayPoints = {}
-			s_Bot._PersistentFollowTarget = nil
 			s_FollowersStopped = s_FollowersStopped + 1
 		end
 	end
@@ -1720,15 +1719,8 @@ end
 ---@param p_Player Player
 ---@param p_Index integer
 function BotManager:SetupBotFollowing(p_Bot, p_Player, p_Index)
+	p_Bot._FollowWayPoints = {}
 	p_Bot._FollowTargetPlayer = p_Player
-	p_Bot._PersistentFollowTarget = p_Player
-	p_Bot._FollowDistance = 3.0 + math.random() * 2.0                  -- 3-5 meters
-	p_Bot._FollowAngle = (p_Index - 1) * (180 / 2) + math.random(-30, 30) -- Spread them in front
-	p_Bot._FollowStrafeTimer = 0.0
-	p_Bot._FollowLookTimer = 0.0
-	p_Bot._FollowReturnTimer = 0.0
-
-	-- p_Bot:SetState(g_BotStates.States.Following)
 end
 
 if g_BotManager == nil then
