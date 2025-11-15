@@ -315,6 +315,7 @@ function FunBotUIServer:_onBotEditorEvent(p_Player, p_Data)
 			return
 		end
 		Globals.SpawnMode = "manual"
+		BotSpawner:ClearSpawnSets()
 		BotManager:DestroyAll()
 		return
 	elseif request.action == 'bot_kick_team' then
@@ -325,6 +326,7 @@ function FunBotUIServer:_onBotEditorEvent(p_Player, p_Data)
 		Globals.SpawnMode = "manual"
 		local teamNumber = tonumber(request.value)
 
+		BotSpawner:ClearSpawnSets()
 		if teamNumber == 1 then
 			BotManager:DestroyAll(nil, TeamId.Team1)
 		elseif teamNumber == 2 then
@@ -337,6 +339,7 @@ function FunBotUIServer:_onBotEditorEvent(p_Player, p_Data)
 			return
 		end
 		Globals.SpawnMode = "manual"
+		BotSpawner:ClearSpawnSets()
 		BotManager:KillAll()
 		return
 	elseif request.action == 'bot_respawn' then -- Toggle this function.
