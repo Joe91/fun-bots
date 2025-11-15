@@ -108,7 +108,7 @@ function BotSpawner:OnEngineUpdate(p_DeltaTime, p_SimulationDeltaTime)
 		end
 	else
 		-- count below 0 for post-delay-reactions
-		if self._DelayDirectSpawn > -10 and Globals.IsInputAllowed and self._NrOfPlayers > 0 then
+		if self._DelayDirectSpawn > -(Registry.BOT_SPAWN.DELAY_DIRECT_SPAWN * 2) and Globals.IsInputAllowed and self._NrOfPlayers > 0 then
 			self._DelayDirectSpawn = self._DelayDirectSpawn - p_DeltaTime
 		end
 		self._PlayerUpdateTimer = self._PlayerUpdateTimer + p_DeltaTime
@@ -120,7 +120,7 @@ function BotSpawner:OnEngineUpdate(p_DeltaTime, p_SimulationDeltaTime)
 	end
 
 	if #self._SpawnSets > 0 then
-		if self._BotSpawnTimer > 0.5 then -- Time to wait between spawn. 0.2 works
+		if self._BotSpawnTimer > 0.3 then -- Time to wait between spawn. 0.2 works
 			-- g_Profiler:Start("BotSpawner:Spawn")
 			self._BotSpawnTimer = 0.0
 			local s_PosOfSetInTable = MathUtils:GetRandomInt(1, #self._SpawnSets)
@@ -892,6 +892,12 @@ function BotSpawner:UpdateGmWeapon(p_Bot)
 	end
 end
 
+function BotSpawner:ClearSpawnSets()
+	if #self._SpawnSets > 0 then
+		self._SpawnSets = {}
+	end
+end
+
 -- =============================================
 -- Private Functions
 -- =============================================
@@ -1318,7 +1324,8 @@ function BotSpawner:_SpawnSingleWayBot(p_Player, p_UseRandomWay, p_ActiveWayInde
 	if s_Name ~= nil or s_IsRespawn then
 		---@cast s_Name -nil
 		-- g_Profiler:Start("BotSpawner:SpawnPart2") -- about 60 ms on conquest (close to 0 on deathmatch)
-		if Globals.UsedSpawnMethod == SpawnMethod.Spawn then
+		if Globals.UsedSpawnMethod == SpawnMethod.Spawn and
+			not (Globals.IsTdm and (self._DelayDirectSpawn > -(Registry.BOT_SPAWN.DELAY_DIRECT_SPAWN))) then -- workaround for TDM-Spawn-Behaviour
 			local s_Bot = self:GetBot(p_ExistingBot, s_Name, s_TeamId, s_SquadId)
 			if s_Bot == nil then
 				return
