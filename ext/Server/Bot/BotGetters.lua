@@ -195,15 +195,14 @@ function Bot:IsStuck()
 	end
 end
 
----@param p_CurrentWayPoint integer|nil
 ---@return integer
-function Bot:_GetWayIndex(p_CurrentWayPoint)
+function Bot:_GetWayIndex()
 	local s_ActivePointIndex = 1
 
-	if p_CurrentWayPoint == nil then
-		p_CurrentWayPoint = s_ActivePointIndex
+	if self._CurrentWayPoint == nil then
+		self._CurrentWayPoint = s_ActivePointIndex
 	else
-		s_ActivePointIndex = p_CurrentWayPoint
+		s_ActivePointIndex = self._CurrentWayPoint
 
 		-- Direction handling.
 		local s_CountOfPoints = #m_NodeCollection:Get(nil, self._PathIndex)

@@ -43,6 +43,7 @@ This is the changelog for the version V3.0 Don't forget to [join us on Discord](
 * Don't exit vehicle, if player is driver
 * Attempt to fix Messed-up first spawn in TDM, (only a workaround working right now)
 * Bots now can use a path-offset sidewards (by MatiasPastori)
+* Add the command to make the bots follow a player
 
 ### some open TODOs:
 * rework of raycasts for better performance
