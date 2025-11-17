@@ -1647,6 +1647,8 @@ function BotManager:CommandBotsToFollow(p_Player)
 		return
 	end
 
+	self:CommandBotsToStopFollowing(p_Player, true) -- stop following first
+
 	local s_NearbyBots = {}
 	local s_PlayerPosition = p_Player.soldier.worldTransform.trans
 	local s_MaxFollowers = 2
@@ -1693,25 +1695,26 @@ function BotManager:CommandBotsToFollow(p_Player)
 end
 
 ---@param p_Player Player
-function BotManager:CommandBotsToStopFollowing(p_Player)
+function BotManager:CommandBotsToStopFollowing(p_Player, p_NoLogging)
 	local s_FollowersStopped = 0
 	local s_BotsOnTeam = self._BotsByTeam[p_Player.teamId + 1]
 
 	for i = 1, #s_BotsOnTeam do
 		local s_Bot = s_BotsOnTeam[i]
-		if s_Bot.m_ActiveState == g_BotStates.States.Following and
-			s_Bot._FollowTargetPlayer == p_Player then
-			-- s_Bot:SetState(g_BotStates.States.Moving)
+		if s_Bot._FollowTargetPlayer == p_Player then
 			s_Bot._FollowTargetPlayer = nil
 			s_Bot._FollowWayPoints = {}
 			s_FollowersStopped = s_FollowersStopped + 1
 		end
 	end
 
+	if p_NoLogging then
+		return
+	end
 	if s_FollowersStopped > 0 then
 		ChatManager:SendMessage(string.format('%d bot(s) stopped following you.', s_FollowersStopped), p_Player)
 	else
-		ChatManager:SendMessage('No bots were following you.', p_Player)
+		ChatManager:SendMessage('No bots are following you.', p_Player)
 	end
 end
 

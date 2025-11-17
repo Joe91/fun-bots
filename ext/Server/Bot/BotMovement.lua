@@ -138,6 +138,7 @@ function Bot:_ExecuteActionIfNeeded(p_Point, p_NextPoint, p_DeltaTime)
 							self._PathIndex = s_Node.PathIndex
 							self._CurrentWayPoint = s_Node.PointIndex
 							p_NextPoint = m_NodeCollection:Get(self:_GetWayIndex(1), self._PathIndex)
+							self._LastWayDistance = 1000.0
 						end
 					end
 				end
@@ -273,9 +274,16 @@ function Bot:_HandleSidwardsMovement(p_DeltaTime)
 	end
 end
 
-function Bot:_ObstacleHandling(p_Velocity, p_HeightDistance, p_DeltaTime)
+function Bot:_ObstacleHandling(p_Velocity, p_DistanceSquared, p_HeightDistance, p_DeltaTime)
 	local s_SetTargetReached = false
 	local s_IncrementNodes = 0
+
+	-- skip node, if node was passed
+	if p_DistanceSquared > (self._LastWayDistance + 0.01) and self._ObstacleSequenceTimer == 0 then
+		s_SetTargetReached = true
+		return { s_SetTargetReached, s_IncrementNodes }
+	end
+	-- handling on standstill
 	if p_Velocity.magnitude < 0.3 or self._ObstacleSequenceTimer ~= 0 then -- use velocity instead of position
 		-- Try to get around obstacle.
 		self.m_ActiveSpeedValue = BotMoveSpeeds.Sprint                  -- Always try to stand.
@@ -590,7 +598,8 @@ function Bot:UpdateNormalMovement(p_DeltaTime)
 			self._NextTargetPoint = s_NextPoint
 
 			-- do the obstacle-handling
-			local s_Result = self:_ObstacleHandling(s_Velocity, s_HeightDistance, p_DeltaTime)
+			local s_Result = self:_ObstacleHandling(s_Velocity, s_DistanceFromTargetSquared, s_HeightDistance, p_DeltaTime)
+			self._LastWayDistance = s_DistanceFromTargetSquared
 			if s_Result == nil then
 				self.m_Player.soldier:Kill()
 				m_Logger:Write(self.m_Player.name .. ' got stuck. Kill')
@@ -622,6 +631,7 @@ function Bot:UpdateNormalMovement(p_DeltaTime)
 
 				self._ObstacleSequenceTimer = 0
 				self:_ResetActionFlag(BotActionFlags.MeleeActive)
+				self._LastWayDistance = 1000.0
 			end
 		else -- Wait mode.
 			self._WayWaitTimer = self._WayWaitTimer + p_DeltaTime
@@ -645,15 +655,10 @@ function Bot:UpdateNormalMovement(p_DeltaTime)
 		local s_PointIncrement = 1
 		local s_NoStuckReset = false
 
-		if self._FollowTargetPlayer and (self._FollowTargetPlayer.soldier or self._FollowTargetPlayer.corpse) then
+		if self._FollowTargetPlayer and self._FollowTargetPlayer.soldier then
 			local s_TracePlayer = self._FollowTargetPlayer
 			self._FollowingTraceTimer = self._FollowingTraceTimer + p_DeltaTime
-			local s_PlayerPos = nil
-			if s_TracePlayer.soldier then
-				s_PlayerPos = s_TracePlayer.soldier.worldTransform.trans
-			else
-				s_PlayerPos = s_TracePlayer.corpse.worldTransform.trans
-			end
+			local s_PlayerPos = s_TracePlayer.soldier.worldTransform.trans
 			if self._FollowingTraceTimer > Config.TraceDelta then
 				if #self._FollowWayPoints == 0 or self._FollowWayPoints[#self._FollowWayPoints].Position:Distance(s_PlayerPos) > 0.2 then
 					self._FollowingTraceTimer = 0.0
@@ -671,12 +676,30 @@ function Bot:UpdateNormalMovement(p_DeltaTime)
 						SpeedMode = s_Speed,
 						Position = s_PlayerPos:Clone(),
 					}
+
+					local s_IndexToRemoveTo = 0
+					local s_NumberOfNodes = #self._FollowWayPoints
+					for l_Index = s_NumberOfNodes - 1, 1, -1 do
+						local l_Node = self._FollowWayPoints[l_Index]
+						if s_PlayerPos:Distance(l_Node.Position) < 0.5 then
+							s_IndexToRemoveTo = l_Index
+						end
+					end
+
+					if s_IndexToRemoveTo > 0 then
+						for l_Rounds = 1, s_IndexToRemoveTo do
+							table.remove(self._FollowWayPoints, 1)
+						end
+					end
 				end
 			end
-			if #self._FollowWayPoints > 4 then
+			local s_NodeCount = #self._FollowWayPoints
+			if s_NodeCount > 1 then
 				s_Point = self._FollowWayPoints[1]
 				s_NextPoint = self._FollowWayPoints[2]
-				s_NextToNextPoint = self._FollowWayPoints[3]
+				if s_NodeCount > 2 then
+					s_NextToNextPoint = self._FollowWayPoints[3]
+				end
 			else
 				-- just wait
 				s_Point = {
@@ -687,6 +710,7 @@ function Bot:UpdateNormalMovement(p_DeltaTime)
 			end
 		else
 			self._FollowTargetPlayer = nil
+			self._FollowWayPoints = {}
 
 			local s_Node = g_GameDirector:FindClosestPath(self.m_Player.soldier.worldTransform.trans, false, true, nil)
 			if s_Node ~= nil then
@@ -730,8 +754,8 @@ function Bot:UpdateNormalMovement(p_DeltaTime)
 			self._TargetPoint = s_Point
 			self._NextTargetPoint = s_NextPoint
 
-			-- TODO: Check for special treatments?
-			local s_Result = self:_ObstacleHandling(s_Velocity, s_HeightDistance, p_DeltaTime)
+			local s_Result = self:_ObstacleHandling(s_Velocity, 0, s_HeightDistance, p_DeltaTime) -- dpmt skip nodes if passing them (0)
+			self._LastWayDistance = s_DistanceFromTargetSquared
 			if s_Result == nil then
 				self._StuckTimer = 0.0
 				return
@@ -754,7 +778,7 @@ function Bot:UpdateNormalMovement(p_DeltaTime)
 				self._OnSwitch = false
 
 				for l_Runs = 1, math.abs(s_PointIncrement) do
-					if #self._FollowWayPoints > 3 then
+					if #self._FollowWayPoints > 1 then
 						table.remove(self._FollowWayPoints, 1)
 					end
 				end
