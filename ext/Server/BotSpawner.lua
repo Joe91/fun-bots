@@ -2216,8 +2216,15 @@ function BotSpawner:_FindAppearance(p_TeamName, p_KitName, p_ColorName)
 	-- 'Persistence/Unlocks/Soldiers/Visual/MP[or:MP_XP4]/Us/MP_US_Assault_Appearance_'..p_ColorName
 	for l_Index = 1, #s_GameModeAppearances do
 		local l_GameMode = s_GameModeAppearances[l_Index]
-		local s_AppearanceString = l_GameMode ..
-			p_TeamName .. '/MP_' .. string.upper(p_TeamName) .. '_' .. p_KitName .. '_Appearance_' .. p_ColorName
+		local s_AppearanceString = ""
+		if p_ColorName == "DEFAULT" then
+			s_AppearanceString = l_GameMode ..
+				p_TeamName .. '/MP_' .. string.upper(p_TeamName) .. '_' .. p_KitName .. '_Appearance01'
+		else
+			s_AppearanceString = l_GameMode ..
+				p_TeamName .. '/MP_' .. string.upper(p_TeamName) .. '_' .. p_KitName .. '_Appearance_' .. p_ColorName
+		end
+
 		local s_Appearance = self:GetResourceDataContainer('Persistence/Unlocks/Soldiers/Visual/' ..
 			s_AppearanceString)
 
