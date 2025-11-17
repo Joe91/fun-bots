@@ -193,6 +193,7 @@ function BotManager:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 
 		self._DestroyBotsTimer = self._DestroyBotsTimer + p_DeltaTime
 	end
+
 	-- g_Profiler:End("Botmanager:Update")
 end
 
@@ -1638,6 +1639,91 @@ function BotManager:_GetDamageValue(p_Damage, p_Bot, p_Soldier)
 	end
 
 	return p_Damage * s_DamageFactor
+end
+
+---@param p_Player Player
+function BotManager:CommandBotsToFollow(p_Player)
+	if not p_Player or not p_Player.soldier then
+		return
+	end
+
+	self:CommandBotsToStopFollowing(p_Player, true) -- stop following first
+
+	local s_NearbyBots = {}
+	local s_PlayerPosition = p_Player.soldier.worldTransform.trans
+	local s_MaxFollowers = 2
+	local s_MaxDistance = 30
+
+	-- Get bots on same team
+	local s_BotsOnTeam = self._BotsByTeam[p_Player.teamId + 1]
+
+	for i = 1, #s_BotsOnTeam do
+		local s_Bot = s_BotsOnTeam[i]
+		if s_Bot.m_Player.soldier and
+			s_Bot.m_ActiveState ~= g_BotStates.States.Following and
+			not g_BotStates:IsInVehicleState(s_Bot.m_ActiveState) then
+			local s_BotPosition = s_Bot.m_Player.soldier.worldTransform.trans
+			local s_Distance = s_BotPosition:Distance(s_PlayerPosition)
+
+			if s_Distance < s_MaxDistance then
+				table.insert(s_NearbyBots, {
+					Bot = s_Bot,
+					Distance = s_Distance
+				})
+			end
+		end
+	end
+
+	-- Sort by distance and take closest
+	table.sort(s_NearbyBots, function(a, b) return a.Distance < b.Distance end)
+
+	local s_FollowersAssigned = 0
+	for i = 1, math.min(#s_NearbyBots, s_MaxFollowers) do
+		local s_BotData = s_NearbyBots[i]
+		local s_Bot = s_BotData.Bot
+
+		-- Set up following
+		self:SetupBotFollowing(s_Bot, p_Player, i)
+		s_FollowersAssigned = s_FollowersAssigned + 1
+	end
+
+	if s_FollowersAssigned > 0 then
+		ChatManager:SendMessage(string.format('%d bot(s) are now following you!', s_FollowersAssigned), p_Player)
+	else
+		ChatManager:SendMessage('No nearby bots available to follow you.', p_Player)
+	end
+end
+
+---@param p_Player Player
+function BotManager:CommandBotsToStopFollowing(p_Player, p_NoLogging)
+	local s_FollowersStopped = 0
+	local s_BotsOnTeam = self._BotsByTeam[p_Player.teamId + 1]
+
+	for i = 1, #s_BotsOnTeam do
+		local s_Bot = s_BotsOnTeam[i]
+		if s_Bot._FollowTargetPlayer == p_Player then
+			s_Bot._FollowTargetPlayer = nil
+			s_Bot._FollowWayPoints = {}
+			s_FollowersStopped = s_FollowersStopped + 1
+		end
+	end
+
+	if p_NoLogging then
+		return
+	end
+	if s_FollowersStopped > 0 then
+		ChatManager:SendMessage(string.format('%d bot(s) stopped following you.', s_FollowersStopped), p_Player)
+	else
+		ChatManager:SendMessage('No bots are following you.', p_Player)
+	end
+end
+
+---@param p_Bot Bot
+---@param p_Player Player
+---@param p_Index integer
+function BotManager:SetupBotFollowing(p_Bot, p_Player, p_Index)
+	p_Bot._FollowWayPoints = {}
+	p_Bot._FollowTargetPlayer = p_Player
 end
 
 if g_BotManager == nil then

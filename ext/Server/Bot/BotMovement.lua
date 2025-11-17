@@ -120,14 +120,378 @@ function Bot:ApplyPathOffset(p_OriginalPoint, p_NextPoint, p_NextToNextPoint)
 		}
 end
 
+function Bot:_ExecuteActionIfNeeded(p_Point, p_NextPoint, p_DeltaTime)
+	if self._ActiveAction == BotActionFlags.OtherActionActive then
+		if p_Point.Data ~= nil and p_Point.Data.Action ~= nil then
+			if p_Point.Data.Action.type == 'vehicle' then
+				if Config.UseVehicles then
+					local s_RetCode, s_Position = self:_EnterVehicle(false)
+					if s_RetCode == 0 then
+						---@cast s_Position -nil
+						self:_ResetActionFlag(BotActionFlags.OtherActionActive)
+						local s_Node = g_GameDirector:FindClosestPath(s_Position, true, false, self.m_ActiveVehicle.Terrain)
+
+						if s_Node ~= nil then
+							-- Switch to vehicle.
+							p_Point = s_Node
+							self._InvertPathDirection = false
+							self._PathIndex = s_Node.PathIndex
+							self._CurrentWayPoint = s_Node.PointIndex
+							p_NextPoint = m_NodeCollection:Get(self:_GetWayIndex(1), self._PathIndex)
+							self._LastWayDistance = 1000.0
+						end
+					end
+				end
+				self:_ResetActionFlag(BotActionFlags.OtherActionActive)
+			elseif p_Point.Data.Action.type == "beacon"
+				and self.m_SecondaryGadget.type == WeaponTypes.Beacon
+				and not self.m_HasBeacon
+			then
+				self._WeaponToUse = BotWeapons.Gadget2
+
+				if self.m_Player.soldier.weaponsComponent.currentWeaponSlot == WeaponSlot.WeaponSlot_5 then
+					if self.m_Player.soldier.weaponsComponent.weapons[6] and self.m_Player.soldier.weaponsComponent.weapons[6].primaryAmmo > 0 then
+						self:_SetInput(EntryInputActionEnum.EIAFire, 1)
+					else
+						self:_SetInput(EntryInputActionEnum.EIAFire, 0)
+						self:_ResetActionFlag(BotActionFlags.OtherActionActive)
+					end
+				end
+			elseif p_Point.Data.Action.type == "beacon" then
+				self:_ResetActionFlag(BotActionFlags.OtherActionActive)
+			elseif self._ActionTimer <= p_Point.Data.Action.time then
+				for l_Index = 1, #p_Point.Data.Action.inputs do
+					local l_Input = p_Point.Data.Action.inputs[l_Index]
+					self:_SetInput(l_Input, 1)
+				end
+			end
+		else
+			self:_ResetActionFlag(BotActionFlags.OtherActionActive)
+		end
+
+		self._ActionTimer = self._ActionTimer - p_DeltaTime
+
+		if self._ActionTimer <= 0.0 then
+			self:_ResetActionFlag(BotActionFlags.OtherActionActive)
+		end
+
+		if self._ActiveAction == BotActionFlags.OtherActionActive then
+			return -- DON'T EXECUTE ANYTHING ELSE.
+		else
+			if p_NextPoint then
+				p_Point = p_NextPoint
+			end
+		end
+	end
+end
+
+function Bot:_HandleDefendingIfNeeded(p_DeltaTime)
+	if self._ObjectiveMode == BotObjectiveModes.Defend and g_GameDirector:IsAtTargetObjective(self._PathIndex, self._Objective) then
+		self._DefendTimer = self._DefendTimer + p_DeltaTime
+
+		local s_TargetTime = self.m_Id % 5 + 4 -- min 2 sec on path, then 2 sec movement to side
+		if self._DefendTimer >= s_TargetTime then
+			-- look around
+			self.m_ActiveSpeedValue = BotMoveSpeeds.NoMovement
+
+			local s_DefendMode = self.m_Id % 3
+			if s_DefendMode == 0 then
+				if self.m_Player.soldier.pose ~= CharacterPoseType.CharacterPoseType_Crouch then
+					self.m_Player.soldier:SetPose(CharacterPoseType.CharacterPoseType_Crouch, true, true)
+				end
+			elseif s_DefendMode == 1 then
+				if self.m_Player.soldier.pose ~= CharacterPoseType.CharacterPoseType_Stand then
+					self.m_Player.soldier:SetPose(CharacterPoseType.CharacterPoseType_Stand, true, true)
+				end
+			else
+				if self.m_Player.soldier.pose ~= CharacterPoseType.CharacterPoseType_Prone then
+					self.m_Player.soldier:SetPose(CharacterPoseType.CharacterPoseType_Prone, true, true)
+				end
+			end
+
+			self:LookAround(p_DeltaTime)
+
+			-- TODO: look at target
+			-- don't do anything else
+			return
+		elseif self._DefendTimer >= (s_TargetTime - 2) then
+			self.m_ActiveSpeedValue = BotMoveSpeeds.Backwards
+			local s_StrafeValue = 1.0
+			if self.m_Id % 2 then
+				s_StrafeValue = -1.0
+			end
+			self:_SetInput(EntryInputActionEnum.EIAStrafe, s_StrafeValue)
+			return
+		end
+	else
+		self._DefendTimer = 0.0
+	end
+end
+
+function Bot:_ApplyReactionAction(p_DeltaTime)
+	if self._ActiveAction == BotActionFlags.RunAway and self._ActionTimer > 0.0 then
+		self._ActionTimer = self._ActionTimer - p_DeltaTime
+
+		self.m_ActiveSpeedValue = BotMoveSpeeds.Sprint
+		if self._ActionTimer <= 0.0 then
+			self:_ResetActionFlag(BotActionFlags.RunAway)
+		end
+	end
+
+	if self._ActiveAction == BotActionFlags.HideOnAttack and self._ActionTimer > 0.0 then
+		self._ActionTimer = self._ActionTimer - p_DeltaTime
+
+		self.m_ActiveSpeedValue = BotMoveSpeeds.VerySlowProne
+		if self._ActionTimer <= 0.0 then
+			self:_ResetActionFlag(BotActionFlags.HideOnAttack)
+		end
+	end
+end
+
+function Bot:_HandleSidwardsMovement(p_DeltaTime)
+	if Config.MoveSidewards then
+		if self._SidewardsTimer <= 0.0 then
+			if self.m_StrafeValue ~= 0 then
+				self._SidewardsTimer = MathUtils:GetRandom(Config.MinMoveCycle, Config.MaxStraigtCycle)
+				self.m_StrafeValue = 0.0
+				self.m_YawOffset = 0.0
+			else
+				self._SidewardsTimer = MathUtils:GetRandom(Config.MinMoveCycle, Config.MaxSideCycle)
+				if MathUtils:GetRandomInt(0, 1) > 0 then -- Random direction.
+					self.m_StrafeValue = 1.0
+				else
+					self.m_StrafeValue = -1.0
+				end
+				if self.m_ActiveSpeedValue == BotMoveSpeeds.Sprint then
+					self.m_YawOffset = 0.3927 * -self.m_StrafeValue
+				else
+					self.m_YawOffset = 0.7854 * -self.m_StrafeValue
+				end
+			end
+		end
+		self:_SetInput(EntryInputActionEnum.EIAStrafe, self.m_StrafeValue)
+		self._SidewardsTimer = self._SidewardsTimer - p_DeltaTime
+	end
+end
+
+function Bot:_ObstacleHandling(p_Velocity, p_DistanceSquared, p_HeightDistance, p_DeltaTime)
+	local s_SetTargetReached = false
+	local s_IncrementNodes = 0
+
+	-- skip node, if node was passed
+	if p_DistanceSquared > (self._LastWayDistance + 0.01) and self._ObstacleSequenceTimer == 0 then
+		s_SetTargetReached = true
+		return { s_SetTargetReached, s_IncrementNodes }
+	end
+	-- handling on standstill
+	if p_Velocity.magnitude < 0.3 or self._ObstacleSequenceTimer ~= 0 then -- use velocity instead of position
+		-- Try to get around obstacle.
+		self.m_ActiveSpeedValue = BotMoveSpeeds.Sprint                  -- Always try to stand.
+		if p_HeightDistance > 1.5 then                                  -- no change to get there, so skip the obstacle-stuff
+			self._ObstacleRetryCounter = 10
+			goto skip
+		end
+
+		if self._ObstacleSequenceTimer == 0 then -- Step 0
+		elseif self._ObstacleSequenceTimer > 3.4 then -- Step 4 - repeat afterwards.
+			self._ObstacleSequenceTimer = 0
+			self:_ResetActionFlag(BotActionFlags.MeleeActive)
+			self._ObstacleRetryCounter = self._ObstacleRetryCounter + 1
+		elseif self._ObstacleSequenceTimer > 2.0 then -- Step 3
+			if self._ObstacleRetryCounter == 0 then
+				if self._ActiveAction ~= BotActionFlags.MeleeActive then
+					self._ActiveAction = BotActionFlags.MeleeActive
+					self:_SetInput(EntryInputActionEnum.EIASelectWeapon7, 1)
+					self:_SetInput(EntryInputActionEnum.EIAQuicktimeFastMelee, 1)
+					self:_SetInput(EntryInputActionEnum.EIAMeleeAttack, 1)
+					self.m_ActiveWeapon = self.m_Knife
+					self._MeleeCooldownTimer = Config.MeleeAttackCoolDown -- Set time to ensure bot exit knife-mode when attack starts.
+				else
+					self:_SetInput(EntryInputActionEnum.EIAFire, 1)
+				end
+			else
+				self:_SetInput(EntryInputActionEnum.EIAFire, 1)
+			end
+		elseif self._ObstacleSequenceTimer > 1.4 then -- Step 2
+			if self._ObstacleSequenceTimer <= 1.4 + p_DeltaTime then
+				self.m_StrafeValue = self.m_StrafeValue * -1.0
+			end
+			self:_SetInput(EntryInputActionEnum.EIAStrafe, self.m_StrafeValue * Config.SpeedFactor)
+		elseif self._ObstacleSequenceTimer > 0.4 then -- Step 2
+			self._TargetPitch = 0.0
+
+			if self.m_StrafeValue == 0 then
+				if (MathUtils:GetRandomInt(0, 1) == 1) then
+					self.m_StrafeValue = 1.0
+				else
+					self.m_StrafeValue = -1.0
+				end
+			end
+			self:_SetInput(EntryInputActionEnum.EIAStrafe, self.m_StrafeValue * Config.SpeedFactor)
+		elseif self._ObstacleSequenceTimer > 0.0 then -- Step 1
+			self:_SetInput(EntryInputActionEnum.EIAQuicktimeJumpClimb, 1)
+			self:_SetInput(EntryInputActionEnum.EIAJump, 1)
+		end
+
+		::skip::
+		self._ObstacleSequenceTimer = self._ObstacleSequenceTimer + p_DeltaTime
+		self._StuckTimer = self._StuckTimer + p_DeltaTime
+
+		if self._ObstacleRetryCounter >= 2 then -- Try next waypoint.
+			self._ObstacleRetryCounter = 0
+			self:_ResetActionFlag(BotActionFlags.MeleeActive)
+			s_SetTargetReached = true
+
+			if Config.TeleportIfStuck and m_Utilities:CheckProbablity(Registry.BOT.PROBABILITY_TELEPORT_IF_STUCK) then
+				local s_Transform = self.m_Player.soldier.worldTransform:Clone()
+				s_Transform.trans = self._TargetPoint.Position
+				s_Transform:LookAtTransform(self._TargetPoint.Position, self._NextTargetPoint.Position)
+				self.m_Player.soldier:SetTransform(s_Transform)
+				m_Logger:Write('teleported ' .. self.m_Player.name)
+			else
+				s_IncrementNodes = MathUtils:GetRandomInt(0, 4) -- Go up to 4 points further.
+				if s_IncrementNodes == 0 then
+					s_IncrementNodes = -2           -- Go backwards and try again.
+				end
+
+				if (Globals.IsConquest or Globals.IsRush) then
+					if g_GameDirector:IsOnObjectivePath(self._PathIndex) then
+						self._InvertPathDirection = m_Utilities:CheckProbablity(Registry.BOT.PROBABILITY_CHANGE_DIRECTION_IF_STUCK)
+					end
+				end
+			end
+		end
+
+		if self._StuckTimer > 15.0 then
+			return nil
+		end
+
+		return { s_SetTargetReached, s_IncrementNodes }
+	else
+		self:_ResetActionFlag(BotActionFlags.MeleeActive)
+		return { s_SetTargetReached, s_IncrementNodes }
+	end
+end
+
+function Bot:_JumpDetection(p_Point, p_ActivePointIndex)
+	if self._ObstacleSequenceTimer == 0 then
+		if (p_Point.Position.y - self.m_Player.soldier.worldTransform.trans.y) > 0.3 and Config.JumpWhileMoving then
+			-- Detect, if a jump was recorded or not.
+			local s_TimeForwardBackwardJumpDetection = 1.1 -- 1.5 s ahead and back.
+			local s_JumpValid = false
+
+			for i = 1, math.floor(s_TimeForwardBackwardJumpDetection / Config.TraceDelta) do
+				local s_PointBefore = m_NodeCollection:Get(p_ActivePointIndex - i, self._PathIndex)
+				local s_PointAfter = m_NodeCollection:Get(p_ActivePointIndex + i, self._PathIndex)
+
+				if (s_PointBefore ~= nil and s_PointBefore.ExtraMode == 1) or
+					(s_PointAfter ~= nil and s_PointAfter.ExtraMode == 1) then
+					s_JumpValid = true
+					break
+				end
+			end
+
+			if s_JumpValid then
+				self:_SetInput(EntryInputActionEnum.EIAJump, 1)
+				self:_SetInput(EntryInputActionEnum.EIAQuicktimeJumpClimb, 1)
+			end
+		end
+	end
+end
+
+function Bot:_IsTargetDistanceReached(p_DistanceFromTargetSquared, p_HeightDistance)
+	-- apply speed values
+	local s_TargetDistanceSpeed = Config.TargetDistanceWayPoint
+	if self.m_ActiveSpeedValue == BotMoveSpeeds.Sprint then
+		s_TargetDistanceSpeed = s_TargetDistanceSpeed * 1.5
+	elseif self.m_ActiveSpeedValue == BotMoveSpeeds.SlowCrouch then
+		s_TargetDistanceSpeed = s_TargetDistanceSpeed * 0.7
+	elseif self.m_ActiveSpeedValue == BotMoveSpeeds.VerySlowProne then
+		s_TargetDistanceSpeed = s_TargetDistanceSpeed * 0.5
+	end
+	local s_TargetDistanceSpeedSquared = s_TargetDistanceSpeed * s_TargetDistanceSpeed -- use squared values to avoid sqrt
+
+	-- Target-Reached handling
+	if p_DistanceFromTargetSquared <= s_TargetDistanceSpeedSquared and p_HeightDistance <= Registry.BOT.TARGET_HEIGHT_DISTANCE_WAYPOINT then
+		return true
+	else
+		return false
+	end
+end
+
+function Bot:_CheckForAction(p_Point)
+	-- CHECK FOR ACTION.
+	if p_Point.Data and p_Point.Data.Action ~= nil then
+		local s_Action = p_Point.Data.Action
+
+		if g_GameDirector:CheckForExecution(p_Point, self.m_Player.teamId, false) then
+			self._ActiveAction = BotActionFlags.OtherActionActive
+
+			if s_Action.time ~= nil then
+				self._ActionTimer = s_Action.time
+			else
+				self._ActionTimer = 0.0
+			end
+
+			if s_Action.yaw ~= nil then
+				self._TargetYaw = s_Action.yaw
+			end
+
+			if s_Action.pitch ~= nil then
+				self._TargetPitch = s_Action.pitch
+			end
+
+			return true
+		end
+	end
+	return false
+end
+
+function Bot:_CheckAndDoPathSwitchAndIncrement(p_Point, p_ActivePointIndex, p_PointIncrement)
+	-- CHECK FOR PATH-SWITCHES.
+	local s_NewWaypoint = nil
+	local s_SwitchPath = false
+	s_SwitchPath, s_NewWaypoint = m_PathSwitcher:GetNewPath(self, self.m_Id, p_Point, self._Objective, false,
+		self.m_Player.teamId, nil)
+
+	if self.m_Player.soldier == nil then
+		return
+	end
+
+	if s_SwitchPath == true and not self._OnSwitch and s_NewWaypoint then
+		if self._Objective ~= '' then
+			-- 'Best' direction for objective on switch.
+			local s_Direction = m_NodeCollection:ObjectiveDirection(s_NewWaypoint, self._Objective, false)
+			if s_Direction then
+				self._InvertPathDirection = (s_Direction == 'Previous')
+			end
+		else
+			-- Random path direction on switch.
+			self._InvertPathDirection = MathUtils:GetRandomInt(1, 2) == 1
+		end
+
+		self._PathIndex = s_NewWaypoint.PathIndex
+		self._CurrentWayPoint = s_NewWaypoint.PointIndex
+		self._OnSwitch = true
+	else
+		self._OnSwitch = false
+
+		if self._InvertPathDirection then
+			self._CurrentWayPoint = p_ActivePointIndex - p_PointIncrement
+		else
+			self._CurrentWayPoint = p_ActivePointIndex + p_PointIncrement
+		end
+	end
+end
+
 ---@param p_DeltaTime number
 function Bot:UpdateNormalMovement(p_DeltaTime)
 	-- Move along points.
 	self._AttackModeMoveTimer = 0.0
 
-	if m_NodeCollection:Get(1, self._PathIndex) ~= nil then -- Check for valid point.
-		-- Get next point.
-		local s_ActivePointIndex = self:_GetWayIndex(self._CurrentWayPoint)
+
+	if self._FollowTargetPlayer == nil then -- default movement
+		local s_ActivePointIndex = self:_GetWayIndex(0)
 
 		local s_Point = nil
 		local s_NextPoint = nil
@@ -156,186 +520,44 @@ function Bot:UpdateNormalMovement(p_DeltaTime)
 			end
 			self._ShootWayPoints = {}
 		end
+
+		-- get all nodes
 		s_Point = m_NodeCollection:Get(s_ActivePointIndex, self._PathIndex)
 		if s_Point == nil then
 			return
 		end
-
 		if not self._InvertPathDirection then
-			s_NextPoint = m_NodeCollection:Get(self:_GetWayIndex(self._CurrentWayPoint + 1), self._PathIndex)
+			s_NextPoint = m_NodeCollection:Get(self:_GetWayIndex(1), self._PathIndex)
 			if s_NextPoint then
-				s_NextToNextPoint = m_NodeCollection:Get(self:_GetWayIndex(self._CurrentWayPoint + 2), self._PathIndex)
+				s_NextToNextPoint = m_NodeCollection:Get(self:_GetWayIndex(2), self._PathIndex)
 			end
 		else
-			s_NextPoint = m_NodeCollection:Get(self:_GetWayIndex(self._CurrentWayPoint - 1), self._PathIndex)
+			s_NextPoint = m_NodeCollection:Get(self:_GetWayIndex(-1), self._PathIndex)
 			if s_NextPoint then
-				s_NextToNextPoint = m_NodeCollection:Get(self:_GetWayIndex(self._CurrentWayPoint - 2), self._PathIndex)
+				s_NextToNextPoint = m_NodeCollection:Get(self:_GetWayIndex(-2), self._PathIndex)
 			end
 		end
-
-
 
 		if Registry.BOT.USE_PATH_OFFSETS and s_Point and s_NextPoint and s_NextToNextPoint then
 			s_Point, s_NextPoint = self:ApplyPathOffset(s_Point, s_NextPoint, s_NextToNextPoint)
 		end
 
-		-- Do defense, if needed
-		if self._ObjectiveMode == BotObjectiveModes.Defend and g_GameDirector:IsAtTargetObjective(self._PathIndex, self._Objective) then
-			self._DefendTimer = self._DefendTimer + p_DeltaTime
-
-			local s_TargetTime = self.m_Id % 5 + 4 -- min 2 sec on path, then 2 sec movement to side
-			if self._DefendTimer >= s_TargetTime then
-				-- look around
-				self.m_ActiveSpeedValue = BotMoveSpeeds.NoMovement
-
-				local s_DefendMode = self.m_Id % 3
-				if s_DefendMode == 0 then
-					if self.m_Player.soldier.pose ~= CharacterPoseType.CharacterPoseType_Crouch then
-						self.m_Player.soldier:SetPose(CharacterPoseType.CharacterPoseType_Crouch, true, true)
-					end
-				elseif s_DefendMode == 1 then
-					if self.m_Player.soldier.pose ~= CharacterPoseType.CharacterPoseType_Stand then
-						self.m_Player.soldier:SetPose(CharacterPoseType.CharacterPoseType_Stand, true, true)
-					end
-				else
-					if self.m_Player.soldier.pose ~= CharacterPoseType.CharacterPoseType_Prone then
-						self.m_Player.soldier:SetPose(CharacterPoseType.CharacterPoseType_Prone, true, true)
-					end
-				end
-
-				self:LookAround(p_DeltaTime)
-
-				-- TODO: look at target
-				-- don't do anything else
-				return
-			elseif self._DefendTimer >= (s_TargetTime - 2) then
-				self.m_ActiveSpeedValue = BotMoveSpeeds.Backwards
-				local s_StrafeValue = 1.0
-				if self.m_Id % 2 then
-					s_StrafeValue = -1.0
-				end
-				self:_SetInput(EntryInputActionEnum.EIAStrafe, s_StrafeValue)
-				return
-			end
-		else
-			self._DefendTimer = 0.0
-		end
-
-
-		-- Execute Action if needed.
-		if self._ActiveAction == BotActionFlags.OtherActionActive then
-			if s_Point.Data ~= nil and s_Point.Data.Action ~= nil then
-				if s_Point.Data.Action.type == 'vehicle' then
-					if Config.UseVehicles then
-						local s_RetCode, s_Position = self:_EnterVehicle(false)
-						if s_RetCode == 0 then
-							---@cast s_Position -nil
-							self:_ResetActionFlag(BotActionFlags.OtherActionActive)
-							local s_Node = g_GameDirector:FindClosestPath(s_Position, true, false, self.m_ActiveVehicle.Terrain)
-
-							if s_Node ~= nil then
-								-- Switch to vehicle.
-								s_Point = s_Node
-								self._InvertPathDirection = false
-								self._PathIndex = s_Node.PathIndex
-								self._CurrentWayPoint = s_Node.PointIndex
-								s_NextPoint = m_NodeCollection:Get(self:_GetWayIndex(self._CurrentWayPoint + 1), self._PathIndex)
-							end
-						end
-					end
-					self:_ResetActionFlag(BotActionFlags.OtherActionActive)
-				elseif s_Point.Data.Action.type == "beacon"
-					and self.m_SecondaryGadget.type == WeaponTypes.Beacon
-					and not self.m_HasBeacon
-				then
-					self._WeaponToUse = BotWeapons.Gadget2
-
-					if self.m_Player.soldier.weaponsComponent.currentWeaponSlot == WeaponSlot.WeaponSlot_5 then
-						if self.m_Player.soldier.weaponsComponent.weapons[6] and self.m_Player.soldier.weaponsComponent.weapons[6].primaryAmmo > 0 then
-							self:_SetInput(EntryInputActionEnum.EIAFire, 1)
-						else
-							self:_SetInput(EntryInputActionEnum.EIAFire, 0)
-							self:_ResetActionFlag(BotActionFlags.OtherActionActive)
-						end
-					end
-				elseif s_Point.Data.Action.type == "beacon" then
-					self:_ResetActionFlag(BotActionFlags.OtherActionActive)
-				elseif self._ActionTimer <= s_Point.Data.Action.time then
-					for l_Index = 1, #s_Point.Data.Action.inputs do
-						local l_Input = s_Point.Data.Action.inputs[l_Index]
-						self:_SetInput(l_Input, 1)
-					end
-				end
-			else
-				self:_ResetActionFlag(BotActionFlags.OtherActionActive)
-			end
-
-			self._ActionTimer = self._ActionTimer - p_DeltaTime
-
-			if self._ActionTimer <= 0.0 then
-				self:_ResetActionFlag(BotActionFlags.OtherActionActive)
-			end
-
-			if self._ActiveAction == BotActionFlags.OtherActionActive then
-				return -- DON'T EXECUTE ANYTHING ELSE.
-			else
-				if s_NextPoint then
-					s_Point = s_NextPoint
-				end
-			end
-		end
+		self:_HandleDefendingIfNeeded(p_DeltaTime)
+		self:_ExecuteActionIfNeeded(s_Point, s_NextPoint, p_DeltaTime)
 
 		if s_Point.SpeedMode ~= BotMoveSpeeds.NoMovement then -- Movement.
 			self._WayWaitTimer = 0.0
 			self._WayWaitYawTimer = 0.0
 			self.m_ActiveSpeedValue = s_Point.SpeedMode -- Speed.
 
-			if self._ActiveAction == BotActionFlags.RunAway and self._ActionTimer > 0.0 then
-				self._ActionTimer = self._ActionTimer - p_DeltaTime
-
-				self.m_ActiveSpeedValue = BotMoveSpeeds.Sprint
-				if self._ActionTimer <= 0.0 then
-					self:_ResetActionFlag(BotActionFlags.RunAway)
-				end
-			end
-
-			if self._ActiveAction == BotActionFlags.HideOnAttack and self._ActionTimer > 0.0 then
-				self._ActionTimer = self._ActionTimer - p_DeltaTime
-
-				self.m_ActiveSpeedValue = BotMoveSpeeds.VerySlowProne
-				if self._ActionTimer <= 0.0 then
-					self:_ResetActionFlag(BotActionFlags.HideOnAttack)
-				end
-			end
+			self:_ApplyReactionAction(p_DeltaTime)
 
 			if Config.OverWriteBotSpeedMode ~= BotMoveSpeeds.NoMovement then
 				self.m_ActiveSpeedValue = Config.OverWriteBotSpeedMode
 			end
 
 			-- Sidewards movement.
-			if Config.MoveSidewards then
-				if self._SidewardsTimer <= 0.0 then
-					if self.m_StrafeValue ~= 0 then
-						self._SidewardsTimer = MathUtils:GetRandom(Config.MinMoveCycle, Config.MaxStraigtCycle)
-						self.m_StrafeValue = 0.0
-						self.m_YawOffset = 0.0
-					else
-						self._SidewardsTimer = MathUtils:GetRandom(Config.MinMoveCycle, Config.MaxSideCycle)
-						if MathUtils:GetRandomInt(0, 1) > 0 then -- Random direction.
-							self.m_StrafeValue = 1.0
-						else
-							self.m_StrafeValue = -1.0
-						end
-						if self.m_ActiveSpeedValue == BotMoveSpeeds.Sprint then
-							self.m_YawOffset = 0.3927 * -self.m_StrafeValue
-						else
-							self.m_YawOffset = 0.7854 * -self.m_StrafeValue
-						end
-					end
-				end
-				self:_SetInput(EntryInputActionEnum.EIAStrafe, self.m_StrafeValue)
-				self._SidewardsTimer = self._SidewardsTimer - p_DeltaTime
-			end
+			self:_HandleSidwardsMovement(p_DeltaTime)
 
 			-- Use parachute if needed.
 			local s_Velocity = PhysicsEntity(self.m_Player.soldier).velocity
@@ -357,7 +579,6 @@ function Bot:UpdateNormalMovement(p_DeltaTime)
 				local soldier = self.m_Player.soldier
 				if soldier ~= nil then
 					local s_Node = g_GameDirector:FindClosestPath(soldier.worldTransform.trans, false, true, nil)
-
 					if s_Node ~= nil then
 						self._InvertPathDirection = false
 						self._PathIndex = s_Node.PathIndex
@@ -367,7 +588,6 @@ function Bot:UpdateNormalMovement(p_DeltaTime)
 					self.m_PathSide = 0 -- reset offset
 					self.m_OffsetRecoveryNodes = 10 -- lock center for a while
 					self._StuckTimer = 0.0
-
 					-- print("Bot rerouted " .. self.m_Name)
 					return
 				end
@@ -377,203 +597,41 @@ function Bot:UpdateNormalMovement(p_DeltaTime)
 			self._TargetPoint = s_Point
 			self._NextTargetPoint = s_NextPoint
 
-			if s_Velocity.magnitude < 0.3 or self._ObstacleSequenceTimer ~= 0 then -- use velocity instead of position
-				-- Try to get around obstacle.
-				self.m_ActiveSpeedValue = BotMoveSpeeds.Sprint            -- Always try to stand.
-				if s_HeightDistance > 1.5 then                            -- no change to get there, so skip the obstacle-stuff
-					self._ObstacleRetryCounter = 10
-					goto skip
-				end
-
-				if self._ObstacleSequenceTimer == 0 then -- Step 0
-				elseif self._ObstacleSequenceTimer > 3.4 then -- Step 4 - repeat afterwards.
-					self._ObstacleSequenceTimer = 0
-					self:_ResetActionFlag(BotActionFlags.MeleeActive)
-					self._ObstacleRetryCounter = self._ObstacleRetryCounter + 1
-				elseif self._ObstacleSequenceTimer > 2.0 then -- Step 3
-					if self._ObstacleRetryCounter == 0 then
-						if self._ActiveAction ~= BotActionFlags.MeleeActive then
-							self._ActiveAction = BotActionFlags.MeleeActive
-							self:_SetInput(EntryInputActionEnum.EIASelectWeapon7, 1)
-							self:_SetInput(EntryInputActionEnum.EIAQuicktimeFastMelee, 1)
-							self:_SetInput(EntryInputActionEnum.EIAMeleeAttack, 1)
-							self.m_ActiveWeapon = self.m_Knife
-							self._MeleeCooldownTimer = Config.MeleeAttackCoolDown -- Set time to ensure bot exit knife-mode when attack starts.
-						else
-							self:_SetInput(EntryInputActionEnum.EIAFire, 1)
-						end
-					else
-						self:_SetInput(EntryInputActionEnum.EIAFire, 1)
-					end
-				elseif self._ObstacleSequenceTimer > 1.4 then -- Step 2
-					if self._ObstacleSequenceTimer <= 1.4 + p_DeltaTime then
-						self.m_StrafeValue = self.m_StrafeValue * -1.0
-					end
-					self:_SetInput(EntryInputActionEnum.EIAStrafe, self.m_StrafeValue * Config.SpeedFactor)
-				elseif self._ObstacleSequenceTimer > 0.4 then -- Step 2
-					self._TargetPitch = 0.0
-
-					if self.m_StrafeValue == 0 then
-						if (MathUtils:GetRandomInt(0, 1) == 1) then
-							self.m_StrafeValue = 1.0
-						else
-							self.m_StrafeValue = -1.0
-						end
-					end
-					self:_SetInput(EntryInputActionEnum.EIAStrafe, self.m_StrafeValue * Config.SpeedFactor)
-				elseif self._ObstacleSequenceTimer > 0.0 then -- Step 1
-					self:_SetInput(EntryInputActionEnum.EIAQuicktimeJumpClimb, 1)
-					self:_SetInput(EntryInputActionEnum.EIAJump, 1)
-				end
-
-				::skip::
-				self._ObstacleSequenceTimer = self._ObstacleSequenceTimer + p_DeltaTime
-				self._StuckTimer = self._StuckTimer + p_DeltaTime
-
-				if self._ObstacleRetryCounter >= 2 then -- Try next waypoint.
-					self._ObstacleRetryCounter = 0
-					self:_ResetActionFlag(BotActionFlags.MeleeActive)
+			-- do the obstacle-handling
+			local s_Result = self:_ObstacleHandling(s_Velocity, s_DistanceFromTargetSquared, s_HeightDistance, p_DeltaTime)
+			self._LastWayDistance = s_DistanceFromTargetSquared
+			if s_Result == nil then
+				self.m_Player.soldier:Kill()
+				m_Logger:Write(self.m_Player.name .. ' got stuck. Kill')
+				return
+			else
+				if s_Result[1] == true then
 					s_DistanceFromTargetSquared = 0
 					s_HeightDistance = 0
-
-					-- Teleport to target.
-					s_NoStuckReset = true
-					if Config.TeleportIfStuck and m_Utilities:CheckProbablity(Registry.BOT.PROBABILITY_TELEPORT_IF_STUCK) then
-						local s_Transform = self.m_Player.soldier.worldTransform:Clone()
-						s_Transform.trans = self._TargetPoint.Position
-						s_Transform:LookAtTransform(self._TargetPoint.Position, self._NextTargetPoint.Position)
-						self.m_Player.soldier:SetTransform(s_Transform)
-						m_Logger:Write('teleported ' .. self.m_Player.name)
-					else
-						s_PointIncrement = MathUtils:GetRandomInt(0, 4) -- Go up to 4 points further.
-						if s_PointIncrement == 0 then
-							s_PointIncrement = -2     -- Go backwards and try again.
-						end
-
-						if (Globals.IsConquest or Globals.IsRush) then
-							if g_GameDirector:IsOnObjectivePath(self._PathIndex) then
-								self._InvertPathDirection = m_Utilities:CheckProbablity(Registry.BOT.PROBABILITY_CHANGE_DIRECTION_IF_STUCK)
-							end
-						end
-					end
-				end
-
-				if self._StuckTimer > 15.0 then
-					self.m_Player.soldier:Kill()
-
-					m_Logger:Write(self.m_Player.name .. ' got stuck. Kill')
-
-					return
-				end
-			else
-				self:_ResetActionFlag(BotActionFlags.MeleeActive)
-			end
-
-			-- Jump detection. Much more simple now, but works fine -)
-			if self._ObstacleSequenceTimer == 0 then
-				if (s_Point.Position.y - self.m_Player.soldier.worldTransform.trans.y) > 0.3 and Config.JumpWhileMoving then
-					-- Detect, if a jump was recorded or not.
-					local s_TimeForwardBackwardJumpDetection = 1.1 -- 1.5 s ahead and back.
-					local s_JumpValid = false
-
-					for i = 1, math.floor(s_TimeForwardBackwardJumpDetection / Config.TraceDelta) do
-						local s_PointBefore = m_NodeCollection:Get(s_ActivePointIndex - i, self._PathIndex)
-						local s_PointAfter = m_NodeCollection:Get(s_ActivePointIndex + i, self._PathIndex)
-
-						if (s_PointBefore ~= nil and s_PointBefore.ExtraMode == 1) or
-							(s_PointAfter ~= nil and s_PointAfter.ExtraMode == 1) then
-							s_JumpValid = true
-							break
-						end
-					end
-
-					if s_JumpValid then
-						self:_SetInput(EntryInputActionEnum.EIAJump, 1)
-						self:_SetInput(EntryInputActionEnum.EIAQuicktimeJumpClimb, 1)
+					if s_Result[2] ~= 0 then
+						s_NoStuckReset = true
+						s_PointIncrement = s_Result[2]
 					end
 				end
 			end
 
-			local s_TargetDistanceSpeed = Config.TargetDistanceWayPoint
+			self:_JumpDetection(s_Point, s_ActivePointIndex)
 
-			if self.m_ActiveSpeedValue == BotMoveSpeeds.Sprint then
-				s_TargetDistanceSpeed = s_TargetDistanceSpeed * 1.5
-			elseif self.m_ActiveSpeedValue == BotMoveSpeeds.SlowCrouch then
-				s_TargetDistanceSpeed = s_TargetDistanceSpeed * 0.7
-			elseif self.m_ActiveSpeedValue == BotMoveSpeeds.VerySlowProne then
-				s_TargetDistanceSpeed = s_TargetDistanceSpeed * 0.5
-			end
-			local s_TargetDistanceSpeedSquared = s_TargetDistanceSpeed * s_TargetDistanceSpeed -- use squared values to avoid sqrt
-
-			-- Check for reached target.
-			if s_DistanceFromTargetSquared <= s_TargetDistanceSpeedSquared and s_HeightDistance <= Registry.BOT.TARGET_HEIGHT_DISTANCE_WAYPOINT then
+			-- Target-Reached handling
+			if self:_IsTargetDistanceReached(s_DistanceFromTargetSquared, s_HeightDistance) then
 				if not s_NoStuckReset then
 					self._StuckTimer = 0.0
 				end
 
-
-				-- CHECK FOR ACTION.
-				if s_Point.Data.Action ~= nil then
-					local s_Action = s_Point.Data.Action
-
-					if g_GameDirector:CheckForExecution(s_Point, self.m_Player.teamId, false) then
-						self._ActiveAction = BotActionFlags.OtherActionActive
-
-						if s_Action.time ~= nil then
-							self._ActionTimer = s_Action.time
-						else
-							self._ActionTimer = 0.0
-						end
-
-						if s_Action.yaw ~= nil then
-							self._TargetYaw = s_Action.yaw
-						end
-
-						if s_Action.pitch ~= nil then
-							self._TargetPitch = s_Action.pitch
-						end
-
-						return -- DON'T DO ANYTHING ELSE ANY MORE.
-					end
+				if self:_CheckForAction(s_Point) then
+					return -- DON'T DO ANYTHING ELSE ANY MORE.
 				end
 
-				-- CHECK FOR PATH-SWITCHES.
-				local s_NewWaypoint = nil
-				local s_SwitchPath = false
-				s_SwitchPath, s_NewWaypoint = m_PathSwitcher:GetNewPath(self, self.m_Id, s_Point, self._Objective, false,
-					self.m_Player.teamId, nil)
-
-				if self.m_Player.soldier == nil then
-					return
-				end
-
-				if s_SwitchPath == true and not self._OnSwitch and s_NewWaypoint then
-					if self._Objective ~= '' then
-						-- 'Best' direction for objective on switch.
-						local s_Direction = m_NodeCollection:ObjectiveDirection(s_NewWaypoint, self._Objective, false)
-						if s_Direction then
-							self._InvertPathDirection = (s_Direction == 'Previous')
-						end
-					else
-						-- Random path direction on switch.
-						self._InvertPathDirection = MathUtils:GetRandomInt(1, 2) == 1
-					end
-
-					self._PathIndex = s_NewWaypoint.PathIndex
-					self._CurrentWayPoint = s_NewWaypoint.PointIndex
-					self._OnSwitch = true
-				else
-					self._OnSwitch = false
-
-					if self._InvertPathDirection then
-						self._CurrentWayPoint = s_ActivePointIndex - s_PointIncrement
-					else
-						self._CurrentWayPoint = s_ActivePointIndex + s_PointIncrement
-					end
-				end
+				self:_CheckAndDoPathSwitchAndIncrement(s_Point, s_ActivePointIndex, s_PointIncrement)
 
 				self._ObstacleSequenceTimer = 0
 				self:_ResetActionFlag(BotActionFlags.MeleeActive)
+				self._LastWayDistance = 1000.0
 			end
 		else -- Wait mode.
 			self._WayWaitTimer = self._WayWaitTimer + p_DeltaTime
@@ -590,7 +648,147 @@ function Bot:UpdateNormalMovement(p_DeltaTime)
 				end
 			end
 		end
-		-- else -- no point: do nothing.
+	else -- following movement
+		local s_Point = nil
+		local s_NextPoint = nil
+		local s_NextToNextPoint = nil
+		local s_PointIncrement = 1
+		local s_NoStuckReset = false
+
+		if self._FollowTargetPlayer and self._FollowTargetPlayer.soldier then
+			local s_TracePlayer = self._FollowTargetPlayer
+			self._FollowingTraceTimer = self._FollowingTraceTimer + p_DeltaTime
+			local s_PlayerPos = s_TracePlayer.soldier.worldTransform.trans
+			if self._FollowingTraceTimer > Config.TraceDelta then
+				if #self._FollowWayPoints == 0 or self._FollowWayPoints[#self._FollowWayPoints].Position:Distance(s_PlayerPos) > 0.2 then
+					self._FollowingTraceTimer = 0.0
+					local s_SpeedInput = math.abs(s_TracePlayer.input:GetLevel(EntryInputActionEnum.EIAThrottle))
+					local s_Speed = BotMoveSpeeds.Normal
+					if s_SpeedInput > 0 then
+						if s_TracePlayer.input:GetLevel(EntryInputActionEnum.EIASprint) == 1 then
+							s_Speed = BotMoveSpeeds.Sprint
+						end
+					elseif s_SpeedInput == 0 then
+						s_Speed = BotMoveSpeeds.SlowCrouch
+					end
+
+					self._FollowWayPoints[#self._FollowWayPoints + 1] = {
+						SpeedMode = s_Speed,
+						Position = s_PlayerPos:Clone(),
+					}
+
+					local s_IndexToRemoveTo = 0
+					local s_NumberOfNodes = #self._FollowWayPoints
+					for l_Index = s_NumberOfNodes - 1, 1, -1 do
+						local l_Node = self._FollowWayPoints[l_Index]
+						if s_PlayerPos:Distance(l_Node.Position) < 0.5 then
+							s_IndexToRemoveTo = l_Index
+						end
+					end
+
+					if s_IndexToRemoveTo > 0 then
+						for l_Rounds = 1, s_IndexToRemoveTo do
+							table.remove(self._FollowWayPoints, 1)
+						end
+					end
+				end
+			end
+			local s_NodeCount = #self._FollowWayPoints
+			if s_NodeCount > 1 then
+				s_Point = self._FollowWayPoints[1]
+				s_NextPoint = self._FollowWayPoints[2]
+				if s_NodeCount > 2 then
+					s_NextToNextPoint = self._FollowWayPoints[3]
+				end
+			else
+				-- just wait
+				s_Point = {
+					SpeedMode = BotMoveSpeeds.NoMovement,
+					OptValue = 0x128,
+					Position = s_PlayerPos:Clone(),
+				}
+			end
+		else
+			self._FollowTargetPlayer = nil
+			self._FollowWayPoints = {}
+
+			local s_Node = g_GameDirector:FindClosestPath(self.m_Player.soldier.worldTransform.trans, false, true, nil)
+			if s_Node ~= nil then
+				self._InvertPathDirection = false
+				self._PathIndex = s_Node.PathIndex
+				self._CurrentWayPoint = s_Node.PointIndex
+			end
+			return
+		end
+
+		if Registry.BOT.USE_PATH_OFFSETS and s_Point and s_NextPoint and s_NextToNextPoint then
+			s_Point, s_NextPoint = self:ApplyPathOffset(s_Point, s_NextPoint, s_NextToNextPoint)
+		end
+
+		if s_Point.SpeedMode ~= BotMoveSpeeds.NoMovement then -- Movement.
+			self._WayWaitTimer = 0.0
+			self._WayWaitYawTimer = 0.0
+			self.m_ActiveSpeedValue = s_Point.SpeedMode -- Speed.
+
+			self:_ApplyReactionAction(p_DeltaTime)
+
+			if Config.OverWriteBotSpeedMode ~= BotMoveSpeeds.NoMovement then
+				self.m_ActiveSpeedValue = Config.OverWriteBotSpeedMode
+			end
+
+			-- Sidewards movement.
+			self:_HandleSidwardsMovement(p_DeltaTime)
+
+			-- Use parachute if needed.
+			local s_Velocity = PhysicsEntity(self.m_Player.soldier).velocity
+			local s_VelocityFalling = s_Velocity.y
+			if s_VelocityFalling < -25.0 then
+				self:_SetInput(EntryInputActionEnum.EIAToggleParachute, 1)
+			end
+
+			local s_DifferenceY = s_Point.Position.z - self.m_Player.soldier.worldTransform.trans.z
+			local s_DifferenceX = s_Point.Position.x - self.m_Player.soldier.worldTransform.trans.x
+			local s_DistanceFromTargetSquared = s_DifferenceX ^ 2 + s_DifferenceY ^ 2
+			local s_HeightDistance = math.abs(s_Point.Position.y - self.m_Player.soldier.worldTransform.trans.y)
+
+			self._TargetPoint = s_Point
+			self._NextTargetPoint = s_NextPoint
+
+			local s_Result = self:_ObstacleHandling(s_Velocity, 0, s_HeightDistance, p_DeltaTime) -- dpmt skip nodes if passing them (0)
+			self._LastWayDistance = s_DistanceFromTargetSquared
+			if s_Result == nil then
+				self._StuckTimer = 0.0
+				return
+			else
+				if s_Result[1] == true then
+					s_DistanceFromTargetSquared = 0
+					s_HeightDistance = 0
+					if s_Result[2] ~= 0 then
+						s_NoStuckReset = true
+						s_PointIncrement = s_Result[2]
+					end
+				end
+			end
+
+			if self:_IsTargetDistanceReached(s_DistanceFromTargetSquared, s_HeightDistance) then
+				if not s_NoStuckReset then
+					self._StuckTimer = 0.0
+				end
+
+				self._OnSwitch = false
+
+				for l_Runs = 1, math.abs(s_PointIncrement) do
+					if #self._FollowWayPoints > 1 then
+						table.remove(self._FollowWayPoints, 1)
+					end
+				end
+
+				self._ObstacleSequenceTimer = 0
+				self:_ResetActionFlag(BotActionFlags.MeleeActive)
+			end
+		else
+			self:LookAround(p_DeltaTime)
+		end
 	end
 end
 

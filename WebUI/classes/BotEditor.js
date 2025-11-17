@@ -467,6 +467,8 @@ class BotEditor {
                 case "defend_g":
                 case "defend_h":
                 case "back_to_comm":
+                case 'follow_me':
+                case 'stop_follow':
                     WebUI.Call(
                         "DispatchEventLocal",
                         "BotEditor",

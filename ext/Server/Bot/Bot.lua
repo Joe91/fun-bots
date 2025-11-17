@@ -155,7 +155,7 @@ function Bot:__init(p_Player)
 	---@type Waypoint|nil
 	self._NextTargetPoint = nil
 	self._PathIndex = 0
-	self._LastWayDistance = 0.0
+	self._LastWayDistance = 1000.0
 	self._InvertPathDirection = false
 	self._ExitVehicleActive = false
 	self._ObstacleRetryCounter = 0
@@ -214,6 +214,7 @@ function Bot:__init(p_Player)
 	self._WeaponToUse = BotWeapons.Primary
 	-- To-do: add emmylua type.
 	self._ShootWayPoints = {}
+	self._FollowWayPoints = {}
 	---@type Vec3[]
 	self._KnifeWayPositions = {}
 	self._Accuracy = 0.0
@@ -222,6 +223,9 @@ function Bot:__init(p_Player)
 
 	---@type Player|nil
 	self._TargetPlayer = nil
+
+	self._FollowTargetPlayer = nil
+	self._FollowingTraceTimer = 0.0
 end
 
 -- =============================================

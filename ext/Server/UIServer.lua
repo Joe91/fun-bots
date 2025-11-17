@@ -85,6 +85,14 @@ function FunBotUIServer:_onBotEditorEvent(p_Player, p_Data)
 		BotManager:RepairVehicle(p_Player)
 		NetEvents:SendTo('UI_CommoRose', p_Player, "false")
 		return
+	elseif request.action == 'follow_me' then
+		if not Config.AllowCommForAll and PermissionManager:HasPermission(p_Player, 'Comm') == false then
+			ChatManager:SendMessage('You have no permissions for this action.', p_Player)
+			return
+		end
+		BotManager:CommandBotsToFollow(p_Player)
+		NetEvents:SendTo('UI_CommoRose', p_Player, "false")
+		return
 	elseif request.action == 'attack_objective' then
 		if not Config.AllowCommForAll and PermissionManager:HasPermission(p_Player, 'Comm') == false then
 			ChatManager:SendMessage('You have no permissions for this action.', p_Player)
@@ -199,6 +207,14 @@ function FunBotUIServer:_onBotEditorEvent(p_Player, p_Data)
 				Label = Language:I18N('Back'),
 			}
 		})
+		return
+	elseif request.action == 'stop_follow' then
+		if not Config.AllowCommForAll and PermissionManager:HasPermission(p_Player, 'Comm') == false then
+			ChatManager:SendMessage('You have no permissions for this action.', p_Player)
+			return
+		end
+		BotManager:CommandBotsToStopFollowing(p_Player)
+		NetEvents:SendTo('UI_CommoRose', p_Player, "false")
 		return
 	elseif string.find(request.action, 'attack_') ~= nil then
 		if not Config.AllowCommForAll and PermissionManager:HasPermission(p_Player, 'Comm') == false then
@@ -494,8 +510,8 @@ function FunBotUIServer:_onUIRequestCommoRoseShow(p_Player, p_Data)
 
 	NetEvents:SendTo('UI_CommoRose', p_Player, {
 		Top = {
-			Action = 'not_implemented',
-			Label = Language:I18N(''),
+			Action = 'follow_me',
+			Label = Language:I18N('Follow Me')
 		},
 		Left = {
 			{
@@ -513,7 +529,7 @@ function FunBotUIServer:_onUIRequestCommoRoseShow(p_Player, p_Data)
 			{
 				Action = 'drop_medkit',
 				Label = Language:I18N('Drop Medkit')
-			}
+			},
 		},
 		Center = {
 			Action = 'not_implemented',
@@ -538,8 +554,8 @@ function FunBotUIServer:_onUIRequestCommoRoseShow(p_Player, p_Data)
 			}
 		},
 		Bottom = {
-			Action = 'not_implemented',
-			Label = Language:I18N(''),
+			Action = 'stop_follow',
+			Label = Language:I18N('Stop Follow')
 		}
 	})
 end
