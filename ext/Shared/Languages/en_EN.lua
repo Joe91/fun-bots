@@ -450,3 +450,5 @@ Language:add(code, "Keep a Vehicle Seat For Player", "Keep a Vehicle Seat For Pl
 Language:add(code, "To keep a vehicle seat for the player always or not (default true)", "To keep a vehicle seat for the player always or not (default true)")
 Language:add(code, "Spawn in Transport helicopters and AMTRACs", "Spawn in Transport helicopters and AMTRACs")
 Language:add(code, "Bots can spawn in Transport helicopters and AMTRACs", "Bots can spawn in Transport helicopters and AMTRACs")
+Language:add(code, "Follow Me", "Follow Me")
+Language:add(code, "Stop Following", "Stop Following")

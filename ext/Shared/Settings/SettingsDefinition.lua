@@ -1350,7 +1350,7 @@ SettingsDefinition = {
 			Value = Config.TraceDelta,
 			Description = "Update interval of trace",
 			Reference = Range(0.10, 10.00, 0.1),
-			Default = 0.4,
+			Default = 0.35,
 			UpdateFlag = UpdateFlag.None,
 			Category = "TRACE"
 		},

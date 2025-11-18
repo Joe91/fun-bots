@@ -43,6 +43,7 @@ function Bot:ApplyPathOffset(p_OriginalPoint, p_NextPoint, p_NextToNextPoint)
 	-- Emergency fallback
 	if self._ObstacleSequenceTimer ~= 0 and self.m_PathSide ~= 0 then
 		self.m_ForceCenter = true
+		self.m_OffsetRecoveryNodes = 3
 		return p_OriginalPoint, p_NextPoint
 	end
 	if self.m_ForceCenter and self._ObstacleSequenceTimer == 0 then

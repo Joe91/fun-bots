@@ -450,3 +450,5 @@ Language:add(code, "Keep a Vehicle Seat For Player", "为玩家保留载具空�
 Language:add(code, "To keep a vehicle seat for the player always or not (default true)", "始终为玩家保留载具空位（默认为true）")
 Language:add(code, "Spawn in Transport helicopters and AMTRACs", "在运输直升机和水陆两栖载具中重生")
 Language:add(code, "Bots can spawn in Transport helicopters and AMTRACs", "BOT可以在运输直升机和水陆两栖载具中重生")
+Language:add(code, "Follow Me", "跟我来")
+Language:add(code, "Stop Following", "停止关注")

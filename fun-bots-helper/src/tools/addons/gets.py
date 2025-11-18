@@ -326,6 +326,11 @@ def get_js_lines() -> List[str]:
                         translation = translation.split("'")[0]
                         if translation not in out_file_lines:
                             out_file_lines.append(translation)
+                    if 'I18N("' in line:
+                        translation = line.split('I18N("')[1]
+                        translation = translation.split('"')[0]
+                        if translation not in out_file_lines:
+                            out_file_lines.append(translation)
 
     return out_file_lines
 

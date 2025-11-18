@@ -555,7 +555,7 @@ function FunBotUIServer:_onUIRequestCommoRoseShow(p_Player, p_Data)
 		},
 		Bottom = {
 			Action = 'stop_follow',
-			Label = Language:I18N('Stop Follow')
+			Label = Language:I18N('Stop Following')
 		}
 	})
 end
