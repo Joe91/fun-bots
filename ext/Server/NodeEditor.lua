@@ -1187,26 +1187,6 @@ function NodeEditor:OnLevelLoaded(p_LevelName, p_GameMode, p_CustomGameMode)
 	m_NodeCollection:StartLoad(p_LevelName, s_GameModeToLoad)
 end
 
----VEXT Shared Partition:Loaded Event
----@param p_Partition DatabasePartition
-function NodeEditor:OnPartitionLoaded(p_Partition)
-	---@type AlternateSpawnEntityData
-	for _, l_Instance in pairs(p_Partition.instances) do
-		if l_Instance:Is("AlternateSpawnEntityData") then
-			local s_LevelName = SharedUtils:GetLevelName() .. SharedUtils:GetCurrentGameMode()
-			---@type AlternateSpawnEntityData
-			l_Instance = AlternateSpawnEntityData(l_Instance)
-			-- print(l_Instance.typeInfo.name)
-			-- print(l_Instance.indexInBlueprint) -- should be uinique. maybe use it?
-			-- print(l_Instance.isEventConnectionTarget)
-			-- print(l_Instance.isPropertyConnectionTarget)
-			-- print(l_Instance.priority)
-			m_NodeCollection:AddSpawnPoint(l_Instance.transform, s_LevelName)
-			-- print("add spawn")
-		end
-	end
-end
-
 function NodeEditor:Reload()
 	self:Clear()
 	m_NodeCollection:Reload()

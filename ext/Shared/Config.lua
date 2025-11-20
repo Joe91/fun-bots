@@ -128,7 +128,6 @@ Config = {
 	DrawWaypointIDs = true,				-- Draw the IDs of the waypoints 
 	TextRange = 15,						-- Set how far away waypoint text is visible (meters) 
 	DrawSpawnPoints = false,			-- Draw the Points where players can spawn 
-	DrawParsedSpawns = false,			-- Draw the parsed spawn-points with parsed links 
 	SpawnPointRange = 150,				-- Set how far away spawn points are visible (meters) 
 	TraceDelta = 0.35,					-- Update interval of trace 
 	NodesPerCycle = 2048,				-- Set how many nodes get drawn per cycle. Affects performance 

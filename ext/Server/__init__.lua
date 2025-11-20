@@ -78,8 +78,6 @@ function FunBotServer:__init()
 	self.m_PlayerKilledDelay = 0
 	Events:Subscribe('Engine:Init', self, self.OnEngineInit)
 	Events:Subscribe('Extension:Loaded', self, self.OnExtensionLoaded)
-
-	Events:Subscribe('Partition:Loaded', self, self.OnPartitionLoaded)
 end
 
 ---VEXT Server Engine:Init Event
@@ -251,12 +249,6 @@ end
 ---VEXT Shared Extension:Unloading Event
 function FunBotServer:OnExtensionUnloading()
 	m_BotManager:DestroyAll(nil, nil, true)
-end
-
----VEXT Shared Partition:Loaded Event
----@param p_Partition DatabasePartition
-function FunBotServer:OnPartitionLoaded(p_Partition)
-	m_NodeEditor:OnPartitionLoaded(p_Partition)
 end
 
 ---VEXT Shared Engine:Update Event

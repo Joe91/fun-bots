@@ -47,15 +47,13 @@ This is the changelog for the version V3.0 Don't forget to [join us on Discord](
 * Default-Color for appearance added (thanks to QuantumTube)
 
 ### some open TODOs:
-* rework of raycasts for better performance
-* fully support default-sapwn-method (for now only on TDM/GM/SDM by default)
+* Vehicle/Tank: better aiming on steep slopes (compensate car-rotation)
 * chopper: handle different hights and positions depending on capture-points
-* performance of spawn-point parsing -> save those? Better logic for finding the target-node
 * add logic for jets in rush
 * improve team-logic for AA and other vehicles (example AA on Rush)
-* improve node-editor
-* Vehicle/Tank: better aiming on steep slopes (compensate car-rotation)
-* Delay-Spawn-Timer: have a look at the initial value, if this is done right...
+* fully support default-sapwn-method? (for now only on TDM/GM/SDM by default)
+* (rework of raycasts for better performance)
+* (improve node-editor)
 
 ### Bug fixes
 * fix stationary AA again...

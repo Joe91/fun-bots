@@ -222,13 +222,11 @@ function BotSpawner:OnEngineUpdate(p_DeltaTime, p_SimulationDeltaTime)
 				end
 
 				local s_Position = l_Bot.m_Player.soldier.worldTransform.trans:Clone()
-				local s_Link = m_NodeCollection:GetLinkFromSpawnPoint(s_Position)
-				-- print(s_Link)
-				if not s_Link then
-					local s_Node = g_GameDirector:FindClosestPath(s_Position, false, false, nil)
-					if s_Node then
-						s_Link = { s_Node.PathIndex, s_Node.PointIndex }
-					end
+				local s_Link = nil
+
+				local s_Node = g_GameDirector:FindClosestPath(s_Position, false, false)
+				if s_Node then
+					s_Link = { s_Node.PathIndex, s_Node.PointIndex }
 				end
 
 				if s_Link then

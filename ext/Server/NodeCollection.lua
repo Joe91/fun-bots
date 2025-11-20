@@ -35,7 +35,6 @@ function NodeCollection:InitVars()
 	self._WaypointsByPathIndex = {}
 
 	self._InfoNode = {}
-	self._SpawnPointTable = {}
 	self._SpawnPointLevelName = ''
 
 	self._SelectedWaypoints = {}
@@ -197,67 +196,6 @@ function NodeCollection:Add(p_SelectionId)
 	end
 
 	return false, 'Must select up to two waypoints'
-end
-
-function NodeCollection:GetSpawnPoints()
-	return self._SpawnPointTable
-end
-
-function NodeCollection:GetLinkFromSpawnPoint(s_Position)
-	local s_ClosestSpawn = nil
-	local s_ClosestDistance = 0
-	for i = 1, #self._SpawnPointTable do
-		local s_SpawnPoint = self._SpawnPointTable[i]
-		local s_Distance = m_Utilities:DistanceFast(s_Position, s_SpawnPoint.Transform.trans)
-		-- local s_Distance = s_Position:Distance(s_SpawnPoint.Transform.trans)
-		if s_ClosestSpawn == nil or s_Distance < s_ClosestDistance then
-			s_ClosestSpawn = s_SpawnPoint
-			s_ClosestDistance = s_Distance
-			if s_Distance < 0.1 then
-				break
-			end
-		end
-	end
-
-	if s_ClosestSpawn ~= nil then
-		if s_ClosestSpawn.Data == nil or s_ClosestSpawn.Data.Links == nil then
-			-- g_Profiler:Start("ParseSingleSpawn")
-			self:ParseSingleSpawn(s_ClosestSpawn)
-			-- g_Profiler:End("ParseSingleSpawn")
-		end
-
-		if s_ClosestSpawn.Data and s_ClosestSpawn.Data.Links then
-			if #s_ClosestSpawn.Data.Links == 1 then
-				return s_ClosestSpawn.Data.Links[1]
-			elseif #s_ClosestSpawn.Data.Links > 1 then
-				local s_RandomIndex = MathUtils:GetRandomInt(1, #s_ClosestSpawn.Data.Links)
-				return s_ClosestSpawn.Data.Links[s_RandomIndex]
-			end
-		end
-	end
-end
-
-function NodeCollection:ClearSpawnPoints()
-	self._SpawnPointTable = {}
-end
-
-function NodeCollection:AddSpawnPoint(p_Transform, p_LevelName)
-	if self._SpawnPointLevelName ~= p_LevelName then
-		self._SpawnPointTable = {}
-		self._SpawnPointLevelName = p_LevelName
-	end
-	-- check if already in list
-	for i = 1, #self._SpawnPointTable do
-		if self._SpawnPointTable[i].Transform == p_Transform then
-			return
-		end
-	end
-
-	-- add, if not in list
-	self._SpawnPointTable[#self._SpawnPointTable + 1] = {
-		Transform = p_Transform,
-		Data = {}
-	}
 end
 
 ---@param p_Waypoint? Waypoint
@@ -587,19 +525,6 @@ function NodeCollection:Link(p_SelectionId, p_Waypoints, p_LinkID, p_OneWay)
 	local s_Selection = p_Waypoints or g_NodeCollection:GetSelected(p_SelectionId)
 	p_OneWay = p_OneWay or false
 
-	-- -- not used right now. Keep for future-spawn-point-handling
-	-- local s_SelectedSpawn = g_NodeCollection:GetSelectedSpawn(p_SelectionId)
-	-- if s_SelectedSpawn then
-	-- 	local s_SecetedId = s_SelectedSpawn.ID
-	-- 	if not self._SpawnPointTable[s_SelectedSpawn].Data then
-	-- 		self._SpawnPointTable[s_SelectedSpawn].Data = {}
-	-- 	end
-	-- 	local s_Links = self._SpawnPointTable[s_SelectedSpawn].Data.Links or {}
-	-- 	s_Links[#s_Links + 1] = s_SecetedId
-	-- 	self._SpawnPointTable[s_SelectedSpawn].Data.Links = s_Links
-	-- 	return true, 'Success'
-	-- end
-
 	if #s_Selection == 2 then
 		-- Special case, nodes link to each other.
 		self:Link(p_SelectionId, s_Selection[1], s_Selection[2].ID, true)
@@ -862,40 +787,6 @@ end
 
 function NodeCollection:GetNrOfPaths()
 	return self._LoadPathCount
-end
-
-function NodeCollection:ParseSpawnsToNodes()
-	local s_Nodes = {}
-	for l_Index = 1, #self._SpawnPointTable do
-		local s_SpawnPoint = self._SpawnPointTable[l_Index]
-		local s_Node = {
-			PathIndex = 0,
-			PointIndex = l_Index,
-			InputVar = 0,
-			SpeedMode = 0,
-			ExtraMode = 0,
-			OptValue = 0,
-			ID = 'SpawnPoint_' .. l_Index,
-			Position = s_SpawnPoint.Transform.trans,
-			Data = s_SpawnPoint.Data
-		}
-		s_Nodes[#s_Nodes + 1] = s_Node
-	end
-	return s_Nodes
-end
-
-function NodeCollection:GetPathsAndSpawns()
-	local s_Paths = {}
-	-- print(s_Paths[0])
-	local s_LastIndex = 0
-	for l_PathIndex, _ in pairs(self._WaypointsByPathIndex) do
-		s_Paths[l_PathIndex] = self._WaypointsByPathIndex[l_PathIndex]
-		s_LastIndex = l_PathIndex
-	end
-	if Config.DrawParsedSpawns then
-		s_Paths[s_LastIndex + 1] = self:ParseSpawnsToNodes()
-	end
-	return s_Paths
 end
 
 function NodeCollection:Clear()
@@ -1250,18 +1141,6 @@ function NodeCollection:isNodeInFront(p_Point, p_Direction, p_Node)
 	return dotProduct > 0
 end
 
-function NodeCollection:AddToClosestSpawnPoint(p_Node)
-	local s_FirstNode = self._LoadLastFirstNode
-
-	local s_ClosestSpawnPoint = nil
-	local s_ClosestDistance = 9999999
-
-	for i = 1, #self._SpawnPointTable do
-		local s_SpawnPoint = self._SpawnPointTable[i]
-		local s_Distance = m_Utilities:DistanceFast(s_SpawnPoint.Transform.trans, p_Node.Position)
-	end
-end
-
 function NodeCollection:ParseSingleSpawn(p_SpawnPoint)
 	local s_PositionSpawn = p_SpawnPoint.Transform.trans
 
@@ -1335,13 +1214,6 @@ function NodeCollection:ParseSingleSpawn(p_SpawnPoint)
 		-- no node found, just use one randomly
 		local s_RandomIndex = MathUtils:GetRandomInt(1, #s_ClosestPathNodes)
 		self:LinkSpawn(p_SpawnPoint, s_ClosestPathNodes[s_RandomIndex])
-	end
-end
-
-function NodeCollection:ParseAllSpawns()
-	for i = 1, #self._SpawnPointTable do
-		local s_Spawn = self._SpawnPointTable[i]
-		self:ParseSingleSpawn(s_Spawn)
 	end
 end
 
@@ -1444,12 +1316,6 @@ function NodeCollection:ProcessAllDataToLoad()
 				local s_PointIndex = l_Row['pointIndex']
 				if s_PointIndex == 0 then
 					self._InfoNode = json.decode(l_Row['data'] or '{}')
-					-- else -- spawn-points form mod-db. For now just parse them directly
-					-- 	-- only happens on modlist-relad
-					-- 	if self._SpawnPointTable[s_PointIndex] == nil then
-					-- 		self._SpawnPointTable[s_PointIndex] = {}
-					-- 	end
-					-- 	self._SpawnPointTable[s_PointIndex].Data = json.decode(l_Row['data'] or '{}')
 				end
 			else
 				local s_Waypoint = {
@@ -1477,9 +1343,6 @@ function NodeCollection:ProcessAllDataToLoad()
 					self._LoadLastFirstNode = s_Waypoint
 				end
 				self._LoadLastWaypoint = s_Waypoint
-
-				-- TODO: partly parse spawn-points here?
-				-- self:AddToClosestSpawnPoint(s_Waypoint)
 			end
 			self._LoadWaypointCount = self._LoadWaypointCount + 1
 		end
@@ -1550,7 +1413,6 @@ function NodeCollection:ProcessAllDataToSave()
 			s_JsonSaveData = SQL:Escape(table.concat(s_JsonData:split('"'), '""'))
 		end
 
-
 		-- info-node
 		table.insert(self._SaveTraceBatchQueries, '(' .. table.concat({
 			0, -- path
@@ -1562,35 +1424,6 @@ function NodeCollection:ProcessAllDataToSave()
 			'"' .. s_JsonSaveData .. '"'
 		}, ',') .. ')')
 
-		-- -- don't save spawn-poits for now, just parse them
-		-- -- then save spawn-points
-		-- for l_IndexSpawn = 1, #self._SpawnPointTable do
-		-- 	local s_JsonSaveData = ''
-		-- 	local l_SpawnPoint = self._SpawnPointTable[l_IndexSpawn]
-
-		-- 	if l_SpawnPoint ~= nil and type(l_SpawnPoint.Data) == 'table' then
-		-- 		local s_JsonData, s_EncodeError = json.encode(l_SpawnPoint.Data)
-		-- 		if s_JsonData == nil then
-		-- 			m_Logger:Warning('Infonode data could not encode: ' .. tostring(s_EncodeError))
-		-- 		end
-		-- 		if s_JsonData ~= '{}' then
-		-- 			s_JsonSaveData = SQL:Escape(table.concat(s_JsonData:split('"'), '""'))
-		-- 		end
-		-- 	end
-
-		-- 	-- info-node
-		-- 	table.insert(self._SaveTraceBatchQueries, '(' .. table.concat({
-		-- 		0, -- path
-		-- 		l_IndexSpawn, -- point
-		-- 		0, -- self._SpawnPointTable[l_IndexSpawn].Transform.trans.x, --x
-		-- 		0, -- self._SpawnPointTable[l_IndexSpawn].Transform.trans.y, --y
-		-- 		0, -- self._SpawnPointTable[l_IndexSpawn].Transform.trans.z, --z
-		-- 		1, -- var
-		-- 		'"' .. s_JsonSaveData .. '"'
-		-- 	}, ',') .. ')')
-		-- end
-
-		-- then save waypoints
 		for l_Index = 1, #self._Waypoints do
 			local l_Waypoint = self._Waypoints[l_Index]
 			-- Keep track of disconnected nodes, only two should exist.
