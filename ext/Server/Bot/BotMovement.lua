@@ -15,11 +15,11 @@ local flags = RayCastFlags.DontCheckWater |
 -- >>> SMART PATH OFFSET (with zig-zag and stairs fixes)
 function Bot:ApplyPathOffset(p_OriginalPoint, p_NextPoint, p_NextToNextPoint)
 	-- PRIORITY 1: Recovery mode - disable offset
-	if self.m_PathSide == 0 and self.m_OffsetRecoveryNodes and self.m_OffsetRecoveryNodes > 0 then
+	if self.m_PathSide ~= 0 and self.m_OffsetRecoveryNodes and self.m_OffsetRecoveryNodes > 0 then
 		self.m_OffsetRecoveryNodes = self.m_OffsetRecoveryNodes - 1
-		if self.m_OffsetRecoveryNodes == 0 then
-			self.m_PathSide = math.random(-1, 1)
-		end
+		-- if self.m_OffsetRecoveryNodes == 0 then - Stay on one side of one path
+		-- 	self.m_PathSide = math.random(-1, 1)
+		-- end
 		return p_OriginalPoint, p_NextPoint
 	end
 
@@ -32,9 +32,8 @@ function Bot:ApplyPathOffset(p_OriginalPoint, p_NextPoint, p_NextToNextPoint)
 
 	-- Initialize side once per path
 	if not self.m_PathSide or self.m_LastPathIndex ~= self._PathIndex then
-		self.m_PathSide = math.random(-1, 1) -- -1 left, 0 center, 1 right
+		self.m_PathSide = math.random(-1, 1)          -- -1 left, 0 center, 1 right
 		self.m_LastPathIndex = self._PathIndex
-		-- print('Bot ' .. self.m_Player.name .. ' path offset side: ' .. tostring(self.m_PathSide))
 		self.m_OffsetDistance = 0.8 + (math.random() * 0.4) -- 0.8-1.2m
 		self.m_LastStuckCheck = 0
 		self.m_ForceCenter = false
@@ -79,7 +78,6 @@ function Bot:ApplyPathOffset(p_OriginalPoint, p_NextPoint, p_NextToNextPoint)
 	local verticalDelta = math.abs(p_NextPoint.Position.y - p_OriginalPoint.Position.y)
 	if verticalDelta > 0.35 then
 		self.m_OffsetRecoveryNodes = 5 -- force center for 5 nodes
-		-- print("return - vertical")
 		return p_OriginalPoint, p_NextPoint
 	end
 
@@ -251,31 +249,35 @@ end
 
 function Bot:_HandleSidwardsMovement(p_DeltaTime)
 	if Config.MoveSidewards then
-		if self._SidewardsTimer <= 0.0 then
-			if self.m_StrafeValue ~= 0 then
-				self._SidewardsTimer = MathUtils:GetRandom(Config.MinMoveCycle, Config.MaxStraigtCycle)
-				self.m_StrafeValue = 0.0
-				self.m_YawOffset = 0.0
-			else
-				self._SidewardsTimer = MathUtils:GetRandom(Config.MinMoveCycle, Config.MaxSideCycle)
-				if MathUtils:GetRandomInt(0, 1) > 0 then -- Random direction.
-					self.m_StrafeValue = 1.0
+		if self._ObstacleSequenceTimer ~= 0 then
+			self.m_YawOffset = 0.0
+		else
+			if self._SidewardsTimer <= 0.0 then
+				if self.m_StrafeValue ~= 0 then
+					self._SidewardsTimer = MathUtils:GetRandom(Config.MinMoveCycle, Config.MaxStraigtCycle)
+					self.m_StrafeValue = 0.0
+					self.m_YawOffset = 0.0
 				else
-					self.m_StrafeValue = -1.0
-				end
-				if self.m_ActiveSpeedValue == BotMoveSpeeds.Sprint then
-					self.m_YawOffset = 0.3927 * -self.m_StrafeValue
-				else
-					self.m_YawOffset = 0.7854 * -self.m_StrafeValue
+					self._SidewardsTimer = MathUtils:GetRandom(Config.MinMoveCycle, Config.MaxSideCycle)
+					if MathUtils:GetRandomInt(0, 1) > 0 then -- Random direction.
+						self.m_StrafeValue = 1.0
+					else
+						self.m_StrafeValue = -1.0
+					end
+					if self.m_ActiveSpeedValue == BotMoveSpeeds.Sprint then
+						self.m_YawOffset = 0.3927 * -self.m_StrafeValue
+					else
+						self.m_YawOffset = 0.7854 * -self.m_StrafeValue
+					end
 				end
 			end
+			self:_SetInput(EntryInputActionEnum.EIAStrafe, self.m_StrafeValue)
+			self._SidewardsTimer = self._SidewardsTimer - p_DeltaTime
 		end
-		self:_SetInput(EntryInputActionEnum.EIAStrafe, self.m_StrafeValue)
-		self._SidewardsTimer = self._SidewardsTimer - p_DeltaTime
 	end
 end
 
-function Bot:_ObstacleHandling(p_Velocity, p_DistanceSquared, p_HeightDistance, p_DeltaTime)
+function Bot:_ObstacleHandling(p_Velocity, p_DistanceSquared, p_HeightDistance, p_DeltaTime, p_PointPosition, p_Transform)
 	local s_SetTargetReached = false
 	local s_IncrementNodes = 0
 
@@ -287,18 +289,34 @@ function Bot:_ObstacleHandling(p_Velocity, p_DistanceSquared, p_HeightDistance, 
 	-- handling on standstill
 	if p_Velocity.magnitude < 0.3 or self._ObstacleSequenceTimer ~= 0 then -- use velocity instead of position
 		-- Try to get around obstacle.
-		self.m_ActiveSpeedValue = BotMoveSpeeds.Sprint                  -- Always try to stand.
+		self.m_ActiveSpeedValue = BotMoveSpeeds.Normal                  -- Always try to stand.
 		if p_HeightDistance > 1.5 then                                  -- no change to get there, so skip the obstacle-stuff
 			self._ObstacleRetryCounter = 10
 			goto skip
 		end
 
 		if self._ObstacleSequenceTimer == 0 then -- Step 0
-		elseif self._ObstacleSequenceTimer > 3.4 then -- Step 4 - repeat afterwards.
+			-- if self.m_PathSide == 0 then
+			-- TODO: detect side of path
+			local s_A = Vec2(p_Transform.trans.x, p_Transform.trans.z)
+			local s_B = s_A + Vec2(p_Transform.forward.x, p_Transform.forward.z)
+			local s_P = Vec2(p_PointPosition.x, p_PointPosition.z)
+			local s_Cross = (s_B.x - s_A.x) * (s_P.y - s_A.y) - (s_B.y - s_A.y) * (s_P.x - s_A.x)
+			if s_Cross > 0 then
+				-- target on left side
+				self.m_StrafeValue = -1.0
+			else
+				-- target on right side
+				self.m_StrafeValue = 1.0
+			end
+			self._TargetPitch = 0.0
+			self.m_YawOffset = 0.0
+		end
+		if self._ObstacleSequenceTimer > 2.0 then -- Step 4 - repeat afterwards.
 			self._ObstacleSequenceTimer = 0
 			self:_ResetActionFlag(BotActionFlags.MeleeActive)
 			self._ObstacleRetryCounter = self._ObstacleRetryCounter + 1
-		elseif self._ObstacleSequenceTimer > 2.0 then -- Step 3
+		elseif self._ObstacleSequenceTimer > 1.6 then -- Step 3
 			if self._ObstacleRetryCounter == 0 then
 				if self._ActiveAction ~= BotActionFlags.MeleeActive then
 					self._ActiveAction = BotActionFlags.MeleeActive
@@ -313,30 +331,34 @@ function Bot:_ObstacleHandling(p_Velocity, p_DistanceSquared, p_HeightDistance, 
 			else
 				self:_SetInput(EntryInputActionEnum.EIAFire, 1)
 			end
-		elseif self._ObstacleSequenceTimer > 1.4 then -- Step 2
-			if self._ObstacleSequenceTimer <= 1.4 + p_DeltaTime then
+		elseif self._ObstacleSequenceTimer > 1.3 then -- Step 2
+			if self._ObstacleSequenceTimer <= 1.3 + p_DeltaTime then
 				self.m_StrafeValue = self.m_StrafeValue * -1.0
 			end
-			self:_SetInput(EntryInputActionEnum.EIAStrafe, self.m_StrafeValue * Config.SpeedFactor)
-		elseif self._ObstacleSequenceTimer > 0.4 then -- Step 2
-			self._TargetPitch = 0.0
-
-			if self.m_StrafeValue == 0 then
-				if (MathUtils:GetRandomInt(0, 1) == 1) then
-					self.m_StrafeValue = 1.0
-				else
-					self.m_StrafeValue = -1.0
-				end
-			end
-			self:_SetInput(EntryInputActionEnum.EIAStrafe, self.m_StrafeValue * Config.SpeedFactor)
-		elseif self._ObstacleSequenceTimer > 0.0 then -- Step 1
+			self:_SetInput(EntryInputActionEnum.EIAStrafe, self.m_StrafeValue)
+		elseif self._ObstacleSequenceTimer > 1.0 then -- Step 2
+			self:_SetInput(EntryInputActionEnum.EIAStrafe, self.m_StrafeValue)
+		elseif self._ObstacleSequenceTimer > 0.7 then -- Step 2
 			self:_SetInput(EntryInputActionEnum.EIAQuicktimeJumpClimb, 1)
 			self:_SetInput(EntryInputActionEnum.EIAJump, 1)
+			self.m_ActiveSpeedValue = BotMoveSpeeds.Sprint -- Always try to stand.
+		elseif self._ObstacleSequenceTimer >= 0.0 then -- Step 0
+			self:_SetInput(EntryInputActionEnum.EIAStrafe, self.m_StrafeValue)
+			self.m_ActiveSpeedValue = BotMoveSpeeds.Slow
 		end
 
 		::skip::
 		self._ObstacleSequenceTimer = self._ObstacleSequenceTimer + p_DeltaTime
 		self._StuckTimer = self._StuckTimer + p_DeltaTime
+
+		if p_Velocity.magnitude > 3.5 and math.abs(p_Velocity.y) < 0.5 then -- more than full strafe
+			self._ObstacleSequenceTimer = 0
+			self._StuckTimer = 0.0
+			self._ObstacleRetryCounter = 0
+			self:_ResetActionFlag(BotActionFlags.MeleeActive)
+			s_SetTargetReached = true
+			return { s_SetTargetReached, s_IncrementNodes }
+		end
 
 		if self._ObstacleRetryCounter >= 2 then -- Try next waypoint.
 			self._ObstacleRetryCounter = 0
@@ -405,7 +427,7 @@ function Bot:_IsTargetDistanceReached(p_DistanceFromTargetSquared, p_HeightDista
 	local s_TargetDistanceSpeed = Config.TargetDistanceWayPoint
 	if self.m_ActiveSpeedValue == BotMoveSpeeds.Sprint then
 		s_TargetDistanceSpeed = s_TargetDistanceSpeed * 1.5
-	elseif self.m_ActiveSpeedValue == BotMoveSpeeds.SlowCrouch then
+	elseif self.m_ActiveSpeedValue == BotMoveSpeeds.SlowCrouch or self.m_ActiveSpeedValue == BotMoveSpeeds.Slow then
 		s_TargetDistanceSpeed = s_TargetDistanceSpeed * 0.7
 	elseif self.m_ActiveSpeedValue == BotMoveSpeeds.VerySlowProne then
 		s_TargetDistanceSpeed = s_TargetDistanceSpeed * 0.5
@@ -586,10 +608,8 @@ function Bot:UpdateNormalMovement(p_DeltaTime)
 						self._CurrentWayPoint = s_Node.PointIndex
 					end
 
-					self.m_PathSide = 0 -- reset offset
 					self.m_OffsetRecoveryNodes = 10 -- lock center for a while
 					self._StuckTimer = 0.0
-					-- print("Bot rerouted " .. self.m_Name)
 					return
 				end
 			end
@@ -599,7 +619,7 @@ function Bot:UpdateNormalMovement(p_DeltaTime)
 			self._NextTargetPoint = s_NextPoint
 
 			-- do the obstacle-handling
-			local s_Result = self:_ObstacleHandling(s_Velocity, s_DistanceFromTargetSquared, s_HeightDistance, p_DeltaTime)
+			local s_Result = self:_ObstacleHandling(s_Velocity, s_DistanceFromTargetSquared, s_HeightDistance, p_DeltaTime, s_Point.Position, self.m_Player.soldier.worldTransform)
 			self._LastWayDistance = s_DistanceFromTargetSquared
 			if s_Result == nil then
 				self.m_Player.soldier:Kill()
@@ -755,7 +775,7 @@ function Bot:UpdateNormalMovement(p_DeltaTime)
 			self._TargetPoint = s_Point
 			self._NextTargetPoint = s_NextPoint
 
-			local s_Result = self:_ObstacleHandling(s_Velocity, 0, s_HeightDistance, p_DeltaTime) -- dpmt skip nodes if passing them (0)
+			local s_Result = self:_ObstacleHandling(s_Velocity, 0, s_HeightDistance, p_DeltaTime, s_Point.Position, self.m_Player.soldier.worldTransform)
 			self._LastWayDistance = s_DistanceFromTargetSquared
 			if s_Result == nil then
 				self._StuckTimer = 0.0
@@ -940,6 +960,12 @@ function Bot:UpdateSpeedOfMovement()
 
 			if self.m_Player.soldier.pose ~= CharacterPoseType.CharacterPoseType_Crouch then
 				self.m_Player.soldier:SetPose(CharacterPoseType.CharacterPoseType_Crouch, true, true)
+			end
+		elseif self.m_ActiveSpeedValue == BotMoveSpeeds.Slow then
+			s_SpeedVal = 0.7
+
+			if self.m_Player.soldier.pose ~= CharacterPoseType.CharacterPoseType_Stand then
+				self.m_Player.soldier:SetPose(CharacterPoseType.CharacterPoseType_Stand, true, true)
 			end
 		elseif self.m_ActiveSpeedValue >= BotMoveSpeeds.Normal then
 			s_SpeedVal = 1.0
