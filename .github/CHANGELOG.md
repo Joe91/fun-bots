@@ -45,6 +45,7 @@ This is the changelog for the version V3.0 Don't forget to [join us on Discord](
 * Bots now can use a path-offset sidewards (by MatiasPastori)
 * Add the command to make the bots follow a player (by MatiasPastori)
 * Default-Color for appearance added (thanks to QuantumTube)
+* Bot movement and Obstacle-handling rework
 
 ### some open TODOs:
 * Vehicle/Tank: better aiming on steep slopes (compensate car-rotation)

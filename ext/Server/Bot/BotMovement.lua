@@ -42,7 +42,7 @@ function Bot:ApplyPathOffset(p_OriginalPoint, p_NextPoint, p_NextToNextPoint)
 	-- Emergency fallback
 	if self._ObstacleSequenceTimer ~= 0 and self.m_PathSide ~= 0 then
 		self.m_ForceCenter = true
-		self.m_OffsetRecoveryNodes = 3
+		self.m_OffsetRecoveryNodes = 15
 		return p_OriginalPoint, p_NextPoint
 	end
 	if self.m_ForceCenter and self._ObstacleSequenceTimer == 0 then
@@ -77,7 +77,7 @@ function Bot:ApplyPathOffset(p_OriginalPoint, p_NextPoint, p_NextToNextPoint)
 	-- >>> FIX 2: stairs/passages vertical → center
 	local verticalDelta = math.abs(p_NextPoint.Position.y - p_OriginalPoint.Position.y)
 	if verticalDelta > 0.35 then
-		self.m_OffsetRecoveryNodes = 5 -- force center for 5 nodes
+		self.m_OffsetRecoveryNodes = 15 -- force center for 10 cycles
 		return p_OriginalPoint, p_NextPoint
 	end
 
@@ -277,15 +277,15 @@ function Bot:_HandleSidwardsMovement(p_DeltaTime)
 	end
 end
 
-function Bot:_ObstacleHandling(p_Velocity, p_DistanceSquared, p_HeightDistance, p_DeltaTime, p_PointPosition, p_Transform)
+function Bot:_ObstacleHandling(p_Velocity, p_DistanceSquared, p_HeightDistance, p_DeltaTime, p_PlayerPos)
 	local s_SetTargetReached = false
 	local s_IncrementNodes = 0
 
-	-- skip node, if node was passed
-	if p_DistanceSquared > (self._LastWayDistance + 0.01) and self._ObstacleSequenceTimer == 0 then
-		s_SetTargetReached = true
+	if self._LastWayDistance == 1024 then
+		s_SetTargetReached = true -- skip came from target-movement
 		return { s_SetTargetReached, s_IncrementNodes }
 	end
+
 	-- handling on standstill
 	if p_Velocity.magnitude < 0.3 or self._ObstacleSequenceTimer ~= 0 then -- use velocity instead of position
 		-- Try to get around obstacle.
@@ -296,11 +296,9 @@ function Bot:_ObstacleHandling(p_Velocity, p_DistanceSquared, p_HeightDistance, 
 		end
 
 		if self._ObstacleSequenceTimer == 0 then -- Step 0
-			-- if self.m_PathSide == 0 then
-			-- TODO: detect side of path
-			local s_A = Vec2(p_Transform.trans.x, p_Transform.trans.z)
-			local s_B = s_A + Vec2(p_Transform.forward.x, p_Transform.forward.z)
-			local s_P = Vec2(p_PointPosition.x, p_PointPosition.z)
+			local s_P = Vec2(p_PlayerPos.x, p_PlayerPos.z)
+			local s_A = Vec2(self._TargetPoint.Position.x, self._TargetPoint.Position.z)
+			local s_B = Vec2(self._NextTargetPoint.Position.x, self._NextTargetPoint.Position.z)
 			local s_Cross = (s_B.x - s_A.x) * (s_P.y - s_A.y) - (s_B.y - s_A.y) * (s_P.x - s_A.x)
 			if s_Cross > 0 then
 				-- target on left side
@@ -608,7 +606,7 @@ function Bot:UpdateNormalMovement(p_DeltaTime)
 						self._CurrentWayPoint = s_Node.PointIndex
 					end
 
-					self.m_OffsetRecoveryNodes = 10 -- lock center for a while
+					self.m_OffsetRecoveryNodes = 25 -- lock center for a while
 					self._StuckTimer = 0.0
 					return
 				end
@@ -619,8 +617,7 @@ function Bot:UpdateNormalMovement(p_DeltaTime)
 			self._NextTargetPoint = s_NextPoint
 
 			-- do the obstacle-handling
-			local s_Result = self:_ObstacleHandling(s_Velocity, s_DistanceFromTargetSquared, s_HeightDistance, p_DeltaTime, s_Point.Position, self.m_Player.soldier.worldTransform)
-			self._LastWayDistance = s_DistanceFromTargetSquared
+			local s_Result = self:_ObstacleHandling(s_Velocity, s_DistanceFromTargetSquared, s_HeightDistance, p_DeltaTime, self.m_Player.soldier.worldTransform.trans)
 			if s_Result == nil then
 				self.m_Player.soldier:Kill()
 				m_Logger:Write(self.m_Player.name .. ' got stuck. Kill')
@@ -775,8 +772,7 @@ function Bot:UpdateNormalMovement(p_DeltaTime)
 			self._TargetPoint = s_Point
 			self._NextTargetPoint = s_NextPoint
 
-			local s_Result = self:_ObstacleHandling(s_Velocity, 0, s_HeightDistance, p_DeltaTime, s_Point.Position, self.m_Player.soldier.worldTransform)
-			self._LastWayDistance = s_DistanceFromTargetSquared
+			local s_Result = self:_ObstacleHandling(s_Velocity, 0, s_HeightDistance, p_DeltaTime, self.m_Player.soldier.worldTransform.trans)
 			if s_Result == nil then
 				self._StuckTimer = 0.0
 				return
@@ -1001,6 +997,15 @@ function Bot:UpdateTargetMovement()
 
 		if s_Distance < 0.2 then
 			self._TargetPoint = self._NextTargetPoint
+			self._LastWayDistance = 1024 -- value to signal skip of one node
+		else
+			-- skip node, if node was passed
+			if s_Distance > (self._LastWayDistance + 0.1) and self._ObstacleSequenceTimer == 0 then
+				self._TargetPoint = self._NextTargetPoint
+				self._LastWayDistance = 1024 -- value to signal skip of one node
+			else
+				self._LastWayDistance = s_Distance
+			end
 		end
 
 		local s_DifferenceY = self._TargetPoint.Position.z - self.m_Player.soldier.worldTransform.trans.z
