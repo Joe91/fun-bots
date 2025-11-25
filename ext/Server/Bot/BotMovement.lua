@@ -398,17 +398,20 @@ function Bot:_JumpDetection(p_Point, p_ActivePointIndex)
 	if self._ObstacleSequenceTimer == 0 then
 		if (p_Point.Position.y - self.m_Player.soldier.worldTransform.trans.y) > 0.3 and Config.JumpWhileMoving then
 			-- Detect, if a jump was recorded or not.
-			local s_TimeForwardBackwardJumpDetection = 1.1 -- 1.5 s ahead and back.
 			local s_JumpValid = false
+			if p_Point.ExtraMode == 1 then
+				s_JumpValid = true
+			else
+				for i = 1, 2 do
+					local s_PointBefore = m_NodeCollection:Get(p_ActivePointIndex - i, self._PathIndex)
+					local s_PointAfter = m_NodeCollection:Get(p_ActivePointIndex + i, self._PathIndex)
 
-			for i = 1, math.floor(s_TimeForwardBackwardJumpDetection / Config.TraceDelta) do
-				local s_PointBefore = m_NodeCollection:Get(p_ActivePointIndex - i, self._PathIndex)
-				local s_PointAfter = m_NodeCollection:Get(p_ActivePointIndex + i, self._PathIndex)
-
-				if (s_PointBefore ~= nil and s_PointBefore.ExtraMode == 1) or
-					(s_PointAfter ~= nil and s_PointAfter.ExtraMode == 1) then
-					s_JumpValid = true
-					break
+					if
+						(s_PointBefore ~= nil and s_PointBefore.ExtraMode == 1) or
+						(s_PointAfter ~= nil and s_PointAfter.ExtraMode == 1) then
+						s_JumpValid = true
+						break
+					end
 				end
 			end
 
@@ -1000,7 +1003,7 @@ function Bot:UpdateTargetMovement()
 			self._LastWayDistance = 1024 -- value to signal skip of one node
 		else
 			-- skip node, if node was passed
-			if s_Distance > (self._LastWayDistance + 0.1) and self._ObstacleSequenceTimer == 0 then
+			if s_Distance > (self._LastWayDistance + 0.001) and self._ObstacleSequenceTimer == 0 then
 				self._TargetPoint = self._NextTargetPoint
 				self._LastWayDistance = 1024 -- value to signal skip of one node
 			else

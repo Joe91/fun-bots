@@ -349,10 +349,6 @@ end
 function FunBotServer:OnFinishedLoading()
 	m_NodeEditor:EndOfLoad()
 	m_GameDirector:OnLoadFinished()
-	-- don't parse the spawn before on other map-types than TDM
-	if Globals.IsTdm and Config.SpawnMethod == SpawnMethod.SpawnOnTdm then
-		m_NodeEditor:ParseAllSpawns()
-	end
 end
 
 function FunBotServer:DestroyObstacles(p_LevelName, p_GameMode)

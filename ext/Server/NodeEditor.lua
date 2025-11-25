@@ -1215,10 +1215,6 @@ function NodeEditor:EndOfLoad()
 	end
 end
 
-function NodeEditor:ParseAllSpawns()
-	m_NodeCollection:ParseAllSpawns()
-end
-
 function NodeEditor:Clear()
 	m_NodeCollection:Clear()
 	self:SendToAllPlayers('ClientNodeEditor:ClearAll')
