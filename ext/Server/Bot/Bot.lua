@@ -198,6 +198,9 @@ function Bot:__init(p_Player)
 	self._Pid_Att_Yaw = PidController(10, 2.0, 2.0, 1.0)
 	---@type PidController
 	self._Pid_Att_Pitch = PidController(10, 2.0, 2.0, 1.0)
+	-- movement
+	---@type PidController
+	self._Pid_Move_Yaw = PidController(0.01, 0.02, 0.0, 1.0)
 
 	-- Shooting.
 	self._Shoot = false

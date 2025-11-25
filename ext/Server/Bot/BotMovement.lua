@@ -998,16 +998,18 @@ function Bot:UpdateTargetMovement()
 	if self._TargetPoint and self.m_Player.soldier then
 		local s_Distance = self.m_Player.soldier.worldTransform.trans:Distance(self._TargetPoint.Position)
 
-		if s_Distance < 0.2 then
-			self._TargetPoint = self._NextTargetPoint
-			self._LastWayDistance = 1024 -- value to signal skip of one node
-		else
-			-- skip node, if node was passed
-			if s_Distance > (self._LastWayDistance + 0.001) and self._ObstacleSequenceTimer == 0 then
+		if self._NextTargetPoint then
+			if s_Distance < 0.2 then
 				self._TargetPoint = self._NextTargetPoint
 				self._LastWayDistance = 1024 -- value to signal skip of one node
 			else
-				self._LastWayDistance = s_Distance
+				-- skip node, if node was passed
+				if s_Distance > (self._LastWayDistance + 0.001) and self._ObstacleSequenceTimer == 0 then
+					self._TargetPoint = self._NextTargetPoint
+					self._LastWayDistance = 1024 -- value to signal skip of one node
+				else
+					self._LastWayDistance = s_Distance
+				end
 			end
 		end
 
@@ -1067,20 +1069,22 @@ function Bot:UpdateYaw()
 		s_DeltaYaw = s_DeltaYaw + 2 * math.pi
 	end
 
-	local s_AbsDeltaYaw = math.abs(s_DeltaYaw)
-	local s_Increment = Globals.YawPerFrame
+	local s_Output = self._Pid_Move_Yaw:Update(s_DeltaYaw)
 
-	if s_AbsDeltaYaw < s_Increment then
-		self.m_Player.input.authoritativeAimingYaw = self._TargetYaw
-		self.m_Player.input.authoritativeAimingPitch = self._TargetPitch
-		return
-	end
+	-- local s_AbsDeltaYaw = math.abs(s_DeltaYaw)
+	-- local s_Increment = s_Output
 
-	if s_DeltaYaw > 0 then
-		s_Increment = -s_Increment
-	end
+	-- if s_AbsDeltaYaw < s_Increment then
+	-- 	self.m_Player.input.authoritativeAimingYaw = self._TargetYaw
+	-- 	self.m_Player.input.authoritativeAimingPitch = self._TargetPitch
+	-- 	return
+	-- end
 
-	local s_TempYaw = self.m_Player.input.authoritativeAimingYaw + s_Increment
+	-- if s_DeltaYaw > 0 then
+	-- 	s_Increment = -s_Increment
+	-- end
+
+	local s_TempYaw = self.m_Player.input.authoritativeAimingYaw - s_Output
 
 	if s_TempYaw >= (math.pi * 2) then
 		s_TempYaw = s_TempYaw - (math.pi * 2)
