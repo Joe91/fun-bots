@@ -471,16 +471,12 @@ function Bot:_CheckForAction(p_Point)
 	return false
 end
 
-function Bot:_CheckAndDoPathSwitchAndIncrement(p_Point, p_ActivePointIndex, p_PointIncrement)
+function Bot:_CheckAndDoPathSwitch(p_Point)
 	-- CHECK FOR PATH-SWITCHES.
 	local s_NewWaypoint = nil
 	local s_SwitchPath = false
 	s_SwitchPath, s_NewWaypoint = m_PathSwitcher:GetNewPath(self, self.m_Id, p_Point, self._Objective, false,
 		self.m_Player.teamId, nil)
-
-	if self.m_Player.soldier == nil then
-		return
-	end
 
 	if s_SwitchPath == true and not self._OnSwitch and s_NewWaypoint then
 		if self._Objective ~= '' then
@@ -499,12 +495,6 @@ function Bot:_CheckAndDoPathSwitchAndIncrement(p_Point, p_ActivePointIndex, p_Po
 		self._OnSwitch = true
 	else
 		self._OnSwitch = false
-
-		if self._InvertPathDirection then
-			self._CurrentWayPoint = p_ActivePointIndex - p_PointIncrement
-		else
-			self._CurrentWayPoint = p_ActivePointIndex + p_PointIncrement
-		end
 	end
 end
 
@@ -644,11 +634,30 @@ function Bot:UpdateNormalMovement(p_DeltaTime)
 					self._StuckTimer = 0.0
 				end
 
-				if self:_CheckForAction(s_Point) then
-					return -- DON'T DO ANYTHING ELSE ANY MORE.
-				end
+				for i = 1, s_PointIncrement do
+					if i > 1 then
+						if self._InvertPathDirection then
+							s_Point = m_NodeCollection:Get(self:_GetWayIndex(-i), self._PathIndex)
+						else
+							s_Point = m_NodeCollection:Get(self:_GetWayIndex(i), self._PathIndex)
+						end
+						if s_Point == nil then
+							break
+						end
+					end
+					if self:_CheckForAction(s_Point) then
+						return -- DON'T DO ANYTHING ELSE ANY MORE.
+					end
 
-				self:_CheckAndDoPathSwitchAndIncrement(s_Point, s_ActivePointIndex, s_PointIncrement)
+					self:_CheckAndDoPathSwitch(s_Point)
+				end
+				if not self._OnSwitch then
+					if self._InvertPathDirection then
+						self._CurrentWayPoint = s_ActivePointIndex - s_PointIncrement
+					else
+						self._CurrentWayPoint = s_ActivePointIndex + s_PointIncrement
+					end
+				end
 
 				self._ObstacleSequenceTimer = 0
 				self:_ResetActionFlag(BotActionFlags.MeleeActive)

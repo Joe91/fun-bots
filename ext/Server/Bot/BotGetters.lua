@@ -209,7 +209,7 @@ function Bot:_GetWayIndex(p_Increment)
 		local s_FirstPoint = m_NodeCollection:GetFirst(self._PathIndex)
 
 		if s_ActivePointIndex > s_CountOfPoints then
-			if s_FirstPoint and s_FirstPoint.OptValue == 0xFF then -- Inversion needed.
+			if s_FirstPoint and s_FirstPoint.OptValue == 0xFF then -- Inversion needed.		
 				s_ActivePointIndex = s_CountOfPoints
 				self._InvertPathDirection = true
 			else
