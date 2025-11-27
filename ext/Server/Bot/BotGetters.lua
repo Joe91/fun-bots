@@ -196,8 +196,10 @@ function Bot:IsStuck()
 end
 
 ---@return integer
+---@return boolean
 function Bot:_GetWayIndex(p_Increment)
 	local s_ActivePointIndex = 1
+	local s_InvertPathDirection = self._InvertPathDirection
 
 	if self._CurrentWayPoint == nil then
 		self._CurrentWayPoint = s_ActivePointIndex
@@ -211,19 +213,28 @@ function Bot:_GetWayIndex(p_Increment)
 		if s_ActivePointIndex > s_CountOfPoints then
 			if s_FirstPoint and s_FirstPoint.OptValue == 0xFF then -- Inversion needed.		
 				s_ActivePointIndex = s_CountOfPoints
-				self._InvertPathDirection = true
+				-- local s_Diff = s_ActivePointIndex - s_CountOfPoints - 1
+				-- if s_Diff > 1 then
+				-- 	s_ActivePointIndex = s_ActivePointIndex - s_Diff
+				-- end
+
+				s_InvertPathDirection = true
 			else
 				s_ActivePointIndex = 1
 			end
 		elseif s_ActivePointIndex < 1 then
 			if s_FirstPoint and s_FirstPoint.OptValue == 0xFF then -- Inversion needed.
 				s_ActivePointIndex = 1
-				self._InvertPathDirection = false
+				-- local s_Diff = 1 - s_ActivePointIndex - 1
+				-- if s_Diff > 1 then
+				-- 	s_ActivePointIndex = s_ActivePointIndex + s_Diff
+				-- end
+				s_InvertPathDirection = false
 			else
 				s_ActivePointIndex = s_CountOfPoints
 			end
 		end
 	end
 
-	return s_ActivePointIndex
+	return s_ActivePointIndex, s_InvertPathDirection
 end

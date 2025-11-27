@@ -505,7 +505,9 @@ function Bot:UpdateNormalMovement(p_DeltaTime)
 
 
 	if self._FollowTargetPlayer == nil then -- default movement
-		local s_ActivePointIndex = self:_GetWayIndex(0)
+		local s_ActivePointIndex, s_InvertPathDirection = self:_GetWayIndex(0)
+		self._CurrentWayPoint = s_ActivePointIndex
+		self._InvertPathDirection = s_InvertPathDirection
 
 		local s_Point = nil
 		local s_NextPoint = nil
@@ -646,6 +648,7 @@ function Bot:UpdateNormalMovement(p_DeltaTime)
 						end
 					end
 					if self:_CheckForAction(s_Point) then
+						self._CurrentWayPoint = s_Point.PointIndex
 						return -- DON'T DO ANYTHING ELSE ANY MORE.
 					end
 
@@ -1078,22 +1081,20 @@ function Bot:UpdateYaw()
 		s_DeltaYaw = s_DeltaYaw + 2 * math.pi
 	end
 
-	local s_Output = self._Pid_Move_Yaw:Update(s_DeltaYaw)
+	local s_AbsDeltaYaw = math.abs(s_DeltaYaw)
+	local s_Increment = Globals.YawPerFrame
 
-	-- local s_AbsDeltaYaw = math.abs(s_DeltaYaw)
-	-- local s_Increment = s_Output
+	if s_AbsDeltaYaw < s_Increment then
+		self.m_Player.input.authoritativeAimingYaw = self._TargetYaw
+		self.m_Player.input.authoritativeAimingPitch = self._TargetPitch
+		return
+	end
 
-	-- if s_AbsDeltaYaw < s_Increment then
-	-- 	self.m_Player.input.authoritativeAimingYaw = self._TargetYaw
-	-- 	self.m_Player.input.authoritativeAimingPitch = self._TargetPitch
-	-- 	return
-	-- end
+	if s_DeltaYaw > 0 then
+		s_Increment = -s_Increment
+	end
 
-	-- if s_DeltaYaw > 0 then
-	-- 	s_Increment = -s_Increment
-	-- end
-
-	local s_TempYaw = self.m_Player.input.authoritativeAimingYaw - s_Output
+	local s_TempYaw = self.m_Player.input.authoritativeAimingYaw + s_Increment
 
 	if s_TempYaw >= (math.pi * 2) then
 		s_TempYaw = s_TempYaw - (math.pi * 2)
