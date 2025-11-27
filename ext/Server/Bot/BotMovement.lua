@@ -478,7 +478,7 @@ function Bot:_CheckAndDoPathSwitch(p_Point)
 	s_SwitchPath, s_NewWaypoint = m_PathSwitcher:GetNewPath(self, self.m_Id, p_Point, self._Objective, false,
 		self.m_Player.teamId, nil)
 
-	if s_SwitchPath == true and not self._OnSwitch and s_NewWaypoint then
+	if s_SwitchPath and not self._OnSwitch and s_NewWaypoint then
 		if self._Objective ~= '' then
 			-- 'Best' direction for objective on switch.
 			local s_Direction = m_NodeCollection:ObjectiveDirection(s_NewWaypoint, self._Objective, false)
@@ -653,6 +653,9 @@ function Bot:UpdateNormalMovement(p_DeltaTime)
 					end
 
 					self:_CheckAndDoPathSwitch(s_Point)
+					if self._OnSwitch then
+						break
+					end
 				end
 				if not self._OnSwitch then
 					if self._InvertPathDirection then
