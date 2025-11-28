@@ -237,7 +237,7 @@ function PathSwitcher:GetNewPath(p_Bot, p_BotId, p_Point, p_Objective, p_InVehic
 		end
 
 		-- evalute and insert to target path
-		if s_CurrentPathStatus <= s_NewPathStatus and s_CurrentPriority <= s_Priority and (not s_NewBasePath or s_OnBasePath or s_Priority == 5) then
+		if s_CurrentPathStatus <= s_NewPathStatus and s_CurrentPriority <= s_Priority and (not s_NewBasePath or (s_OnBasePath and s_CountOld == 1) or s_Priority == 5) then
 			table.insert(s_ValidPaths, {
 				Priority = s_Priority,
 				Point = s_NewPoint,

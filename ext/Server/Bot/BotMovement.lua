@@ -636,33 +636,37 @@ function Bot:UpdateNormalMovement(p_DeltaTime)
 					self._StuckTimer = 0.0
 				end
 
-				for i = 1, s_PointIncrement do
-					if i > 1 then
-						if self._InvertPathDirection then
-							s_Point = m_NodeCollection:Get(self:_GetWayIndex(-i), self._PathIndex)
-						else
-							s_Point = m_NodeCollection:Get(self:_GetWayIndex(i), self._PathIndex)
+				if s_PointIncrement > 0 then
+					for i = 1, s_PointIncrement do
+						if i > 1 then
+							if self._InvertPathDirection then
+								s_Point = m_NodeCollection:Get(self:_GetWayIndex(-i), self._PathIndex)
+							else
+								s_Point = m_NodeCollection:Get(self:_GetWayIndex(i), self._PathIndex)
+							end
+							if s_Point == nil then
+								break
+							end
 						end
-						if s_Point == nil then
-							break
+						if self:_CheckForAction(s_Point) then
+							self._CurrentWayPoint = s_Point.PointIndex
+							return -- DON'T DO ANYTHING ELSE ANY MORE.
 						end
-					end
-					if self:_CheckForAction(s_Point) then
-						self._CurrentWayPoint = s_Point.PointIndex
-						return -- DON'T DO ANYTHING ELSE ANY MORE.
-					end
 
-					self:_CheckAndDoPathSwitch(s_Point)
-					if self._OnSwitch then
-						break
+						self:_CheckAndDoPathSwitch(s_Point)
+						if self._OnSwitch then
+							self._ObstacleSequenceTimer = 0
+							self:_ResetActionFlag(BotActionFlags.MeleeActive)
+							self._LastWayDistance = 1000.0
+							return
+						end
 					end
 				end
-				if not self._OnSwitch then
-					if self._InvertPathDirection then
-						self._CurrentWayPoint = s_ActivePointIndex - s_PointIncrement
-					else
-						self._CurrentWayPoint = s_ActivePointIndex + s_PointIncrement
-					end
+
+				if self._InvertPathDirection then
+					self._CurrentWayPoint = s_ActivePointIndex - s_PointIncrement
+				else
+					self._CurrentWayPoint = s_ActivePointIndex + s_PointIncrement
 				end
 
 				self._ObstacleSequenceTimer = 0
