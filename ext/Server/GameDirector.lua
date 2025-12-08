@@ -205,7 +205,7 @@ function GameDirector:OnEngineUpdate(p_DeltaTime)
 					end
 				end
 
-				if (s_CurrentPathStatus == 0 or s_OnBasePath) and not s_OnVehiclePath then
+				if (s_CurrentPathStatus == 0 or s_OnBasePath) and not s_OnVehiclePath and not l_Bot._FollowTargetPlayer then
 					l_Bot._KillYourselfTimer = l_Bot._KillYourselfTimer + Registry.GAME_DIRECTOR.UPDATE_OBJECTIVES_CYCLE
 				else
 					l_Bot._KillYourselfTimer = 0.0

@@ -1623,7 +1623,7 @@ SettingsDefinition = {
 			Value = Config.MaximunYawPerSec,
 			Description = "In Degrees. Rotation Movement per second",
 			Reference = Range(0.00, 1080.00, 5.0),
-			Default = 450,
+			Default = 550,
 			UpdateFlag = UpdateFlag.YawPerSec,
 			Category = "EXPERT"
 		},

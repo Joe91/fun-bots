@@ -310,7 +310,8 @@ function Bot:_ObstacleHandling(p_Velocity, p_DistanceSquared, p_HeightDistance, 
 			self._TargetPitch = 0.0
 			self.m_YawOffset = 0.0
 		end
-		if self._ObstacleSequenceTimer > 2.0 then -- Step 4 - repeat afterwards.
+
+		if self._ObstacleSequenceTimer > 2.6 then -- Step 4 - repeat afterwards.
 			self._ObstacleSequenceTimer = 0
 			self:_ResetActionFlag(BotActionFlags.MeleeActive)
 			self._ObstacleRetryCounter = self._ObstacleRetryCounter + 1
@@ -656,6 +657,7 @@ function Bot:UpdateNormalMovement(p_DeltaTime)
 						self:_CheckAndDoPathSwitch(s_Point)
 						if self._OnSwitch then
 							self._ObstacleSequenceTimer = 0
+							self._ObstacleRetryCounter = 0
 							self:_ResetActionFlag(BotActionFlags.MeleeActive)
 							self._LastWayDistance = 1000.0
 							return
@@ -669,7 +671,8 @@ function Bot:UpdateNormalMovement(p_DeltaTime)
 					self._CurrentWayPoint = s_ActivePointIndex + s_PointIncrement
 				end
 
-				self._ObstacleSequenceTimer = 0
+				self._StuckTimer = 0.0
+				self._ObstacleRetryCounter = 0
 				self:_ResetActionFlag(BotActionFlags.MeleeActive)
 				self._LastWayDistance = 1000.0
 			end
@@ -823,6 +826,7 @@ function Bot:UpdateNormalMovement(p_DeltaTime)
 				end
 
 				self._ObstacleSequenceTimer = 0
+				self._ObstacleRetryCounter = 0
 				self:_ResetActionFlag(BotActionFlags.MeleeActive)
 			end
 		else
@@ -1050,27 +1054,30 @@ function Bot:LookAround(p_DeltaTime)
 	self._TargetPoint = nil
 	self._TargetPitch = 0.0
 
-	if self._WayWaitYawTimer > 6.0 then
-		self._WayWaitYawTimer = 0.0
-		self._TargetYaw = self._TargetYaw + 1.0 -- 60° rotation right.
+	if self._WayWaitYawTimer > 8.0 then
+		self._WayWaitYawTimer = 0.0 + MathUtils:GetRandom(0.0, 0.5)       -- randomize delay a bit
+		self._TargetYaw = self._TargetYaw + 1.0 + MathUtils:GetRandom(0.0, 0.6) -- 60° rotation right.
 
 		if self._TargetYaw > (math.pi * 2) then
 			self._TargetYaw = self._TargetYaw - (2 * math.pi)
 		end
+	elseif self._WayWaitYawTimer >= 5.5 and s_LastYawTimer < 5.5 then
+		self._WayWaitYawTimer = self._WayWaitYawTimer + MathUtils:GetRandom(0.0, 1.0) -- randomize delay a bit
+		self._TargetYaw = self._TargetYaw - 1.0 - MathUtils:GetRandom(0.0, 0.6) -- 60° rotation left.
+
+		if self._TargetYaw < 0.0 then
+			self._TargetYaw = self._TargetYaw + (2 * math.pi)
+		end
 	elseif self._WayWaitYawTimer >= 4.0 and s_LastYawTimer < 4.0 then
-		self._TargetYaw = self._TargetYaw - 1.0 -- 60° rotation left.
+		self._WayWaitYawTimer = self._WayWaitYawTimer + MathUtils:GetRandom(0.0, 0.5) -- randomize delay a bit
+		self._TargetYaw = self._TargetYaw - 1.0 - MathUtils:GetRandom(0.0, 0.6) -- 60° rotation left.
 
 		if self._TargetYaw < 0.0 then
 			self._TargetYaw = self._TargetYaw + (2 * math.pi)
 		end
-	elseif self._WayWaitYawTimer >= 3.0 and s_LastYawTimer < 3.0 then
-		self._TargetYaw = self._TargetYaw - 1.0 -- 60° rotation left.
-
-		if self._TargetYaw < 0.0 then
-			self._TargetYaw = self._TargetYaw + (2 * math.pi)
-		end
-	elseif self._WayWaitYawTimer >= 1.0 and s_LastYawTimer < 1.0 then
-		self._TargetYaw = self._TargetYaw + 1.0 -- 60° rotation right.
+	elseif self._WayWaitYawTimer >= 1.5 and s_LastYawTimer < 1.5 then
+		self._WayWaitYawTimer = self._WayWaitYawTimer + MathUtils:GetRandom(0.0, 0.5) -- randomize delay a bit
+		self._TargetYaw = self._TargetYaw + 1.0 + MathUtils:GetRandom(0.0, 0.6) -- 60° rotation right.
 
 		if self._TargetYaw > (math.pi * 2) then
 			self._TargetYaw = self._TargetYaw - (2 * math.pi)

@@ -179,7 +179,7 @@ Registry = {
 		-- Advanced aiming makes a difference on huge distances, but costs more performance.
 		USE_ADVANCED_AIMING = false,
 		-- Use of path-Offset
-		USE_PATH_OFFSETS = true,
+		USE_PATH_OFFSETS = false,
 		-- Worsening bots on larger distances. Factor 1.0 = no worsening, always same offset
 		WORSENING_FACOTR_DISTANCE = 0.9,
 		PROBABILITY_SWITCH_TO_BEACON_PATH = 80,
