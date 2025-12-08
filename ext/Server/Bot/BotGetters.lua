@@ -213,10 +213,10 @@ function Bot:_GetWayIndex(p_Increment)
 		if s_ActivePointIndex > s_CountOfPoints then
 			if s_FirstPoint and s_FirstPoint.OptValue == 0xFF then -- Inversion needed.		
 				s_ActivePointIndex = s_CountOfPoints
-				-- local s_Diff = s_ActivePointIndex - s_CountOfPoints - 1
-				-- if s_Diff > 1 then
-				-- 	s_ActivePointIndex = s_ActivePointIndex - s_Diff
-				-- end
+				local s_Diff = s_ActivePointIndex - s_CountOfPoints - 1
+				if s_Diff > 1 then
+					s_ActivePointIndex = s_ActivePointIndex - s_Diff
+				end
 
 				s_InvertPathDirection = true
 			else
@@ -225,10 +225,10 @@ function Bot:_GetWayIndex(p_Increment)
 		elseif s_ActivePointIndex < 1 then
 			if s_FirstPoint and s_FirstPoint.OptValue == 0xFF then -- Inversion needed.
 				s_ActivePointIndex = 1
-				-- local s_Diff = 1 - s_ActivePointIndex - 1
-				-- if s_Diff > 1 then
-				-- 	s_ActivePointIndex = s_ActivePointIndex + s_Diff
-				-- end
+				local s_Diff = 1 - s_ActivePointIndex - 1
+				if s_Diff > 1 then
+					s_ActivePointIndex = s_ActivePointIndex + s_Diff
+				end
 				s_InvertPathDirection = false
 			else
 				s_ActivePointIndex = s_CountOfPoints
