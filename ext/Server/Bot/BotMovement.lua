@@ -30,6 +30,11 @@ function Bot:ApplyPathOffset(p_OriginalPoint, p_NextPoint, p_NextToNextPoint)
 		return p_OriginalPoint, p_NextPoint
 	end
 
+	-- No offset on subobjectives
+	if Globals.IsRush and self._Objective ~= "" and g_GameDirector:IsOnSubobjectivePath(self._PathIndex, self._Objective) then
+		return p_OriginalPoint, p_NextPoint
+	end
+
 	-- Initialize side once per path
 	if not self.m_PathSide or self.m_LastPathIndex ~= self._PathIndex then
 		self.m_PathSide = math.random(-1, 1)          -- -1 left, 0 center, 1 right
@@ -561,6 +566,27 @@ function Bot:UpdateNormalMovement(p_DeltaTime)
 
 		self:_HandleDefendingIfNeeded(p_DeltaTime)
 		self:_ExecuteActionIfNeeded(s_Point, s_NextPoint, p_DeltaTime)
+		-- return if action executed
+		if self._ActiveAction == BotActionFlags.OtherActionActive then
+			local s_DifferenceY = s_Point.Position.z - self.m_Player.soldier.worldTransform.trans.z
+			local s_DifferenceX = s_Point.Position.x - self.m_Player.soldier.worldTransform.trans.x
+			local s_DistanceFromTargetSquared = s_DifferenceX ^ 2 + s_DifferenceY ^ 2
+
+			if s_Point.Data and s_Point.Data.Action and s_Point.Data.Action.type == 'mcom' and s_DistanceFromTargetSquared < (1.7 * 1.7) then
+				if self.m_Player.soldier.pose ~= CharacterPoseType.CharacterPoseType_Crouch then
+					self.m_Player.soldier:SetPose(CharacterPoseType.CharacterPoseType_Crouch, true, true)
+				end
+			else
+				if self.m_Player.soldier.pose ~= CharacterPoseType.CharacterPoseType_Stand then
+					self.m_Player.soldier:SetPose(CharacterPoseType.CharacterPoseType_Stand, true, true)
+				end
+			end
+
+			if s_DistanceFromTargetSquared > (0.3 * 0.3) then
+				self:_SetInput(EntryInputActionEnum.EIAThrottle, 1)
+			end
+			return
+		end
 
 		if s_Point.SpeedMode ~= BotMoveSpeeds.NoMovement then -- Movement.
 			self._WayWaitTimer = 0.0

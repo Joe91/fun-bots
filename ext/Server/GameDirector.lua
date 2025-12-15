@@ -1553,6 +1553,24 @@ function GameDirector:IsAtTargetObjective(p_Path, p_Objective)
 	return false
 end
 
+---@param p_Path integer
+---@param p_Objective string
+---@return boolean
+function GameDirector:IsOnSubobjectivePath(p_Path, p_Objective)
+	local s_CurrentPathFirst = m_NodeCollection:GetFirst(p_Path)
+
+	if s_CurrentPathFirst.Data ~= nil and s_CurrentPathFirst.Data.Objectives ~= nil then
+		if #s_CurrentPathFirst.Data.Objectives == 1 and s_CurrentPathFirst.Data.Objectives[1] == p_Objective then
+			local s_TempObjective = self:_GetObjectiveObject(p_Objective)
+			if s_TempObjective ~= nil and s_TempObjective.subObjective then
+				return true
+			end
+		end
+	end
+
+	return false
+end
+
 ---@param p_ObjectiveNames string[]
 ---@return boolean
 function GameDirector:IsBasePath(p_ObjectiveNames)
