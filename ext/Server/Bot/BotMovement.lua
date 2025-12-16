@@ -124,7 +124,7 @@ function Bot:ApplyPathOffset(p_OriginalPoint, p_NextPoint, p_NextToNextPoint)
 		}
 end
 
-function Bot:_ExecuteActionIfNeeded(p_Point, p_NextPoint, p_DeltaTime)
+function Bot:_ExecuteActionIfNeeded(p_Point, p_DeltaTime)
 	if self._ActiveAction == BotActionFlags.OtherActionActive then
 		if p_Point.Data ~= nil and p_Point.Data.Action ~= nil then
 			if p_Point.Data.Action.type == 'vehicle' then
@@ -179,12 +179,8 @@ function Bot:_ExecuteActionIfNeeded(p_Point, p_NextPoint, p_DeltaTime)
 			self:_ResetActionFlag(BotActionFlags.OtherActionActive)
 		end
 
-		if self._ActiveAction == BotActionFlags.OtherActionActive then
-			return -- DON'T EXECUTE ANYTHING ELSE.
-		else
-			if p_NextPoint then
-				p_Point = p_NextPoint
-			end
+		if self._ActiveAction ~= BotActionFlags.OtherActionActive then -- action finished
+			self._LastActionId = p_Point.Index                   -- remember last action node to continue from here
 		end
 	end
 end
@@ -565,7 +561,7 @@ function Bot:UpdateNormalMovement(p_DeltaTime)
 		end
 
 		self:_HandleDefendingIfNeeded(p_DeltaTime)
-		self:_ExecuteActionIfNeeded(s_Point, s_NextPoint, p_DeltaTime)
+		self:_ExecuteActionIfNeeded(s_Point, p_DeltaTime)
 		-- return if action executed
 		if self._ActiveAction == BotActionFlags.OtherActionActive then
 			local s_DifferenceY = s_Point.Position.z - self.m_Player.soldier.worldTransform.trans.z
@@ -585,7 +581,7 @@ function Bot:UpdateNormalMovement(p_DeltaTime)
 			if s_DistanceFromTargetSquared > (0.3 * 0.3) then
 				self:_SetInput(EntryInputActionEnum.EIAThrottle, 1)
 			end
-			return
+			return -- DON'T DO ANYTHING ELSE.
 		end
 
 		if s_Point.SpeedMode ~= BotMoveSpeeds.NoMovement then -- Movement.
@@ -675,7 +671,7 @@ function Bot:UpdateNormalMovement(p_DeltaTime)
 								break
 							end
 						end
-						if self:_CheckForAction(s_Point) then
+						if s_Point.Index ~= self._LastActionId and self:_CheckForAction(s_Point) then
 							self._CurrentWayPoint = s_Point.PointIndex
 							return -- DON'T DO ANYTHING ELSE ANY MORE.
 						end

@@ -205,6 +205,7 @@ function Bot:ResetSpawnVars()
 
 	self._ObstacleRetryCounter = 0
 	self._LastWayDistance = 1000.0
+	self._LastActionId = -1
 	self._ShootPlayer = nil
 	self._FollowTargetPlayer = nil
 	self._DontAttackPlayers = false
