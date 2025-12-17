@@ -47,6 +47,7 @@ This is the changelog for the version V3.0 Don't forget to [join us on Discord](
 * Default-Color for appearance added (thanks to QuantumTube)
 * Bot movement and Obstacle-handling rework
 * Fix of mcom-handling of the bots
+* Fix of some path-switching-issues in context with actions
 
 ### some open TODOs:
 * Vehicle/Tank: better aiming on steep slopes (compensate car-rotation)

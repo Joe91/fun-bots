@@ -64,11 +64,9 @@ function PathSwitcher:GetNewPath(p_Bot, p_BotId, p_Point, p_Objective, p_InVehic
 	local s_OnBasePath = false
 	local s_CurrentPathFirst = m_NodeCollection:GetFirst(p_Point.PathIndex)
 	local s_CurrentPathStatus = 0
-	local s_OnBeaconPath = false
 	if s_CurrentPathFirst.Data ~= nil and s_CurrentPathFirst.Data.Objectives ~= nil then
 		s_CurrentPathStatus = m_GameDirector:GetEnableStateOfPath(s_CurrentPathFirst.Data.Objectives)
 		s_OnBasePath = m_GameDirector:IsBasePath(s_CurrentPathFirst.Data.Objectives)
-		s_OnBeaconPath = m_GameDirector:IsBeaconPath(s_CurrentPathFirst.Data.Objectives[1])
 	end
 
 	-- To-do: get all paths via links, assign priority, sort by priority.
@@ -209,10 +207,6 @@ function PathSwitcher:GetNewPath(p_Bot, p_BotId, p_Point, p_Objective, p_InVehic
 		end
 
 		if s_CountOld == 0 and s_CountNew > 0 then
-			s_SwitchAnyways = true
-		end
-
-		if s_OnBeaconPath then -- always leave beacon path
 			s_SwitchAnyways = true
 		end
 
