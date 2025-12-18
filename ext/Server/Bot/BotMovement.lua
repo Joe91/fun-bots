@@ -494,6 +494,12 @@ function Bot:_CheckAndDoPathSwitch(p_Point)
 
 		self._PathIndex = s_NewWaypoint.PathIndex
 		self._CurrentWayPoint = s_NewWaypoint.PointIndex
+		self._TargetPoint = s_NewWaypoint
+		if self._InvertPathDirection then
+			self._NextTargetPoint = m_NodeCollection:Get(self:_GetWayIndex(-1), self._PathIndex)
+		else
+			self._NextTargetPoint = m_NodeCollection:Get(self:_GetWayIndex(1), self._PathIndex)
+		end
 		self._OnSwitch = true
 	else
 		self._OnSwitch = false
@@ -680,6 +686,7 @@ function Bot:UpdateNormalMovement(p_DeltaTime)
 						if self._OnSwitch then
 							self._ObstacleSequenceTimer = 0
 							self._ObstacleRetryCounter = 0
+							self._LastActionId = -1
 							self:_ResetActionFlag(BotActionFlags.MeleeActive)
 							self._LastWayDistance = 1000.0
 							return
