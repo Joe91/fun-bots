@@ -1,7 +1,7 @@
 ---@enum BotColors
 BotColors = {
 	RANDOM_COLOR = 0,
-	Urban = 1,
+	DEFAULT = 1,
 	ExpForce = 2,
 	Ninja = 3,
 	DrPepper = 4,
@@ -14,5 +14,6 @@ BotColors = {
 	Jungle = 11,
 	Navy = 12,
 	Wood01 = 13,
-	Count = 14
+	Urban = 14,
+	Count = 15
 }

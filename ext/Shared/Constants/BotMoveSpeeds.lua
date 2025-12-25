@@ -5,5 +5,6 @@ BotMoveSpeeds = {
 	VerySlowProne = 1,
 	SlowCrouch = 2,
 	Normal = 3,
-	Sprint = 4
+	Sprint = 4,
+	Slow = 5,
 }

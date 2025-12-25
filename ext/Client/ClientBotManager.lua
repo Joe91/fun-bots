@@ -14,14 +14,14 @@ function ClientBotManager:__init()
 end
 
 function ClientBotManager:RegisterVars()
+	self.m_ReadyToUpdate = false
 	self.m_RaycastTimer = 0
 	self.m_AliveTimer = 0
 	self.m_LastIndex = 0
-	self.m_Player = nil
-	self.m_ReadyToUpdate = false
+
 	---@type RaycastRequests[]
 	self.m_BotBotRaycastsToDo = {}
-
+	self.m_Player = nil
 	-- Inputs for change of seats (1-8).
 	self.m_LastInputLevelsPos = { 0, 0, 0, 0, 0, 0, 0, 0 }
 end
@@ -33,6 +33,9 @@ end
 ---VEXT Client Client:UpdateInput Event
 ---@param p_DeltaTime number
 function ClientBotManager:OnClientUpdateInput(p_DeltaTime)
+	if not self.m_ReadyToUpdate then
+		return
+	end
 	-- To-do: find a better solution for that!!!
 	if InputManager:WentKeyDown(InputDeviceKeys.IDK_Q) then
 		-- Execute Vehicle Enter Detection here.
@@ -57,7 +60,9 @@ function ClientBotManager:OnClientUpdateInput(p_DeltaTime)
 
 			if s_Raycast ~= nil and s_Raycast.rigidBody:Is("CharacterPhysicsEntity") then
 				-- Find a teammate at this position.
-				for _, l_Player in pairs(PlayerManager:GetPlayersByTeam(self.m_Player.teamId)) do
+				local s_PlayersByTeam = PlayerManager:GetPlayersByTeam(self.m_Player.teamId)
+				for l_Index = 1, #s_PlayersByTeam do
+					local l_Player = s_PlayersByTeam[l_Index]
 					if l_Player.soldier ~= nil and m_Utilities:isBot(l_Player) and
 						l_Player.soldier.worldTransform.trans:Distance(s_Raycast.position) < 2 then
 						NetEvents:SendLocal('Client:RequestEnterVehicle', l_Player.name)
@@ -74,7 +79,11 @@ end
 ---@param p_Cache ConceptCache
 ---@param p_DeltaTime number
 function ClientBotManager:OnInputPreUpdate(p_HookCtx, p_Cache, p_DeltaTime)
-	if self.m_Player ~= nil and self.m_Player.inVehicle then
+	if not self.m_ReadyToUpdate then
+		return
+	end
+
+	if self.m_Player ~= nil and self.m_Player.alive and self.m_Player.inVehicle then
 		for i = 1, 8 do
 			local s_Varname = "ConceptSelectPosition" .. tostring(i)
 			local s_LevelId = InputConceptIdentifiers[s_Varname]
@@ -92,15 +101,17 @@ end
 ---VEXT Shared Engine:Message Event
 ---@param p_Message Message
 function ClientBotManager:OnEngineMessage(p_Message)
-	if p_Message.type == MessageType.ClientLevelFinalizedMessage then
+	if p_Message.type == MessageType.ClientStateEnteredIngameMessage then --MessageType.ClientLevelFinalizedMessage then
 		NetEvents:SendLocal('Client:RequestSettings')
-		self.m_ReadyToUpdate = true
+		self:RegisterVars()
 		m_Logger:Write("level loaded on Client")
 	end
 
 	if p_Message.type == MessageType.ClientConnectionUnloadLevelMessage or
-		p_Message.type == MessageType.ClientCharacterLocalPlayerDeletedMessage then
-		self:RegisterVars()
+		-- p_Message.type == MessageType.ClientCharacterLocalPlayerDeletedMessage or
+		p_Message.type == MessageType.UIRequestEndOfRoundMessage then
+		print("End: " .. tostring(p_Message.type))
+		self.m_ReadyToUpdate = false
 	end
 end
 
@@ -268,7 +279,7 @@ function ClientBotManager:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 	self.m_RaycastTimer = 0
 	local s_CheckCount = 0
 
-	if self.m_Player.soldier ~= nil then                       -- Alive. Check for enemy bots.
+	if self.m_Player.alive and self.m_Player.soldier ~= nil then -- Alive. Check for enemy bots.
 		if self.m_AliveTimer < Registry.CLIENT.SPAWN_PROTECTION then -- Wait 2s (spawn-protection).
 			self.m_AliveTimer = self.m_AliveTimer + p_DeltaTime
 			self:SendRaycastResults(s_RaycastResultsToSend)
@@ -278,9 +289,11 @@ function ClientBotManager:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 		---@type Player[]
 		local s_EnemyPlayers = {}
 
-		for _, l_Player in pairs(PlayerManager:GetPlayers()) do
+		local s_Players = PlayerManager:GetPlayers()
+		for l_Index = 1, #s_Players do
+			local l_Player = s_Players[l_Index]
 			if l_Player.teamId ~= self.m_Player.teamId and self.m_Player.teamId ~= 0 then -- Don't let bots attack spectators.
-				table.insert(s_EnemyPlayers, l_Player)
+				s_EnemyPlayers[#s_EnemyPlayers + 1] = l_Player
 			end
 		end
 
@@ -296,6 +309,10 @@ function ClientBotManager:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 		else
 			s_PlayerPosition = ClientUtils:GetCameraTransform().trans:Clone() -- player.soldier.worldTransform.trans:Clone() + m_Utilities:getCameraPos(player, false)
 		end
+
+		local s_MaxVehicleDistance = math.max(Config.MaxShootDistanceVehicles, Config.MaxShootDistanceGunship)
+		local s_MaxPlayerDistance = math.max(Config.MaxShootDistanceMissileAir, Config.MaxShootDistanceSniper)
+
 		for i = 0, #s_EnemyPlayers - 1 do
 			local s_Index = (self.m_LastIndex + i) % #s_EnemyPlayers + 1
 			local s_Bot = s_EnemyPlayers[s_Index]
@@ -318,7 +335,7 @@ function ClientBotManager:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 
 			s_CheckCount = s_CheckCount + 1
 
-			if (s_Distance < Config.MaxShootDistanceSniper) or (s_Bot.inVehicle and (s_Distance < Config.MaxShootDistanceVehicles)) then
+			if (not s_Bot.inVehicle and (s_Distance < s_MaxPlayerDistance)) or (s_Bot.inVehicle and (s_Distance < s_MaxVehicleDistance)) then
 				if self:DoRaycast(s_PlayerPosition, s_TargetPos, self.m_Player.inVehicle, s_Bot.inVehicle) then
 					-- We found a valid bot in Sight (either no hit, or player-hit). Signal Server with players.
 					local s_IgnoreYaw = false
@@ -408,12 +425,12 @@ end
 
 ---VEXT Shared Extension:Unloading Event
 function ClientBotManager:OnExtensionUnloading()
-	self:RegisterVars()
+	self.m_ReadyToUpdate = false
 end
 
 ---VEXT Shared Level:Destroy Event
 function ClientBotManager:OnLevelDestroy()
-	self:RegisterVars()
+	self.m_ReadyToUpdate = false
 end
 
 -- =============================================
@@ -433,11 +450,13 @@ function ClientBotManager:OnWriteClientSettings(p_NewConfig, p_UpdateWeaponSets)
 	end
 
 	self.m_Player = PlayerManager:GetLocalPlayer()
+	self.m_ReadyToUpdate = true
 end
 
 function ClientBotManager:CheckForBotBotAttack(p_RaycastData)
-	for _, l_RaycastEntry in pairs(p_RaycastData) do
-		table.insert(self.m_BotBotRaycastsToDo, l_RaycastEntry)
+	for l_Index = 1, #p_RaycastData do
+		local l_RaycastEntry = p_RaycastData[l_Index]
+		self.m_BotBotRaycastsToDo[#self.m_BotBotRaycastsToDo + 1] = l_RaycastEntry
 	end
 end
 

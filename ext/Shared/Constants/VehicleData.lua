@@ -24,6 +24,7 @@
 ---@field Team TeamId|integer|nil
 ---@field Offset Vec3[]
 ---@field FirstPassengerSeat integer
+---@field RotationOffset Vec3[]|nil
 
 ---@class VehicleData
 ---@type VehicleDataInner[]
@@ -226,6 +227,7 @@ VehicleData = {
 		Parts = { -1, 12, -1, -1 },
 		Speed = { 300, 1000, 300, 300 },
 		Drop = { 9.81, 0.0, 9.82, 9.81 },
+		FirstPassengerSeat = 3,
 		Offset = { Vec3(0, 0, 0), Vec3(0.0, 0.224, 0.670), Vec3(0, 0, 0), Vec3(0, 0, 0) }
 	},
 	["Humvee_ASRAD"] = {
@@ -235,13 +237,14 @@ VehicleData = {
 		Parts = { -1, 25, -1, -1 },
 		Speed = { 300, 1000, 300, 300 },
 		Drop = { 300, 0.0, 300, 300 },
+		FirstPassengerSeat = 3,
 		Offset = { Vec3(0, 0, 0), Vec3(0.0, 0.0, 0.623), Vec3(0, 0, 0), Vec3(0, 0, 0) }
 	},
 
 	-- Light Vehicle
 	["AAV-7A1"] = {
 		Name = "[AAV-7A1 AMTRAC]",
-		Type = VehicleTypes.LightVehicle,
+		Type = VehicleTypes.AMTRAC,
 		Terrain = VehicleTerrains.Amphibious,
 		Parts = { -1, 23, -1, -1, -1, -1 },
 		Speed = { 600, 80, 600, 600, 600, 600 },
@@ -256,6 +259,7 @@ VehicleData = {
 		Parts = { -1, 19, -1, -1 },
 		Speed = { 300, 610, 300, 300 },
 		Drop = { 0.0, 9.81, 0.0, 0.0 },
+		FirstPassengerSeat = 3,
 		Offset = { Vec3(0, 0, 0), Vec3(0.252, -0.098, 0.450), Vec3(0, 0, 0), Vec3(0, 0, 0) }
 	},
 	["Humvee"] = {
@@ -265,6 +269,7 @@ VehicleData = {
 		Parts = { -1, 19, -1, -1 },
 		Speed = { 300, 610, 300, 300 },
 		Drop = { 0.0, 9.81, 0.0, 0.0 },
+		FirstPassengerSeat = 3,
 		Offset = { Vec3(0, 0, 0), Vec3(0.252, -0.098, 0.450), Vec3(0, 0, 0), Vec3(0, 0, 0) }
 	},
 	["HumveeArmored_hmg"] = {
@@ -274,6 +279,7 @@ VehicleData = {
 		Parts = { -1, 19, -1, -1 },
 		Speed = { 300, 610, 300, 300 },
 		Drop = { 0.0, 9.81, 0.0, 0.0 },
+		FirstPassengerSeat = 3,
 		Offset = { Vec3(0, 0, 0), Vec3(0.252, -0.098, 0.450), Vec3(0, 0, 0), Vec3(0, 0, 0) }
 	},
 	["GAZ-3937_Vodnik"] = {
@@ -283,6 +289,7 @@ VehicleData = {
 		Parts = { -1, 23, -1, -1 },
 		Speed = { 300, 600, 300, 300 },
 		Drop = { 0.0, 9.81, 0.0, 0.0 },
+		FirstPassengerSeat = 3,
 		Offset = { Vec3(0, 0, 0), Vec3(0.574, -0.196, 0.302), Vec3(0, 0, 0), Vec3(0, 0, 0) }
 	},
 	["VodnikModified_V2"] = {
@@ -292,6 +299,7 @@ VehicleData = {
 		Parts = { -1, 6, 16 },
 		Speed = { 300, 80, 600 },
 		Drop = { 0.0, 7.0, 9.81 },
+		FirstPassengerSeat = 4,
 		Offset = { Vec3(0, 0, 0), Vec3(-0.003, 0.243, -0.492), Vec3(0.0, 0.272, -0.708) }
 	},
 	["HumveeModified"] = {
@@ -301,6 +309,7 @@ VehicleData = {
 		Parts = { -1, 1, 18 },
 		Speed = { 300, 600, 80 },
 		Drop = { 0.0, 15, 7.0 },
+		FirstPassengerSeat = 4,
 		Offset = { Vec3(0, 0, 0), Vec3(-0.076, 0.285, -0.933), Vec3(-0.003, 0.243, -0.581) }
 	},
 
@@ -312,6 +321,7 @@ VehicleData = {
 		Parts = { -1, { 13, 13 } },
 		Speed = { 300, { 50, 50 } },
 		Drop = { 0.0, { 25.0, 25.0 } },
+		FirstPassengerSeat = 3,
 		Offset = { Vec3(0, 0, 0), { Vec3(0, 0, 0), Vec3(0, 0, 0) } }
 	},
 	["STAR_1466"] = {
@@ -321,6 +331,9 @@ VehicleData = {
 		Parts = { -1, { 1, 1 } },
 		Speed = { 300, { 50, 50 } },
 		Drop = { 0.0, { 25.0, 25.0 } },
+		FirstPassengerSeat = 3, -- CRITICAL: we must ensure this because with the new ShouldExit logic,
+		-- we check for passenger seats and MobileArtillery and LightAA have logic to switch seats to fire their guns
+		-- and then switch back.
 		Offset = { Vec3(0, 0, 0), { Vec3(0, 0, 0), Vec3(0, 0, 0) } }
 	},
 
@@ -406,6 +419,7 @@ VehicleData = {
 		Parts = { { -2, -2 }, { 14, 14 } },
 		Speed = { { 300, 10000 }, { 600, 999 } },
 		Drop = { { 0.0, 0.0 }, { 0.0, 0.0 } },
+		FirstPassengerSeat = 3,
 		Offset = { { Vec3(3.374, 0.258, 1.802), Vec3(3.374, 0.258, 1.802) }, { Vec3(0.0, 0.0, 0.345), Vec3(0.0, 0.0, 0.345) } }
 	},
 	["AH1Z_coop"] = {
@@ -415,6 +429,7 @@ VehicleData = {
 		Parts = { { -2, -2 }, { 14, 14 } },
 		Speed = { { 300, 10000 }, { 600, 999 } },
 		Drop = { { 0.0, 0.0 }, { 0.0, 0.0 } },
+		FirstPassengerSeat = 3,
 		Offset = { { Vec3(3.374, 0.258, 1.802), Vec3(3.374, 0.258, 1.802) }, { Vec3(0.0, 0.0, 0.345), Vec3(0.0, 0.0, 0.345) } }
 	},
 	["AH6_Littlebird"] = {
@@ -424,6 +439,7 @@ VehicleData = {
 		Parts = { { -2, -2 }, -1, -1, -1 },
 		Speed = { { 900, 10000 }, 300, 300, 300 },
 		Drop = { { 0.0, 0.0 }, 9.81, 9.81, 9.81 },
+		FirstPassengerSeat = 2,
 		Offset = { { Vec3(0.453, -0.062, 0.848), Vec3(0.453, -0.062, 0.848) }, Vec3(0, 0, 0), Vec3(0, 0, 0), Vec3(0, 0, 0) }
 	},
 	["AH6_Littlebird_EQ"] = {
@@ -433,15 +449,17 @@ VehicleData = {
 		Parts = { { -2, -2 }, -1, -1, -1 },
 		Speed = { { 900, 10000 }, 300, 300, 300 },
 		Drop = { { 0.0, 0.0 }, 9.81, 9.81, 9.81 },
+		FirstPassengerSeat = 2,
 		Offset = { { Vec3(0.453, -0.062, 0.848), Vec3(0.453, -0.062, 0.848) }, Vec3(0, 0, 0), Vec3(0, 0, 0), Vec3(0, 0, 0) }
 	},
 	["Ka-60"] = {
 		Name = "[KA-60 KASATKA]",
-		Type = VehicleTypes.Chopper,
+		Type = VehicleTypes.TransportChopper,
 		Terrain = VehicleTerrains.Air,
 		Parts = { -1, 18, 15, -1, -1 },
 		Speed = { 350, 900, 900, 350, 350 },
 		Drop = { 9.81, 0.0, 0.0, 9.81, 9.81 },
+		FirstPassengerSeat = 4,
 		Offset = { Vec3(0, 0, 0), Vec3(0.0, 0.191, -0.360), Vec3(0.0, 0.191, -0.360), Vec3(0, 0, 0), Vec3(0, 0, 0) }
 	},
 	["Mi28"] = {
@@ -451,24 +469,27 @@ VehicleData = {
 		Parts = { { -2, -2 }, { 6, 6 } },
 		Speed = { { 300, 10000 }, { 600, 999 } },
 		Drop = { { 0.0, 0.0 }, { 0.0, 0.0 } },
+		FirstPassengerSeat = 3,
 		Offset = { { Vec3(0.006, 0.499, 1.427), Vec3(0.006, 0.499, 1.427) }, { Vec3(0, -0.018, 0.427), Vec3(0, -0.018, 0.427) } }
 	},
 	["Venom"] = {
 		Name = "[UH-1Y VENOM]",
-		Type = VehicleTypes.Chopper,
+		Type = VehicleTypes.TransportChopper,
 		Terrain = VehicleTerrains.Air,
 		Parts = { -1, 19, 16, -1, -1 },
 		Speed = { 350, 900, 900, 350, 350 },
 		Drop = { 9.81, 0.0, 0.0, 9.81, 9.81 },
+		FirstPassengerSeat = 4,
 		Offset = { Vec3(0, 0, 0), Vec3(0.0, 0.239, -0.650), Vec3(0.0, 0.239, -0.650), Vec3(0, 0, 0), Vec3(0, 0, 0) }
 	},
 	["Venom_coop"] = {
 		Name = "[UH-1Y VENOM]",
-		Type = VehicleTypes.Chopper,
+		Type = VehicleTypes.TransportChopper,
 		Terrain = VehicleTerrains.Air,
 		Parts = { -1, 19, 16, -1, -1 },
 		Speed = { 350, 900, 900, 350, 350 },
 		Drop = { 9.81, 0.0, 0.0, 9.81, 9.81 },
+		FirstPassengerSeat = 4,
 		Offset = { Vec3(0, 0, 0), Vec3(0.0, 0.239, -0.650), Vec3(0.0, 0.239, -0.650), Vec3(0, 0, 0), Vec3(0, 0, 0) }
 	},
 	["Z-11w"] = {
@@ -478,6 +499,7 @@ VehicleData = {
 		Parts = { { -1, -1 }, -1, -1, -1 },
 		Speed = { { 900, 10000 }, 350, 350, 350 },
 		Drop = { { 0.0, 0.0 }, 9.81, 9.81, 9.81 },
+		FirstPassengerSeat = 2,
 		Offset = { { Vec3(0.495, -0.199, 2.158), Vec3(0.495, -0.199, 2.158) }, Vec3(0, 0, 0), Vec3(0, 0, 0), Vec3(0, 0, 0) }
 	},
 	["Wz11_SP_Paris"] = {
@@ -487,6 +509,7 @@ VehicleData = {
 		Parts = { { -1, -1 }, -1, -1, -1 },
 		Speed = { { 900, 10000 }, 350, 350, 350 },
 		Drop = { { 0.0, 0.0 }, 9.81, 9.81, 9.81 },
+		FirstPassengerSeat = 2,
 		Offset = { { Vec3(0.495, -0.199, 2.158), Vec3(0.495, -0.199, 2.158) }, Vec3(0, 0, 0), Vec3(0, 0, 0), Vec3(0, 0, 0) }
 	},
 
@@ -498,6 +521,7 @@ VehicleData = {
 		Parts = { -1, 47, -1 },
 		Speed = { 300, 610, 300 },
 		Drop = { 0.0, 9.81, 0.0 },
+		FirstPassengerSeat = 3,
 		Offset = { Vec3(0, 0, 0), Vec3(0, 0.239, -0.816), Vec3(0, 0, 0) }
 	},
 	["GrowlerITV_Valley"] = {
@@ -507,6 +531,7 @@ VehicleData = {
 		Parts = { -1, 47, -1 },
 		Speed = { 300, 610, 300 },
 		Drop = { 0.0, 9.81, 0.0 },
+		FirstPassengerSeat = 3,
 		Offset = { Vec3(0, 0, 0), Vec3(0, 0.239, -0.816), Vec3(0, 0, 0) }
 	},
 	["VDV Buggy"] = {
@@ -516,6 +541,7 @@ VehicleData = {
 		Parts = { -1, 7, -1 },
 		Speed = { 300, 610, 300 },
 		Drop = { 0.0, 9.81, 0.0 },
+		FirstPassengerSeat = 3,
 		Offset = { Vec3(0, 0, 0), Vec3(-0.037, 0.096, -0.624), Vec3(0, 0, 0) }
 	},
 	["DPV"] = {
@@ -525,6 +551,7 @@ VehicleData = {
 		Parts = { -1, 4, -1 },
 		Speed = { 300, 610, 300 },
 		Drop = { 0.0, 9.81, 0.0 },
+		FirstPassengerSeat = 3,
 		Offset = { Vec3(0, 0, 0), Vec3(-0.001, 0.189, -0.600), Vec3(0, 0, 0) }
 	},
 
@@ -545,12 +572,13 @@ VehicleData = {
 	["SkidLoader"] = { Name = "[SKID LOADER]", Type = VehicleTypes.NoArmorVehicle, Terrain = VehicleTerrains.Land, Parts = {} },
 
 	["C130"] = {
-		Name = "[GUNSHIP]",
-		Type = VehicleTypes.Gunship,
+		Name = "[UNARMED_GUNSHIP]",
+		Type = VehicleTypes.UnarmedGunship,
 		Terrain = VehicleTerrains.Air,
-		Parts = { -1, { 1, 3 }, { 0, 2 } },
-		Speed = { 300, { 600, 900 }, { 250, 900 } },
-		Drop = { 0.0, { 0.0, 0.0 }, { 0.0, 0.0 } },
+		Parts = { -1, },
+		Speed = { 300 },
+		Drop = { 0.0, },
+		RotationOffset = { Vec3(0, 0, 0) }
 	},
 	["AC130"] = {
 		Name = "[GUNSHIP]",
@@ -559,13 +587,16 @@ VehicleData = {
 		Parts = { -1, { 1, 3 }, { 0, 2 } },
 		Speed = { 300, { 600, 900 }, { 250, 900 } },
 		Drop = { 0.0, { 0.0, 0.0 }, { 0.0, 0.0 } },
+		--FirstPassengerSeat = 3, although the 1st one should be the piolt one is disabled due to the auto driving logic in a certain orbit
+		FirstPassengerSeat = 4,                                                                                                                         --Lets try with 4 as its index ?
+		RotationOffset = { Vec3(0, 0, 0), { Vec3(math.pi / 2, 0.52, 0), Vec3(math.pi / 2, 0, 0) }, { Vec3(math.pi / 2, 0.375, 0), Vec3(math.pi / 2, 0, 0) } } -- use yaw and pitch as offset here
 	},
 	-- AA Stationary.
 	["Centurion_C-RAM"] = {
 		Name = "[CENTURION_AA]",
 		Type = VehicleTypes.StationaryAA,
 		Terrain = VehicleTerrains.Land,
-		Parts = { 3 },
+		Parts = { 1 },
 		Speed = { 900 },
 		Drop = { 0.0 },
 		Team = 1
@@ -574,7 +605,7 @@ VehicleData = {
 		Name = "[CENTURION_AA]",
 		Type = VehicleTypes.StationaryAA,
 		Terrain = VehicleTerrains.Land,
-		Parts = { 3 },
+		Parts = { 1 },
 		Speed = { 900 },
 		Drop = { 0.0 },
 		Team = 1

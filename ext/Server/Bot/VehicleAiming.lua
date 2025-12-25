@@ -46,7 +46,7 @@ end
 ---@param p_Bot Bot
 ---@param p_AdvancedAlgorithm boolean
 function VehicleAiming:UpdateAimingVehicle(p_Bot, p_AdvancedAlgorithm)
-	if p_Bot._ShootPlayer == nil then
+	if p_Bot._ShootPlayer == nil or p_Bot.m_Player.soldier == nil then
 		return
 	end
 
@@ -111,7 +111,10 @@ function VehicleAiming:UpdateAimingVehicle(p_Bot, p_AdvancedAlgorithm)
 
 	s_TargetMovement = (s_TargetMovement * s_TimeToTravel)
 
-
+	-- only for jet aiming for now
+	local s_AimAtPos = s_FullPositionTarget:Clone() + s_TargetMovement
+	s_AimAtPos.y = s_AimAtPos.y + s_PitchCorrection
+	p_Bot._AttackPosition = s_AimAtPos:Clone()
 
 	-- Calculate yaw and pitch.
 	local s_DifferenceZ = s_FullPositionTarget.z + s_TargetMovement.z - s_FullPositionBot.z
@@ -129,12 +132,18 @@ function VehicleAiming:UpdateAimingVehicle(p_Bot, p_AdvancedAlgorithm)
 	local s_WorseningYaw = 0.0
 	local s_WorseningValue = 0.0
 
-	if s_IsAirVehicle then
+	if not s_IsAirVehicle then
 		s_WorseningValue = Config.VehicleAimWorsening
+	elseif m_Vehicles:IsAAVehicle(p_Bot.m_ActiveVehicle) then
+		s_WorseningValue = Config.VehicleAAAimWorsening
+	elseif m_Vehicles:IsGunship(p_Bot.m_ActiveVehicle) then
+		s_WorseningValue = Config.VehicleGunshipAimWorsening
+	elseif m_Vehicles:IsChopper(p_Bot.m_ActiveVehicle) then
+		s_WorseningValue = Config.VehicleChopperAimWorsening
 	else
-		s_WorseningValue = Config.VehicleAirAimWorsening
+		s_WorseningValue = Config.VehiclePlaneAimWorsening
 	end
-	if s_WorseningValue > 0 then
+	if s_WorseningValue > 0.0 then
 		local s_SkillDistanceFactor = 1 / (p_Bot._DistanceToPlayer * Registry.BOT.WORSENING_FACOTR_DISTANCE)
 		s_WorseningValue = s_WorseningValue * s_SkillDistanceFactor
 		s_WorseningPitch = (MathUtils:GetRandom(-1.0, 1.0) * s_WorseningValue)
@@ -160,10 +169,7 @@ function VehicleAiming:UpdateAimingVehicle(p_Bot, p_AdvancedAlgorithm)
 			s_FullPositionBot:Distance(s_FullPositionTarget) < Registry.VEHICLES.ABORT_ATTACK_AIR_DISTANCE_JET then
 			p_Bot:AbortAttack()
 		end
-		if p_Bot._ShootPlayerVehicleType ~= VehicleTypes.Chopper
-			and p_Bot._ShootPlayerVehicleType ~= VehicleTypes.ScoutChopper
-			and p_Bot._ShootPlayerVehicleType ~= VehicleTypes.Plane
-		then
+		if not m_Vehicles:IsAirVehicleType(p_Bot._ShootPlayerVehicleType) then
 			local s_DiffVertical = s_FullPositionBot.y - s_FullPositionTarget.y
 			if m_Vehicles:IsChopper(p_Bot.m_ActiveVehicle) then
 				if s_DiffVertical < Registry.VEHICLES.ABORT_ATTACK_HEIGHT_CHOPPER then -- Too low to the ground.

@@ -27,6 +27,10 @@ ui-help[data-name="interaction"] span {
 ui-help[data-name="numpad"] {
     right: 10px;
     top: 50%;
+    background-image: linear-gradient(180deg,
+            var(--color_button_default_from) 100%,
+            var(--color_button_default_to) 100%);
+    padding: 5px;
     transform: translateY(-50%);
 }
 

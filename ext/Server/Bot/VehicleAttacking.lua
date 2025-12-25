@@ -11,8 +11,9 @@ function VehicleAttacking:__init()
 	-- Nothing to do.
 end
 
+---@param p_DeltaTime number
 ---@param p_Bot Bot
-function VehicleAttacking:UpdateAttackingVehicle(p_Bot)
+function VehicleAttacking:UpdateAttackingVehicle(p_DeltaTime, p_Bot)
 	if p_Bot._ShootPlayer.soldier ~= nil and p_Bot._Shoot then
 		-- jets should only attack other vehicles for now
 		if m_Vehicles:IsVehicleType(p_Bot.m_ActiveVehicle, VehicleTypes.Plane) and p_Bot._ShootPlayerVehicleType == VehicleTypes.NoVehicle then
@@ -20,7 +21,7 @@ function VehicleAttacking:UpdateAttackingVehicle(p_Bot)
 		end
 
 		if (p_Bot._ShootModeTimer > 0) then -- Three times the default duration.
-			p_Bot._ShootModeTimer = p_Bot._ShootModeTimer - Registry.BOT.BOT_UPDATE_CYCLE
+			p_Bot._ShootModeTimer = p_Bot._ShootModeTimer - p_DeltaTime
 
 			-- Get amount of weapon slots.
 			local s_WeaponSlots = m_Vehicles:GetAvailableWeaponSlots(p_Bot.m_ActiveVehicle, p_Bot.m_Player.controlledEntryId)
@@ -28,18 +29,15 @@ function VehicleAttacking:UpdateAttackingVehicle(p_Bot)
 			p_Bot._ReloadTimer = 0.0 -- Reset reloading.
 
 			if p_Bot._ShootPlayerVehicleType ~= VehicleTypes.NoVehicle then
-				local s_AttackMode = m_Vehicles:CheckForVehicleAttack(p_Bot._ShootPlayerVehicleType, p_Bot._DistanceToPlayer,
-					p_Bot.m_SecondaryGadget, true, false)
+				local s_AttackMode = m_Vehicles:CheckForVehicleAttack(p_Bot._ShootPlayerVehicleType, p_Bot)
 
 				if s_AttackMode ~= VehicleAttackModes.NoAttack then
 					if s_WeaponSlots > 1 then
 						-- To-do more logic depending on vehicle and distance.
 						-- Chopper on Plane / Chopper → weapon 2 (seaker).
 						if m_Vehicles:IsVehicleType(p_Bot.m_ActiveVehicle, VehicleTypes.Chopper) then
-							if p_Bot.m_Player.controlledEntryId == 0 and
-								(p_Bot._ShootPlayerVehicleType == VehicleTypes.Chopper
-									or p_Bot._ShootPlayerVehicleType == VehicleTypes.ScoutChopper
-									or p_Bot._ShootPlayerVehicleType == VehicleTypes.Plane)
+							if p_Bot.m_Player.controlledEntryId == 0
+								and m_Vehicles:IsAirVehicleType(p_Bot._ShootPlayerVehicleType)
 							then
 								p_Bot._VehicleWeaponSlotToUse = 2
 							elseif p_Bot.m_Player.controlledEntryId == 1 and
@@ -48,6 +46,7 @@ function VehicleAttacking:UpdateAttackingVehicle(p_Bot)
 									or p_Bot._ShootPlayerVehicleType == VehicleTypes.MobileArtillery
 									or p_Bot._ShootPlayerVehicleType == VehicleTypes.AntiAir
 									or p_Bot._ShootPlayerVehicleType == VehicleTypes.LightVehicle
+									or p_Bot._ShootPlayerVehicleType == VehicleTypes.AMTRAC
 									or p_Bot._ShootPlayerVehicleType == VehicleTypes.LightAA
 									or p_Bot._ShootPlayerVehicleType == VehicleTypes.NoArmorVehicle
 									or p_Bot._ShootPlayerVehicleType == VehicleTypes.MavBot)
@@ -57,10 +56,8 @@ function VehicleAttacking:UpdateAttackingVehicle(p_Bot)
 								p_Bot._VehicleWeaponSlotToUse = 1
 							end
 						elseif m_Vehicles:IsVehicleType(p_Bot.m_ActiveVehicle, VehicleTypes.ScoutChopper) then
-							if p_Bot.m_Player.controlledEntryId == 0 and
-								(p_Bot._ShootPlayerVehicleType == VehicleTypes.Chopper
-									or p_Bot._ShootPlayerVehicleType == VehicleTypes.Plane
-									or p_Bot._ShootPlayerVehicleType == VehicleTypes.ScoutChopper)
+							if p_Bot.m_Player.controlledEntryId == 0
+								and m_Vehicles:IsAirVehicleType(p_Bot._ShootPlayerVehicleType)
 							then
 								p_Bot._VehicleWeaponSlotToUse = 1
 							else
@@ -70,6 +67,7 @@ function VehicleAttacking:UpdateAttackingVehicle(p_Bot)
 							if p_Bot.m_Player.controlledEntryId == 0 and
 								(p_Bot._ShootPlayerVehicleType == VehicleTypes.Tank
 									or p_Bot._ShootPlayerVehicleType == VehicleTypes.MobileArtillery
+									or p_Bot._ShootPlayerVehicleType == VehicleTypes.AMTRAC
 									or p_Bot._ShootPlayerVehicleType == VehicleTypes.AntiAir
 									or p_Bot._ShootPlayerVehicleType == VehicleTypes.IFV)
 							then
@@ -127,15 +125,16 @@ function VehicleAttacking:UpdateAttackingVehicle(p_Bot)
 						self:Fire(p_Bot)
 					end
 				else
-					if p_Bot._ShotTimer >= 0.6 then
+					if p_Bot._ShotTimer >= (0.6 * p_Bot._FireCycleModifier) then
 						p_Bot._ShotTimer = 0.0
+						p_Bot._FireCycleModifier = 0.8 + (math.random() * 1.2) -- between 0.8 and 2.0
 					end
-					if p_Bot._ShotTimer >= 0.3 and p_Bot._VehicleReadyToShoot then
+					if p_Bot._ShotTimer >= (0.3 * p_Bot._FireCycleModifier) and p_Bot._VehicleReadyToShoot then
 						self:Fire(p_Bot)
 					end
 				end
-				p_Bot._ShotTimer = p_Bot._ShotTimer + Registry.BOT.BOT_UPDATE_CYCLE
-				p_Bot._SoundTimer = p_Bot._SoundTimer + Registry.BOT.BOT_UPDATE_CYCLE
+				p_Bot._ShotTimer = p_Bot._ShotTimer + p_DeltaTime
+				p_Bot._SoundTimer = p_Bot._SoundTimer + p_DeltaTime
 			end
 		else
 			p_Bot._TargetPitch = 0.0
@@ -148,7 +147,7 @@ function VehicleAttacking:UpdateAttackingVehicle(p_Bot)
 		p_Bot:AbortAttack()
 	end
 
-	p_Bot._VehicleSecondaryWeaponTimer = math.max(p_Bot._VehicleSecondaryWeaponTimer - Registry.BOT.BOT_UPDATE_CYCLE, 0)
+	p_Bot._VehicleSecondaryWeaponTimer = math.max(p_Bot._VehicleSecondaryWeaponTimer - p_DeltaTime, 0)
 end
 
 function VehicleAttacking:Fire(p_Bot)

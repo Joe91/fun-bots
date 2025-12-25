@@ -193,7 +193,7 @@ function FunBotUIClient:_onUISettings(p_Data)
 
 			for l_Key, l_Value in pairs(l_Item.Reference) do
 				if l_Key ~= "Count" then
-					table.insert(s_EnumTable, l_Key)
+					s_EnumTable[#s_EnumTable + 1] = l_Key
 				end
 
 				if l_Value == p_Data[l_Item.Name] then
@@ -337,6 +337,12 @@ end
 ---VEXT Shared Extension:Unloading Event
 function FunBotUIClient:OnExtensionUnloading()
 	self._views:OnExtensionUnloading()
+end
+
+function FunBotUIClient:OnLevelDestroy()
+end
+
+function FunBotUIClient:OnLevelLoaded()
 end
 
 function FunBotUIClient:OnPushScreen()

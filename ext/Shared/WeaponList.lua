@@ -173,6 +173,8 @@ function WeaponList:__init()
 			'Weapons/XP1_HK53/U_HK53'),
 		Weapon('M4A1_RX01', '', { 'RX01', 'HeavyBarrel', 'Foregrip' }, WeaponTypes.Carabine, 'Weapons/M4A1/U_M4A1'),
 		Weapon('M4A1_Kobra', '', { 'Kobra', 'HeavyBarrel', 'Foregrip' }, WeaponTypes.Carabine, 'Weapons/M4A1/U_M4A1'),
+		Weapon('M4_RX01', '', { 'RX01', 'HeavyBarrel', 'Foregrip' }, WeaponTypes.Assault, 'Weapons/M4A1/U_M4'),
+		Weapon('M4_Kobra', '', { 'Kobra', 'HeavyBarrel', 'Foregrip' }, WeaponTypes.Assault, 'Weapons/M4A1/U_M4'),
 		Weapon('MTAR_RX01', 'XP2', { 'RX_01', 'HeavyBarrel', 'Foregrip', 'CAMO_1' }, WeaponTypes.Carabine,
 			'Weapons/XP2_MTAR/U_MTAR'),
 		Weapon('MTAR_Kobra', 'XP2', { 'Kobra', 'HeavyBarrel', 'Foregrip', 'CAMO_2' }, WeaponTypes.Carabine,
@@ -278,6 +280,10 @@ function WeaponList:__init()
 			'Weapons/SVD/U_SVD'),
 		Weapon('SVD_RifleScope', '', { 'Rifle_Scope', 'Target_pointer', 'Weapons/Common/NoPrimaryAccessory' },
 			WeaponTypes.Sniper, 'Weapons/SVD/U_SVD'),
+		Weapon('QBU88_RifleScope', '', { 'Rifle_Scope', 'TargetPointer', 'Weapons/Common/NoPrimaryAccessory' },
+			WeaponTypes.Sniper, 'Weapons/XP1_QBU-88/U_QBU-88_Sniper'),
+		Weapon('QBU88_PSO-1', '', { 'PSO-1', 'TargetPointer', 'Weapons/Common/NoPrimaryAccessory' },
+			WeaponTypes.Sniper, 'Weapons/XP1_QBU-88/U_QBU-88_Sniper'),
 
 		---------------------------
 		-- Pistols.
@@ -454,14 +460,14 @@ function WeaponList:_typeToBotWeapon(p_WeaponType)
 	elseif p_WeaponType == WeaponTypes.Pistol then
 		s_BotWeaponType = BotWeapons.Pistol
 	elseif p_WeaponType == WeaponTypes.Medkit or
-		p_WeaponType == WeaponTypes.Torch or
 		p_WeaponType == WeaponTypes.Ammobag or
-		p_WeaponType == WeaponTypes.Tugs then
-		s_BotWeaponType = BotWeapons.Gadget1
-	elseif p_WeaponType == WeaponTypes.Defibrillator or
 		p_WeaponType == WeaponTypes.Rocket or
 		p_WeaponType == WeaponTypes.MissileAir or
 		p_WeaponType == WeaponTypes.MissileLand or
+		p_WeaponType == WeaponTypes.Tugs then
+		s_BotWeaponType = BotWeapons.Gadget1
+	elseif p_WeaponType == WeaponTypes.Defibrillator or
+		p_WeaponType == WeaponTypes.Torch or
 		p_WeaponType == WeaponTypes.Claymore or
 		p_WeaponType == WeaponTypes.C4 or
 		p_WeaponType == WeaponTypes.Beacon then
@@ -479,25 +485,25 @@ function WeaponList:_insertWeapon(p_Kit, p_WeaponType, p_WeaponName, p_Team)
 	local s_BotWeaponType = self:_typeToBotWeapon(p_WeaponType)
 
 	if s_BotWeaponType ~= nil then
-		table.insert(Weapons[p_Kit][s_BotWeaponType][p_Team], p_WeaponName)
+		Weapons[p_Kit][s_BotWeaponType][p_Team][#Weapons[p_Kit][s_BotWeaponType][p_Team] + 1] = p_WeaponName
 	end
 
 	if s_BotWeaponType == BotWeapons.Primary then -- Only insert primaries once.
 		if p_Kit == BotKits.Assault then
 			if not table.has(AssaultPrimary, p_WeaponName) then
-				table.insert(AssaultPrimary, p_WeaponName)
+				AssaultPrimary[#AssaultPrimary + 1] = p_WeaponName
 			end
 		elseif p_Kit == BotKits.Engineer then
 			if not table.has(EngineerPrimary, p_WeaponName) then
-				table.insert(EngineerPrimary, p_WeaponName)
+				EngineerPrimary[#EngineerPrimary + 1] = p_WeaponName
 			end
 		elseif p_Kit == BotKits.Support then
 			if not table.has(SupportPrimary, p_WeaponName) then
-				table.insert(SupportPrimary, p_WeaponName)
+				SupportPrimary[#SupportPrimary + 1] = p_WeaponName
 			end
 		else
 			if not table.has(ReconPrimary, p_WeaponName) then
-				table.insert(ReconPrimary, p_WeaponName)
+				ReconPrimary[#ReconPrimary + 1] = p_WeaponName
 			end
 		end
 	end
@@ -549,16 +555,16 @@ function WeaponList:UpdateWeaponList()
 		local s_Wep = self._weapons[i]
 
 		if (s_Wep.type == WeaponTypes.Knife) then
-			table.insert(KnifeWeapons, s_Wep.name)
+			KnifeWeapons[#KnifeWeapons + 1] = s_Wep.name
 		elseif (s_Wep.type == WeaponTypes.Pistol) then
-			table.insert(PistolWeapons, s_Wep.name)
+			PistolWeapons[#PistolWeapons + 1] = s_Wep.name
 		end
 
 		if self:_useWeaponScavenger(s_Wep.name) then
 			local s_BotWeaponType = self:_typeToBotWeapon(s_Wep.type)
 
 			if s_BotWeaponType ~= nil then
-				table.insert(ScavengerWeapons[s_BotWeaponType], s_Wep.name)
+				ScavengerWeapons[s_BotWeaponType][#ScavengerWeapons[s_BotWeaponType] + 1] = s_Wep.name
 			end
 		end
 
@@ -576,6 +582,8 @@ function WeaponList:UpdateWeaponList()
 	end
 end
 
+---@param p_Name string
+---@return Weapon?
 function WeaponList:getWeapon(p_Name)
 	local s_RetWeapon = nil
 	local s_AllPossibleWeapons = {}
@@ -587,7 +595,7 @@ function WeaponList:getWeapon(p_Name)
 
 	for _, l_Weapon in pairs(self._weapons) do
 		if string.find(l_Weapon.name, p_Name .. "_") ~= nil then -- Check for weapon-variant.
-			table.insert(s_AllPossibleWeapons, l_Weapon)
+			s_AllPossibleWeapons[#s_AllPossibleWeapons + 1] = l_Weapon
 		end
 
 		if l_Weapon.name == p_Name then

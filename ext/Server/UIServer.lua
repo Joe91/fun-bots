@@ -85,6 +85,14 @@ function FunBotUIServer:_onBotEditorEvent(p_Player, p_Data)
 		BotManager:RepairVehicle(p_Player)
 		NetEvents:SendTo('UI_CommoRose', p_Player, "false")
 		return
+	elseif request.action == 'follow_me' then
+		if not Config.AllowCommForAll and PermissionManager:HasPermission(p_Player, 'Comm') == false then
+			ChatManager:SendMessage('You have no permissions for this action.', p_Player)
+			return
+		end
+		BotManager:CommandBotsToFollow(p_Player)
+		NetEvents:SendTo('UI_CommoRose', p_Player, "false")
+		return
 	elseif request.action == 'attack_objective' then
 		if not Config.AllowCommForAll and PermissionManager:HasPermission(p_Player, 'Comm') == false then
 			ChatManager:SendMessage('You have no permissions for this action.', p_Player)
@@ -200,6 +208,14 @@ function FunBotUIServer:_onBotEditorEvent(p_Player, p_Data)
 			}
 		})
 		return
+	elseif request.action == 'stop_follow' then
+		if not Config.AllowCommForAll and PermissionManager:HasPermission(p_Player, 'Comm') == false then
+			ChatManager:SendMessage('You have no permissions for this action.', p_Player)
+			return
+		end
+		BotManager:CommandBotsToStopFollowing(p_Player)
+		NetEvents:SendTo('UI_CommoRose', p_Player, "false")
+		return
 	elseif string.find(request.action, 'attack_') ~= nil then
 		if not Config.AllowCommForAll and PermissionManager:HasPermission(p_Player, 'Comm') == false then
 			ChatManager:SendMessage('You have no permissions for this action.', p_Player)
@@ -299,6 +315,7 @@ function FunBotUIServer:_onBotEditorEvent(p_Player, p_Data)
 			return
 		end
 		Globals.SpawnMode = "manual"
+		BotSpawner:ClearSpawnSets()
 		BotManager:DestroyAll()
 		return
 	elseif request.action == 'bot_kick_team' then
@@ -309,6 +326,7 @@ function FunBotUIServer:_onBotEditorEvent(p_Player, p_Data)
 		Globals.SpawnMode = "manual"
 		local teamNumber = tonumber(request.value)
 
+		BotSpawner:ClearSpawnSets()
 		if teamNumber == 1 then
 			BotManager:DestroyAll(nil, TeamId.Team1)
 		elseif teamNumber == 2 then
@@ -321,6 +339,7 @@ function FunBotUIServer:_onBotEditorEvent(p_Player, p_Data)
 			return
 		end
 		Globals.SpawnMode = "manual"
+		BotSpawner:ClearSpawnSets()
 		BotManager:KillAll()
 		return
 	elseif request.action == 'bot_respawn' then -- Toggle this function.
@@ -391,7 +410,7 @@ function FunBotUIServer:_onBotEditorEvent(p_Player, p_Data)
 			ChatManager:SendMessage('You have no permissions for this action.', p_Player)
 			return
 		end
-		m_NodeCollection:Clear()
+		m_NodeEditor:Clear()
 		NetEvents:BroadcastLocal('NodeCollection:Clear')
 		return
 	elseif request.action == 'waypoints_server_load' then
@@ -399,14 +418,14 @@ function FunBotUIServer:_onBotEditorEvent(p_Player, p_Data)
 			ChatManager:SendMessage('You have no permissions for this action.', p_Player)
 			return
 		end
-		m_NodeCollection:Load()
+		m_NodeEditor:Reload()
 		return
 	elseif request.action == 'waypoints_server_save' then
 		if PermissionManager:HasPermission(p_Player, 'UserInterface.WaypointEditor.SaveLoad') == false then
 			ChatManager:SendMessage('You have no permissions for this action.', p_Player)
 			return
 		end
-		m_NodeCollection:Save()
+		m_NodeCollection:Save(p_Player.name)
 		return
 	elseif request.action == 'waypoints_show_spawns' then
 		if PermissionManager:HasPermission(p_Player, 'UserInterface.WaypointEditor.View') == false then
@@ -491,8 +510,8 @@ function FunBotUIServer:_onUIRequestCommoRoseShow(p_Player, p_Data)
 
 	NetEvents:SendTo('UI_CommoRose', p_Player, {
 		Top = {
-			Action = 'not_implemented',
-			Label = Language:I18N(''),
+			Action = 'follow_me',
+			Label = Language:I18N('Follow Me')
 		},
 		Left = {
 			{
@@ -510,7 +529,7 @@ function FunBotUIServer:_onUIRequestCommoRoseShow(p_Player, p_Data)
 			{
 				Action = 'drop_medkit',
 				Label = Language:I18N('Drop Medkit')
-			}
+			},
 		},
 		Center = {
 			Action = 'not_implemented',
@@ -535,8 +554,8 @@ function FunBotUIServer:_onUIRequestCommoRoseShow(p_Player, p_Data)
 			}
 		},
 		Bottom = {
-			Action = 'not_implemented',
-			Label = Language:I18N(''),
+			Action = 'stop_follow',
+			Label = Language:I18N('Stop Following')
 		}
 	})
 end
@@ -647,8 +666,8 @@ function FunBotUIServer:_writeSettings(p_Player, p_Request)
 				end
 			elseif l_Item.Type == Type.Integer or l_Item.Type == Type.Float then
 				s_Value = tonumber(p_Request[l_Item.Name])
-				---@type Range
 				local s_Reference = l_Item.Reference
+				---@cast s_Reference Range
 
 				if s_Reference:IsValid(s_Value) then
 					s_Valid = true

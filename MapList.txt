@@ -1,3 +1,7 @@
+XP5_001 AirSuperiority0 1
+XP5_002 AirSuperiority0 1
+XP5_003 AirSuperiority0 1
+XP5_004 AirSuperiority0 1
 XP5_003 CaptureTheFlag0 1
 XP1_001 ConquestAssaultLarge0 1
 XP1_003 ConquestAssaultLarge0 1

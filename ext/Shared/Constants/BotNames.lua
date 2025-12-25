@@ -146,6 +146,8 @@ BotNames = {
 	'Sjoerd',
 	'Kiwi',
 	'NoFaTe',
+	'Paul',
+	'Beschuetzer',
 	-- Contributors.
 	'BOB',
 	'MeisterPeitsche',
@@ -162,6 +164,7 @@ BotNames = {
 	'Cosmin',
 	'qnr3343',
 	'akebono047',
+	'EricH',
 	-- Other names
 	'LunyblacAseity',
 	'C4EvC4Elius',

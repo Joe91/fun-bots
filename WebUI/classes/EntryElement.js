@@ -35,11 +35,11 @@ class EntryElement extends HTMLElement {
               ? this._default == null
                 ? ""
                 : this._default
+                  ? yes
+                  : no
+              : this._value
                 ? yes
                 : no
-              : this._value
-              ? yes
-              : no
           )
         );
         this._container.appendChild(arrow_right);
@@ -114,9 +114,7 @@ class EntryElement extends HTMLElement {
 
   _createRestore() {
     let restore = document.createElement("ui-restore");
-    restore.dataset.description = BotEditor.I18N(
-      "Restore this value to Default"
-    );
+    restore.dataset.description = BotEditor.I18N("Restore this value to Default");
     return restore;
   }
 

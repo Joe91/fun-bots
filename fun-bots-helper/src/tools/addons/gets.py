@@ -28,6 +28,7 @@ ALL_GAME_MODES = [
     "Scavanger",
     "CTF",
     "Tank Superiority",
+    "Air Superiority",
 ]
 GAME_MODE_TRANSLATIONS = {
     "TDM": "TeamDeathMatch0",
@@ -45,6 +46,7 @@ GAME_MODE_TRANSLATIONS = {
     "Scavanger": "Scavenger0",
     "CTF": "CaptureTheFlag0",
     "Tank Superiority": "TankSuperiority0",
+    "Air Superiority": "AirSuperiority0",
 }
 DISTANCE_MAX = 80
 
@@ -322,6 +324,11 @@ def get_js_lines() -> List[str]:
                     if "I18N('" in line:
                         translation = line.split("I18N('")[1]
                         translation = translation.split("'")[0]
+                        if translation not in out_file_lines:
+                            out_file_lines.append(translation)
+                    if 'I18N("' in line:
+                        translation = line.split('I18N("')[1]
+                        translation = translation.split('"')[0]
                         if translation not in out_file_lines:
                             out_file_lines.append(translation)
 

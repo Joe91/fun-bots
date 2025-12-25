@@ -26,7 +26,10 @@ Config = {
 	DamageFactorPistol = 0.8,			-- Original Damage from bots gets multiplied by this 
 	DamageFactorKnife = 1.5,			-- Original Damage from bots gets multiplied by this 
 	VehicleAimWorsening = 0.05,			-- Make bots in vehicles aim worse: for difficulty: 0 = no offset (hard), 1 or even greater = more sway (easy) 
-	VehicleAirAimWorsening = 0.02,		-- See VehicleAimWorsening, only for Air-Vehicles 
+	VehicleAAAimWorsening = 0.9,		-- Make bots in AA aim worse: for difficulty: 0 = no offset (hard), 1 or even greater = more sway (easy) 
+	VehicleGunshipAimWorsening = 0.8,	-- Make bots in Gunships aim worse: for difficulty: 0 = no offset (hard), 1 or even greater = more sway (easy) 
+	VehicleChopperAimWorsening = 0.5,	-- Make bots in Choppers aim worse: for difficulty: 0 = no offset (hard), 1 or even greater = more sway (easy) 
+	VehiclePlaneAimWorsening = 0.02,	-- See VehicleAimWorsening, only for Planes 
 	DamageFactorVehicles = 1.0,			-- Original Damage from bots in vehicles gets multiplied by this 
 
 	-- SPAWN 
@@ -36,15 +39,15 @@ Config = {
 	SpawnInBothTeams = true,			-- Bots spawn in both teams 
 	InitNumberOfBots = 10,				-- Bots for spawnmode 
 	NewBotsPerNewPlayer = 1.6,			-- Number to increase Bots by when new players join 
-	FactorPlayerTeamCount = 0.9,		-- Reduce player team in balanced_teams or fixed_number mode 
+	FactorPlayerTeamCount = 1.0,		-- Reduce player team in balanced_teams or fixed_number mode 
 	BotTeam = 0,						-- Default bot team (0 = neutral / auto, 1 = US, 2 = RU) TeamId.Team2 
-	BotNewLoadoutOnSpawn = true,		-- Bots get a new kit and color, if they respawn 
 	MaxAssaultBots = -1,				-- Maximum number of Bots with Assault Kit. -1 = no limit 
 	MaxEngineerBots = -1,				-- Maximum number of Bots with Engineer Kit. -1 = no limit 
 	MaxSupportBots = -1,				-- Maximum number of Bots with Support Kit. -1 = no limit 
 	MaxReconBots = -1,					-- Maximum number of Bots with Recon Kit. -1 = no limit 
 	AdditionalBotSpawnDelay = 0.5,		-- Additional time a bot waits to respawn 
 	BotMaxHealth = 100.0,				-- Max health of bot (default 100.0) 
+	KeepVehicleSeatForPlayer = true,	-- To keep a vehicle seat for the player always or not (default true) 
 
 	-- SPAWNLIMITS 
 	MaxBotsPerTeamDefault = 32,			-- Max number of bots in one team, if no other mode fits 
@@ -66,6 +69,7 @@ Config = {
 	FovVerticleForShooting = 90,		-- Degrees of FOV of Bot in vertical direction 
 	MaxShootDistance = 70,				-- Meters before bots (not sniper) will start shooting at players 
 	MaxShootDistanceSniper = 150,		-- Meters before bots will start shooting at players 
+	MaxShootDistanceMissileAir = 350,	-- Meters before bots will start shooting with stingers 
 	MaxDistanceShootBack = 150,			-- Meters until bots (not sniper) shoot back if hit 
 	MaxDistanceShootBackSniper = 400,	-- Meters until snipers shoot back if hit 
 	MaxShootDistancePistol = 20,		-- The distance before a bot switches to pistol if his magazine is empty (Only in auto-weapon-mode) 
@@ -93,14 +97,15 @@ Config = {
 	FovVerticleChopperForShooting = 80,	-- Degrees of pitch a chopper attacks 
 	FovVehicleAAForShooting = 360,		-- Degrees of FOV of AA - Vehicles 
 	FovVerticleVehicleAAForShooting = 160,	-- Degrees of FOV of AA - Vehicles 
-	MaxShootDistanceVehicles = 250,		-- Meters bots in Vehicles start shooting at players 
-	MaxShootDistanceNoAntiAir = 150,	-- Meters bots in vehicle (no Anti-Air) starts shooting at players 
+	MaxShootDistanceGunship = 1000,		-- Meters bots in the Gunship start shooting at players 
+	MaxShootDistanceVehicles = 375,		-- Meters bots in Vehicles start shooting at players 
+	MaxShootDistanceNoAntiAir = 175,	-- Meters bots in vehicle (no Anti-Air) starts shooting at players 
 	VehicleWaitForPassengersTime = 7.0,	-- Seconds to wait for other passengers 
 	ChopperDriversAttack = false,		-- If false, choppers only attack without gunner on board 
-	VehicleMoveWhileShooting = true,	-- Vehicles like tanks do not stop for shooting 
 	AABots = false,						-- Enable Auto-AA by NyScorpy 
-	MaxDistanceAABots = 300,			-- Max Range of Stationary AA 
+	MaxDistanceAABots = 375,			-- Max Range of Stationary AA 
 	EnableParadrop = false,				-- Bots can spawn on vehicles inside C-130 gunship 
+	SpawnInMobileRespawnVehicles = true,	-- Bots can spawn in Transport helicopters and AMTRACs 
 
 	-- WEAPONS 
 	UseRandomWeapon = true,				-- Use a random weapon out of the Weapon Set 
@@ -117,15 +122,15 @@ Config = {
 
 	-- TRACE 
 	DebugTracePaths = false,			-- Shows the trace line and search area from Commo Rose selection 
-	WaypointRange = 50,					-- Set how far away waypoints are visible (meters) 
+	WaypointRange = 100,				-- Set how far away waypoints are visible (meters) 
 	DrawWaypointLines = true,			-- Draw waypoint connection lines 
-	LineRange = 25,						-- Set how far away waypoint lines are visible (meters) 
+	LineRange = 50,						-- Set how far away waypoint lines are visible (meters) 
 	DrawWaypointIDs = true,				-- Draw the IDs of the waypoints 
-	TextRange = 7,						-- Set how far away waypoint text is visible (meters) 
+	TextRange = 15,						-- Set how far away waypoint text is visible (meters) 
 	DrawSpawnPoints = false,			-- Draw the Points where players can spawn 
-	SpawnPointRange = 100,				-- Set how far away spawn points are visible (meters) 
-	TraceDelta = 0.3,					-- Update interval of trace 
-	NodesPerCycle = 400,				-- Set how many nodes get drawn per cycle. Affects performance 
+	SpawnPointRange = 150,				-- Set how far away spawn points are visible (meters) 
+	TraceDelta = 0.35,					-- Update interval of trace 
+	NodesPerCycle = 2048,				-- Set how many nodes get drawn per cycle. Affects performance 
 
 	-- ADVANCED 
 	DistanceForDirectAttack = 6,		-- Distance bots can hear you at 
@@ -152,7 +157,7 @@ Config = {
 	BotVehicleMinTimeShootAtPlayer = 4.0,	-- The minimum time a bot shoots at one player if in vehicle - recommended minimum 2.5, below this you will have issues 
 	BotFireModeDuration = 4.5,			-- The minimum time a bot tries to shoot a player - recommended minimum 3.0, below this you will have issues 
 	BotVehicleFireModeDuration = 9.0,	-- The minimum time a bot tries to shoot a player or vehicle, when in a vehicle - recommended minimum 7.0 
-	MaximunYawPerSec = 450,				-- In Degrees. Rotation Movement per second 
+	MaximunYawPerSec = 550,				-- In Degrees. Rotation Movement per second 
 	TargetDistanceWayPoint = 0.8,		-- The distance the bots have to reach to continue with the next Waypoint 
 	TargetDistanceWayPointAirVehicles = 16.0,	-- The distance the bots have to reach to continue with the next Waypoint on air vehicles 
 	KeepOneSlotForPlayers = true,		-- Always keep one slot for free new Players to join 
@@ -162,7 +167,7 @@ Config = {
 	MaxTrysToSpawnAtDistance = 3,		-- Try this often to spawn a bot away from players 
 	AttackWayBots = true,				-- Bots on paths attack player 
 	RespawnWayBots = true,				-- Bots on paths respawn if killed 
-	SpawnMethod = SpawnMethod.SpawnSoldierAt,	-- Method the bots spawn with. Careful, not supported on most of the maps!! 
+	SpawnMethod = SpawnMethod.SpawnOnTdm,	-- Method the bots spawn with. Careful, not supported on most of the maps!! 
 
 	-- OTHER 
 	DisableUserInterface = false,		-- If true, the complete UI will be disabled (not available in the UI) 

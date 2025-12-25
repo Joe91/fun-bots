@@ -24,28 +24,26 @@ function Vehicles:FindOutVehicleType(p_Player)
 	return s_VehicleType
 end
 
----@param p_Player Player
+---@param p_Player Player?
 function Vehicles:GetVehicleName(p_Player)
-	if p_Player.controlledControllable and not p_Player.controlledControllable:Is("ServerSoldierEntity") then
+	if p_Player and p_Player.controlledControllable and not p_Player.controlledControllable:Is("ServerSoldierEntity") then
 		return VehicleEntityData(p_Player.controlledControllable.data).controllableType:gsub(".+/.+/", "")
 	else
 		return nil
 	end
 end
 
----@param p_Player Player
+---@param p_Player Player?
 function Vehicles:GetVehicle(p_Player)
 	local s_VehicleName = self:GetVehicleName(p_Player)
-	m_Logger:Write("s_VehicleName")
-
 	if s_VehicleName == nil then
 		return nil
 	end
-
+	m_Logger:Write("s_VehicleName: " .. s_VehicleName)
 	return VehicleData[s_VehicleName]
 end
 
----@param p_Entity ControllableEntity
+---@param p_Entity ControllableEntity | Entity
 function Vehicles:GetVehicleByEntity(p_Entity)
 	local s_VehicleName = nil
 
@@ -66,24 +64,61 @@ function Vehicles:GetVehicleByEntity(p_Entity)
 	return s_VehicleData
 end
 
----@param p_Entity ControllableEntity
+---@param p_Entity ControllableEntity?
 ---@param p_PlayerIsDriver boolean
 function Vehicles:GetNrOfFreeSeats(p_Entity, p_PlayerIsDriver)
-	local s_NrOfFreeSeats = 0
-	local s_MaxEntries = p_Entity.entryCount
+	if not p_Entity then
+		return 0
+	end
 
-	-- Keep one seat free, if enough available.
-	if not p_PlayerIsDriver and s_MaxEntries > 2 then
+	local s_MaxEntries = p_Entity.entryCount
+	local s_NrOfFreeSeats = 0
+	local s_NumBotsInVehicle = 0
+
+	local vehicleData = self:GetVehicle(p_Entity:GetPlayerInEntry(0))
+	if not vehicleData then
+		return 0
+	end
+
+	if vehicleData.Type == VehicleTypes.Gunship then
+		s_MaxEntries = 2
+	end
+	if vehicleData.Type == VehicleTypes.MobileArtillery then
+		s_MaxEntries = 1
+	end
+	if vehicleData.Type == VehicleTypes.UnarmedGunship then
+		return 0
+	end
+
+	if Config.KeepVehicleSeatForPlayer and not p_PlayerIsDriver and s_MaxEntries > 2 then
 		s_MaxEntries = s_MaxEntries - 1
 	end
 
 	for i = 0, s_MaxEntries - 1 do
-		if p_Entity:GetPlayerInEntry(i) == nil then
+		local s_Player = p_Entity:GetPlayerInEntry(i)
+
+		if s_Player == nil then
 			s_NrOfFreeSeats = s_NrOfFreeSeats + 1
+		elseif m_Utilities:isBot(s_Player) then
+			s_NumBotsInVehicle = s_NumBotsInVehicle + 1
+		end
+
+		-- If we've reached the MaxBotsPerVehicle limit, stop counting free seats
+		if s_NumBotsInVehicle >= Config.MaxBotsPerVehicle then
+			s_NrOfFreeSeats = 0
+			break
 		end
 	end
 
+	-- Cap the number of free seats at MaxBotsPerVehicle - s_NumBotsInVehicle
+	s_NrOfFreeSeats = math.min(s_NrOfFreeSeats, Config.MaxBotsPerVehicle - s_NumBotsInVehicle)
+
 	return s_NrOfFreeSeats
+end
+
+---@param p_Entity ControllableEntity
+function Vehicles:IsEmpty(p_Entity)
+	return self:GetNrOfFreeSeats(p_Entity, true) == p_Entity.entryCount
 end
 
 ---@param p_VehicleData VehicleDataInner
@@ -157,9 +192,21 @@ function Vehicles:IsVehicleType(p_VehicleData, p_VehicleType)
 end
 
 ---@param p_VehicleData VehicleDataInner
+function Vehicles:IsTransportChopper(p_VehicleData)
+	return self:IsVehicleType(p_VehicleData, VehicleTypes.TransportChopper)
+end
+
+---@param p_VehicleData VehicleDataInner
 function Vehicles:IsChopper(p_VehicleData)
 	return self:IsVehicleType(p_VehicleData, VehicleTypes.Chopper)
 		or self:IsVehicleType(p_VehicleData, VehicleTypes.ScoutChopper)
+		or self:IsVehicleType(p_VehicleData, VehicleTypes.TransportChopper)
+end
+
+---@param p_VehicleData VehicleDataInner
+function Vehicles:IsMobileRespawnVehicle(p_VehicleData)
+	return self:IsVehicleType(p_VehicleData, VehicleTypes.TransportChopper)
+		or self:IsVehicleType(p_VehicleData, VehicleTypes.AMTRAC)
 end
 
 ---@param p_VehicleData VehicleDataInner
@@ -167,6 +214,12 @@ function Vehicles:IsAirVehicle(p_VehicleData)
 	return self:IsChopper(p_VehicleData)
 		or self:IsVehicleType(p_VehicleData, VehicleTypes.Gunship)
 		or self:IsVehicleType(p_VehicleData, VehicleTypes.Plane)
+end
+
+---@param p_VehicleData VehicleDataInner
+function Vehicles:IsGunship(p_VehicleData)
+	return self:IsVehicleType(p_VehicleData, VehicleTypes.Gunship)
+		or self:IsVehicleType(p_VehicleData, VehicleTypes.UnarmedGunship)
 end
 
 ---@param p_VehicleData VehicleDataInner
@@ -180,6 +233,8 @@ function Vehicles:IsAirVehicleType(p_VehicleType)
 	return p_VehicleType == VehicleTypes.Chopper
 		or p_VehicleType == VehicleTypes.ScoutChopper
 		or p_VehicleType == VehicleTypes.Plane
+		or p_VehicleType == VehicleTypes.Gunship
+		or p_VehicleType == VehicleTypes.TransportChopper
 end
 
 ---@param p_VehicleType VehicleTypes
@@ -239,6 +294,26 @@ end
 ---@param p_VehicleData VehicleDataInner
 ---@param p_Index integer
 ---@param p_WeaponSelection integer
+function Vehicles:GetRotationOffsets(p_VehicleData, p_Index, p_WeaponSelection)
+	local s_Offset = Vec3.zero
+
+	if p_VehicleData and p_VehicleData.RotationOffset then
+		s_Offset = p_VehicleData.RotationOffset[p_Index + 1]
+		if type(s_Offset) == "table" then
+			if p_WeaponSelection ~= 0 then
+				s_Offset = s_Offset[p_WeaponSelection]
+			else
+				s_Offset = s_Offset[1]
+			end
+		end
+	end
+
+	return s_Offset
+end
+
+---@param p_VehicleData VehicleDataInner
+---@param p_Index integer
+---@param p_WeaponSelection integer
 function Vehicles:GetSpeedAndDrop(p_VehicleData, p_Index, p_WeaponSelection)
 	local s_Drop = nil
 	local s_Speed = nil
@@ -274,13 +349,19 @@ function Vehicles:GetSpeedAndDrop(p_VehicleData, p_Index, p_WeaponSelection)
 end
 
 ---@param p_VehicleType VehicleTypes
----@param p_Distance number
----@param p_Gadget Weapon
----@param p_InVehicle boolean
----@param p_IsSniper boolean
-function Vehicles:CheckForVehicleAttack(p_VehicleType, p_Distance, p_Gadget, p_InVehicle, p_IsSniper)
-	if p_InVehicle then
+---@param p_Bot Bot
+function Vehicles:CheckForVehicleAttack(p_VehicleType, p_Bot)
+	local s_InVehicle = g_BotStates:IsInVehicleState(p_Bot.m_ActiveState)
+	if s_InVehicle then
 		return VehicleAttackModes.AttackWithRifle -- Attack with main-weapon.
+	end
+
+	local s_Distance = p_Bot._DistanceToPlayer
+	local s_Gadget1 = p_Bot.m_PrimaryGadget
+	local s_Gadget2 = p_Bot.m_SecondaryGadget
+	local s_IsSniper = false
+	if (p_Bot.m_ActiveWeapon and p_Bot.m_ActiveWeapon.type == WeaponTypes.Sniper) then
+		s_IsSniper = true
 	end
 
 	local s_AttackMode = VehicleAttackModes.NoAttack -- No attack.
@@ -290,25 +371,25 @@ function Vehicles:CheckForVehicleAttack(p_VehicleType, p_Distance, p_Gadget, p_I
 		p_VehicleType == VehicleTypes.Gadgets then                                               -- No idea what this might be.
 		s_AttackMode = VehicleAttackModes.AttackWithRifle                                        -- Attack with rifle.
 	end
-	if (p_IsSniper and p_VehicleType == VehicleTypes.Chopper and Config.SnipersAttackChoppers) then -- Don't attack planes. Too fast...
+	if (s_IsSniper and p_VehicleType == VehicleTypes.Chopper and Config.SnipersAttackChoppers) then -- Don't attack planes. Too fast...
 		if m_Utilities:CheckProbablity(Registry.BOT.PROBABILITY_ATTACK_CHOPPER_WITH_RIFLE) then
 			s_AttackMode = VehicleAttackModes.AttackWithRifle                                    -- Attack with rifle.
 		end
 	end
 
-	if p_VehicleType ~= VehicleTypes.MavBot and p_Gadget then                                                                           -- MAV or EOD always with rifle.
-		if p_Gadget.type == WeaponTypes.Rocket then
-			s_AttackMode = VehicleAttackModes.AttackWithRocket                                                                          -- Always use rocket if possible.
-		elseif p_Gadget.type == WeaponTypes.C4 and p_Distance < 25 then
-			if p_VehicleType ~= VehicleTypes.Chopper and p_VehicleType ~= VehicleTypes.ScoutChopper and p_VehicleType ~= VehicleTypes.Plane then -- No air vehicles.
-				s_AttackMode = VehicleAttackModes.AttackWithC4                                                                          -- Always use C4 if possible.
+	if p_VehicleType ~= VehicleTypes.MavBot then      -- MAV or EOD always with rifle.
+		if s_Gadget1 and s_Gadget1.type == WeaponTypes.Rocket and p_Bot._RocketCooldownTimer <= 0 then
+			s_AttackMode = VehicleAttackModes.AttackWithRocket -- Always use rocket if possible.
+		elseif s_Gadget2 and s_Gadget2.type == WeaponTypes.C4 and s_Distance < 25 then
+			if not self:IsAirVehicleType(p_VehicleType) then
+				s_AttackMode = VehicleAttackModes.AttackWithC4 -- Always use C4 if possible.
 			end
-		elseif p_Gadget.type == WeaponTypes.MissileAir then
-			if p_VehicleType == VehicleTypes.Chopper or p_VehicleType == VehicleTypes.ScoutChopper or p_VehicleType == VehicleTypes.Plane then -- No air vehicles.
+		elseif s_Gadget1 and s_Gadget1.type == WeaponTypes.MissileAir and p_Bot._RocketCooldownTimer <= 0 then
+			if self:IsAirVehicleType(p_VehicleType) then
 				s_AttackMode = VehicleAttackModes.AttackWithMissileAir
 			end
-		elseif p_Gadget.type == WeaponTypes.MissileLand then
-			if p_VehicleType ~= VehicleTypes.Chopper and p_VehicleType ~= VehicleTypes.ScoutChopper and p_VehicleType ~= VehicleTypes.Plane then -- No air vehicles.
+		elseif s_Gadget1 and s_Gadget1.type == WeaponTypes.MissileLand and p_Bot._RocketCooldownTimer <= 0 then
+			if not self:IsAirVehicleType(p_VehicleType) then
 				s_AttackMode = VehicleAttackModes.AttackWithMissileLand
 			end
 		end

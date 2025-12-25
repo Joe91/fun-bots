@@ -159,10 +159,13 @@ def set_traces_files(cursor: sqlite3.Cursor) -> None:
                 ]
                 dataString = outList[-1]
                 if "{" in dataString and "}" in dataString:
-                    data_dict = json.loads(dataString)
-                    sorted_data = sort_dict_and_string_lists(data_dict)
-                    sorted_data_keys = json.dumps(sorted_data, separators=(',', ':'))
-                    outList[-1] = sorted_data_keys
+                    try:
+                        data_dict = json.loads(dataString)
+                        sorted_data = sort_dict_and_string_lists(data_dict)
+                        sorted_data_keys = json.dumps(sorted_data, separators=(',', ':'))
+                        outList[-1] = sorted_data_keys
+                    except json.JSONDecodeError:
+                        print("Error decoding JSON in dataString:", dataString)
                 out_file.write(";".join(outList) + "\n")
 
 

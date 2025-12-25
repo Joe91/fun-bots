@@ -8,13 +8,20 @@ local m_NodeCollection = require('NodeCollection')
 local m_Logger = Logger('NodeEditor', Debug.Server.NODEEDITOR)
 
 function NodeEditor:__init()
+	self:RegisterVars()
+end
+
+function NodeEditor:RegisterVars()
 	self.m_ActiveTracePlayers = {}
+	self.m_ActivePlayers = {}
+	self.m_DataWasRequested = false
 
 	self.m_CustomTrace = {}
 	self.m_NodeWaitTimer = {}
 	self.m_CustomTraceIndex = {}
 	self.m_CustomTraceTimer = {}
 	self.m_CustomTraceDistance = {}
+	self.m_CustomTraceLastNodeIndex = {}
 	self.m_JumpDetected = {}
 
 	self.m_lastDrawIndexNode = {}
@@ -44,6 +51,11 @@ function NodeEditor:RegisterCustomEvents()
 	NetEvents:Subscribe('NodeEditor:SplitNode', self, self.OnSplitNode)
 	NetEvents:Subscribe('NodeEditor:RemoveNode', self, self.OnRemoveNode)
 
+	NetEvents:Subscribe('NodeEditor:SelectSpawn', self, self.OnSelectSpawn)
+	NetEvents:Subscribe('NodeEditor:DeselectSpawn', self, self.OnDeselectSpawn)
+	NetEvents:Subscribe('NodeEditor:LinkSpawn', self, self.LinkSpawn)
+	NetEvents:Subscribe('NodeEditor:UnlinkSpawn', self, self.UnlinkSpawn)
+
 	NetEvents:Subscribe('NodeEditor:AddMcom', self, self.OnAddMcom)
 	NetEvents:Subscribe('NodeEditor:AddVehicle', self, self.OnAddVehicle)
 	NetEvents:Subscribe('NodeEditor:ExitVehicle', self, self.OnExitVehicle)
@@ -63,6 +75,8 @@ function NodeEditor:RegisterCustomEvents()
 	NetEvents:Subscribe('NodeEditor:AddNode', self, self.OnAddNode)
 
 	NetEvents:Subscribe('NodeEditor:JumpDetected', self, self.OnJumpDetected)
+
+	NetEvents:Subscribe('NodeEditor:RequestData', self, self.OnRequestData)
 
 
 	-- To-do: fill.
@@ -89,7 +103,9 @@ function NodeEditor:OnAddNode(p_Player)
 		m_NodeCollection:ClearSelection(p_Player.onlineId)
 		m_NodeCollection:Select(p_Player.onlineId, s_Result)
 
-		NetEvents:SendToLocal('ClientNodeEditor:SelectNewNode', p_Player, s_Result.Index)
+		local s_NewNodes = self:GetNodesForPlayer({ s_Result })
+		self:SendToAllPlayers('ClientNodeEditor:AddNodes', s_NewNodes)
+		NetEvents:SendToLocal('ClientNodeEditor:SelectNewNode', p_Player, s_Result.ID)
 	end
 
 	return true
@@ -106,6 +122,12 @@ function NodeEditor:OnUpdatePos(p_Player, p_UpdateData)
 			})
 		end
 	end
+
+	local s_NodesToSend = {}
+	for _, l_UpdateItem in pairs(p_UpdateData) do
+		s_NodesToSend[#s_NodesToSend + 1] = m_NodeCollection:Get(l_UpdateItem.ID)
+	end
+	self:SendToAllPlayers('ClientNodeEditor:UpdateNodes', self:GetNodesForPlayer(s_NodesToSend))
 end
 
 ---@param p_Player Player
@@ -135,6 +157,8 @@ function NodeEditor:OnAddMcom(p_Player)
 		s_Selection[i].Data.Action = action
 		self:Log(p_Player, 'Updated Waypoint: %s', s_Selection[i].ID)
 	end
+
+	self:SendToAllPlayers('ClientNodeEditor:UpdateNodes', self:GetNodesForPlayer(s_Selection))
 
 	return true
 end
@@ -166,6 +190,8 @@ function NodeEditor:OnAddVehicle(p_Player)
 		s_Selection[i].Data.Action = action
 		self:Log(p_Player, 'Updated Waypoint: %s', s_Selection[i].ID)
 	end
+
+	self:SendToAllPlayers('ClientNodeEditor:UpdateNodes', self:GetNodesForPlayer(s_Selection))
 end
 
 ---@param p_Player Player
@@ -199,6 +225,8 @@ function NodeEditor:OnExitVehicle(p_Player, p_Args)
 		s_Selection[i].Data.Action = action
 		self:Log(p_Player, 'Updated Waypoint: %s', s_Selection[i].ID)
 	end
+
+	self:SendToAllPlayers('ClientNodeEditor:UpdateNodes', self:GetNodesForPlayer(s_Selection))
 
 	return
 end
@@ -237,6 +265,8 @@ function NodeEditor:OnCustomAction(p_Player, p_Args)
 		s_Selection[i].Data.Action = action
 		self:Log(p_Player, 'Updated Waypoint: %s', s_Selection[i].ID)
 	end
+
+	self:SendToAllPlayers('ClientNodeEditor:UpdateNodes', self:GetNodesForPlayer(s_Selection))
 end
 
 ---@param p_Player Player
@@ -253,6 +283,7 @@ function NodeEditor:OnAddVehiclePath(p_Player, p_Args)
 	end
 
 	local s_DonePaths = {}
+	local s_UpdatedNodes = {}
 	self:Log(p_Player, 'Updating %d Possible Waypoints', (#s_Selection))
 
 	for i = 1, #s_Selection do
@@ -264,6 +295,7 @@ function NodeEditor:OnAddVehiclePath(p_Player, p_Args)
 			if s_Data == "clear" then
 				s_Waypoint.Data.Vehicles = {}
 				self:Log(p_Player, 'Updated Waypoint: %s', s_Waypoint.ID)
+				s_UpdatedNodes[#s_UpdatedNodes + 1] = s_Waypoint
 			else
 				local s_Vehicles = s_Waypoint.Data.Vehicles or {}
 				local s_InTable = false
@@ -276,13 +308,16 @@ function NodeEditor:OnAddVehiclePath(p_Player, p_Args)
 				end
 
 				if not s_InTable then
-					table.insert(s_Vehicles, s_Data)
+					s_Vehicles[#s_Vehicles + 1] = s_Data
 					s_Waypoint.Data.Vehicles = s_Vehicles
 					self:Log(p_Player, 'Updated Waypoint: %s', s_Waypoint.ID)
+					s_UpdatedNodes[#s_UpdatedNodes + 1] = s_Waypoint
 				end
 			end
 		end
 	end
+
+	self:SendToAllPlayers('ClientNodeEditor:UpdateNodes', self:GetNodesForPlayer(s_UpdatedNodes))
 
 	return true
 end
@@ -297,6 +332,7 @@ function NodeEditor:OnSetVehicleSpawn(p_Player)
 	end
 
 	local s_DonePaths = {}
+	local s_UpdatedNodes = {}
 	self:Log(p_Player, 'Updating %d Possible Waypoints', (#s_Selection))
 
 	for i = 1, #s_Selection do
@@ -310,6 +346,7 @@ function NodeEditor:OnSetVehicleSpawn(p_Player)
 				if string.find(s_Objectives[1], "spawn") == nil then
 					s_Waypoint.Data.Objectives = { "spawn " .. s_Objectives[1] }
 					self:Log(p_Player, 'Updated Waypoint: %s', s_Waypoint.ID)
+					s_UpdatedNodes[#s_UpdatedNodes + 1] = s_Waypoint
 				else
 					self:Log(p_Player, 'Path is already spawnable')
 				end
@@ -319,6 +356,7 @@ function NodeEditor:OnSetVehicleSpawn(p_Player)
 		end
 	end
 
+	self:SendToAllPlayers('ClientNodeEditor:UpdateNodes', self:GetNodesForPlayer(s_UpdatedNodes))
 	return true
 end
 
@@ -338,6 +376,7 @@ function NodeEditor:OnAddObjective(p_Player, p_Args)
 	end
 
 	local s_DonePaths = {}
+	local s_UpdatedNodes = {}
 	self:Log(p_Player, 'Updating %d Possible Waypoints', (#s_Selection))
 
 	for i = 1, #s_Selection do
@@ -357,12 +396,14 @@ function NodeEditor:OnAddObjective(p_Player, p_Args)
 			end
 
 			if not s_InTable then
-				table.insert(s_Objectives, s_Data)
+				s_Objectives[#s_Objectives + 1] = s_Data
 				s_Waypoint.Data.Objectives = s_Objectives
+				s_UpdatedNodes[#s_UpdatedNodes + 1] = s_Waypoint
 				self:Log(p_Player, 'Updated Waypoint: %s', s_Waypoint.ID)
 			end
 		end
 	end
+	self:SendToAllPlayers('ClientNodeEditor:UpdateNodes', self:GetNodesForPlayer(s_UpdatedNodes))
 
 	return true
 end
@@ -387,6 +428,7 @@ function NodeEditor:OnRemoveObjective(p_Player, p_Args)
 	end
 
 	local s_DonePaths = {}
+	local s_UpdatedNodes = {}
 	self:Log(p_Player, 'Updating %d Possible Waypoints', (#s_Selection))
 
 	for i = 1, #s_Selection do
@@ -400,15 +442,16 @@ function NodeEditor:OnRemoveObjective(p_Player, p_Args)
 
 			for j = 1, #s_Objectives do
 				if (s_Objectives[j] ~= s_Data) then
-					table.insert(s_NewObjectives, s_Objectives[j])
+					s_NewObjectives[#s_NewObjectives + 1] = s_Objectives[j]
 				end
 			end
 
 			s_Waypoint.Data.Objectives = s_NewObjectives
+			s_UpdatedNodes[#s_UpdatedNodes + 1] = s_Waypoint
 			self:Log(p_Player, 'Updated Waypoint: %s', s_Waypoint.ID)
 		end
 	end
-
+	self:SendToAllPlayers('ClientNodeEditor:UpdateNodes', self:GetNodesForPlayer(s_UpdatedNodes))
 	return true
 end
 
@@ -428,6 +471,7 @@ function NodeEditor:OnRemoveAllObjectives(p_Player, p_Args)
 	end
 
 	local s_DonePaths = {}
+	local s_UpdatedNodes = {}
 	self:Log(p_Player, 'Updating %d Possible Waypoints', (#s_Selection))
 
 	for i = 1, #s_Selection do
@@ -436,9 +480,12 @@ function NodeEditor:OnRemoveAllObjectives(p_Player, p_Args)
 		if not s_DonePaths[s_Waypoint.PathIndex] then
 			s_DonePaths[s_Waypoint.PathIndex] = true
 			s_Waypoint.Data.Objectives = {}
+			s_UpdatedNodes[#s_UpdatedNodes + 1] = s_Waypoint
 			self:Log(p_Player, 'Updated Waypoint: %s', s_Waypoint.ID)
 		end
 	end
+
+	self:SendToAllPlayers('ClientNodeEditor:UpdateNodes', self:GetNodesForPlayer(s_UpdatedNodes))
 
 	return true
 end
@@ -462,6 +509,7 @@ function NodeEditor:OnSetLoopMode(p_Player, p_Args)
 	end
 
 	local s_DonePaths = {}
+	local s_UpdatedNodes = {}
 	self:Log(p_Player, 'Updating %d Possible Waypoints', (#s_Selection))
 
 	for i = 1, #s_Selection do
@@ -476,10 +524,12 @@ function NodeEditor:OnSetLoopMode(p_Player, p_Args)
 				s_Waypoint.OptValue = 0XFF
 			end
 			m_NodeCollection:UpdateInputVar(s_Waypoint)
-
+			s_UpdatedNodes[#s_UpdatedNodes + 1] = s_Waypoint
 			self:Log(p_Player, 'Updated Waypoint: %s', s_Waypoint.ID)
 		end
 	end
+
+	self:SendToAllPlayers('ClientNodeEditor:UpdateNodes', self:GetNodesForPlayer(s_UpdatedNodes))
 
 	return true
 end
@@ -500,6 +550,7 @@ function NodeEditor:OnSetSpawnPath(p_Player, p_Args)
 	end
 
 	local s_DonePaths = {}
+	local s_UpdatedNodes = {}
 	self:Log(p_Player, 'Updating %d Possible Waypoints', (#s_Selection))
 
 	for i = 1, #s_Selection do
@@ -525,7 +576,7 @@ function NodeEditor:OnSetSpawnPath(p_Player, p_Args)
 						local s_SpawnObjective = "spawn " .. s_TargetObjective
 						-- Add new objective to current path.
 						s_FirstWaypoint.Data.Objectives = { s_SpawnObjective }
-
+						s_UpdatedNodes[#s_UpdatedNodes + 1] = s_FirstWaypoint
 						self:Log(p_Player, 'Updated Waypoint: %s', s_FirstWaypoint.ID)
 					else
 						self:Log(p_Player, 'Path must have one connection to target-objective on last node')
@@ -541,6 +592,7 @@ function NodeEditor:OnSetSpawnPath(p_Player, p_Args)
 			end
 		end
 	end
+	self:SendToAllPlayers('ClientNodeEditor:UpdateNodes', self:GetNodesForPlayer(s_UpdatedNodes))
 	return true
 end
 
@@ -564,9 +616,55 @@ function NodeEditor:OnRemoveData(p_Player)
 		s_Selection[i].Data = {}
 		self:Log(p_Player, 'Updated Waypoint: %s', s_Selection[i].ID)
 	end
+	self:SendToAllPlayers('ClientNodeEditor:UpdateNodes', self:GetNodesForPlayer(s_Selection))
+end
+
+function NodeEditor:GetNodesForPlayer(p_Nodes)
+	local s_SerializedNodes = {}
+	for _, l_Node in pairs(p_Nodes) do
+		s_SerializedNodes[#s_SerializedNodes + 1] = {
+			ID = l_Node.ID,
+			Index = l_Node.Index,
+			PathIndex = l_Node.PathIndex,
+			PointIndex = l_Node.PointIndex,
+			InputVar = l_Node.InputVar,
+			Position = l_Node.Position,
+			Data = l_Node.Data
+		}
+	end
+	return s_SerializedNodes
+end
+
+function NodeEditor:SendToAllPlayers(p_EventName, p_Data)
+	for l_Index = 1, #self.m_ActivePlayers do
+		local s_Player = PlayerManager:GetPlayerByOnlineId(self.m_ActivePlayers[l_Index])
+		if s_Player then
+			NetEvents:SendToLocal(p_EventName, s_Player, p_Data)
+		end
+	end
+end
+
+function NodeEditor:OnRequestData(p_Player)
+	self.m_DataWasRequested = true
+	local s_AllNodes = m_NodeCollection:Get()
+
+	if not s_AllNodes then
+		return
+	end
+
+	local s_SerializedNodes = self:GetNodesForPlayer(s_AllNodes)
+
+	print('[NodeEditor] Sending ' .. tostring(#s_SerializedNodes) .. ' waypoints to client.')
+
+	-- TODO: better handling here for all Players
+	self:SendToAllPlayers('ClientNodeEditor:RevieveNodes', s_SerializedNodes)
+	print('[NodeEditor] Sent waypoints to client.')
 end
 
 function NodeEditor:OnRemoveNode(p_Player)
+	local s_Selection = m_NodeCollection:GetSelected(p_Player.onlineId)
+	self:SendToAllPlayers('ClientNodeEditor:RemoveNodes', self:GetNodesForPlayer(s_Selection))
+
 	local s_Result, s_Message = m_NodeCollection:Remove(p_Player.onlineId)
 	if not s_Result then
 		self:Log(p_Player, s_Message)
@@ -586,14 +684,23 @@ function NodeEditor:OnSplitNode(p_Player)
 	local s_Result, s_Message = m_NodeCollection:SplitSelection(p_Player.onlineId)
 	if not s_Result then
 		self:Log(p_Player, s_Message)
+	else
+		local s_Selection = m_NodeCollection:GetSelected(p_Player.onlineId)
+		self:SendToAllPlayers("ClientNodeEditor:AddNodes", self:GetNodesForPlayer(s_Selection))
 	end
 end
 
 ---@param p_Player Player
 function NodeEditor:OnMergeNodes(p_Player)
+	local s_OriginalSelectionToRemove = self:GetNodesForPlayer(m_NodeCollection:GetSelected(p_Player.onlineId))
 	local s_Result, s_Message = m_NodeCollection:MergeSelection(p_Player.onlineId)
 	if not s_Result then
 		self:Log(p_Player, s_Message)
+	else
+		table.remove(s_OriginalSelectionToRemove, 1) -- first node is only updated, rest is removed
+		self:SendToAllPlayers("ClientNodeEditor:RemoveNodes", s_OriginalSelectionToRemove)
+		local s_Selection = m_NodeCollection:GetSelected(p_Player.onlineId)
+		self:SendToAllPlayers("ClientNodeEditor:UpdateNodes", self:GetNodesForPlayer(s_Selection))
 	end
 end
 
@@ -603,6 +710,9 @@ function NodeEditor:OnUnlinkNodes(p_Player)
 	if not s_Result then
 		self:Log(p_Player, s_Message)
 	end
+
+	local s_Selection = m_NodeCollection:GetSelected(p_Player.onlineId)
+	self:SendToAllPlayers('ClientNodeEditor:UpdateNodes', self:GetNodesForPlayer(s_Selection))
 end
 
 ---@param p_Player Player
@@ -611,14 +721,9 @@ function NodeEditor:OnLinkNodes(p_Player)
 	if not s_Result then
 		self:Log(p_Player, s_Message)
 	end
-end
 
----@param p_Player Player
-function NodeEditor:OnSpitNode(p_Player)
-	local s_Result, s_Message = m_NodeCollection:SplitSelection(p_Player.onlineId)
-	if not s_Result then
-		self:Log(p_Player, s_Message)
-	end
+	local s_Selection = m_NodeCollection:GetSelected(p_Player.onlineId)
+	self:SendToAllPlayers('ClientNodeEditor:UpdateNodes', self:GetNodesForPlayer(s_Selection))
 end
 
 ---@param p_Player Player
@@ -630,6 +735,9 @@ function NodeEditor:OnSetInputNode(p_Player, p_Arg1, p_Arg2, p_Arg3)
 	if not s_Result then
 		self:Log(p_Player, s_Message)
 	end
+
+	local s_Selection = m_NodeCollection:GetSelected(p_Player.onlineId)
+	self:SendToAllPlayers('ClientNodeEditor:UpdateNodes', self:GetNodesForPlayer(s_Selection))
 end
 
 ---@param p_Player Player
@@ -649,12 +757,43 @@ end
 ---@param p_WaypointId integer|string
 function NodeEditor:OnSelect(p_Player, p_WaypointId)
 	m_NodeCollection:Select(p_Player.onlineId, p_WaypointId)
+	self:UpdateSelection(p_Player)
 end
 
 ---@param p_Player Player
 ---@param p_WaypointId integer|string
 function NodeEditor:OnDeselect(p_Player, p_WaypointId)
 	m_NodeCollection:Deselect(p_Player.onlineId, p_WaypointId)
+	self:UpdateSelection(p_Player)
+end
+
+---@param p_Player Player
+---@param p_SpawnId integer|string
+function NodeEditor:OnSelectSpawn(p_Player, p_SpawnId)
+	m_NodeCollection:SelectSpawn(p_Player.onlineId, p_SpawnId)
+end
+
+---@param p_Player Player
+---@param p_SpawnId integer|string
+function NodeEditor:OnDeselectSpawn(p_Player, p_SpawnId)
+	m_NodeCollection:UnelectSpawn(p_Player.onlineId, p_SpawnId)
+end
+
+function NodeEditor:LinkSpawn(p_Player)
+	m_NodeCollection:LinkSpawn(p_Player.onlineId)
+end
+
+function NodeEditor:UnlinkSpawn(p_Player)
+	m_NodeCollection:UnlinkSpawn(p_Player.onlineId)
+end
+
+function NodeEditor:UpdateSelection(p_Player)
+	local s_Selection = m_NodeCollection:GetSelected(p_Player.onlineId)
+	local s_SelectionIDs = {}
+	for _, l_Node in pairs(s_Selection) do
+		s_SelectionIDs[#s_SelectionIDs + 1] = l_Node.ID
+	end
+	NetEvents:SendToLocal('ClientNodeEditor:UpdateSelection', p_Player, s_SelectionIDs)
 end
 
 ---@param p_Player Player
@@ -680,6 +819,8 @@ function NodeEditor:OnSelectBetween(p_Player)
 
 		s_CurrentWaypoint = s_CurrentWaypoint.Next
 	end
+
+	self:UpdateSelection(p_Player)
 end
 
 ---@param p_Player Player
@@ -693,6 +834,8 @@ function NodeEditor:OnSelectNext(p_Player)
 	else
 		self:Log(p_Player, 'Must select at least one node')
 	end
+
+	self:UpdateSelection(p_Player)
 end
 
 ---@param p_Player Player
@@ -706,11 +849,14 @@ function NodeEditor:OnSelectPrevious(p_Player)
 	else
 		self:Log(p_Player, 'Must select at least one node')
 	end
+
+	self:UpdateSelection(p_Player)
 end
 
 ---@param p_Player Player
 function NodeEditor:OnClearSelection(p_Player)
 	m_NodeCollection:ClearSelection(p_Player.onlineId)
+	self:UpdateSelection(p_Player)
 end
 
 -- =============================================
@@ -782,6 +928,7 @@ function NodeEditor:StartTrace(p_Player)
 	self.m_JumpDetected[p_Player.onlineId] = 0
 	self.m_NodeWaitTimer[p_Player.onlineId] = 0
 	self.m_CustomTraceIndex[p_Player.onlineId] = self:_getNewIndex()
+	self.m_CustomTraceLastNodeIndex[p_Player.onlineId] = 0
 	self.m_CustomTraceDistance[p_Player.onlineId] = 0
 
 	local s_PlayerPos = nil
@@ -800,16 +947,23 @@ function NodeEditor:StartTrace(p_Player)
 	self:Log(p_Player, 'Custom Trace Started')
 
 	local s_TotalTraceDistance = self.m_CustomTraceDistance[p_Player.onlineId]
-	local s_TotalTraceNodes = #self.m_CustomTrace[p_Player.onlineId]:Get()
+	local s_TraceNodes = self.m_CustomTrace[p_Player.onlineId]:Get()
+	local s_TotalTraceNodes = #s_TraceNodes
+	local s_NodesToSend = {}
+	for i = self.m_CustomTraceLastNodeIndex[p_Player.onlineId] + 1, s_TotalTraceNodes do
+		s_NodesToSend[#s_NodesToSend + 1] = {
+			Position = s_TraceNodes[i].Position,
+		}
+	end
 	local s_TraceIndex = self.m_CustomTraceIndex[p_Player.onlineId] -- To-do: not really needed?
-	NetEvents:SendToLocal('UI_ClientNodeEditor_TraceData', p_Player, s_TotalTraceNodes, s_TotalTraceDistance, s_TraceIndex,
-		true)
+	NetEvents:SendToLocal('UI_ClientNodeEditor_TraceData', p_Player, s_TotalTraceNodes, s_TotalTraceDistance, s_TraceIndex, true, s_NodesToSend)
+	self.m_CustomTraceLastNodeIndex[p_Player.onlineId] = s_TotalTraceNodes
 end
 
 ---@param p_Player Player
 function NodeEditor:EndTrace(p_Player)
 	self.m_CustomTraceTimer[p_Player.onlineId] = -1
-	NetEvents:SendToLocal('UI_ClientNodeEditor_TraceData', p_Player, nil, nil, nil, false)
+	NetEvents:SendToLocal('UI_ClientNodeEditor_TraceData', p_Player, nil, nil, nil, false, nil)
 
 	local s_FirstWaypoint = self.m_CustomTrace[p_Player.onlineId]:GetFirst()
 
@@ -859,8 +1013,8 @@ function NodeEditor:ClearTrace(p_Player)
 		local s_TotalTraceNodes = #self.m_CustomTrace[p_Player.onlineId]:Get()
 		local s_TraceIndex = self.m_CustomTraceIndex[p_Player.onlineId] -- To-do: not really needed ?
 		NetEvents:SendToLocal('UI_ClientNodeEditor_TraceData', p_Player, s_TotalTraceNodes, s_TotalTraceDistance, s_TraceIndex,
-			false)
-
+			false, nil)
+		NetEvents:SendToLocal('ClientNodeEditor:ClearCustomTrace', p_Player)
 		self:Log(p_Player, 'Custom Trace Cleared')
 	else
 		-- Delete paths of selection.
@@ -868,7 +1022,8 @@ function NodeEditor:ClearTrace(p_Player)
 
 		-- Detect selected path(s).
 		local s_Selection = m_NodeCollection:GetSelected(p_Player.onlineId)
-		for _, l_Node in pairs(s_Selection) do
+		for l_Index = 1, #s_Selection do
+			local l_Node = s_Selection[l_Index]
 			local s_PathIndex = l_Node.PathIndex
 			s_PathIndexes[s_PathIndex] = true -- Add more checks?
 		end
@@ -912,7 +1067,7 @@ function NodeEditor:SaveTrace(p_Player, p_PathIndex)
 
 	self.m_NodeOperation = 'Custom Trace'
 
-	local s_PathCount = #m_NodeCollection:GetPaths()
+	local s_PathCount = m_NodeCollection:GetNrOfPaths()
 	p_PathIndex = tonumber(p_PathIndex) or self:_getNewIndex()
 	local s_CurrentWaypoint = self.m_CustomTrace[p_Player.onlineId]:GetFirst()
 	local s_ReferrenceWaypoint = nil
@@ -987,6 +1142,10 @@ function NodeEditor:SaveTrace(p_Player, p_PathIndex)
 	collectgarbage('collect')
 	self:Log(p_Player, 'Custom Trace Saved to Path: %d', p_PathIndex)
 	self.m_NodeOperation = ''
+
+	NetEvents:SendToLocal('ClientNodeEditor:ClearCustomTrace', p_Player)
+	local s_NewPathNodes = m_NodeCollection:Get(nil, p_PathIndex)
+	self:SendToAllPlayers('ClientNodeEditor:AddNodes', self:GetNodesForPlayer(s_NewPathNodes))
 	return true
 end
 
@@ -1028,7 +1187,13 @@ function NodeEditor:OnLevelLoaded(p_LevelName, p_GameMode, p_CustomGameMode)
 	m_NodeCollection:StartLoad(p_LevelName, s_GameModeToLoad)
 end
 
+function NodeEditor:Reload()
+	self:Clear()
+	m_NodeCollection:Reload()
+end
+
 function NodeEditor:EndOfLoad()
+	m_NodeCollection:ParseObjectives()
 	local s_Counter = 0
 	local s_Waypoints = m_NodeCollection:Get()
 
@@ -1045,16 +1210,20 @@ function NodeEditor:EndOfLoad()
 	end
 
 	self:Log(nil, 'Load -> Stale Nodes: %d', s_Counter)
+	if self.m_DataWasRequested then
+		self:OnRequestData() -- send nodes to all players
+	end
+end
+
+function NodeEditor:Clear()
+	m_NodeCollection:Clear()
+	self:SendToAllPlayers('ClientNodeEditor:ClearAll')
 end
 
 ---VEXT Shared Level:Destroy Event
 function NodeEditor:OnLevelDestroy()
 	m_NodeCollection:Clear()
-	self.m_ActiveTracePlayers = {}
-	self.m_CustomTrace = {}
-	self.m_CustomTraceIndex = {}
-	self.m_CustomTraceTimer = {}
-	self.m_CustomTraceDistance = {}
+	self:RegisterVars()
 end
 
 -- =============================================
@@ -1075,6 +1244,13 @@ end
 ---@param p_Player Player
 function NodeEditor:OnPlayerLeft(p_Player)
 	self.m_CustomTrace[p_Player.onlineId] = nil
+
+	for l_Index = 1, #self.m_ActivePlayers do
+		if self.m_ActivePlayers[l_Index] == p_Player.onlineId then
+			table.remove(self.m_ActivePlayers, l_Index)
+			break
+		end
+	end
 end
 
 ---VEXT Server Player:Destroyed Event
@@ -1092,13 +1268,6 @@ end
 -- =============================================
 -- Update Events
 -- =============================================
-function NodeEditor:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
-	-- Only do math on presimulation UpdatePass, don't bother if debugging is off.
-	if p_UpdatePass ~= UpdatePass.UpdatePass_PreSim then
-		return
-	end
-end
-
 ---VEXT Shared Engine:Update Event
 ---@param p_DeltaTime number
 ---@param p_SimulationDeltaTime number
@@ -1197,10 +1366,17 @@ function NodeEditor:OnEngineUpdate(p_DeltaTime, p_SimulationDeltaTime)
 								math.floor(self.m_NodeWaitTimer[l_PlayerGuid]))
 						end
 
-						-- To-do: Send to Client UI.
 						local s_TotalTraceDistance = self.m_CustomTraceDistance[l_PlayerGuid]
-						local s_TotalTraceNodes = #self.m_CustomTrace[l_PlayerGuid]:Get()
-						NetEvents:SendUnreliableToLocal('UI_ClientNodeEditor_TraceData', s_Player, s_TotalTraceNodes, s_TotalTraceDistance)
+						local s_TraceNodes = self.m_CustomTrace[l_PlayerGuid]:Get()
+						local s_TotalTraceNodes = #s_TraceNodes
+						local s_NodesToSend = {}
+						for i = self.m_CustomTraceLastNodeIndex[l_PlayerGuid] + 1, s_TotalTraceNodes do
+							s_NodesToSend[#s_NodesToSend + 1] = {
+								Position = s_TraceNodes[i].Position,
+							}
+						end
+						NetEvents:SendToLocal('UI_ClientNodeEditor_TraceData', s_Player, s_TotalTraceNodes, s_TotalTraceDistance, nil, nil, s_NodesToSend)
+						self.m_CustomTraceLastNodeIndex[l_PlayerGuid] = s_TotalTraceNodes
 					end
 				else
 					-- Collection is empty, stop the timer.
@@ -1212,213 +1388,28 @@ function NodeEditor:OnEngineUpdate(p_DeltaTime, p_SimulationDeltaTime)
 			end
 		end
 	end
-
-	-- Visible NODE distribution-handling.
-	if self.m_NodeSendUpdateTimer < 0.1 then
-		self.m_NodeSendUpdateTimer = self.m_NodeSendUpdateTimer + p_DeltaTime
-	else
-		self.m_NodeSendUpdateTimer = 0.0
-
-		-- To-do: distribute load equally (multiple Players).
-		for l_PlayerGuid, l_Active in pairs(self.m_ActiveTracePlayers) do
-			local s_Player = PlayerManager:GetPlayerByOnlineId(l_PlayerGuid)
-			local s_FirstPath = true
-			local s_Count = 0
-			if not s_Player or not s_Player.soldier or not l_Active then
-				goto continue
-			end
-
-			local s_NodesToDraw = {}
-
-			-- selected + isTracepath + showOption (text, node, id)
-
-			local s_PlayerPos = s_Player.soldier.worldTransform.trans
-			local s_WaypointPaths = m_NodeCollection:GetPaths()
-			for l_Path, _ in pairs(s_WaypointPaths) do
-				if m_NodeCollection:IsPathVisible(l_Path) and l_Path >= self.m_lastDrawIndexPath[l_PlayerGuid] then
-					local s_startIndex = 1
-
-					if s_FirstPath then
-						s_startIndex = self.m_lastDrawIndexNode[l_PlayerGuid] + 1
-
-						if s_startIndex <= 0 then
-							s_startIndex = 1
-						end
-
-						s_FirstPath = false
-					end
-
-					local s_FirstNode = s_WaypointPaths[l_Path][1]
-					for l_Waypoint = s_startIndex, #s_WaypointPaths[l_Path] do
-						local l_Node = s_WaypointPaths[l_Path][l_Waypoint]
-						if (l_Node.Next ~= false or l_Node.Previous ~= false) then -- Removed node?
-							local s_DrawNode = false
-							local s_DrawLine = false
-							local s_DrawText = false
-							local s_IsSelected = false
-
-							local s_Distance = m_NodeCollection:GetDistance(l_Node, s_PlayerPos)
-							if s_Distance <= Config.WaypointRange then
-								s_DrawNode = true
-							end
-							if s_Distance <= Config.LineRange then
-								s_DrawLine = true
-							end
-							if s_Distance <= Config.TextRange then
-								s_DrawText = true
-							end
-
-							-- Display all selected nodes.
-							if m_NodeCollection:IsSelected(l_PlayerGuid, l_Node) then
-								s_IsSelected = true
-							end
-
-							s_Count = s_Count + 1
-
-							if s_DrawNode or s_DrawLine or s_DrawText or s_IsSelected then
-								local s_DataNode = {
-									Node = {},
-									DrawNode = s_DrawNode,
-									DrawLine = s_DrawLine,
-									DrawText = s_DrawText,
-									IsSelected = s_IsSelected,
-									Objectives = {},
-									Vehicles = {},
-									Reverse = (s_FirstNode.OptValue == 0XFF),
-									Links = {},
-									NextPos = nil,
-									IsTrace = false,
-									IsOthersTrace = false,
-								}
-
-								-- Fill tables.
-								if l_Node.Data.Links then
-									for i = 1, #l_Node.Data.Links do
-										local s_LinkNode = m_NodeCollection:Get(l_Node.Data.Links[i])
-										if s_LinkNode then
-											table.insert(s_DataNode.Links, s_LinkNode.Position)
-										end
-									end
-								end
-
-								for l_Key, l_Value in pairs(l_Node) do
-									if (l_Key ~= 'Next' and l_Key ~= 'Previous') then
-										s_DataNode.Node[l_Key] = l_Value
-									end
-								end
-
-								if s_FirstNode.Data.Objectives then
-									for _, l_Objective in pairs(s_FirstNode.Data.Objectives) do
-										table.insert(s_DataNode.Objectives, l_Objective)
-									end
-								end
-
-								if s_FirstNode.Data.Vehicles then
-									for _, l_Vehicle in pairs(s_FirstNode.Data.Vehicles) do
-										table.insert(s_DataNode.Vehicles, l_Vehicle)
-									end
-								end
-
-								if l_Node.Next and l_Node.Next.PathIndex == l_Node.PathIndex then
-									s_DataNode.NextPos = l_Node.Next.Position:Clone()
-								end
-
-								table.insert(s_NodesToDraw, s_DataNode)
-								if s_Count >= Config.NodesPerCycle and l_Waypoint < #s_WaypointPaths[l_Path] then
-									self.m_lastDrawIndexNode[l_PlayerGuid] = l_Waypoint
-									self.m_lastDrawIndexPath[l_PlayerGuid] = l_Path
-									NetEvents:SendUnreliableToLocal('ClientNodeEditor:DrawNodes', s_Player, s_NodesToDraw, false) -- Send all nodes that are visible for the player.
-									return
-								end
-							end
-						end
-					end
-				end
-			end
-
-			if self.m_lastDrawIndexPath[l_PlayerGuid] ~= 99999 then
-				self.m_lastDrawIndexNode[l_PlayerGuid] = 0
-			end
-
-			self.m_lastDrawIndexPath[l_PlayerGuid] = 99999
-
-			-- Custom trace of player.
-			-- To-do: also show active Traces of other players with other colour?
-			if self.m_CustomTrace[l_PlayerGuid] then
-				local s_CustomWaypoints = self.m_CustomTrace[l_PlayerGuid]:Get()
-				for i = self.m_lastDrawIndexNode[l_PlayerGuid] + 1, #s_CustomWaypoints do
-					local l_Node = s_CustomWaypoints[i]
-					local s_DrawNode = false
-					local s_DrawLine = false
-					local s_DrawText = false
-					local s_IsSelected = false
-
-					local s_Distance = m_NodeCollection:GetDistance(l_Node, s_PlayerPos)
-					if s_Distance <= Config.WaypointRange then
-						s_DrawNode = true
-					end
-					if s_Distance <= Config.LineRange then
-						s_DrawLine = true
-					end
-
-					s_Count = s_Count + 1
-
-					if s_DrawNode or s_DrawLine or s_DrawText then
-						local s_DataNode = {
-							Node = {},
-							DrawNode = s_DrawNode,
-							DrawLine = s_DrawLine,
-							DrawText = s_DrawText,
-							IsSelected = s_IsSelected,
-							NextPos = nil,
-							IsTrace = true,
-							IsOthersTrace = false,
-						}
-
-						-- Fill tables.
-						for l_Key, l_Value in pairs(l_Node) do
-							if (l_Key ~= 'Next' and l_Key ~= 'Previous') then
-								s_DataNode.Node[l_Key] = l_Value
-							end
-						end
-
-						if l_Node.Next and l_Node.Next.PathIndex == l_Node.PathIndex then
-							s_DataNode.NextPos = l_Node.Next.Position:Clone()
-						end
-
-						table.insert(s_NodesToDraw, s_DataNode)
-						if s_Count >= Config.NodesPerCycle and i < #s_CustomWaypoints then
-							self.m_lastDrawIndexNode[l_PlayerGuid] = i
-							NetEvents:SendUnreliableToLocal('ClientNodeEditor:DrawNodes', s_Player, s_NodesToDraw, false)
-							return
-						end
-					end
-				end
-			end
-
-			NetEvents:SendUnreliableToLocal('ClientNodeEditor:DrawNodes', s_Player, s_NodesToDraw, true) -- Send all nodes that are visible for the player.
-			-- Reset cars.
-			self.m_lastDrawIndexPath[l_PlayerGuid] = 0
-			self.m_lastDrawIndexNode[l_PlayerGuid] = 0
-
-			::continue::
-		end
-	end
 end
 
 -- =============================================
 -- Functions
 -- =============================================
 
+function NodeEditor:RegisterActivePlayer(p_Player)
+	-- Check if the player is already listed
+	if table.has(self.m_ActivePlayers, p_Player.onlineId) then
+		return
+	end
+
+	self.m_ActivePlayers[#self.m_ActivePlayers + 1] = p_Player.onlineId
+end
+
 function NodeEditor:Log(p_Player, ...)
 	local s_MessageString = Language:I18N(...)
 	m_Logger:Write(s_MessageString)
 	-- Send message to client as well.
-	if p_Player then
+	if p_Player and table.has(self.m_ActivePlayers, p_Player.onlineId) then
+		-- Check if the player is already listed
 		ChatManager:SendMessage('TRACE: ' .. s_MessageString, p_Player)
-		NetEvents:SendUnreliableToLocal('ClientNodeEditor:PrintLog', p_Player, s_MessageString)
-	else
-		NetEvents:BroadcastUnreliableLocal('ClientNodeEditor:PrintLog', s_MessageString)
 	end
 end
 

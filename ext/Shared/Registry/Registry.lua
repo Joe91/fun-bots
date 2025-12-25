@@ -24,7 +24,7 @@ Registry = {
 		-- Distance commands are heard by bots.
 		COMMAND_DISTANCE = 20,
 		-- Use load of Bundle to fix Bug of weapons disappearing (thanks to Lesley!) !!! THIS MIGHT CAUSE CRASHES OR OTHER ISSUES!!!
-		USE_LOAD_BUNDLE_BUGFIX = true,
+		USE_LOAD_BUNDLE_BUGFIX = false,
 		-- Keep the last ticket in conquest for the gamemode counter
 		DONT_SPAWN_BOTS_ON_LAST_CONQUEST_TICKET = true,
 		-- Valid keys can be found here: https://docs.veniceunleashed.net/vext/ref/fb/inputdevicekeys/.
@@ -33,25 +33,29 @@ Registry = {
 		DESTROY_OBSTACLES_ON_START = true,
 		-- Number of Nodes to load in one cycle
 		MAX_NUMBER_OF_NODES_PER_CYCLE = 1024,
+		-- experimental nametags
+		USE_EXPERIMENTAL_NAMETAGS = false,
 	},
 	-- Version and Release related variables.
 	-- Variables related to the current build version, version and the type of version.
 	-- We use semantic versioning. Please see: https://semver.org.
 	VERSION = {
 		-- Major version.
-		VERSION_MAJ = 2,
+		VERSION_MAJ = 3,
 		-- Minor version.
-		VERSION_MIN = 9,
+		VERSION_MIN = 0,
 		-- Patch version.
-		VERSION_PATCH = 5,
+		VERSION_PATCH = 0,
 		-- Additional label for pre-releases and build metadata.
-		VERSION_LABEL = "",
+		VERSION_LABEL = "dev12",
 		-- Current version type of this build.
-		VERSION_TYPE = VersionType.Release,
+		VERSION_TYPE = VersionType.DevBuild,
 		-- The Version used for the Update-Check.
-		UPDATE_CHANNEL = VersionType.Stable,
+		UPDATE_CHANNEL = VersionType.DevBuild,
 		-- Prints current version in console.
 		CLIENT_SHOW_VERSION_ON_JOIN = false,
+		-- compatibility version for traces
+		COMP_MAP_TRACES = 1,
 	},
 	-- Some Client Variables.
 	CLIENT = {
@@ -93,7 +97,9 @@ Registry = {
 		--- Weight for defending objectives
 		WEIGHT_DEFEND_OBJECTIVE = 1.0,
 		--- PathSwitch on same prio
-		PROBABILITY_SWITCH_SAME_PRIO = 20
+		PROBABILITY_SWITCH_SAME_PRIO = 20,
+		--- Allow bots to spawn on the last tickets in conquest.
+		DONT_SPAWN_BOTS_ON_LAST_TICKETS = true,
 	},
 	VEHICLES = {
 		-- Distance for the "enter vehicle" command.
@@ -101,19 +107,23 @@ Registry = {
 		-- Maximum distance for Jet-Attack
 		MAX_ATTACK_DISTANCE_JET = 2000,
 		-- Once a jet is that low above a vehicle or person, he aborts.
-		ABORT_ATTACK_HEIGHT_JET = 70,
+		ABORT_ATTACK_HEIGHT_JET = 100,
 		-- Once a jet is that far away from a vehicle or person, he aborts.
-		ABORT_ATTACK_DISTANCE_JET = 120,
+		ABORT_ATTACK_DISTANCE_JET = 100,
 		-- Once a jet is that far away from a jet or chopper, he aborts.
-		ABORT_ATTACK_AIR_DISTANCE_JET = 50,
+		ABORT_ATTACK_AIR_DISTANCE_JET = 30,
 		-- Once a chopper is that low above a vehicle or person, he aborts.
 		ABORT_ATTACK_HEIGHT_CHOPPER = 20,
 		-- In this time, a jet will not attack.
-		JET_TAKEOFF_TIME = 20,
+		JET_TAKEOFF_TIME = 12,
 		-- Time a jet waits after an attack.
-		JET_ABORT_ATTACK_TIME = 4.0,
+		JET_ABORT_ATTACK_TIME = 6.0,
 		-- Time a jet waits after an attack on another jet.
-		JET_ABORT_JET_ATTACK_TIME = 0.7,
+		JET_ABORT_JET_ATTACK_TIME = 4.0,
+		-- Target height for jets.
+		JET_TARGET_HEIGHT = 350,
+		-- Target height for choppers.
+		CHOPPER_TARGET_HEIGHT = 110,
 		-- Percentage of vehicle health to leave vehicle with (currently no passive events for bot-only vehicles)
 		VEHICLE_EXIT_HEALTH = 12,
 		-- Probability to exit on low health.
@@ -122,24 +132,24 @@ Registry = {
 		VEHICLE_PROPABILITY_SECOND_AIRTARGET = 40,
 		-- Probability to use 3nd best air-target.
 		VEHICLE_PROPABILITY_THIRD_AIRTARGET = 25,
-		-- Health-check cycle-time.
-		VEHICLE_HEALTH_CYLCE_TIME = 0.5,
 		-- Seat-check cycle-time.
-		VEHICLE_SEAT_CHECK_CYCLE_TIME = 4.0,
+		VEHICLE_SEAT_CHECK_CYCLE_TIME = 3.0,
+		-- Probability to stop in vehicle while shooting
+		PROBABILITY_VEHICLE_STOP_TO_SHOOT = 40,
 	},
 	-- Bot related.
 	BOT = {
-		-- Update cycle fast.
-		BOT_FAST_UPDATE_CYCLE = 0.03, -- Equals 30 fps.
 		-- Distance a bot tries to revive a bot.
 		REVIVE_DISTANCE = 15.0,
 		-- Revive probabilities
 		REVIVE_PROBABILITY = 80.0,
 		REVIVE_PROBABILITY_IF_HAS_TARGET = 40.0,
+		-- Update cycle fast.
+		BOT_FAST_UPDATE_CYCLE = 0.03, -- Equals 30 fps.
 		-- Update cycle.
-		BOT_UPDATE_CYCLE = 0.1,
+		BOT_UPDATE_CYCLE = 0.13, -- 7 fps
 		-- Update cycle.
-		BOT_SLOW_UPDATE_CYCLE = 1.0,
+		BOT_SLOW_UPDATE_CYCLE = 0.66,
 		-- - distance the bots have to reach in height to continue with next Waypoint.
 		TARGET_HEIGHT_DISTANCE_WAYPOINT = 1.5,
 		-- Chance that the bot will teleport when they are stuck.
@@ -154,6 +164,8 @@ Registry = {
 		PROBABILITY_SHOOT_ROCKET = 20,
 		-- The probability to use the rocket, if behavior of bot priorizes this
 		PROBABILITY_SHOOT_ROCKET_PRIO = 85,
+		-- Rocket reload cooldown-time
+		ROCKET_RELOAD_COOLDOWN = 13.0,
 		-- The probability to use the rifle to attack a chopper.
 		PROBABILITY_ATTACK_CHOPPER_WITH_RIFLE = 25,
 		-- If the game mode is Rush or Conquest, change direction if the bot is stuck on non-connecting paths.
@@ -166,6 +178,8 @@ Registry = {
 		MIN_DISTANCE_NADE = 12,
 		-- Advanced aiming makes a difference on huge distances, but costs more performance.
 		USE_ADVANCED_AIMING = false,
+		-- Use of path-Offset
+		USE_PATH_OFFSETS = true,
 		-- Worsening bots on larger distances. Factor 1.0 = no worsening, always same offset
 		WORSENING_FACOTR_DISTANCE = 0.9,
 		PROBABILITY_SWITCH_TO_BEACON_PATH = 80,
@@ -174,7 +188,11 @@ Registry = {
 		-- number of nodes in every direction to scan for best way back
 		NUMBER_NODES_TO_SCAN_AFTER_ATTACK = 20,
 		-- Delay on destroying several bots
-		BOT_DESTORY_DELAY = 0.05
+		BOT_DESTORY_DELAY = 0.05,
+		-- Distance to closest objective on which passengers should exit vehicles
+		PASSENGER_EXIT_DISTANCE = 50,
+		-- Probability to stop in while shooting
+		PROBABILITY_STOP_TO_SHOOT = 40
 	},
 	-- Bot team balancing (only in keep_playercount - spawn-mode)
 	BOT_TEAM_BALANCING = {
@@ -195,15 +213,19 @@ Registry = {
 		-- Additional delay for dirct-spawnable vehicles (set to 0 to disable this)
 		DELAY_DIRECT_SPAWN = 6.0,
 		-- Probability of a bot spawning on a member of the same squad.
-		PROBABILITY_SQUADMATE_SPAWN = 40,
+		PROBABILITY_SQUADMATE_SPAWN = 20,
 		-- Probability of a bot spawning in the vehicle of a bot of the same squad.
-		PROBABILITY_SQUADMATE_VEHICLE_SPAWN = 60,
+		PROBABILITY_SQUADMATE_VEHICLE_SPAWN = 70,
+		-- Probability of a bot spawning on a random teammate
+		PROBABILITY_TEAMMATE_SPAWN = 1,
+		-- Probability of a bot spawning in a random teammate vehicle
+		PROBABILITY_TEAMMATE_VEHICLE_SPAWN = 50,
 		-- Probability of a bot spawning in the vehicle of a player of the same squad.
-		PROBABILITY_SQUADMATE_PLAYER_VEHICLE_SPAWN = 80,
+		PROBABILITY_SQUADMATE_PLAYER_VEHICLE_SPAWN = 50,
 		-- Probability of a bot spawning on the closest spawn point.
-		PROBABILITY_CLOSEST_SPAWN = 80,
+		PROBABILITY_CLOSEST_SPAWN = 40,
 		-- Probability of a bot spawning on an attacked spawn point.
-		PROBABILITY_ATTACKED_SPAWN = 80,
+		PROBABILITY_ATTACKED_SPAWN = 60,
 		-- Probability of a bot spawning on their deployment base.
 		PROBABILITY_BASE_SPAWN = 5,
 		-- Probability of a bot spawning on their deployment base.

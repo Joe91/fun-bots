@@ -255,12 +255,48 @@ SettingsDefinition = {
 			Category = "DIFFICULTY"
 		},
 		{
-			Name = "VehicleAirAimWorsening",
-			Text = "Vehicle Air Aim Worsening",
+			Name = "VehicleAAAimWorsening",
+			Text = "AA Aim Worsening",
 			---@type Type|integer
 			Type = Type.Float,
-			Value = Config.VehicleAirAimWorsening,
-			Description = "See VehicleAimWorsening, only for Air-Vehicles",
+			Value = Config.VehicleAAAimWorsening,
+			Description = "Make bots in AA aim worse: for difficulty: 0 = no offset (hard), 1 or even greater = more sway (easy)",
+			Reference = Range(0.00, 10.00, 0.05),
+			Default = 0.9,
+			UpdateFlag = UpdateFlag.None,
+			Category = "DIFFICULTY"
+		},
+		{
+			Name = "VehicleGunshipAimWorsening",
+			Text = "Gunship Aim Worsening",
+			---@type Type|integer
+			Type = Type.Float,
+			Value = Config.VehicleGunshipAimWorsening,
+			Description = "Make bots in Gunships aim worse: for difficulty: 0 = no offset (hard), 1 or even greater = more sway (easy)",
+			Reference = Range(0.00, 10.00, 0.05),
+			Default = 0.8,
+			UpdateFlag = UpdateFlag.None,
+			Category = "DIFFICULTY"
+		},
+		{
+			Name = "VehicleChopperAimWorsening",
+			Text = "Chopper Aim Worsening",
+			---@type Type|integer
+			Type = Type.Float,
+			Value = Config.VehicleChopperAimWorsening,
+			Description = "Make bots in Choppers aim worse: for difficulty: 0 = no offset (hard), 1 or even greater = more sway (easy)",
+			Reference = Range(0.00, 10.00, 0.05),
+			Default = 0.5,
+			UpdateFlag = UpdateFlag.None,
+			Category = "DIFFICULTY"
+		},
+		{
+			Name = "VehiclePlaneAimWorsening",
+			Text = "Vehicle Plane Aim Worsening",
+			---@type Type|integer
+			Type = Type.Float,
+			Value = Config.VehiclePlaneAimWorsening,
+			Description = "See VehicleAimWorsening, only for Planes",
 			Reference = Range(0.00, 10.00, 0.05),
 			Default = 0.02,
 			UpdateFlag = UpdateFlag.None,
@@ -358,7 +394,7 @@ SettingsDefinition = {
 			Value = Config.FactorPlayerTeamCount,
 			Description = "Reduce player team in balanced_teams or fixed_number mode",
 			Reference = Range(0.00, 1.00, 0.05),
-			Default = 0.9,
+			Default = 1.0,
 			UpdateFlag = UpdateFlag.AmountAndTeam,
 			Category = "SPAWN"
 		},
@@ -372,17 +408,6 @@ SettingsDefinition = {
 			Reference = Range(0.00, 4.00, 1.0),
 			Default = 0,
 			UpdateFlag = UpdateFlag.AmountAndTeam,
-			Category = "SPAWN"
-		},
-		{
-			Name = "BotNewLoadoutOnSpawn",
-			Text = "New Loadout on Spawn",
-			---@type Type|integer
-			Type = Type.Boolean,
-			Value = Config.BotNewLoadoutOnSpawn,
-			Description = "Bots get a new kit and color, if they respawn",
-			Default = true,
-			UpdateFlag = UpdateFlag.None,
 			Category = "SPAWN"
 		},
 		{
@@ -454,6 +479,17 @@ SettingsDefinition = {
 			Description = "Max health of bot (default 100.0)",
 			Reference = Range(0.0, 1000.00, 1.0),
 			Default = 100.0,
+			UpdateFlag = UpdateFlag.None,
+			Category = "SPAWN"
+		},
+		{
+			Name = "KeepVehicleSeatForPlayer",
+			Text = "Keep a Vehicle Seat For Player",
+			---@type Type|integer
+			Type = Type.Boolean,
+			Value = Config.KeepVehicleSeatForPlayer,
+			Description = "To keep a vehicle seat for the player always or not (default true)",
+			Default = true,
 			UpdateFlag = UpdateFlag.None,
 			Category = "SPAWN"
 		},
@@ -662,6 +698,18 @@ SettingsDefinition = {
 			Description = "Meters before bots will start shooting at players",
 			Reference = Range(1.00, 1500.00, 5.0),
 			Default = 150,
+			UpdateFlag = UpdateFlag.None,
+			Category = "BEHAVIOUR"
+		},
+		{
+			Name = "MaxShootDistanceMissileAir",
+			Text = "Max Shoot Distance Air Missiles",
+			---@type Type|integer
+			Type = Type.Integer,
+			Value = Config.MaxShootDistanceMissileAir,
+			Description = "Meters before bots will start shooting with stingers",
+			Reference = Range(1.00, 1500.00, 5.0),
+			Default = 350,
 			UpdateFlag = UpdateFlag.None,
 			Category = "BEHAVIOUR"
 		},
@@ -954,6 +1002,18 @@ SettingsDefinition = {
 			Category = "VEHICLE"
 		},
 		{
+			Name = "MaxShootDistanceGunship",
+			Text = "Max Raycast Distance for Gunships",
+			---@type Type|integer
+			Type = Type.Integer,
+			Value = Config.MaxShootDistanceGunship,
+			Description = "Meters bots in the Gunship start shooting at players",
+			Reference = Range(1.00, 2000.00, 5.0),
+			Default = 1000,
+			UpdateFlag = UpdateFlag.None,
+			Category = "VEHICLE"
+		},
+		{
 			Name = "MaxShootDistanceVehicles",
 			Text = "Max Raycast Distance for Vehicles",
 			---@type Type|integer
@@ -961,7 +1021,7 @@ SettingsDefinition = {
 			Value = Config.MaxShootDistanceVehicles,
 			Description = "Meters bots in Vehicles start shooting at players",
 			Reference = Range(1.00, 1500.00, 5.0),
-			Default = 250,
+			Default = 375,
 			UpdateFlag = UpdateFlag.None,
 			Category = "VEHICLE"
 		},
@@ -973,7 +1033,7 @@ SettingsDefinition = {
 			Value = Config.MaxShootDistanceNoAntiAir,
 			Description = "Meters bots in vehicle (no Anti-Air) starts shooting at players",
 			Reference = Range(1.00, 1500.00, 5.0),
-			Default = 150,
+			Default = 175,
 			UpdateFlag = UpdateFlag.None,
 			Category = "VEHICLE"
 		},
@@ -1001,17 +1061,6 @@ SettingsDefinition = {
 			Category = "VEHICLE"
 		},
 		{
-			Name = "VehicleMoveWhileShooting",
-			Text = "Vehicles move while shooting",
-			---@type Type|integer
-			Type = Type.Boolean,
-			Value = Config.VehicleMoveWhileShooting,
-			Description = "Vehicles like tanks do not stop for shooting",
-			Default = true,
-			UpdateFlag = UpdateFlag.None,
-			Category = "VEHICLE"
-		},
-		{
 			Name = "AABots",
 			Text = "Activate Auto-AA",
 			---@type Type|integer
@@ -1030,7 +1079,7 @@ SettingsDefinition = {
 			Value = Config.MaxDistanceAABots,
 			Description = "Max Range of Stationary AA",
 			Reference = Range(50, 1500.00, 5),
-			Default = 300,
+			Default = 375,
 			UpdateFlag = UpdateFlag.None,
 			Category = "VEHICLE"
 		},
@@ -1042,6 +1091,17 @@ SettingsDefinition = {
 			Value = Config.EnableParadrop,
 			Description = "Bots can spawn on vehicles inside C-130 gunship",
 			Default = false,
+			UpdateFlag = UpdateFlag.None,
+			Category = "VEHICLE"
+		},
+		{
+			Name = "SpawnInMobileRespawnVehicles",
+			Text = "Spawn in Transport helicopters and AMTRACs",
+			---@type Type|integer
+			Type = Type.Boolean,
+			Value = Config.SpawnInMobileRespawnVehicles,
+			Description = "Bots can spawn in Transport helicopters and AMTRACs",
+			Default = true,
 			UpdateFlag = UpdateFlag.None,
 			Category = "VEHICLE"
 		},
@@ -1198,7 +1258,7 @@ SettingsDefinition = {
 			Value = Config.WaypointRange,
 			Description = "Set how far away waypoints are visible (meters)",
 			Reference = Range(1.00, 1000.00, 1.0),
-			Default = 50,
+			Default = 100,
 			UpdateFlag = UpdateFlag.None,
 			Category = "TRACE"
 		},
@@ -1221,7 +1281,7 @@ SettingsDefinition = {
 			Value = Config.LineRange,
 			Description = "Set how far away waypoint lines are visible (meters)",
 			Reference = Range(1.00, 1000.00, 1.0),
-			Default = 25,
+			Default = 50,
 			UpdateFlag = UpdateFlag.None,
 			Category = "TRACE"
 		},
@@ -1244,7 +1304,7 @@ SettingsDefinition = {
 			Value = Config.TextRange,
 			Description = "Set how far away waypoint text is visible (meters)",
 			Reference = Range(1.00, 1000.00, 1.0),
-			Default = 7,
+			Default = 15,
 			UpdateFlag = UpdateFlag.None,
 			Category = "TRACE"
 		},
@@ -1267,7 +1327,7 @@ SettingsDefinition = {
 			Value = Config.SpawnPointRange,
 			Description = "Set how far away spawn points are visible (meters)",
 			Reference = Range(1.00, 1000.00, 1.0),
-			Default = 100,
+			Default = 150,
 			UpdateFlag = UpdateFlag.None,
 			Category = "TRACE"
 		},
@@ -1279,7 +1339,7 @@ SettingsDefinition = {
 			Value = Config.TraceDelta,
 			Description = "Update interval of trace",
 			Reference = Range(0.10, 10.00, 0.1),
-			Default = 0.3,
+			Default = 0.35,
 			UpdateFlag = UpdateFlag.None,
 			Category = "TRACE"
 		},
@@ -1291,7 +1351,7 @@ SettingsDefinition = {
 			Value = Config.NodesPerCycle,
 			Description = "Set how many nodes get drawn per cycle. Affects performance",
 			Reference = Range(1.00, 10000.00, 1.0),
-			Default = 400,
+			Default = 2048,
 			UpdateFlag = UpdateFlag.None,
 			Category = "TRACE"
 		},
@@ -1563,7 +1623,7 @@ SettingsDefinition = {
 			Value = Config.MaximunYawPerSec,
 			Description = "In Degrees. Rotation Movement per second",
 			Reference = Range(0.00, 1080.00, 5.0),
-			Default = 450,
+			Default = 550,
 			UpdateFlag = UpdateFlag.YawPerSec,
 			Category = "EXPERT"
 		},
@@ -1680,7 +1740,7 @@ SettingsDefinition = {
 			Value = Config.SpawnMethod,
 			Description = "Method the bots spawn with. Careful, not supported on most of the maps!!",
 			Reference = SpawnMethod,
-			Default = SpawnMethod.SpawnSoldierAt,
+			Default = SpawnMethod.SpawnOnTdm,
 			UpdateFlag = UpdateFlag.None,
 			Category = "EXPERT"
 		},
