@@ -4,79 +4,74 @@
 ![Image](https://img.shields.io/github/stars/Joe91/fun-bots?style=for-the-badge)
 
 ## Welcome to the changelogs for release **V3.0**
-This is the changelog for the version V3.0 Don't forget to [join us on Discord](https://discord.com/invite/FKamccAEqz)
+This is the changelog for release **V3.0**. Don't forget to [join us on Discord](https://discord.com/invite/FKamccAEqz)
+
 
 ## Changelog
 
 ### New features / improvements
-* rework of complete update to state pattern
-* performance-improvements
-* original game-spawn-method by default (still a bit to do, till it works fine)
-* add two missing weapons
-* Info-Node in maps for future versioning and information
-* pathless-jets
-* pathless-choppers
-* Bots can use the gunships (TODO: separate state with separate distace and tragets)
+* Rework of the complete update to state pattern
+* Performance improvements
+* Use the original game spawn method by default (still a bit to do until it works fine)
+* Add two missing weapons
+* Info node in maps for future versioning and information
+* Pathless jets
+* Pathless choppers
+* Bots can use the gunships (TODO: separate state with separate distance and targets)
 * Separate worsening values for different vehicle types (by MatiasPastori)
 * Make bots attack the gunship by themselves (by ThyKingdomCome)
-* Bots can use every jet in conquest now (no more paths needed)
-* No more air-paths needed (only enter-paths for choppers)
-* Kind of Support for AirSuperiority (jets still too passive)
+* Bots can use every jet in Conquest now (no more paths needed)
+* No more air paths needed (only enter paths for choppers)
+* Kind of support for Air Superiority (jets still too passive)
 * Bots randomly move or stop while shooting in vehicles (by MatiasPastori)
-* Cooldown-time for rockets after refill
-* Max Bot-Kits now per team
-* Randomized spawn-order
-* Better distance-handling for attack
-* Registry-Option to still spawn bots on the last tickets added
-* passengers now exit when close to objective in some vehicles (by ThyKingdomCome)
-* Spawn of bots in AMTRAC and Transport-Choppters (by ThyKingdomCome)
+* Cooldown time for rockets after refill
+* Max bot kits per team
+* Randomized spawn order
+* Better distance handling for attack
+* Registry option to still spawn bots on the last tickets added
+* Passengers now exit when close to objective in some vehicles (by ThyKingdomCome)
+* Spawn of bots in AMTRAC and transport choppers (by ThyKingdomCome)
 * Option to disable KeepVehicleSeatForPlayer (by MatiasPastori)
-* Registry-Option to USE_EXPERIMENTAL_NAMETAGS (by MatiasPastori)
-* Bots don't use 3rd seat of Tanks anymore (by MatiasPastori)
-* Support for dynamic-jet-spawn + fixes for some special cases (by MatiasPastori)
-* Support of Gunship on Rush-Maps
-* Variation in default fire-cycles (by MatiasPastori)
-* Refactoring of lots of Bot-stuff (by Bree_Arnold)
-* Switch to new Web-UI-Backend (by Paul)
-* Sometimes Stop for shooting of bots (by MatiasPastori)
-* performance of node-editor
-* Don't exit vehicle, if player is driver
-* Attempt to fix Messed-up first spawn in TDM, (only a workaround working right now)
-* Bots now can use a path-offset sidewards (by MatiasPastori)
-* Add the command to make the bots follow a player (by MatiasPastori)
-* Default-Color for appearance added (thanks to QuantumTube)
-* Bot movement and Obstacle-handling rework
-* Fix of mcom-handling of the bots
-* Fix of some path-switching-issues in context with actions
+* Registry option to USE_EXPERIMENTAL_NAMETAGS (by MatiasPastori)
+* Bots don't use the 3rd seat of tanks anymore (by MatiasPastori)
+* Support for dynamic jet spawn + fixes for some special cases (by MatiasPastori)
+* Support of gunship on Rush maps
+* Variation in default fire cycles (by MatiasPastori)
+* Refactoring of lots of Bot-Stuff (by Bree_Arnold)
+* Switch to the new Web UI backend (by Paul)
+* Sometimes stop for shooting of bots (by MatiasPastori)
+* Improved performance of the node editor
+* Don't exit vehicle if player is driver
+* Attempt to fix messed-up first spawn in TDM (only a workaround right now)
+* Bots now can use a path offset sideways (by MatiasPastori)
+* Added the command to make the bots follow a player (by MatiasPastori)
+* Default color for appearance added (thanks to QuantumTube)
+* Bot movement and obstacle handling rework
+* Fix of mcom handling of the bots
+* Fix of some path switching issues in context with actions
 
-### some open TODOs:
-* Vehicle/Tank: better aiming on steep slopes (compensate car-rotation)
-* chopper: handle different hights and positions depending on capture-points
-* add logic for jets in rush
-* improve team-logic for AA and other vehicles (example AA on Rush)
-* fully support default-sapwn-method? (for now only on TDM/GM/SDM by default)
-* (rework of raycasts for better performance)
-* (improve node-editor)
+### Some open TODOs:
+* Vehicle/Tank: better aiming on steep slopes (compensate car rotation)
+* Chopper: handle different heights and positions depending on capture points
+* Add logic for jets in Rush
+* Improve team logic for AA and other vehicles (example: AA on Rush)
+* Fully support default spawn method? (for now only on TDM/GM/SDM by default)
+* (Rework raycasts for better performance)
+* (Improve node editor)
 
 ### Bug fixes
-* fix stationary AA again...
-* fix horn-usage of jeeps #356
-* fix refill of rockets
-* fix keep same bot-players
-* fix air-vehicles attacking bases (by ThyKingdomCome)
-* fix Bots trying to spawn in unarmed Gunships (by MatiasPastori)
-
-### New maps
-* 
+* Fix stationary AA again...
+* Fix horn usage of jeeps #356
+* Fix refill of rockets
+* Fix keep same bot players
+* Fix air vehicles attacking bases (by ThyKingdomCome)
+* Fix bots trying to spawn in unarmed gunships (by MatiasPastori)
 
 ### Updated maps
-* MP12_ConquestSmall0 by ThyKingdomCome (with explore-paths)
-* MP17_ConquestLarge0 by ThyKingdomCome (with explore-paths)
-* MP01_ConquestLarge0 by MatiasPastori (with explore-paths)
+* MP12_ConquestSmall0 by ThyKingdomCome (with explore paths)
+* MP17_ConquestLarge0 by ThyKingdomCome (with explore paths)
+* MP01_ConquestLarge0 by MatiasPastori (with explore paths)
 * XP1_003_ConquestAssaultLarge0 by MatiasPastori
 * XP3_Desert_ConquestLarge0 by MatiasPastori
-* MP01_ConquestLarge0 by MatiasPastori (with explore-paths)
-* XP4 ConquestLarge0 by MatiasPastori
-
-### Documentation update
-
+* MP01_ConquestLarge0 by MatiasPastori (with explore paths)
+* XP4_ConquestLarge0 by MatiasPastori

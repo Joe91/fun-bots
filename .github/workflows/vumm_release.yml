@@ -5,6 +5,7 @@ on:
     tags:
       - 'V*.*.*-release'
       - 'v*.*.*-dev*'
+      - 'V*.*.*-RC*'
 
 jobs:
   publish:
@@ -17,6 +18,6 @@ jobs:
       - name: Publish
         uses: BF3RM/vumm-action@v1
         with:
-          tag: ${{ contains(github.ref_name, '-dev') && 'dev' || 'latest' }}
+          tag: ${{ contains(github.ref_name, '-dev') && 'dev' || contains(github.ref_name, '-RC') && 'beta' || 'latest' }}
         env:
           VUMM_TOKEN: ${{ secrets.VUMM_TOKEN }}
