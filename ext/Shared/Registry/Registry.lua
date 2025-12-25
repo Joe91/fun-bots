@@ -47,11 +47,11 @@ Registry = {
 		-- Patch version.
 		VERSION_PATCH = 0,
 		-- Additional label for pre-releases and build metadata.
-		VERSION_LABEL = "dev12",
+		VERSION_LABEL = "RC1",
 		-- Current version type of this build.
-		VERSION_TYPE = VersionType.DevBuild,
+		VERSION_TYPE = VersionType.Stable,
 		-- The Version used for the Update-Check.
-		UPDATE_CHANNEL = VersionType.DevBuild,
+		UPDATE_CHANNEL = VersionType.Stable,
 		-- Prints current version in console.
 		CLIENT_SHOW_VERSION_ON_JOIN = false,
 		-- compatibility version for traces
