@@ -415,7 +415,7 @@ end
 -- =============================================
 function BotSpawner:UpdateBotNames()
 	self._SpawnSets = {}
-	local s_TimeToWait = (#m_BotManager:GetBots() * Registry.BOT.BOT_DESTORY_DELAY) + 1.0
+	local s_TimeToWait = (#m_BotManager:GetBots() * Registry.BOT.BOT_DESTROY_DELAY) + 1.0
 	m_BotManager:DestroyAll()
 	m_BotManager:RefreshTables()
 	self._FirstSpawnInLevel = true

@@ -78,7 +78,7 @@ Registry = {
 		-- How often are the connections for a bot-bot-attack checked.
 		BOT_BOT_CHECK_INTERVAL = 0.05,
 		-- Hof often Bot-Revive-Bot-Raycast-chcks are done (costs server performance)
-		BOT_BOT_REVICE_INTERVAL = 0.5,
+		BOT_BOT_REVIVE_INTERVAL = 0.5,
 		-- Max checks per cycle.
 		BOT_BOT_MAX_CHECKS = 30,
 		-- Max Raycaststs Bot-Bot-Revive
@@ -127,11 +127,11 @@ Registry = {
 		-- Percentage of vehicle health to leave vehicle with (currently no passive events for bot-only vehicles)
 		VEHICLE_EXIT_HEALTH = 12,
 		-- Probability to exit on low health.
-		VEHICLE_PROPABILITY_EXIT_LOW_HEALTH = 60,
+		VEHICLE_PROBABILITY_EXIT_LOW_HEALTH = 60,
 		-- Probability to use 2nd best air-target.
-		VEHICLE_PROPABILITY_SECOND_AIRTARGET = 40,
+		VEHICLE_PROBABILITY_SECOND_AIRTARGET = 40,
 		-- Probability to use 3nd best air-target.
-		VEHICLE_PROPABILITY_THIRD_AIRTARGET = 25,
+		VEHICLE_PROBABILITY_THIRD_AIRTARGET = 25,
 		-- Seat-check cycle-time.
 		VEHICLE_SEAT_CHECK_CYCLE_TIME = 3.0,
 		-- Probability to stop in vehicle while shooting
@@ -181,14 +181,14 @@ Registry = {
 		-- Use of path-Offset
 		USE_PATH_OFFSETS = true,
 		-- Worsening bots on larger distances. Factor 1.0 = no worsening, always same offset
-		WORSENING_FACOTR_DISTANCE = 0.95,
+		WORSENING_FACTOR_DISTANCE = 0.95,
 		PROBABILITY_SWITCH_TO_BEACON_PATH = 80,
 		PROBABILITY_SWITCH_TO_EXPLORE_PATH = 60,
 		PROBABILITY_KEEP_KIT_IF_HAS_BEACON = 80,
 		-- number of nodes in every direction to scan for best way back
 		NUMBER_NODES_TO_SCAN_AFTER_ATTACK = 20,
 		-- Delay on destroying several bots
-		BOT_DESTORY_DELAY = 0.05,
+		BOT_DESTROY_DELAY = 0.05,
 		-- Distance to closest objective on which passengers should exit vehicles
 		PASSENGER_EXIT_DISTANCE = 50,
 		-- Probability to stop in while shooting

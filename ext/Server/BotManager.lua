@@ -65,10 +65,7 @@ function BotManager:RegisterVars()
 	self._L1Counter = 0
 	self._L2Counter = 0
 
-	print(self._CycleTimeL0)
-	print(self._L1CycleTime)
-	print(self._L2CycleTime)
-	print(self._L3CycleTime)
+	m_Logger:Write("CycleTimes L0=" .. tostring(self._CycleTimeL0) .. " L1=" .. tostring(self._L1CycleTime) .. " L2=" .. tostring(self._L2CycleTime) .. " L3=" .. tostring(self._L3CycleTime))
 end
 
 -- =============================================
@@ -177,7 +174,7 @@ function BotManager:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 	if Config.BotsReviveBots
 		and not Globals.IsGm
 	then
-		if self._BotReviveBotTimer >= Registry.GAME_RAYCASTING.BOT_BOT_REVICE_INTERVAL then
+		if self._BotReviveBotTimer >= Registry.GAME_RAYCASTING.BOT_BOT_REVIVE_INTERVAL then
 			self._BotReviveBotTimer = 0.0
 			self:_CheckForBotBotRevive()
 		end
@@ -186,7 +183,7 @@ function BotManager:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 	end
 
 	if #self._BotsToDestroy > 0 then
-		if self._DestroyBotsTimer >= Registry.BOT.BOT_DESTORY_DELAY then
+		if self._DestroyBotsTimer >= Registry.BOT.BOT_DESTROY_DELAY then
 			self._DestroyBotsTimer = 0.0
 			self:DestroyBot(table.remove(self._BotsToDestroy))
 		end
@@ -289,11 +286,12 @@ function BotManager:OnVehicleDamage(p_VehicleEntity, p_Damage, p_DamageGiverInfo
 
 			if not s_Bot then
 				m_Logger:Error("Could not find Bot for bot player " .. s_Player.name)
-				return
+				goto continue_entry
 			end
 
 			-- Shoot back.
 			s_Bot:ShootAt(p_DamageGiverInfo.giver, true)
+			::continue_entry::
 		end
 	end
 end
@@ -932,13 +930,6 @@ function BotManager:ResetAllBots()
 	for l_Index = 1, #self._Bots do
 		local l_Bot = self._Bots[l_Index]
 		l_Bot:Kill() -- this also will call l_Bot:ResetVars()
-	end
-end
-
-function BotManager:ResetSkills()
-	for l_Index = 1, #self._Bots do
-		local l_Bot = self._Bots[l_Index]
-		l_Bot:ResetSkill()
 	end
 end
 

@@ -321,7 +321,7 @@ function Bot:_CheckForVehicleActions(p_DeltaTime, p_AttackActive)
 		end
 
 		if s_CurrentVehicleHealth <= self._ExitVehicleHealth then
-			if math.random(0, 100) <= Registry.VEHICLES.VEHICLE_PROPABILITY_EXIT_LOW_HEALTH then
+			if math.random(0, 100) <= Registry.VEHICLES.VEHICLE_PROBABILITY_EXIT_LOW_HEALTH then
 				self:AbortAttack()
 				self:ExitVehicle()
 			end
@@ -412,7 +412,7 @@ function Bot:_CheckShouldExitVehicleIfPassenger(p_VehicleEntity, p_OnVehicle)
 	local s_CurrentPosition = self.m_Player.soldier.worldTransform.trans:Clone()
 	s_CurrentPosition.y = 0
 
-	s_Coordinates = {}
+	local s_Coordinates = {}
 	for l_Index = 1, #s_AllCapturePoints do
 		s_Coordinates[#s_Coordinates + 1] = s_AllCapturePoints[l_Index].transform.trans
 	end

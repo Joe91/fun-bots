@@ -144,7 +144,7 @@ function VehicleAiming:UpdateAimingVehicle(p_Bot, p_AdvancedAlgorithm)
 		s_WorseningValue = Config.VehiclePlaneAimWorsening
 	end
 	if s_WorseningValue > 0.0 then
-		local s_SkillDistanceFactor = 1 / (p_Bot._DistanceToPlayer * Registry.BOT.WORSENING_FACOTR_DISTANCE)
+		local s_SkillDistanceFactor = 1 / (p_Bot._DistanceToPlayer * Registry.BOT.WORSENING_FACTOR_DISTANCE)
 		s_WorseningValue = s_WorseningValue * s_SkillDistanceFactor
 		s_WorseningPitch = (MathUtils:GetRandom(-1.0, 1.0) * s_WorseningValue)
 		s_WorseningYaw = (MathUtils:GetRandom(-1.0, 1.0) * s_WorseningValue)

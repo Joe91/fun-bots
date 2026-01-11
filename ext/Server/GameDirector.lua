@@ -272,14 +272,20 @@ function GameDirector:OnEngineUpdate(p_DeltaTime)
 		-- assign bots to the objectives
 		-- number of bots / weighted objective-count = bots per weight-unit
 		if s_BotsByTeam[i] ~= nil then
-			local s_BotsPerWeightObjective = #s_BotsByTeam[i] / s_TotalObjectivesBalanced
-			s_MaxAssignsAttack[i] = math.floor((s_BotsPerWeightObjective * Registry.GAME_DIRECTOR.WEIGHT_ATTACK_OBJECTIVE) + 0.999)
-			s_MaxAssignsDefend[i] = math.floor((s_BotsPerWeightObjective * Registry.GAME_DIRECTOR.WEIGHT_DEFEND_OBJECTIVE) + 0.999)
-			if s_MaxAssignsDefend[i] == 0 then
-				s_MaxAssignsDefend[i] = 1
-			end
-			if s_MaxAssignsAttack[i] == 0 then
-				s_MaxAssignsAttack[i] = 1
+			if s_TotalObjectivesBalanced > 0 then
+				local s_BotsPerWeightObjective = #s_BotsByTeam[i] / s_TotalObjectivesBalanced
+				s_MaxAssignsAttack[i] = math.floor((s_BotsPerWeightObjective * Registry.GAME_DIRECTOR.WEIGHT_ATTACK_OBJECTIVE) + 0.999)
+				s_MaxAssignsDefend[i] = math.floor((s_BotsPerWeightObjective * Registry.GAME_DIRECTOR.WEIGHT_DEFEND_OBJECTIVE) + 0.999)
+				if s_MaxAssignsDefend[i] == 0 then
+					s_MaxAssignsDefend[i] = 1
+				end
+				if s_MaxAssignsAttack[i] == 0 then
+					s_MaxAssignsAttack[i] = 1
+				end
+			else
+				-- No objectives available -> assign nothing
+				s_MaxAssignsAttack[i] = 0
+				s_MaxAssignsDefend[i] = 0
 			end
 
 			if s_AvailableObjectivesAttack[i] == 0 then

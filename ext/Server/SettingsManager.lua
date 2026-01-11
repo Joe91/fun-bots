@@ -299,8 +299,6 @@ function SettingsManager:UpdateSetting(p_Name, p_Value)
 			m_BotSpawner:UpdateBotAmountAndTeam()
 		elseif s_UpdateFlag == UpdateFlag.BotNames then
 			m_BotSpawner:UpdateBotNames()
-		elseif s_UpdateFlag == UpdateFlag.Skill then
-			m_BotManager:ResetSkills()
 		end
 
 		NetEvents:BroadcastLocal('WriteClientSettings', Config, s_UpdateClientWeapons)

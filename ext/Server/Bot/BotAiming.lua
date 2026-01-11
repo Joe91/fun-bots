@@ -275,7 +275,7 @@ local function _DefaultAimingAction(p_Bot)
 	-- Worsen yaw and pitch depending on bot-skill. Don't use Skill for Nades, Rockets, Missiles, ...
 	if s_ActiveWeaponType <= WeaponTypes.Sniper then -- All normal weapons.
 		-- Skaling: Worsening of 1.0 should be up to 1 meter off of target without modifier.
-		local s_DistanceFactor = 1.0 / (p_Bot._DistanceToPlayer * Registry.BOT.WORSENING_FACOTR_DISTANCE)
+		local s_DistanceFactor = 1.0 / (p_Bot._DistanceToPlayer * Registry.BOT.WORSENING_FACTOR_DISTANCE)
 
 		-- Determine base worsening factor based on weapon type and class
 		local s_AimWorseningBase = Config.BotAimWorsening
