@@ -2217,7 +2217,7 @@ function BotSpawner:_FindAppearance(p_TeamName, p_KitName, p_ColorName)
 		local s_AppearanceString = ""
 		if p_ColorName == "DEFAULT" then
 			if l_GameMode == "MP/" then
-				s_AppearanceString = 'MP_' ..
+				s_AppearanceString = 'MP/' ..
 					p_TeamName .. '/MP_' .. string.upper(p_TeamName) .. '_' .. p_KitName .. '_Appearance01'
 			else
 				s_AppearanceString = 'MP/' ..
