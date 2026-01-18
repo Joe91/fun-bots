@@ -134,7 +134,7 @@ local function _CompensateRecoil(p_Bot, p_Skill)
 	local s_CurrentRecoilDeviationYaw = s_CurrentRecoilDeviation.yaw
 
 	-- Worsen compensation dependant on skill?
-	local s_SkillFactorRecoil = (1.0 - p_Skill)
+	local s_SkillFactorRecoil = (1.0 - p_Skill) -- only use range from 0.5 to 1.0
 
 	if s_SkillFactorRecoil < 0 then
 		s_SkillFactorRecoil = 0.0
@@ -187,7 +187,6 @@ local function _DefaultAimingAction(p_Bot)
 	local s_PitchCorrection = 0.0
 	local s_FullPositionTarget = nil
 	local s_FullPositionBot = nil
-	local s_Skill = p_Bot._Accuracy
 
 	s_FullPositionBot = p_Bot.m_Player.soldier.worldTransform.trans:Clone() + m_Utilities:getCameraPos(p_Bot.m_Player, false, false)
 
@@ -199,7 +198,6 @@ local function _DefaultAimingAction(p_Bot)
 
 		if s_ActiveWeaponType == WeaponTypes.Sniper then
 			s_AimForHead = Config.AimForHeadSniper
-			s_Skill = p_Bot._AccuracySniper
 		elseif s_ActiveWeaponType == WeaponTypes.LMG then
 			s_AimForHead = Config.AimForHeadSupport
 		else
@@ -274,31 +272,33 @@ local function _DefaultAimingAction(p_Bot)
 
 	-- Worsen yaw and pitch depending on bot-skill. Don't use Skill for Nades, Rockets, Missiles, ...
 	if s_ActiveWeaponType <= WeaponTypes.Sniper then -- All normal weapons.
-		local s_SkillDistanceFactor = 1 / (p_Bot._DistanceToPlayer * Registry.BOT.WORSENING_FACOTR_DISTANCE)
-		local s_SkillFactor = s_Skill * s_SkillDistanceFactor
-		local s_WorseningSkillX = (MathUtils:GetRandom(-1.0, 1.0) * s_SkillFactor) -- Value scaled in offset in 1 m.
-		local s_WorseningSkillY = (MathUtils:GetRandom(-1.0, 1.0) * s_SkillFactor) -- Value scaled in offset in 1 m.
+		-- Skaling: Worsening of 1.0 should be up to 1 meter off of target without modifier.
+		local s_DistanceFactor = 1.0 / (p_Bot._DistanceToPlayer * Registry.BOT.WORSENING_FACOTR_DISTANCE)
 
-		local s_WorseningClassFactor = 0
+		-- Determine base worsening factor based on weapon type and class
+		local s_AimWorseningBase = Config.BotAimWorsening
+		local s_SkillCompensation = Config.BotWorseningSkill * p_Bot.m_Accuracy -- full range from 0.0 to Max-Skill for Recoul-Compensation
 
-		if p_Bot.m_Kit == BotKits.Support then
-			s_WorseningClassFactor = Config.BotSupportAimWorsening
-		elseif p_Bot.m_Kit == BotKits.Recon then
-			s_WorseningClassFactor = Config.BotSniperAimWorsening
-		else
-			s_WorseningClassFactor = Config.BotAimWorsening
+		if s_ActiveWeaponType == WeaponTypes.Sniper then
+			s_AimWorseningBase = Config.BotSniperAimWorsening
+			s_SkillCompensation = Config.BotSniperWorseningSkill * p_Bot.m_Accuracy -- full range from 0.0 to Max-Skill for Recoul-Compensation
+		elseif s_ActiveWeaponType == WeaponTypes.LMG then
+			s_AimWorseningBase = Config.BotSupportAimWorsening
 		end
 
-		s_WorseningClassFactor = s_WorseningClassFactor * s_SkillDistanceFactor
+		-- Apply accuracy modifier (±50% based on bot accuracy) - TODO: use skill-config-value for the range on this?
+		local s_AimWorseningSkill = s_AimWorseningBase + s_AimWorseningBase * (p_Bot.m_Accuracy - 0.5)
 
-		local s_WorseningClassX = (MathUtils:GetRandom(-1.0, 1.0) * s_WorseningClassFactor)
-		local s_WorseningClassY = (MathUtils:GetRandom(-1.0, 1.0) * s_WorseningClassFactor)
+		local s_SkillFactor = s_AimWorseningSkill * s_DistanceFactor
+		local s_WorseningSkillX = (MathUtils:GetRandom(-1.0, 1.0) * s_SkillFactor)
+		local s_WorseningSkillY = (MathUtils:GetRandom(-1.0, 1.0) * s_SkillFactor)
 
-		local s_RecoilCompensationPitch, s_RecoilCompensationYaw = _CompensateRecoil(p_Bot, s_Skill)
+		-- Compensate for recoil based on accuracy
+		local s_RecoilCompensationPitch, s_RecoilCompensationYaw = _CompensateRecoil(p_Bot, s_SkillCompensation)
 
 		-- Recoil from gunSway is negative → add recoil to yaw.
-		s_Yaw = s_Yaw + s_WorseningSkillX + s_WorseningClassX + s_RecoilCompensationYaw
-		s_Pitch = s_Pitch + s_WorseningSkillY + s_WorseningClassY + s_RecoilCompensationPitch
+		s_Yaw = s_Yaw + s_WorseningSkillX + s_RecoilCompensationYaw
+		s_Pitch = s_Pitch + s_WorseningSkillY + s_RecoilCompensationPitch
 	end
 
 	p_Bot._TargetPitch = s_Pitch

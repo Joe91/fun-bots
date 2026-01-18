@@ -172,10 +172,6 @@ function Bot:ResetVars()
 	self._WeaponToUse = BotWeapons.Primary
 end
 
-function Bot:ResetSkill()
-	self._SkillFound = false
-end
-
 function Bot:ResetSpawnVars()
 	-- Timers
 	self._SpawnDelayTimer = 0.0
@@ -213,13 +209,6 @@ function Bot:ResetSpawnVars()
 	self._AttackMode = BotAttackModes.RandomNotSet
 	self._ShootWayPoints = {}
 	self._FollowWayPoints = {}
-
-	-- Skill.
-	if not self._SkillFound then
-		self._Accuracy = Config.BotWorseningSkill + Config.BotWorseningSkill * (self.m_Accuracy - 0.5)             -- up to 0.5 better or worse
-		self._AccuracySniper = Config.BotSniperWorseningSkill + Config.BotSniperWorseningSkill * (self.m_Accuracy - 0.5) -- up to 0.5 better or worse
-		self._SkillFound = true
-	end
 
 	self._TargetPoint = nil
 	self._NextTargetPoint = nil
