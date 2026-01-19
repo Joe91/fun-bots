@@ -181,7 +181,7 @@ Registry = {
 		-- Use of path-Offset
 		USE_PATH_OFFSETS = true,
 		-- Worsening bots on larger distances. Factor 1.0 = no worsening, always same offset
-		WORSENING_FACOTR_DISTANCE = 0.98,
+		WORSENING_FACOTR_DISTANCE = 1.0,
 		PROBABILITY_SWITCH_TO_BEACON_PATH = 80,
 		PROBABILITY_SWITCH_TO_EXPLORE_PATH = 60,
 		PROBABILITY_KEEP_KIT_IF_HAS_BEACON = 80,

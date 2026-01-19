@@ -129,9 +129,11 @@ local function _CompensateRecoil(p_Bot, p_Skill)
 	end
 
 	local s_CurrentRecoilDeviation = s_GunSway.currentRecoilDeviation
+	local s_CurrentDispersionDeviation = s_GunSway.currentDispersionDeviation
+	-- local s_CurrentLagDeviation = s_GunSway.currentLagDeviation -- Lag is always zero. No need to use it
 
-	local s_CurrentRecoilDeviationPitch = s_CurrentRecoilDeviation.pitch
-	local s_CurrentRecoilDeviationYaw = s_CurrentRecoilDeviation.yaw
+	local s_CurrentRecoilDeviationPitch = s_CurrentRecoilDeviation.pitch + s_CurrentDispersionDeviation.pitch
+	local s_CurrentRecoilDeviationYaw = s_CurrentRecoilDeviation.yaw + s_CurrentDispersionDeviation.yaw
 
 	-- Worsen compensation dependant on skill?
 	local s_SkillFactorRecoil = (1.0 - p_Skill) -- only use range from 0.5 to 1.0
@@ -209,9 +211,9 @@ local function _DefaultAimingAction(p_Bot)
 	end
 
 	if p_Bot._ShootPlayerVehicleType == VehicleTypes.NoVehicle then
-		s_TargetMovement = p_Bot._ShootPlayer.soldier.velocity
+		s_TargetMovement = p_Bot._ShootPlayer.soldier.velocity:Clone()
 	else
-		s_TargetMovement = p_Bot._ShootPlayer.controlledControllable.velocity
+		s_TargetMovement = p_Bot._ShootPlayer.controlledControllable.velocity:Clone()
 	end
 
 	-- Calculate how long the distance is → time to travel.

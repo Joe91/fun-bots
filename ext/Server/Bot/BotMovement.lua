@@ -526,6 +526,9 @@ function Bot:UpdateNormalMovement(p_DeltaTime)
 		if #self._ShootWayPoints > 0 then -- We need to go back to the path first.		
 			s_Point = m_NodeCollection:Get(s_ActivePointIndex, self._PathIndex)
 			---@cast s_Point -nil
+			if s_Point == nil then
+				return
+			end
 			local s_ClosestDistance = self.m_Player.soldier.worldTransform.trans:Distance(s_Point.Position)
 			local s_ClosestNode = s_ActivePointIndex
 			for i = 1, Registry.BOT.NUMBER_NODES_TO_SCAN_AFTER_ATTACK, 2 do

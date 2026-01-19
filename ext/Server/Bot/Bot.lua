@@ -219,9 +219,6 @@ function Bot:__init(p_Player)
 	self._FollowWayPoints = {}
 	---@type Vec3[]
 	self._KnifeWayPositions = {}
-	self._Accuracy = 0.0
-	self._AccuracySniper = 0.0
-	self._SkillFound = false
 
 	---@type Player|nil
 	self._TargetPlayer = nil
