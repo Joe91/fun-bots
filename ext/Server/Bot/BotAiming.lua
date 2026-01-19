@@ -290,11 +290,12 @@ local function _DefaultAimingAction(p_Bot)
 		local s_AimWorseningSkill = s_AimWorseningBase + s_AimWorseningBase * (p_Bot.m_Accuracy - 0.5)
 
 		local s_SkillFactor = s_AimWorseningSkill * s_DistanceFactor
+		s_SkillFactor = 0.0
 		local s_WorseningSkillX = (MathUtils:GetRandom(-1.0, 1.0) * s_SkillFactor)
 		local s_WorseningSkillY = (MathUtils:GetRandom(-1.0, 1.0) * s_SkillFactor)
 
 		-- Compensate for recoil based on accuracy
-		local s_RecoilCompensationPitch, s_RecoilCompensationYaw = _CompensateRecoil(p_Bot, s_SkillCompensation)
+		local s_RecoilCompensationPitch, s_RecoilCompensationYaw = _CompensateRecoil(p_Bot, 0.0)
 
 		-- Recoil from gunSway is negative → add recoil to yaw.
 		s_Yaw = s_Yaw + s_WorseningSkillX + s_RecoilCompensationYaw
