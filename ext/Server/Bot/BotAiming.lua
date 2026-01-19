@@ -288,16 +288,15 @@ local function _DefaultAimingAction(p_Bot)
 			s_AimWorseningBase = Config.BotSupportAimWorsening
 		end
 
-		-- Apply accuracy modifier (±50% based on bot accuracy) - TODO: use skill-config-value for the range on this?
+		-- Apply accuracy modifier (±50% based on bot accuracy)
 		local s_AimWorseningSkill = s_AimWorseningBase + s_AimWorseningBase * (p_Bot.m_Accuracy - 0.5)
 
 		local s_SkillFactor = s_AimWorseningSkill * s_DistanceFactor
-		s_SkillFactor = 0.0
 		local s_WorseningSkillX = (MathUtils:GetRandom(-1.0, 1.0) * s_SkillFactor)
 		local s_WorseningSkillY = (MathUtils:GetRandom(-1.0, 1.0) * s_SkillFactor)
 
 		-- Compensate for recoil based on accuracy
-		local s_RecoilCompensationPitch, s_RecoilCompensationYaw = _CompensateRecoil(p_Bot, 0.0)
+		local s_RecoilCompensationPitch, s_RecoilCompensationYaw = _CompensateRecoil(p_Bot, s_SkillCompensation)
 
 		-- Recoil from gunSway is negative → add recoil to yaw.
 		s_Yaw = s_Yaw + s_WorseningSkillX + s_RecoilCompensationYaw
