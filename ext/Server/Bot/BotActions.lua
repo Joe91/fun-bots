@@ -140,11 +140,6 @@ function Bot:ShootAt(p_Player, p_IgnoreYaw)
 
 	self._ShootPlayerVehicleType = s_Type
 
-	local s_DifferenceYaw = 0
-	local s_Pitch = 0
-	local s_FovHalf = 0
-	local s_PitchHalf = 0
-
 	-- If target is air-vehicle and bot is in AA → ignore yaw.
 	if m_Vehicles:IsAirVehicleType(s_Type) then
 		if (s_InVehicle and m_Vehicles:IsAAVehicle(self.m_ActiveVehicle)) or
@@ -167,44 +162,49 @@ function Bot:ShootAt(p_Player, p_IgnoreYaw)
 		p_IgnoreYaw = true
 	end
 
+	local s_RelativePitch = 0
+	local s_RelativeYaw = 0
+	local s_HalfHfov = 0
+	local s_HalfVfov = 0
 	if not p_IgnoreYaw then
-		local s_OldYaw = self.m_Player.input.authoritativeAimingYaw
+		-- Determine the target's position relative to the bot.
+		local s_Vector = s_TargetPos - s_PlayerPos
 
-		local s_DifferenceY = s_TargetPos.z - s_PlayerPos.z
-		local s_DifferenceX = s_TargetPos.x - s_PlayerPos.x
-		local s_DifferenceZ = s_TargetPos.y - s_PlayerPos.y
+		-- Compute the pitch and yaw between the bot and its target. These
+		-- angles are relative to the absolute coordinate system; pitch is
+		-- measured from the x-y plane while yaw is measured from the x axis.
+		local s_Pitch = math.atan(s_Vector.z, math.sqrt(s_Vector.x^2 + s_Vector.y^2))
+		local s_Yaw = math.atan(s_Vector.y, s_Vector.x)
 
-		local s_AtanYaw = math.atan(s_DifferenceY, s_DifferenceX)
-		local s_Yaw = (s_AtanYaw > math.pi / 2) and (s_AtanYaw - math.pi / 2) or (s_AtanYaw + 3 * math.pi / 2)
+		-- Transform the pitch and yaw to be relative to the bot's current
+		-- heading.
+		s_RelativePitch = s_Pitch - self.m_Player.input.authoritativeAimingPitch
+		s_RelativeYaw = s_Yaw - self.m_Player.input.authoritativeAimingYaw
 
-		local s_DistanceHoizontal = math.sqrt(s_DifferenceX ^ 2 + s_DifferenceY ^ 2)
-		s_Pitch = math.abs(math.atan(s_DifferenceZ, s_DistanceHoizontal))
-
-		s_DifferenceYaw = math.abs(s_OldYaw - s_Yaw)
-
-		if s_DifferenceYaw > math.pi then
-			s_DifferenceYaw = math.pi * 2 - s_DifferenceYaw
-		end
-
+		-- Halve configured horizontal & vertical FOVs and convert them to
+		-- radians.
 		if s_InVehicle then
 			if m_Vehicles:IsAAVehicle(self.m_ActiveVehicle) then
-				s_FovHalf = Config.FovVehicleAAForShooting / 360 * math.pi
-				s_PitchHalf = Config.FovVerticleVehicleAAForShooting / 360 * math.pi
+				s_HalfHfov = Config.FovVehicleAAForShooting
+				s_HalfVfov = Config.FovVerticleVehicleAAForShooting
 			elseif m_Vehicles:IsAirVehicle(self.m_ActiveVehicle) and
 				self.m_Player.controlledEntryId == 0 then
-				s_FovHalf = Config.FovVehicleForShooting / 360 * math.pi
-				s_PitchHalf = Config.FovVerticleChopperForShooting / 360 * math.pi
+				s_HalfHfov = Config.FovVehicleForShooting
+				s_HalfVfov = Config.FovVerticleChopperForShooting
 			else
-				s_FovHalf = Config.FovVehicleForShooting / 360 * math.pi
-				s_PitchHalf = Config.FovVerticleVehicleForShooting / 360 * math.pi
+				s_HalfHfov = Config.FovVehicleForShooting
+				s_HalfVfov = Config.FovVerticleVehicleForShooting
 			end
 		else
-			s_FovHalf = Config.FovForShooting / 360 * math.pi
-			s_PitchHalf = Config.FovVerticleForShooting / 360 * math.pi
+			s_HalfHfov = Config.FovForShooting
+			s_HalfVfov = Config.FovVerticleForShooting
 		end
+		s_HalfHfov = math.rad(s_HalfHfov / 2)
+		s_HalfVfov = math.rad(s_HalfVfov / 2)
 	end
 
-	if p_IgnoreYaw or (s_DifferenceYaw < s_FovHalf and s_Pitch < s_PitchHalf) then
+	if p_IgnoreYaw or (math.abs(s_RelativeYaw) < s_HalfHfov
+	                   and math.abs(s_RelativePitch) < s_HalfVfov) then
 		if self._Shoot then
 			-- only reset ShotTimer, if not already attacking
 			if self._ShootModeTimer <= 0 then
