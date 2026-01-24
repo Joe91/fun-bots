@@ -212,7 +212,7 @@ function GameDirector:OnEngineUpdate(p_DeltaTime)
 				end
 
 				if l_Bot._KillYourselfTimer > Registry.GAME_DIRECTOR.KILL_ON_INVALID_PATH_TIME then
-					if l_Bot.m_Player ~= nil and l_Bot.m_Player.soldier ~= nil and not l_Bot:IsStaticMovement() then
+					if l_Bot.m_Player ~= nil and l_Bot.m_Player.soldier ~= nil and not s_BotStates:IsStaticState(l_Bot.m_ActiveState) then
 						l_Bot.m_DontRevive = true
 						l_Bot.m_Player.soldier:Kill()
 						l_Bot._KillYourselfTimer = 0.0

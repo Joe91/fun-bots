@@ -63,8 +63,6 @@ function Bot:__init(p_Player)
 	---@type BotSpawnModes
 	self._SpawnMode = BotSpawnModes.NoRespawn
 	---@type BotMoveModes
-	self._MoveMode = BotMoveModes.Standstill
-	self._ForcedMovement = false
 
 	-- TODO: this whole block could be moved to an inner class `Bot.Loadout = class('Bot.Loadout')`.
 	---@type BotKits|integer

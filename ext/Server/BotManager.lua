@@ -770,12 +770,14 @@ end
 ---@param p_Option string|'"mode"'|'"speed"'
 ---@param p_Value BotMoveModes|BotMoveSpeeds
 function BotManager:SetStaticOption(p_Player, p_Option, p_Value)
+	local s_BotStates = g_BotStates
 	for l_Index = 1, #self._Bots do
 		local l_Bot = self._Bots[l_Index]
 		if l_Bot:GetTargetPlayer() == p_Player then
-			if l_Bot:IsStaticMovement() then
+			if s_BotStates:IsStaticState(l_Bot.m_ActiveState) then
 				if p_Option == "mode" then
 					---@cast p_Value BotMoveModes
+					print("set mode for bot " .. l_Bot.m_Player.name .. " to " .. tostring(p_Value))
 					l_Bot:SetMoveMode(p_Value)
 				end
 			end

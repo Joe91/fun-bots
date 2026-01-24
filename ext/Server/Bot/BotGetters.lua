@@ -136,17 +136,6 @@ function Bot:GetFirstShotDelay(p_DistanceToTarget, p_ReducedTiming)
 	return s_Delay
 end
 
----@return boolean
-function Bot:IsStaticMovement()
-	if self._ForcedMovement and (self._MoveMode == BotMoveModes.Standstill or
-			self._MoveMode == BotMoveModes.Mirror or
-			self._MoveMode == BotMoveModes.Mimic) then
-		return true
-	else
-		return false
-	end
-end
-
 ---@return string
 function Bot:GetObjective()
 	return self._Objective
