@@ -153,7 +153,7 @@ function PathSwitcher:GetNewPath(p_Bot, p_BotId, p_Point, p_Objective, p_InVehic
 			if m_GameDirector:IsBeaconPath(s_PathNode.Data.Objectives[1]) then
 				if p_Bot.m_SecondaryGadget.type == WeaponTypes.Beacon
 					and not p_Bot.m_HasBeacon
-					and m_Utilities:CheckProbablity(Registry.BOT.PROBABILITY_SWITCH_TO_BEACON_PATH)
+					and m_Utilities:CheckProbability(Registry.BOT.PROBABILITY_SWITCH_TO_BEACON_PATH)
 				then
 					return true, s_NewPoint
 				end

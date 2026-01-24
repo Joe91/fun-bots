@@ -365,7 +365,7 @@ function Bot:_ObstacleHandling(p_Velocity, p_DistanceSquared, p_HeightDistance, 
 			self:_ResetActionFlag(BotActionFlags.MeleeActive)
 			s_SetTargetReached = true
 
-			if Config.TeleportIfStuck and m_Utilities:CheckProbablity(Registry.BOT.PROBABILITY_TELEPORT_IF_STUCK) then
+			if Config.TeleportIfStuck and m_Utilities:CheckProbability(Registry.BOT.PROBABILITY_TELEPORT_IF_STUCK) then
 				local s_Transform = self.m_Player.soldier.worldTransform:Clone()
 				s_Transform.trans = self._TargetPoint.Position
 				s_Transform:LookAtTransform(self._TargetPoint.Position, self._NextTargetPoint.Position)
@@ -379,7 +379,7 @@ function Bot:_ObstacleHandling(p_Velocity, p_DistanceSquared, p_HeightDistance, 
 
 				if (Globals.IsConquest or Globals.IsRush) then
 					if g_GameDirector:IsOnObjectivePath(self._PathIndex) then
-						self._InvertPathDirection = m_Utilities:CheckProbablity(Registry.BOT.PROBABILITY_CHANGE_DIRECTION_IF_STUCK)
+						self._InvertPathDirection = m_Utilities:CheckProbability(Registry.BOT.PROBABILITY_CHANGE_DIRECTION_IF_STUCK)
 					end
 				end
 			end
