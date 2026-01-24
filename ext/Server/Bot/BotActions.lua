@@ -1,5 +1,6 @@
 ---@type Vehicles
 local m_Vehicles = require('Vehicles')
+local m_Utilities = require('__shared/Utilities')
 
 -- Initialize a revive on a teammate.
 ---@param p_Player Player the player to revive.
@@ -173,13 +174,13 @@ function Bot:ShootAt(p_Player, p_IgnoreYaw)
 		-- Compute the pitch and yaw between the bot and its target. These
 		-- angles are relative to the absolute coordinate system; pitch is
 		-- measured from the x-z plane while yaw is measured from the x axis.
-		local s_Pitch = math.atan(s_Vector.y, math.sqrt(s_Vector.x^2 + s_Vector.z^2))
-		local s_Yaw = math.atan(s_Vector.z, s_Vector.x)
+		local s_Pitch = math.atan(s_Vector.y, math.sqrt(s_Vector.x ^ 2 + s_Vector.z ^ 2))
+		local s_Yaw = math.atan(s_Vector.z, s_Vector.x) - (math.pi / 2) -- alignment to authoritativeAimingYaw needed (-pi/2)
 
 		-- Transform the pitch and yaw to be relative to the bot's current
 		-- heading.
-		s_RelativePitch = s_Pitch - self.m_Player.input.authoritativeAimingPitch
-		s_RelativeYaw = s_Yaw - self.m_Player.input.authoritativeAimingYaw
+		s_RelativePitch = m_Utilities:NormalizeAngleRad(s_Pitch - self.m_Player.input.authoritativeAimingPitch)
+		s_RelativeYaw = m_Utilities:NormalizeAngleRad(s_Yaw - self.m_Player.input.authoritativeAimingYaw)
 
 		-- Halve configured horizontal & vertical FOVs and convert them to
 		-- radians.
@@ -204,7 +205,7 @@ function Bot:ShootAt(p_Player, p_IgnoreYaw)
 	end
 
 	if p_IgnoreYaw or (math.abs(s_RelativeYaw) < s_HalfHfov
-	                   and math.abs(s_RelativePitch) < s_HalfVfov) then
+			and math.abs(s_RelativePitch) < s_HalfVfov) then
 		if self._Shoot then
 			-- only reset ShotTimer, if not already attacking
 			if self._ShootModeTimer <= 0 then
