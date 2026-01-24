@@ -172,9 +172,9 @@ function Bot:ShootAt(p_Player, p_IgnoreYaw)
 
 		-- Compute the pitch and yaw between the bot and its target. These
 		-- angles are relative to the absolute coordinate system; pitch is
-		-- measured from the x-y plane while yaw is measured from the x axis.
-		local s_Pitch = math.atan(s_Vector.z, math.sqrt(s_Vector.x^2 + s_Vector.y^2))
-		local s_Yaw = math.atan(s_Vector.y, s_Vector.x)
+		-- measured from the x-z plane while yaw is measured from the x axis.
+		local s_Pitch = math.atan(s_Vector.y, math.sqrt(s_Vector.x^2 + s_Vector.z^2))
+		local s_Yaw = math.atan(s_Vector.z, s_Vector.x)
 
 		-- Transform the pitch and yaw to be relative to the bot's current
 		-- heading.
