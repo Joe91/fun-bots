@@ -777,7 +777,6 @@ function BotManager:SetStaticOption(p_Player, p_Option, p_Value)
 			if s_BotStates:IsStaticState(l_Bot.m_ActiveState) then
 				if p_Option == "mode" then
 					---@cast p_Value BotMoveModes
-					print("set mode for bot " .. l_Bot.m_Player.name .. " to " .. tostring(p_Value))
 					l_Bot:SetMoveMode(p_Value)
 				end
 			end
@@ -1563,7 +1562,7 @@ function BotManager:_CheckForBotBotRevive()
 						l_ReviveProbability = Registry.BOT.REVIVE_PROBABILITY_IF_HAS_TARGET
 					end
 
-					local l_ShouldRevive = m_Utilities:CheckProbablity(l_ReviveProbability)
+					local l_ShouldRevive = m_Utilities:CheckProbability(l_ReviveProbability)
 
 					if s_Distance < Registry.BOT.REVIVE_DISTANCE and l_ShouldRevive then
 						-- insert positions

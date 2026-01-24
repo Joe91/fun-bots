@@ -166,7 +166,7 @@ end
 
 ---@param p_Value number
 ---@return boolean
-function Utilities:CheckProbablity(p_Value)
+function Utilities:CheckProbability(p_Value)
 	return MathUtils:GetRandomInt(1, 100) <= p_Value
 end
 

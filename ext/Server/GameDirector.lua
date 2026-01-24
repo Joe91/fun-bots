@@ -1189,7 +1189,7 @@ function GameDirector:GetSpawnableBeaconOrMate(p_TeamId, p_SquadId)
 		local s_Beacon = self:GetPlayerBeacon(l_Player.name)
 
 		if s_Beacon ~= nil then
-			if m_Utilities:CheckProbablity(Registry.BOT_SPAWN.PROBABILITY_SQUADMATE_SPAWN) then
+			if m_Utilities:CheckProbability(Registry.BOT_SPAWN.PROBABILITY_SQUADMATE_SPAWN) then
 				m_Logger:Write("spawn at beacon, owned by " .. l_Player.name)
 				return s_Beacon.Path, s_Beacon.Point, true, nil, s_Beacon.Entity.transform.trans
 			end
@@ -1197,7 +1197,7 @@ function GameDirector:GetSpawnableBeaconOrMate(p_TeamId, p_SquadId)
 
 		if l_Player.soldier and l_Player.isAllowedToSpawnOn then
 			-- check for vehicle and spawn either on player or vehicle
-			if m_Utilities:CheckProbablity(Registry.BOT_SPAWN.PROBABILITY_SQUADMATE_SPAWN) then
+			if m_Utilities:CheckProbability(Registry.BOT_SPAWN.PROBABILITY_SQUADMATE_SPAWN) then
 				m_Logger:Write("spawn at squad-mate " .. l_Player.name)
 				if l_Player.controlledControllable ~= nil and not l_Player.controlledControllable:Is("ServerSoldierEntity") then
 					---@type ControllableEntity
@@ -1246,7 +1246,7 @@ function GameDirector:TrySpawnInVehicle(player, isBot, isSquadMate)
 		if m_Vehicles:GetNrOfFreeSeats(s_Vehicle, true) == 0 then return end
 	end
 
-	if m_Utilities:CheckProbablity(vehicleSpawnProbability) then
+	if m_Utilities:CheckProbability(vehicleSpawnProbability) then
 		m_Logger:Write("spawn at " .. (isSquadMate and "squad" or "team") .. "-mate's vehicle")
 		return s_WayIndex, s_PointIndex, s_Invert, s_Vehicle
 	end
@@ -1261,13 +1261,13 @@ function GameDirector:TrySpawnOnSoldier(player, isBot, isSquadMate)
 		if not bot then return end
 		if not g_BotStates:IsSoldierState(bot.m_ActiveState) and bot._Objective then return end
 
-		if m_Utilities:CheckProbablity(spawnProbability) then
+		if m_Utilities:CheckProbability(spawnProbability) then
 			m_Logger:Write("spawn at " .. (isSquadMate and "squad" or "team") .. "-mate (bot)")
 			return bot:GetWayIndex(), bot:GetPointIndex(), bot._InvertPathDirection, nil
 		end
 	else
 		if not player.soldier then return end
-		if m_Utilities:CheckProbablity(spawnProbability) then
+		if m_Utilities:CheckProbability(spawnProbability) then
 			local node = self:FindClosestPath(player.soldier.worldTransform.trans, false, true, nil)
 			if node and node.Position:Distance(player.soldier.worldTransform.trans) < 6.0 then
 				return node.PathIndex, node.PointIndex, false, nil
@@ -1281,7 +1281,7 @@ function GameDirector:TrySpawnOnBeacon(player, isSquadMate)
 		or Registry.BOT_SPAWN.PROBABILITY_TEAMMATE_SPAWN
 
 	local beacon = self:GetPlayerBeacon(player.name)
-	if beacon and m_Utilities:CheckProbablity(spawnProbability) then
+	if beacon and m_Utilities:CheckProbability(spawnProbability) then
 		m_Logger:Write("spawn at beacon, owned by " .. player.name)
 		return beacon.Path, beacon.Point, true, beacon.Entity
 	end
@@ -1465,9 +1465,9 @@ function GameDirector:GetSpawnPath(p_TeamId, p_SquadId, p_OnlyBase)
 	if not p_OnlyBase and #s_PossibleBases > 0 then
 		local s_SpawnAtBase = false
 		if #self.m_AvailableVehicles[p_TeamId] > 0 then
-			s_SpawnAtBase = m_Utilities:CheckProbablity(Registry.BOT_SPAWN.PROBABILITY_BASE_VEHICLE_SPAWN)
+			s_SpawnAtBase = m_Utilities:CheckProbability(Registry.BOT_SPAWN.PROBABILITY_BASE_VEHICLE_SPAWN)
 		else
-			s_SpawnAtBase = m_Utilities:CheckProbablity(Registry.BOT_SPAWN.PROBABILITY_BASE_SPAWN)
+			s_SpawnAtBase = m_Utilities:CheckProbability(Registry.BOT_SPAWN.PROBABILITY_BASE_SPAWN)
 		end
 
 		if s_SpawnAtBase then
@@ -1478,10 +1478,10 @@ function GameDirector:GetSpawnPath(p_TeamId, p_SquadId, p_OnlyBase)
 	end
 
 	-- Spawn in order of priority.
-	if #s_AttackedObjectives > 0 and m_Utilities:CheckProbablity(Registry.BOT_SPAWN.PROBABILITY_ATTACKED_SPAWN) then
+	if #s_AttackedObjectives > 0 and m_Utilities:CheckProbability(Registry.BOT_SPAWN.PROBABILITY_ATTACKED_SPAWN) then
 		m_Logger:Write("spawn at attaced objective")
 		return self:GetSpawnPathOfObjectives(s_AttackedObjectives)
-	elseif s_ClosestObjective ~= nil and m_Utilities:CheckProbablity(Registry.BOT_SPAWN.PROBABILITY_CLOSEST_SPAWN) then
+	elseif s_ClosestObjective ~= nil and m_Utilities:CheckProbability(Registry.BOT_SPAWN.PROBABILITY_CLOSEST_SPAWN) then
 		m_Logger:Write("spwawn at closest objective")
 		return self:GetSpawnPathOfObjectives({ s_ClosestObjective })
 	elseif #s_PossibleObjectives > 0 then

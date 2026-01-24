@@ -74,7 +74,7 @@ function BotSpawner:OnLevelLoaded(p_Round)
 
 	if (Config.TeamSwitchMode == TeamSwitchModes.SwitchForRoundTwo and p_Round ~= self._LastRound) or
 		(Config.TeamSwitchMode == TeamSwitchModes.AlwaysSwitchTeams) or
-		(Config.TeamSwitchMode == TeamSwitchModes.SwitchTeamsRandomly and m_Utilities:CheckProbablity(50))
+		(Config.TeamSwitchMode == TeamSwitchModes.SwitchTeamsRandomly and m_Utilities:CheckProbability(50))
 	then
 		m_Logger:Write("switch teams")
 		self:_SwitchTeams()
@@ -1638,7 +1638,7 @@ function BotSpawner:_GetSpawnPoint(p_TeamId, p_SquadId)
 				s_ProbabilityToSpawn = 30
 			end
 
-			if m_Utilities:CheckProbablity(s_ProbabilityToSpawn) then
+			if m_Utilities:CheckProbability(s_ProbabilityToSpawn) then
 				return "SpawnAtMobileVehicle"
 			end
 		end
@@ -1833,7 +1833,7 @@ function BotSpawner:_GetUnlocks(p_Bot, p_TeamId, p_SquadId)
 			"persistence/unlocks/vehicles/artilleryairburst",
 		}
 		-- some variation in appearance
-		if m_Utilities:CheckProbablity(50) then
+		if m_Utilities:CheckProbability(50) then
 			s_VehiclePerksToAdd[#s_VehiclePerksToAdd + 1] = "persistence/unlocks/vehicles/mbtreactivearmor"
 			s_VehiclePerksToAdd[#s_VehiclePerksToAdd + 1] = "persistence/unlocks/vehicles/lbtreactivearmor"
 			s_VehiclePerksToAdd[#s_VehiclePerksToAdd + 1] = "persistence/unlocks/vehicles/ifvreloadupgrade"
@@ -1870,7 +1870,7 @@ function BotSpawner:_GetUnlocks(p_Bot, p_TeamId, p_SquadId)
 	for l_Index = 1, #s_PossiblePerks do
 		local l_PerkName = s_PossiblePerks[l_Index]
 		s_SelectedPerk = l_PerkName
-		if m_Utilities:CheckProbablity(80) then -- Use the best available perk with this percentage.
+		if m_Utilities:CheckProbability(80) then -- Use the best available perk with this percentage.
 			break
 		end
 	end

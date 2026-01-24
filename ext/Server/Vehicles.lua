@@ -372,7 +372,7 @@ function Vehicles:CheckForVehicleAttack(p_VehicleType, p_Bot)
 		s_AttackMode = VehicleAttackModes.AttackWithRifle                                        -- Attack with rifle.
 	end
 	if (s_IsSniper and p_VehicleType == VehicleTypes.Chopper and Config.SnipersAttackChoppers) then -- Don't attack planes. Too fast...
-		if m_Utilities:CheckProbablity(Registry.BOT.PROBABILITY_ATTACK_CHOPPER_WITH_RIFLE) then
+		if m_Utilities:CheckProbability(Registry.BOT.PROBABILITY_ATTACK_CHOPPER_WITH_RIFLE) then
 			s_AttackMode = VehicleAttackModes.AttackWithRifle                                    -- Attack with rifle.
 		end
 	end
