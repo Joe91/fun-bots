@@ -24,19 +24,19 @@ function StateStaticAttacking:Update(p_Bot, p_DeltaTime)
 		return
 	end
 
-	p_Bot._MoveWhileShooting = false -- dont move in static attack (only for weapon-testing)
+
 
 	-- update state-timer
 	p_Bot.m_StateTimer = p_Bot.m_StateTimer - p_DeltaTime
-
+	p_Bot._MoveWhileShooting = false -- don't move in static attack (only for weapon-testing)
 
 	-- default-handling
 	p_Bot:UpdateWeaponSelection(p_DeltaTime)
 
 	p_Bot:UpdateAttacking(p_DeltaTime)
 	p_Bot:UpdateShootMovement(p_DeltaTime)
-
 	p_Bot:UpdateSpeedOfMovement()
+
 	p_Bot:_UpdateInputs(p_DeltaTime)
 end
 

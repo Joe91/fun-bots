@@ -66,6 +66,7 @@ This is the changelog for release **V3.0**. Don't forget to [join us on Discord]
 * Fix keep same bot players
 * Fix air vehicles attacking bases (by ThyKingdomCome)
 * Fix bots trying to spawn in unarmed gunships (by MatiasPastori)
+* Fixed static-bot-modes
 
 ### Updated maps
 * MP12_ConquestSmall0 by ThyKingdomCome (with explore paths)

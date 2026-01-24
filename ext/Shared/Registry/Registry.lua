@@ -192,7 +192,7 @@ Registry = {
 		-- Distance to closest objective on which passengers should exit vehicles
 		PASSENGER_EXIT_DISTANCE = 50,
 		-- Probability to stop in while shooting
-		PROBABILITY_STOP_TO_SHOOT = 40
+		PROBABILITY_STOP_TO_SHOOT = 35
 	},
 	-- Bot team balancing (only in keep_playercount - spawn-mode)
 	BOT_TEAM_BALANCING = {

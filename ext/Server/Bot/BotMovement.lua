@@ -915,7 +915,7 @@ function Bot:UpdateShootMovement(p_DeltaTime)
 
 	if (self.m_ActiveWeapon and (self.m_ActiveWeapon.type == WeaponTypes.Sniper or
 				self.m_ActiveWeapon.type == WeaponTypes.MissileAir or
-				self.m_ActiveWeapon.type == WeaponTypes.MissileLand) and
+				self.m_ActiveWeapon.type == WeaponTypes.MissileLand or not self._MoveWhileShooting) and
 			not self.m_KnifeMode) then -- Don't move while shooting some weapons.
 		if self._AttackMode == BotAttackModes.Crouch then
 			if self.m_Player.soldier.pose ~= CharacterPoseType.CharacterPoseType_Crouch then
@@ -1002,7 +1002,7 @@ function Bot:UpdateSpeedOfMovement()
 
 	local s_SpeedVal = 0
 
-	if self.m_ActiveMoveMode ~= BotMoveModes.Standstill then
+	if self.m_ActiveMoveMode ~= BotMoveModes.Standstill and self._MoveWhileShooting then
 		if self.m_ActiveSpeedValue == BotMoveSpeeds.VerySlowProne then
 			s_SpeedVal = 1.0
 
@@ -1033,11 +1033,7 @@ function Bot:UpdateSpeedOfMovement()
 	-- Do not reduce speed if sprinting.
 	if s_SpeedVal > 0 and self._ShootPlayer ~= nil and self._ShootPlayer.soldier ~= nil and
 		self.m_ActiveSpeedValue <= BotMoveSpeeds.Normal then
-		if self._MoveWhileShooting then
-			s_SpeedVal = s_SpeedVal * Config.SpeedFactorAttack
-		else
-			s_SpeedVal = 0
-		end
+		s_SpeedVal = s_SpeedVal * Config.SpeedFactorAttack
 	end
 
 	-- Movement speed.

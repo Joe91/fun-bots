@@ -21,7 +21,7 @@ function StateStaticMovement:Update(p_Bot, p_DeltaTime)
 	end
 
 	if p_Bot._ShootPlayer ~= nil then
-		p_Bot:SetState(g_BotStates.States.StaticAttackingAttacking)
+		p_Bot:SetState(g_BotStates.States.StaticAttacking)
 		return
 	end
 
