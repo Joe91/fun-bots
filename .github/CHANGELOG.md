@@ -50,7 +50,7 @@ This is the changelog for release **V3.0**. Don't forget to [join us on Discord]
 * Fix of mcom handling of the bots
 * Fix of some path switching issues in context with actions
 * improvement in FOV-logic (by kruschk)
-* Fix the Node-Editor-Function to remove a full trace
+* Fix the Node-Editor-Function to remove a full trace (and unlik correctly)
 
 ### Some open TODOs:
 * Vehicle/Tank: better aiming on steep slopes (compensate car rotation)

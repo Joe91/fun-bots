@@ -274,31 +274,22 @@ function NodeCollection:RemovePath(p_PathIndex)
 		s_LastWaypoint.Next.Previous = s_FirstWaypoint.Previous
 	end
 
-	-- Collect indices to remove in reverse order
-	local l_IndicesToRemove = {}
-	for i = 1, #s_PathWaypoints do
-		table.insert(l_IndicesToRemove, s_PathWaypoints[i].Index)
-	end
-	table.sort(l_IndicesToRemove, function(a, b) return a > b end)
-
-	-- Remove from _Waypoints in reverse order
-	for _, l_Index in ipairs(l_IndicesToRemove) do
-		table.remove(self._Waypoints, l_Index)
-	end
-
-	-- Clear the path from _WaypointsByPathIndex
-	self._WaypointsByPathIndex[p_PathIndex] = nil
-
 	-- Remove all waypoint IDs from _WaypointsByID and remove counter-part links
-	for i = 1, #s_PathWaypoints do
-		self:UnlinkCounterpart(s_PathWaypoints[i])
-		self._WaypointsByID[s_PathWaypoints[i].ID] = nil
-	end
+	for _, s_Waypoint in pairs(s_PathWaypoints) do
+		self:Unlink(0, s_Waypoint)
+		self:UnlinkCounterpart(s_Waypoint)
 
-	-- Clean up selections
-	for l_PlayerGuid, _ in pairs(self._SelectedWaypoints) do
-		for i = 1, #s_PathWaypoints do
-			self._SelectedWaypoints[l_PlayerGuid][s_PathWaypoints[i].ID] = nil
+		-- Cut ties with old friends.
+		s_Waypoint.Next = false
+		s_Waypoint.Previous = false
+
+		-- Delete Facebook.
+		self._Waypoints[s_Waypoint.Index] = s_Waypoint
+		self._WaypointsByID[s_Waypoint.ID] = s_Waypoint
+		self._WaypointsByPathIndex[s_Waypoint.PathIndex][s_Waypoint.PointIndex] = s_Waypoint
+		-- Delete IDs for everyone.
+		for l_PlayerGuid, _ in pairs(self._SelectedWaypoints) do
+			self._SelectedWaypoints[l_PlayerGuid][s_Waypoint.ID] = nil
 		end
 	end
 
