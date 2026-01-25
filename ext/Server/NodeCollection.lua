@@ -227,6 +227,8 @@ function NodeCollection:Remove(p_SelectionId, p_Waypoint)
 
 	-- Use connections to update indexes.
 	self:Unlink(p_SelectionId, p_Waypoint)
+	-- Remove counter-part links (remove this waypoint from all nodes that link to it)
+	self:UnlinkCounterpart(p_Waypoint)
 
 	if p_Waypoint.Previous then
 		self:RecalculateIndexes(p_Waypoint.Previous)
@@ -287,8 +289,9 @@ function NodeCollection:RemovePath(p_PathIndex)
 	-- Clear the path from _WaypointsByPathIndex
 	self._WaypointsByPathIndex[p_PathIndex] = nil
 
-	-- Remove all waypoint IDs from _WaypointsByID
+	-- Remove all waypoint IDs from _WaypointsByID and remove counter-part links
 	for i = 1, #s_PathWaypoints do
+		self:UnlinkCounterpart(s_PathWaypoints[i])
 		self._WaypointsByID[s_PathWaypoints[i].ID] = nil
 	end
 
@@ -643,6 +646,60 @@ end
 function NodeCollection:UnlinkSpawn(p_SelectionId)
 	local s_Selection = g_NodeCollection:GetSelected(p_SelectionId)
 	local s_SelectedSpawn = g_NodeCollection:GetSelectedSpawn(p_SelectionId)
+end
+
+-- Removes all counter-part links pointing to a waypoint when it's being removed.
+-- This function accesses the target waypoints directly using link information and removes the reverse link.
+---@param p_Waypoint Waypoint
+function NodeCollection:UnlinkCounterpart(p_Waypoint)
+	if p_Waypoint == nil or p_Waypoint.ID == nil then
+		return
+	end
+
+	local s_RemovedWaypointID = p_Waypoint.ID
+
+	-- If the removed waypoint has links, iterate through them directly and remove the counter-part
+	if p_Waypoint.Data ~= nil and p_Waypoint.Data.Links ~= nil then
+		for i = 1, #p_Waypoint.Data.Links do
+			local s_LinkedWaypointID = p_Waypoint.Data.Links[i]
+			local s_LinkedWaypoint = self:Get(s_LinkedWaypointID)
+
+			if s_LinkedWaypoint ~= nil and s_LinkedWaypoint.Data ~= nil and s_LinkedWaypoint.Data.Links ~= nil then
+				local s_NewLinks = {}
+
+				for j = 1, #s_LinkedWaypoint.Data.Links do
+					if s_LinkedWaypoint.Data.Links[j] ~= s_RemovedWaypointID then
+						-- Keep links that don't point to the removed waypoint
+						s_NewLinks[#s_NewLinks + 1] = s_LinkedWaypoint.Data.Links[j]
+					end
+				end
+
+				-- Update the linked waypoint's links if they changed
+				if #s_NewLinks ~= #s_LinkedWaypoint.Data.Links then
+					if #s_NewLinks > 0 then
+						self:Update(s_LinkedWaypoint, {
+							Data = m_Utilities:mergeKeys(s_LinkedWaypoint.Data, {
+								Links = s_NewLinks,
+							})
+						})
+					else
+						-- Clear linking info if no links remain
+						local s_NewData = {}
+
+						for l_Key, l_Value in pairs(s_LinkedWaypoint.Data) do
+							if l_Key ~= 'Links' and l_Key ~= 'LinkMode' then
+								s_NewData[l_Key] = l_Value
+							end
+						end
+
+						self:Update(s_LinkedWaypoint, {
+							Data = s_NewData,
+						})
+					end
+				end
+			end
+		end
+	end
 end
 
 -- Removes a linked connection between two or more arbitrary waypoints.
