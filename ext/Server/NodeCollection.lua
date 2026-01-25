@@ -250,6 +250,61 @@ function NodeCollection:Remove(p_SelectionId, p_Waypoint)
 	-- Go hit the gym.
 end
 
+---@param p_PathIndex integer
+---@return boolean
+---@return string
+function NodeCollection:RemovePath(p_PathIndex)
+	local s_PathWaypoints = self:Get(nil, p_PathIndex)
+
+	if not s_PathWaypoints or #s_PathWaypoints == 0 then
+		return false, 'Path does not exist'
+	end
+
+	local s_FirstWaypoint = s_PathWaypoints[1]
+	local s_LastWaypoint = s_PathWaypoints[#s_PathWaypoints]
+
+	-- Link Previous of FirstWaypoint to Next of LastWaypoint to skip the entire path
+	if s_FirstWaypoint.Previous then
+		s_FirstWaypoint.Previous.Next = s_LastWaypoint.Next
+	end
+
+	if s_LastWaypoint.Next then
+		s_LastWaypoint.Next.Previous = s_FirstWaypoint.Previous
+	end
+
+	-- Collect indices to remove in reverse order
+	local l_IndicesToRemove = {}
+	for i = 1, #s_PathWaypoints do
+		table.insert(l_IndicesToRemove, s_PathWaypoints[i].Index)
+	end
+	table.sort(l_IndicesToRemove, function(a, b) return a > b end)
+
+	-- Remove from _Waypoints in reverse order
+	for _, l_Index in ipairs(l_IndicesToRemove) do
+		table.remove(self._Waypoints, l_Index)
+	end
+
+	-- Clear the path from _WaypointsByPathIndex
+	self._WaypointsByPathIndex[p_PathIndex] = nil
+
+	-- Remove all waypoint IDs from _WaypointsByID
+	for i = 1, #s_PathWaypoints do
+		self._WaypointsByID[s_PathWaypoints[i].ID] = nil
+	end
+
+	-- Clean up selections
+	for l_PlayerGuid, _ in pairs(self._SelectedWaypoints) do
+		for i = 1, #s_PathWaypoints do
+			self._SelectedWaypoints[l_PlayerGuid][s_PathWaypoints[i].ID] = nil
+		end
+	end
+
+	-- Recalculate indexes
+	self:RecalculateIndexes(false)
+
+	return true, 'Success'
+end
+
 ---@param p_ReferrenceWaypoint Waypoint
 ---@param p_Waypoint Waypoint
 function NodeCollection:InsertAfter(p_ReferrenceWaypoint, p_Waypoint)

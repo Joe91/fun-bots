@@ -1033,9 +1033,8 @@ function NodeEditor:ClearTrace(p_Player)
 				local s_PathWaypoints = m_NodeCollection:Get(nil, l_PathIndex)
 
 				if #s_PathWaypoints > 0 then
-					for i = 1, #s_PathWaypoints do
-						m_NodeCollection:Remove(p_Player.onlineId, s_PathWaypoints[i])
-					end
+					m_NodeCollection:RemovePath(l_PathIndex)
+					self:SendToAllPlayers('ClientNodeEditor:ClearTrace', l_PathIndex)
 					self:Log(p_Player, 'Trace Nr. %d Cleared', l_PathIndex)
 				end
 			end

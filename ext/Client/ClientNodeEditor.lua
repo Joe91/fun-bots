@@ -98,6 +98,7 @@ function ClientNodeEditor:OnRegisterEvents()
 	NetEvents:Subscribe('ClientNodeEditor:AddNodes', self, self._OnAddNodes)
 	NetEvents:Subscribe('ClientNodeEditor:UpdateSelection', self, self._OnUpdateSelection)
 	NetEvents:Subscribe('ClientNodeEditor:ClearCustomTrace', self, self._OnClearCustomTrace)
+	NetEvents:Subscribe('ClientNodeEditor:ClearTrace', self, self._OnClearTrace)
 	NetEvents:Subscribe('ClientNodeEditor:ClearAll', self, self._OnClearAll)
 
 	NetEvents:Subscribe('UI_CommoRose_Action_Select', self, self._onSelectNode)
@@ -231,6 +232,16 @@ end
 
 function ClientNodeEditor:_OnClearCustomTrace()
 	self.m_CurrentTrace = {}
+end
+
+function ClientNodeEditor:_OnClearTrace(p_PathIndex)
+	for l_Index = #self.m_WayPoints, 1, -1 do
+		local l_Waypoint = self.m_WayPoints[l_Index]
+		if l_Waypoint.PathIndex == p_PathIndex then
+			self.m_WayPointsById[self.m_WayPoints[l_Index].ID] = nil
+			table.remove(self.m_WayPoints, l_Index)
+		end
+	end
 end
 
 function ClientNodeEditor:_OnClearAll()
