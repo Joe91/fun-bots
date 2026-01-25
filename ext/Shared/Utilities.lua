@@ -170,6 +170,17 @@ function Utilities:CheckProbability(p_Value)
 	return MathUtils:GetRandomInt(1, 100) <= p_Value
 end
 
+---@param p_Angle number
+---@return number
+function Utilities:NormalizeAngleRad(p_Angle)
+	if p_Angle > math.pi then
+		p_Angle = p_Angle - 2 * math.pi
+	elseif p_Angle < -math.pi then
+		p_Angle = p_Angle + 2 * math.pi
+	end
+	return p_Angle
+end
+
 function Utilities:has(p_Object, p_Value)
 	for i = 1, #p_Object do
 		if p_Object[i] == p_Value then
