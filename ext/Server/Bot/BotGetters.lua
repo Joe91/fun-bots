@@ -2,7 +2,6 @@
 local m_Vehicles = require('Vehicles')
 ---@type NodeCollection
 local m_NodeCollection = require('NodeCollection')
-local m_Utilities = require('__shared/Utilities')
 
 ---@param p_ShootBackAfterHit boolean
 ---@param p_Player Player | nil
@@ -146,19 +145,16 @@ end
 ---@return boolean true if enemy should be missed (edge of FOV and distance), false if detected
 function Bot:WillMissEnemyAtFovEdge(p_RelativeYaw, p_RelativePitch, p_HalfHfov, p_HalfVfov, p_Distance, p_AttackDistance)
 	-- Calculate how far from center the target is (0.0 = center, 1.0 = at edge)
-	local s_HorizontalDeviation = math.abs(p_RelativeYaw) / p_HalfHfov
-	local s_VerticalDeviation = math.abs(p_RelativePitch) / p_HalfVfov
+	local s_HorizontalDeviation = 0.95 * math.abs(p_RelativeYaw) / p_HalfHfov -- weight to 0.95
+	local s_VerticalDeviation = 0.6 * math.abs(p_RelativePitch) / p_HalfVfov -- weight to 0.6
+	-- Calculate distance factor (0.0 at close range, 1.0 at max attack distance)
+	local s_DistanceFactor = 0.8 * p_Distance / p_AttackDistance           -- weight to 0.8
 
 	-- Use the maximum deviation as the FOV edge factor (target at edge = 1.0, at center = 0.0)
-	local s_FovEdgeFactor = math.max(s_HorizontalDeviation, s_VerticalDeviation)
+	local s_MissProbabilityFactor = math.max(s_HorizontalDeviation, s_VerticalDeviation, s_DistanceFactor)
 
-	-- Calculate distance factor (0.0 at close range, 1.0 at max attack distance)
-	local s_DistanceFactor = p_Distance / p_AttackDistance
-
-	-- Combined probability to miss = (FOV edge position) * (distance) * (registry factor)
-	-- At center (FOV edge factor = 0), probability is 0 regardless of distance
-	-- At edge (FOV edge factor = 1) and max distance, probability = Registry.BOT.FOV_EDGE_DISTANCE_DETECTION_FACTOR
-	local s_MissProbability = s_FovEdgeFactor * s_DistanceFactor * Registry.BOT.FOV_EDGE_DISTANCE_DETECTION_FACTOR
+	-- At edge (FOV edge factor = 1) and max distance, probability = Registry.BOT.FOV_EDGE_DISTANCE_MISS_FACTOR
+	local s_MissProbability = s_MissProbabilityFactor * Registry.BOT.FOV_EDGE_DISTANCE_MISS_FACTOR
 
 	-- Decide whether to miss the enemy
 	return MathUtils:GetRandom(0.0, 100.0) < s_MissProbability

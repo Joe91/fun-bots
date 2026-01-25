@@ -146,8 +146,8 @@ Registry = {
 		REVIVE_PROBABILITY_IF_HAS_TARGET = 40.0,
 		-- FOV edge and distance detection probability factor
 		-- Probability to miss a target at the edge of FOV and at distance
-		-- Ranges from 0 (never miss) to 100 (always miss at max distance and edge)
-		FOV_EDGE_DISTANCE_DETECTION_FACTOR = 100,
+		-- Ranges from 0 (never miss) to 100 (always miss at max distance or edge)
+		FOV_EDGE_DISTANCE_MISS_FACTOR = 60.0,
 		-- Update cycle fast.
 		BOT_FAST_UPDATE_CYCLE = 0.03, -- Equals 30 fps.
 		-- Update cycle.
