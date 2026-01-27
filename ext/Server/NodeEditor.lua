@@ -51,9 +51,6 @@ function NodeEditor:RegisterCustomEvents()
 	NetEvents:Subscribe('NodeEditor:SplitNode', self, self.OnSplitNode)
 	NetEvents:Subscribe('NodeEditor:RemoveNode', self, self.OnRemoveNode)
 
-	NetEvents:Subscribe('NodeEditor:SelectSpawn', self, self.OnSelectSpawn)
-	NetEvents:Subscribe('NodeEditor:DeselectSpawn', self, self.OnDeselectSpawn)
-
 	NetEvents:Subscribe('NodeEditor:AddMcom', self, self.OnAddMcom)
 	NetEvents:Subscribe('NodeEditor:AddVehicle', self, self.OnAddVehicle)
 	NetEvents:Subscribe('NodeEditor:ExitVehicle', self, self.OnExitVehicle)
@@ -765,18 +762,6 @@ function NodeEditor:OnDeselect(p_Player, p_WaypointId)
 	self:UpdateSelection(p_Player)
 end
 
----@param p_Player Player
----@param p_SpawnId integer|string
-function NodeEditor:OnSelectSpawn(p_Player, p_SpawnId)
-	m_NodeCollection:SelectSpawn(p_Player.onlineId, p_SpawnId)
-end
-
----@param p_Player Player
----@param p_SpawnId integer|string
-function NodeEditor:OnDeselectSpawn(p_Player, p_SpawnId)
-	m_NodeCollection:UnelectSpawn(p_Player.onlineId, p_SpawnId)
-end
-
 function NodeEditor:UpdateSelection(p_Player)
 	local s_Selection = m_NodeCollection:GetSelected(p_Player.onlineId)
 	local s_SelectionIDs = {}
@@ -1103,9 +1088,7 @@ function NodeEditor:SaveTrace(p_Player, p_PathIndex)
 			local s_PathWaypoints = m_NodeCollection:Get(nil, p_PathIndex)
 
 			if #s_PathWaypoints > 0 then
-				for i = 1, #s_PathWaypoints do
-					m_NodeCollection:Remove(p_Player.onlineId, s_PathWaypoints[i])
-				end
+				m_NodeCollection:RemovePath(p_PathIndex)
 			end
 		end
 	end

@@ -210,6 +210,7 @@ function NodeCollection:Remove(p_SelectionId, p_Waypoint)
 			local l_SelectedWaypoint = s_Selection[l_Index]
 			self:Remove(p_SelectionId, l_SelectedWaypoint)
 		end
+		self:RecalculateIndexes(false)
 
 		return true, 'Success'
 	end
@@ -225,16 +226,9 @@ function NodeCollection:Remove(p_SelectionId, p_Waypoint)
 		p_Waypoint.Next.Previous = p_Waypoint.Previous
 	end
 
-	-- Use connections to update indexes.
-	self:Unlink(p_SelectionId, p_Waypoint)
 	-- Remove counter-part links (remove this waypoint from all nodes that link to it)
 	self:UnlinkCounterpart(p_Waypoint)
-
-	if p_Waypoint.Previous then
-		self:RecalculateIndexes(p_Waypoint.Previous)
-	elseif (p_Waypoint.Next) then
-		self:RecalculateIndexes(p_Waypoint.Next)
-	end
+	p_Waypoint.Data = nil
 
 	-- Cut ties with old friends.
 	p_Waypoint.Next = false
@@ -276,8 +270,8 @@ function NodeCollection:RemovePath(p_PathIndex)
 
 	-- Remove all waypoint IDs from _WaypointsByID and remove counter-part links
 	for _, s_Waypoint in pairs(s_PathWaypoints) do
-		self:Unlink(0, s_Waypoint)
 		self:UnlinkCounterpart(s_Waypoint)
+		s_Waypoint.Data = nil
 
 		-- Cut ties with old friends.
 		s_Waypoint.Next = false
@@ -609,15 +603,6 @@ function NodeCollection:Link(p_SelectionId, p_Waypoints, p_LinkID, p_OneWay)
 	return true, 'Success'
 end
 
-function NodeCollection:SelectSpawn(p_SelectionId, p_SpawnId)
-	self._SelectedSpawnPoints[p_SelectionId] = p_SpawnId
-	print(p_SpawnId)
-end
-
-function NodeCollection:UnelectSpawn(p_SelectionId, p_SpawnId)
-	self._SelectedSpawnPoints[p_SelectionId] = nil
-end
-
 -- Removes all counter-part links pointing to a waypoint when it's being removed.
 -- This function accesses the target waypoints directly using link information and removes the reverse link.
 ---@param p_Waypoint Waypoint
@@ -716,6 +701,17 @@ function NodeCollection:Unlink(p_SelectionId, p_Waypoints, p_LinkID, p_OneWay)
 				if not p_OneWay then
 					self:Unlink(p_SelectionId, self:Get(p_LinkID), s_Selection.ID, true)
 				end
+			end
+		end
+	elseif p_LinkID == nil then
+		-- Clear all links.
+		m_Logger:Write("clearing all links from waypoint: " .. tostring(s_Selection.ID))
+
+		-- Remove all links from connected nodes, `p_OneWay` prevents infinite recursion.
+		if not p_OneWay and s_Selection.Data.Links ~= nil then
+			for i = 1, #s_Selection.Data.Links do
+				local s_LinkedWaypointID = s_Selection.Data.Links[i]
+				self:Unlink(p_SelectionId, self:Get(s_LinkedWaypointID), s_Selection.ID, true)
 			end
 		end
 	end
@@ -1076,6 +1072,7 @@ function NodeCollection:MergeSelection(p_SelectionId)
 	for i = 2, #s_Selection do
 		self:Remove(p_SelectionId, s_Selection[i])
 	end
+	self:RecalculateIndexes(false)
 
 	return true, 'Success'
 end
@@ -1864,6 +1861,8 @@ function NodeCollection:FindAlongTrace(p_Vec3Start, p_Vec3End, p_Granularity, p_
 end
 
 function NodeCollection:Log(...)
+	print("logger")
+	m_Logger:Write(...)
 	m_Logger:Write(Language:I18N(...))
 end
 
