@@ -10,12 +10,12 @@ end
 ---@param p_Player Player
 function Bot:SetVarsStatic(p_Player)
 	self._SpawnMode = BotSpawnModes.NoRespawn
-	self._ForcedMovement = true
-	self._MoveMode = BotMoveModes.Standstill
 	self._PathIndex = 0
 	self._Respawning = false
 	self._Shoot = false
 	self._TargetPlayer = p_Player
+	self:SetState(g_BotStates.States.StaticMovement)
+	self.m_ActiveMoveMode = BotMoveModes.Standstill
 end
 
 ---@param p_Player Player|nil
@@ -44,8 +44,10 @@ end
 
 ---@param p_MoveMode BotMoveModes|integer
 function Bot:SetMoveMode(p_MoveMode)
-	self._ForcedMovement = true
-	self._MoveMode = p_MoveMode
+	if not g_BotStates:IsStaticState(self.m_ActiveState) then
+		self:SetState(g_BotStates.States.StaticMovement)
+	end
+	self.m_ActiveMoveMode = p_MoveMode
 end
 
 ---@param p_Respawn boolean
@@ -125,10 +127,6 @@ function Bot:_SetActiveVarsSlow()
 end
 
 function Bot:_SetActiveVars()
-	if self._ForcedMovement then
-		self.m_ActiveMoveMode = self._MoveMode
-	end
-
 	if Config.BotWeapon == BotWeapons.Knife then
 		self.m_KnifeMode = true
 	else
@@ -146,7 +144,6 @@ end
 
 function Bot:ResetVars()
 	self._SpawnMode = BotSpawnModes.NoRespawn
-	self._ForcedMovement = false
 	self._ActiveAction = BotActionFlags.NoActionActive
 	self._PathIndex = 0
 	self._Respawning = false
@@ -170,10 +167,6 @@ function Bot:ResetVars()
 	self._SpawnProtectionTimer = 0.0
 	self._Objective = ''
 	self._WeaponToUse = BotWeapons.Primary
-end
-
-function Bot:ResetSkill()
-	self._SkillFound = false
 end
 
 function Bot:ResetSpawnVars()
@@ -213,13 +206,6 @@ function Bot:ResetSpawnVars()
 	self._AttackMode = BotAttackModes.RandomNotSet
 	self._ShootWayPoints = {}
 	self._FollowWayPoints = {}
-
-	-- Skill.
-	if not self._SkillFound then
-		self._Accuracy = Config.BotWorseningSkill + Config.BotWorseningSkill * (self.m_Accuracy - 0.5)             -- up to 0.5 better or worse
-		self._AccuracySniper = Config.BotSniperWorseningSkill + Config.BotSniperWorseningSkill * (self.m_Accuracy - 0.5) -- up to 0.5 better or worse
-		self._SkillFound = true
-	end
 
 	self._TargetPoint = nil
 	self._NextTargetPoint = nil

@@ -31,7 +31,7 @@ function Bot:IsReadyToAttack(p_ShootBackAfterHit, p_Player, p_CheckShootTimer, p
 
 	local s_InVehicle = g_BotStates:IsInVehicleState(self.m_ActiveState)
 	if self._ShootPlayerId == -1 or
-		(p_Player and p_IsNewTarget) or -- if still the same enemy, you can trigger directly again
+		(p_Player and not p_IsNewTarget) or -- if still the same enemy, you can trigger directly again
 		(s_InVehicle and (self._DoneShootDuration > Config.BotVehicleMinTimeShootAtPlayer)) or
 		(not s_InVehicle and (self._DoneShootDuration > Config.BotMinTimeShootAtPlayer)) or
 		(self.m_KnifeMode and self._ShootModeTimer > ((Config.BotMinTimeShootAtPlayer * 0.5))) then
@@ -134,17 +134,6 @@ function Bot:GetFirstShotDelay(p_DistanceToTarget, p_ReducedTiming)
 	-- Slower reaction on greater distances. 100 m = 0.5 extra seconda.
 	s_Delay = s_Delay + (p_DistanceToTarget * 0.005 * (1.0 + ((self.m_Reaction - 0.5) * 0.4))) -- +-20% depending on reaction-characteristic of bot
 	return s_Delay
-end
-
----@return boolean
-function Bot:IsStaticMovement()
-	if self._ForcedMovement and (self._MoveMode == BotMoveModes.Standstill or
-			self._MoveMode == BotMoveModes.Mirror or
-			self._MoveMode == BotMoveModes.Mimic) then
-		return true
-	else
-		return false
-	end
 end
 
 ---@return string

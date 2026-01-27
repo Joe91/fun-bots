@@ -63,4 +63,5 @@ Language['de_DE'] /* Add/replace the xx_XX here with your language code (like de
 	"End Trace": "Trace beenden",
 	"[Save / Load]": "",
 	"[Paths]": "[Pfade]",
+	"Refresh": "Aktualisieren",
 };

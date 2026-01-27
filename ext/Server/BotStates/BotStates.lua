@@ -20,6 +20,9 @@ function BotStates:__init()
 
 		OnVehicleIdle = require('BotStates/StateOnVehicleIdle'),
 		OnVehicleAttacking = require('BotStates/StateOnVehicleAttacking'),
+
+		StaticMovement = require('BotStates/StateStaticMovement'),
+		StaticAttacking = require('BotStates/StateStaticAttacking'),
 	}
 end
 
@@ -47,6 +50,15 @@ end
 function BotStates:IsOnVehicleState(p_State)
 	if p_State == self.States.OnVehicleAttacking or
 		p_State == self.States.OnVehicleIdle then
+		return true
+	else
+		return false
+	end
+end
+
+function BotStates:IsStaticState(p_State)
+	if p_State == self.States.StaticMovement or
+		p_State == self.States.StaticAttacking then
 		return true
 	else
 		return false

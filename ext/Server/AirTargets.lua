@@ -79,10 +79,10 @@ function AirTargets:GetTarget(p_Player, p_MaxDistance)
 	end
 
 	local s_RandomValue = MathUtils:GetRandomInt(0, 100)
-	if s_ClosestTarget3 and s_RandomValue <= Registry.VEHICLES.VEHICLE_PROPABILITY_THIRD_AIRTARGET then
+	if s_ClosestTarget3 and s_RandomValue <= Registry.VEHICLES.VEHICLE_PROBABILITY_THIRD_AIRTARGET then
 		return s_ClosestTarget3
 	end
-	if s_ClosestTarget2 and s_RandomValue <= Registry.VEHICLES.VEHICLE_PROPABILITY_SECOND_AIRTARGET then
+	if s_ClosestTarget2 and s_RandomValue <= Registry.VEHICLES.VEHICLE_PROBABILITY_SECOND_AIRTARGET then
 		return s_ClosestTarget2
 	end
 

@@ -365,7 +365,7 @@ function Bot:_ObstacleHandling(p_Velocity, p_DistanceSquared, p_HeightDistance, 
 			self:_ResetActionFlag(BotActionFlags.MeleeActive)
 			s_SetTargetReached = true
 
-			if Config.TeleportIfStuck and m_Utilities:CheckProbablity(Registry.BOT.PROBABILITY_TELEPORT_IF_STUCK) then
+			if Config.TeleportIfStuck and m_Utilities:CheckProbability(Registry.BOT.PROBABILITY_TELEPORT_IF_STUCK) then
 				local s_Transform = self.m_Player.soldier.worldTransform:Clone()
 				s_Transform.trans = self._TargetPoint.Position
 				s_Transform:LookAtTransform(self._TargetPoint.Position, self._NextTargetPoint.Position)
@@ -379,7 +379,7 @@ function Bot:_ObstacleHandling(p_Velocity, p_DistanceSquared, p_HeightDistance, 
 
 				if (Globals.IsConquest or Globals.IsRush) then
 					if g_GameDirector:IsOnObjectivePath(self._PathIndex) then
-						self._InvertPathDirection = m_Utilities:CheckProbablity(Registry.BOT.PROBABILITY_CHANGE_DIRECTION_IF_STUCK)
+						self._InvertPathDirection = m_Utilities:CheckProbability(Registry.BOT.PROBABILITY_CHANGE_DIRECTION_IF_STUCK)
 					end
 				end
 			end
@@ -526,6 +526,9 @@ function Bot:UpdateNormalMovement(p_DeltaTime)
 		if #self._ShootWayPoints > 0 then -- We need to go back to the path first.		
 			s_Point = m_NodeCollection:Get(s_ActivePointIndex, self._PathIndex)
 			---@cast s_Point -nil
+			if s_Point == nil then
+				return
+			end
 			local s_ClosestDistance = self.m_Player.soldier.worldTransform.trans:Distance(s_Point.Position)
 			local s_ClosestNode = s_ActivePointIndex
 			for i = 1, Registry.BOT.NUMBER_NODES_TO_SCAN_AFTER_ATTACK, 2 do
@@ -912,7 +915,7 @@ function Bot:UpdateShootMovement(p_DeltaTime)
 
 	if (self.m_ActiveWeapon and (self.m_ActiveWeapon.type == WeaponTypes.Sniper or
 				self.m_ActiveWeapon.type == WeaponTypes.MissileAir or
-				self.m_ActiveWeapon.type == WeaponTypes.MissileLand) and
+				self.m_ActiveWeapon.type == WeaponTypes.MissileLand or not self._MoveWhileShooting) and
 			not self.m_KnifeMode) then -- Don't move while shooting some weapons.
 		if self._AttackMode == BotAttackModes.Crouch then
 			if self.m_Player.soldier.pose ~= CharacterPoseType.CharacterPoseType_Crouch then
@@ -999,7 +1002,7 @@ function Bot:UpdateSpeedOfMovement()
 
 	local s_SpeedVal = 0
 
-	if self.m_ActiveMoveMode ~= BotMoveModes.Standstill then
+	if self.m_ActiveMoveMode ~= BotMoveModes.Standstill and self._MoveWhileShooting then
 		if self.m_ActiveSpeedValue == BotMoveSpeeds.VerySlowProne then
 			s_SpeedVal = 1.0
 
@@ -1030,11 +1033,7 @@ function Bot:UpdateSpeedOfMovement()
 	-- Do not reduce speed if sprinting.
 	if s_SpeedVal > 0 and self._ShootPlayer ~= nil and self._ShootPlayer.soldier ~= nil and
 		self.m_ActiveSpeedValue <= BotMoveSpeeds.Normal then
-		if self._MoveWhileShooting then
-			s_SpeedVal = s_SpeedVal * Config.SpeedFactorAttack
-		else
-			s_SpeedVal = 0
-		end
+		s_SpeedVal = s_SpeedVal * Config.SpeedFactorAttack
 	end
 
 	-- Movement speed.

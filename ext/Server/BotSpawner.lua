@@ -74,7 +74,7 @@ function BotSpawner:OnLevelLoaded(p_Round)
 
 	if (Config.TeamSwitchMode == TeamSwitchModes.SwitchForRoundTwo and p_Round ~= self._LastRound) or
 		(Config.TeamSwitchMode == TeamSwitchModes.AlwaysSwitchTeams) or
-		(Config.TeamSwitchMode == TeamSwitchModes.SwitchTeamsRandomly and m_Utilities:CheckProbablity(50))
+		(Config.TeamSwitchMode == TeamSwitchModes.SwitchTeamsRandomly and m_Utilities:CheckProbability(50))
 	then
 		m_Logger:Write("switch teams")
 		self:_SwitchTeams()
@@ -415,7 +415,7 @@ end
 -- =============================================
 function BotSpawner:UpdateBotNames()
 	self._SpawnSets = {}
-	local s_TimeToWait = (#m_BotManager:GetBots() * Registry.BOT.BOT_DESTORY_DELAY) + 1.0
+	local s_TimeToWait = (#m_BotManager:GetBots() * Registry.BOT.BOT_DESTROY_DELAY) + 1.0
 	m_BotManager:DestroyAll()
 	m_BotManager:RefreshTables()
 	self._FirstSpawnInLevel = true
@@ -737,6 +737,8 @@ end
 ---@param p_Length integer
 ---@param p_Spacing number
 function BotSpawner:SpawnBotRow(p_Player, p_Length, p_Spacing)
+	Globals.SpawnMode = "manual"
+
 	local s_TeamId = m_BotManager:GetBotTeam()
 	for i = 1, p_Length do
 		local s_Name = m_BotCreator:GetNextBotName(self:_GetSpawnBotKit(s_TeamId), s_TeamId)
@@ -759,6 +761,8 @@ end
 ---@param p_Player Player
 ---@param p_Height integer
 function BotSpawner:SpawnBotTower(p_Player, p_Height)
+	Globals.SpawnMode = "manual"
+
 	local s_TeamId = m_BotManager:GetBotTeam()
 	for i = 1, p_Height do
 		local s_Name = m_BotCreator:GetNextBotName(self:_GetSpawnBotKit(s_TeamId), s_TeamId)
@@ -786,6 +790,8 @@ end
 ---@param p_Columns integer
 ---@param p_Spacing number
 function BotSpawner:SpawnBotGrid(p_Player, p_Rows, p_Columns, p_Spacing)
+	Globals.SpawnMode = "manual"
+
 	local s_TeamId = m_BotManager:GetBotTeam()
 	for i = 1, p_Rows do
 		for j = 1, p_Columns do
@@ -1632,7 +1638,7 @@ function BotSpawner:_GetSpawnPoint(p_TeamId, p_SquadId)
 				s_ProbabilityToSpawn = 30
 			end
 
-			if m_Utilities:CheckProbablity(s_ProbabilityToSpawn) then
+			if m_Utilities:CheckProbability(s_ProbabilityToSpawn) then
 				return "SpawnAtMobileVehicle"
 			end
 		end
@@ -1827,7 +1833,7 @@ function BotSpawner:_GetUnlocks(p_Bot, p_TeamId, p_SquadId)
 			"persistence/unlocks/vehicles/artilleryairburst",
 		}
 		-- some variation in appearance
-		if m_Utilities:CheckProbablity(50) then
+		if m_Utilities:CheckProbability(50) then
 			s_VehiclePerksToAdd[#s_VehiclePerksToAdd + 1] = "persistence/unlocks/vehicles/mbtreactivearmor"
 			s_VehiclePerksToAdd[#s_VehiclePerksToAdd + 1] = "persistence/unlocks/vehicles/lbtreactivearmor"
 			s_VehiclePerksToAdd[#s_VehiclePerksToAdd + 1] = "persistence/unlocks/vehicles/ifvreloadupgrade"
@@ -1864,7 +1870,7 @@ function BotSpawner:_GetUnlocks(p_Bot, p_TeamId, p_SquadId)
 	for l_Index = 1, #s_PossiblePerks do
 		local l_PerkName = s_PossiblePerks[l_Index]
 		s_SelectedPerk = l_PerkName
-		if m_Utilities:CheckProbablity(80) then -- Use the best available perk with this percentage.
+		if m_Utilities:CheckProbability(80) then -- Use the best available perk with this percentage.
 			break
 		end
 	end
@@ -2216,8 +2222,13 @@ function BotSpawner:_FindAppearance(p_TeamName, p_KitName, p_ColorName)
 		local l_GameMode = s_GameModeAppearances[l_Index]
 		local s_AppearanceString = ""
 		if p_ColorName == "DEFAULT" then
-			s_AppearanceString = l_GameMode ..
-				p_TeamName .. '/MP_' .. string.upper(p_TeamName) .. '_' .. p_KitName .. '_Appearance01'
+			if l_GameMode == "MP/" then
+				s_AppearanceString = 'MP/' ..
+					p_TeamName .. '/MP_' .. string.upper(p_TeamName) .. '_' .. p_KitName .. '_Appearance01'
+			else
+				s_AppearanceString = 'MP/' ..
+					p_TeamName .. '/MP_' .. string.upper(p_TeamName) .. '_' .. p_KitName .. '_Appearance01_XP4'
+			end
 		else
 			s_AppearanceString = l_GameMode ..
 				p_TeamName .. '/MP_' .. string.upper(p_TeamName) .. '_' .. p_KitName .. '_Appearance_' .. p_ColorName

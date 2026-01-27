@@ -42,7 +42,7 @@ function StateInVehicleAttacking:Update(p_Bot, p_DeltaTime)
 	if not m_Vehicles:IsGunship(p_Bot.m_ActiveVehicle) then
 		if p_Bot.m_StateTimer <= 0.0 then
 			p_Bot.m_StateTimer = 5.0 + MathUtils:GetRandom(-1.0, 3.0)
-			if m_Utilities:CheckProbablity(Registry.VEHICLES.PROBABILITY_VEHICLE_STOP_TO_SHOOT) then
+			if m_Utilities:CheckProbability(Registry.VEHICLES.PROBABILITY_VEHICLE_STOP_TO_SHOOT) then
 				p_Bot._VehicleMoveWhileShooting = false
 			else
 				p_Bot._VehicleMoveWhileShooting = true

@@ -49,6 +49,9 @@ This is the changelog for release **V3.0**. Don't forget to [join us on Discord]
 * Bot movement and obstacle handling rework
 * Fix of mcom handling of the bots
 * Fix of some path switching issues in context with actions
+* improvement in FOV-logic (by kruschk)
+* Fix the Node-Editor-Function to remove a full trace (and unlik correctly)
+* Improved unlink-handling and Path-deletion in Node-Editor
 
 ### Some open TODOs:
 * Vehicle/Tank: better aiming on steep slopes (compensate car rotation)
@@ -66,6 +69,7 @@ This is the changelog for release **V3.0**. Don't forget to [join us on Discord]
 * Fix keep same bot players
 * Fix air vehicles attacking bases (by ThyKingdomCome)
 * Fix bots trying to spawn in unarmed gunships (by MatiasPastori)
+* Fixed static-bot-modes
 
 ### Updated maps
 * MP12_ConquestSmall0 by ThyKingdomCome (with explore paths)

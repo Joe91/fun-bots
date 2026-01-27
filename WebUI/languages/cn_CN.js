@@ -63,4 +63,5 @@ Language['cn_CN'] /* Add/replace the xx_XX here with your language code (like de
 	"Spawn Bot": "生成BOT",
 	"[Save / Load]": "[保存/加载]",
 	"[Paths]": "[路径]",
+	"Refresh": "刷新",
 };

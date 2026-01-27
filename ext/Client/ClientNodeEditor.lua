@@ -98,6 +98,7 @@ function ClientNodeEditor:OnRegisterEvents()
 	NetEvents:Subscribe('ClientNodeEditor:AddNodes', self, self._OnAddNodes)
 	NetEvents:Subscribe('ClientNodeEditor:UpdateSelection', self, self._OnUpdateSelection)
 	NetEvents:Subscribe('ClientNodeEditor:ClearCustomTrace', self, self._OnClearCustomTrace)
+	NetEvents:Subscribe('ClientNodeEditor:ClearTrace', self, self._OnClearTrace)
 	NetEvents:Subscribe('ClientNodeEditor:ClearAll', self, self._OnClearAll)
 
 	NetEvents:Subscribe('UI_CommoRose_Action_Select', self, self._onSelectNode)
@@ -233,6 +234,16 @@ function ClientNodeEditor:_OnClearCustomTrace()
 	self.m_CurrentTrace = {}
 end
 
+function ClientNodeEditor:_OnClearTrace(p_PathIndex)
+	for l_Index = #self.m_WayPoints, 1, -1 do
+		local l_Waypoint = self.m_WayPoints[l_Index]
+		if l_Waypoint.PathIndex == p_PathIndex then
+			self.m_WayPointsById[self.m_WayPoints[l_Index].ID] = nil
+			table.remove(self.m_WayPoints, l_Index)
+		end
+	end
+end
+
 function ClientNodeEditor:_OnClearAll()
 	self:_onUnload()
 end
@@ -295,8 +306,6 @@ function ClientNodeEditor:GetColor(p_Node, p_IsTracePath)
 
 		s_Color = self.m_Colors[p_Node.PathIndex]
 	else
-		-- print("node with index 0")
-		-- print(s_Waypoint)
 		s_Color = {
 			Node = self.m_Colors.Red,
 			Line = self.m_Colors.Red,
@@ -364,7 +373,6 @@ function ClientNodeEditor:_onSelectNode(p_Args)
 
 	if s_Hit == nil then
 		self.m_ScanForNode = true
-		print("Scan for node started")
 		return
 	end
 
@@ -379,26 +387,11 @@ function ClientNodeEditor:_onSelectNode(p_Args)
 		return
 	end
 
-	local s_HitSpawn = m_ClientSpawnPointHelper:FindSpawn(s_Hit.position)
-	if s_HitSpawn then
-		print(s_HitSpawn)
-		NetEvents:SendLocal('NodeEditor:SelectSpawn', s_HitSpawn)
-		return
-	end
-
-	local s_SelectedSpawn = m_ClientSpawnPointHelper:GetSelectedSpawn()
-	if s_SelectedSpawn then
-		print(s_SelectedSpawn)
-		NetEvents:SendLocal('NodeEditor:SelectSpawn', s_SelectedSpawn)
-		return
-	end
-
 	-- TODO: don't always do this?
 	self.m_ScanForNode = true
 end
 
 function ClientNodeEditor:_onRemoveNode()
-	print("trigger remove node")
 	NetEvents:SendLocal('NodeEditor:RemoveNode')
 end
 
@@ -1006,7 +999,6 @@ function ClientNodeEditor:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 						-- Select point if it's close to the hitPosition.
 						if s_Center:Distance(s_PointScreenPos) < 20 then
 							self.m_ScanForNode = false
-							print("San for node ended")
 
 							if s_IsSelected then
 								self:Log('Deselect -> %s', l_Node.ID)
@@ -1075,8 +1067,10 @@ function ClientNodeEditor:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 						-- s_Text = s_Text .. string.format("(%s)Pevious [ %s ] Next(%s)\n", s_PreviousNode, p_Waypoint.ID, s_NextNode)
 						s_Text = s_Text .. string.format('Index[%d]\n', l_Node.Index)
 						s_Text = s_Text .. string.format('Path[%d][%d] (%s)\n', l_Node.PathIndex, l_Node.PointIndex, s_PathMode)
-						s_Text = s_Text .. string.format('Path Objectives: %s\n', g_Utilities:dump(s_FirstNode.Data.Objectives, false))
-						s_Text = s_Text .. string.format('Vehicles: %s\n', g_Utilities:dump(s_FirstNode.Data.Vehicles, false))
+						if s_FirstNode.Data then
+							s_Text = s_Text .. string.format('Path Objectives: %s\n', g_Utilities:dump(s_FirstNode.Data.Objectives, false))
+							s_Text = s_Text .. string.format('Vehicles: %s\n', g_Utilities:dump(s_FirstNode.Data.Vehicles, false))
+						end
 						s_Text = s_Text .. string.format('InputVar: %d\n', l_Node.InputVar)
 						s_Text = s_Text .. string.format('SpeedMode: %s (%d)\n', s_SpeedMode, SpeedMode)
 						s_Text = s_Text .. string.format('ExtraMode: %s (%d)\n', s_ExtraMode, ExtraMode)

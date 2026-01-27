@@ -63,8 +63,6 @@ function Bot:__init(p_Player)
 	---@type BotSpawnModes
 	self._SpawnMode = BotSpawnModes.NoRespawn
 	---@type BotMoveModes
-	self._MoveMode = BotMoveModes.Standstill
-	self._ForcedMovement = false
 
 	-- TODO: this whole block could be moved to an inner class `Bot.Loadout = class('Bot.Loadout')`.
 	---@type BotKits|integer
@@ -219,9 +217,6 @@ function Bot:__init(p_Player)
 	self._FollowWayPoints = {}
 	---@type Vec3[]
 	self._KnifeWayPositions = {}
-	self._Accuracy = 0.0
-	self._AccuracySniper = 0.0
-	self._SkillFound = false
 
 	---@type Player|nil
 	self._TargetPlayer = nil
@@ -324,7 +319,7 @@ function Bot:_CheckForVehicleActions(p_DeltaTime, p_AttackActive)
 		end
 
 		if s_CurrentVehicleHealth <= self._ExitVehicleHealth then
-			if math.random(0, 100) <= Registry.VEHICLES.VEHICLE_PROPABILITY_EXIT_LOW_HEALTH then
+			if math.random(0, 100) <= Registry.VEHICLES.VEHICLE_PROBABILITY_EXIT_LOW_HEALTH then
 				self:AbortAttack()
 				self:ExitVehicle()
 			end
@@ -415,7 +410,7 @@ function Bot:_CheckShouldExitVehicleIfPassenger(p_VehicleEntity, p_OnVehicle)
 	local s_CurrentPosition = self.m_Player.soldier.worldTransform.trans:Clone()
 	s_CurrentPosition.y = 0
 
-	s_Coordinates = {}
+	local s_Coordinates = {}
 	for l_Index = 1, #s_AllCapturePoints do
 		s_Coordinates[#s_Coordinates + 1] = s_AllCapturePoints[l_Index].transform.trans
 	end

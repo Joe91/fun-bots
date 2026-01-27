@@ -89,8 +89,10 @@ function Bot:UpdateWeaponSelection(p_DeltaTime)
 				Config.BotWeapon == BotWeapons.Pistol then
 				if self.m_Player.soldier.weaponsComponent.currentWeaponSlot ~= WeaponSlot.WeaponSlot_1 then
 					self:_SetInput(EntryInputActionEnum.EIASelectWeapon2, 1)
-					self.m_ActiveWeapon = self.m_Pistol
 					self._ShotTimer = -self:GetFirstShotDelay(self._DistanceToPlayer, true)
+				end
+				if self.m_ActiveWeapon ~= self.m_Pistol then
+					self.m_ActiveWeapon = self.m_Pistol
 				end
 				if self.m_Player.soldier.weaponsComponent.weapons[2] and
 					self.m_Player.soldier.weaponsComponent.weapons[2].secondaryAmmo <
@@ -103,8 +105,10 @@ function Bot:UpdateWeaponSelection(p_DeltaTime)
 				Config.BotWeapon == BotWeapons.Primary then
 				if self.m_Player.soldier.weaponsComponent.currentWeaponSlot ~= WeaponSlot.WeaponSlot_0 then
 					self:_SetInput(EntryInputActionEnum.EIASelectWeapon1, 1)
-					self.m_ActiveWeapon = self.m_Primary
 					self._ShotTimer = -0.05
+				end
+				if self.m_ActiveWeapon ~= self.m_Primary then
+					self.m_ActiveWeapon = self.m_Primary
 				end
 				-- keep primary filled
 				if self.m_Player.soldier.weaponsComponent.weapons[1] and
