@@ -51,11 +51,6 @@ function NodeEditor:RegisterCustomEvents()
 	NetEvents:Subscribe('NodeEditor:SplitNode', self, self.OnSplitNode)
 	NetEvents:Subscribe('NodeEditor:RemoveNode', self, self.OnRemoveNode)
 
-	NetEvents:Subscribe('NodeEditor:SelectSpawn', self, self.OnSelectSpawn)
-	NetEvents:Subscribe('NodeEditor:DeselectSpawn', self, self.OnDeselectSpawn)
-	NetEvents:Subscribe('NodeEditor:LinkSpawn', self, self.LinkSpawn)
-	NetEvents:Subscribe('NodeEditor:UnlinkSpawn', self, self.UnlinkSpawn)
-
 	NetEvents:Subscribe('NodeEditor:AddMcom', self, self.OnAddMcom)
 	NetEvents:Subscribe('NodeEditor:AddVehicle', self, self.OnAddVehicle)
 	NetEvents:Subscribe('NodeEditor:ExitVehicle', self, self.OnExitVehicle)
@@ -622,15 +617,17 @@ end
 function NodeEditor:GetNodesForPlayer(p_Nodes)
 	local s_SerializedNodes = {}
 	for _, l_Node in pairs(p_Nodes) do
-		s_SerializedNodes[#s_SerializedNodes + 1] = {
-			ID = l_Node.ID,
-			Index = l_Node.Index,
-			PathIndex = l_Node.PathIndex,
-			PointIndex = l_Node.PointIndex,
-			InputVar = l_Node.InputVar,
-			Position = l_Node.Position,
-			Data = l_Node.Data
-		}
+		if l_Node.Next or l_Node.Prev then -- Only send nodes that aren't stale
+			s_SerializedNodes[#s_SerializedNodes + 1] = {
+				ID = l_Node.ID,
+				Index = l_Node.Index,
+				PathIndex = l_Node.PathIndex,
+				PointIndex = l_Node.PointIndex,
+				InputVar = l_Node.InputVar,
+				Position = l_Node.Position,
+				Data = l_Node.Data
+			}
+		end
 	end
 	return s_SerializedNodes
 end
@@ -765,26 +762,6 @@ end
 function NodeEditor:OnDeselect(p_Player, p_WaypointId)
 	m_NodeCollection:Deselect(p_Player.onlineId, p_WaypointId)
 	self:UpdateSelection(p_Player)
-end
-
----@param p_Player Player
----@param p_SpawnId integer|string
-function NodeEditor:OnSelectSpawn(p_Player, p_SpawnId)
-	m_NodeCollection:SelectSpawn(p_Player.onlineId, p_SpawnId)
-end
-
----@param p_Player Player
----@param p_SpawnId integer|string
-function NodeEditor:OnDeselectSpawn(p_Player, p_SpawnId)
-	m_NodeCollection:UnelectSpawn(p_Player.onlineId, p_SpawnId)
-end
-
-function NodeEditor:LinkSpawn(p_Player)
-	m_NodeCollection:LinkSpawn(p_Player.onlineId)
-end
-
-function NodeEditor:UnlinkSpawn(p_Player)
-	m_NodeCollection:UnlinkSpawn(p_Player.onlineId)
 end
 
 function NodeEditor:UpdateSelection(p_Player)
@@ -1033,9 +1010,8 @@ function NodeEditor:ClearTrace(p_Player)
 				local s_PathWaypoints = m_NodeCollection:Get(nil, l_PathIndex)
 
 				if #s_PathWaypoints > 0 then
-					for i = 1, #s_PathWaypoints do
-						m_NodeCollection:Remove(p_Player.onlineId, s_PathWaypoints[i])
-					end
+					m_NodeCollection:RemovePath(l_PathIndex)
+					self:SendToAllPlayers('ClientNodeEditor:ClearTrace', l_PathIndex)
 					self:Log(p_Player, 'Trace Nr. %d Cleared', l_PathIndex)
 				end
 			end
@@ -1114,9 +1090,7 @@ function NodeEditor:SaveTrace(p_Player, p_PathIndex)
 			local s_PathWaypoints = m_NodeCollection:Get(nil, p_PathIndex)
 
 			if #s_PathWaypoints > 0 then
-				for i = 1, #s_PathWaypoints do
-					m_NodeCollection:Remove(p_Player.onlineId, s_PathWaypoints[i])
-				end
+				m_NodeCollection:RemovePath(p_PathIndex)
 			end
 		end
 	end
@@ -1213,6 +1187,10 @@ function NodeEditor:EndOfLoad()
 	if self.m_DataWasRequested then
 		self:OnRequestData() -- send nodes to all players
 	end
+end
+
+function NodeEditor:RefreshWaypointsOnClient()
+	self:OnRequestData() -- send nodes to all players
 end
 
 function NodeEditor:Clear()

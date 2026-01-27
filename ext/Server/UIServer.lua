@@ -427,6 +427,13 @@ function FunBotUIServer:_onBotEditorEvent(p_Player, p_Data)
 		end
 		m_NodeCollection:Save(p_Player.name)
 		return
+	elseif request.action == 'refresh_all_waypoints' then
+		if PermissionManager:HasPermission(p_Player, 'UserInterface.WaypointEditor.SaveLoad') == false then
+			ChatManager:SendMessage('You have no permissions for this action.', p_Player)
+			return
+		end
+		m_NodeEditor:RefreshWaypointsOnClient()
+		return
 	elseif request.action == 'waypoints_show_spawns' then
 		if PermissionManager:HasPermission(p_Player, 'UserInterface.WaypointEditor.View') == false then
 			ChatManager:SendMessage('You have no permissions for this action.', p_Player)

@@ -210,6 +210,7 @@ function NodeCollection:Remove(p_SelectionId, p_Waypoint)
 			local l_SelectedWaypoint = s_Selection[l_Index]
 			self:Remove(p_SelectionId, l_SelectedWaypoint)
 		end
+		self:RecalculateIndexes(false)
 
 		return true, 'Success'
 	end
@@ -225,14 +226,9 @@ function NodeCollection:Remove(p_SelectionId, p_Waypoint)
 		p_Waypoint.Next.Previous = p_Waypoint.Previous
 	end
 
-	-- Use connections to update indexes.
-	self:Unlink(p_SelectionId, p_Waypoint)
-
-	if p_Waypoint.Previous then
-		self:RecalculateIndexes(p_Waypoint.Previous)
-	elseif (p_Waypoint.Next) then
-		self:RecalculateIndexes(p_Waypoint.Next)
-	end
+	-- Remove counter-part links (remove this waypoint from all nodes that link to it)
+	self:UnlinkCounterpart(p_Waypoint)
+	p_Waypoint.Data = nil
 
 	-- Cut ties with old friends.
 	p_Waypoint.Next = false
@@ -248,6 +244,53 @@ function NodeCollection:Remove(p_SelectionId, p_Waypoint)
 	end
 	return true, 'Success'
 	-- Go hit the gym.
+end
+
+---@param p_PathIndex integer
+---@return boolean
+---@return string
+function NodeCollection:RemovePath(p_PathIndex)
+	local s_PathWaypoints = self:Get(nil, p_PathIndex)
+
+	if not s_PathWaypoints or #s_PathWaypoints == 0 then
+		return false, 'Path does not exist'
+	end
+
+	local s_FirstWaypoint = s_PathWaypoints[1]
+	local s_LastWaypoint = s_PathWaypoints[#s_PathWaypoints]
+
+	-- Link Previous of FirstWaypoint to Next of LastWaypoint to skip the entire path
+	if s_FirstWaypoint.Previous then
+		s_FirstWaypoint.Previous.Next = s_LastWaypoint.Next
+	end
+
+	if s_LastWaypoint.Next then
+		s_LastWaypoint.Next.Previous = s_FirstWaypoint.Previous
+	end
+
+	-- Remove all waypoint IDs from _WaypointsByID and remove counter-part links
+	for _, s_Waypoint in pairs(s_PathWaypoints) do
+		self:UnlinkCounterpart(s_Waypoint)
+		s_Waypoint.Data = nil
+
+		-- Cut ties with old friends.
+		s_Waypoint.Next = false
+		s_Waypoint.Previous = false
+
+		-- Delete Facebook.
+		self._Waypoints[s_Waypoint.Index] = s_Waypoint
+		self._WaypointsByID[s_Waypoint.ID] = s_Waypoint
+		self._WaypointsByPathIndex[s_Waypoint.PathIndex][s_Waypoint.PointIndex] = s_Waypoint
+		-- Delete IDs for everyone.
+		for l_PlayerGuid, _ in pairs(self._SelectedWaypoints) do
+			self._SelectedWaypoints[l_PlayerGuid][s_Waypoint.ID] = nil
+		end
+	end
+
+	-- Recalculate indexes
+	self:RecalculateIndexes(false)
+
+	return true, 'Success'
 end
 
 ---@param p_ReferrenceWaypoint Waypoint
@@ -560,34 +603,58 @@ function NodeCollection:Link(p_SelectionId, p_Waypoints, p_LinkID, p_OneWay)
 	return true, 'Success'
 end
 
-function NodeCollection:SelectSpawn(p_SelectionId, p_SpawnId)
-	self._SelectedSpawnPoints[p_SelectionId] = p_SpawnId
-	print(p_SpawnId)
-end
-
-function NodeCollection:UnelectSpawn(p_SelectionId, p_SpawnId)
-	self._SelectedSpawnPoints[p_SelectionId] = nil
-end
-
----@return boolean
-function NodeCollection:LinkSpawn(p_SpawnPoint, p_Node)
-	if not p_SpawnPoint.Data then
-		p_SpawnPoint.Data = {}
+-- Removes all counter-part links pointing to a waypoint when it's being removed.
+-- This function accesses the target waypoints directly using link information and removes the reverse link.
+---@param p_Waypoint Waypoint
+function NodeCollection:UnlinkCounterpart(p_Waypoint)
+	if p_Waypoint == nil or p_Waypoint.ID == nil then
+		return
 	end
-	local s_Links = p_SpawnPoint.Data.Links or {}
-	s_Links[#s_Links + 1] = { p_Node.PathIndex, p_Node.PointIndex } --p_Node.ID
-	p_SpawnPoint.Data.Links = s_Links
 
-	return true
-end
+	local s_RemovedWaypointID = p_Waypoint.ID
 
--- TODO: Finish this, or remove this.
----@param p_SelectionId integer
----@return boolean
----@return string
-function NodeCollection:UnlinkSpawn(p_SelectionId)
-	local s_Selection = g_NodeCollection:GetSelected(p_SelectionId)
-	local s_SelectedSpawn = g_NodeCollection:GetSelectedSpawn(p_SelectionId)
+	-- If the removed waypoint has links, iterate through them directly and remove the counter-part
+	if p_Waypoint.Data ~= nil and p_Waypoint.Data.Links ~= nil then
+		for i = 1, #p_Waypoint.Data.Links do
+			local s_LinkedWaypointID = p_Waypoint.Data.Links[i]
+			local s_LinkedWaypoint = self:Get(s_LinkedWaypointID)
+
+			if s_LinkedWaypoint ~= nil and s_LinkedWaypoint.Data ~= nil and s_LinkedWaypoint.Data.Links ~= nil then
+				local s_NewLinks = {}
+
+				for j = 1, #s_LinkedWaypoint.Data.Links do
+					if s_LinkedWaypoint.Data.Links[j] ~= s_RemovedWaypointID then
+						-- Keep links that don't point to the removed waypoint
+						s_NewLinks[#s_NewLinks + 1] = s_LinkedWaypoint.Data.Links[j]
+					end
+				end
+
+				-- Update the linked waypoint's links if they changed
+				if #s_NewLinks ~= #s_LinkedWaypoint.Data.Links then
+					if #s_NewLinks > 0 then
+						self:Update(s_LinkedWaypoint, {
+							Data = m_Utilities:mergeKeys(s_LinkedWaypoint.Data, {
+								Links = s_NewLinks,
+							})
+						})
+					else
+						-- Clear linking info if no links remain
+						local s_NewData = {}
+
+						for l_Key, l_Value in pairs(s_LinkedWaypoint.Data) do
+							if l_Key ~= 'Links' and l_Key ~= 'LinkMode' then
+								s_NewData[l_Key] = l_Value
+							end
+						end
+
+						self:Update(s_LinkedWaypoint, {
+							Data = s_NewData,
+						})
+					end
+				end
+			end
+		end
+	end
 end
 
 -- Removes a linked connection between two or more arbitrary waypoints.
@@ -634,6 +701,17 @@ function NodeCollection:Unlink(p_SelectionId, p_Waypoints, p_LinkID, p_OneWay)
 				if not p_OneWay then
 					self:Unlink(p_SelectionId, self:Get(p_LinkID), s_Selection.ID, true)
 				end
+			end
+		end
+	elseif p_LinkID == nil then
+		-- Clear all links.
+		m_Logger:Write("clearing all links from waypoint: " .. tostring(s_Selection.ID))
+
+		-- Remove all links from connected nodes, `p_OneWay` prevents infinite recursion.
+		if not p_OneWay and s_Selection.Data.Links ~= nil then
+			for i = 1, #s_Selection.Data.Links do
+				local s_LinkedWaypointID = s_Selection.Data.Links[i]
+				self:Unlink(p_SelectionId, self:Get(s_LinkedWaypointID), s_Selection.ID, true)
 			end
 		end
 	end
@@ -994,6 +1072,7 @@ function NodeCollection:MergeSelection(p_SelectionId)
 	for i = 2, #s_Selection do
 		self:Remove(p_SelectionId, s_Selection[i])
 	end
+	self:RecalculateIndexes(false)
 
 	return true, 'Success'
 end
@@ -1139,82 +1218,6 @@ function NodeCollection:isNodeInFront(p_Point, p_Direction, p_Node)
 
 	-- If dot product is positive, the node is in front of the point
 	return dotProduct > 0
-end
-
-function NodeCollection:ParseSingleSpawn(p_SpawnPoint)
-	local s_PositionSpawn = p_SpawnPoint.Transform.trans
-
-	---@type MaterialFlags|integer
-	local s_MaterialFlags = 0
-	---@type RayCastFlags|integer
-	local s_RaycastFlags = RayCastFlags.DontCheckWater | RayCastFlags.DontCheckCharacter | RayCastFlags.DontCheckRagdoll | RayCastFlags.CheckDetailMesh
-
-	local s_Paths = self:GetPaths()
-
-	local s_PositionSpawnHigher = s_PositionSpawn:Clone()
-	s_PositionSpawnHigher.y = s_PositionSpawnHigher.y + 1.0
-
-	local s_TargetDistance = 15.0
-	if Globals.IsConquest then
-		s_TargetDistance = 30.0
-	end
-
-	local s_ClosestPathNodes = {}
-	for l_PathIndex, l_Path in pairs(s_Paths) do
-		if l_Path[1] and l_Path[1].Data and l_Path[1].Data.Objectives and l_Path[1].Data.Objectives[1] then
-			local s_Objective = l_Path[1].Data.Objectives[1]
-			if g_GameDirector:IsVehicleEnterPath(s_Objective) then -- TODO: air-paths?
-				goto continue
-			end
-		end
-		if l_Path[1] and l_Path[1].Data and l_Path[1].Data.Vehicles and #l_Path[1].Data.Vehicles ~= 0 and (table.has(l_Path[1].Data.Vehicles, "air") or table.has(l_Path[1].Data.Vehicles, "water")) then
-			goto continue
-		end
-
-		for l_Index = 1, #l_Path do
-			local s_Waypoint = l_Path[l_Index]
-
-			local s_Distance = m_Utilities:DistanceFast(s_PositionSpawn, s_Waypoint.Position)
-			-- local s_Distance = s_PositionSpawn:Distance(s_Waypoint.Position)
-
-			if s_Distance < s_TargetDistance then
-				s_ClosestPathNodes[#s_ClosestPathNodes + 1] = s_Waypoint
-			end
-		end
-		::continue::
-	end
-
-
-	local s_NodeCount = 0
-	local s_PathsLinked = {}
-	-- find closest paths with closest node (3+ paths min)
-	for j = 1, #s_ClosestPathNodes do
-		local s_CloseNode = s_ClosestPathNodes[j]
-
-		local s_PositionNode = s_CloseNode.Position:Clone()
-		local s_HeightDifference = math.abs(s_PositionSpawn.y - s_PositionNode.y)
-
-		-- check for height difference
-
-		-- check for direction of node (only forward nodes?)
-		if not s_PathsLinked[s_CloseNode.PathIndex] and s_HeightDifference < 2.0 and self:isNodeInFront(s_PositionSpawn, p_SpawnPoint.Transform.forward, s_PositionNode) then
-			s_PositionNode.y = s_PositionNode.y + 1.0
-			local s_Result = RaycastManager:CollisionRaycast(s_PositionNode, s_PositionSpawnHigher, 1, s_MaterialFlags, s_RaycastFlags)
-			if #s_Result == 0 then
-				self:LinkSpawn(p_SpawnPoint, s_CloseNode)
-				s_NodeCount = s_NodeCount + 1
-				s_PathsLinked[s_CloseNode.PathIndex] = true
-				if s_NodeCount >= 5 then
-					break
-				end
-			end
-		end
-	end
-	if s_NodeCount == 0 and #s_ClosestPathNodes > 0 then
-		-- no node found, just use one randomly
-		local s_RandomIndex = MathUtils:GetRandomInt(1, #s_ClosestPathNodes)
-		self:LinkSpawn(p_SpawnPoint, s_ClosestPathNodes[s_RandomIndex])
-	end
 end
 
 -----------------------------
@@ -1858,6 +1861,8 @@ function NodeCollection:FindAlongTrace(p_Vec3Start, p_Vec3End, p_Granularity, p_
 end
 
 function NodeCollection:Log(...)
+	print("logger")
+	m_Logger:Write(...)
 	m_Logger:Write(Language:I18N(...))
 end
 
