@@ -53,8 +53,6 @@ function NodeEditor:RegisterCustomEvents()
 
 	NetEvents:Subscribe('NodeEditor:SelectSpawn', self, self.OnSelectSpawn)
 	NetEvents:Subscribe('NodeEditor:DeselectSpawn', self, self.OnDeselectSpawn)
-	NetEvents:Subscribe('NodeEditor:LinkSpawn', self, self.LinkSpawn)
-	NetEvents:Subscribe('NodeEditor:UnlinkSpawn', self, self.UnlinkSpawn)
 
 	NetEvents:Subscribe('NodeEditor:AddMcom', self, self.OnAddMcom)
 	NetEvents:Subscribe('NodeEditor:AddVehicle', self, self.OnAddVehicle)
@@ -777,14 +775,6 @@ end
 ---@param p_SpawnId integer|string
 function NodeEditor:OnDeselectSpawn(p_Player, p_SpawnId)
 	m_NodeCollection:UnelectSpawn(p_Player.onlineId, p_SpawnId)
-end
-
-function NodeEditor:LinkSpawn(p_Player)
-	m_NodeCollection:LinkSpawn(p_Player.onlineId)
-end
-
-function NodeEditor:UnlinkSpawn(p_Player)
-	m_NodeCollection:UnlinkSpawn(p_Player.onlineId)
 end
 
 function NodeEditor:UpdateSelection(p_Player)
