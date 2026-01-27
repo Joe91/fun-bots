@@ -291,6 +291,7 @@ class BotEditor {
                 case "trace_reset_all":
                 case "waypoints_server_load":
                 case "waypoints_server_save":
+                case "refresh_all_waypoints":
                 case "trace_show":
                 case "waypoints_show_spawns":
                 case "waypoints_show_lines":
