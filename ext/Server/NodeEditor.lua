@@ -617,15 +617,17 @@ end
 function NodeEditor:GetNodesForPlayer(p_Nodes)
 	local s_SerializedNodes = {}
 	for _, l_Node in pairs(p_Nodes) do
-		s_SerializedNodes[#s_SerializedNodes + 1] = {
-			ID = l_Node.ID,
-			Index = l_Node.Index,
-			PathIndex = l_Node.PathIndex,
-			PointIndex = l_Node.PointIndex,
-			InputVar = l_Node.InputVar,
-			Position = l_Node.Position,
-			Data = l_Node.Data
-		}
+		if l_Node.Next or l_Node.Prev then -- Only send nodes that aren't stale
+			s_SerializedNodes[#s_SerializedNodes + 1] = {
+				ID = l_Node.ID,
+				Index = l_Node.Index,
+				PathIndex = l_Node.PathIndex,
+				PointIndex = l_Node.PointIndex,
+				InputVar = l_Node.InputVar,
+				Position = l_Node.Position,
+				Data = l_Node.Data
+			}
+		end
 	end
 	return s_SerializedNodes
 end
@@ -1185,6 +1187,10 @@ function NodeEditor:EndOfLoad()
 	if self.m_DataWasRequested then
 		self:OnRequestData() -- send nodes to all players
 	end
+end
+
+function NodeEditor:RefreshWaypointsOnClient()
+	self:OnRequestData() -- send nodes to all players
 end
 
 function NodeEditor:Clear()

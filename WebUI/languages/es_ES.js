@@ -63,4 +63,5 @@ Language['es_ES'] /* Add/replace the xx_XX here with your language code (like de
 	"End Trace": "Finalizar Trazo",
 	"[Save / Load]": "[Guardar / Carga]",
 	"[Paths]": "[Caminos]",
+	"Refresh": "Refrescar",
 };

@@ -63,4 +63,5 @@ Language['fr_FR'] /* Add/replace the xx_XX here with your language code (like de
 	"Restore this value to Default": "Restaurer cette valeur par défaut",
 	"End Trace": "Fin du suivi",
 	"[Paths]": "[Chemins]",
+	"Refresh": "Rafraîchir",
 };

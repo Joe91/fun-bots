@@ -1067,8 +1067,10 @@ function ClientNodeEditor:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 						-- s_Text = s_Text .. string.format("(%s)Pevious [ %s ] Next(%s)\n", s_PreviousNode, p_Waypoint.ID, s_NextNode)
 						s_Text = s_Text .. string.format('Index[%d]\n', l_Node.Index)
 						s_Text = s_Text .. string.format('Path[%d][%d] (%s)\n', l_Node.PathIndex, l_Node.PointIndex, s_PathMode)
-						s_Text = s_Text .. string.format('Path Objectives: %s\n', g_Utilities:dump(s_FirstNode.Data.Objectives, false))
-						s_Text = s_Text .. string.format('Vehicles: %s\n', g_Utilities:dump(s_FirstNode.Data.Vehicles, false))
+						if s_FirstNode.Data then
+							s_Text = s_Text .. string.format('Path Objectives: %s\n', g_Utilities:dump(s_FirstNode.Data.Objectives, false))
+							s_Text = s_Text .. string.format('Vehicles: %s\n', g_Utilities:dump(s_FirstNode.Data.Vehicles, false))
+						end
 						s_Text = s_Text .. string.format('InputVar: %d\n', l_Node.InputVar)
 						s_Text = s_Text .. string.format('SpeedMode: %s (%d)\n', s_SpeedMode, SpeedMode)
 						s_Text = s_Text .. string.format('ExtraMode: %s (%d)\n', s_ExtraMode, ExtraMode)

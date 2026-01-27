@@ -18,6 +18,7 @@ Language['xx_XX'] /* Add/replace the xx_XX here with your language code (like de
 	"[Save / Load]": "",
 	"Save": "",
 	"Load": "",
+	"Refresh": "",
 	"View": "",
 	"Waypoints": "",
 	"Toggle Spawns": "",
