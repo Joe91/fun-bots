@@ -206,6 +206,13 @@ function Bot:ShootAt(p_Player, p_IgnoreYaw)
 
 	if p_IgnoreYaw or (math.abs(s_RelativeYaw) < s_HalfHfov
 			and math.abs(s_RelativePitch) < s_HalfVfov) then
+		-- Check if enemy at FOV edge and distance should be detected
+		-- This adds a probability mechanic where enemies at FOV edges and far away are harder to spot
+		if not p_IgnoreYaw and self:WillMissEnemyAtFovEdge(s_RelativeYaw, s_RelativePitch, s_HalfHfov, s_HalfVfov, self._DistanceToPlayer, s_AttackDistance) then
+			-- Enemy missed due to being at FOV edge and distance
+			return false
+		end
+
 		if self._Shoot then
 			-- only reset ShotTimer, if not already attacking
 			if self._ShootModeTimer <= 0 then
