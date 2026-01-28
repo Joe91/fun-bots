@@ -899,6 +899,7 @@ function NodeEditor:StartTrace(p_Player)
 	if self.m_CustomTrace[p_Player.onlineId] ~= nil then
 		self.m_CustomTrace[p_Player.onlineId]:Clear()
 	end
+	NetEvents:SendToLocal('ClientNodeEditor:ClearCustomTrace', p_Player)
 
 	self.m_CustomTrace[p_Player.onlineId] = NodeCollection(true)
 	self.m_CustomTraceTimer[p_Player.onlineId] = 0
@@ -1030,6 +1031,10 @@ function NodeEditor:SaveTrace(p_Player, p_PathIndex)
 	if self:IsSavingOrLoading() then
 		self:Log(p_Player, 'Operation in progress, please wait...')
 		return false
+	end
+
+	if self.m_CustomTraceTimer[p_Player.onlineId] >= 0 then -- trace is still active
+		self:EndTrace(p_Player)
 	end
 
 	if type(p_PathIndex) == 'table' then
