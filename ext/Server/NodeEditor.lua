@@ -1190,6 +1190,7 @@ function NodeEditor:EndOfLoad()
 end
 
 function NodeEditor:RefreshWaypointsOnClient()
+	self:SendToAllPlayers('ClientNodeEditor:ClearAll')
 	self:OnRequestData() -- send nodes to all players
 end
 
