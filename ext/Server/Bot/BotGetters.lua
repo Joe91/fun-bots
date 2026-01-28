@@ -145,10 +145,10 @@ end
 ---@return boolean true if enemy should be missed (edge of FOV and distance), false if detected
 function Bot:WillMissEnemyAtFovEdge(p_RelativeYaw, p_RelativePitch, p_HalfHfov, p_HalfVfov, p_Distance, p_AttackDistance)
 	-- Calculate how far from center the target is (0.0 = center, 1.0 = at edge)
-	local s_HorizontalDeviation = 0.95 * math.abs(p_RelativeYaw) / p_HalfHfov -- weight to 0.95
-	local s_VerticalDeviation = 0.6 * math.abs(p_RelativePitch) / p_HalfVfov -- weight to 0.6
+	local s_HorizontalDeviation = 0.90 * math.abs(p_RelativeYaw) / p_HalfHfov -- weight to 0.90
+	local s_VerticalDeviation = 0.33 * math.abs(p_RelativePitch) / p_HalfVfov -- weight to 0.33
 	-- Calculate distance factor (0.0 at close range, 1.0 at max attack distance)
-	local s_DistanceFactor = 0.8 * p_Distance / p_AttackDistance           -- weight to 0.8
+	local s_DistanceFactor = 0.50 * p_Distance / p_AttackDistance          -- weight to 0.50
 
 	-- Use the maximum deviation as the FOV edge factor (target at edge = 1.0, at center = 0.0)
 	local s_MissProbabilityFactor = math.max(s_HorizontalDeviation, s_VerticalDeviation, s_DistanceFactor)
