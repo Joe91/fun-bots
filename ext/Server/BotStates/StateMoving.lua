@@ -38,7 +38,7 @@ function StateMoving:Update(p_Bot, p_DeltaTime)
 
 	p_Bot:UpdateNormalMovement(p_DeltaTime)
 
-	p_Bot:UpdateSpeedOfMovement()
+	p_Bot:UpdateSpeedOfMovement(false)
 	p_Bot:_UpdateInputs(p_DeltaTime)
 end
 

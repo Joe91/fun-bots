@@ -60,7 +60,7 @@ function StateAttacking:Update(p_Bot, p_DeltaTime)
 	end
 
 
-	p_Bot:UpdateSpeedOfMovement()
+	p_Bot:UpdateSpeedOfMovement(true)
 	p_Bot:_UpdateInputs(p_DeltaTime)
 end
 

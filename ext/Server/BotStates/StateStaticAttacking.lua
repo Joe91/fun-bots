@@ -35,7 +35,7 @@ function StateStaticAttacking:Update(p_Bot, p_DeltaTime)
 
 	p_Bot:UpdateAttacking(p_DeltaTime)
 	p_Bot:UpdateShootMovement(p_DeltaTime)
-	p_Bot:UpdateSpeedOfMovement()
+	p_Bot:UpdateSpeedOfMovement(true)
 
 	p_Bot:_UpdateInputs(p_DeltaTime)
 end

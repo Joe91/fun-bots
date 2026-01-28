@@ -990,7 +990,7 @@ function Bot:UpdateShootMovement(p_DeltaTime)
 	end
 end
 
-function Bot:UpdateSpeedOfMovement()
+function Bot:UpdateSpeedOfMovement(p_InAttackMode)
 	-- Additional movement.
 	if self.m_Player.soldier == nil then
 		return
@@ -1001,8 +1001,9 @@ function Bot:UpdateSpeedOfMovement()
 	end
 
 	local s_SpeedVal = 0
+	local s_StopForShooting = p_InAttackMode and not self._MoveWhileShooting
 
-	if self.m_ActiveMoveMode ~= BotMoveModes.Standstill and self._MoveWhileShooting then
+	if self.m_ActiveMoveMode ~= BotMoveModes.Standstill and not s_StopForShooting then
 		if self.m_ActiveSpeedValue == BotMoveSpeeds.VerySlowProne then
 			s_SpeedVal = 1.0
 
