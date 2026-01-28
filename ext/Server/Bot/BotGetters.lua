@@ -136,6 +136,30 @@ function Bot:GetFirstShotDelay(p_DistanceToTarget, p_ReducedTiming)
 	return s_Delay
 end
 
+---@param p_RelativeYaw number radians from bot center, normalized
+---@param p_RelativePitch number radians from bot center, normalized
+---@param p_HalfHfov number half horizontal FOV in radians
+---@param p_HalfVfov number half vertical FOV in radians
+---@param p_Distance number distance to target in meters
+---@param p_AttackDistance number max attack distance in meters
+---@return boolean true if enemy should be missed (edge of FOV and distance), false if detected
+function Bot:WillMissEnemyAtFovEdge(p_RelativeYaw, p_RelativePitch, p_HalfHfov, p_HalfVfov, p_Distance, p_AttackDistance)
+	-- Calculate how far from center the target is (0.0 = center, 1.0 = at edge)
+	local s_HorizontalDeviation = 0.90 * math.abs(p_RelativeYaw) / p_HalfHfov -- weight to 0.90
+	local s_VerticalDeviation = 0.33 * math.abs(p_RelativePitch) / p_HalfVfov -- weight to 0.33
+	-- Calculate distance factor (0.0 at close range, 1.0 at max attack distance)
+	local s_DistanceFactor = 0.50 * p_Distance / p_AttackDistance          -- weight to 0.50
+
+	-- Use the maximum deviation as the FOV edge factor (target at edge = 1.0, at center = 0.0)
+	local s_MissProbabilityFactor = math.max(s_HorizontalDeviation, s_VerticalDeviation, s_DistanceFactor)
+
+	-- At edge (FOV edge factor = 1) and max distance, probability = Registry.BOT.FOV_EDGE_DISTANCE_MISS_FACTOR
+	local s_MissProbability = s_MissProbabilityFactor * Registry.BOT.FOV_EDGE_DISTANCE_MISS_FACTOR
+
+	-- Decide whether to miss the enemy
+	return MathUtils:GetRandom(0.0, 100.0) < s_MissProbability
+end
+
 ---@return string
 function Bot:GetObjective()
 	return self._Objective

@@ -47,6 +47,17 @@ function BotStates:IsInVehicleState(p_State)
 	end
 end
 
+function BotStates:IsAttackingState(p_State)
+	if p_State == self.States.Attacking or
+		p_State == self.States.InVehicleAttacking or
+		p_State == self.States.OnVehicleAttacking or
+		p_State == self.States.StaticAttacking then
+		return true
+	else
+		return false
+	end
+end
+
 function BotStates:IsOnVehicleState(p_State)
 	if p_State == self.States.OnVehicleAttacking or
 		p_State == self.States.OnVehicleIdle then

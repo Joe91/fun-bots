@@ -47,9 +47,9 @@ Registry = {
 		-- Patch version.
 		VERSION_PATCH = 0,
 		-- Additional label for pre-releases and build metadata.
-		VERSION_LABEL = "RC2",
+		VERSION_LABEL = "",
 		-- Current version type of this build.
-		VERSION_TYPE = VersionType.Stable,
+		VERSION_TYPE = VersionType.Release,
 		-- The Version used for the Update-Check.
 		UPDATE_CHANNEL = VersionType.Stable,
 		-- Prints current version in console.
@@ -144,6 +144,10 @@ Registry = {
 		-- Revive probabilities
 		REVIVE_PROBABILITY = 80.0,
 		REVIVE_PROBABILITY_IF_HAS_TARGET = 40.0,
+		-- FOV edge and distance detection probability factor
+		-- Probability to miss a target at the edge of FOV and at distance
+		-- Ranges from 0 (never miss) to 100 (always miss at max distance or edge)
+		FOV_EDGE_DISTANCE_MISS_FACTOR = 50.0,
 		-- Update cycle fast.
 		BOT_FAST_UPDATE_CYCLE = 0.03, -- Equals 30 fps.
 		-- Update cycle.

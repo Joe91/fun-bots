@@ -52,6 +52,8 @@ This is the changelog for release **V3.0**. Don't forget to [join us on Discord]
 * improvement in FOV-logic (by kruschk)
 * Fix the Node-Editor-Function to remove a full trace (and unlik correctly)
 * Improved unlink-handling and Path-deletion in Node-Editor
+* Don't always detect enemys at distance and FOV-edge
+
 
 ### Some open TODOs:
 * Vehicle/Tank: better aiming on steep slopes (compensate car rotation)
