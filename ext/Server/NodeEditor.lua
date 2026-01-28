@@ -658,6 +658,25 @@ function NodeEditor:OnRequestData(p_Player)
 	print('[NodeEditor] Sent waypoints to client.')
 end
 
+function NodeEditor:RefreshCustomTracesOnClient()
+	for l_Index = 1, #self.m_ActivePlayers do
+		local s_Player = PlayerManager:GetPlayerByOnlineId(self.m_ActivePlayers[l_Index])
+		if s_Player then
+			local s_TraceNodes = {}
+			local s_DataToSend = {}
+			if self.m_CustomTrace[s_Player.onlineId] then
+				s_TraceNodes = self.m_CustomTrace[s_Player.onlineId]:Get()
+				for i = 1, #s_TraceNodes do
+					s_DataToSend[#s_DataToSend + 1] = {
+						Position = s_TraceNodes[i].Position,
+					}
+				end
+				NetEvents:SendToLocal('UI_ClientNodeEditor_TraceData', s_Player, #s_TraceNodes, self.m_CustomTraceDistance[s_Player.onlineId], nil, nil, s_DataToSend)
+			end
+		end
+	end
+end
+
 function NodeEditor:OnRemoveNode(p_Player)
 	local s_Selection = m_NodeCollection:GetSelected(p_Player.onlineId)
 	self:SendToAllPlayers('ClientNodeEditor:RemoveNodes', self:GetNodesForPlayer(s_Selection))
@@ -899,6 +918,7 @@ function NodeEditor:StartTrace(p_Player)
 	if self.m_CustomTrace[p_Player.onlineId] ~= nil then
 		self.m_CustomTrace[p_Player.onlineId]:Clear()
 	end
+	NetEvents:SendToLocal('ClientNodeEditor:ClearCustomTrace', p_Player)
 
 	self.m_CustomTrace[p_Player.onlineId] = NodeCollection(true)
 	self.m_CustomTraceTimer[p_Player.onlineId] = 0
@@ -1030,6 +1050,10 @@ function NodeEditor:SaveTrace(p_Player, p_PathIndex)
 	if self:IsSavingOrLoading() then
 		self:Log(p_Player, 'Operation in progress, please wait...')
 		return false
+	end
+
+	if self.m_CustomTraceTimer[p_Player.onlineId] >= 0 then -- trace is still active
+		self:EndTrace(p_Player)
 	end
 
 	if type(p_PathIndex) == 'table' then
@@ -1190,7 +1214,9 @@ function NodeEditor:EndOfLoad()
 end
 
 function NodeEditor:RefreshWaypointsOnClient()
+	self:SendToAllPlayers('ClientNodeEditor:ClearAll')
 	self:OnRequestData() -- send nodes to all players
+	self:RefreshCustomTracesOnClient()
 end
 
 function NodeEditor:Clear()
