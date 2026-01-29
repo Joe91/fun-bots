@@ -3,8 +3,8 @@
 ![Image](https://img.shields.io/github/downloads/Joe91/fun-bots/total?style=for-the-badge)
 ![Image](https://img.shields.io/github/stars/Joe91/fun-bots?style=for-the-badge)
 
-## Welcome to the changelogs for release **V3.0**
-This is the changelog for release **V3.0**. Don't forget to [join us on Discord](https://discord.com/invite/FKamccAEqz)
+## Welcome to the changelogs for release **V3.0.0**
+This is the changelog for release **V3.0.0**. Don't forget to [join us on Discord](https://discord.com/invite/FKamccAEqz)
 
 
 ## Changelog
@@ -54,15 +54,6 @@ This is the changelog for release **V3.0**. Don't forget to [join us on Discord]
 * Improved unlink-handling and Path-deletion in Node-Editor
 * Don't always detect enemys at distance and FOV-edge
 
-
-### Some open TODOs:
-* Vehicle/Tank: better aiming on steep slopes (compensate car rotation)
-* Chopper: handle different heights and positions depending on capture points
-* Add logic for jets in Rush
-* Improve team logic for AA and other vehicles (example: AA on Rush)
-* Fully support default spawn method? (for now only on TDM/GM/SDM by default)
-* (Rework raycasts for better performance)
-* (Improve node editor)
 
 ### Bug fixes
 * Fix stationary AA again...
