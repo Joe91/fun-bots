@@ -1861,8 +1861,6 @@ function NodeCollection:FindAlongTrace(p_Vec3Start, p_Vec3End, p_Granularity, p_
 end
 
 function NodeCollection:Log(...)
-	print("logger")
-	m_Logger:Write(...)
 	m_Logger:Write(Language:I18N(...))
 end
 

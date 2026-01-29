@@ -158,7 +158,6 @@ function ClientNodeEditor:OnRegisterEvents()
 
 	self.m_EventsReady = true
 	self.m_RequestDataSent = false
-	-- self:Log('Register Events')
 end
 
 function ClientNodeEditor:Log(...)
