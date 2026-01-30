@@ -173,10 +173,13 @@ end
 ---@param p_Angle number
 ---@return number
 function Utilities:NormalizeAngleRad(p_Angle)
-	if p_Angle > math.pi then
-		p_Angle = p_Angle - 2 * math.pi
-	elseif p_Angle < -math.pi then
+	-- Ensure the angle is in the range (-2π, 2π).
+	p_Angle = math.fmod(p_Angle, 2 * math.pi)
+	-- Normalise the angle to its equivalent in [-π, π).
+	if p_Angle < -math.pi then
 		p_Angle = p_Angle + 2 * math.pi
+	elseif math.pi <= p_Angle then
+		p_Angle = p_Angle - 2 * math.pi
 	end
 	return p_Angle
 end
