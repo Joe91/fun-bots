@@ -188,7 +188,7 @@ function GameDirector:OnEngineUpdate(p_DeltaTime)
 
 		if (Globals.IsRush or Globals.IsConquest) then
 			-- check for vehicle or valid path
-			if s_BotStates:IsInVehicleState(l_Bot.m_ActiveState) then
+			if s_BotStates:IsInVehicleState(l_Bot.m_ActiveState) or l_Bot.m_ActiveState == s_BotStates.States.Following then
 				l_Bot._KillYourselfTimer = 0.0
 			else
 				-- check if bot is on active path

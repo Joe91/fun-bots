@@ -9,6 +9,8 @@ function BotStates:__init()
 		Attacking = require('BotStates/StateAttacking'),
 		Reviving = nil,
 		Repairing = nil,
+		Following = require('BotStates/StateFollowing'),
+
 
 		-- InVehicleIdle = require('BotStates/StateInVehicleIdle'),
 		InVehicleMoving = require('BotStates/StateInVehicleMoving'),
@@ -25,7 +27,8 @@ end
 
 function BotStates:IsSoldierState(p_State)
 	if p_State == self.States.Moving or
-		p_State == self.States.Attacking then
+		p_State == self.States.Attacking or
+		p_State == self.States.Following then
 		return true
 	else
 		return false
