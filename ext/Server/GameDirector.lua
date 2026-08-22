@@ -111,7 +111,7 @@ end
 ---@param p_CapturePoint CapturePointEntity|Entity
 function GameDirector:OnPlayerEnterExitCapturePoint(p_Player, p_CapturePoint)
 	p_CapturePoint = CapturePointEntity(p_CapturePoint)
-	local s_ObjectiveName = self:_TranslateObjective(p_CapturePoint.transform.trans, p_CapturePoint.name)
+	local s_ObjectiveName = self:_TranslateObjective(p_CapturePoint.transform.trans:Clone(), p_CapturePoint.name)
 	self:_UpdateObjective(s_ObjectiveName, {
 		-- team = p_CapturePoint.team,
 		isAttacked = p_CapturePoint.isAttacked
@@ -122,7 +122,7 @@ end
 ---@param p_CapturePoint CapturePointEntity|Entity
 function GameDirector:OnCapturePointCaptured(p_CapturePoint)
 	p_CapturePoint = CapturePointEntity(p_CapturePoint)
-	local s_ObjectiveName = self:_TranslateObjective(p_CapturePoint.transform.trans, p_CapturePoint.name)
+	local s_ObjectiveName = self:_TranslateObjective(p_CapturePoint.transform.trans:Clone(), p_CapturePoint.name)
 	self:_UpdateObjective(s_ObjectiveName, {
 		team = p_CapturePoint.team,
 		isAttacked = p_CapturePoint.isAttacked
@@ -142,7 +142,7 @@ end
 ---@param p_CapturePoint CapturePointEntity|Entity
 function GameDirector:OnCapturePointLost(p_CapturePoint)
 	p_CapturePoint = CapturePointEntity(p_CapturePoint)
-	local s_ObjectiveName = self:_TranslateObjective(p_CapturePoint.transform.trans, p_CapturePoint.name)
+	local s_ObjectiveName = self:_TranslateObjective(p_CapturePoint.transform.trans:Clone(), p_CapturePoint.name)
 	local s_IsAttacked = p_CapturePoint.flagLocation < 100.0 and p_CapturePoint.isControlled
 	self:_UpdateObjective(s_ObjectiveName, {
 		team = TeamId.TeamNeutral, -- p_CapturePoint.team
@@ -356,7 +356,7 @@ function GameDirector:OnEngineUpdate(p_DeltaTime)
 					-- defend can also be a valid objective
 					if l_Objective.team == l_BotTeam and Config.DefendObjectives then
 						if l_Objective.assigned[l_BotTeam] < s_MaxAssignsDefend[l_BotTeam] then
-							local s_Distance = self:_GetDistanceFromObjective(l_Objective.name, l_Bot.m_Player.soldier.worldTransform.trans)
+							local s_Distance = self:_GetDistanceFromObjective(l_Objective.name, l_Bot.m_Player.soldier.worldTransform.trans:Clone())
 
 							if s_ClosestDistance == nil or s_ClosestDistance > s_Distance then
 								s_ClosestDistance = s_Distance
@@ -366,7 +366,7 @@ function GameDirector:OnEngineUpdate(p_DeltaTime)
 						end
 					elseif l_Objective.team ~= l_BotTeam then -- objective of enemy-team
 						if l_Objective.assigned[l_BotTeam] < s_MaxAssignsAttack[l_BotTeam] then
-							local s_Distance = self:_GetDistanceFromObjective(l_Objective.name, l_Bot.m_Player.soldier.worldTransform.trans)
+							local s_Distance = self:_GetDistanceFromObjective(l_Objective.name, l_Bot.m_Player.soldier.worldTransform.trans:Clone())
 
 							if s_ClosestDistance == nil or s_ClosestDistance > s_Distance then
 								s_ClosestDistance = s_Distance
@@ -609,7 +609,7 @@ function GameDirector:ReturnStationaryAaEntity(p_ControllableEntity, p_TeamId)
 end
 
 function GameDirector:GetGadgetOwner(p_Entity)
-	local s_GadgetPosition = p_Entity.transform.trans
+	local s_GadgetPosition = p_Entity.transform.trans:Clone()
 
 	local s_MinDistance = nil
 	local s_ClosestPlayer = nil
@@ -655,7 +655,7 @@ function GameDirector:OnVehicleSpawnDone(p_Entity)
 				end
 
 				local s_Beacon = {}
-				local s_Pos = p_Entity.transform.trans
+				local s_Pos = p_Entity.transform.trans:Clone()
 				local s_Node = self:FindClosestPath(s_Pos, false, true, nil, 1)
 
 				if s_Node and s_Node.Position:Distance(s_Pos) < 6.0 then
@@ -723,7 +723,7 @@ function GameDirector:OnVehicleSpawnDone(p_Entity)
 	end
 
 	-- now check the other vehicles
-	local s_Objective = self:_SetVehicleObjectiveState(p_Entity.transform.trans, true)
+	local s_Objective = self:_SetVehicleObjectiveState(p_Entity.transform.trans:Clone(), true)
 	if s_Objective ~= nil then
 		-- don't make this dependant of the nodes
 		if s_Objective.isSpawnPath then
@@ -857,7 +857,7 @@ function GameDirector:OnVehicleEnter(p_Entity, p_Player)
 
 	if not m_Utilities:isBot(p_Player) then
 		p_Entity = ControllableEntity(p_Entity)
-		self:_SetVehicleObjectiveState(p_Entity.transform.trans, false)
+		self:_SetVehicleObjectiveState(p_Entity.transform.trans:Clone(), false)
 
 		if p_Player.controlledEntryId ~= 0 and p_Player.controlledControllable then
 			local s_Driver = p_Player.controlledControllable:GetPlayerInEntry(0)
@@ -866,7 +866,7 @@ function GameDirector:OnVehicleEnter(p_Entity, p_Player)
 			end
 		end
 
-		self:_SetVehicleObjectiveState(p_Entity.transform.trans, false)
+		self:_SetVehicleObjectiveState(p_Entity.transform.trans:Clone(), false)
 	end
 end
 
@@ -1191,7 +1191,7 @@ function GameDirector:GetSpawnableBeaconOrMate(p_TeamId, p_SquadId)
 		if s_Beacon ~= nil then
 			if m_Utilities:CheckProbability(Registry.BOT_SPAWN.PROBABILITY_SQUADMATE_SPAWN) then
 				m_Logger:Write("spawn at beacon, owned by " .. l_Player.name)
-				return s_Beacon.Path, s_Beacon.Point, true, nil, s_Beacon.Entity.transform.trans
+				return s_Beacon.Path, s_Beacon.Point, true, nil, s_Beacon.Entity.transform.trans:Clone()
 			end
 		end
 
@@ -1208,9 +1208,9 @@ function GameDirector:GetSpawnableBeaconOrMate(p_TeamId, p_SquadId)
 						return 1, 1, false, s_Vehicle, nil
 					end
 				else
-					local s_Node = self:FindClosestPath(l_Player.soldier.worldTransform.trans, false, false)
+					local s_Node = self:FindClosestPath(l_Player.soldier.worldTransform.trans:Clone(), false, false)
 					if s_Node then
-						return s_Node.PathIndex, s_Node.PointIndex, false, nil, l_Player.soldier.worldTransform.trans
+						return s_Node.PathIndex, s_Node.PointIndex, false, nil, l_Player.soldier.worldTransform.trans:Clone()
 					end
 				end
 			end
@@ -1268,7 +1268,7 @@ function GameDirector:TrySpawnOnSoldier(player, isBot, isSquadMate)
 	else
 		if not player.soldier then return end
 		if m_Utilities:CheckProbability(spawnProbability) then
-			local node = self:FindClosestPath(player.soldier.worldTransform.trans, false, true, nil)
+			local node = self:FindClosestPath(player.soldier.worldTransform.trans:Clone(), false, true, nil)
 			if node and node.Position:Distance(player.soldier.worldTransform.trans) < 6.0 then
 				return node.PathIndex, node.PointIndex, false, nil
 			end
@@ -1718,7 +1718,7 @@ function GameDirector:GetActiveTargetPointPosition(p_TeamId)
 		for l_Index = 1, #self._AllCapturePoints do
 			local l_CapturePoint = self._AllCapturePoints[l_Index]
 
-			local s_Pos = l_CapturePoint.transform.trans
+			local s_Pos = l_CapturePoint.transform.trans:Clone()
 			if l_CapturePoint.team ~= p_TeamId then
 				s_NeutralNode = s_Pos
 			end
@@ -1918,7 +1918,7 @@ function GameDirector:_InitFlagTeams()
 	for l_Index = 1, #self._AllCapturePoints do
 		local s_Entity = self._AllCapturePoints[l_Index]
 
-		local s_ObjectiveName = self:_TranslateObjective(s_Entity.transform.trans, s_Entity.name)
+		local s_ObjectiveName = self:_TranslateObjective(s_Entity.transform.trans:Clone(), s_Entity.name)
 		if s_ObjectiveName ~= "" then
 			local s_Objective = self:_GetObjectiveObject(s_ObjectiveName)
 

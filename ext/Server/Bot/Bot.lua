@@ -412,7 +412,7 @@ function Bot:_CheckShouldExitVehicleIfPassenger(p_VehicleEntity, p_OnVehicle)
 
 	local s_Coordinates = {}
 	for l_Index = 1, #s_AllCapturePoints do
-		s_Coordinates[#s_Coordinates + 1] = s_AllCapturePoints[l_Index].transform.trans
+		s_Coordinates[#s_Coordinates + 1] = s_AllCapturePoints[l_Index].transform.trans:Clone()
 	end
 	for l_Index = 1, #s_ActiveMcoms do
 		s_Coordinates[#s_Coordinates + 1] = s_ActiveMcoms[l_Index]
@@ -488,7 +488,7 @@ function Bot:_UpdateLookAroundPassenger(p_DeltaTime)
 		return
 	end
 
-	local s_Pos = self.m_Player.attachedControllable.transform.forward
+	local s_Pos = self.m_Player.attachedControllable.transform.forward:Clone()
 	local s_AtanDzDx = math.atan(s_Pos.z, s_Pos.x)
 	self._TargetYaw = (s_AtanDzDx > math.pi / 2) and (s_AtanDzDx - math.pi / 2) or (s_AtanDzDx + 3 * math.pi / 2)
 	self._TargetPitch = 0.0
@@ -606,7 +606,7 @@ function Bot:UpdateVehicleMovableId()
 			self._ActiveVehicleWeaponSlot)
 
 		if self.m_Player.controlledEntryId == 0 then
-			self:FindVehiclePath(self.m_Player.soldier.worldTransform.trans)
+			self:FindVehiclePath(self.m_Player.soldier.worldTransform.trans:Clone())
 		end
 	end
 	self:UpdateDontAttackFlag()

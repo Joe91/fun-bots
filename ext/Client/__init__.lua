@@ -207,10 +207,10 @@ function FunBotClient:OnUIDrawHud()
 			if p == lp or not p.soldier or p.soldier.health <= 0 then goto skip end
 			if p.teamId ~= lp.teamId then goto skip end
 
-			local headPos = p.soldier.worldTransform.trans + VERT_OFFS
+			local headPos = p.soldier.worldTransform.trans:Clone() + VERT_OFFS
 
 			-- occlusion check
-			local hit = RaycastManager:Raycast(lp.soldier.worldTransform.trans,
+			local hit = RaycastManager:Raycast(lp.soldier.worldTransform.trans:Clone(),
 				headPos,
 				RayCastFlags.DontCheckWater |
 				RayCastFlags.DontCheckCharacter |

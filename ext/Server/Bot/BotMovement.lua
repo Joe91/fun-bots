@@ -626,7 +626,7 @@ function Bot:UpdateNormalMovement(p_DeltaTime)
 			if self._StuckTimer > 6.0 then
 				local soldier = self.m_Player.soldier
 				if soldier ~= nil then
-					local s_Node = g_GameDirector:FindClosestPath(soldier.worldTransform.trans, false, true, nil)
+					local s_Node = g_GameDirector:FindClosestPath(soldier.worldTransform.trans:Clone(), false, true, nil)
 					if s_Node ~= nil then
 						self._InvertPathDirection = false
 						self._PathIndex = s_Node.PathIndex
@@ -644,7 +644,7 @@ function Bot:UpdateNormalMovement(p_DeltaTime)
 			self._NextTargetPoint = s_NextPoint
 
 			-- do the obstacle-handling
-			local s_Result = self:_ObstacleHandling(s_Velocity, s_DistanceFromTargetSquared, s_HeightDistance, p_DeltaTime, self.m_Player.soldier.worldTransform.trans)
+			local s_Result = self:_ObstacleHandling(s_Velocity, s_DistanceFromTargetSquared, s_HeightDistance, p_DeltaTime, self.m_Player.soldier.worldTransform.trans:Clone())
 			if s_Result == nil then
 				self.m_Player.soldier:Kill()
 				m_Logger:Write(self.m_Player.name .. ' got stuck. Kill')
@@ -733,7 +733,7 @@ function Bot:UpdateNormalMovement(p_DeltaTime)
 		if self._FollowTargetPlayer and self._FollowTargetPlayer.soldier then
 			local s_TracePlayer = self._FollowTargetPlayer
 			self._FollowingTraceTimer = self._FollowingTraceTimer + p_DeltaTime
-			local s_PlayerPos = s_TracePlayer.soldier.worldTransform.trans
+			local s_PlayerPos = s_TracePlayer.soldier.worldTransform.trans:Clone()
 			if self._FollowingTraceTimer > Config.TraceDelta then
 				if #self._FollowWayPoints == 0 or self._FollowWayPoints[#self._FollowWayPoints].Position:Distance(s_PlayerPos) > 0.2 then
 					self._FollowingTraceTimer = 0.0
@@ -787,7 +787,7 @@ function Bot:UpdateNormalMovement(p_DeltaTime)
 			self._FollowTargetPlayer = nil
 			self._FollowWayPoints = {}
 
-			local s_Node = g_GameDirector:FindClosestPath(self.m_Player.soldier.worldTransform.trans, false, true, nil)
+			local s_Node = g_GameDirector:FindClosestPath(self.m_Player.soldier.worldTransform.trans:Clone(), false, true, nil)
 			if s_Node ~= nil then
 				self._InvertPathDirection = false
 				self._PathIndex = s_Node.PathIndex
@@ -829,7 +829,7 @@ function Bot:UpdateNormalMovement(p_DeltaTime)
 			self._TargetPoint = s_Point
 			self._NextTargetPoint = s_NextPoint
 
-			local s_Result = self:_ObstacleHandling(s_Velocity, 0, s_HeightDistance, p_DeltaTime, self.m_Player.soldier.worldTransform.trans)
+			local s_Result = self:_ObstacleHandling(s_Velocity, 0, s_HeightDistance, p_DeltaTime, self.m_Player.soldier.worldTransform.trans:Clone())
 			if s_Result == nil then
 				self._StuckTimer = 0.0
 				return

@@ -15,7 +15,7 @@ function VehicleChopperControl:UpdateMovementChopper(p_DeltaTime, p_Bot)
 	if p_Bot._VehicleWaitTimer > 0.0 then
 		p_Bot._VehicleWaitTimer = p_Bot._VehicleWaitTimer - p_DeltaTime
 		if p_Bot._VehicleWaitTimer <= 0.0 then
-			g_GameDirector:_SetVehicleObjectiveState(p_Bot.m_Player.controlledControllable.transform.trans, false)
+			g_GameDirector:_SetVehicleObjectiveState(p_Bot.m_Player.controlledControllable.transform.trans:Clone(), false)
 		else
 			return
 		end

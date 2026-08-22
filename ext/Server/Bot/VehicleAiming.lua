@@ -63,14 +63,14 @@ function VehicleAiming:UpdateAimingVehicle(p_Bot, p_AdvancedAlgorithm)
 
 
 	if p_Bot._VehicleMovableId >= 0 then
-		local s_VehicleTrans = p_Bot.m_Player.controlledControllable.physicsEntityBase:GetPartTransform(p_Bot._VehicleMovableId):ToLinearTransform()
+		local s_VehicleTrans = p_Bot.m_Player.controlledControllable.physicsEntityBase:GetPartTransform(p_Bot._VehicleMovableId):ToLinearTransform():Clone()
 		local s_Offsets = m_Vehicles:GetOffsets(p_Bot.m_ActiveVehicle, p_Bot.m_Player.controlledEntryId, p_Bot._ActiveVehicleWeaponSlot)
-		s_FullPositionBot = s_VehicleTrans.trans + (s_VehicleTrans.left * s_Offsets.x) + (s_VehicleTrans.up * s_Offsets.y) + (s_VehicleTrans.forward * s_Offsets.z)
+		s_FullPositionBot = s_VehicleTrans.trans:Clone() + (s_VehicleTrans.left:Clone() * s_Offsets.x) + (s_VehicleTrans.up:Clone() * s_Offsets.y) + (s_VehicleTrans.forward:Clone() * s_Offsets.z)
 	elseif s_IsAirVehicle and p_Bot.m_Player.controlledEntryId == 0 then
 		-- main weapon of chopper or jet
-		local s_VehicleTrans = p_Bot.m_Player.controlledControllable.transform
+		local s_VehicleTrans = p_Bot.m_Player.controlledControllable.transform:Clone()
 		local s_Offsets = m_Vehicles:GetOffsets(p_Bot.m_ActiveVehicle, p_Bot.m_Player.controlledEntryId, p_Bot._ActiveVehicleWeaponSlot)
-		s_FullPositionBot = s_VehicleTrans.trans + (s_VehicleTrans.left * s_Offsets.x) + (s_VehicleTrans.up * s_Offsets.y) + (s_VehicleTrans.forward * s_Offsets.z)
+		s_FullPositionBot = s_VehicleTrans.trans:Clone() + (s_VehicleTrans.left:Clone() * s_Offsets.x) + (s_VehicleTrans.up:Clone() * s_Offsets.y) + (s_VehicleTrans.forward:Clone() * s_Offsets.z)
 	else
 		s_FullPositionBot = p_Bot.m_Player.soldier.worldTransform.trans:Clone() +
 			m_Utilities:getCameraPos(p_Bot.m_Player, false, false)

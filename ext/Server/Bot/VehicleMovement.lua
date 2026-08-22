@@ -23,7 +23,7 @@ function VehicleMovement:UpdateNormalMovementVehicle(p_DeltaTime, p_Bot)
 	if p_Bot._VehicleWaitTimer > 0.0 then
 		p_Bot._VehicleWaitTimer = p_Bot._VehicleWaitTimer - p_DeltaTime
 		if p_Bot._VehicleWaitTimer <= 0.0 then
-			g_GameDirector:_SetVehicleObjectiveState(p_Bot.m_Player.controlledControllable.transform.trans, false)
+			g_GameDirector:_SetVehicleObjectiveState(p_Bot.m_Player.controlledControllable.transform.trans:Clone(), false)
 		else
 			return
 		end
@@ -382,7 +382,7 @@ function VehicleMovement:UpdateVehicleLookAround(p_Bot, p_DeltaTime)
 		p_Bot._TargetPoint = s_Waypoint
 	else
 		if p_Bot._VehicleMovableId >= 0 then
-			local s_Pos = p_Bot.m_Player.controlledControllable.transform.forward
+			local s_Pos = p_Bot.m_Player.controlledControllable.transform.forward:Clone()
 			local s_AtanDzDx = math.atan(s_Pos.z, s_Pos.x)
 			p_Bot._TargetYaw = (s_AtanDzDx > math.pi / 2) and (s_AtanDzDx - math.pi / 2) or (s_AtanDzDx + 3 * math.pi / 2)
 			p_Bot._TargetPitch = 0.0
@@ -461,9 +461,9 @@ function VehicleMovement:UpdateYawVehicle(p_Bot, p_Attacking, p_IsStationaryLaun
 
 		-- now rotate corresponding to the gun-alignment
 		-- now modify the orientation as needed
-		local s_forward = s_Transform.forward
-		local s_left = s_Transform.left
-		local s_up = s_Transform.up
+		local s_forward = s_Transform.forward:Clone()
+		local s_left = s_Transform.left:Clone()
+		local s_up = s_Transform.up:Clone()
 
 		local s_Corrections = m_Vehicles:GetRotationOffsets(p_Bot.m_ActiveVehicle, p_Bot.m_Player.controlledEntryId, p_Bot._ActiveVehicleWeaponSlot)
 		local s_YawCorr = -s_Corrections.x + Debug.Vars[6]
@@ -475,16 +475,16 @@ function VehicleMovement:UpdateYawVehicle(p_Bot, p_Attacking, p_IsStationaryLaun
 		local s_AdjustedForward = self:rotate_vector(s_NewForward, s_NewLeft, s_PitchCorr)
 		local s_AdjustedUp = self:rotate_vector(s_up, s_NewLeft, s_PitchCorr)
 
-		local s_LinearTransformNew = LinearTransform(s_NewLeft, s_AdjustedUp, s_AdjustedForward, s_Transform.trans)
+		local s_LinearTransformNew = LinearTransform(s_NewLeft, s_AdjustedUp, s_AdjustedForward, s_Transform.trans:Clone())
 
 		local s_Direction = Vec3.zero
 		if p_Attacking then
 			-- print({ p_Bot._AttackPosition, p_Bot.m_Player.controlledControllable.transform.trans })
 			s_DeltaYaw, s_DeltaPitch = self:CalculateDeviationRelativeToOrientation(s_LinearTransformNew, p_Bot._AttackPosition)
-			s_Direction = p_Bot._AttackPosition - s_LinearTransformNew.trans
+			s_Direction = p_Bot._AttackPosition:Clone() - s_LinearTransformNew.trans:Clone()
 		elseif p_Bot._TargetPoint then
 			s_DeltaYaw, s_DeltaPitch = self:CalculateDeviationRelativeToOrientation(s_LinearTransformNew, p_Bot._TargetPoint.Position)
-			s_Direction = p_Bot._TargetPoint.Position - s_LinearTransformNew.trans
+			s_Direction = p_Bot._TargetPoint.Position:Clone() - s_LinearTransformNew.trans:Clone()
 		end
 
 		p_Bot._TargetYaw = math.atan(s_Direction.z, s_Direction.x)
@@ -615,7 +615,7 @@ function VehicleMovement:UpdateYawVehicle(p_Bot, p_Attacking, p_IsStationaryLaun
 		local s_Output = p_Bot._Pid_Att_Yaw:Update(s_DeltaYaw)
 
 		if p_Bot._VehicleMoveWhileShooting and p_Bot.m_Player.controlledEntryId == 0 and not p_IsStationaryLauncher then -- Driver
-			s_Pos = p_Bot.m_Player.controlledControllable.transform.forward
+			s_Pos = p_Bot.m_Player.controlledControllable.transform.forward:Clone()
 			local s_AtanDzDx = math.atan(s_Pos.z, s_Pos.x)
 			local s_Yaw = (s_AtanDzDx > math.pi / 2) and (s_AtanDzDx - math.pi / 2) or (s_AtanDzDx + 3 * math.pi / 2)
 			local s_DeltaYawDriving = s_Yaw - p_Bot._TargetYawMovementVehicle

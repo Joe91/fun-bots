@@ -1238,7 +1238,7 @@ function ClientNodeEditor:Raycast(p_MaxDistance, p_UseAsync)
 		return
 	end
 
-	local s_CastStart = s_Transform.trans
+	local s_CastStart = s_Transform.trans:Clone()
 
 	-- We get the raycast end transform with the calculated direction and the max distance.
 	local s_CastEnd = Vec3(

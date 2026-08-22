@@ -68,8 +68,8 @@ function ChatCommands:Execute(p_Parts, p_Player)
 
 		if p_Player.attachedControllable ~= nil then
 			local s_VehicleName = VehicleEntityData(p_Player.controlledControllable.data).controllableType:gsub(".+/.+/", "")
-			local s_Pos = p_Player.controlledControllable.transform.forward
-			local s_PlayerPos = p_Player.soldier.worldTransform.trans
+			local s_Pos = p_Player.controlledControllable.transform.forward:Clone()
+			local s_PlayerPos = p_Player.soldier.worldTransform.trans:Clone()
 			print("-----------------------------")
 			print(s_VehicleName)
 			local s_VehicleEntity
@@ -81,17 +81,17 @@ function ChatCommands:Execute(p_Parts, p_Player)
 
 			if Registry.DEBUG.VEHICLE_PROJECTILE_TRACE and Globals.LastPorjectile ~= nil then
 				print("Offset of vehicle to bullet:")
-				local s_Diff = Globals.LastPorjectile.trans - p_Player.controlledControllable.transform.trans
+				local s_Diff = Globals.LastPorjectile.trans:Clone() - p_Player.controlledControllable.transform.trans:Clone()
 
-				local s_Left = Globals.LastPorjectile.left
+				local s_Left = Globals.LastPorjectile.left:Clone()
 				local s_FactLeft = s_Diff:Dot(s_Left) / s_Left:Dot(s_Left)
 				print("x: " .. string.format("%.3f", s_FactLeft))
 
-				local s_Up = Globals.LastPorjectile.up
+				local s_Up = Globals.LastPorjectile.up:Clone()
 				local s_FactUp = s_Diff:Dot(s_Up) / s_Up:Dot(s_Up)
 				print("y: " .. string.format("%.3f", s_FactUp))
 
-				local s_Forward = Globals.LastPorjectile.forward
+				local s_Forward = Globals.LastPorjectile.forward:Clone()
 				local s_FactForward = s_Diff:Dot(s_Forward) / s_Forward:Dot(s_Forward)
 				print("z: " .. string.format("%.3f", s_FactForward))
 
@@ -111,10 +111,9 @@ function ChatCommands:Execute(p_Parts, p_Player)
 					-- print(p_Player.controlledControllable.physicsEntityBase:GetPart(j).typeInfo.name)
 
 					local s_Direction = s_QuatTransform:ToLinearTransform().forward - s_Pos
-					local s_Position = s_QuatTransform:ToLinearTransform().trans
+					local s_Position = s_QuatTransform:ToLinearTransform().trans:Clone()
 					if Registry.DEBUG.VEHICLE_PROJECTILE_TRACE and Globals.LastPorjectile ~= nil then
-						-- print(s_Position - p_Player.controlledControllable.transform.trans)
-						local s_DiffDir = s_QuatTransform:ToLinearTransform().forward - Globals.LastPorjectile.forward
+						local s_DiffDir = s_QuatTransform:ToLinearTransform().forward:Clone() - Globals.LastPorjectile.forward
 
 						if s_DiffDir.magnitude < 0.05 then
 							print("index: " .. j)
@@ -161,8 +160,8 @@ function ChatCommands:Execute(p_Parts, p_Player)
 
 		if p_Player.attachedControllable ~= nil then
 			local s_VehicleName = VehicleEntityData(p_Player.controlledControllable.data).controllableType:gsub(".+/.+/", "")
-			local s_Pos = p_Player.controlledControllable.transform.forward
-			local s_PlayerPos = p_Player.soldier.worldTransform.trans
+			local s_Pos = p_Player.controlledControllable.transform.forward:Clone()
+			local s_PlayerPos = p_Player.soldier.worldTransform.trans:Clone()
 			print("-----------------------------")
 			print(s_VehicleName)
 			local s_VehicleEntity
@@ -207,7 +206,7 @@ function ChatCommands:Execute(p_Parts, p_Player)
 
 
 
-						local s_DirOld = s_QuatTransform:ToLinearTransform().forward + p_Player.controlledControllable.transform.left
+						local s_DirOld = s_QuatTransform:ToLinearTransform().forward:Clone() + p_Player.controlledControllable.transform.left:Clone()
 						local s_DirrBullet = (Globals.LastPorjectile.trans - s_QuatTransform:ToLinearTransform().trans):Normalize()
 
 						local s_AtanDzDx = math.atan(s_DirOld.z, s_DirOld.x)
@@ -275,7 +274,7 @@ function ChatCommands:Execute(p_Parts, p_Player)
 
 		if p_Player.attachedControllable ~= nil then
 			local s_VehicleName = VehicleEntityData(p_Player.controlledControllable.data).controllableType:gsub(".+/.+/", "")
-			local s_Pos = p_Player.controlledControllable.transform.forward
+			local s_Pos = p_Player.controlledControllable.transform.forward:Clone()
 			print(s_VehicleName)
 			local s_VehicleEntity
 

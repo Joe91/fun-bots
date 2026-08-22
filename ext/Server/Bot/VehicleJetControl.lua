@@ -21,8 +21,8 @@ function VehicleJetControl:UpdateMovementJet(p_DeltaTime, p_Bot)
 				local l_Jet = g_GameDirector:GetSpawnableVehicle(p_Bot.m_Player.teamId)[l_Index]
 				local s_DistanceToJet = p_Bot.m_Player.controlledControllable.transform.trans:Distance(l_Jet.transform.trans)
 				if s_DistanceToJet < 30 then
-					local s_CompPos = p_Bot.m_Player.controlledControllable.transform.trans +
-						p_Bot.m_Player.controlledControllable.transform.forward * s_DistanceToJet
+					local s_CompPos = p_Bot.m_Player.controlledControllable.transform.trans:Clone() +
+						p_Bot.m_Player.controlledControllable.transform.forward:Clone() * s_DistanceToJet
 					if l_Jet.transform.trans:Distance(s_CompPos) < 10 then
 						s_IsInfront = true
 					end
@@ -33,7 +33,7 @@ function VehicleJetControl:UpdateMovementJet(p_DeltaTime, p_Bot)
 				return
 			end
 
-			g_GameDirector:_SetVehicleObjectiveState(p_Bot.m_Player.controlledControllable.transform.trans, false)
+			g_GameDirector:_SetVehicleObjectiveState(p_Bot.m_Player.controlledControllable.transform.trans:Clone(), false)
 		else
 			return
 		end

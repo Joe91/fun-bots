@@ -46,7 +46,7 @@ function ClientSpawnPointHelper:FindSpawn(p_Position)
 
 	for l_Index = 1, #self.m_SpawnPointTable do
 		local s_Transform = self.m_SpawnPointTable[l_Index]
-		local s_Distance = m_Utilities:DistanceFast(s_Transform.trans, p_Position)
+		local s_Distance = m_Utilities:DistanceFast(s_Transform.trans:Clone(), p_Position)
 		if s_Distance < s_ClosestDistance then
 			s_ClosestIndex = l_Index
 			s_ClosestDistance = s_Distance
@@ -69,10 +69,11 @@ function ClientSpawnPointHelper:Update(p_PlayerPos, p_NodesToDraw, p_LinesToDraw
 
 	for l_Index = 1, #self.m_SpawnPointTable do
 		local l_Transform = self.m_SpawnPointTable[l_Index]
-		if m_Utilities:DistanceFast(l_Transform.trans, p_PlayerPos) <= Config.SpawnPointRange then
+		local l_Pos = l_Transform.trans:Clone()
+		if m_Utilities:DistanceFast(l_Pos, p_PlayerPos) <= Config.SpawnPointRange then
 			-- self:DrawSpawnPoint(l_Transform, l_Index)
 			local s_Color = Vec4(1, 1, 1, 0.5)
-			local s_PointScreenPos = ClientUtils:WorldToScreen(l_Transform.trans)
+			local s_PointScreenPos = ClientUtils:WorldToScreen(l_Pos)
 
 			-- Skip to the next point if this one isn't in view.
 			-- if s_PointScreenPos ~= nil then
@@ -90,14 +91,14 @@ function ClientSpawnPointHelper:Update(p_PlayerPos, p_NodesToDraw, p_LinesToDraw
 			-- local s_Offset = self:GetForwardOffsetFromLT(p_Transform)
 
 			table.insert(p_NodesToDraw, {
-				pos = l_Transform.trans,
+				pos = l_Pos,
 				radius = 0.3,
 				color = s_Color,
 				renderLines = true,
 				smallSizeSegmentDecrease = false,
 			})
 			-- table.insert(p_NodesToDraw, {
-			-- 	pos = l_Transform.trans + s_Up,
+			-- 	pos = l_Pos + s_Up,
 			-- 	radius = 0.3,
 			-- 	color = s_Color,
 			-- 	renderLines = true,
@@ -112,13 +113,13 @@ function ClientSpawnPointHelper:Update(p_PlayerPos, p_NodesToDraw, p_LinesToDraw
 			-- })
 
 			-- table.insert(p_LinesToDraw, {
-			-- 	from = l_Transform.trans,
-			-- 	to = l_Transform.trans + s_Up,
+			-- 	from = l_Pos,
+			-- 	to = l_Pos + s_Up,
 			-- 	colorFrom = s_Color,
 			-- 	colorTo = s_Color,
 			-- })
 			-- table.insert(p_LinesToDraw, {
-			-- 	from = l_Transform.trans + s_Up,
+			-- 	from = l_Pos + s_Up,
 			-- 	to = s_Offset + s_Up,
 			-- 	colorFrom = s_Color,
 			-- 	colorTo = s_Color,
