@@ -1,5 +1,6 @@
 # VU related files 
 .vu
+.vua_data
 mod.db
 
 # IDE files

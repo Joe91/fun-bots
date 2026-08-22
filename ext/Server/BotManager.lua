@@ -404,7 +404,7 @@ function BotManager:CheckForFlareOrSmoke(p_MissileEntity, p_MissileSpeed, p_Time
 	p_MissileEntity = SpatialEntity(p_MissileEntity)
 
 	local s_MissileTransform = p_MissileEntity.transform
-	local s_MissilePosition = s_MissileTransform.trans
+	local s_MissilePosition = s_MissileTransform.trans:Clone()
 
 	local s_SmallestAngle = 1.0
 	local s_DriverOfVehicle = nil
@@ -439,7 +439,7 @@ function BotManager:CheckForFlareOrSmoke(p_MissileEntity, p_MissileSpeed, p_Time
 
 
 		if s_DriverPlayer then
-			local s_PositionVehicle = s_Entity.transform.trans
+			local s_PositionVehicle = s_Entity.transform.trans:Clone()
 			local s_VecMissile = (s_PositionVehicle - s_MissilePosition):Normalize()
 
 			local s_Angle = math.acos(s_VecMissile:Dot(s_MissileTransform.forward))
@@ -1107,7 +1107,7 @@ function BotManager:ExitVehicle(p_Player)
 	---@type Bot|nil
 	local s_ClosestBot = nil
 
-	local s_SoldierPosition = p_Player.soldier.worldTransform.trans
+	local s_SoldierPosition = p_Player.soldier.worldTransform.trans:Clone()
 
 	local s_BotStates = g_BotStates
 	for l_Index = 1, #self._BotsByTeam[p_Player.teamId + 1] do
@@ -1118,9 +1118,9 @@ function BotManager:ExitVehicle(p_Player)
 		if s_InVehicle and l_Bot.m_Player.soldier then
 			local s_BotSoldierPosition = nil
 			if l_Bot.m_Player.controlledControllable then
-				s_BotSoldierPosition = l_Bot.m_Player.controlledControllable.transform.trans
+				s_BotSoldierPosition = l_Bot.m_Player.controlledControllable.transform.trans:Clone()
 			else
-				s_BotSoldierPosition = l_Bot.m_Player.soldier.worldTransform.trans
+				s_BotSoldierPosition = l_Bot.m_Player.soldier.worldTransform.trans:Clone()
 			end
 
 			if s_BotSoldierPosition then
@@ -1168,7 +1168,7 @@ function BotManager:Deploy(p_Player, p_Type)
 		return
 	end
 
-	local s_SoldierPosition = p_Player.soldier.worldTransform.trans
+	local s_SoldierPosition = p_Player.soldier.worldTransform.trans:Clone()
 
 	local s_BotStates = g_BotStates
 	for l_Index = 1, #self._BotsByTeam[p_Player.teamId + 1] do
@@ -1202,7 +1202,7 @@ function BotManager:RepairVehicle(p_Player)
 		return
 	end
 
-	local s_SoldierPosition = p_Player.soldier.worldTransform.trans
+	local s_SoldierPosition = p_Player.soldier.worldTransform.trans:Clone()
 
 	local s_BotStates = g_BotStates
 	for l_Index = 1, #self._BotsByTeam[p_Player.teamId + 1] do
@@ -1236,7 +1236,7 @@ function BotManager:EnterVehicle(p_Player)
 		return
 	end
 
-	local s_SoldierPosition = p_Player.soldier.worldTransform.trans
+	local s_SoldierPosition = p_Player.soldier.worldTransform.trans:Clone()
 
 	local s_BotStates = g_BotStates
 	for l_Index = 1, #self._BotsByTeam[p_Player.teamId + 1] do
@@ -1268,7 +1268,7 @@ function BotManager:Attack(p_Player, p_Objective)
 	end
 
 	local s_MaxObjectiveBots = 4
-	local s_SoldierPosition = p_Player.soldier.worldTransform.trans
+	local s_SoldierPosition = p_Player.soldier.worldTransform.trans:Clone()
 
 	for l_Index = 1, #self._BotsByTeam[p_Player.teamId + 1] do
 		local l_Bot = self._BotsByTeam[p_Player.teamId + 1][l_Index]
@@ -1397,9 +1397,9 @@ function BotManager:_CheckForBotBotAttack()
 		if s_Bot and s_Bot.m_Player and s_Bot.m_Player.soldier and s_Bot:IsReadyToAttack(false, nil, false, true) then
 			local s_BotPosition = nil
 			if s_Bot.m_Player.controlledControllable then
-				s_BotPosition = s_Bot.m_Player.controlledControllable.transform.trans
+				s_BotPosition = s_Bot.m_Player.controlledControllable.transform.trans:Clone()
 			else
-				s_BotPosition = s_Bot.m_Player.soldier.worldTransform.trans
+				s_BotPosition = s_Bot.m_Player.soldier.worldTransform.trans:Clone()
 			end
 
 			for l_Index = 1, #self._BotBotAttackList do
@@ -1425,9 +1425,9 @@ function BotManager:_CheckForBotBotAttack()
 							-- Check distance.
 							local s_EnemyBotPosition = nil
 							if s_Bot.m_Player.controlledControllable then
-								s_EnemyBotPosition = s_EnemyBot.m_Player.controlledControllable.transform.trans
+								s_EnemyBotPosition = s_EnemyBot.m_Player.controlledControllable.transform.trans:Clone()
 							else
-								s_EnemyBotPosition = s_EnemyBot.m_Player.soldier.worldTransform.trans
+								s_EnemyBotPosition = s_EnemyBot.m_Player.soldier.worldTransform.trans:Clone()
 							end
 							local s_Distance = s_BotPosition:Distance(s_EnemyBotPosition)
 							s_ChecksDone = s_ChecksDone + 1
@@ -1642,7 +1642,7 @@ function BotManager:CommandBotsToFollow(p_Player)
 	self:CommandBotsToStopFollowing(p_Player, true) -- stop following first
 
 	local s_NearbyBots = {}
-	local s_PlayerPosition = p_Player.soldier.worldTransform.trans
+	local s_PlayerPosition = p_Player.soldier.worldTransform.trans:Clone()
 	local s_MaxFollowers = 2
 	local s_MaxDistance = 30
 
@@ -1654,7 +1654,7 @@ function BotManager:CommandBotsToFollow(p_Player)
 		if s_Bot.m_Player.soldier and
 			s_Bot.m_ActiveState ~= g_BotStates.States.Following and
 			not g_BotStates:IsInVehicleState(s_Bot.m_ActiveState) then
-			local s_BotPosition = s_Bot.m_Player.soldier.worldTransform.trans
+			local s_BotPosition = s_Bot.m_Player.soldier.worldTransform.trans:Clone()
 			local s_Distance = s_BotPosition:Distance(s_PlayerPosition)
 
 			if s_Distance < s_MaxDistance then

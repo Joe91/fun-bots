@@ -185,7 +185,7 @@ function BotSpawner:OnEngineUpdate(p_DeltaTime, p_SimulationDeltaTime)
 					if l_Bot:_EnterVehicleEntity(s_SpawnEntity, false) ~= 0 then
 						l_Bot:Kill()
 					elseif s_SpawnEntity ~= nil then
-						l_Bot:FindVehiclePath(s_SpawnEntity.transform.trans)
+						l_Bot:FindVehiclePath(s_SpawnEntity.transform.trans:Clone())
 					end
 
 					self:_ApplyCosumizationAfterSpawn(l_Bot)
@@ -745,7 +745,7 @@ function BotSpawner:SpawnBotRow(p_Player, p_Length, p_Spacing)
 
 		if s_Name ~= nil then
 			local s_Transform = LinearTransform()
-			s_Transform.trans = p_Player.soldier.worldTransform.trans + (p_Player.soldier.worldTransform.forward * i * p_Spacing)
+			s_Transform.trans = p_Player.soldier.worldTransform.trans:Clone() + (p_Player.soldier.worldTransform.forward:Clone() * i * p_Spacing)
 			local s_Bot = m_BotManager:CreateBot(s_Name, s_TeamId, SquadId.SquadNone)
 
 			if not s_Bot then
@@ -1176,9 +1176,9 @@ function BotSpawner:_FindTargetLocation(p_TeamId)
 			local l_Entity = s_Entity.bus.entities[l_Index]
 			if l_Entity:Is('ServerCharacterSpawnEntity') then
 				if CharacterSpawnReferenceObjectData(l_Entity.data).team == 0 then
-					s_TargetLocation = s_Entity.transform.trans
+					s_TargetLocation = s_Entity.transform.trans:Clone()
 				else
-					return s_Entity.transform.trans
+					return s_Entity.transform.trans:Clone()
 				end
 
 				goto endOfLoop
@@ -1416,7 +1416,7 @@ function BotSpawner:_SpawnSingleWayBot(p_Player, p_UseRandomWay, p_ActiveWayInde
 					if p_ExistingBot:_EnterVehicleEntity(s_SpawnEntity, false) ~= 0 then
 						p_ExistingBot:Kill()
 					elseif s_SpawnEntity ~= nil then
-						p_ExistingBot:FindVehiclePath(s_SpawnEntity.transform.trans)
+						p_ExistingBot:FindVehiclePath(s_SpawnEntity.transform.trans:Clone())
 					end
 				else
 					local s_Bot = m_BotManager:CreateBot(s_Name, s_TeamId, s_SquadId)
@@ -1433,7 +1433,7 @@ function BotSpawner:_SpawnSingleWayBot(p_Player, p_UseRandomWay, p_ActiveWayInde
 						if s_Bot:_EnterVehicleEntity(s_SpawnEntity, false) ~= 0 then
 							s_Bot:Kill()
 						elseif s_SpawnEntity then
-							s_Bot:FindVehiclePath(s_SpawnEntity.transform.trans)
+							s_Bot:FindVehiclePath(s_SpawnEntity.transform.trans:Clone())
 						end
 					end
 				end

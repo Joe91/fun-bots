@@ -274,7 +274,7 @@ function Bot:_EnterVehicleEntity(p_Entity, p_PlayerIsDriver)
 		return -2
 	end
 
-	local s_Position = p_Entity.transform.trans
+	local s_Position = p_Entity.transform.trans:Clone()
 	local s_VehicleData = m_Vehicles:GetVehicleByEntity(p_Entity)
 
 	if not s_VehicleData then
@@ -341,7 +341,7 @@ function Bot:_EnterVehicleEntity(p_Entity, p_PlayerIsDriver)
 						self._VehicleTakeoffTimer = Registry.VEHICLES.JET_TAKEOFF_TIME
 						self._JetTakeoffActive = true
 					end
-					g_GameDirector:_SetVehicleObjectiveState(p_Entity.transform.trans, false)
+					g_GameDirector:_SetVehicleObjectiveState(p_Entity.transform.trans:Clone(), false)
 				else
 					self._VehicleWaitTimer = Config.VehicleWaitForPassengersTime
 					self._BrakeTimer = 0.0
@@ -355,7 +355,7 @@ function Bot:_EnterVehicleEntity(p_Entity, p_PlayerIsDriver)
 
 					if s_Driver ~= nil then
 						Events:Dispatch('Bot:AbortWait', s_Driver.id)
-						g_GameDirector:_SetVehicleObjectiveState(p_Entity.transform.trans, false)
+						g_GameDirector:_SetVehicleObjectiveState(p_Entity.transform.trans:Clone(), false)
 					end
 				end
 			end
@@ -381,7 +381,7 @@ function Bot:_EnterVehicle(p_PlayerIsDriver, p_Distance)
 
 	while s_Entity ~= nil do
 		s_Entity = ControllableEntity(s_Entity)
-		local s_Position = s_Entity.transform.trans
+		local s_Position = s_Entity.transform.trans:Clone()
 		local s_Distance = s_Position:Distance(self.m_Player.soldier.worldTransform.trans)
 
 		if s_Distance < s_ClosestDistance then

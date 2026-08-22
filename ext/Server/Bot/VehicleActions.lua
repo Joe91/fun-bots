@@ -11,7 +11,7 @@ function Bot:_DoExitVehicle()
 		self.m_Player:ExitVehicle(true, false)
 		self.m_ActiveVehicle = nil
 		self:SetState(g_BotStates.States.Moving)
-		local s_Node = g_GameDirector:FindClosestPath(self.m_Player.soldier.worldTransform.trans, false, true, nil)
+		local s_Node = g_GameDirector:FindClosestPath(self.m_Player.soldier.worldTransform.trans:Clone(), false, true, nil)
 
 		if s_Node ~= nil then
 			-- Switch to foot.
