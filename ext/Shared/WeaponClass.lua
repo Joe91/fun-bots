@@ -69,6 +69,11 @@ function Weapon:learnStatsValues()
 		return
 	end
 
+	if not s_BulletData:Is('BulletEntityData') then
+		m_Logger:Warning('No bulletData for: ' .. self.name)
+		return
+	end
+
 	-- m_Logger:Write(self.name..': '..tostring(aiData.name))
 
 	-- Stats depending on weapon-type.

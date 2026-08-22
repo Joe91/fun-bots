@@ -1397,9 +1397,9 @@ function BotManager:_CheckForBotBotAttack()
 		if s_Bot and s_Bot.m_Player and s_Bot.m_Player.soldier and s_Bot:IsReadyToAttack(false, nil, false, true) then
 			local s_BotPosition = nil
 			if s_Bot.m_Player.controlledControllable then
-				s_BotPosition = s_Bot.m_Player.controlledControllable.transform.trans
+				s_BotPosition = s_Bot.m_Player.controlledControllable.transform.trans:Clone()
 			else
-				s_BotPosition = s_Bot.m_Player.soldier.worldTransform.trans
+				s_BotPosition = s_Bot.m_Player.soldier.worldTransform.trans:Clone()
 			end
 
 			for l_Index = 1, #self._BotBotAttackList do
@@ -1425,9 +1425,9 @@ function BotManager:_CheckForBotBotAttack()
 							-- Check distance.
 							local s_EnemyBotPosition = nil
 							if s_Bot.m_Player.controlledControllable then
-								s_EnemyBotPosition = s_EnemyBot.m_Player.controlledControllable.transform.trans
+								s_EnemyBotPosition = s_EnemyBot.m_Player.controlledControllable.transform.trans:Clone()
 							else
-								s_EnemyBotPosition = s_EnemyBot.m_Player.soldier.worldTransform.trans
+								s_EnemyBotPosition = s_EnemyBot.m_Player.soldier.worldTransform.trans:Clone()
 							end
 							local s_Distance = s_BotPosition:Distance(s_EnemyBotPosition)
 							s_ChecksDone = s_ChecksDone + 1
