@@ -15,6 +15,10 @@
 		{
 			"name": "Web UI",
 			"path": "WebUI"
+		},
+		{
+			"name": "root",
+			"path": "."
 		}
 	],
 	"settings": {
