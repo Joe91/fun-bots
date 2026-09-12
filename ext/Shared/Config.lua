@@ -11,23 +11,23 @@ Config = {
 	BotTeamNames = false,				-- If the bots shall have their names based on their team 
 
 	-- DIFFICULTY 
-	BotAimWorsening = 0.2,				-- Make bots aim worse: for difficulty: 0 = no offset (hard), 1 or even greater = more sway (easy) 
-	BotSniperAimWorsening = 0.1,		-- See botAimWorsening, only for Sniper-rifles 
-	BotSupportAimWorsening = 0.3,		-- See botAimWorsening, only for LMGs 
-	BotWorseningSkill = 0.40,			-- Variation of the skill of a single bot. The higher, the worse the bots can get compared to the original settings 
-	BotSniperWorseningSkill = 0.30,		-- See BotWorseningSkill - only for BOTs using sniper bolt-action rifles 
-	ReactionTime = 0.2,					-- Additional delay for bots, dependant of skill (might also be 0) 
-	DamageFactorAssault = 0.8,			-- Original Damage from bots gets multiplied by this 
-	DamageFactorCarabine = 0.8,			-- Original Damage from bots gets multiplied by this 
-	DamageFactorLMG = 0.8,				-- Original Damage from bots gets multiplied by this 
-	DamageFactorPDW = 0.8,				-- Original Damage from bots gets multiplied by this 
-	DamageFactorSniper = 0.8,			-- Original Damage from bots gets multiplied by this 
-	DamageFactorShotgun = 0.8,			-- Original Damage from bots gets multiplied by this 
-	DamageFactorPistol = 0.8,			-- Original Damage from bots gets multiplied by this 
+	BotAimWorsening = 0.90,				-- Make bots aim worse: for difficulty: 0 = no offset (hard), 1 or even greater = more sway (easy) 
+	BotSniperAimWorsening = 0.90,		-- See botAimWorsening, only for Sniper-rifles 
+	BotSupportAimWorsening = 0.90,		-- See botAimWorsening, only for LMGs 
+	BotWorseningSkill = 0.20,			-- Variation of the skill of a single bot. The higher, the worse the bots can get compared to the original settings 
+	BotSniperWorseningSkill = 0.20,		-- See BotWorseningSkill - only for BOTs using sniper bolt-action rifles 
+	ReactionTime = 1.0,					-- Additional delay for bots, dependant of skill (might also be 0) 
+	DamageFactorAssault = 0.20,			-- Original Damage from bots gets multiplied by this 
+	DamageFactorCarabine = 0.20,			-- Original Damage from bots gets multiplied by this 
+	DamageFactorLMG = 0.20,				-- Original Damage from bots gets multiplied by this 
+	DamageFactorPDW = 0.20,				-- Original Damage from bots gets multiplied by this 
+	DamageFactorSniper = 0.20,			-- Original Damage from bots gets multiplied by this 
+	DamageFactorShotgun = 0.20,			-- Original Damage from bots gets multiplied by this 
+	DamageFactorPistol = 0.20,			-- Original Damage from bots gets multiplied by this 
 	DamageFactorKnife = 1.5,			-- Original Damage from bots gets multiplied by this 
-	VehicleAimWorsening = 0.05,			-- Make bots in vehicles aim worse: for difficulty: 0 = no offset (hard), 1 or even greater = more sway (easy) 
-	VehicleAAAimWorsening = 0.9,		-- Make bots in AA aim worse: for difficulty: 0 = no offset (hard), 1 or even greater = more sway (easy) 
-	VehicleGunshipAimWorsening = 0.8,	-- Make bots in Gunships aim worse: for difficulty: 0 = no offset (hard), 1 or even greater = more sway (easy) 
+	VehicleAimWorsening = 0.90,			-- Make bots in vehicles aim worse: for difficulty: 0 = no offset (hard), 1 or even greater = more sway (easy) 
+	VehicleAAAimWorsening = 0.90,		-- Make bots in AA aim worse: for difficulty: 0 = no offset (hard), 1 or even greater = more sway (easy) 
+	VehicleGunshipAimWorsening = 0.80,	-- Make bots in Gunships aim worse: for difficulty: 0 = no offset (hard), 1 or even greater = more sway (easy) 
 	VehicleChopperAimWorsening = 0.5,	-- Make bots in Choppers aim worse: for difficulty: 0 = no offset (hard), 1 or even greater = more sway (easy) 
 	VehiclePlaneAimWorsening = 0.02,	-- See VehicleAimWorsening, only for Planes 
 	DamageFactorVehicles = 1.0,			-- Original Damage from bots in vehicles gets multiplied by this 
