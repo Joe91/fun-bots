@@ -722,8 +722,8 @@ function FunBotUIServer:_writeSettings(p_Player, p_Request)
 		NetEvents:SendTo('UI_Change_Language', p_Player, Config.Language)
 	end
 
-	-- Call batched process.
-	if batched then
+	-- Call batched process. Temporary saves don't touch the database.
+	if batched and not temporary then
 		Database:ExecuteBatch()
 	end
 

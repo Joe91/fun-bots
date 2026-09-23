@@ -137,8 +137,13 @@ function Database:Update(p_TableName, p_Parameters, p_Where)
 		p_TableName .. ' SET ' .. s_Fields:join(', ') .. ' WHERE ' .. p_Where .. ' = ' .. s_Found .. ''))
 end
 
--- This is unused.
 function Database:ExecuteBatch()
+	-- Nothing batched: don't wipe FB_Settings.
+	if m_Batches:isEmpty() then
+		m_Batched = ''
+		return
+	end
+
 	self:Query('DELETE FROM `FB_Settings`')
 	self:Query(m_Batched .. m_Batches:join(', '))
 	m_Batched = ''
