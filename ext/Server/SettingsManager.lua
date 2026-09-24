@@ -128,7 +128,7 @@ function SettingsManager:OnExtensionLoaded()
 											`Config`.`Time` > `Settings`.`Time`]])
 
 	if s_Settings ~= nil then
-		for l_Name, l_Value in pairs(s_Settings) do
+		for _, l_Value in pairs(s_Settings) do
 			-- if Debug.Server.SETTINGS then
 			-- print('Updating Config Variable: ' .. tostring(l_Value.Key) .. ' = ' .. tostring(l_Value.Value) .. ' (' .. tostring(l_Value.Time) .. ')')
 			-- end

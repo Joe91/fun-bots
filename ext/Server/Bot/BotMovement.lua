@@ -7,10 +7,6 @@ local m_PathSwitcher = require('PathSwitcher')
 ---@type NodeCollection
 local m_NodeCollection = require('NodeCollection')
 
-local flags = RayCastFlags.DontCheckWater |
-	RayCastFlags.DontCheckCharacter |
-	RayCastFlags.DontCheckRagdoll |
-	RayCastFlags.CheckDetailMesh
 
 -- >>> SMART PATH OFFSET (with zig-zag and stairs fixes)
 function Bot:ApplyPathOffset(p_OriginalPoint, p_NextPoint, p_NextToNextPoint)
@@ -784,7 +780,7 @@ function Bot:UpdateNormalMovement(p_DeltaTime)
 					end
 
 					if s_IndexToRemoveTo > 0 then
-						for l_Rounds = 1, s_IndexToRemoveTo do
+						for _ = 1, s_IndexToRemoveTo do
 							table.remove(self._FollowWayPoints, 1)
 						end
 					end
@@ -874,7 +870,7 @@ function Bot:UpdateNormalMovement(p_DeltaTime)
 
 				self._OnSwitch = false
 
-				for l_Runs = 1, math.abs(s_PointIncrement) do
+				for _ = 1, math.abs(s_PointIncrement) do
 					if #self._FollowWayPoints > 1 then
 						table.remove(self._FollowWayPoints, 1)
 					end

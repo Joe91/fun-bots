@@ -8,8 +8,6 @@ require('__shared/Config')
 ---@type Language
 Language = require('__shared/Language')
 
----@type NodeCollection
-local m_NodeCollection = require('NodeCollection')
 -- @type NodeEditor
 local m_NodeEditor = require('NodeEditor')
 ---@type PermissionManager

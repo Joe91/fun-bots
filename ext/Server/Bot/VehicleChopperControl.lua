@@ -5,7 +5,6 @@ VehicleChopperControl = class('VehicleChopperControl')
 ---@type Utilities
 local m_Utilities = require('__shared/Utilities')
 ---@type Vehicles
-local m_Vehicles = require('Vehicles')
 
 function VehicleChopperControl:__init()
 	-- Nothing to do.

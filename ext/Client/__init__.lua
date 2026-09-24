@@ -212,9 +212,9 @@ function FunBotClient:OnUIDrawHud()
 			-- occlusion check
 			local hit = RaycastManager:Raycast(lp.soldier.worldTransform.trans:Clone(),
 				headPos,
-				RayCastFlags.DontCheckWater |
+				(RayCastFlags.DontCheckWater |
 				RayCastFlags.DontCheckCharacter |
-				RayCastFlags.DontCheckRagdoll)
+				RayCastFlags.DontCheckRagdoll) --[[@as RayCastFlags]])
 			if hit ~= nil then goto skip end
 
 			local sp = ClientUtils:WorldToScreen(headPos)

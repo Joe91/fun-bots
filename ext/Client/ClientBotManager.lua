@@ -224,7 +224,7 @@ function ClientBotManager:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 
 		local s_RaycastEntriesDone = 0
 
-		for i = 1, s_MaxRaycastsBotBot do
+		for _ = 1, s_MaxRaycastsBotBot do
 			if (#self.m_BotBotRaycastsToDo > 0) then
 				---@type RaycastRequests
 				local s_RaycastCheckEntry = table.remove(self.m_BotBotRaycastsToDo, 1)

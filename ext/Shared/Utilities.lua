@@ -252,8 +252,8 @@ function string.starts(p_Str, p_Start)
 end
 
 function requireExists(p_Module)
-	local function reference(p_Module)
-		require(p_Module)
+	local function reference(p_Name)
+		require(p_Name)
 		return true
 	end
 

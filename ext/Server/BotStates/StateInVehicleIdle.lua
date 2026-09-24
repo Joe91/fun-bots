@@ -11,10 +11,6 @@ StateInVehicleIdle = class('StateInVehicleIdle')
 -- - moving
 -- (- vehicle-idle?)
 
-local m_VehicleAiming = require('Bot/VehicleAiming')
-local m_VehicleAttacking = require('Bot/VehicleAttacking')
-local m_VehicleMovement = require('Bot/VehicleMovement')
-local m_VehicleWeaponHandling = require('Bot/VehicleWeaponHandling')
 
 function StateInVehicleIdle:__init()
 	-- Nothing to do.

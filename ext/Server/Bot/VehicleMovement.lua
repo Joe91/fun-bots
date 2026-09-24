@@ -500,7 +500,6 @@ function VehicleMovement:UpdateYawVehicle(p_Bot, p_Attacking, p_IsStationaryLaun
 			if p_Bot.m_Player.controlledEntryId == 0 and not p_IsStationaryLauncher then
 				local s_Euler = p_Bot.m_Player.controlledControllable.transform:ToQuatTransform(false).rotation:ToEuler()
 				local s_Yaw = -s_Euler.x
-				local s_Roll = s_Euler.y
 				local s_Pitch = m_Utilities:GetPitchFromEuler(s_Euler)
 
 				-- TODO: delta pitch also needed?
@@ -522,7 +521,6 @@ function VehicleMovement:UpdateYawVehicle(p_Bot, p_Attacking, p_IsStationaryLaun
 				if p_Bot._VehicleMovableId >= 0 then
 					local s_Euler = p_Bot.m_Player.controlledControllable.physicsEntityBase:GetPartTransform(p_Bot._VehicleMovableId).rotation:ToEuler()
 					local s_Yaw = -s_Euler.x
-					local s_Roll = s_Euler.y
 					local s_Pitch = m_Utilities:GetPitchFromEuler(s_Euler)
 
 					s_DeltaPitch = s_Pitch - p_Bot._TargetPitch
@@ -531,7 +529,7 @@ function VehicleMovement:UpdateYawVehicle(p_Bot, p_Attacking, p_IsStationaryLaun
 			end
 		else
 			if p_Bot._VehicleMovableId >= 0 then
-				local s_GunQuatTransform = p_Bot.m_Player.controlledControllable.physicsEntityBase:GetPartTransform(p_Bot._VehicleMovableId)
+				local s_GunQuatTransform = p_Bot.m_Player.controlledControllable.physicsEntityBase:GetPartTransform(p_Bot._VehicleMovableId) --[[@as QuatTransform]]
 				local s_Euler = s_GunQuatTransform.rotation:ToEuler()
 				local s_Yaw = -s_Euler.x
 
@@ -561,7 +559,6 @@ function VehicleMovement:UpdateYawVehicle(p_Bot, p_Attacking, p_IsStationaryLaun
 				local s_Euler = p_Bot.m_Player.controlledControllable.transform:ToQuatTransform(false).rotation:ToEuler()
 
 				local s_Yaw = -s_Euler.x
-				local s_Roll = s_Euler.y
 				local s_Pitch = m_Utilities:GetPitchFromEuler(s_Euler)
 
 				s_DeltaPitch = s_Pitch - p_Bot._TargetPitch
@@ -616,7 +613,7 @@ function VehicleMovement:UpdateYawVehicle(p_Bot, p_Attacking, p_IsStationaryLaun
 				local s_Output = p_Bot._Pid_Att_Yaw:Update(s_DeltaYaw)
 				p_Bot.m_Player.input:SetLevel(EntryInputActionEnum.EIARoll, -s_Output)
 
-				local s_Output = p_Bot._Pid_Att_Pitch:Update(s_DeltaPitch)
+				s_Output = p_Bot._Pid_Att_Pitch:Update(s_DeltaPitch)
 				p_Bot.m_Player.input:SetLevel(EntryInputActionEnum.EIAPitch, -s_Output)
 			end
 		end
@@ -655,7 +652,7 @@ function VehicleMovement:UpdateYawVehicle(p_Bot, p_Attacking, p_IsStationaryLaun
 		-- p_Bot.m_Player.input:SetLevel(EntryInputActionEnum.EIACameraYaw, -s_Output)
 
 		-- Pitch.
-		local s_Output = p_Bot._Pid_Att_Pitch:Update(s_DeltaPitch)
+		s_Output = p_Bot._Pid_Att_Pitch:Update(s_DeltaPitch)
 		p_Bot.m_Player.input:SetLevel(EntryInputActionEnum.EIAPitch, -s_Output)
 		-- p_Bot.m_Player.input:SetLevel(EntryInputActionEnum.EIACameraPitch, -s_Output)
 	end

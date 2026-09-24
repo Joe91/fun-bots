@@ -1,5 +1,5 @@
 ---@class BotStates
----@overload fun(p_Player: Player):BotStates
+---@overload fun():BotStates
 BotStates = class('BotStates')
 
 function BotStates:__init()

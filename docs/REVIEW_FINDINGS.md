@@ -20,5 +20,5 @@ Open items from a static review of `ext/`, `WebUI/` and `fun-bots-helper/`. Fixe
 
 **I8. Store WebUI booleans in `data-value`.** `EntryElement` renders the literal `"Yes"` / `"No"`, and `BotEditor` reads the value back by comparing `innerHTML == "Yes"` ([BotEditor.js](../WebUI/classes/BotEditor.js)). This breaks as soon as the words are translated.
 
-**Stricter luacheck.** Enable the unused-variable and shadowing warnings in `.luacheckrc` once the existing ones are cleaned up.
+**Stricter luacheck (optional).** Unused variables and shadowing are now enforced. Still off: values overwritten before use (`311`, 87 hits, mostly `local x = nil` before an assignment) and empty `if` branches (`542`, 6 hits). Enable them in `.luacheckrc` once those are cleaned up.
 

@@ -26,7 +26,7 @@ require('__shared/EbxEditUtils')
 
 
 ---@type Language
-local m_Language = require('__shared/Language')
+require('__shared/Language')
 
 local m_Logger = Logger("FunBotShared", Debug.Shared.INFO)
 

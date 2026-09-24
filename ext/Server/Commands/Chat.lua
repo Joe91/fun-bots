@@ -69,11 +69,11 @@ function ChatCommands:Execute(p_Parts, p_Player)
 			end
 		end
 		print(s_unlock_path)
-		local s_weapon = Weapon(s_name_of_weapon, '', {}, WeaponTypes.None, s_unlock_path)
-		s_weapon:learnStatsValues()
-		print(s_weapon.bulletDrop)
-		print(s_weapon.bulletSpeed)
-		print(s_weapon.damage)
+		local s_WeaponInfo = Weapon(s_name_of_weapon, '', {}, WeaponTypes.None, s_unlock_path)
+		s_WeaponInfo:learnStatsValues()
+		print(s_WeaponInfo.bulletDrop)
+		print(s_WeaponInfo.bulletSpeed)
+		print(s_WeaponInfo.damage)
 	elseif p_Parts[1] == '!car' then
 		if PermissionManager:HasPermission(p_Player, 'ChatCommands') == false then
 			ChatManager:SendMessage('You have no permissions for this action (ChatCommands).', p_Player)
@@ -176,7 +176,6 @@ function ChatCommands:Execute(p_Parts, p_Player)
 
 		if p_Player.attachedControllable ~= nil then
 			local s_VehicleName = VehicleEntityData(p_Player.controlledControllable.data).controllableType:gsub(".+/.+/", "")
-			local s_Pos = p_Player.controlledControllable.transform.forward:Clone()
 			local s_PlayerPos = p_Player.soldier.worldTransform.trans:Clone()
 			print("-----------------------------")
 			print(s_VehicleName)
@@ -229,7 +228,7 @@ function ChatCommands:Execute(p_Parts, p_Player)
 						local s_Yaw1 = (s_AtanDzDx > math.pi / 2) and (s_AtanDzDx - math.pi / 2) or (s_AtanDzDx + 3 * math.pi / 2)
 						local s_Pitch1 = math.asin(s_DirOld.y / 1.0)
 
-						local s_AtanDzDx = math.atan(s_DirrBullet.z, s_DirrBullet.x)
+						s_AtanDzDx = math.atan(s_DirrBullet.z, s_DirrBullet.x)
 						local s_Yaw2 = (s_AtanDzDx > math.pi / 2) and (s_AtanDzDx - math.pi / 2) or (s_AtanDzDx + 3 * math.pi / 2)
 						local s_Pitch2 = math.asin(s_DirrBullet.y / 1.0)
 
@@ -295,7 +294,6 @@ function ChatCommands:Execute(p_Parts, p_Player)
 
 		if p_Player.attachedControllable ~= nil then
 			local s_VehicleName = VehicleEntityData(p_Player.controlledControllable.data).controllableType:gsub(".+/.+/", "")
-			local s_Pos = p_Player.controlledControllable.transform.forward:Clone()
 			print(s_VehicleName)
 			local s_VehicleEntity
 
@@ -331,11 +329,12 @@ function ChatCommands:Execute(p_Parts, p_Player)
 			return
 		end
 
-		if tonumber(p_Parts[2]) == nil then
+		local s_Length = tonumber(p_Parts[2])
+
+		if s_Length == nil then
 			return
 		end
 
-		local s_Length = tonumber(p_Parts[2])
 		local s_Spacing = tonumber(p_Parts[3]) or 2
 
 		m_BotSpawner:SpawnBotRow(p_Player, s_Length, s_Spacing)
@@ -349,11 +348,12 @@ function ChatCommands:Execute(p_Parts, p_Player)
 			return
 		end
 
-		if tonumber(p_Parts[2]) == nil then
+		local s_Height = tonumber(p_Parts[2])
+
+		if s_Height == nil then
 			return
 		end
 
-		local s_Height = tonumber(p_Parts[2])
 		m_BotSpawner:SpawnBotTower(p_Player, s_Height)
 	elseif p_Parts[1] == '!grid' then
 		if PermissionManager:HasPermission(p_Player, 'ChatCommands.Grid') == false then
@@ -365,12 +365,13 @@ function ChatCommands:Execute(p_Parts, p_Player)
 			return
 		end
 
-		if tonumber(p_Parts[2]) == nil then
+		local s_Rows = tonumber(p_Parts[2])
+
+		if s_Rows == nil then
 			return
 		end
 
-		local s_Rows = tonumber(p_Parts[2])
-		local s_Columns = tonumber(p_Parts[3]) or tonumber(p_Parts[2])
+		local s_Columns = tonumber(p_Parts[3]) or s_Rows
 		local s_Spacing = tonumber(p_Parts[4]) or 2
 
 		m_BotSpawner:SpawnBotGrid(p_Player, s_Rows, s_Columns, s_Spacing)
@@ -417,11 +418,11 @@ function ChatCommands:Execute(p_Parts, p_Player)
 			return
 		end
 
-		if tonumber(p_Parts[2]) == nil then
+		local s_Amount = tonumber(p_Parts[2])
+
+		if s_Amount == nil then
 			return
 		end
-
-		local s_Amount = tonumber(p_Parts[2])
 
 		m_BotSpawner:SpawnWayBots(s_Amount, true)
 		-- Respawn moving bots.

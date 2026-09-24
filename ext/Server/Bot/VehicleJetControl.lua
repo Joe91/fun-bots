@@ -3,7 +3,6 @@
 VehicleJetControl = class('VehicleJetControl')
 
 ---@type Vehicles
-local m_Vehicles = require('Vehicles')
 
 function VehicleJetControl:__init()
 	-- Nothing to do.

@@ -64,7 +64,7 @@ local m_ChatCommands = require('Commands/Chat')
 ---@type Console
 local m_Console = require('Commands/Console')
 ---@type RCONCommands
-local m_RCONCommands = require('Commands/RCON')
+require('Commands/RCON')
 ---@type AirTargets
 local m_AirTargets = require('AirTargets')
 ---@type GameDirector
@@ -575,11 +575,8 @@ function FunBotServer:OnEntityFactoryCreate(p_HookCtx, p_EntityData, p_Transform
 	end
 	if Registry.DEBUG.VEHICLE_PROJECTILE_TRACE then
 		if p_EntityData.typeInfo.name == "ProjectileEntityData" or p_EntityData.typeInfo.name == "BulletEntityData" or p_EntityData.typeInfo.name == "MissileEntityData" then
-			local s_CreatedEntity = p_HookCtx:Call()
-			if s_CreatedEntity then
-				local s_SpartialEntity = SpatialEntity(s_CreatedEntity)
-				-- Globals.LastPorjectile = s_SpartialEntity.transform
-			end
+			p_HookCtx:Call()
+			-- To trace projectiles: Globals.LastPorjectile = SpatialEntity(<created entity>).transform
 		end
 	end
 end

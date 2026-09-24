@@ -20,11 +20,11 @@ ignore = {
 	"11[123]/[A-Z].*",
 	"11[123]/g_.*",
 
-	-- Not enforced yet: unused variables and values (2xx, 311), shadowing (4xx),
+	-- Unused arguments: event callbacks and class methods keep their full signature.
+	"212",
+	-- Not enforced: values overwritten before use (mostly `local x = nil` before an assignment),
 	-- empty branches (542) and formatting (6xx).
-	"2",
 	"311",
-	"4",
 	"542",
 	"6",
 }

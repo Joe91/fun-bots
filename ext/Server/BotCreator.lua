@@ -124,7 +124,7 @@ function BotCreator:GetNextBotName(p_BotKit, p_TeamId)
 		botTattributesByClass = self.BotAttributesByClass
 		activeNames = self.ActiveTeamBotNames
 	end
-	for l_Index, l_Attributes in pairs(botTattributesByClass[p_BotKit]) do
+	for _, l_Attributes in pairs(botTattributesByClass[p_BotKit]) do
 		local s_NameAvailable = true
 		for _, l_UsedNames in pairs(activeNames) do
 			if l_Attributes.Name == l_UsedNames then

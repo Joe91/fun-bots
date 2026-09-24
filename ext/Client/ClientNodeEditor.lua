@@ -1288,7 +1288,6 @@ function ClientNodeEditor:Raycast(p_MaxDistance, p_UseAsync)
 
 	-- Perform raycast, returns a RayCastHit object.
 
-	---@type RayCastFlags
 	local s_Flags = RayCastFlags.DontCheckWater | RayCastFlags.DontCheckCharacter | RayCastFlags.DontCheckRagdoll |
 		RayCastFlags.CheckDetailMesh
 
@@ -1296,7 +1295,7 @@ function ClientNodeEditor:Raycast(p_MaxDistance, p_UseAsync)
 		s_Flags = s_Flags | RayCastFlags.IsAsyncRaycast
 	end
 
-	local s_RaycastHit = RaycastManager:Raycast(s_CastStart, s_CastEnd, s_Flags)
+	local s_RaycastHit = RaycastManager:Raycast(s_CastStart, s_CastEnd, s_Flags --[[@as RayCastFlags]])
 
 	return s_RaycastHit
 end

@@ -44,7 +44,7 @@ function PermissionManager:__boot()
 
 	m_Logger:Write('Loading ' .. #s_Permissions .. ' permissions.')
 
-	for l_Name, l_Value in pairs(s_Permissions) do
+	for _, l_Value in pairs(s_Permissions) do
 		if self.m_Guid_Players[l_Value.PlayerName] == nil then
 			self.m_Guid_Players[l_Value.PlayerName] = l_Value.GUID
 		end
@@ -134,7 +134,7 @@ end
 function PermissionManager:ExtendPermissions(p_Permissions)
 	local s_Result = {}
 
-	for l_Index, l_Permission in pairs(p_Permissions) do
+	for _, l_Permission in pairs(p_Permissions) do
 		local s_Parts = l_Permission:split('.')
 		local s_Temp = ''
 

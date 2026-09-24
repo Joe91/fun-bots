@@ -1086,6 +1086,7 @@ function BotManager:DestroyBot(p_Bot)
 	if p_Bot == nil then
 		return
 	end
+	---@cast p_Bot Bot
 
 	for l_Index = #self._Bots, 1, -1 do
 		local s_Bot = self._Bots[l_Index]

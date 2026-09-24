@@ -6,7 +6,6 @@ StateInVehicleChopperControl = class('StateInVehicleChopperControl')
 -- bot-methods
 local m_VehicleAiming = require('Bot/VehicleAiming')
 local m_VehicleAttacking = require('Bot/VehicleAttacking')
-local m_VehicleMovement = require('Bot/VehicleMovement')
 local m_ChopperControl = require('Bot/VehicleChopperControl')
 local m_VehicleWeaponHandling = require('Bot/VehicleWeaponHandling')
 
