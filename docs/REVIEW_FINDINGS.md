@@ -100,12 +100,12 @@ This second pass covers `Bot/`, `BotStates/`, `BotManager`, `BotSpawner`, `GameD
 
 ### High
 
-**B25. GameDirector assigns no objectives when team 1 has no active bots**
+**B25. GameDirector assigns no objectives when team 1 has no active bots** — ✅ fixed
 [GameDirector.lua:175-187](../ext/Server/GameDirector.lua#L175-L187), [GameDirector.lua:304](../ext/Server/GameDirector.lua#L304), [GameDirector.lua:314](../ext/Server/GameDirector.lua#L314)
 `s_BotsByTeam` is keyed by team ID and only gets an entry for teams that have bots. Both loops run `for l_BotTeam = 1, #s_BotsByTeam`. When only team 2 has bots, `s_BotsByTeam[1]` is nil and `#s_BotsByTeam` is `0`, so neither loop runs. That happens in the usual "players vs bots" setups: `SpawnInBothTeams = false`, `BotTeam = 2`, or `increment_with_players`. In Conquest and Rush the bots then never get an attack or defend objective and wander along whatever `PathSwitcher` picks.
 *Fix:* `for l_BotTeam = 1, Globals.NrOfTeams do` and skip teams where `s_BotsByTeam[l_BotTeam] == nil`.
 
-**B26. Defending bots don't hold position (regression)**
+**B26. Defending bots don't hold position (regression)** — ✅ fixed
 [BotMovement.lua:188-229](../ext/Server/Bot/BotMovement.lua#L188-L229), [BotMovement.lua:572](../ext/Server/Bot/BotMovement.lua#L572)
 Commit `7569899b` ("some cleanup") moved the defend block into `_HandleDefendingIfNeeded()`. Its `return` statements ("don't do anything else") now leave only the helper, not `UpdateNormalMovement`. The caller keeps running: `m_ActiveSpeedValue = s_Point.SpeedMode` overwrites `NoMovement`, `_TargetPoint = s_Point` undoes the `LookAround()` reset, and `_HandleSidwardsMovement` overwrites the strafe. Defenders therefore keep walking the objective path instead of stopping, looking around and changing pose. `DefendObjectives` is on by default, so this affects most Conquest games.
 *Fix:* return a boolean from the helper and `return` from `UpdateNormalMovement` when it is true.
@@ -139,7 +139,7 @@ The beacon/mate branch sets the path, teleports or enters the vehicle, and appli
 [BotSpawner.lua:185-186](../ext/Server/BotSpawner.lua#L185-L186), [BotSpawner.lua:207-208](../ext/Server/BotSpawner.lua#L207-L208), [BotSpawner.lua:1416-1417](../ext/Server/BotSpawner.lua#L1416-L1417), [BotSpawner.lua:1433-1434](../ext/Server/BotSpawner.lua#L1433-L1434)
 These paths call `Bot:Kill()`, which runs `ResetVars()` and sets `_SpawnMode = NoRespawn` and `_Respawning = false`. The bot becomes inactive and is later garbage-collected, and a new bot is created. That churns bot names and loses bots entirely in manual mode. `BotMovement.lua:649` shows the right pattern for "kill but keep respawning": `soldier:Kill()`. The `SpawnAt*` paths also spawn the soldier at `LinearTransform()` (the world origin) before trying the vehicle. When `s_SpawnEntity` is nil, the bot is spawned and killed immediately. *(plausible)* This costs a ticket in Conquest.
 
-**B33. Scavenger and GunMaster crash on beacon paths and beacon actions**
+**B33. Scavenger and GunMaster crash on beacon paths and beacon actions** — ✅ fixed
 [PathSwitcher.lua:154](../ext/Server/PathSwitcher.lua#L154), [BotMovement.lua:151](../ext/Server/Bot/BotMovement.lua#L151)
 `p_Bot.m_SecondaryGadget.type` is read without a nil check. `_SetBotWeapons` sets `m_SecondaryGadget = nil` in Scavenger and returns early in GunMaster ([BotSpawner.lua:2253-2264](../ext/Server/BotSpawner.lua#L2253-L2264)). On any map with a beacon path or `beacon` action, this raises an error inside `BotManager:OnUpdateManagerUpdate`, which aborts that tick for every bot after it in the batch.
 
@@ -154,7 +154,7 @@ These paths call `Bot:Kill()`, which runs `ResetVars()` and sets `_SpawnMode = N
 
 ### Low
 
-**B36.** In defend mode, `if self.m_Id % 2 then` is always true in Lua (`0` is truthy), so every defender strafes left ([BotMovement.lua:220](../ext/Server/Bot/BotMovement.lua#L220)). *Fix:* `% 2 == 0`. (This only matters once B26 is fixed.)
+**B36.** ✅ fixed. In defend mode, `if self.m_Id % 2 then` is always true in Lua (`0` is truthy), so every defender strafes left ([BotMovement.lua:220](../ext/Server/Bot/BotMovement.lua#L220)). *Fix:* `% 2 == 0`. (This only matters once B26 is fixed.)
 **B37.** Vehicle look-around reuses `_VehicleWaitTimer`, which is also the "wait for passengers" timer. When a driver with a weapon seat waits at a wait node, look-around adds `dt` and the next `UpdateNormalMovementVehicle` subtracts it again. As a result, `_SetVehicleObjectiveState()` runs every tick (a full scan over all paths), and the look-around never gets past its first phase ([VehicleMovement.lua:23-30](../ext/Server/Bot/VehicleMovement.lua#L23-L30), [VehicleMovement.lua:384-409](../ext/Server/Bot/VehicleMovement.lua#L384-L409)). *Fix:* use a separate look-around timer.
 **B38.** *(plausible)* `_FindTargetLocation` returns an enemy HQ as soon as the iterator reaches one. It should prefer capturable flags and fall back to the HQ, as its closing comment says. Depending on iteration order, Conquest bots spawn at the flag closest to the enemy base instead of the one closest to the front ([BotSpawner.lua:1162-1194](../ext/Server/BotSpawner.lua#L1162-L1194)).
 **B39.** *(plausible)* `OnPlayerLeft` calls `ClearPlayer`, which doesn't clear `_FollowTargetPlayer`. Bots following a player who disconnects keep reading `.soldier` on a deleted `Player` ([BotManager.lua:199-203](../ext/Server/BotManager.lua#L199-L203), [Bot.lua:439-454](../ext/Server/Bot/Bot.lua#L439-L454)).
@@ -167,16 +167,16 @@ These paths call `Bot:Kill()`, which runs `ResetVars()` and sets `_SpawnMode = N
 
 This subsection covers `VehicleMovement`, `VehicleChopperControl`, `VehicleJetControl`, `VehicleAttacking`, `VehicleAiming`, `VehicleWeaponHandling` and the vehicle states. B37 above also concerns vehicle movement.
 
-**B44 (Medium). After a weapon switch, the bot aims with the previous weapon's part**
+**B44 (Medium). After a weapon switch, the bot aims with the previous weapon's part** — ✅ fixed
 [VehicleWeaponHandling.lua:47-51](../ext/Server/Bot/VehicleWeaponHandling.lua#L47-L51)
 `_VehicleMovableId` is computed from `_ActiveVehicleWeaponSlot` *before* that field is set to the new slot, so it always holds the part of the weapon that was just deselected. `GetOffsets` and `GetRotationOffsets` use the new slot, so the transform and the offsets come from different weapons. This matters wherever the parts differ per slot: the BMP-2 driver (cannon `37` vs. TOW `6`) and both AC-130 gunner seats (`{1, 3}`, `{0, 2}`) ([VehicleData.lua:150](../ext/Shared/Constants/VehicleData.lua#L150), [VehicleData.lua:587](../ext/Shared/Constants/VehicleData.lua#L587)). Their turret and gunship aim is computed against the wrong part.
 *Fix:* assign the slot first, then call `GetPartIdForSeat(..., p_Bot._VehicleWeaponSlotToUse)`.
 
-**B45 (Medium). Choppers and jets from one team all fly to the same flag**
+**B45 (Medium). Choppers and jets from one team all fly to the same flag** — ✅ fixed
 [GameDirector.lua:1714-1739](../ext/Server/GameDirector.lua#L1714-L1739)
 `s_EnemyNode` is never assigned: the first `if` stores every non-friendly flag in `s_NeutralNode`. The "enemy first, then neutral" preference therefore doesn't exist, and every air vehicle of a team targets whichever non-owned flag comes last in `_AllCapturePoints`. That is the same point for all of them and ignores distance. In Rush, `self._McomPositions[...]` is nil if a stage's MCOM has no trace path. Large Rush then does arithmetic on nil, and Squad Rush returns nil, so `:Clone()` in `UpdateMovementChopper` / `UpdateMovementJet` raises an error on every tick. In every other mode the function returns `Vec3.zero`, so air vehicles circle the world origin.
 
-**B46 (Medium). Passenger bots only see one MCOM (Rush) or none (Squad Rush) when deciding to get out**
+**B46 (Medium). Passenger bots only see one MCOM (Rush) or none (Squad Rush) when deciding to get out** — ✅ fixed
 [GameDirector.lua:953-966](../ext/Server/GameDirector.lua#L953-L966), [Bot.lua:409-419](../ext/Server/Bot/Bot.lua#L409-L419)
 `GetActiveMcomPositions` fills keys `0` and `1`, but the caller loops `for l_Index = 1, #s_ActiveMcoms`. Key `0` is never visited. In Squad Rush the only MCOM is at key `0`, and in Rush it is the even-numbered MCOM, so passengers ride past it instead of dismounting.
 *Fix:* use keys `1` and `2`.

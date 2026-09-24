@@ -301,7 +301,9 @@ function GameDirector:OnEngineUpdate(p_DeltaTime)
 
 	-- Check objective statuses.
 	-- Clear assigned-count on every cycle first
-	for l_BotTeam = 1, #s_BotsByTeam do
+	-- s_BotsByTeam is keyed by team ID and has holes for teams without bots,
+	-- so iterate over all teams instead of using #s_BotsByTeam.
+	for l_BotTeam = 1, Globals.NrOfTeams do
 		for l_Index = 1, #self.m_AllObjectives do
 			local l_Objective = self.m_AllObjectives[l_Index]
 			l_Objective.assigned[l_BotTeam] = 0
@@ -311,8 +313,8 @@ function GameDirector:OnEngineUpdate(p_DeltaTime)
 	-- g_Profiler:End("GameDirector:Update2")
 	-- g_Profiler:Start("GameDirector:Update3")
 
-	for l_BotTeam = 1, #s_BotsByTeam do
-		local l_Bots = s_BotsByTeam[l_BotTeam]
+	for l_BotTeam = 1, Globals.NrOfTeams do
+		local l_Bots = s_BotsByTeam[l_BotTeam] or {}
 		for l_Index0 = 1, #l_Bots do
 			local l_Bot = l_Bots[l_Index0]
 			local s_BotObjective = l_Bot:GetObjective()
@@ -953,12 +955,14 @@ end
 function GameDirector:GetActiveMcomPositions()
 	local s_Positions = {}
 
+	-- Build a proper array (starting at 1, no holes), so callers can use #.
+	-- MCOMs without a trace path have no known position and are skipped.
 	if Globals.IsRush then
 		if Globals.IsSquadRush then
-			s_Positions[0] = self._McomPositions[self.m_RushStageCounter]
+			s_Positions[#s_Positions + 1] = self._McomPositions[self.m_RushStageCounter]
 		else
-			s_Positions[0] = self._McomPositions[self.m_RushStageCounter * 2]
-			s_Positions[1] = self._McomPositions[self.m_RushStageCounter * 2 - 1]
+			s_Positions[#s_Positions + 1] = self._McomPositions[self.m_RushStageCounter * 2]
+			s_Positions[#s_Positions + 1] = self._McomPositions[self.m_RushStageCounter * 2 - 1]
 		end
 	end
 
@@ -1703,8 +1707,9 @@ function GameDirector:UseSubobjective(p_BotId, p_BotTeam, p_Objective)
 end
 
 ---@param p_TeamId TeamId
+---@param p_Position? Vec3 position of the asking vehicle; picks the closest point of each kind
 ---@return Vec3
-function GameDirector:GetActiveTargetPointPosition(p_TeamId)
+function GameDirector:GetActiveTargetPointPosition(p_TeamId, p_Position)
 	local s_TargetPos = Vec3.zero
 
 	if self.m_UpdateTimer < 0 then -- round over or not started yet
@@ -1712,36 +1717,42 @@ function GameDirector:GetActiveTargetPointPosition(p_TeamId)
 	end
 
 	if Globals.IsConquest then
-		local s_NeutralNode = nil
-		local s_EnemyNode = nil
-		local s_FriendlyNode = nil
+		local s_Closest = {}  -- kind → position
+		local s_Distance = {} -- kind → distance to p_Position
 		for l_Index = 1, #self._AllCapturePoints do
 			local l_CapturePoint = self._AllCapturePoints[l_Index]
 
-			local s_Pos = l_CapturePoint.transform.trans:Clone()
-			if l_CapturePoint.team ~= p_TeamId then
-				s_NeutralNode = s_Pos
-			end
+			local s_Kind = 'enemy'
 			if l_CapturePoint.team == p_TeamId then
-				s_FriendlyNode = s_Pos
+				s_Kind = 'friendly'
+			elseif l_CapturePoint.team == TeamId.TeamNeutral then
+				s_Kind = 'neutral'
 			end
-			if l_CapturePoint.team == TeamId.TeamNeutral then
-				s_NeutralNode = s_Pos
+
+			local s_Pos = l_CapturePoint.transform.trans
+			local l_Distance = p_Position and p_Position:Distance(s_Pos) or 0.0
+			if s_Closest[s_Kind] == nil or l_Distance < s_Distance[s_Kind] then
+				s_Closest[s_Kind] = s_Pos
+				s_Distance[s_Kind] = l_Distance
 			end
 		end
 		-- first use enemy-nodes, then neutral, then friendly
-		if s_EnemyNode then
-			s_TargetPos = s_EnemyNode
-		elseif s_NeutralNode then
-			s_TargetPos = s_NeutralNode
-		elseif s_FriendlyNode then
-			s_TargetPos = s_FriendlyNode
+		local s_Pos = s_Closest['enemy'] or s_Closest['neutral'] or s_Closest['friendly']
+		if s_Pos then
+			s_TargetPos = s_Pos:Clone()
 		end
 	elseif Globals.IsRush then
+		-- An MCOM without a trace path has no known position.
 		if Globals.IsSquadRush then
-			s_TargetPos = self._McomPositions[self.m_RushStageCounter]
+			s_TargetPos = self._McomPositions[self.m_RushStageCounter] or s_TargetPos
 		else -- Rush-Large, use middle between positions
-			s_TargetPos = (self._McomPositions[self.m_RushStageCounter * 2] + self._McomPositions[self.m_RushStageCounter * 2 - 1]) / 2
+			local s_McomA = self._McomPositions[self.m_RushStageCounter * 2]
+			local s_McomB = self._McomPositions[self.m_RushStageCounter * 2 - 1]
+			if s_McomA and s_McomB then
+				s_TargetPos = (s_McomA + s_McomB) / 2
+			else
+				s_TargetPos = s_McomA or s_McomB or s_TargetPos
+			end
 		end
 	end
 

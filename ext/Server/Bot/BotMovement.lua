@@ -148,7 +148,7 @@ function Bot:_ExecuteActionIfNeeded(p_Point, p_DeltaTime)
 				end
 				self:_ResetActionFlag(BotActionFlags.OtherActionActive)
 			elseif p_Point.Data.Action.type == "beacon"
-				and self.m_SecondaryGadget.type == WeaponTypes.Beacon
+				and self.m_SecondaryGadget ~= nil and self.m_SecondaryGadget.type == WeaponTypes.Beacon
 				and not self.m_HasBeacon
 			then
 				self._WeaponToUse = BotWeapons.Gadget2
@@ -185,6 +185,7 @@ function Bot:_ExecuteActionIfNeeded(p_Point, p_DeltaTime)
 	end
 end
 
+---@return boolean true if defending took over the movement this tick
 function Bot:_HandleDefendingIfNeeded(p_DeltaTime)
 	if self._ObjectiveMode == BotObjectiveModes.Defend and g_GameDirector:IsAtTargetObjective(self._PathIndex, self._Objective) then
 		self._DefendTimer = self._DefendTimer + p_DeltaTime
@@ -213,19 +214,21 @@ function Bot:_HandleDefendingIfNeeded(p_DeltaTime)
 
 			-- TODO: look at target
 			-- don't do anything else
-			return
+			return true
 		elseif self._DefendTimer >= (s_TargetTime - 2) then
 			self.m_ActiveSpeedValue = BotMoveSpeeds.Backwards
 			local s_StrafeValue = 1.0
-			if self.m_Id % 2 then
+			if self.m_Id % 2 == 0 then
 				s_StrafeValue = -1.0
 			end
 			self:_SetInput(EntryInputActionEnum.EIAStrafe, s_StrafeValue)
-			return
+			return true
 		end
 	else
 		self._DefendTimer = 0.0
 	end
+
+	return false
 end
 
 function Bot:_ApplyReactionAction(p_DeltaTime)
@@ -569,7 +572,9 @@ function Bot:UpdateNormalMovement(p_DeltaTime)
 			s_Point, s_NextPoint = self:ApplyPathOffset(s_Point, s_NextPoint, s_NextToNextPoint)
 		end
 
-		self:_HandleDefendingIfNeeded(p_DeltaTime)
+		if self:_HandleDefendingIfNeeded(p_DeltaTime) then
+			return -- DON'T DO ANYTHING ELSE.
+		end
 		self:_ExecuteActionIfNeeded(s_Point, p_DeltaTime)
 		-- return if action executed
 		if self._ActiveAction == BotActionFlags.OtherActionActive then

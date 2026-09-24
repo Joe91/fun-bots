@@ -25,7 +25,8 @@ function VehicleChopperControl:UpdateMovementChopper(p_DeltaTime, p_Bot)
 		p_Bot._VehicleTakeoffTimer = p_Bot._VehicleTakeoffTimer - p_DeltaTime
 	end
 
-	local s_TargetPoint = g_GameDirector:GetActiveTargetPointPosition(p_Bot.m_Player.teamId):Clone()
+	local s_TargetPoint = g_GameDirector:GetActiveTargetPointPosition(p_Bot.m_Player.teamId,
+		p_Bot.m_Player.controlledControllable and p_Bot.m_Player.controlledControllable.transform.trans):Clone()
 	s_TargetPoint.y = s_TargetPoint.y + Registry.VEHICLES.CHOPPER_TARGET_HEIGHT
 	if (p_Bot.m_Player.teamId % 2) == 1 then
 		s_TargetPoint.z = s_TargetPoint.z + 20

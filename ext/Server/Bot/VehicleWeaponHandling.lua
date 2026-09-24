@@ -45,9 +45,10 @@ function VehicleWeaponHandling:UpdateWeaponSelectionVehicle(p_Bot)
 
 		-- Select inputs.
 		if p_Bot._ActiveVehicleWeaponSlot ~= p_Bot._VehicleWeaponSlotToUse then
+			-- Set the slot first, so the part matches the newly selected weapon.
+			p_Bot._ActiveVehicleWeaponSlot = p_Bot._VehicleWeaponSlotToUse
 			p_Bot._VehicleMovableId = m_Vehicles:GetPartIdForSeat(p_Bot.m_ActiveVehicle, p_Bot.m_Player.controlledEntryId,
 				p_Bot._ActiveVehicleWeaponSlot)
-			p_Bot._ActiveVehicleWeaponSlot = p_Bot._VehicleWeaponSlotToUse
 			p_Bot._ShotTimer = 0.0
 
 			-- To-do: how long to press? How to switch?
