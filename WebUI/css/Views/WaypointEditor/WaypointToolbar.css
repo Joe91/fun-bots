@@ -91,8 +91,8 @@ ui-view[data-name="waypoint_toolbar"] ui-box {
 
 ui-view[data-name="waypoint_toolbar"] ui-box[data-color="red"] {
     background-image: linear-gradient(180deg,
-            var(--color_button_default_from) 100%,
-            var(--color_button_default_to) 100%);
+            rgba(150, 35, 25, 0.9) 100%,
+            rgba(150, 35, 25, 0.5) 100%);
 }
 
 ui-view[data-name="waypoint_toolbar"] ui-box[data-name="record"] {

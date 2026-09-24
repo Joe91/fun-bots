@@ -75,13 +75,13 @@ function FunBotUIClient:_onUICommoRose(p_Data)
 		return
 	end
 
-	self._views:execute('BotEditor.setCommoRose(\'' .. json.encode(p_Data) .. '\')')
+	self._views:execute('BotEditor.setCommoRose(\'' .. self._views:escape(json.encode(p_Data)) .. '\')')
 	self._views:focusMouse()
 	self.m_InCommScreen = true
 end
 
 function FunBotUIClient:_onSetOperationControls(p_Data)
-	self._views:execute('BotEditor.setOperationControls(\'' .. json.encode(p_Data) .. '\')')
+	self._views:execute('BotEditor.setOperationControls(\'' .. self._views:escape(json.encode(p_Data)) .. '\')')
 end
 
 function FunBotUIClient:_onUIWaypointsEditor(p_State)
@@ -228,7 +228,7 @@ function FunBotUIClient:_onUISettings(p_Data)
 		end
 	end
 
-	self._views:execute('BotEditor.openSettings(\'' .. settings:getJSON() .. '\')')
+	self._views:execute('BotEditor.openSettings(\'' .. self._views:escape(settings:getJSON()) .. '\')')
 	self._views:show('settings')
 	self._views:focus()
 end

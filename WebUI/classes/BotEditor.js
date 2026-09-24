@@ -58,13 +58,16 @@ class BotEditor {
         if (typeof window.Language === 'undefined') {
             window.Language = {};
         }
-        import('../languages/cn_CN.js');
-        import('../languages/de_DE.js');
-        import('../languages/en_EN.js');
-        import('../languages/es_ES.js');
-        import('../languages/fr_FR.js');
-        import('../languages/ja_JA.js');
-        import('../languages/pt_PT.js');
+        // The language files load asynchronously, so re-apply the strings once they are available.
+        Promise.all([
+            import('../languages/cn_CN.js'),
+            import('../languages/de_DE.js'),
+            import('../languages/en_EN.js'),
+            import('../languages/es_ES.js'),
+            import('../languages/fr_FR.js'),
+            import('../languages/ja_JA.js'),
+            import('../languages/pt_PT.js'),
+        ]).then(() => this.reloadLanguageStrings());
     }
 
     Hide() {
@@ -558,48 +561,15 @@ class BotEditor {
                             },
                         );
 
-                        /* UI-Entrys :: Boolean */
-                        [].map.call(
-                            form.querySelectorAll('ui-entry[data-type="Boolean"]'),
-                            (input) => {
-                                if (
-                                    typeof input.dataset.name !== "undefined" &&
-                                    input.dataset.name.length > 0
-                                ) {
-                                    data[input.dataset.name] =
-                                        input.querySelector("ui-text").innerHTML == "Yes";
-                                }
-                            },
-                        );
-
-                        /* UI-Entrys :: List */
-                        [].map.call(
-                            form.querySelectorAll('ui-entry[data-type="List"]'),
-                            (input) => {
-                                if (
-                                    typeof input.dataset.name !== "undefined" &&
-                                    input.dataset.name.length > 0
-                                ) {
-                                    data[input.dataset.name] =
-                                        input.querySelector("ui-text").innerHTML;
-                                }
-                            },
-                        );
-
-                        /* UI-Entrys :: Integer, Float, Text & Password */
-                        [].map.call(
-                            form.querySelectorAll(
-                                'ui-entry[data-type="Integer"], ui-entry[data-type="Float"], ui-entry[data-type="Text"], ui-entry[data-type="Password"]',
-                            ),
-                            (input) => {
-                                if (
-                                    typeof input.dataset.name !== "undefined" &&
-                                    input.dataset.name.length > 0
-                                ) {
-                                    data[input.dataset.name] = input.querySelector("input").value;
-                                }
-                            },
-                        );
+                        /* UI-Entrys :: Boolean, List, Integer, Float, Text & Password */
+                        [].map.call(form.querySelectorAll("ui-entry[data-type]"), (input) => {
+                            if (
+                                typeof input.dataset.name !== "undefined" &&
+                                input.dataset.name.length > 0
+                            ) {
+                                data[input.dataset.name] = input.getValue();
+                            }
+                        });
 
                         WebUI.Call("DispatchEventLocal", action, JSON.stringify(data));
                     }
@@ -635,9 +605,9 @@ class BotEditor {
                 /* Forms */
                 case InputDeviceKeys.IDK_Enter:
                     let form = getClosest(event.target, "ui-view");
-                    let submit = form.querySelector('[data-action="submit"]');
+                    let submit = form ? form.querySelector('[data-action="submit"]') : null;
 
-                    if (typeof submit !== "undefined") {
+                    if (submit) {
                         var clickEvent = document.createEvent("MouseEvents");
                         clickEvent.initEvent("mousedown", true, true);
                         submit.dispatchEvent(clickEvent);
@@ -783,26 +753,25 @@ class BotEditor {
 
         json.forEach((entry) => {
             let element = container.querySelector('ui-tab[data-name="' + entry.category + '"]');
+
+            // Unknown categories would otherwise abort the whole list.
+            if (element == null) {
+                element = container.querySelector('ui-tab[data-name="OTHER"]');
+            }
+
             let output = document.createElement("ui-entry");
 
             output.setType(entry.types);
             output.setName(entry.name);
             output.setTitle(entry.title);
-            output.setValue(entry.value);
             output.setDefault(entry.default);
-            output.setDescription(entry.description);
 
-            switch (entry.types) {
-                case EntryType.List:
-                    output.setList(entry.list);
-                    break;
-                case EntryType.Boolean:
-                case EntryType.Float:
-                case EntryType.Integer:
-                case EntryType.Text:
-                case EntryType.Password:
-                    break;
+            if (entry.types == EntryType.List) {
+                output.setList(entry.list);
             }
+
+            output.setValue(entry.value);
+            output.setDescription(entry.description);
             element.appendChild(output.getElement());
         });
 
@@ -874,9 +843,11 @@ class BotEditor {
             return string;
         }
 
-        // Check if translation exists
-        if (typeof window.Language[this._language][string] !== "undefined") {
-            return window.Language[this._language][string];
+        // Check if translation exists (empty entries are untranslated)
+        let translated = window.Language[this._language][string];
+
+        if (typeof translated === "string" && translated.length > 0) {
+            return translated;
         }
 
         return string;
@@ -887,17 +858,23 @@ class BotEditor {
     }
 
     updateTraceWaypoints(count) {
-        console.log("updateTraceWaypoints", count);
+        if (this.DEBUG) {
+            console.log("updateTraceWaypoints", count);
+        }
         document.querySelector('ui-value[data-name="waypoints"]').innerHTML = count;
     }
 
     updateTraceWaypointsDistance(distance) {
-        console.log("updateTraceWaypointsDistance", distance);
+        if (this.DEBUG) {
+            console.log("updateTraceWaypointsDistance", distance);
+        }
         document.querySelector('ui-value[data-name="distance"]').innerHTML = distance;
     }
 
     toggleTraceRun(state) {
-        console.log("toggleTraceRun", state);
+        if (this.DEBUG) {
+            console.log("toggleTraceRun", state);
+        }
         let element = document.querySelector(
             '[data-action="trace_start"], [data-action="trace_end"]',
         );
@@ -908,6 +885,7 @@ class BotEditor {
 
         if (state) {
             a.dataset.key = "F6";
+            a.style.setProperty("--key-content", '"F6"');
             icon.dataset.name = "stop";
             text.dataset.lang = "End Trace";
             text.innerHTML = this.I18N("End Trace");
@@ -915,6 +893,7 @@ class BotEditor {
             element.dataset.action = "trace_end";
         } else {
             a.dataset.key = "F5";
+            a.style.setProperty("--key-content", '"F5"');
             icon.dataset.name = "start";
             text.dataset.lang = "Start Trace";
             text.innerHTML = this.I18N("Start Trace");
@@ -967,7 +946,7 @@ class BotEditor {
                     let spanElement = keyElement.nextElementSibling;
                     if (spanElement && spanElement.tagName === 'SPAN') {
                         spanElement.dataset.lang = entry.Name;
-                        spanElement.innerHTML = entry.Name;
+                        spanElement.innerHTML = this.I18N(entry.Name);
                     }
                 }
             });
@@ -986,7 +965,7 @@ class BotEditor {
 
                 let spanElement = document.createElement("span");
                 spanElement.dataset.lang = entry.Name;
-                spanElement.innerHTML = entry.Name;
+                spanElement.innerHTML = this.I18N(entry.Name);
 
                 entryElement.appendChild(keyElement);
                 entryElement.appendChild(spanElement);
