@@ -80,6 +80,20 @@ function Utilities:DistanceFast(p_PosA, p_PosB)
 		math.abs(p_PosA.z - p_PosB.z))
 end
 
+---Pitch of a vehicle from the Euler angles of its rotation (x = yaw, y = roll, z = pitch).
+---The roll correction is clamped so the value stays finite while banking towards 90°.
+---@param p_Euler Vec3
+---@return number
+function Utilities:GetPitchFromEuler(p_Euler)
+	local s_CosRoll = math.cos(p_Euler.y)
+
+	if math.abs(s_CosRoll) < 0.2 then
+		s_CosRoll = s_CosRoll < 0 and -0.2 or 0.2
+	end
+
+	return -p_Euler.z / s_CosRoll
+end
+
 -- Do not use on numerically indexed tables, only tables with string keys.
 -- This is a shallow merge, does not recurse deeper than one p_Level.
 ---@param p_OriginalTable table

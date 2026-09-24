@@ -1029,24 +1029,18 @@ function BotSpawner:_AirSuperioritySpawn(p_Bot)
 		p_Bot.m_Player.teamId)
 	local s_EntityIterator = EntityManager:GetIterator("ServerCharacterSpawnEntity")
 	local s_Entity = s_EntityIterator:Next()
-	local s_ValidSpawn = false
 
 	while s_Entity do
 		if s_Entity.data:Is('CharacterSpawnReferenceObjectData') then
 			if CharacterSpawnReferenceObjectData(s_Entity.data).team == p_Bot.m_Player.teamId then
-				-- Skip if it is a vehicle spawn.
+				-- Only spawn at a spawn that has a vehicle (the jet). Keep looking otherwise.
 				for l_Index = 1, #s_Entity.bus.entities do
 					local l_Entity = s_Entity.bus.entities[l_Index]
 					if l_Entity:Is("ServerVehicleSpawnEntity") then
-						s_ValidSpawn = true
-						break
+						s_Entity:FireEvent(s_Event)
+						return
 					end
 				end
-
-				if s_ValidSpawn then
-					s_Entity:FireEvent(s_Event)
-				end
-				return
 			end
 		end
 
@@ -1172,6 +1166,8 @@ end
 function BotSpawner:_FindTargetLocation(p_TeamId)
 	---@type Vec3|nil
 	local s_TargetLocation = nil
+	---@type Vec3|nil
+	local s_EnemyBaseLocation = nil
 	local s_EntityIterator = EntityManager:GetIterator("ServerCapturePointEntity")
 	local s_Entity = s_EntityIterator:Next()
 
@@ -1185,10 +1181,11 @@ function BotSpawner:_FindTargetLocation(p_TeamId)
 		for l_Index = 1, #s_Entity.bus.entities do
 			local l_Entity = s_Entity.bus.entities[l_Index]
 			if l_Entity:Is('ServerCharacterSpawnEntity') then
+				-- Capturable flags have a spawn without a fixed team. A fixed team means it is a base.
 				if CharacterSpawnReferenceObjectData(l_Entity.data).team == 0 then
 					s_TargetLocation = s_Entity.transform.trans:Clone()
 				else
-					return s_Entity.transform.trans:Clone()
+					s_EnemyBaseLocation = s_Entity.transform.trans:Clone()
 				end
 
 				goto endOfLoop
@@ -1200,7 +1197,7 @@ function BotSpawner:_FindTargetLocation(p_TeamId)
 	end
 
 	-- Return enemy base location (or nil) if all capture points were captured by bot team already.
-	return s_TargetLocation
+	return s_TargetLocation or s_EnemyBaseLocation
 end
 
 ---Check to avoid the iteration through entities without need. If there are already 2 planes alive per team, don't even check.

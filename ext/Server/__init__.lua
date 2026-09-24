@@ -157,9 +157,11 @@ function FunBotServer:RegisterCustomEvents()
 	NetEvents:Subscribe('ConsoleCommands:SetConfig', self, self.OnConsoleCommandSetConfig)
 	NetEvents:Subscribe('ConsoleCommands:SaveAll', self, self.OnConsoleCommandSaveAll)
 	NetEvents:Subscribe('ConsoleCommands:Restore', self, self.OnConsoleCommandRestore)
-	NetEvents:Subscribe('ConsoleCommands:SpawnGrenade', self, self.OnSpawnGrenade)
-	NetEvents:Subscribe('ConsoleCommands:DestroyObstaclesTest', self, self.OnDestroyObstaclesTest)
-	NetEvents:Subscribe("SpawnPointHelper:TeleportTo", self, self.OnTeleportTo)
+	-- The client only offers these to permitted players, but the server must check as well.
+	PermissionManager:SubscribeNetEvent('ConsoleCommands:SpawnGrenade', 'UserInterface.Settings', self, self.OnSpawnGrenade)
+	PermissionManager:SubscribeNetEvent('ConsoleCommands:DestroyObstaclesTest', 'UserInterface.Settings', self,
+		self.OnDestroyObstaclesTest)
+	PermissionManager:SubscribeNetEvent('SpawnPointHelper:TeleportTo', 'UserInterface.WaypointEditor', self, self.OnTeleportTo)
 	m_NodeEditor:RegisterCustomEvents()
 end
 
@@ -652,6 +654,10 @@ function FunBotServer:OnConsoleCommandRestore(p_Player, p_Args)
 end
 
 function FunBotServer:OnSpawnGrenade(p_Player, p_Args)
+	if p_Player.soldier == nil then
+		return
+	end
+
 	local position = p_Player.soldier.worldTransform.trans:Clone()
 	position.y = position.y + 0.1
 
@@ -767,9 +773,9 @@ function FunBotServer:OnModReloaded()
 	local s_FullLevelPathTable = s_FullLevelPath:split('/')
 	local s_Level = s_FullLevelPathTable[#s_FullLevelPathTable]
 	local s_GameMode = SharedUtils:GetCurrentGameMode()
-	m_Logger:Write(s_Level .. '_' .. s_GameMode .. ' reloaded')
 
 	if s_Level ~= nil and s_GameMode ~= nil then
+		m_Logger:Write(s_Level .. '_' .. s_GameMode .. ' reloaded')
 		self:OnLevelLoaded(s_Level, s_GameMode, TicketManager:GetCurrentRound(), TicketManager:GetRoundCount())
 	end
 end
@@ -777,10 +783,10 @@ end
 -- Set up the used respawn time, which gets calculated by value * rcon multiplier.
 function FunBotServer:SetRespawnDelay()
 	local s_RconResponseTable = RCON:SendCommand('vars.playerRespawnTime')
-	local s_RespawnTimeModifier = tonumber(s_RconResponseTable[2]) / 100
+	local s_RespawnTimeModifier = s_RconResponseTable and tonumber(s_RconResponseTable[2])
 
 	if self.m_PlayerKilledDelay > 0 and s_RespawnTimeModifier ~= nil then
-		Globals.RespawnDelay = self.m_PlayerKilledDelay * s_RespawnTimeModifier
+		Globals.RespawnDelay = self.m_PlayerKilledDelay * s_RespawnTimeModifier / 100
 	else
 		Globals.RespawnDelay = 10.0
 	end

@@ -469,9 +469,12 @@ end
 ---@param p_Player Player
 ---@param p_RaycastResults RaycastResults[]
 function BotManager:OnClientRaycastResults(p_Player, p_RaycastResults)
-	if p_RaycastResults == nil then
+	if type(p_RaycastResults) ~= 'table' then
 		return
 	end
+
+	-- The client reports which bots can see each other. Bot:ShootAt still checks teams, distance and FOV,
+	-- and Bot:Revive checks that a revive is possible, so a forged report can't make bots shoot teammates.
 
 	for l_Index = 1, #p_RaycastResults do
 		local l_RaycastResult = p_RaycastResults[l_Index]
@@ -498,6 +501,10 @@ end
 ---@param p_Player Player
 ---@param p_SeatNumber integer
 function BotManager:OnRequestChangeSeatVehicle(p_Player, p_SeatNumber)
+	if type(p_SeatNumber) ~= 'number' or p_SeatNumber % 1 ~= 0 then
+		return
+	end
+
 	local s_TargetEntryId = p_SeatNumber - 1
 	local s_VehicleEntity = p_Player.controlledControllable
 
@@ -507,6 +514,11 @@ function BotManager:OnRequestChangeSeatVehicle(p_Player, p_SeatNumber)
 
 	-- No vehicle found.
 	if not s_VehicleEntity then
+		return
+	end
+
+	-- The seat number comes from the client.
+	if s_TargetEntryId < 0 or s_TargetEntryId >= s_VehicleEntity.entryCount then
 		return
 	end
 
@@ -846,9 +858,16 @@ function BotManager:CreateBot(p_Name, p_TeamId, p_SquadId)
 
 	-- Bot exists, so just reset him.
 	if s_Bot ~= nil and s_Bot.m_Player ~= nil and s_Bot.m_Player.input ~= nil then
+		local s_OldTeamId = s_Bot.m_Player.teamId
 		s_Bot.m_Player.teamId = p_TeamId
 		s_Bot.m_Player.squadId = p_SquadId
 		s_Bot:ResetVars()
+
+		-- Move the bot to its new team list right away. RefreshTables() doesn't run in manual mode.
+		if s_OldTeamId ~= p_TeamId then
+			self:RefreshTables()
+		end
+
 		return s_Bot
 	end
 
@@ -946,14 +965,16 @@ function BotManager:KillAll(p_Amount, p_TeamId)
 	p_Amount = p_Amount or #s_BotTable
 	-- start from the end, to kill the last spawned bots first
 	for l_Index = #s_BotTable, 1, -1 do
-		local l_Bot = s_BotTable[l_Index]
-
-		l_Bot:Kill()
-
-		p_Amount = p_Amount - 1
-
 		if p_Amount <= 0 then
 			return
+		end
+
+		local l_Bot = s_BotTable[l_Index]
+
+		-- Inactive bots are already out of the game and don't count towards the amount.
+		if not l_Bot:IsInactive() then
+			l_Bot:Kill()
+			p_Amount = p_Amount - 1
 		end
 	end
 end
@@ -971,6 +992,10 @@ function BotManager:DestroyAll(p_Amount, p_TeamId, p_Force)
 	p_Amount = p_Amount or #s_BotTable
 
 	for l_Index = #s_BotTable, 1, -1 do
+		if p_Amount <= 0 then
+			return
+		end
+
 		local l_Bot = s_BotTable[l_Index]
 		if p_Force then
 			self:DestroyBot(l_Bot)
@@ -979,10 +1004,6 @@ function BotManager:DestroyAll(p_Amount, p_TeamId, p_Force)
 		end
 
 		p_Amount = p_Amount - 1
-
-		if p_Amount <= 0 then
-			return
-		end
 	end
 end
 

@@ -31,7 +31,7 @@ The save runs `DROP TABLE` in one frame and then the INSERT batches over several
 Loading traces held SQL open across frames in the same way; it now opens and closes it per step as well.
 *Fix:* build `<map>_table_new`, then `BEGIN; DROP old; ALTER TABLE … RENAME; COMMIT`. Alternatively, do the whole write synchronously inside one transaction.
 
-**B5. Server NetEvents with no permission check**
+**B5. Server NetEvents with no permission check** — ✅ fixed
 The client only hides or doesn't register these, but the server accepts them from any client:
 
 | Event | Handler | Effect |
@@ -43,6 +43,7 @@ The client only hides or doesn't register these, but the server accepts them fro
 | `NodeCollection:Clear`, `NodeCollection:Create` | [NodeCollection.lua:27-28](../ext/Server/NodeCollection.lua#L27-L28) | Wipe the in-memory waypoint graph. No client ever sends these; the subscriptions are dead code |
 
 Exploiting these needs a modified client, but the server must not rely on that. *Fix:* check `HasPermission` in each handler; §Improvements I2 describes a single wrapper.
+*Done via I2.* The `NodeEditor:*`, `SpawnPointHelper:TeleportTo` and `PathMenu:Request/Open/Unhide` events need `UserInterface.WaypointEditor`; the grenade test events need `UserInterface.Settings`. The dead `NodeCollection:Create/Clear` subscriptions are removed. While doing this, `NodeEditor:SetLoopMode` and `NodeEditor:SetSpawnPath` turned out to be sent by the client under names the server never subscribed to (`SetPathLoops` / `AddSpawnPath`), so the console commands did nothing. The client now sends the subscribed names.
 
 ### Medium
 
@@ -50,16 +51,16 @@ Exploiting these needs a modified client, but the server must not rely on that. 
 Set in 11 places: [UIServer.lua:276-341](../ext/Server/UIServer.lua#L276), [BotSpawner.lua:740/764/793](../ext/Server/BotSpawner.lua#L740), [RCON.lua:94/122](../ext/Server/Commands/RCON.lua#L94).
 After any manual spawn, kick or kill, `BotSpawner` doesn't recognise manual mode. The garbage-collection guard `~= SpawnModes.manual` ([BotSpawner.lua:139](../ext/Server/BotSpawner.lua#L139)) passes when it shouldn't, and the `== SpawnModes.manual` branch ([BotSpawner.lua:699](../ext/Server/BotSpawner.lua#L699)) never runs. *Fix:* use `SpawnModes.manual` everywhere.
 
-**B7. Setting `DynamicList` values (weapons) via RCON or console picks the wrong weapon**
+**B7. Setting `DynamicList` values (weapons) via RCON or console picks the wrong weapon** — ✅ fixed (I1)
 [SettingsManager.lua:270-281](../ext/Server/SettingsManager.lua#L270-L281)
 `_G[Reference]` is an array such as `AssaultPrimary = {"M416", "AK74M", …}`, so `l_Key` is an integer. `string.find("M416", 1)` finds the digit `1` and returns weapon #1. Most inputs therefore select an arbitrary weapon or fail.
 *Fix:* compare values (`l_Value == p_Value`) the way `UIServer:_writeSettings` does.
 
-**B8. Enum settings via RCON or console use substring matching in `pairs` order**
+**B8. Enum settings via RCON or console use substring matching in `pairs` order** — ✅ fixed (I1)
 [SettingsManager.lua:242-251](../ext/Server/SettingsManager.lua#L242-L251)
 `string.find(p_Value, l_Key)` with `SpawnMethod = {SpawnSoldierAt, Spawn, SpawnOnTdm}`: the input `SpawnOnTdm` also matches the key `Spawn`. Which one wins depends on hash order. *Fix:* exact key match.
 
-**B9. Empty or non-numeric number fields crash the settings save**
+**B9. Empty or non-numeric number fields crash the settings save** — ✅ fixed (I1)
 [UIServer.lua:674-680](../ext/Server/UIServer.lua#L674-L680), [SettingsManager.lua:228-233](../ext/Server/SettingsManager.lua#L228-L233), [Range.lua `IsValid`](../ext/Shared/Settings/Range.lua)
 `tonumber("")` is `nil`, and `nil >= min` raises an error. In the WebUI path this aborts `_writeSettings` halfway: `Config` is partly updated, the batch never runs and the UI never closes. *Fix:* return `false` from `Range:IsValid` for non-numbers. Integer settings should also `math.floor` the value.
 
@@ -83,14 +84,14 @@ After any manual spawn, kick or kill, `BotSpawner` doesn't recognise manual mode
 
 **B15.** ✅ fixed. `!stop` / `!stopall` pass the option `'respawning'`, but only `'respawn'` exists, so respawn is never disabled ([Chat.lua:486](../ext/Server/Commands/Chat.lua#L486), [Chat.lua:495](../ext/Server/Commands/Chat.lua#L495)).
 **B16.** ✅ fixed. `!kickp_Player` can never match because messages are lowercased first. This is a leftover of a rename to `!kickplayer` ([Chat.lua:497](../ext/Server/Commands/Chat.lua#L497)).
-**B17.** Chat commands that use `p_Player.soldier` without a nil check crash when the caller is dead: `!weap`, `!printtrans`, `!row`, `!tower`, `!grid` (the latter via `BotSpawner:SpawnBotRow/Tower/Grid`).
-**B18.** `SetRespawnDelay`: `tonumber(x) / 100` raises an error on `nil` before the `~= nil` guard can run ([\_\_init\_\_.lua:780-782](../ext/Server/__init__.lua#L780-L782)). `OnModReloaded` concatenates `s_GameMode` before its nil check ([\_\_init\_\_.lua:769-772](../ext/Server/__init__.lua#L769-L772)).
-**B19.** Runtime changes via RCON or console ignore the `Language` and `MaxBots` update flags, so a language change via RCON doesn't reload text ([SettingsManager.lua:292-302](../ext/Server/SettingsManager.lua#L292-L302)). `RestoreDefault()` resets `Config` without triggering any update flag, broadcasting to clients or persisting ([SettingsManager.lua:209-213](../ext/Server/SettingsManager.lua#L209-L213)).
-**B20.** `KillAll(0)` / `DestroyAll(0)` still remove one bot because the amount is checked after acting ([BotManager.lua:948-958](../ext/Server/BotManager.lua#L948-L958)). `!kick 0` kicks one bot.
-**B21.** `Bot:_UpdateInputs` handles at most one expired delayed input per tick and stops decrementing the rest after it, so later delays run long ([Bot.lua:532-543](../ext/Server/Bot/Bot.lua#L532-L543)).
-**B22.** SQL is built by string concatenation with no escaping in `Database:Insert/Update/Delete`, `PermissionManager:AddPermission` and `SettingsManager` lookups. Any value containing `'` breaks the query. Inputs come from admins and RCON, so this is mostly a robustness issue.
-**B23.** `Client:RequestChangeVehicleSeat` doesn't range-check the client-supplied seat number ([BotManager.lua:500-514](../ext/Server/BotManager.lua#L500-L514)). `Botmanager:RaycastResults` trusts client-reported bot IDs, and `OnBotShootAtBot` doesn't check that the two bots are on different teams ([BotManager.lua:383-398](../ext/Server/BotManager.lua#L383-L398)).
-**B24.** Minor cleanups: `BotNames` is required twice in [Shared/\_\_init\_\_.lua](../ext/Shared/__init__.lua#L13-L15). There's a stray `print(self:Query(...))` in `Database:Update`, and `ExecuteBatch` is commented "This is unused" although it is used.
+**B17.** ✅ fixed. Chat commands that use `p_Player.soldier` without a nil check crash when the caller is dead: `!weap`, `!printtrans`, `!row`, `!tower`, `!grid` (the latter via `BotSpawner:SpawnBotRow/Tower/Grid`). These now reply "You need to be alive for this command."
+**B18.** ✅ fixed. `SetRespawnDelay`: `tonumber(x) / 100` raises an error on `nil` before the `~= nil` guard can run ([\_\_init\_\_.lua:780-782](../ext/Server/__init__.lua#L780-L782)). `OnModReloaded` concatenates `s_GameMode` before its nil check ([\_\_init\_\_.lua:769-772](../ext/Server/__init__.lua#L769-L772)).
+**B19.** ✅ fixed (I1). Runtime changes via RCON or console ignore the `Language` and `MaxBots` update flags, so a language change via RCON doesn't reload text ([SettingsManager.lua:292-302](../ext/Server/SettingsManager.lua#L292-L302)). `RestoreDefault()` resets `Config` without triggering any update flag, broadcasting to clients or persisting ([SettingsManager.lua:209-213](../ext/Server/SettingsManager.lua#L209-L213)).
+**B20.** ✅ fixed. `KillAll(0)` / `DestroyAll(0)` still remove one bot because the amount is checked after acting ([BotManager.lua:948-958](../ext/Server/BotManager.lua#L948-L958)). `!kick 0` kicks one bot.
+**B21.** ✅ fixed. `Bot:_UpdateInputs` handles at most one expired delayed input per tick and stops decrementing the rest after it, so later delays run long ([Bot.lua:532-543](../ext/Server/Bot/Bot.lua#L532-L543)).
+**B22.** ✅ fixed. SQL is built by string concatenation with no escaping in `Database:Insert/Update/Delete`, `PermissionManager:AddPermission` and `SettingsManager` lookups. Any value containing `'` breaks the query. Inputs come from admins and RCON, so this is mostly a robustness issue. *Fix:* `Database:Quote()` doubles embedded quotes (SQLite syntax) and is used for every concatenated value.
+**B23.** ✅ fixed. `Client:RequestChangeVehicleSeat` doesn't range-check the client-supplied seat number ([BotManager.lua:500-514](../ext/Server/BotManager.lua#L500-L514)). `Botmanager:RaycastResults` trusts client-reported bot IDs, and `OnBotShootAtBot` doesn't check that the two bots are on different teams ([BotManager.lua:383-398](../ext/Server/BotManager.lua#L383-L398)). *Fix:* the seat number is range-checked. `Bot:ShootAt` already refuses teammates; `Bot:Revive` had no team check, so a forged report could make an enemy bot revive a player. It now only revives teammates.
+**B24.** ✅ fixed. Minor cleanups: `BotNames` is required twice in [Shared/\_\_init\_\_.lua](../ext/Shared/__init__.lua#L13-L15). There's a stray `print(self:Query(...))` in `Database:Update`, and `ExecuteBatch` is commented "This is unused" although it is used.
 
 ---
 
@@ -155,13 +156,13 @@ These paths call `Bot:Kill()`, which runs `ResetVars()` and sets `_SpawnMode = N
 ### Low
 
 **B36.** ✅ fixed. In defend mode, `if self.m_Id % 2 then` is always true in Lua (`0` is truthy), so every defender strafes left ([BotMovement.lua:220](../ext/Server/Bot/BotMovement.lua#L220)). *Fix:* `% 2 == 0`. (This only matters once B26 is fixed.)
-**B37.** Vehicle look-around reuses `_VehicleWaitTimer`, which is also the "wait for passengers" timer. When a driver with a weapon seat waits at a wait node, look-around adds `dt` and the next `UpdateNormalMovementVehicle` subtracts it again. As a result, `_SetVehicleObjectiveState()` runs every tick (a full scan over all paths), and the look-around never gets past its first phase ([VehicleMovement.lua:23-30](../ext/Server/Bot/VehicleMovement.lua#L23-L30), [VehicleMovement.lua:384-409](../ext/Server/Bot/VehicleMovement.lua#L384-L409)). *Fix:* use a separate look-around timer.
-**B38.** *(plausible)* `_FindTargetLocation` returns an enemy HQ as soon as the iterator reaches one. It should prefer capturable flags and fall back to the HQ, as its closing comment says. Depending on iteration order, Conquest bots spawn at the flag closest to the enemy base instead of the one closest to the front ([BotSpawner.lua:1162-1194](../ext/Server/BotSpawner.lua#L1162-L1194)).
-**B39.** *(plausible)* `OnPlayerLeft` calls `ClearPlayer`, which doesn't clear `_FollowTargetPlayer`. Bots following a player who disconnects keep reading `.soldier` on a deleted `Player` ([BotManager.lua:199-203](../ext/Server/BotManager.lua#L199-L203), [Bot.lua:439-454](../ext/Server/Bot/Bot.lua#L439-L454)).
-**B40.** When `CreateBot` reuses an existing bot, it changes `teamId` but leaves the bot in its old `_BotsByTeam` list until the next `RefreshTables()`, which never runs in manual mode. Commands that use team lists (`KillAll(n, team)`, comm-rose actions) then act on the wrong bots ([BotManager.lua:848-853](../ext/Server/BotManager.lua#L848-L853)).
-**B41.** `KillAll(n, team)` counts bots that are already dead or inactive towards `n`, so balancing needs several 2-second cycles to reach its target ([BotManager.lua:948-958](../ext/Server/BotManager.lua#L948-L958)).
-**B42.** `_AirSuperioritySpawn` returns after the first spawn entity of the bot's team even when it isn't a vehicle spawn, so later valid spawns are never tried ([BotSpawner.lua:1024-1040](../ext/Server/BotSpawner.lua#L1024-L1040)).
-**B43.** Leftovers: in `_GetWayIndex`, `s_Diff` is computed after the index has been clamped, so it is always `-1` and the reflection code is dead ([BotGetters.lua:481-498](../ext/Server/Bot/BotGetters.lua#L481-L498)). `_ExecuteActionIfNeeded` assigns the undeclared global `p_NextPoint` ([BotMovement.lua:144](../ext/Server/Bot/BotMovement.lua#L144)).
+**B37.** ✅ fixed. Vehicle look-around reuses `_VehicleWaitTimer`, which is also the "wait for passengers" timer. When a driver with a weapon seat waits at a wait node, look-around adds `dt` and the next `UpdateNormalMovementVehicle` subtracts it again. As a result, `_SetVehicleObjectiveState()` runs every tick (a full scan over all paths), and the look-around never gets past its first phase ([VehicleMovement.lua:23-30](../ext/Server/Bot/VehicleMovement.lua#L23-L30), [VehicleMovement.lua:384-409](../ext/Server/Bot/VehicleMovement.lua#L384-L409)). *Fix:* use a separate look-around timer.
+**B38.** ✅ fixed. *(plausible)* `_FindTargetLocation` returns an enemy HQ as soon as the iterator reaches one. It should prefer capturable flags and fall back to the HQ, as its closing comment says. Depending on iteration order, Conquest bots spawn at the flag closest to the enemy base instead of the one closest to the front ([BotSpawner.lua:1162-1194](../ext/Server/BotSpawner.lua#L1162-L1194)).
+**B39.** ✅ fixed. *(plausible)* `OnPlayerLeft` calls `ClearPlayer`, which doesn't clear `_FollowTargetPlayer`. Bots following a player who disconnects keep reading `.soldier` on a deleted `Player` ([BotManager.lua:199-203](../ext/Server/BotManager.lua#L199-L203), [Bot.lua:439-454](../ext/Server/Bot/Bot.lua#L439-L454)).
+**B40.** ✅ fixed. When `CreateBot` reuses an existing bot, it changes `teamId` but leaves the bot in its old `_BotsByTeam` list until the next `RefreshTables()`, which never runs in manual mode. Commands that use team lists (`KillAll(n, team)`, comm-rose actions) then act on the wrong bots ([BotManager.lua:848-853](../ext/Server/BotManager.lua#L848-L853)).
+**B41.** ✅ fixed. `KillAll(n, team)` counts bots that are already dead or inactive towards `n`, so balancing needs several 2-second cycles to reach its target ([BotManager.lua:948-958](../ext/Server/BotManager.lua#L948-L958)).
+**B42.** ✅ fixed. `_AirSuperioritySpawn` returns after the first spawn entity of the bot's team even when it isn't a vehicle spawn, so later valid spawns are never tried ([BotSpawner.lua:1024-1040](../ext/Server/BotSpawner.lua#L1024-L1040)).
+**B43.** ✅ fixed. Leftovers: in `_GetWayIndex`, `s_Diff` is computed after the index has been clamped, so it is always `-1` and the reflection code is dead ([BotGetters.lua:481-498](../ext/Server/Bot/BotGetters.lua#L481-L498)). The dead code was removed, so path-end behaviour is unchanged. `_ExecuteActionIfNeeded` assigns the undeclared global `p_NextPoint` ([BotMovement.lua:144](../ext/Server/Bot/BotMovement.lua#L144)).
 
 ### Vehicles, choppers and jets
 
@@ -185,16 +186,16 @@ This subsection covers `VehicleMovement`, `VehicleChopperControl`, `VehicleJetCo
 [VehicleAttacking.lua:17](../ext/Server/Bot/VehicleAttacking.lua#L17), [VehicleAttacking.lua:146-148](../ext/Server/Bot/VehicleAttacking.lua#L146-L148)
 If `_Shoot` is false (for example after `!stop` or `SetOptionForAll("shoot", false)`) while the target is alive, neither branch runs. `_ShootModeTimer` never counts down and `AbortAttack` is never called. The vehicle stays in its attack state, stopped and aiming, until the target dies. The infantry path handles this case (`not p_Bot._Shoot` → abort).
 
-**B48 (Low). The chopper banks the same way on every turn**
+**B48 (Low). The chopper banks the same way on every turn** — ✅ fixed *(bank direction not verified in-game)*
 [VehicleChopperControl.lua:167-173](../ext/Server/Bot/VehicleChopperControl.lua#L167-L173)
 `if s_AbsDeltaYaw > 0` is always true while `_FullVehicleSteering` is set, so the target roll is always `+0.1`. Left turns are flown with the wrong bank.
 *Fix:* test the sign of `s_DeltaYaw`.
 
-**B49 (Low, plausible). The gunship's aiming yaw is 90° off from every other yaw in the mod**
+**B49 (Low, plausible). The gunship's aiming yaw is 90° off from every other yaw in the mod** — ✅ fixed
 [VehicleMovement.lua:490](../ext/Server/Bot/VehicleMovement.lua#L490)
 The gunship branch sets `_TargetYaw = math.atan(dz, dx)`, but everywhere else yaw is `atan(dz, dx) - π/2`, wrapped to 0–2π. That value is written to `authoritativeAimingYaw` ([VehicleMovement.lua:572](../ext/Server/Bot/VehicleMovement.lua#L572)), which `Bot:ShootAt` uses for the FOV check. Gunship gunners therefore detect targets in a cone rotated by a quarter turn from where their guns point.
 
-**B50 (Low).** Assorted smaller issues:
+**B50 (Low).** ✅ fixed. Assorted smaller issues:
 - Pitch is derived as `-euler.z / math.cos(roll)` in the chopper, jet and vehicle-yaw code. It grows without bound as a chopper or jet banks towards 90° ([VehicleChopperControl.lua:70](../ext/Server/Bot/VehicleChopperControl.lua#L70), [VehicleMovement.lua:555](../ext/Server/Bot/VehicleMovement.lua#L555)).
 - `PidController:Reset()` clears only the integral, not `_LastError`, so the first update after a reset (a jet aborting an attack) gets a derivative kick ([PidController.lua:18-20](../ext/Server/PidController.lua#L18-L20)).
 - `StateInVehicleJetControl` reads `g_PlayerData:GetData(id).Vehicle` without a nil check ([StateInVehicleJetControl.lua:64](../ext/Server/BotStates/StateInVehicleJetControl.lua#L64)).
@@ -204,18 +205,18 @@ The gunship branch sets `_TargetYaw = math.atan(dz, dx)`, but everywhere else ya
 
 ## Improvements
 
-**I1. One settings validator.** There are three independent parsers: `UIServer:_writeSettings`, `SettingsManager:UpdateSetting`, and `Console` via `UpdateSetting`. They disagree, and that is the root cause of B7, B8, B9 and B19. Move to a single `SettingsManager:Apply(name, rawValue, {persist=bool})` that validates, converts, persists, runs the `UpdateFlag` side effects and broadcasts. All three entry points should call it.
+**I1. One settings validator.** ✅ Done: `SettingsManager:Apply(values, persist)` with `ParseValue()`. `UpdateSetting()` (RCON, console) and the WebUI both call it. `RestoreDefault()` now persists the defaults and runs the update flags. Invalid values are kept at their current value and reported in chat. There are three independent parsers: `UIServer:_writeSettings`, `SettingsManager:UpdateSetting`, and `Console` via `UpdateSetting`. They disagree, and that is the root cause of B7, B8, B9 and B19. Move to a single `SettingsManager:Apply(name, rawValue, {persist=bool})` that validates, converts, persists, runs the `UpdateFlag` side effects and broadcasts. All three entry points should call it.
 
-**I2. A guarded NetEvent helper.** For example, `SecureNetEvent(name, permission, handler)`, which checks `HasPermission` (and optionally that `player.soldier` exists) before dispatching. Register every mutating server NetEvent through it. This fixes B5 structurally and removes about 60 copies of the identical permission check in [UIServer.lua](../ext/Server/UIServer.lua).
+**I2. A guarded NetEvent helper.** ✅ Done: `PermissionManager:SubscribeNetEvent(name, permission, context, handler)`. `UIServer:_onBotEditorEvent` checks one action→permission table up front instead of repeating the check in each branch. For example, `SecureNetEvent(name, permission, handler)`, which checks `HasPermission` (and optionally that `player.soldier` exists) before dispatching. Register every mutating server NetEvent through it. This fixes B5 structurally and removes about 60 copies of the identical permission check in [UIServer.lua](../ext/Server/UIServer.lua).
 
 **I3. Table-driven command dispatch.** `Chat.lua` and `UIServer:_onBotEditorEvent` are long `if/elseif` chains that repeat the permission boilerplate. A table of `{permission, handler}` per command is shorter and makes a missing check (B13) obvious. Move debug-only commands (`!car`, `!caryaw`, `!cardiff`, `!weap`, `!dbg`, `!perks`, `!objectives`) behind `Registry.DEBUG`.
 
 **I4. Safer persistence.**
-- Use transactions for trace saves (B4) and settings batches.
-- Add a small `Database:Escape()` helper (VU provides `SQL:Escape`) and use it everywhere values are concatenated (B22).
+- Use transactions for trace saves (B4) and settings batches. *(Trace saves done with B4.)*
+- ✅ Add a small `Database:Escape()` helper (VU provides `SQL:Escape`) and use it everywhere values are concatenated (B22). *(Done as `Database:Quote()`.)*
 - Key permissions by account GUID rather than name. The GUID is already stored but not used for lookups.
 
-**I5. Static checks in CI.** The code already carries EmmyLua annotations. Running `lua-language-server --check` with the VU stubs, plus `luacheck`, in a GitHub workflow would have flagged B6 (string vs enum), B11 (argument mismatch), B12 and B14. The CodeQL workflow is currently in `disabled-workflows/`.
+**I5. Static checks in CI.** ✅ Done: `.luacheckrc` and `.github/workflows/lua-checks.yml` run luacheck on every push and PR (globals, std-library fields, unreachable code; unused/shadowing/style warnings are not enforced yet). `tools/check-lua.sh` also runs `lua-language-server --check` when the VU stubs from the VS Code extension exist in `.vua_data/`; CI can't generate those stubs, so the type check is local only. It currently reports 19 warnings on the server side, all annotation nits. The code already carries EmmyLua annotations. Running `lua-language-server --check` with the VU stubs, plus `luacheck`, in a GitHub workflow would have flagged B6 (string vs enum), B11 (argument mismatch), B12 and B14. The CodeQL workflow is currently in `disabled-workflows/`.
 
 **I6. Escape data passed into `WebUI:ExecuteJS`.** [UIClient.lua:78/84/231](../ext/Client/UIClient.lua#L78) wrap JSON in `'…'`. A `'` in any translated label or setting string breaks the UI. The French file already drops apostrophes (`"Objectif d attaque"`) to work around this. Escaping `'` and `\` in the Lua helper removes the constraint.
 
@@ -229,9 +230,12 @@ The gunship branch sets `_TargetYaw = math.atan(dz, dx)`, but everywhere else ya
 
 ## Suggested order
 
-Fixed items have been removed from this list.
+Fixed items have been removed from this list. All bugs above are fixed; what remains are improvements.
 
-1. B5 via I2: close the unauthenticated NetEvents.
-2. I1, which fixes B7, B8, B9 and B19 together.
-3. I5, to catch the next batch automatically.
-4. The remaining Low items as time allows.
+1. Test in-game: B48 (chopper bank direction) and B49 (gunship FOV) couldn't be verified from source.
+2. I4: settings-batch transaction, and keying permissions by account GUID.
+3. I6, I8: escaping for `WebUI:ExecuteJS` and `data-value` for booleans, which lifts the no-apostrophe constraint on translations.
+4. I7: send node lists only to the requester.
+5. I3: move debug-only chat commands behind `Registry.DEBUG`.
+6. Enable more luacheck warnings (unused variables, shadowing) once the existing ones are cleaned up.
+7. I9: documentation hygiene.

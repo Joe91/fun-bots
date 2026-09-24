@@ -97,6 +97,7 @@ function Bot:__init(p_Player)
 	self._SpawnDelayTimer = 0.0
 	self._WayWaitTimer = 0.0
 	self._VehicleWaitTimer = 0.0
+	self._VehicleLookAroundTimer = 0.0
 	self._VehicleSeatTimer = 0.0
 	self._VehicleTakeoffTimer = 0.0
 	self._WayWaitYawTimer = 0.0
@@ -446,6 +447,11 @@ function Bot:ClearPlayer(p_Player)
 		self._TargetPlayer = nil
 	end
 
+	if self._FollowTargetPlayer == p_Player then
+		self._FollowTargetPlayer = nil
+		self._FollowWayPoints = {}
+	end
+
 	local s_CurrentShootPlayer = PlayerManager:GetPlayerById(self._ShootPlayerId)
 
 	if s_CurrentShootPlayer == p_Player then
@@ -494,19 +500,19 @@ function Bot:_UpdateLookAroundPassenger(p_DeltaTime)
 	self._TargetYaw = (s_AtanDzDx > math.pi / 2) and (s_AtanDzDx - math.pi / 2) or (s_AtanDzDx + 3 * math.pi / 2)
 	self._TargetPitch = 0.0
 
-	self._VehicleWaitTimer = self._VehicleWaitTimer + p_DeltaTime
+	self._VehicleLookAroundTimer = self._VehicleLookAroundTimer + p_DeltaTime
 
-	if self._VehicleWaitTimer > 9.0 then
-		self._VehicleWaitTimer = 0.0
-	elseif self._VehicleWaitTimer >= 6.0 then
-	elseif self._VehicleWaitTimer >= 3.0 then
+	if self._VehicleLookAroundTimer > 9.0 then
+		self._VehicleLookAroundTimer = 0.0
+	elseif self._VehicleLookAroundTimer >= 6.0 then
+	elseif self._VehicleLookAroundTimer >= 3.0 then
 		self._TargetYaw = self._TargetYaw - 1.0 -- 60° rotation left.
 		self._TargetPitch = 0.2
 
 		if self._TargetYaw < 0.0 then
 			self._TargetYaw = self._TargetYaw + (2 * math.pi)
 		end
-	elseif self._VehicleWaitTimer >= 0.0 then
+	elseif self._VehicleLookAroundTimer >= 0.0 then
 		self._TargetYaw = self._TargetYaw + 1.0 -- 60° rotation right.
 		self._TargetPitch = -0.2
 
@@ -530,17 +536,28 @@ function Bot:_UpdateInputs(p_DeltaTime)
 		end
 	end
 
-	for l_Index = 1, #self.m_DelayedInputs do
-		local l_DelayedInput = self.m_DelayedInputs[l_Index]
+	-- Apply every expired delayed input in insertion order and keep the rest, compacting the list in place.
+	local s_DelayedInputs = self.m_DelayedInputs
+	local s_Count = #s_DelayedInputs
+	local s_Remaining = 0
+
+	for l_Index = 1, s_Count do
+		local l_DelayedInput = s_DelayedInputs[l_Index]
 		l_DelayedInput.delay = l_DelayedInput.delay - p_DeltaTime
+
 		if l_DelayedInput.delay <= 0 then
 			self.m_ActiveInputs[l_DelayedInput.input] = {
 				value = l_DelayedInput.value,
 				reset = l_DelayedInput.value == 0,
 			}
-			table.remove(self.m_DelayedInputs, l_Index)
-			break
+		else
+			s_Remaining = s_Remaining + 1
+			s_DelayedInputs[s_Remaining] = l_DelayedInput
 		end
+	end
+
+	for l_Index = s_Count, s_Remaining + 1, -1 do
+		s_DelayedInputs[l_Index] = nil
 	end
 end
 

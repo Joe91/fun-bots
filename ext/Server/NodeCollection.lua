@@ -13,7 +13,7 @@
 ---@field Next nil|Waypoint
 
 ---@class NodeCollection
----@overload fun(p_DisableServerEvents?: boolean):NodeCollection
+---@overload fun():NodeCollection
 NodeCollection = class 'NodeCollection'
 
 ---@type Utilities
@@ -21,12 +21,8 @@ local m_Utilities = require('__shared/Utilities.lua')
 ---@type Logger
 local m_Logger = Logger('NodeCollection', Debug.Server.NODECOLLECTION)
 
-function NodeCollection:__init(p_DisableServerEvents)
+function NodeCollection:__init()
 	self:InitVars()
-	if p_DisableServerEvents == nil or not p_DisableServerEvents then
-		NetEvents:Subscribe('NodeCollection:Create', self, self.Create)
-		NetEvents:Subscribe('NodeCollection:Clear', self, self.Clear)
-	end
 end
 
 function NodeCollection:InitVars()

@@ -17,6 +17,7 @@ end
 
 function PidController:Reset()
 	self._Integral = 0
+	self._LastError = 0 -- Avoid a derivative kick on the first update after a reset.
 end
 
 ---@param p_Error number

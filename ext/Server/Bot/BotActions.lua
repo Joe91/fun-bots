@@ -16,6 +16,9 @@ function Bot:Revive(p_Player)
 	-- These gamemodes don't allow revives.
 	if Globals.IsGm or Globals.IsScavenger then return end
 
+	-- Only revive teammates. The request comes from a client raycast report.
+	if p_Player.teamId ~= self.m_Player.teamId then return end
+
 	-- The player to revive is not revivable. Could be already alive or dead.
 	if not p_Player.corpse or p_Player.corpse.isDead then return end
 

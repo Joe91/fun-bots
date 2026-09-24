@@ -137,12 +137,10 @@ function Bot:_ExecuteActionIfNeeded(p_Point, p_DeltaTime)
 						local s_Node = g_GameDirector:FindClosestPath(s_Position, true, false, self.m_ActiveVehicle.Terrain)
 
 						if s_Node ~= nil then
-							-- Switch to vehicle.
-							p_Point = s_Node
+							-- Switch to the vehicle path. The next update picks up the new point.
 							self._InvertPathDirection = false
 							self._PathIndex = s_Node.PathIndex
 							self._CurrentWayPoint = s_Node.PointIndex
-							p_NextPoint = m_NodeCollection:Get(self:_GetWayIndex(1), self._PathIndex)
 							self._LastWayDistance = 1000.0
 						end
 					end

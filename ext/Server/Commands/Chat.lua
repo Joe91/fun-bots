@@ -11,6 +11,18 @@ local m_BotSpawner = require('BotSpawner')
 
 local m_CarParts
 
+-- Some commands use the caller's soldier; tell the caller instead of raising an error when they are dead.
+---@param p_Player Player
+---@return boolean
+local function _IsAlive(p_Player)
+	if p_Player.soldier == nil then
+		ChatManager:SendMessage('You need to be alive for this command.', p_Player)
+		return false
+	end
+
+	return true
+end
+
 function ChatCommands:Execute(p_Parts, p_Player)
 	if p_Player == nil or Config.DisableChatCommands == true then
 		return
@@ -28,6 +40,10 @@ function ChatCommands:Execute(p_Parts, p_Player)
 	elseif p_Parts[1] == '!weap' then
 		if PermissionManager:HasPermission(p_Player, 'ChatCommands') == false then
 			ChatManager:SendMessage('You have no permissions for this action (ChatCommands.KickAll).', p_Player)
+			return
+		end
+
+		if not _IsAlive(p_Player) then
 			return
 		end
 
@@ -311,6 +327,10 @@ function ChatCommands:Execute(p_Parts, p_Player)
 			return
 		end
 
+		if not _IsAlive(p_Player) then
+			return
+		end
+
 		if tonumber(p_Parts[2]) == nil then
 			return
 		end
@@ -325,6 +345,10 @@ function ChatCommands:Execute(p_Parts, p_Player)
 			return
 		end
 
+		if not _IsAlive(p_Player) then
+			return
+		end
+
 		if tonumber(p_Parts[2]) == nil then
 			return
 		end
@@ -334,6 +358,10 @@ function ChatCommands:Execute(p_Parts, p_Player)
 	elseif p_Parts[1] == '!grid' then
 		if PermissionManager:HasPermission(p_Player, 'ChatCommands.Grid') == false then
 			ChatManager:SendMessage('You have no permissions for this action (ChatCommands.Grid).', p_Player)
+			return
+		end
+
+		if not _IsAlive(p_Player) then
 			return
 		end
 
@@ -584,6 +612,10 @@ function ChatCommands:Execute(p_Parts, p_Player)
 	elseif p_Parts[1] == '!printtrans' then
 		if PermissionManager:HasPermission(p_Player, 'ChatCommands.PrintTransform') == false then
 			ChatManager:SendMessage('You have no permissions for this action (ChatCommands.PrintTransform).', p_Player)
+			return
+		end
+
+		if not _IsAlive(p_Player) then
 			return
 		end
 

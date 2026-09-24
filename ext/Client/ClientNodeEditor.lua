@@ -519,8 +519,6 @@ function ClientNodeEditor:_onToggleMoveNode(p_Args)
 		self:Log('Edit Mode: %s', self.m_EditMode)
 		return true
 	end
-
-	return false
 end
 
 function ClientNodeEditor:_onAddNode(p_Args)
@@ -594,11 +592,11 @@ function ClientNodeEditor:_onRemoveAllObjectives(p_Args)
 end
 
 function ClientNodeEditor:_onSetLoopMode(p_Args)
-	NetEvents:SendLocal('NodeEditor:SetLoopMode', p_Args)
+	NetEvents:SendLocal('NodeEditor:SetPathLoops', p_Args)
 end
 
 function ClientNodeEditor:_onSetSpawnPath(p_Args)
-	NetEvents:SendLocal('NodeEditor:SetSpawnPath', p_Args)
+	NetEvents:SendLocal('NodeEditor:AddSpawnPath', p_Args)
 end
 
 function ClientNodeEditor:_onRemoveData()
