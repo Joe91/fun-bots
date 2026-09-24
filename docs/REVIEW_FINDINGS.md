@@ -147,7 +147,7 @@ These paths call `Bot:Kill()`, which runs `ResetVars()` and sets `_SpawnMode = N
 [BotMovement.lua:380-384](../ext/Server/Bot/BotMovement.lua#L380-L384)
 `_InvertPathDirection = CheckProbability(P)` sets an absolute value. A bot that is already inverted is switched to forward with probability `1-P`, which is usually the likely outcome. The intended behaviour is `if CheckProbability(P) then invert = not invert end`.
 
-**B35. PathSwitcher ignores better paths when the best one was filtered out**
+**B35. PathSwitcher ignores better paths when the best one was filtered out** — ✅ fixed
 [PathSwitcher.lua:234-246](../ext/Server/PathSwitcher.lua#L234-L246), [PathSwitcher.lua:270-282](../ext/Server/PathSwitcher.lua#L270-L282)
 `s_HighestPriority` is updated *before* the validity filter on line 239. If the highest-priority link fails the filter (for example, a base path), `s_HighestPrioPathsIndex` is empty, `GetRandomInt(1, 0)` is called, and the function returns `false`. A valid path whose priority is still higher than the current one is then skipped.
 *Fix:* update `s_HighestPriority` only for paths inserted into `s_ValidPaths`.
@@ -181,7 +181,7 @@ This subsection covers `VehicleMovement`, `VehicleChopperControl`, `VehicleJetCo
 `GetActiveMcomPositions` fills keys `0` and `1`, but the caller loops `for l_Index = 1, #s_ActiveMcoms`. Key `0` is never visited. In Squad Rush the only MCOM is at key `0`, and in Rush it is the even-numbered MCOM, so passengers ride past it instead of dismounting.
 *Fix:* use keys `1` and `2`.
 
-**B47 (Medium). A vehicle bot keeps attacking forever when shooting is disabled**
+**B47 (Medium). A vehicle bot keeps attacking forever when shooting is disabled** — ✅ fixed
 [VehicleAttacking.lua:17](../ext/Server/Bot/VehicleAttacking.lua#L17), [VehicleAttacking.lua:146-148](../ext/Server/Bot/VehicleAttacking.lua#L146-L148)
 If `_Shoot` is false (for example after `!stop` or `SetOptionForAll("shoot", false)`) while the target is alive, neither branch runs. `_ShootModeTimer` never counts down and `AbortAttack` is never called. The vehicle stays in its attack state, stopped and aiming, until the target dies. The infantry path handles this case (`not p_Bot._Shoot` → abort).
 
@@ -233,6 +233,5 @@ Fixed items have been removed from this list.
 
 1. B5 via I2: close the unauthenticated NetEvents.
 2. I1, which fixes B7, B8, B9 and B19 together.
-3. B35 and B47: the two remaining Medium bugs.
-4. I5, to catch the next batch automatically.
-5. The remaining Low items as time allows.
+3. I5, to catch the next batch automatically.
+4. The remaining Low items as time allows.
