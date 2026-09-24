@@ -647,10 +647,10 @@ end
 ---@param p_VehicleData table
 ---@return TeamId|integer
 function GameDirector:_GetStationaryAaTeam(p_Entity, p_VehicleData)
-	-- Rush: stationary AAs are only placed in the bases of the defenders (always Team2).
-	-- The team of the entity is not reliable there (e.g. final base on Operation Firestorm).
+	-- Rush: the team of the entity is not reliable there (e.g. final base on Operation Firestorm).
+	-- Use the team of the closest base instead (defenders as fallback).
 	if Globals.IsRush then
-		return TeamId.Team2
+		return self:_GetTeamOfClosestBasePath(p_Entity.transform.trans) or TeamId.Team2
 	end
 
 	local s_Team = p_Entity.defaultTeamId
@@ -664,6 +664,41 @@ function GameDirector:_GetStationaryAaTeam(p_Entity, p_VehicleData)
 	end
 
 	return s_Team
+end
+
+---Team of the base-path (e.g. "base us 2", "base ru 1") that starts closest to the position.
+---Used where no capture points exist (Rush). Attackers and defenders spawn far apart there.
+---@param p_Position Vec3
+---@return TeamId|integer|nil
+function GameDirector:_GetTeamOfClosestBasePath(p_Position)
+	local s_Paths = m_NodeCollection:GetPaths()
+
+	if s_Paths == nil then
+		return nil
+	end
+
+	local s_ClosestDistance = nil
+	local s_ClosestTeam = nil
+
+	for _, l_Waypoints in pairs(s_Paths) do
+		local s_FirstNode = l_Waypoints[1]
+
+		if s_FirstNode ~= nil and s_FirstNode.Data ~= nil and s_FirstNode.Data.Objectives ~= nil and
+			#s_FirstNode.Data.Objectives == 1 then
+			local s_Objective = self:_GetObjectiveObject(s_FirstNode.Data.Objectives[1])
+
+			if s_Objective ~= nil and s_Objective.isBase and s_Objective.team ~= TeamId.TeamNeutral then
+				local s_Distance = s_FirstNode.Position:Distance(p_Position)
+
+				if s_ClosestDistance == nil or s_Distance < s_ClosestDistance then
+					s_ClosestDistance = s_Distance
+					s_ClosestTeam = s_Objective.team
+				end
+			end
+		end
+	end
+
+	return s_ClosestTeam
 end
 
 ---@param p_ControllableEntity ControllableEntity
@@ -790,7 +825,13 @@ function GameDirector:OnVehicleSpawnDone(p_Entity)
 					end
 				end
 			end
+			-- no capture points (e.g. Rush): use the team of the closest base
+			if s_ClosestTeam == nil then
+				s_ClosestTeam = self:_GetTeamOfClosestBasePath(p_Entity.transform.trans)
+			end
+
 			if s_ClosestTeam then
+				m_Logger:Write("Jet spawned: " .. s_VehicleData.Name .. ", team: " .. tostring(s_ClosestTeam))
 				self:AddEntityToVehicleCollection(self.m_SpawnableVehicles, s_ClosestTeam, p_Entity)
 			end
 		end

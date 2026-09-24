@@ -14,11 +14,11 @@ This is the changelog for release **V3.1.0**. Don't forget to [join us on Discor
 * Some performance improvements
 * World-Compensation for vehicle-guns
 * Try to fix Auto-AA on Rush
+* Add logic for jets in Rush
 
 
 ### Some optional TODOs:
 * Chopper: handle different heights and positions depending on capture points
-* Add logic for jets in Rush
 * Fully support default spawn method? (for now only on TDM/GM/SDM by default)
 * (Rework raycasts for better performance)
 * (Improve node editor)

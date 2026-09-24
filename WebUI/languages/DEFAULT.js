@@ -3,6 +3,7 @@ Language['xx_XX'] /* Add/replace the xx_XX here with your language code (like
     = {
         "__LANGUAGE_INFO" :
             {"name" : "English", "author" : "Unknown", "version" : "1.0.0"},
+
         "Bots" : "",
         "Spawn Enemy Bots" : "",
         "Spawn Friend Bots" : "",
@@ -32,6 +33,7 @@ Language['xx_XX'] /* Add/replace the xx_XX here with your language code (like
         "Reset all Traces" : "",
         "Current Trace Index" : "",
         "Total Distance" : "",
+        "Recording..." : "",
         "Node Operation Controls" : "",
         "Merge" : "",
         "Link" : "",
@@ -63,20 +65,4 @@ Language['xx_XX'] /* Add/replace the xx_XX here with your language code (like
         "Save temporarily" : "",
         "Restore this value to Default" : "",
         "End Trace" : "",
-        "Recording..." : "",
-        "Yes" : "",
-        "No" : "",
-        "Quick Select" : "",
-        "Mode" : "",
-        "Finish" : "",
-        "Reset" : "",
-        "Forward" : "",
-        "Left" : "",
-        "Right" : "",
-        "Up" : "",
-        "Down" : "",
-        "Finish Move" : "",
-        "Cancel Move" : "",
-        "Speed +" : "",
-        "Speed -" : "",
       };
