@@ -112,30 +112,30 @@ Commit `7569899b` ("some cleanup") moved the defend block into `_HandleDefending
 
 ### Medium
 
-**B27. Stuck bots are never killed and loop through the same reroute**
+**B27. Stuck bots are never killed and loop through the same reroute** — ✅ fixed
 [BotMovement.lua:626-640](../ext/Server/Bot/BotMovement.lua#L626-L640), [BotMovement.lua:388-390](../ext/Server/Bot/BotMovement.lua#L388-L390)
 The "hard reroute" patch fires at `_StuckTimer > 6.0` and resets the timer to 0. As a result, the `> 15.0` kill in `_ObstacleHandling` can no longer trigger. `FindClosestPath(pos, false, true)` returns the node closest to the bot, which is usually the one it is stuck on, so the bot repeats the reroute every 6 s indefinitely. The reroute also forces `_InvertPathDirection = false`, which discards the objective direction, and it doesn't reset `_ObstacleSequenceTimer` or `_LastWayDistance`.
 *Fix:* count reroutes, and fall back to the kill after one or two failed attempts. Keep or recompute the direction with `ObjectiveDirection`.
 
-**B28. Rejoining the path after combat picks the wrong node**
+**B28. Rejoining the path after combat picks the wrong node** — ✅ fixed
 [BotMovement.lua:532-547](../ext/Server/Bot/BotMovement.lua#L532-L547)
 The scan never updates `s_ClosestDistance`, so `s_ClosestNode` ends up as the last scanned node (up to ±19 away) that is closer than the *starting* node, not the closest node. The `< 5.0` check also tests the starting node's distance, so no rejoin happens once the bot has moved more than 5 m from its old waypoint. Bots then run back to their old waypoint or skip ahead or behind along the path. The scan also only checks every second node (`step 2`).
 *Fix:* update `s_ClosestDistance` together with `s_ClosestNode`, and test the final closest distance.
 
-**B29. The path offset on the next point uses the current segment's direction**
+**B29. The path offset on the next point uses the current segment's direction** — ✅ fixed
 [BotMovement.lua:70-78](../ext/Server/Bot/BotMovement.lua#L70-L78)
-`deltaNext = p_NextPoint.Position - p_OriginalPoint.Position` duplicates `delta`. It should be `p_NextToNextPoint.Position - p_NextPoint.Position`. At every corner, the offset target for the next node points sideways relative to the incoming segment, so bots cut or overshoot corners by up to 1.2 m, which is enough to clip walls in doorways. `p_NextToNextPoint` is otherwise only nil-checked. Also, `m_OffsetRecoveryNodes` is decremented once per `Update` tick (0.13 s), not per node as the comments say.
+`deltaNext = p_NextPoint.Position - p_OriginalPoint.Position` duplicates `delta`. It should be `p_NextToNextPoint.Position - p_NextPoint.Position`. At every corner, the offset target for the next node points sideways relative to the incoming segment, so bots cut or overshoot corners by up to 1.2 m, which is enough to clip walls in doorways. `p_NextToNextPoint` is otherwise only nil-checked. Also, `m_OffsetRecoveryNodes` is decremented once per `Update` tick (0.13 s), not per node as the comments say. *(Fixed by correcting the comments; the counter values are tuned for update ticks.)*
 
-**B30. Player team balancing moves dead bots and counts them as players**
+**B30. Player team balancing moves dead bots and counts them as players** — ✅ fixed
 [BotSpawner.lua:530-552](../ext/Server/BotSpawner.lua#L530-L552)
 The loop moves any player with `soldier == nil` who is in another team, and that includes bots waiting to respawn. Each move is counted in `s_CountPlayers` (real players only), so the target is "reached" without moving a human. Bots end up in the wrong team (and in the wrong `_BotsByTeam` list), and human players stay unbalanced. The loop also calls `PlayerManager:GetPlayers()` twice per iteration.
 *Fix:* skip `m_Utilities:isBot(l_Player)`.
 
-**B31. Beacon and squad-mate spawns are overwritten, and can teleport repeatedly**
+**B31. Beacon and squad-mate spawns are overwritten, and can teleport repeatedly** — ✅ fixed
 [BotSpawner.lua:201-244](../ext/Server/BotSpawner.lua#L201-L244)
 The beacon/mate branch sets the path, teleports or enters the vehicle, and applies customization, but it neither removes the bot from `_BotsWithoutPath` nor `break`s. Execution falls through to the closest-path code, which overwrites the chosen path and direction with `FindClosestPath(..., false, false)` (first nodes only, direction forced forward). Customization is also applied a second time. If no closest path is found, the bot stays in the list and is teleported to a mate or beacon again on the next frame. A bot whose spawn failed stays in the list with `soldier == nil`, and it can be added again on its next respawn, so it gets processed twice once it finally spawns.
 
-**B32. A failed vehicle spawn permanently disables the bot**
+**B32. A failed vehicle spawn permanently disables the bot** — ✅ fixed
 [BotSpawner.lua:185-186](../ext/Server/BotSpawner.lua#L185-L186), [BotSpawner.lua:207-208](../ext/Server/BotSpawner.lua#L207-L208), [BotSpawner.lua:1416-1417](../ext/Server/BotSpawner.lua#L1416-L1417), [BotSpawner.lua:1433-1434](../ext/Server/BotSpawner.lua#L1433-L1434)
 These paths call `Bot:Kill()`, which runs `ResetVars()` and sets `_SpawnMode = NoRespawn` and `_Respawning = false`. The bot becomes inactive and is later garbage-collected, and a new bot is created. That churns bot names and loses bots entirely in manual mode. `BotMovement.lua:649` shows the right pattern for "kill but keep respawning": `soldier:Kill()`. The `SpawnAt*` paths also spawn the soldier at `LinearTransform()` (the world origin) before trying the vehicle. When `s_SpawnEntity` is nil, the bot is spawned and killed immediately. *(plausible)* This costs a ticket in Conquest.
 
@@ -143,7 +143,7 @@ These paths call `Bot:Kill()`, which runs `ResetVars()` and sets `_SpawnMode = N
 [PathSwitcher.lua:154](../ext/Server/PathSwitcher.lua#L154), [BotMovement.lua:151](../ext/Server/Bot/BotMovement.lua#L151)
 `p_Bot.m_SecondaryGadget.type` is read without a nil check. `_SetBotWeapons` sets `m_SecondaryGadget = nil` in Scavenger and returns early in GunMaster ([BotSpawner.lua:2253-2264](../ext/Server/BotSpawner.lua#L2253-L2264)). On any map with a beacon path or `beacon` action, this raises an error inside `BotManager:OnUpdateManagerUpdate`, which aborts that tick for every bot after it in the batch.
 
-**B34. "Change direction if stuck" sets the direction instead of flipping it**
+**B34. "Change direction if stuck" sets the direction instead of flipping it** — ✅ fixed
 [BotMovement.lua:380-384](../ext/Server/Bot/BotMovement.lua#L380-L384)
 `_InvertPathDirection = CheckProbability(P)` sets an absolute value. A bot that is already inverted is switched to forward with probability `1-P`, which is usually the likely outcome. The intended behaviour is `if CheckProbability(P) then invert = not invert end`.
 
@@ -229,13 +229,10 @@ The gunship branch sets `_TargetYaw = math.atan(dz, dx)`, but everywhere else ya
 
 ## Suggested order
 
-1. B1, B2, B3: small, isolated fixes that stop data loss.
-2. B5 via I2: close the unauthenticated NetEvents.
-3. B4: transactional trace save.
-4. I1, which fixes B7, B8, B9 and B19 together.
-5. B6, B10–B16: one-line fixes each.
-6. B25, B26, B33: small fixes with a large effect on how bots play.
-7. B27, B28, B29, B34: movement and stuck handling.
-8. B30, B31, B32: spawner and balancing.
-9. B44, B45, B46: one-line vehicle fixes with visible effect.
-10. I5, to catch the next batch automatically.
+Fixed items have been removed from this list.
+
+1. B5 via I2: close the unauthenticated NetEvents.
+2. I1, which fixes B7, B8, B9 and B19 together.
+3. B35 and B47: the two remaining Medium bugs.
+4. I5, to catch the next batch automatically.
+5. The remaining Low items as time allows.

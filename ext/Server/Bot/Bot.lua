@@ -155,6 +155,7 @@ function Bot:__init(p_Player)
 	self._PathIndex = 0
 	self._LastWayDistance = 1000.0
 	self._LastActionId = -1
+	self._StuckRerouteCount = 0
 	self._InvertPathDirection = false
 	self._ExitVehicleActive = false
 	self._ObstacleRetryCounter = 0

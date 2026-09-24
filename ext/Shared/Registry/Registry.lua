@@ -174,6 +174,8 @@ Registry = {
 		PROBABILITY_ATTACK_CHOPPER_WITH_RIFLE = 25,
 		-- If the game mode is Rush or Conquest, change direction if the bot is stuck on non-connecting paths.
 		PROBABILITY_CHANGE_DIRECTION_IF_STUCK = 50,
+		-- Hard reroutes to the closest path a stuck bot tries before it is killed.
+		MAX_STUCK_REROUTES = 2,
 		-- Trace delta, a bot uses when they are off a trace path to find his way back to the best path.
 		TRACE_DELTA_SHOOTING = 0.4,
 		-- The max time a bot tries to move to the repair-vehicle.

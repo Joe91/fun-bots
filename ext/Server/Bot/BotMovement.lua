@@ -15,6 +15,7 @@ local flags = RayCastFlags.DontCheckWater |
 -- >>> SMART PATH OFFSET (with zig-zag and stairs fixes)
 function Bot:ApplyPathOffset(p_OriginalPoint, p_NextPoint, p_NextToNextPoint)
 	-- PRIORITY 1: Recovery mode - disable offset
+	-- m_OffsetRecoveryNodes counts update cycles (one per call), not nodes.
 	if self.m_PathSide ~= 0 and self.m_OffsetRecoveryNodes and self.m_OffsetRecoveryNodes > 0 then
 		self.m_OffsetRecoveryNodes = self.m_OffsetRecoveryNodes - 1
 		-- if self.m_OffsetRecoveryNodes == 0 then - Stay on one side of one path
@@ -67,8 +68,8 @@ function Bot:ApplyPathOffset(p_OriginalPoint, p_NextPoint, p_NextToNextPoint)
 	local dir = Vec3(delta.x / length2D, 0, delta.z / length2D)
 	local right = Vec3(dir.z, 0, -dir.x)
 
-	-- Calculate delta and direction for NextNode
-	local deltaNext = p_NextPoint.Position - p_OriginalPoint.Position
+	-- Calculate delta and direction for NextNode (the segment after it, so corners are offset correctly)
+	local deltaNext = p_NextToNextPoint.Position - p_NextPoint.Position
 	local length2DNext = math.sqrt(deltaNext.x * deltaNext.x + deltaNext.z * deltaNext.z)
 	if length2DNext < 0.01 then
 		return p_OriginalPoint, p_NextPoint
@@ -82,7 +83,7 @@ function Bot:ApplyPathOffset(p_OriginalPoint, p_NextPoint, p_NextToNextPoint)
 	-- >>> FIX 2: stairs/passages vertical → center
 	local verticalDelta = math.abs(p_NextPoint.Position.y - p_OriginalPoint.Position.y)
 	if verticalDelta > 0.35 then
-		self.m_OffsetRecoveryNodes = 15 -- force center for 10 cycles
+		self.m_OffsetRecoveryNodes = 15 -- force center for 15 cycles
 		return p_OriginalPoint, p_NextPoint
 	end
 
@@ -104,7 +105,7 @@ function Bot:ApplyPathOffset(p_OriginalPoint, p_NextPoint, p_NextToNextPoint)
 	-- 	-- offsetPosition = p_OriginalPoint.Position + right * (self.m_PathSide * comfortableDistance)
 	-- 	-- offsetPositionNext = p_NextPoint.Position + right * (self.m_PathSide * comfortableDistance)
 
-	-- 	self.m_OffsetRecoveryNodes = 5 -- force center for 3 nodes
+	-- 	self.m_OffsetRecoveryNodes = 5 -- force center for 5 cycles
 	-- 	return p_OriginalPoint, p_NextPoint
 	-- end
 
@@ -381,8 +382,10 @@ function Bot:_ObstacleHandling(p_Velocity, p_DistanceSquared, p_HeightDistance, 
 				end
 
 				if (Globals.IsConquest or Globals.IsRush) then
-					if g_GameDirector:IsOnObjectivePath(self._PathIndex) then
-						self._InvertPathDirection = m_Utilities:CheckProbability(Registry.BOT.PROBABILITY_CHANGE_DIRECTION_IF_STUCK)
+					if g_GameDirector:IsOnObjectivePath(self._PathIndex)
+						and m_Utilities:CheckProbability(Registry.BOT.PROBABILITY_CHANGE_DIRECTION_IF_STUCK)
+					then
+						self._InvertPathDirection = not self._InvertPathDirection
 					end
 				end
 			end
@@ -532,16 +535,19 @@ function Bot:UpdateNormalMovement(p_DeltaTime)
 			if s_Point == nil then
 				return
 			end
-			local s_ClosestDistance = self.m_Player.soldier.worldTransform.trans:Distance(s_Point.Position)
+			local s_SoldierPos = self.m_Player.soldier.worldTransform.trans
+			local s_ClosestDistance = s_SoldierPos:Distance(s_Point.Position)
 			local s_ClosestNode = s_ActivePointIndex
-			for i = 1, Registry.BOT.NUMBER_NODES_TO_SCAN_AFTER_ATTACK, 2 do
-				s_Point = m_NodeCollection:Get(s_ActivePointIndex - i, self._PathIndex)
-				if s_Point and self.m_Player.soldier.worldTransform.trans:Distance(s_Point.Position) < s_ClosestDistance then
-					s_ClosestNode = s_ActivePointIndex - i
-				end
-				s_Point = m_NodeCollection:Get(s_ActivePointIndex + i, self._PathIndex)
-				if s_Point and self.m_Player.soldier.worldTransform.trans:Distance(s_Point.Position) < s_ClosestDistance then
-					s_ClosestNode = s_ActivePointIndex + i
+			for i = 1, Registry.BOT.NUMBER_NODES_TO_SCAN_AFTER_ATTACK do
+				for _, l_Index in ipairs({ s_ActivePointIndex - i, s_ActivePointIndex + i }) do
+					s_Point = m_NodeCollection:Get(l_Index, self._PathIndex)
+					if s_Point then
+						local s_Distance = s_SoldierPos:Distance(s_Point.Position)
+						if s_Distance < s_ClosestDistance then
+							s_ClosestDistance = s_Distance
+							s_ClosestNode = l_Index
+						end
+					end
 				end
 			end
 			if s_ClosestDistance < 5.0 then
@@ -628,18 +634,30 @@ function Bot:UpdateNormalMovement(p_DeltaTime)
 
 			-- >>> OFFSET-AWARE STUCK RECOVERY (improved)
 			-- >>> PATCH: Hard reroute when stuck
-			if self._StuckTimer > 6.0 then
+			-- Only a limited number of times: after that the stuck timer keeps running,
+			-- so _ObstacleHandling kills the bot at 15 s.
+			if self._StuckTimer > 6.0 and self._StuckRerouteCount < Registry.BOT.MAX_STUCK_REROUTES then
 				local soldier = self.m_Player.soldier
 				if soldier ~= nil then
 					local s_Node = g_GameDirector:FindClosestPath(soldier.worldTransform.trans:Clone(), false, true, nil)
 					if s_Node ~= nil then
-						self._InvertPathDirection = false
 						self._PathIndex = s_Node.PathIndex
 						self._CurrentWayPoint = s_Node.PointIndex
+
+						-- Keep heading for the objective on the new path.
+						if self._Objective ~= '' then
+							local s_Direction = m_NodeCollection:ObjectiveDirection(s_Node, self._Objective, false)
+							if s_Direction then
+								self._InvertPathDirection = (s_Direction == 'Previous')
+							end
+						end
 					end
 
-					self.m_OffsetRecoveryNodes = 25 -- lock center for a while
+					self._StuckRerouteCount = self._StuckRerouteCount + 1
+					self.m_OffsetRecoveryNodes = 25 -- lock center for 25 cycles
 					self._StuckTimer = 0.0
+					self._ObstacleSequenceTimer = 0.0
+					self._LastWayDistance = 1000.0
 					return
 				end
 			end
@@ -671,6 +689,7 @@ function Bot:UpdateNormalMovement(p_DeltaTime)
 			if self:_IsTargetDistanceReached(s_DistanceFromTargetSquared, s_HeightDistance) then
 				if not s_NoStuckReset then
 					self._StuckTimer = 0.0
+					self._StuckRerouteCount = 0
 				end
 
 				if s_PointIncrement > 0 then
@@ -852,6 +871,7 @@ function Bot:UpdateNormalMovement(p_DeltaTime)
 			if self:_IsTargetDistanceReached(s_DistanceFromTargetSquared, s_HeightDistance) then
 				if not s_NoStuckReset then
 					self._StuckTimer = 0.0
+					self._StuckRerouteCount = 0
 				end
 
 				self._OnSwitch = false

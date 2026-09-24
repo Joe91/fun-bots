@@ -183,16 +183,16 @@ function BotSpawner:OnEngineUpdate(p_DeltaTime, p_SimulationDeltaTime)
 					l_Bot:SetVarsWay(nil, true, 0, 0, false)
 
 					if l_Bot:_EnterVehicleEntity(s_SpawnEntity, false) ~= 0 then
-						l_Bot:Kill()
-					elseif s_SpawnEntity ~= nil then
+						self:_KillSoldierKeepRespawn(l_Bot)
+					else
 						l_Bot:FindVehiclePath(s_SpawnEntity.transform.trans:Clone())
-					end
 
-					self:_ApplyCosumizationAfterSpawn(l_Bot)
+						self:_ApplyCosumizationAfterSpawn(l_Bot)
 
-					-- for Civilianizer-mod:
-					if Globals.RemoveKitVisuals then
-						Events:Dispatch('Bot:SoldierEntity', l_Bot.m_Player.soldier)
+						-- for Civilianizer-mod:
+						if Globals.RemoveKitVisuals then
+							Events:Dispatch('Bot:SoldierEntity', l_Bot.m_Player.soldier)
+						end
 					end
 
 					break
@@ -201,11 +201,15 @@ function BotSpawner:OnEngineUpdate(p_DeltaTime, p_SimulationDeltaTime)
 				-- check for mate or beacon
 				local s_PathIndex, s_IndexOnPath, s_InvertDirection, s_SpawnEntity, s_SpawnPosition = g_GameDirector:GetSpawnableBeaconOrMate(l_Bot.m_Player.teamId, l_Bot.m_Player.squadId)
 				if s_PathIndex then
-					-- spawn at mate or beacon
+					-- spawn at mate or beacon. Done here: the closest-path code below must not
+					-- overwrite the chosen path, and the bot must not be teleported again.
+					table.remove(self._BotsWithoutPath, l_Index)
 					l_Bot:SetVarsWay(nil, true, s_PathIndex, s_IndexOnPath, s_InvertDirection)
+					local s_Killed = false
 					if s_SpawnEntity then
 						if l_Bot:_EnterVehicleEntity(s_SpawnEntity, false) ~= 0 then
-							l_Bot:Kill()
+							self:_KillSoldierKeepRespawn(l_Bot)
+							s_Killed = true
 						end
 					elseif s_SpawnPosition then
 						local s_Transform = l_Bot.m_Player.soldier.worldTransform:Clone()
@@ -213,12 +217,16 @@ function BotSpawner:OnEngineUpdate(p_DeltaTime, p_SimulationDeltaTime)
 						l_Bot.m_Player.soldier:SetTransform(s_Transform)
 					end
 
-					self:_ApplyCosumizationAfterSpawn(l_Bot)
+					if not s_Killed then
+						self:_ApplyCosumizationAfterSpawn(l_Bot)
 
-					-- for Civilianizer-mod:
-					if Globals.RemoveKitVisuals then
-						Events:Dispatch('Bot:SoldierEntity', l_Bot.m_Player.soldier)
+						-- for Civilianizer-mod:
+						if Globals.RemoveKitVisuals then
+							Events:Dispatch('Bot:SoldierEntity', l_Bot.m_Player.soldier)
+						end
 					end
+
+					break
 				end
 
 				local s_Position = l_Bot.m_Player.soldier.worldTransform.trans:Clone()
@@ -533,9 +541,11 @@ function BotSpawner:UpdateBotAmountAndTeam()
 
 			for i = 1, Globals.NrOfTeams do
 				if s_CountPlayers[i] < s_MinTargetPlayersPerTeam then
-					for l_Index = 1, #PlayerManager:GetPlayers() do
-						local l_Player = PlayerManager:GetPlayers()[l_Index]
-						if l_Player.soldier == nil and l_Player.teamId ~= i then
+					local s_Players = PlayerManager:GetPlayers()
+					for l_Index = 1, #s_Players do
+						local l_Player = s_Players[l_Index]
+						-- Only move dead real players; bots are balanced by spawning and killing above.
+						if l_Player.soldier == nil and l_Player.teamId ~= i and not m_Utilities:isBot(l_Player) then
 							local s_OldTeam = l_Player.teamId
 							l_Player.teamId = i
 							s_CountPlayers[i] = s_CountPlayers[i] + 1
@@ -1338,7 +1348,7 @@ function BotSpawner:_SpawnSingleWayBot(p_Player, p_UseRandomWay, p_ActiveWayInde
 			m_BotCreator:SetAttributesToBot(s_Bot)
 			self:_SelectLoadout(s_Bot)
 			self:_TriggerSpawn(s_Bot)
-			self._BotsWithoutPath[#self._BotsWithoutPath + 1] = s_Bot
+			self:_AddBotWithoutPath(s_Bot)
 			return
 		end
 
@@ -1358,7 +1368,7 @@ function BotSpawner:_SpawnSingleWayBot(p_Player, p_UseRandomWay, p_ActiveWayInde
 					s_Bot.m_Player.teamId
 				)
 				spawnEntity:FireEvent(spawnEvent)
-				self._BotsWithoutPath[#self._BotsWithoutPath + 1] = s_Bot
+				self:_AddBotWithoutPath(s_Bot)
 				m_Logger:Write("Spawned bot " .. s_Bot.m_Player.name .. " in a jet")
 				return
 			end
@@ -1408,13 +1418,19 @@ function BotSpawner:_SpawnSingleWayBot(p_Player, p_UseRandomWay, p_ActiveWayInde
 					s_SpawnEntity = g_GameDirector:GetGunship(s_TeamId)
 				end
 
+				-- Nothing to spawn in: don't spawn at the world origin (s_Transform) and kill.
+				-- A dead bot tries again after its respawn delay; spawn modes retry next cycle.
+				if s_SpawnEntity == nil then
+					return
+				end
+
 
 				if s_IsRespawn and p_ExistingBot then
 					p_ExistingBot:SetVarsWay(nil, true, 0, 0, false)
 					self:_SpawnBot(p_ExistingBot, s_Transform, false)
 
 					if p_ExistingBot:_EnterVehicleEntity(s_SpawnEntity, false) ~= 0 then
-						p_ExistingBot:Kill()
+						self:_KillSoldierKeepRespawn(p_ExistingBot)
 					elseif s_SpawnEntity ~= nil then
 						p_ExistingBot:FindVehiclePath(s_SpawnEntity.transform.trans:Clone())
 					end
@@ -1431,7 +1447,7 @@ function BotSpawner:_SpawnSingleWayBot(p_Player, p_UseRandomWay, p_ActiveWayInde
 						self:_SpawnBot(s_Bot, s_Transform, true)
 
 						if s_Bot:_EnterVehicleEntity(s_SpawnEntity, false) ~= 0 then
-							s_Bot:Kill()
+							self:_KillSoldierKeepRespawn(s_Bot)
 						elseif s_SpawnEntity then
 							s_Bot:FindVehiclePath(s_SpawnEntity.transform.trans:Clone())
 						end
@@ -1563,6 +1579,27 @@ function BotSpawner:_SpawnBot(p_Bot, p_Transform, p_SetKit)
 end
 
 ---@param p_Bot Bot
+---Kills the soldier but keeps the bot active, so it respawns normally.
+---Bot:Kill() would also reset the bot to NoRespawn and so disable it.
+---@param p_Bot Bot
+function BotSpawner:_KillSoldierKeepRespawn(p_Bot)
+	if p_Bot.m_Player.soldier ~= nil then
+		p_Bot.m_Player.soldier:Kill()
+	end
+end
+
+---@param p_Bot Bot
+function BotSpawner:_AddBotWithoutPath(p_Bot)
+	-- A bot whose last spawn failed can still be in the list.
+	for l_Index = 1, #self._BotsWithoutPath do
+		if self._BotsWithoutPath[l_Index] == p_Bot then
+			return
+		end
+	end
+
+	self._BotsWithoutPath[#self._BotsWithoutPath + 1] = p_Bot
+end
+
 function BotSpawner:_ApplyCosumizationAfterSpawn(p_Bot)
 	p_Bot.m_Player.soldier:ApplyCustomization(self:_GetCustomization(p_Bot, p_Bot.m_Kit))
 end

@@ -197,6 +197,7 @@ function Bot:ResetSpawnVars()
 	self._DeployTimer = MathUtils:GetRandomInt(1, Config.DeployCycle)
 
 	self._ObstacleRetryCounter = 0
+	self._StuckRerouteCount = 0
 	self._LastWayDistance = 1000.0
 	self._LastActionId = -1
 	self._ShootPlayer = nil
