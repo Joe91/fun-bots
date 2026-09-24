@@ -67,17 +67,17 @@ function ClientSpawnPointHelper:Update(p_PlayerPos, p_NodesToDraw, p_LinesToDraw
 		return
 	end
 
+	local s_RangeSq = Config.SpawnPointRange * Config.SpawnPointRange
+	local s_Center = ClientUtils:GetWindowSize() / 2
+
 	for l_Index = 1, #self.m_SpawnPointTable do
 		local l_Transform = self.m_SpawnPointTable[l_Index]
 		local l_Pos = l_Transform.trans:Clone()
-		if m_Utilities:DistanceFast(l_Pos, p_PlayerPos) <= Config.SpawnPointRange then
+		local s_Diff = l_Pos - p_PlayerPos
+		if s_Diff.x * s_Diff.x + s_Diff.y * s_Diff.y + s_Diff.z * s_Diff.z <= s_RangeSq then
 			-- self:DrawSpawnPoint(l_Transform, l_Index)
 			local s_Color = Vec4(1, 1, 1, 0.5)
 			local s_PointScreenPos = ClientUtils:WorldToScreen(l_Pos)
-
-			-- Skip to the next point if this one isn't in view.
-			-- if s_PointScreenPos ~= nil then
-			local s_Center = ClientUtils:GetWindowSize() / 2
 
 			-- Select point if it's close to the hitPosition.
 			if s_PointScreenPos and s_Center:Distance(s_PointScreenPos) < 20 then

@@ -10,12 +10,15 @@ local m_Logger = Logger('ClientNodeEditor', Debug.Client.NODEEDITOR)
 local m_ClientSpawnPointHelper = require('ClientSpawnPointHelper')
 local m_Utilities = require('__shared/Utilities')
 
+local m_SpeedModeNames = { [0] = 'Wait', 'Prone', 'Crouch', 'Walk', 'Sprint' }
+
 function ClientNodeEditor:__init()
 	-- new Mode stuff
 	self.m_WayPoints = {}
 	self.m_WayPointsById = {}
 	self.m_CurrentTrace = {}
 	self.m_Selections = {}
+	self.m_SelectionSet = {}
 	self.m_RequestDataSent = false
 	self.m_LastUpdateIndex = 0
 	self.m_FirstNodeInPath = {}
@@ -82,6 +85,9 @@ function ClientNodeEditor:__init()
 		{ Node = Vec4(0, 1, 1, 0.25),          Line = Vec4(0, 1, 1, 1) },
 		{ Node = Vec4(1, 0.08, 0.58, 0.25),    Line = Vec4(1, 0.08, 0.58, 1) },
 	}
+	-- Shared color tables, so GetColor doesn't create new ones for every node.
+	self.m_TraceColor = { Node = self.m_Colors.White, Line = self.m_Colors.White }
+	self.m_NoPathColor = { Node = self.m_Colors.Red, Line = self.m_Colors.Red }
 
 	self.m_EventsReady = false
 end
@@ -220,6 +226,11 @@ end
 
 function ClientNodeEditor:_OnUpdateSelection(p_Data)
 	self.m_Selections = p_Data or {}
+	self.m_SelectionSet = {}
+
+	for l_Index = 1, #self.m_Selections do
+		self.m_SelectionSet[self.m_Selections[l_Index]] = true
+	end
 end
 
 function ClientNodeEditor:_OnAddToCustomTrace(p_Data)
@@ -234,12 +245,35 @@ function ClientNodeEditor:_OnClearCustomTrace()
 end
 
 function ClientNodeEditor:_OnClearTrace(p_PathIndex)
-	for l_Index = #self.m_WayPoints, 1, -1 do
+	self:_RemoveWaypoints(function(p_Waypoint)
+		return p_Waypoint.PathIndex == p_PathIndex
+	end)
+	self.m_FirstNodeInPath[p_PathIndex] = nil
+end
+
+---Removes all waypoints matching the filter in a single pass.
+---@param p_ShouldRemove fun(p_Waypoint: table): boolean
+function ClientNodeEditor:_RemoveWaypoints(p_ShouldRemove)
+	local s_Count = #self.m_WayPoints
+	local s_Kept = 0
+
+	for l_Index = 1, s_Count do
 		local l_Waypoint = self.m_WayPoints[l_Index]
-		if l_Waypoint.PathIndex == p_PathIndex then
-			self.m_WayPointsById[self.m_WayPoints[l_Index].ID] = nil
-			table.remove(self.m_WayPoints, l_Index)
+
+		if p_ShouldRemove(l_Waypoint) then
+			self.m_WayPointsById[l_Waypoint.ID] = nil
+
+			if self.m_FirstNodeInPath[l_Waypoint.PathIndex] == l_Waypoint then
+				self.m_FirstNodeInPath[l_Waypoint.PathIndex] = nil
+			end
+		else
+			s_Kept = s_Kept + 1
+			self.m_WayPoints[s_Kept] = l_Waypoint
 		end
+	end
+
+	for l_Index = s_Count, s_Kept + 1, -1 do
+		self.m_WayPoints[l_Index] = nil
 	end
 end
 
@@ -266,34 +300,36 @@ function ClientNodeEditor:_OnAddNodes(p_Data)
 end
 
 function ClientNodeEditor:_OnRemoveNodes(p_Data)
+	local s_IdsToRemove = {}
+
 	for l_Index = 1, #p_Data do
-		local l_NodeId = p_Data[l_Index].ID
-		for l_WaypointIndex, l_Waypoint in pairs(self.m_WayPoints) do
-			if l_Waypoint.ID == l_NodeId then
-				table.remove(self.m_WayPoints, l_WaypointIndex)
-				self.m_WayPointsById[l_NodeId] = nil
-				break
+		s_IdsToRemove[p_Data[l_Index].ID] = true
+	end
+
+	self:_RemoveWaypoints(function(p_Waypoint)
+		return s_IdsToRemove[p_Waypoint.ID] == true
+	end)
+end
+
+function ClientNodeEditor:_OnUpdateNodes(p_Data)
+	for l_Index = 1, #p_Data do
+		local l_Node = self.m_WayPointsById[p_Data[l_Index].ID]
+
+		if l_Node ~= nil then
+			m_Utilities:mergeKeys(l_Node, p_Data[l_Index])
+
+			if l_Node.PointIndex == 1 then
+				self.m_FirstNodeInPath[l_Node.PathIndex] = l_Node
 			end
 		end
 	end
 end
 
-function ClientNodeEditor:_OnUpdateNodes(p_Data)
-	for l_Index = 1, #p_Data do
-		local l_NodeId = p_Data[l_Index].ID
-		m_Utilities:mergeKeys(self.m_WayPointsById[l_NodeId], p_Data[l_Index])
-	end
-end
-
 function ClientNodeEditor:GetColor(p_Node, p_IsTracePath)
-	local s_Color = {}
 	if p_IsTracePath then
-		s_Color = {
-			Node = self.m_Colors.White,
-			Line = self.m_Colors.White,
-		}
-		return s_Color
+		return self.m_TraceColor
 	end
+
 	if p_Node.PathIndex > 0 then
 		if self.m_Colors[p_Node.PathIndex] == nil then
 			local r, g, b = (math.random(20, 100) / 100), (math.random(20, 100) / 100), (math.random(20, 100) / 100)
@@ -303,28 +339,14 @@ function ClientNodeEditor:GetColor(p_Node, p_IsTracePath)
 			}
 		end
 
-		s_Color = self.m_Colors[p_Node.PathIndex]
-	else
-		s_Color = {
-			Node = self.m_Colors.Red,
-			Line = self.m_Colors.Red,
-		}
+		return self.m_Colors[p_Node.PathIndex]
 	end
 
-	return s_Color
+	return self.m_NoPathColor
 end
 
 function ClientNodeEditor:GetIsSelected(p_NodeId, p_IsTracePath)
-	if p_IsTracePath then
-		return false
-	end
-	for l_Index = 1, #self.m_Selections do
-		local l_SelectionId = self.m_Selections[l_Index]
-		if l_SelectionId == p_NodeId then
-			return true
-		end
-	end
-	return false
+	return not p_IsTracePath and self.m_SelectionSet[p_NodeId] == true
 end
 
 function ClientNodeEditor:GetLinkNode(p_LinkID)
@@ -333,8 +355,15 @@ end
 
 function ClientNodeEditor:OnUISettings(p_Data)
 	if p_Data == false then -- Client closed settings.
-		self:OnSetEnabled(Config.DebugTracePaths)
+		-- Saving the settings overwrites Config with the server values, so an open editor has to stay enabled.
+		self:OnSetEnabled(g_FunBotUIClient.m_InWaypointEditor or Config.DebugTracePaths)
 	end
+end
+
+---Called after the server sent new settings. Drops the cached path visibility, so changed ranges apply right away.
+function ClientNodeEditor:OnSettingsChanged()
+	self.m_PathsToSkipForCycles = {}
+	self.m_MinDistanceToPath = {}
 end
 
 function ClientNodeEditor:GetDistance(p_Position1, p_Position2)
@@ -526,7 +555,7 @@ function ClientNodeEditor:_onAddNode(p_Args)
 end
 
 function ClientNodeEditor:_onSelectNewNode(p_NewDataNodeId)
-	self.m_Selections = { p_NewDataNodeId }
+	self:_OnUpdateSelection({ p_NewDataNodeId })
 	self.m_EditPositionMode = 'absolute'
 	self:_onToggleMoveNode()
 end
@@ -626,6 +655,7 @@ function ClientNodeEditor:_onUnload()
 	self.m_WayPoints = {}
 	self.m_CurrentTrace = {}
 	self.m_Selections = {}
+	self.m_SelectionSet = {}
 	self.m_RequestDataSent = false
 	self.m_LastUpdateIndex = 0
 	self.m_FirstNodeInPath = {}
@@ -915,195 +945,173 @@ function ClientNodeEditor:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 		end
 	end
 
-
 	-- prepare data to draw
-	if s_Player and s_Player.soldier then
-		local s_MaxIndex = #self.m_WayPoints + #self.m_CurrentTrace
+	if s_Player and s_Player.soldier and self.m_PlayerPos then
+		local s_PlayerX, s_PlayerY, s_PlayerZ = self.m_PlayerPos.x, self.m_PlayerPos.y, self.m_PlayerPos.z
 
-		local s_LastUpdatedIndex = 0
+		-- Ranges are compared squared, so they are real meters without a square root per node.
+		local s_WaypointRangeSq = Config.WaypointRange * Config.WaypointRange
+		local s_LineRangeSq = Config.DrawWaypointLines and Config.LineRange * Config.LineRange or -1
+		local s_TextRangeSq = Config.DrawWaypointIDs and Config.TextRange * Config.TextRange or -1
+		local s_NodesPerCycle = Config.NodesPerCycle
+
+		local s_WayPoints = self.m_WayPoints
+		local s_WayPointCount = #s_WayPoints
+		local s_CurrentTrace = self.m_CurrentTrace
+		local s_MaxIndex = s_WayPointCount + #s_CurrentTrace
+		local s_PathsToSkip = self.m_PathsToSkipForCycles
+		local s_MinDistanceToPath = self.m_MinDistanceToPath
+		local s_ScreenCenter = nil
+
+		local s_LastUpdatedIndex = self.m_LastUpdateIndex
 		local s_UpdateCount = 0
 
 		for l_Index = self.m_LastUpdateIndex + 1, s_MaxIndex do
 			s_LastUpdatedIndex = l_Index
 
-			local s_IsTracePath = false
+			local s_IsTracePath = l_Index > s_WayPointCount
 			local l_Node = nil
 			local l_LastNode = nil
-			if l_Index <= #self.m_WayPoints then
-				l_Node = self.m_WayPoints[l_Index]
-				if l_Index > 1 then
-					l_LastNode = self.m_WayPoints[l_Index - 1]
-				end
+
+			if s_IsTracePath then
+				local l_TraceIndex = l_Index - s_WayPointCount
+				l_Node = s_CurrentTrace[l_TraceIndex]
+				l_LastNode = s_CurrentTrace[l_TraceIndex - 1]
 			else
-				s_IsTracePath = true
-				local l_TraceIndex = l_Index - #self.m_WayPoints
-				l_Node = self.m_CurrentTrace[l_TraceIndex]
-				if l_TraceIndex > 1 then
-					l_LastNode = self.m_CurrentTrace[l_TraceIndex - 1]
-				end
+				l_Node = s_WayPoints[l_Index]
+				l_LastNode = s_WayPoints[l_Index - 1]
 			end
 
-			if not s_IsTracePath and self.m_PathsToSkipForCycles[l_Node.PathIndex] > 0 then
+			local s_PathIndex = l_Node.PathIndex
+
+			if not s_IsTracePath and (s_PathsToSkip[s_PathIndex] or 0) > 0 then
 				goto continue
 			end
 
-			local s_Distance = m_Utilities:DistanceFast(l_Node.Position, self.m_PlayerPos)
-			if not s_IsTracePath and (self.m_MinDistanceToPath[l_Node.PathIndex] == nil or s_Distance < self.m_MinDistanceToPath[l_Node.PathIndex]) then
-				self.m_MinDistanceToPath[l_Node.PathIndex] = s_Distance
+			local s_Position = l_Node.Position
+			local s_DiffX = s_Position.x - s_PlayerX
+			local s_DiffY = s_Position.y - s_PlayerY
+			local s_DiffZ = s_Position.z - s_PlayerZ
+			local s_DistanceSq = s_DiffX * s_DiffX + s_DiffY * s_DiffY + s_DiffZ * s_DiffZ
+
+			if not s_IsTracePath then
+				local s_MinDistanceSq = s_MinDistanceToPath[s_PathIndex]
+
+				if s_MinDistanceSq == nil or s_DistanceSq < s_MinDistanceSq then
+					s_MinDistanceToPath[s_PathIndex] = s_DistanceSq
+				end
 			end
 
-			local s_DrawNode = false
-			local s_DrawLine = false
-			local s_DrawText = false
-			if s_Distance <= Config.WaypointRange then
-				s_DrawNode = true
-			end
-			if s_Distance <= Config.LineRange then
-				s_DrawLine = true
-			end
-			if s_Distance <= Config.TextRange then
-				s_DrawText = true
-			end
+			local s_DrawNode = s_DistanceSq <= s_WaypointRangeSq
+			local s_DrawLine = s_DistanceSq <= s_LineRangeSq
+			local s_DrawText = not s_IsTracePath and s_DistanceSq <= s_TextRangeSq
 
 			if s_DrawNode or s_DrawLine then
-				-- only draw if in front of player
-				-- local s_DiffPos = l_Node.Position - self.m_PlayerPos
-				-- local s_DotProduct = s_DiffPos:Dot(s_Player.soldier.worldTransform.forward)
-				-- if s_DotProduct > 0 then
-				local s_IsSelected = self:GetIsSelected(l_Node.ID, s_IsTracePath)
-
 				local s_Color = self:GetColor(l_Node, s_IsTracePath)
-				local s_QualityAtRange = s_DrawText or s_IsSelected -- higher quality if text is drawn or is selected
-				local s_Size = 0.05
-				if s_IsSelected then
-					s_Size = 0.08
-					-- Transform marker.
-					self:DrawLine(l_Node.Position, l_Node.Position + (Vec3.up), self.m_Colors.Red, self.m_Colors.Red)
-					self:DrawLine(l_Node.Position, l_Node.Position + (Vec3.right * 0.5), self.m_Colors.Green, self.m_Colors.Green)
-					self:DrawLine(l_Node.Position, l_Node.Position + (Vec3.forward * 0.5), self.m_Colors.Blue, self.m_Colors.Blue)
-				end
-				self:DrawSphere(l_Node.Position, s_Size, s_Color.Node, false, (not s_QualityAtRange))
-				s_UpdateCount = s_UpdateCount + 3
+				local s_IsSelected = not s_IsTracePath and self.m_SelectionSet[l_Node.ID] == true
 
-				-- Check if we are scanning for a node to select.
-				if not s_IsTracePath and self.m_ScanForNode then
-					local s_PointScreenPos = ClientUtils:WorldToScreen(l_Node.Position)
+				if s_DrawNode then
+					local s_Size = 0.05
 
-					-- Skip to the next point if this one isn't in view.
-					if s_PointScreenPos ~= nil then
-						local s_Center = ClientUtils:GetWindowSize() / 2
+					if s_IsSelected then
+						s_Size = 0.08
+						-- Transform marker.
+						self:DrawLine(s_Position, s_Position + Vec3.up, self.m_Colors.Red, self.m_Colors.Red)
+						self:DrawLine(s_Position, s_Position + (Vec3.right * 0.5), self.m_Colors.Green, self.m_Colors.Green)
+						self:DrawLine(s_Position, s_Position + (Vec3.forward * 0.5), self.m_Colors.Blue, self.m_Colors.Blue)
+					end
 
-						-- Select point if it's close to the hitPosition.
-						if s_Center:Distance(s_PointScreenPos) < 20 then
-							self.m_ScanForNode = false
+					-- Higher quality if text is drawn or the node is selected.
+					self:DrawSphere(s_Position, s_Size, s_Color.Node, false, not (s_DrawText or s_IsSelected))
+					s_UpdateCount = s_UpdateCount + 3
 
-							if s_IsSelected then
-								self:Log('Deselect -> %s', l_Node.ID)
-								NetEvents:SendLocal('NodeEditor:Deselect', l_Node.ID)
-								return
-							else
-								self:Log('Select -> %s', l_Node.ID)
-								NetEvents:SendLocal('NodeEditor:Select', l_Node.ID)
-								return
+					-- Check if we are scanning for a node to select.
+					if not s_IsTracePath and self.m_ScanForNode then
+						local s_PointScreenPos = ClientUtils:WorldToScreen(s_Position)
+
+						if s_PointScreenPos ~= nil then
+							s_ScreenCenter = s_ScreenCenter or ClientUtils:GetWindowSize() / 2
+
+							-- Select point if it's close to the center of the screen.
+							if s_ScreenCenter:Distance(s_PointScreenPos) < 20 then
+								self.m_ScanForNode = false
+
+								if s_IsSelected then
+									self:Log('Deselect -> %s', l_Node.ID)
+									NetEvents:SendLocal('NodeEditor:Deselect', l_Node.ID)
+								else
+									self:Log('Select -> %s', l_Node.ID)
+									NetEvents:SendLocal('NodeEditor:Select', l_Node.ID)
+								end
 							end
 						end
 					end
 				end
 
-				if Config.DrawWaypointLines and s_DrawLine and l_LastNode and (s_IsTracePath or l_LastNode.PathIndex == l_Node.PathIndex) then
-					self:DrawLine(l_Node.Position, l_LastNode.Position, s_Color.Line, s_Color.Line)
-					s_UpdateCount = s_UpdateCount + 2
-				end
-				if l_Node.Data and l_Node.Data.Links then
-					for l_LinkIndex = 1, #l_Node.Data.Links do
-						local l_LinkID = l_Node.Data.Links[l_LinkIndex]
-						local l_LinkNode = self:GetLinkNode(l_LinkID)
-						if l_LinkNode then
-							self:DrawLine(l_Node.Position, l_LinkNode.Position, self.m_Colors.Purple, self.m_Colors.Purple)
-							s_UpdateCount = s_UpdateCount + 1
+				if s_DrawLine then
+					if l_LastNode and (s_IsTracePath or l_LastNode.PathIndex == s_PathIndex) then
+						self:DrawLine(s_Position, l_LastNode.Position, s_Color.Line, s_Color.Line)
+						s_UpdateCount = s_UpdateCount + 2
+					end
+
+					if not s_IsTracePath and l_Node.Data and l_Node.Data.Links then
+						for l_LinkIndex = 1, #l_Node.Data.Links do
+							local l_LinkNode = self.m_WayPointsById[l_Node.Data.Links[l_LinkIndex]]
+
+							if l_LinkNode then
+								self:DrawLine(s_Position, l_LinkNode.Position, self.m_Colors.Purple, self.m_Colors.Purple)
+								s_UpdateCount = s_UpdateCount + 1
+							end
 						end
 					end
 				end
-				if Config.DrawWaypointIDs and s_DrawText and not s_IsTracePath then
-					-- Draw debugging text.
-					if s_IsSelected then
-						local s_FirstNode = self.m_FirstNodeInPath[l_Node.PathIndex]
-						local s_SpeedMode = 'N/A'
 
-						local SpeedMode = l_Node.InputVar & 0xF -- 0 = wait, 1 = prone, 2 = crouch, 3 = walk, 4 run.
-						local ExtraMode = (l_Node.InputVar >> 4) & 0xF
-						local OptValue = (l_Node.InputVar >> 8) & 0xFF
-
-						if SpeedMode == 0 then s_SpeedMode = 'Wait' end
-
-						if SpeedMode == 1 then s_SpeedMode = 'Prone' end
-
-						if SpeedMode == 2 then s_SpeedMode = 'Crouch' end
-
-						if SpeedMode == 3 then s_SpeedMode = 'Walk' end
-
-						if SpeedMode == 4 then s_SpeedMode = 'Sprint' end
-
-						local s_ExtraMode = 'N/A'
-
-						if ExtraMode == 1 then s_ExtraMode = 'Jump' end
-
-						local s_OptionValue = 'N/A'
-
-						if SpeedMode == 0 then
-							s_OptionValue = tostring(OptValue) .. ' Seconds'
-						end
-
-						local s_PathMode = 'Loops'
-						local s_Reverses = (s_FirstNode.InputVar >> 8) & 0xFF == 0XFF
-						if s_Reverses then
-							s_PathMode = 'Reverses'
-						end
-
-						local s_Text = ''
-						-- s_Text = s_Text .. string.format("(%s)Pevious [ %s ] Next(%s)\n", s_PreviousNode, p_Waypoint.ID, s_NextNode)
-						s_Text = s_Text .. string.format('Index[%d]\n', l_Node.Index)
-						s_Text = s_Text .. string.format('Path[%d][%d] (%s)\n', l_Node.PathIndex, l_Node.PointIndex, s_PathMode)
-						if s_FirstNode.Data then
-							s_Text = s_Text .. string.format('Path Objectives: %s\n', g_Utilities:dump(s_FirstNode.Data.Objectives, false))
-							s_Text = s_Text .. string.format('Vehicles: %s\n', g_Utilities:dump(s_FirstNode.Data.Vehicles, false))
-						end
-						s_Text = s_Text .. string.format('InputVar: %d\n', l_Node.InputVar)
-						s_Text = s_Text .. string.format('SpeedMode: %s (%d)\n', s_SpeedMode, SpeedMode)
-						s_Text = s_Text .. string.format('ExtraMode: %s (%d)\n', s_ExtraMode, ExtraMode)
-						s_Text = s_Text .. string.format('OptValue: %s (%d)\n', s_OptionValue, OptValue)
-						s_Text = s_Text .. 'Data: ' .. g_Utilities:dump(l_Node.Data, true)
-
-						self:DrawPosText2D(l_Node.Position + Vec3.up, s_Text, self.m_Colors.Text, 1.2)
-					else
-						-- Don't try to pre-calculate this value like with the distance, another memory leak crash awaits you.
-						self:DrawPosText2D(l_Node.Position + (Vec3.up * 0.05), tostring(l_Node.ID), self.m_Colors.Text, 1)
-					end
+				if s_DrawText and s_IsSelected then
+					self:DrawPosText2D(s_Position + Vec3.up, self:_GetNodeInfoText(l_Node), self.m_Colors.Text, 1.2)
 					s_UpdateCount = s_UpdateCount + 1
+					s_DrawText = false
 				end
 			end
+
+			if s_DrawText then
+				-- Don't try to pre-calculate this value like with the distance, another memory leak crash awaits you.
+				self:DrawPosText2D(s_Position + (Vec3.up * 0.05), tostring(l_Node.ID), self.m_Colors.Text, 1)
+				s_UpdateCount = s_UpdateCount + 1
+			end
+
 			s_UpdateCount = s_UpdateCount + 1
-			if s_UpdateCount >= Config.NodesPerCycle then
+
+			if s_UpdateCount >= s_NodesPerCycle then
 				break
 			end
-			-- end
+
 			::continue::
 		end
 
 		if s_LastUpdatedIndex >= s_MaxIndex then
 			m_ClientSpawnPointHelper:Update(self.m_PlayerPos, self.m_NodesToDraw_temp, self.m_LinesToDraw_temp)
 			self.m_LastUpdateIndex = 0
-			-- check if we need to update the values
-			local s_MaxDrawDistance = math.max(Config.WaypointRange, Config.LineRange)
-			for l_Index, _ in pairs(self.m_PathsToSkipForCycles) do
-				if self.m_PathsToSkipForCycles[l_Index] > 0 then
-					self.m_PathsToSkipForCycles[l_Index] = self.m_PathsToSkipForCycles[l_Index] - 1
-				else
-					if self.m_MinDistanceToPath[l_Index] and (self.m_MinDistanceToPath[l_Index] > s_MaxDrawDistance) then
-						self.m_PathsToSkipForCycles[l_Index] = math.floor((self.m_MinDistanceToPath[l_Index] / s_MaxDrawDistance) * 10)
-					end
+
+			-- Paths that are completely out of range get skipped for a few cycles. The further away, the longer.
+			local s_MaxDrawDistance = math.max(Config.WaypointRange,
+				Config.DrawWaypointLines and Config.LineRange or 0,
+				Config.DrawWaypointIDs and Config.TextRange or 0)
+			local s_MaxDrawDistanceSq = s_MaxDrawDistance * s_MaxDrawDistance
+
+			for l_PathIndex, l_Cycles in pairs(s_PathsToSkip) do
+				if l_Cycles > 0 then
+					s_PathsToSkip[l_PathIndex] = l_Cycles - 1
 				end
 			end
+
+			-- Only contains the paths that were checked in this cycle.
+			for l_PathIndex, l_MinDistanceSq in pairs(s_MinDistanceToPath) do
+				if l_MinDistanceSq > s_MaxDrawDistanceSq then
+					s_PathsToSkip[l_PathIndex] = math.floor((math.sqrt(l_MinDistanceSq) / s_MaxDrawDistance) * 10)
+				end
+			end
+
+			self.m_MinDistanceToPath = {}
 
 			self.m_NodesToDraw = self.m_NodesToDraw_temp
 			self.m_NodesToDraw_temp = {}
@@ -1123,6 +1131,40 @@ function ClientNodeEditor:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 			self.m_LastUpdateIndex = s_LastUpdatedIndex
 		end
 	end
+end
+
+---Debug text shown for selected nodes.
+---@param p_Node table
+---@return string
+function ClientNodeEditor:_GetNodeInfoText(p_Node)
+	local s_FirstNode = self.m_FirstNodeInPath[p_Node.PathIndex]
+
+	local s_SpeedModeValue = p_Node.InputVar & 0xF -- 0 = wait, 1 = prone, 2 = crouch, 3 = walk, 4 run.
+	local s_ExtraModeValue = (p_Node.InputVar >> 4) & 0xF
+	local s_OptValue = (p_Node.InputVar >> 8) & 0xFF
+
+	local s_SpeedMode = m_SpeedModeNames[s_SpeedModeValue] or 'N/A'
+	local s_ExtraMode = s_ExtraModeValue == 1 and 'Jump' or 'N/A'
+	local s_OptionValue = s_SpeedModeValue == 0 and (tostring(s_OptValue) .. ' Seconds') or 'N/A'
+
+	local s_PathMode = 'N/A'
+	if s_FirstNode then
+		s_PathMode = ((s_FirstNode.InputVar >> 8) & 0xFF == 0XFF) and 'Reverses' or 'Loops'
+	end
+
+	local s_Text = string.format('Index[%d]\n', p_Node.Index)
+	s_Text = s_Text .. string.format('Path[%d][%d] (%s)\n', p_Node.PathIndex, p_Node.PointIndex, s_PathMode)
+	if s_FirstNode and s_FirstNode.Data then
+		s_Text = s_Text .. string.format('Path Objectives: %s\n', g_Utilities:dump(s_FirstNode.Data.Objectives, false))
+		s_Text = s_Text .. string.format('Vehicles: %s\n', g_Utilities:dump(s_FirstNode.Data.Vehicles, false))
+	end
+	s_Text = s_Text .. string.format('InputVar: %d\n', p_Node.InputVar)
+	s_Text = s_Text .. string.format('SpeedMode: %s (%d)\n', s_SpeedMode, s_SpeedModeValue)
+	s_Text = s_Text .. string.format('ExtraMode: %s (%d)\n', s_ExtraMode, s_ExtraModeValue)
+	s_Text = s_Text .. string.format('OptValue: %s (%d)\n', s_OptionValue, s_OptValue)
+	s_Text = s_Text .. 'Data: ' .. g_Utilities:dump(p_Node.Data, true)
+
+	return s_Text
 end
 
 ---VEXT Client UI:DrawHud Event
@@ -1162,54 +1204,54 @@ function ClientNodeEditor:OnUIDrawHud()
 	for l_Index = 1, #self.m_ObbToDraw do
 		local l_Obb = self.m_ObbToDraw[l_Index]
 		-- Draw OBB.
-		DebugRenderer:DrawOBB(l_Obb.p_Aab, l_Obb.transform, l_Obb.color)
+		DebugRenderer:DrawOBB(l_Obb.aab, l_Obb.transform, l_Obb.color)
 	end
 end
 
 function ClientNodeEditor:DrawSphere(p_Position, p_Size, p_Color, p_RenderLines, p_SmallSizeSegmentDecrease)
-	table.insert(self.m_NodesToDraw_temp, {
+	self.m_NodesToDraw_temp[#self.m_NodesToDraw_temp + 1] = {
 		pos = p_Position,
 		radius = p_Size,
 		color = p_Color,
 		renderLines = p_RenderLines,
 		smallSizeSegmentDecrease = p_SmallSizeSegmentDecrease,
-	})
+	}
 end
 
 function ClientNodeEditor:DrawLine(p_From, p_To, p_ColorFrom, p_ColorTo)
-	table.insert(self.m_LinesToDraw_temp, {
+	self.m_LinesToDraw_temp[#self.m_LinesToDraw_temp + 1] = {
 		from = p_From,
 		to = p_To,
 		colorFrom = p_ColorFrom,
 		colorTo = p_ColorTo,
-	})
+	}
 end
 
 function ClientNodeEditor:DrawText2D(p_X, p_Y, p_Text, p_Color, p_Scale)
-	table.insert(self.m_TextToDraw_temp, {
+	self.m_TextToDraw_temp[#self.m_TextToDraw_temp + 1] = {
 		x = p_X,
 		y = p_Y,
 		text = p_Text,
 		color = p_Color,
 		scale = p_Scale,
-	})
+	}
 end
 
 function ClientNodeEditor:DrawPosText2D(p_Pos, p_Text, p_Color, p_Scale)
-	table.insert(self.m_TextPosToDraw_temp, {
+	self.m_TextPosToDraw_temp[#self.m_TextPosToDraw_temp + 1] = {
 		pos = p_Pos,
 		text = p_Text,
 		color = p_Color,
 		scale = p_Scale,
-	})
+	}
 end
 
 function ClientNodeEditor:DrawOBB(p_Aab, p_Transform, p_Color)
-	table.insert(self.m_ObbToDraw_temp, {
+	self.m_ObbToDraw_temp[#self.m_ObbToDraw_temp + 1] = {
 		aab = p_Aab,
 		transform = p_Transform,
 		color = p_Color,
-	})
+	}
 end
 
 -- Stolen't https://github.com/EmulatorNexus/VEXT-Samples/blob/80cddf7864a2cdcaccb9efa810e65fae1baeac78/no-headglitch-raycast/ext/Client/__init__.lua

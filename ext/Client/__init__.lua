@@ -259,6 +259,7 @@ end
 ---@param p_UpdateWeaponSets boolean
 function FunBotClient:OnWriteClientSettings(p_NewConfig, p_UpdateWeaponSets)
 	m_ClientBotManager:OnWriteClientSettings(p_NewConfig, p_UpdateWeaponSets)
+	m_ClientNodeEditor:OnSettingsChanged()
 
 	if not self._SettingsValid then
 		self._SettingsValid = true

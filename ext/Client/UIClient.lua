@@ -97,7 +97,6 @@ function FunBotUIClient:_onUIWaypointsEditor(p_State)
 		self._views:hide('waypoint_toolbar')
 		self._views:execute('BotEditor.setCommoRose(false)')
 		self._views:show('toolbar')
-		Config.DebugTracePaths = false
 		self.m_InWaypointEditor = false
 		g_ClientNodeEditor:OnSetEnabled(false)
 		g_ClientSpawnPointHelper:OnSetEnabled(false)
@@ -106,7 +105,6 @@ function FunBotUIClient:_onUIWaypointsEditor(p_State)
 			print('UIClient: open UI_Waypoints_Editor')
 		end
 
-		Config.DebugTracePaths = true
 		g_ClientNodeEditor:OnSetEnabled(true)
 		g_ClientSpawnPointHelper:OnSetEnabled(true)
 		self._views:show('waypoint_toolbar')
