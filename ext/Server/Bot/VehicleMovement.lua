@@ -531,13 +531,17 @@ function VehicleMovement:UpdateYawVehicle(p_Bot, p_Attacking, p_IsStationaryLaun
 			end
 		else
 			if p_Bot._VehicleMovableId >= 0 then
-				local s_Euler = p_Bot.m_Player.controlledControllable.physicsEntityBase:GetPartTransform(p_Bot._VehicleMovableId).rotation:ToEuler()
+				local s_GunQuatTransform = p_Bot.m_Player.controlledControllable.physicsEntityBase:GetPartTransform(p_Bot._VehicleMovableId)
+				local s_Euler = s_GunQuatTransform.rotation:ToEuler()
 				local s_Yaw = -s_Euler.x
-				local s_Roll = s_Euler.y
-				local s_Pitch = m_Utilities:GetPitchFromEuler(s_Euler)
 
-				s_DeltaPitch = s_Pitch - p_Bot._TargetPitch
-				s_DeltaYaw = s_Yaw - p_Bot._TargetYaw
+				-- Compute the deviation in the gun's local frame. Turret/gun inputs rotate around the (tilted) vehicle axes,
+				-- so comparing world yaw/pitch fails on slopes. Target direction is rebuilt from the world yaw/pitch
+				-- (inverse of atan(dz, dx) - pi/2 used in VehicleAiming), which keeps the aim-worsening.
+				local s_CosPitch = math.cos(p_Bot._TargetPitch)
+				local s_TargetDirection = Vec3(-math.sin(p_Bot._TargetYaw) * s_CosPitch, math.sin(p_Bot._TargetPitch), math.cos(p_Bot._TargetYaw) * s_CosPitch)
+				local s_GunTransform = s_GunQuatTransform:ToLinearTransform()
+				s_DeltaYaw, s_DeltaPitch = self:CalculateDeviationRelativeToOrientation(s_GunTransform, s_GunTransform.trans + s_TargetDirection)
 
 				-- Detect direction for moving gun back.
 				local s_GunDeltaYaw = s_Yaw - p_Bot._LastVehicleYaw
