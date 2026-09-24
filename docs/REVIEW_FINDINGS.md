@@ -24,10 +24,11 @@ Severity: **High**: data loss, security, or a core feature broken. **Medium**: a
 The tool builds only the trace tables in an in-memory DB and then calls `memory_connection.backup(connection)`, which **replaces the whole `mod.db`**. That drops `FB_Settings`, `FB_Config_Trace`, `FB_Permissions`, and any map tables that have no `.map` file.
 *Fix:* write into `mod.db` directly inside a transaction (as `import_permission_and_config.py` does), or `ATTACH` the file and copy only the trace tables.
 
-**B4. A failed trace save destroys the map's saved traces**
+**B4. A failed trace save destroys the map's saved traces** — ✅ fixed
 [NodeCollection.lua:1565](../ext/Server/NodeCollection.lua#L1565), [NodeCollection.lua:1591-1603](../ext/Server/NodeCollection.lua#L1591-L1603)
 The save runs `DROP TABLE` in one frame and then the INSERT batches over several later frames, with no transaction. If any batch fails, or the level changes mid-save (`Clear()` aborts the state machine), the table is left empty or partial.
 *(plausible)* The SQL handle also stays open across frames while `Database:Query()` calls `SQL:Open()` / `SQL:Close()` on the same global `SQL` object, for example when a settings save lands during a trace save.
+Loading traces held SQL open across frames in the same way; it now opens and closes it per step as well.
 *Fix:* build `<map>_table_new`, then `BEGIN; DROP old; ALTER TABLE … RENAME; COMMIT`. Alternatively, do the whole write synchronously inside one transaction.
 
 **B5. Server NetEvents with no permission check**
@@ -45,7 +46,7 @@ Exploiting these needs a modified client, but the server must not rely on that. 
 
 ### Medium
 
-**B6. `Globals.SpawnMode = "manual"` (a string) never equals `SpawnModes.manual` (`0`)**
+**B6. `Globals.SpawnMode = "manual"` (a string) never equals `SpawnModes.manual` (`0`)** — ✅ fixed
 Set in 11 places: [UIServer.lua:276-341](../ext/Server/UIServer.lua#L276), [BotSpawner.lua:740/764/793](../ext/Server/BotSpawner.lua#L740), [RCON.lua:94/122](../ext/Server/Commands/RCON.lua#L94).
 After any manual spawn, kick or kill, `BotSpawner` doesn't recognise manual mode. The garbage-collection guard `~= SpawnModes.manual` ([BotSpawner.lua:139](../ext/Server/BotSpawner.lua#L139)) passes when it shouldn't, and the `== SpawnModes.manual` branch ([BotSpawner.lua:699](../ext/Server/BotSpawner.lua#L699)) never runs. *Fix:* use `SpawnModes.manual` everywhere.
 
@@ -62,26 +63,26 @@ After any manual spawn, kick or kill, `BotSpawner` doesn't recognise manual mode
 [UIServer.lua:674-680](../ext/Server/UIServer.lua#L674-L680), [SettingsManager.lua:228-233](../ext/Server/SettingsManager.lua#L228-L233), [Range.lua `IsValid`](../ext/Shared/Settings/Range.lua)
 `tonumber("")` is `nil`, and `nil >= min` raises an error. In the WebUI path this aborts `_writeSettings` halfway: `Config` is partly updated, the batch never runs and the UI never closes. *Fix:* return `false` from `Range:IsValid` for non-numbers. Integer settings should also `math.floor` the value.
 
-**B10. The comm-rose "Defend objective" makes bots attack**
+**B10. The comm-rose "Defend objective" makes bots attack** — ✅ fixed
 [UIServer.lua:228-236](../ext/Server/UIServer.lua#L228-L236) calls `BotManager:Attack`, which always sets `BotObjectiveModes.Attack` ([BotManager.lua:1281](../ext/Server/BotManager.lua#L1281)). *Fix:* add an objective-mode parameter, or a `Defend` function that sets `BotObjectiveModes.Defend`.
 
-**B11. `!spawnway` and `!spawnbots` chat commands are broken**
+**B11. `!spawnway` and `!spawnbots` chat commands are broken** — ✅ fixed
 [Chat.lua:380](../ext/Server/Commands/Chat.lua#L380), [Chat.lua:393](../ext/Server/Commands/Chat.lua#L393) call `SpawnWayBots(p_Player, s_Amount, …)`, but the signature is `SpawnWayBots(p_Amount, p_UseRandomWay, p_ActiveWayIndex, p_IndexOnPath, p_TeamId)` ([BotSpawner.lua:827](../ext/Server/BotSpawner.lua#L827)). The Player object ends up as the amount.
 
-**B12. `!setbotkit` and `!setbotcolor` set the config to `nil`**
+**B12. `!setbotkit` and `!setbotcolor` set the config to `nil`** — ✅ fixed
 [Chat.lua:435](../ext/Server/Commands/Chat.lua#L435), [Chat.lua:445-446](../ext/Server/Commands/Chat.lua#L445-L446)
 `BotKits` and `BotColors` are name→number maps, so `BotKits[2]` is `nil`, and `#BotColors` is `0`, so the range check is wrong too. *Fix:* assign the number directly after range-checking it against `BotKits.Count` or the maximum color value.
 
-**B13. Anyone can change vehicle aim offsets with `!dbg`**
+**B13. Anyone can change vehicle aim offsets with `!dbg`** — ✅ fixed
 [Chat.lua:245-252](../ext/Server/Commands/Chat.lua#L245-L252) has no permission check. `Debug.Vars[6]` and `Debug.Vars[7]` feed directly into vehicle yaw/pitch correction ([VehicleMovement.lua:469-470](../ext/Server/Bot/VehicleMovement.lua#L469-L470)). *Fix:* gate it behind a permission or `Registry.DEBUG`.
 
-**B14. `!permissions` always reports "no active permissions"**
+**B14. `!permissions` always reports "no active permissions"** — ✅ fixed
 [Chat.lua:20](../ext/Server/Commands/Chat.lua#L20) passes the `Player` object. `GetPermissions` then indexes `m_Permissions[p_Name]` with that object instead of `player.name` ([PermissionManager.lua:77](../ext/Server/PermissionManager.lua#L77)).
 
 ### Low
 
-**B15.** `!stop` / `!stopall` pass the option `'respawning'`, but only `'respawn'` exists, so respawn is never disabled ([Chat.lua:486](../ext/Server/Commands/Chat.lua#L486), [Chat.lua:495](../ext/Server/Commands/Chat.lua#L495)).
-**B16.** `!kickp_Player` can never match because messages are lowercased first. This is a leftover of a rename to `!kickplayer` ([Chat.lua:497](../ext/Server/Commands/Chat.lua#L497)).
+**B15.** ✅ fixed. `!stop` / `!stopall` pass the option `'respawning'`, but only `'respawn'` exists, so respawn is never disabled ([Chat.lua:486](../ext/Server/Commands/Chat.lua#L486), [Chat.lua:495](../ext/Server/Commands/Chat.lua#L495)).
+**B16.** ✅ fixed. `!kickp_Player` can never match because messages are lowercased first. This is a leftover of a rename to `!kickplayer` ([Chat.lua:497](../ext/Server/Commands/Chat.lua#L497)).
 **B17.** Chat commands that use `p_Player.soldier` without a nil check crash when the caller is dead: `!weap`, `!printtrans`, `!row`, `!tower`, `!grid` (the latter via `BotSpawner:SpawnBotRow/Tower/Grid`).
 **B18.** `SetRespawnDelay`: `tonumber(x) / 100` raises an error on `nil` before the `~= nil` guard can run ([\_\_init\_\_.lua:780-782](../ext/Server/__init__.lua#L780-L782)). `OnModReloaded` concatenates `s_GameMode` before its nil check ([\_\_init\_\_.lua:769-772](../ext/Server/__init__.lua#L769-L772)).
 **B19.** Runtime changes via RCON or console ignore the `Language` and `MaxBots` update flags, so a language change via RCON doesn't reload text ([SettingsManager.lua:292-302](../ext/Server/SettingsManager.lua#L292-L302)). `RestoreDefault()` resets `Config` without triggering any update flag, broadcasting to clients or persisting ([SettingsManager.lua:209-213](../ext/Server/SettingsManager.lua#L209-L213)).

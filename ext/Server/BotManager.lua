@@ -1262,7 +1262,10 @@ end
 
 ---@param p_Player Player
 ---@param p_Objective any To-do: add emmylua type
-function BotManager:Attack(p_Player, p_Objective)
+---@param p_ObjectiveMode? BotObjectiveModes defaults to BotObjectiveModes.Attack
+function BotManager:Attack(p_Player, p_Objective, p_ObjectiveMode)
+	p_ObjectiveMode = p_ObjectiveMode or BotObjectiveModes.Attack
+
 	if not Globals.IsConquest or not p_Player or not p_Player.soldier then
 		return
 	end
@@ -1278,7 +1281,7 @@ function BotManager:Attack(p_Player, p_Objective)
 			local s_Distance = s_BotSoldier.worldTransform.trans:Distance(s_SoldierPosition)
 
 			if s_Distance < Registry.COMMON.COMMAND_DISTANCE then
-				l_Bot:UpdateObjective(p_Objective, BotObjectiveModes.Attack)
+				l_Bot:UpdateObjective(p_Objective, p_ObjectiveMode)
 				s_MaxObjectiveBots = s_MaxObjectiveBots - 1
 
 				if s_MaxObjectiveBots == 0 then

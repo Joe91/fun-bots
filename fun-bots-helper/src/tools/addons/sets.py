@@ -137,7 +137,8 @@ def set_traces_files(cursor: sqlite3.Cursor) -> None:
     dest_folder = "mapfiles"
 
     for item in content:
-        if item[1] in ignore_list:
+        # Skip leftover staging tables of an interrupted in-game save.
+        if item[1] in ignore_list or not item[1].endswith("_table"):
             continue
 
         logger.info("Export " + item[1])

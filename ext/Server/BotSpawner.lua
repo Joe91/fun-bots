@@ -737,7 +737,7 @@ end
 ---@param p_Length integer
 ---@param p_Spacing number
 function BotSpawner:SpawnBotRow(p_Player, p_Length, p_Spacing)
-	Globals.SpawnMode = "manual"
+	Globals.SpawnMode = SpawnModes.manual
 
 	local s_TeamId = m_BotManager:GetBotTeam()
 	for i = 1, p_Length do
@@ -761,7 +761,7 @@ end
 ---@param p_Player Player
 ---@param p_Height integer
 function BotSpawner:SpawnBotTower(p_Player, p_Height)
-	Globals.SpawnMode = "manual"
+	Globals.SpawnMode = SpawnModes.manual
 
 	local s_TeamId = m_BotManager:GetBotTeam()
 	for i = 1, p_Height do
@@ -790,7 +790,7 @@ end
 ---@param p_Columns integer
 ---@param p_Spacing number
 function BotSpawner:SpawnBotGrid(p_Player, p_Rows, p_Columns, p_Spacing)
-	Globals.SpawnMode = "manual"
+	Globals.SpawnMode = SpawnModes.manual
 
 	local s_TeamId = m_BotManager:GetBotTeam()
 	for i = 1, p_Rows do

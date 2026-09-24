@@ -231,7 +231,7 @@ function FunBotUIServer:_onBotEditorEvent(p_Player, p_Data)
 			return
 		end
 		local s_Objective = request.action:split('_')[2]
-		BotManager:Attack(p_Player, s_Objective)
+		BotManager:Attack(p_Player, s_Objective, BotObjectiveModes.Defend)
 		NetEvents:SendTo('UI_CommoRose', p_Player, "false")
 		return
 	elseif request.action == 'back_to_comm' then
@@ -273,7 +273,7 @@ function FunBotUIServer:_onBotEditorEvent(p_Player, p_Data)
 			return
 		end
 		local team = p_Player.teamId
-		Globals.SpawnMode = "manual"
+		Globals.SpawnMode = SpawnModes.manual
 
 		if team == TeamId.Team1 then
 			BotSpawner:SpawnWayBots(amount, true, 0, 0, TeamId.Team2)
@@ -287,7 +287,7 @@ function FunBotUIServer:_onBotEditorEvent(p_Player, p_Data)
 			return
 		end
 		local amount = tonumber(request.value)
-		Globals.SpawnMode = "manual"
+		Globals.SpawnMode = SpawnModes.manual
 		if amount then
 			BotSpawner:SpawnWayBots(amount, true, 0, 0, p_Player.teamId)
 		end
@@ -300,7 +300,7 @@ function FunBotUIServer:_onBotEditorEvent(p_Player, p_Data)
 		local amount = 1
 		local indexOnPath = tonumber(request.pointindex) or 1
 		local index = tonumber(request.value)
-		Globals.SpawnMode = "manual"
+		Globals.SpawnMode = SpawnModes.manual
 		local s_TeamId = p_Player.teamId + 1
 
 		if s_TeamId > Globals.NrOfTeams then
@@ -314,7 +314,7 @@ function FunBotUIServer:_onBotEditorEvent(p_Player, p_Data)
 			ChatManager:SendMessage('You have no permissions for this action.', p_Player)
 			return
 		end
-		Globals.SpawnMode = "manual"
+		Globals.SpawnMode = SpawnModes.manual
 		BotSpawner:ClearSpawnSets()
 		BotManager:DestroyAll()
 		return
@@ -323,7 +323,7 @@ function FunBotUIServer:_onBotEditorEvent(p_Player, p_Data)
 			ChatManager:SendMessage('You have no permissions for this action.', p_Player)
 			return
 		end
-		Globals.SpawnMode = "manual"
+		Globals.SpawnMode = SpawnModes.manual
 		local teamNumber = tonumber(request.value)
 
 		BotSpawner:ClearSpawnSets()
@@ -338,7 +338,7 @@ function FunBotUIServer:_onBotEditorEvent(p_Player, p_Data)
 			ChatManager:SendMessage('You have no permissions for this action.', p_Player)
 			return
 		end
-		Globals.SpawnMode = "manual"
+		Globals.SpawnMode = SpawnModes.manual
 		BotSpawner:ClearSpawnSets()
 		BotManager:KillAll()
 		return

@@ -74,7 +74,8 @@ function PermissionManager:GetPermissions(p_Name)
 		return nil
 	end
 
-	return self.m_Permissions[p_Name]
+	-- p_Name can also be a Player object; permissions are keyed by name.
+	return self.m_Permissions[s_Player.name]
 end
 
 function PermissionManager:AddPermission(p_Name, p_Permission)
