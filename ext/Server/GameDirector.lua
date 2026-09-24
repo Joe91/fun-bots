@@ -53,6 +53,8 @@ function GameDirector:RegisterVars()
 	self.m_RushAttackingBase = ''
 
 	self.m_SpawnableStationaryAas = {}
+	-- Owning team of each stationary AA, by instanceId.
+	self.m_StationaryAaTeams = {}
 	self.m_SpawnableVehicles = {}
 	self.m_MobileRespawnVehicles = {}
 	self.m_AvailableVehicles = {}
@@ -132,6 +134,7 @@ function GameDirector:OnRoundOver(p_RoundTime, p_WinningTeam)
 		self.m_SpawnableStationaryAas[l_Team] = {}
 		self.m_AvailableVehicles[l_Team] = {}
 	end
+	self.m_StationaryAaTeams = {}
 	self.m_Gunship = nil
 	self.m_GunshipReservedEntry = nil
 end
@@ -638,10 +641,37 @@ function GameDirector:GetStationaryAas(p_TeamId)
 	return _PruneInvalidEntities(self.m_SpawnableStationaryAas[p_TeamId])
 end
 
+---Team that owns a stationary AA. Uses the team of the vehicle-spawn, as the faction
+---does not tell the team (e.g. in Rush the attackers are always Team1, whatever faction they are).
+---@param p_Entity ControllableEntity
+---@param p_VehicleData table
+---@return TeamId|integer
+function GameDirector:_GetStationaryAaTeam(p_Entity, p_VehicleData)
+	-- Rush: stationary AAs are only placed in the bases of the defenders (always Team2).
+	-- The team of the entity is not reliable there (e.g. final base on Operation Firestorm).
+	if Globals.IsRush then
+		return TeamId.Team2
+	end
+
+	local s_Team = p_Entity.defaultTeamId
+
+	if s_Team == nil or s_Team == TeamId.TeamNeutral then
+		s_Team = p_Entity.teamId
+	end
+
+	if s_Team == nil or s_Team == TeamId.TeamNeutral or s_Team > Globals.NrOfTeams then
+		s_Team = p_VehicleData.Team -- Fallback: faction of the AA.
+	end
+
+	return s_Team
+end
+
 ---@param p_ControllableEntity ControllableEntity
 ---@param p_TeamId TeamId
 function GameDirector:ReturnStationaryAaEntity(p_ControllableEntity, p_TeamId)
 	p_ControllableEntity = ControllableEntity(p_ControllableEntity)
+	-- Always return it to the owning team, not to the team of the last user.
+	p_TeamId = self.m_StationaryAaTeams[p_ControllableEntity.instanceId] or p_TeamId
 	_PruneInvalidEntities(self.m_SpawnableStationaryAas[p_TeamId])
 	for l_Index = 1, #self.m_SpawnableStationaryAas[p_TeamId] do
 		local l_Entity = self.m_SpawnableStationaryAas[p_TeamId][l_Index]
@@ -786,7 +816,10 @@ function GameDirector:OnVehicleSpawnDone(p_Entity)
 	end
 
 	if m_Vehicles:IsVehicleType(s_VehicleData, VehicleTypes.StationaryAA) then
-		self:AddEntityToVehicleCollection(self.m_SpawnableStationaryAas, s_VehicleData.Team, p_Entity)
+		local s_AaTeam = self:_GetStationaryAaTeam(p_Entity, s_VehicleData)
+		m_Logger:Write("Stationary AA spawned: " .. s_VehicleData.Name .. ", team: " .. tostring(s_AaTeam))
+		self.m_StationaryAaTeams[p_Entity.instanceId] = s_AaTeam
+		self:AddEntityToVehicleCollection(self.m_SpawnableStationaryAas, s_AaTeam, p_Entity)
 	end
 
 	if m_Vehicles:IsGunship(s_VehicleData)
@@ -887,6 +920,10 @@ function GameDirector:OnVehicleUnspawn(p_Entity, p_VehiclePoints, p_HotTeam)
 		self.m_GunshipReservedEntry = nil
 	end
 
+	if m_Vehicles:IsVehicleType(s_VehicleData, VehicleTypes.StationaryAA) then
+		self.m_StationaryAaTeams[p_Entity.instanceId] = nil
+	end
+
 	for l_Team = TeamId.Team1, Globals.NrOfTeams do
 		if m_Vehicles:IsVehicleType(s_VehicleData, VehicleTypes.StationaryAA) then
 			self:RemoveEntityFromVehicleCollection(self.m_SpawnableStationaryAas, l_Team, p_Entity)
@@ -931,7 +968,10 @@ function GameDirector:OnVehicleEnter(p_Entity, p_Player)
 		local l_Team = p_Player.teamId
 
 		if m_Vehicles:IsVehicleType(s_VehicleData, VehicleTypes.StationaryAA) then
-			self:RemoveEntityFromVehicleCollection(self.m_SpawnableStationaryAas, l_Team, p_Entity)
+			-- Also an enemy can enter it: remove it from the list of every team.
+			for l_AaTeam = TeamId.Team1, Globals.NrOfTeams do
+				self:RemoveEntityFromVehicleCollection(self.m_SpawnableStationaryAas, l_AaTeam, p_Entity)
+			end
 		elseif m_Vehicles:IsMobileRespawnVehicle(s_VehicleData) then
 			self:RemoveEntityFromVehicleCollection(self.m_SpawnableVehicles, l_Team, p_Entity)
 			self:RemoveEntityFromVehicleCollection(self.m_AvailableVehicles, l_Team, p_Entity)
