@@ -11,6 +11,32 @@ local m_Vehicles = require("Vehicles")
 ---@type Logger
 local m_Logger = Logger("GameDirector", Debug.Server.GAMEDIRECTOR)
 
+local function _AccessEntity(p_Entity)
+	return p_Entity.data ~= nil
+end
+
+-- Accessing a destroyed entity raises an error, so probe it in protected mode.
+local function _IsEntityValid(p_Entity)
+	if p_Entity == nil then
+		return false
+	end
+	local s_Ok, s_HasData = pcall(_AccessEntity, p_Entity)
+	return s_Ok and s_HasData
+end
+
+-- Removes destroyed entities from a list in place and returns it.
+local function _PruneInvalidEntities(p_List)
+	if p_List == nil then
+		return p_List
+	end
+	for l_Index = #p_List, 1, -1 do
+		if not _IsEntityValid(p_List[l_Index]) then
+			table.remove(p_List, l_Index)
+		end
+	end
+	return p_List
+end
+
 function GameDirector:__init()
 	self:RegisterVars()
 end
@@ -94,11 +120,22 @@ end
 ---@param p_WinningTeam TeamId|integer
 function GameDirector:OnRoundOver(p_RoundTime, p_WinningTeam)
 	self.m_UpdateTimer = -1
+	self.m_Beacons = {}
+	-- Vehicles of this round get destroyed, and their unspawn is ignored from now on.
+	-- Not cleared on RoundReset, as vehicles of the next round might already be registered then.
+	for l_Team = 0, Globals.NrOfTeams do
+		self.m_SpawnableVehicles[l_Team] = {}
+		self.m_MobileRespawnVehicles[l_Team] = {}
+		self.m_SpawnableStationaryAas[l_Team] = {}
+		self.m_AvailableVehicles[l_Team] = {}
+	end
+	self.m_Gunship = nil
 end
 
 ---VEXT Server Server:RoundReset Event
 function GameDirector:OnRoundReset()
 	self.m_AllObjectives = {}
+	self.m_Beacons = {}
 	self.m_UpdateTimer = 0
 end
 
@@ -574,7 +611,7 @@ end
 function GameDirector:GetSpawnableVehicle(p_TeamId)
 	local spawnableVehiclesForTeamID = {}
 	if self.m_SpawnableVehicles[p_TeamId] then
-		spawnableVehiclesForTeamID = self.m_SpawnableVehicles[p_TeamId]
+		spawnableVehiclesForTeamID = _PruneInvalidEntities(self.m_SpawnableVehicles[p_TeamId])
 	end
 	return spawnableVehiclesForTeamID
 end
@@ -582,6 +619,7 @@ end
 function GameDirector:GetMobileRespawnVehicles(p_TeamId)
 	local s_Vehicles = {}
 
+	_PruneInvalidEntities(self.m_MobileRespawnVehicles[p_TeamId])
 	for l_Index = 1, #self.m_MobileRespawnVehicles[p_TeamId] do
 		local l_Vehicle = self.m_MobileRespawnVehicles[p_TeamId][l_Index]
 		if l_Vehicle ~= nil and m_Vehicles:GetNrOfFreeSeats(l_Vehicle, false) > 0 then
@@ -593,13 +631,14 @@ function GameDirector:GetMobileRespawnVehicles(p_TeamId)
 end
 
 function GameDirector:GetStationaryAas(p_TeamId)
-	return self.m_SpawnableStationaryAas[p_TeamId]
+	return _PruneInvalidEntities(self.m_SpawnableStationaryAas[p_TeamId])
 end
 
 ---@param p_ControllableEntity ControllableEntity
 ---@param p_TeamId TeamId
 function GameDirector:ReturnStationaryAaEntity(p_ControllableEntity, p_TeamId)
 	p_ControllableEntity = ControllableEntity(p_ControllableEntity)
+	_PruneInvalidEntities(self.m_SpawnableStationaryAas[p_TeamId])
 	for l_Index = 1, #self.m_SpawnableStationaryAas[p_TeamId] do
 		local l_Entity = self.m_SpawnableStationaryAas[p_TeamId][l_Index]
 		if (l_Entity.uniqueId == p_ControllableEntity.uniqueId) and (l_Entity.instanceId == p_ControllableEntity.instanceId) then
@@ -763,6 +802,9 @@ end
 ---@param p_TeamId TeamId|nil
 ---@return ControllableEntity|nil
 function GameDirector:GetGunship(p_TeamId)
+	if self.m_Gunship ~= nil and not _IsEntityValid(self.m_Gunship.Entity) then
+		self.m_Gunship = nil
+	end
 	if self.m_Gunship ~= nil and m_Vehicles:IsVehicleType(self.m_Gunship.Data, VehicleTypes.Gunship) then
 		if p_TeamId == nil or p_TeamId == self.m_Gunship.Team then
 			return self.m_Gunship.Entity
@@ -778,25 +820,31 @@ function GameDirector:OnVehicleUnspawn(p_Entity, p_VehiclePoints, p_HotTeam)
 	p_Entity = ControllableEntity(p_Entity)
 	local s_VehicleData = m_Vehicles:GetVehicleByEntity(p_Entity)
 
+	if s_VehicleData == nil then
+		return
+	end
+
+	-- Always drop beacons, also during a round switch. Otherwise a destroyed entity stays referenced.
+	if m_Vehicles:IsVehicleType(s_VehicleData, VehicleTypes.Gadgets) then
+		m_Logger:Write("Gadget unspawn: " .. s_VehicleData.Name)
+		for l_Owner, l_Beacon in pairs(self.m_Beacons) do
+			local l_Entity = l_Beacon.Entity
+			if not _IsEntityValid(l_Entity)
+				or ((l_Entity.uniqueId == p_Entity.uniqueId) and (l_Entity.instanceId == p_Entity.instanceId)) then
+				self.m_Beacons[l_Owner] = nil
+			end
+		end
+	end
+
 	-- Added the timer check since this could have been called right while we are switching rounds, causing issues while this tries to access variables
 	-- or tables that might be already wipedout
-	if s_VehicleData == nil or self.m_UpdateTimer == -1 then -- updateTimer being -1 means all vars where wipedout due to next round triggered.
+	if self.m_UpdateTimer == -1 then -- updateTimer being -1 means all vars where wipedout due to next round triggered.
 		return
 	end
 
 	if m_Vehicles:IsGunship(s_VehicleData) then
 		m_Logger:Write("Gunship unspawn")
 		self.m_Gunship = nil
-	end
-
-	if m_Vehicles:IsVehicleType(s_VehicleData, VehicleTypes.Gadgets) then
-		m_Logger:Write("Gadget unspawn: " .. s_VehicleData.Name)
-		for l_Owner, l_Beacon in pairs(self.m_Beacons) do
-			local l_Entity = l_Beacon.Entity
-			if (l_Entity.uniqueId == p_Entity.uniqueId) and (l_Entity.instanceId == p_Entity.instanceId) then
-				self.m_Beacons[l_Owner] = nil
-			end
-		end
 	end
 
 	for l_Team = TeamId.Team1, Globals.NrOfTeams do
@@ -980,6 +1028,9 @@ end
 ---@param p_Team integer
 ---@param p_Entity ControllableEntity|Entity
 function GameDirector:RemoveEntityFromVehicleCollection(p_Collection, p_Team, p_Entity)
+	-- Destroyed entries would error on the id comparison below.
+	_PruneInvalidEntities(p_Collection[p_Team])
+
 	for l_Index = 1, #p_Collection[p_Team] do
 		local l_Entity = p_Collection[p_Team][l_Index]
 
@@ -994,6 +1045,8 @@ end
 ---@param p_Team integer
 ---@param p_Entity ControllableEntity|Entity
 function GameDirector:IsEntityInVehicleCollection(p_Collection, p_Team, p_Entity)
+	_PruneInvalidEntities(p_Collection[p_Team])
+
 	for l_Index = 1, #p_Collection[p_Team] do
 		local l_Entity = p_Collection[p_Team][l_Index]
 
@@ -1181,7 +1234,15 @@ function GameDirector:FindClosestPath(p_Trans, p_VehiclePath, p_DetailedSearch, 
 end
 
 function GameDirector:GetPlayerBeacon(p_PlayerName)
-	return self.m_Beacons[p_PlayerName]
+	local s_Beacon = self.m_Beacons[p_PlayerName]
+
+	if s_Beacon ~= nil and not _IsEntityValid(s_Beacon.Entity) then
+		m_Logger:Write("removing destroyed beacon of " .. p_PlayerName)
+		self.m_Beacons[p_PlayerName] = nil
+		return nil
+	end
+
+	return s_Beacon
 end
 
 function GameDirector:GetSpawnableBeaconOrMate(p_TeamId, p_SquadId)
