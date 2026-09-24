@@ -405,29 +405,35 @@ function Bot:_CheckShouldExitVehicleIfPassenger(p_VehicleEntity, p_OnVehicle)
 		return
 	end
 
-	local s_ShouldExit = false
 	local s_ExitDistance = Registry.BOT.PASSENGER_EXIT_DISTANCE
+	local s_ExitDistanceSquared = s_ExitDistance * s_ExitDistance
+	local s_CurrentPosition = self.m_Player.soldier.worldTransform.trans
+	local s_CurrentX = s_CurrentPosition.x
+	local s_CurrentZ = s_CurrentPosition.z
+
+	-- Horizontal (x/z) distance only, compared squared to avoid allocations and sqrt.
+	local function _IsInExitRange(p_Position)
+		local s_DeltaX = p_Position.x - s_CurrentX
+		local s_DeltaZ = p_Position.z - s_CurrentZ
+		return (s_DeltaX * s_DeltaX + s_DeltaZ * s_DeltaZ) < s_ExitDistanceSquared
+	end
+
+	local s_ShouldExit = false
 	local s_AllCapturePoints = g_GameDirector:GetAllCapturePoints()
-	local s_ActiveMcoms = g_GameDirector:GetActiveMcomPositions()
-	local s_CurrentPosition = self.m_Player.soldier.worldTransform.trans:Clone()
-	s_CurrentPosition.y = 0
-
-	local s_Coordinates = {}
 	for l_Index = 1, #s_AllCapturePoints do
-		s_Coordinates[#s_Coordinates + 1] = s_AllCapturePoints[l_Index].transform.trans:Clone()
-	end
-	for l_Index = 1, #s_ActiveMcoms do
-		s_Coordinates[#s_Coordinates + 1] = s_ActiveMcoms[l_Index]
-	end
-
-	for l_Index = 1, #s_Coordinates do
-		local l_Coord = s_Coordinates[l_Index]
-		local s_Position = l_Coord:Clone()
-		s_Position.y = 0
-
-		if s_Position:Distance(s_CurrentPosition) < s_ExitDistance then
+		if _IsInExitRange(s_AllCapturePoints[l_Index].transform.trans) then
 			s_ShouldExit = true
 			break
+		end
+	end
+
+	if not s_ShouldExit then
+		local s_ActiveMcoms = g_GameDirector:GetActiveMcomPositions()
+		for l_Index = 1, #s_ActiveMcoms do
+			if _IsInExitRange(s_ActiveMcoms[l_Index]) then
+				s_ShouldExit = true
+				break
+			end
 		end
 	end
 
