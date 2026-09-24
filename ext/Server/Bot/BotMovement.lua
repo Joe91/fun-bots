@@ -1138,8 +1138,12 @@ function Bot:LookAround(p_DeltaTime)
 end
 
 function Bot:UpdateYaw()
-	local s_DeltaYaw = 0
-	s_DeltaYaw = self.m_Player.input.authoritativeAimingYaw - self._TargetYaw
+	-- Runs every tick for every bot: cache the input userdata, each access crosses into the engine.
+	local s_Input = self.m_Player.input
+	---@cast s_Input -nil
+	local s_CurrentYaw = s_Input.authoritativeAimingYaw
+	local s_TargetYaw = self._TargetYaw
+	local s_DeltaYaw = s_CurrentYaw - s_TargetYaw
 
 	if s_DeltaYaw > math.pi then
 		s_DeltaYaw = s_DeltaYaw - 2 * math.pi
@@ -1147,12 +1151,11 @@ function Bot:UpdateYaw()
 		s_DeltaYaw = s_DeltaYaw + 2 * math.pi
 	end
 
-	local s_AbsDeltaYaw = math.abs(s_DeltaYaw)
 	local s_Increment = Globals.YawPerFrame
 
-	if s_AbsDeltaYaw < s_Increment then
-		self.m_Player.input.authoritativeAimingYaw = self._TargetYaw
-		self.m_Player.input.authoritativeAimingPitch = self._TargetPitch
+	if math.abs(s_DeltaYaw) < s_Increment then
+		s_Input.authoritativeAimingYaw = s_TargetYaw
+		s_Input.authoritativeAimingPitch = self._TargetPitch
 		return
 	end
 
@@ -1160,7 +1163,7 @@ function Bot:UpdateYaw()
 		s_Increment = -s_Increment
 	end
 
-	local s_TempYaw = self.m_Player.input.authoritativeAimingYaw + s_Increment
+	local s_TempYaw = s_CurrentYaw + s_Increment
 
 	if s_TempYaw >= (math.pi * 2) then
 		s_TempYaw = s_TempYaw - (math.pi * 2)
@@ -1168,8 +1171,8 @@ function Bot:UpdateYaw()
 		s_TempYaw = s_TempYaw + (math.pi * 2)
 	end
 
-	self.m_Player.input.authoritativeAimingYaw = s_TempYaw
-	self.m_Player.input.authoritativeAimingPitch = self._TargetPitch
+	s_Input.authoritativeAimingYaw = s_TempYaw
+	s_Input.authoritativeAimingPitch = self._TargetPitch
 end
 
 function Bot:UpdateStaticMovement()

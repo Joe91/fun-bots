@@ -16,7 +16,7 @@ function Utilities:getCameraPos(p_Player, p_IsTarget, p_AimForHead)
 	return Vec3(0.00, self:getTargetHeight(p_Player.soldier, p_IsTarget, p_AimForHead), 0.00)
 end
 
----@param p_Soldier Soldier
+---@param p_Soldier SoldierEntity
 ---@param p_IsTarget boolean
 ---@param p_AimForHead boolean
 ---@return number

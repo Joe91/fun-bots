@@ -43,8 +43,8 @@ function BotManager:RegisterVars()
 	self._BotBotReviveList = {}
 	self._RaycastsPerActivePlayer = 0
 
-	---@type table<string, boolean>
-	---`[botPlayer.id .. "-" .. enemyBotPlayer.id] -> boolean`
+	---@type table<integer, boolean>
+	---`[lowerId * 65536 + higherId] -> boolean`
 	self._ConnectionCheckState = {}
 
 	self._LastBotCheckIndex = 1
@@ -147,10 +147,13 @@ function BotManager:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 
 
 	-- Update every tick (base-update - needed every time)
+	local s_Bots = self._Bots
 	for l_Index = 1, s_BotCount do
-		local l_Bot = self._Bots[l_Index]
-		if l_Bot.m_Player.soldier then                                      -- only update bots with a soldier
-			l_Bot.m_Player.soldier:SingleStepEntry(l_Bot.m_Player.controlledEntryId) -- engine-requirement
+		local l_Bot = s_Bots[l_Index]
+		local l_Player = l_Bot.m_Player
+		local l_Soldier = l_Player.soldier
+		if l_Soldier then                                         -- only update bots with a soldier
+			l_Soldier:SingleStepEntry(l_Player.controlledEntryId) -- engine-requirement
 			l_Bot.m_ActiveState:UpdateVeryFast(l_Bot)
 		end
 	end
@@ -1434,24 +1437,23 @@ function BotManager:_CheckForBotBotAttack()
 					if s_EnemyBot and s_EnemyBot.m_Player and s_EnemyBot.m_Player.soldier and
 						s_EnemyBot.m_Player.teamId ~= s_Bot.m_Player.teamId then -- enemy does not have to be ready!
 						-- Check connection-state.
-						local s_ConnectionValue = ""
-						local s_Id1 = s_BotIdToCheck
-						local s_Id2 = l_BotId
-
-						if s_Id1 > s_Id2 then
-							s_ConnectionValue = tostring(s_Id2) .. "-" .. tostring(s_Id1)
+						-- Integer key (player ids are < 65536) avoids building strings for every pair.
+						local s_ConnectionValue
+						if s_BotIdToCheck > l_BotId then
+							s_ConnectionValue = l_BotId * 65536 + s_BotIdToCheck
 						else
-							s_ConnectionValue = tostring(s_Id1) .. "-" .. tostring(s_Id2)
+							s_ConnectionValue = s_BotIdToCheck * 65536 + l_BotId
 						end
 
 						if not self._ConnectionCheckState[s_ConnectionValue] then
 							self._ConnectionCheckState[s_ConnectionValue] = true
 							-- Check distance.
 							local s_EnemyBotPosition = nil
-							if s_Bot.m_Player.controlledControllable then
-								s_EnemyBotPosition = s_EnemyBot.m_Player.controlledControllable.transform.trans:Clone()
+							local s_EnemyControllable = s_EnemyBot.m_Player.controlledControllable
+							if s_EnemyControllable then
+								s_EnemyBotPosition = s_EnemyControllable.transform.trans
 							else
-								s_EnemyBotPosition = s_EnemyBot.m_Player.soldier.worldTransform.trans:Clone()
+								s_EnemyBotPosition = s_EnemyBot.m_Player.soldier.worldTransform.trans
 							end
 							local s_Distance = s_BotPosition:Distance(s_EnemyBotPosition)
 							s_ChecksDone = s_ChecksDone + 1

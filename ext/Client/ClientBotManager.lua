@@ -192,6 +192,11 @@ end
 
 ---@param p_RaycastResultsToSend RaycastResults
 function ClientBotManager:SendRaycastResults(p_RaycastResultsToSend)
+	-- Skip empty results, otherwise every client sends a reliable NetEvent each frame.
+	if #p_RaycastResultsToSend == 0 then
+		return
+	end
+
 	NetEvents:SendLocal("Botmanager:RaycastResults", p_RaycastResultsToSend)
 end
 
