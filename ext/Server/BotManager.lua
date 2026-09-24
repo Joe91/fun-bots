@@ -1185,6 +1185,53 @@ function BotManager:ExitVehicle(p_Player)
 	end
 end
 
+-- One bot leaves the gunship of the player's team. The seat is kept free for a while, so the player can spawn into it.
+---@param p_Player Player
+function BotManager:FreeGunshipSeat(p_Player)
+	local s_Gunship = g_GameDirector:GetGunship(p_Player.teamId)
+
+	if not s_Gunship then
+		ChatManager:SendMessage('Your team has no gunship.', p_Player)
+		return
+	end
+
+	-- Prefer a seat that is already free, otherwise take the seat of the first bot.
+	local s_EntryId = nil
+	---@type Bot|nil
+	local s_BotToExit = nil
+
+	for l_EntryId = 1, s_Gunship.entryCount - 1 do
+		local s_Player = s_Gunship:GetPlayerInEntry(l_EntryId)
+
+		if s_Player == nil then
+			s_EntryId = l_EntryId
+			s_BotToExit = nil
+			break
+		elseif s_BotToExit == nil then
+			local s_Bot = self:GetBotById(s_Player.id)
+
+			if s_Bot then
+				s_EntryId = l_EntryId
+				s_BotToExit = s_Bot
+			end
+		end
+	end
+
+	if s_EntryId == nil then
+		ChatManager:SendMessage('No gunship seat can be freed.', p_Player)
+		return
+	end
+
+	g_GameDirector:ReserveGunshipEntry(s_EntryId)
+
+	if s_BotToExit then
+		s_BotToExit:ExitVehicle()
+	end
+
+	ChatManager:SendMessage(string.format('A gunship seat is kept free for you for %d seconds.',
+		Registry.COMMON.GUNSHIP_SEAT_RESERVE_TIME), p_Player)
+end
+
 ---@param p_Player Player
 ---@param p_Type string|'"ammo"'|'"medkit"'
 function BotManager:Deploy(p_Player, p_Type)

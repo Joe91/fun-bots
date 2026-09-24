@@ -451,6 +451,7 @@ class BotEditor {
                 case "attack_objective":
                 case "defend_objective":
                 case "repair_vehicle":
+                case "free_gunship_seat":
                 case "attack_a":
                 case "attack_b":
                 case "attack_c":

@@ -1619,17 +1619,8 @@ function BotSpawner:_GetSpecialSpawnEnity(p_Bot, p_TeamId)
 	end
 
 	local s_Gunship = g_GameDirector:GetGunship(p_TeamId)
-	if s_Gunship then
-		local s_SeatsLeft = false
-		for i = 1, s_Gunship.entryCount - 1 do
-			if s_Gunship:GetPlayerInEntry(i) == nil then
-				s_SeatsLeft = true
-				break
-			end
-		end
-		if s_SeatsLeft then
-			return "SpawnInGunship", g_GameDirector:GetGunship(p_TeamId)
-		end
+	if s_Gunship and g_GameDirector:GunshipHasFreeBotSeat(s_Gunship) then
+		return "SpawnInGunship", s_Gunship
 	end
 
 	return nil
@@ -1683,17 +1674,8 @@ function BotSpawner:_GetSpawnPoint(p_TeamId, p_SquadId)
 	end
 
 	local s_Gunship = g_GameDirector:GetGunship(p_TeamId)
-	if s_Gunship then
-		local s_SeatsLeft = false
-		for i = 1, s_Gunship.entryCount - 1 do
-			if s_Gunship:GetPlayerInEntry(i) == nil then
-				s_SeatsLeft = true
-				break
-			end
-		end
-		if s_SeatsLeft then
-			return "SpawnInGunship"
-		end
+	if s_Gunship and g_GameDirector:GunshipHasFreeBotSeat(s_Gunship) then
+		return "SpawnInGunship"
 	end
 
 	-- CONQUEST

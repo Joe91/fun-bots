@@ -491,10 +491,9 @@ function VehicleMovement:UpdateYawVehicle(p_Bot, p_Attacking, p_IsStationaryLaun
 			s_Direction = p_Bot._TargetPoint.Position:Clone() - s_LinearTransformNew.trans:Clone()
 		end
 
-		-- Same yaw convention as everywhere else (atan - pi/2, wrapped to 0..2pi). It feeds authoritativeAimingYaw,
-		-- which Bot:ShootAt uses for the FOV check; the steering above uses the deltas instead.
-		local s_AtanDzDx = math.atan(s_Direction.z, s_Direction.x)
-		p_Bot._TargetYaw = (s_AtanDzDx > math.pi / 2) and (s_AtanDzDx - math.pi / 2) or (s_AtanDzDx + 3 * math.pi / 2)
+		-- Intentionally NOT the atan - pi/2 convention used elsewhere: the gunship's gunner entries are oriented
+		-- differently in the engine, and the raw atan(dz, dx) is what lines up in-game (verified; see B49).
+		p_Bot._TargetYaw = math.atan(s_Direction.z, s_Direction.x)
 		p_Bot._TargetPitch = 0.0
 	else
 		if not p_Attacking then

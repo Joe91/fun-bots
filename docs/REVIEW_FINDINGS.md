@@ -191,9 +191,10 @@ If `_Shoot` is false (for example after `!stop` or `SetOptionForAll("shoot", fal
 `if s_AbsDeltaYaw > 0` is always true while `_FullVehicleSteering` is set, so the target roll is always `+0.1`. Left turns are flown with the wrong bank.
 *Fix:* test the sign of `s_DeltaYaw`.
 
-**B49 (Low, plausible). The gunship's aiming yaw is 90° off from every other yaw in the mod** — ✅ fixed
+**B49 (Low, plausible). The gunship's aiming yaw is 90° off from every other yaw in the mod** — ❌ not a bug (fix reverted)
 [VehicleMovement.lua:490](../ext/Server/Bot/VehicleMovement.lua#L490)
 The gunship branch sets `_TargetYaw = math.atan(dz, dx)`, but everywhere else yaw is `atan(dz, dx) - π/2`, wrapped to 0–2π. That value is written to `authoritativeAimingYaw` ([VehicleMovement.lua:572](../ext/Server/Bot/VehicleMovement.lua#L572)), which `Bot:ShootAt` uses for the FOV check. Gunship gunners therefore detect targets in a cone rotated by a quarter turn from where their guns point.
+*Resolution:* tested in-game. The original `atan(dz, dx)` is correct; the gunship's gunner entries are oriented differently in the engine, and the "fixed" version was off. Reverted, with a comment in the code.
 
 **B50 (Low).** ✅ fixed. Assorted smaller issues:
 - Pitch is derived as `-euler.z / math.cos(roll)` in the chopper, jet and vehicle-yaw code. It grows without bound as a chopper or jet banks towards 90° ([VehicleChopperControl.lua:70](../ext/Server/Bot/VehicleChopperControl.lua#L70), [VehicleMovement.lua:555](../ext/Server/Bot/VehicleMovement.lua#L555)).
@@ -232,7 +233,7 @@ The gunship branch sets `_TargetYaw = math.atan(dz, dx)`, but everywhere else ya
 
 Fixed items have been removed from this list. All bugs above are fixed; what remains are improvements.
 
-1. Test in-game: B48 (chopper bank direction) and B49 (gunship FOV) couldn't be verified from source.
+1. Test in-game: B48 (chopper bank direction) couldn't be verified from source. (B49 tested: not a bug, reverted.)
 2. I4: settings-batch transaction, and keying permissions by account GUID.
 3. I6, I8: escaping for `WebUI:ExecuteJS` and `data-value` for booleans, which lifts the no-apostrophe constraint on translations.
 4. I7: send node lists only to the requester.

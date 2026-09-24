@@ -42,6 +42,7 @@ local m_CommActions = {
 	drop_medkit = true,
 	enter_vehicle = true,
 	repair_vehicle = true,
+	free_gunship_seat = true,
 	follow_me = true,
 	attack_objective = true,
 	defend_objective = true,
@@ -126,6 +127,10 @@ function FunBotUIServer:_onBotEditorEvent(p_Player, p_Data)
 		return
 	elseif request.action == 'repair_vehicle' then
 		BotManager:RepairVehicle(p_Player)
+		NetEvents:SendTo('UI_CommoRose', p_Player, "false")
+		return
+	elseif request.action == 'free_gunship_seat' then
+		BotManager:FreeGunshipSeat(p_Player)
 		NetEvents:SendTo('UI_CommoRose', p_Player, "false")
 		return
 	elseif request.action == 'follow_me' then
@@ -481,8 +486,8 @@ function FunBotUIServer:_onUIRequestCommoRoseShow(p_Player, p_Data)
 				Label = Language:I18N('Repair Vehicle')
 			},
 			{
-				Action = 'not_implemented',
-				Label = Language:I18N('')
+				Action = 'free_gunship_seat',
+				Label = Language:I18N('Free Gunship Seat')
 			}
 		},
 		Bottom = {

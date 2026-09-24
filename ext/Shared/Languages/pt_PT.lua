@@ -306,6 +306,7 @@ Language:add(code, "Commands", "Comandos")
 Language:add(code, "Attack Objective", "Atacar Objetivo")
 Language:add(code, "Defend Objective", "Defender Objetivo")
 Language:add(code, "Repair Vehicle", "Reparar Veículo")
+Language:add(code, "Free Gunship Seat", "Libertar lugar no gunship")
 Language:add(code, "Settings has been saved temporarily", "As configurações foram salvas temporariamente")
 Language:add(code, "Settings has been saved", "As configurações foram salvas")
 

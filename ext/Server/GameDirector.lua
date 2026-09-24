@@ -60,6 +60,9 @@ function GameDirector:RegisterVars()
 	self.m_Gunship = nil
 	self.m_GunshipObjectiveName = nil
 	self.m_GunshipObjectiveTeam = nil
+	-- Gunship seat kept free for a player (comm-action), until the time runs out.
+	self.m_GunshipReservedEntry = nil
+	self.m_GunshipReservedUntil = 0.0
 
 	self.m_MapCompletelyLoaded = false
 	self.m_SpawnedEntitiesToProcess = {}
@@ -130,6 +133,7 @@ function GameDirector:OnRoundOver(p_RoundTime, p_WinningTeam)
 		self.m_AvailableVehicles[l_Team] = {}
 	end
 	self.m_Gunship = nil
+	self.m_GunshipReservedEntry = nil
 end
 
 ---VEXT Server Server:RoundReset Event
@@ -813,6 +817,41 @@ function GameDirector:GetGunship(p_TeamId)
 	return nil
 end
 
+---Keep a gunship seat free for a player for some time.
+---@param p_EntryId integer
+function GameDirector:ReserveGunshipEntry(p_EntryId)
+	self.m_GunshipReservedEntry = p_EntryId
+	self.m_GunshipReservedUntil = SharedUtils:GetTime() + Registry.COMMON.GUNSHIP_SEAT_RESERVE_TIME
+end
+
+---@param p_EntryId integer
+---@return boolean
+function GameDirector:IsGunshipEntryReserved(p_EntryId)
+	if self.m_GunshipReservedEntry == nil then
+		return false
+	end
+
+	if SharedUtils:GetTime() > self.m_GunshipReservedUntil then
+		self.m_GunshipReservedEntry = nil
+		return false
+	end
+
+	return self.m_GunshipReservedEntry == p_EntryId
+end
+
+---Checks if the gunship has a seat left bots are allowed to take.
+---@param p_Gunship ControllableEntity
+---@return boolean
+function GameDirector:GunshipHasFreeBotSeat(p_Gunship)
+	for l_EntryId = 1, p_Gunship.entryCount - 1 do
+		if p_Gunship:GetPlayerInEntry(l_EntryId) == nil and not self:IsGunshipEntryReserved(l_EntryId) then
+			return true
+		end
+	end
+
+	return false
+end
+
 ---@param p_Entity ControllableEntity|Entity
 ---@param p_VehiclePoints any
 ---@param p_HotTeam any
@@ -845,6 +884,7 @@ function GameDirector:OnVehicleUnspawn(p_Entity, p_VehiclePoints, p_HotTeam)
 	if m_Vehicles:IsGunship(s_VehicleData) then
 		m_Logger:Write("Gunship unspawn")
 		self.m_Gunship = nil
+		self.m_GunshipReservedEntry = nil
 	end
 
 	for l_Team = TeamId.Team1, Globals.NrOfTeams do
@@ -907,6 +947,12 @@ function GameDirector:OnVehicleEnter(p_Entity, p_Player)
 
 	if not m_Utilities:isBot(p_Player) then
 		p_Entity = ControllableEntity(p_Entity)
+
+		-- The player took the gunship seat: no need to keep it free anymore.
+		if self.m_GunshipReservedEntry ~= nil and s_VehicleData ~= nil and m_Vehicles:IsGunship(s_VehicleData) then
+			self.m_GunshipReservedEntry = nil
+		end
+
 		self:_SetVehicleObjectiveState(p_Entity.transform.trans:Clone(), false)
 
 		if p_Player.controlledEntryId ~= 0 and p_Player.controlledControllable then

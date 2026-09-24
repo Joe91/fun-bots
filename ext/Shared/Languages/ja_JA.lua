@@ -307,6 +307,7 @@ Language:add(code, "Commands", "コマンド")
 Language:add(code, "Attack Objective", "攻撃目標")
 Language:add(code, "Defend Objective", "防御目標")
 Language:add(code, "Repair Vehicle", "修理車両")
+Language:add(code, "Free Gunship Seat", "ガンシップの席を空ける")
 Language:add(code, "Settings has been saved temporarily", "設定が一時的に保存されました。")
 Language:add(code, "Settings has been saved", "設定が保存されました。")
 

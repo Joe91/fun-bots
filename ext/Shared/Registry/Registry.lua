@@ -23,6 +23,8 @@ Registry = {
 		USE_BUGGED_HITBOXES = false,
 		-- Distance commands are heard by bots.
 		COMMAND_DISTANCE = 20,
+		-- Time in seconds a gunship seat is kept free for a player after the "Free Gunship Seat" command.
+		GUNSHIP_SEAT_RESERVE_TIME = 30.0,
 		-- Use load of Bundle to fix Bug of weapons disappearing (thanks to Lesley!) !!! THIS MIGHT CAUSE CRASHES OR OTHER ISSUES!!!
 		USE_LOAD_BUNDLE_BUGFIX = false,
 		-- Keep the last ticket in conquest for the gamemode counter
