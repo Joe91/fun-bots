@@ -1,4 +1,4 @@
-local code = 'cn_CN' -- Add/replace the xx_XX here with your language code (like de_DE, en_US, or other)!
+local code = 'cn_CN' -- Add/replace the xx_XX here with your language code (like de_DE, en_EN, or other)!
 
 -- GENERAL
 Language:add(code, "Bot Weapon", "BOT武器")

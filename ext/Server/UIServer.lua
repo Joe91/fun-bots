@@ -261,7 +261,7 @@ function FunBotUIServer:_onBotEditorEvent(p_Player, p_Data)
 	-- Settings.
 	if request.action == 'request_settings' then
 		if Config.Language == nil then
-			Config.Language = 'en_US'
+			Config.Language = 'en_EN'
 		end
 
 		-- request.opened

@@ -1,4 +1,4 @@
-local code = 'es_ES' -- Add/replace the xx_XX here with your language code (like de_DE, en_US, or other)!
+local code = 'es_ES' -- Add/replace the xx_XX here with your language code (like de_DE, en_EN, or other)!
 
 -- GENERAL
 Language:add(code, "Bot Weapon", "Armas del Bot")

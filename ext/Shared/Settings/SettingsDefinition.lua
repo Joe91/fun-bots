@@ -1173,7 +1173,7 @@ SettingsDefinition = {
 			Value = Config.AssaultWeapon,
 			Description = "Primary weapon of Assault class, if random-weapon == false",
 			Reference = "AssaultPrimary",
-			Default = "M416",
+			Default = "M416_RX01",
 			UpdateFlag = UpdateFlag.None,
 			Category = "WEAPONS"
 		},
@@ -1185,7 +1185,7 @@ SettingsDefinition = {
 			Value = Config.EngineerWeapon,
 			Description = "Primary weapon of Engineer class, if random-weapon == false",
 			Reference = "EngineerPrimary",
-			Default = "M4A1",
+			Default = "M4A1_RX01",
 			UpdateFlag = UpdateFlag.None,
 			Category = "WEAPONS"
 		},
@@ -1197,7 +1197,7 @@ SettingsDefinition = {
 			Value = Config.SupportWeapon,
 			Description = "Primary weapon of Support class, if random-weapon == false",
 			Reference = "SupportPrimary",
-			Default = "M249",
+			Default = "M249_RX01",
 			UpdateFlag = UpdateFlag.None,
 			Category = "WEAPONS"
 		},
@@ -1209,7 +1209,7 @@ SettingsDefinition = {
 			Value = Config.ReconWeapon,
 			Description = "Primary weapon of Recon class, if random-weapon == false",
 			Reference = "ReconPrimary",
-			Default = "L96",
+			Default = "L96_RifleScope",
 			UpdateFlag = UpdateFlag.None,
 			Category = "WEAPONS"
 		},
@@ -1808,7 +1808,7 @@ SettingsDefinition = {
 			Type = Type.List,
 			Value = Config.Language,
 			Description = "de_DE as sample (default is English, when language file does not exist)",
-			Default = nil,
+			Default = "en_EN",
 			Reference = Languages,
 			UpdateFlag = UpdateFlag.Language,
 			Category = "OTHER"
