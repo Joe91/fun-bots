@@ -1,4 +1,4 @@
-local code = 'es_ES' -- Add/replace the xx_XX here with your language code (like de_DE, en_US, or other)!
+local code = 'es_ES' -- Add/replace the xx_XX here with your language code (like de_DE, en_EN, or other)!
 
 -- GENERAL
 Language:add(code, "Bot Weapon", "Armas del Bot")
@@ -300,6 +300,7 @@ Language:add(code, "Commands", "Comandos")
 Language:add(code, "Attack Objective", "Atacar Objetivo")
 Language:add(code, "Defend Objective", "Defender Objetivo")
 Language:add(code, "Repair Vehicle", "Reparar Vehículo")
+Language:add(code, "Free Gunship Seat", "Liberar asiento del gunship")
 Language:add(code, "Save in progress...", "Guardado en progreso...")
 Language:add(code, "Use air vehicles", "Usar vehículos aéreos")
 Language:add(code, "Bots can use air-vehicles", "Los bots podrán utilizar los vehículos aéreos")

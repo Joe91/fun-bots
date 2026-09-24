@@ -2,6 +2,8 @@
 ---@overload fun():VehicleChopperControl
 VehicleChopperControl = class('VehicleChopperControl')
 
+---@type Utilities
+local m_Utilities = require('__shared/Utilities')
 ---@type Vehicles
 local m_Vehicles = require('Vehicles')
 
@@ -25,7 +27,8 @@ function VehicleChopperControl:UpdateMovementChopper(p_DeltaTime, p_Bot)
 		p_Bot._VehicleTakeoffTimer = p_Bot._VehicleTakeoffTimer - p_DeltaTime
 	end
 
-	local s_TargetPoint = g_GameDirector:GetActiveTargetPointPosition(p_Bot.m_Player.teamId):Clone()
+	local s_TargetPoint = g_GameDirector:GetActiveTargetPointPosition(p_Bot.m_Player.teamId,
+		p_Bot.m_Player.controlledControllable and p_Bot.m_Player.controlledControllable.transform.trans):Clone()
 	s_TargetPoint.y = s_TargetPoint.y + Registry.VEHICLES.CHOPPER_TARGET_HEIGHT
 	if (p_Bot.m_Player.teamId % 2) == 1 then
 		s_TargetPoint.z = s_TargetPoint.z + 20
@@ -67,7 +70,7 @@ function VehicleChopperControl:UpdateYawChopperPilot(p_Bot, p_Attacking) -- only
 		local s_Euler = p_Bot.m_Player.controlledControllable.transform:ToQuatTransform(false).rotation:ToEuler()
 		local s_Yaw = -s_Euler.x
 		local s_Roll = s_Euler.y
-		local s_Pitch = -s_Euler.z / math.cos(s_Roll)
+		local s_Pitch = m_Utilities:GetPitchFromEuler(s_Euler)
 
 		s_DeltaYaw = s_Yaw - p_Bot._TargetYaw
 		s_DeltaPitch = s_Pitch - p_Bot._TargetPitch
@@ -78,7 +81,7 @@ function VehicleChopperControl:UpdateYawChopperPilot(p_Bot, p_Attacking) -- only
 
 		local s_Yaw = -s_Euler.x
 		local s_Roll = s_Euler.y
-		local s_Pitch = -s_Euler.z / math.cos(s_Roll)
+		local s_Pitch = m_Utilities:GetPitchFromEuler(s_Euler)
 
 		s_DeltaPitch = s_Pitch - p_Bot._TargetPitch
 		s_DeltaYaw = s_Yaw - p_Bot._TargetYaw
@@ -165,7 +168,8 @@ function VehicleChopperControl:UpdateYawChopperPilot(p_Bot, p_Attacking) -- only
 	local s_Tartget_Roll = 0.0
 	-- To-do: in strong steering: Roll a little?
 	if p_Bot._FullVehicleSteering then
-		if s_AbsDeltaYaw > 0 then
+		-- Bank into the turn: the sign of the yaw error gives the turn direction.
+		if s_DeltaYaw > 0 then
 			s_Tartget_Roll = 0.1
 		else
 			s_Tartget_Roll = -0.1

@@ -1,4 +1,4 @@
-local code = 'cn_CN' -- Add/replace the xx_XX here with your language code (like de_DE, en_US, or other)!
+local code = 'cn_CN' -- Add/replace the xx_XX here with your language code (like de_DE, en_EN, or other)!
 
 -- GENERAL
 Language:add(code, "Bot Weapon", "BOT武器")
@@ -312,6 +312,7 @@ Language:add(code, "Commands", "命令")
 Language:add(code, "Attack Objective", "进攻目标")
 Language:add(code, "Defend Objective", "防守目标")
 Language:add(code, "Repair Vehicle", "维修载具")
+Language:add(code, "Free Gunship Seat", "空出炮艇座位")
 Language:add(code, "Bot respawn activated!", "BOT重生已激活!")
 Language:add(code, "Bot respawn deactivated!", "BOT重生已关闭!")
 Language:add(code, "Bots will attack!", "BOT启用攻击!")

@@ -33,6 +33,13 @@ function Database:Now()
 	return 'CURRENT_TIMESTAMP'
 end
 
+---Returns the value as a quoted SQL string literal, with embedded quotes escaped.
+---@param p_Value any
+---@return string
+function Database:Quote(p_Value)
+	return '\'' .. tostring(p_Value):gsub('\'', '\'\'') .. '\''
+end
+
 function Database:GetError()
 	return SQL:Error()
 end
@@ -121,7 +128,7 @@ function Database:Update(p_TableName, p_Parameters, p_Where)
 		elseif tostring(l_Value) == 'false' or l_Value == false then
 			l_Value = '\'false\''
 		else
-			l_Value = '\'' .. tostring(l_Value) .. '\''
+			l_Value = self:Quote(l_Value)
 		end
 
 		if p_Where == l_Name then
@@ -133,12 +140,16 @@ function Database:Update(p_TableName, p_Parameters, p_Where)
 
 	m_Logger:Write('UPDATE ' .. p_TableName .. ' SET ' .. s_Fields:join(', ') .. ' WHERE ' .. p_Where .. '= ' .. s_Found .. '')
 
-	print(self:Query('UPDATE ' ..
-		p_TableName .. ' SET ' .. s_Fields:join(', ') .. ' WHERE ' .. p_Where .. ' = ' .. s_Found .. ''))
+	self:Query('UPDATE ' .. p_TableName .. ' SET ' .. s_Fields:join(', ') .. ' WHERE ' .. p_Where .. ' = ' .. s_Found)
 end
 
--- This is unused.
 function Database:ExecuteBatch()
+	-- Nothing batched: don't wipe FB_Settings.
+	if m_Batches:isEmpty() then
+		m_Batched = ''
+		return
+	end
+
 	self:Query('DELETE FROM `FB_Settings`')
 	self:Query(m_Batched .. m_Batches:join(', '))
 	m_Batched = ''
@@ -173,8 +184,8 @@ function Database:BatchQuery(p_TableName, p_Parameters, p_Where)
 			s_Values:add('\'false\'')
 			l_Value = '\'false\''
 		else
-			s_Values:add('\'' .. tostring(l_Value) .. '\'')
-			l_Value = tostring(l_Value)
+			l_Value = self:Quote(l_Value)
+			s_Values:add(l_Value)
 		end
 
 		if p_Where ~= l_Name then
@@ -194,7 +205,7 @@ function Database:Delete(p_TableName, p_Parameters)
 	local s_Where = ArrayMap()
 
 	for l_Name, l_Value in pairs(p_Parameters) do
-		s_Where:add('`' .. l_Name .. '`=\'' .. l_Value .. '\'')
+		s_Where:add('`' .. l_Name .. '`=' .. self:Quote(l_Value))
 	end
 
 	return self:Query('DELETE FROM ' .. p_TableName .. ' WHERE ' .. s_Where:join(' AND '))
@@ -218,7 +229,7 @@ function Database:Insert(p_TableName, p_Parameters)
 		elseif tostring(l_Value) == 'false' or l_Value == false then
 			s_Values:add('\'false\'')
 		else
-			s_Values:add('\'' .. tostring(l_Value) .. '\'')
+			s_Values:add(self:Quote(l_Value))
 		end
 	end
 

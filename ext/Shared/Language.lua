@@ -6,7 +6,7 @@ require('__shared/Utilities')
 
 function Language:__init()
 	self._Translations = {}
-	self._Language = 'en_US'
+	self._Language = 'en_EN'
 
 	if Config ~= nil and Config.Language ~= nil then
 		self:loadLanguage(Config.Language)

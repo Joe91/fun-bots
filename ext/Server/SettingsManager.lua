@@ -12,6 +12,8 @@ local m_BotManager = require('BotManager')
 local m_BotSpawner = require('BotSpawner')
 ---@type WeaponList
 local m_WeaponList = require('__shared/WeaponList')
+---@type Language
+local m_Language = require('__shared/Language')
 
 function SettingsManager:__init()
 	-- Create Config-Trace.
@@ -53,7 +55,7 @@ function SettingsManager:OnExtensionLoaded()
 	-- Get Values from Config.lua
 	for l_Name, l_Value in pairs(Config) do
 		-- Check SQL if Config.lua has changed.
-		local s_Single = m_Database:Single('SELECT * FROM `FB_Config_Trace` WHERE `Key`=\'' .. l_Name .. '\' LIMIT 1')
+		local s_Single = m_Database:Single('SELECT * FROM `FB_Config_Trace` WHERE `Key`=' .. m_Database:Quote(l_Name) .. ' LIMIT 1')
 
 		-- If it doesn't exist, create it.
 		if s_Single == nil then
@@ -164,7 +166,7 @@ function SettingsManager:Update(p_Name, p_Value, p_Temporary, p_Batch)
 
 		-- Use old deprecated queries.
 		if p_Batch == false then
-			local s_Single = m_Database:Single('SELECT * FROM `FB_Settings` WHERE `Key`=\'' .. p_Name .. '\' LIMIT 1')
+			local s_Single = m_Database:Single('SELECT * FROM `FB_Settings` WHERE `Key`=' .. m_Database:Quote(p_Name) .. ' LIMIT 1')
 
 			-- If it doesn't exist, create it.
 			if s_Single == nil then
@@ -206,105 +208,187 @@ function SettingsManager:SaveAll()
 	m_Database:ExecuteBatch()
 end
 
+---Restores every setting to its default, persists the defaults and runs the resulting updates.
 function SettingsManager:RestoreDefault()
+	local s_Flags = {}
+
 	for _, l_Item in pairs(SettingsDefinition.Elements) do
-		Config[l_Item.Name] = l_Item.Default
+		if self:_HasChanged(Config[l_Item.Name], l_Item.Default) then
+			s_Flags[l_Item.UpdateFlag] = true
+		end
+
+		self:Update(l_Item.Name, l_Item.Default, false, true)
 	end
+
+	m_Database:ExecuteBatch()
+	self:_RunUpdateFlags(s_Flags)
 end
 
----comment
+---@param p_Name string
+---@return table|nil
+function SettingsManager:GetDefinition(p_Name)
+	for _, l_Item in pairs(SettingsDefinition.Elements) do
+		if l_Item.Name == p_Name then
+			return l_Item
+		end
+	end
+
+	return nil
+end
+
+---Converts a raw value from the WebUI, RCON or the console into the setting's type and validates it.
+---@param p_Item table An element of SettingsDefinition.Elements.
+---@param p_RawValue any
+---@return boolean valid
+---@return any value
+function SettingsManager:ParseValue(p_Item, p_RawValue)
+	local s_Type = p_Item.Type
+
+	if s_Type == Type.Integer or s_Type == Type.Float then
+		local s_Value = tonumber(p_RawValue)
+
+		if s_Value == nil then
+			return false, nil
+		end
+
+		if s_Type == Type.Integer then
+			s_Value = math.floor(s_Value)
+		end
+
+		local s_Reference = p_Item.Reference
+		---@cast s_Reference Range
+
+		if not s_Reference:IsValid(s_Value) then
+			return false, nil
+		end
+
+		return true, s_Value
+	elseif s_Type == Type.Boolean then
+		if p_RawValue == true or p_RawValue == 1 or p_RawValue == '1' or p_RawValue == 'true' then
+			return true, true
+		elseif p_RawValue == false or p_RawValue == 0 or p_RawValue == '0' or p_RawValue == 'false' then
+			return true, false
+		end
+
+		return false, nil
+	elseif s_Type == Type.Enum then
+		-- Accept the name of the enum entry (case-insensitive) or its numeric value.
+		local s_Number = tonumber(p_RawValue)
+		local s_Name = type(p_RawValue) == 'string' and p_RawValue:lower() or nil
+
+		for l_Key, l_Value in pairs(p_Item.Reference) do
+			if l_Key ~= 'Count' and (l_Key:lower() == s_Name or l_Value == s_Number) then
+				return true, l_Value
+			end
+		end
+
+		return false, nil
+	elseif s_Type == Type.List or s_Type == Type.DynamicList then
+		local s_Reference = p_Item.Reference
+
+		if s_Type == Type.DynamicList then
+			s_Reference = _G[s_Reference]
+		end
+
+		for _, l_Value in pairs(s_Reference) do
+			if l_Value == p_RawValue then
+				return true, l_Value
+			end
+		end
+
+		return false, nil
+	end
+
+	return false, nil
+end
+
+---Validates, converts and applies settings, then runs the side effects of their update flags once.
+---This is the single entry point for the WebUI, RCON and the console.
+---@param p_RawValues table<string, any> Raw values keyed by setting name. Unknown keys are ignored.
+---@param p_Persist boolean Write the settings to the database.
+---@return string[] # Names of the settings whose value was rejected.
+function SettingsManager:Apply(p_RawValues, p_Persist)
+	local s_Invalid = {}
+	local s_Flags = {}
+
+	for _, l_Item in pairs(SettingsDefinition.Elements) do
+		local s_RawValue = p_RawValues[l_Item.Name]
+
+		if s_RawValue ~= nil then
+			local s_Valid, s_Value = self:ParseValue(l_Item, s_RawValue)
+
+			if not s_Valid then
+				s_Invalid[#s_Invalid + 1] = l_Item.Name
+				-- Keep the current value. A persisted save rewrites the whole table, so it is still written.
+				s_Value = Config[l_Item.Name]
+			elseif self:_HasChanged(Config[l_Item.Name], s_Value) then
+				s_Flags[l_Item.UpdateFlag] = true
+			end
+
+			self:Update(l_Item.Name, s_Value, not p_Persist, true)
+		end
+	end
+
+	if p_Persist then
+		m_Database:ExecuteBatch()
+	end
+
+	self:_RunUpdateFlags(s_Flags)
+
+	return s_Invalid
+end
+
+---Sets a single setting at runtime (RCON and console). The change is not persisted.
 ---@param p_Name string
 ---@param p_Value any
 ---@return boolean
 function SettingsManager:UpdateSetting(p_Name, p_Value)
-	local s_Valid = false
-	local s_UpdateClientWeapons = false
-	local s_UpdateFlag = UpdateFlag.None
-	local s_ConvertedValue = nil
-
-	for _, l_Item in pairs(SettingsDefinition.Elements) do
-		if l_Item.Name == p_Name then
-			if l_Item.Type == Type.Integer or l_Item.Type == Type.Float then
-				s_ConvertedValue = tonumber(p_Value)
-				local s_Reference = l_Item.Reference
-				---@cast s_Reference Range
-
-				-- Check for Range.
-				if s_Reference:GetMax() >= s_ConvertedValue and s_Reference:GetMin() <= s_ConvertedValue then
-					s_Valid = true
-				end
-			elseif l_Item.Type == Type.Boolean then
-				s_ConvertedValue = (p_Value == '1' or p_Value == "true")
-				s_Valid = true
-			elseif l_Item.Type == Type.Enum then
-				s_ConvertedValue = tonumber(p_Value)
-
-				if s_ConvertedValue == nil and type(p_Value) == 'string' then -- Check for enum-string.
-					if type(p_Value) == 'string' then
-						for l_Key, l_Value in pairs(l_Item.Reference) do
-							if string.find(p_Value, l_Key) ~= nil then
-								s_ConvertedValue = l_Value
-								s_Valid = true
-								break
-							end
-						end
-					end
-				else
-					for l_Key, l_Value in pairs(l_Item.Reference) do
-						if s_ConvertedValue == l_Value then
-							s_Valid = true
-							break
-						end
-					end
-				end
-			elseif l_Item.Type == Type.List then
-				if type(p_Value) == 'string' then
-					for l_Key, l_Value in pairs(l_Item.Reference) do
-						if string.find(p_Value, l_Key) ~= nil then
-							s_ConvertedValue = l_Value
-							s_Valid = true
-							break
-						end
-					end
-				end
-			elseif l_Item.Type == Type.DynamicList then
-				if type(p_Value) == 'string' then
-					local s_Reference = _G[l_Item.Reference]
-
-					for l_Key, l_Value in pairs(s_Reference) do
-						if string.find(p_Value, l_Key) ~= nil then
-							s_ConvertedValue = l_Value
-							s_Valid = true
-							break
-						end
-					end
-				end
-			end
-
-			s_UpdateFlag = l_Item.UpdateFlag
-			break
-		end
+	if self:GetDefinition(p_Name) == nil then
+		return false
 	end
 
-	if s_Valid then
-		self:Update(p_Name, s_ConvertedValue, true, false)
+	return #self:Apply({ [p_Name] = p_Value }, false) == 0
+end
 
-		if s_UpdateFlag == UpdateFlag.WeaponSets then
-			m_WeaponList:UpdateWeaponList()
-			s_UpdateClientWeapons = true
-		elseif s_UpdateFlag == UpdateFlag.YawPerSec then
-			Globals.YawPerFrame = m_BotManager:CalcYawPerFrame()
-		elseif s_UpdateFlag == UpdateFlag.AmountAndTeam then
-			Globals.SpawnMode = Config.SpawnMode
-			m_BotSpawner:UpdateBotAmountAndTeam()
-		elseif s_UpdateFlag == UpdateFlag.BotNames then
-			m_BotSpawner:UpdateBotNames()
-		end
+---@param p_Old any
+---@param p_New any
+---@return boolean
+function SettingsManager:_HasChanged(p_Old, p_New)
+	if type(p_Old) == 'number' and type(p_New) == 'number' then
+		return math.abs(p_Old - p_New) > 0.001
+	end
 
-		NetEvents:BroadcastLocal('WriteClientSettings', Config, s_UpdateClientWeapons)
-		return true
-	else
-		return false
+	return p_Old ~= p_New
+end
+
+---@param p_Flags table<UpdateFlag, boolean>
+function SettingsManager:_RunUpdateFlags(p_Flags)
+	if p_Flags[UpdateFlag.Language] then
+		m_Language:loadLanguage(Config.Language)
+		NetEvents:Broadcast('UI_Change_Language', Config.Language)
+	end
+
+	if p_Flags[UpdateFlag.WeaponSets] then
+		m_WeaponList:UpdateWeaponList()
+	end
+
+	if p_Flags[UpdateFlag.YawPerSec] then
+		Globals.YawPerFrame = m_BotManager:CalcYawPerFrame()
+	end
+
+	if p_Flags[UpdateFlag.MaxBots] then
+		g_FunBotServer:SetMaxBotsPerTeam(Globals.GameMode)
+	end
+
+	if p_Flags[UpdateFlag.BotNames] then
+		m_BotSpawner:UpdateBotNames()
+	end
+
+	NetEvents:BroadcastLocal('WriteClientSettings', Config, p_Flags[UpdateFlag.WeaponSets] == true)
+
+	if p_Flags[UpdateFlag.AmountAndTeam] then
+		Globals.SpawnMode = Config.SpawnMode
+		m_BotSpawner:UpdateBotAmountAndTeam()
 	end
 end
 

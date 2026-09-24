@@ -4,6 +4,8 @@ NodeEditor = class('NodeEditor')
 
 ---@type NodeCollection
 local m_NodeCollection = require('NodeCollection')
+---@type PermissionManager
+local m_PermissionManager = require('PermissionManager')
 ---@type Logger
 local m_Logger = Logger('NodeEditor', Debug.Server.NODEEDITOR)
 
@@ -36,42 +38,43 @@ function NodeEditor:RegisterCustomEvents()
 	-- Remove them?
 	-- NetEvents:Subscribe('UI_Request_Save_Settings', self, self.OnUIRequestSaveSettings)
 
-	-- EDIT-Events from Client.
-	NetEvents:Subscribe('NodeEditor:Select', self, self.OnSelect)
-	NetEvents:Subscribe('NodeEditor:Deselect', self, self.OnDeselect)
-	NetEvents:Subscribe('NodeEditor:SelectBetween', self, self.OnSelectBetween)
-	NetEvents:Subscribe('NodeEditor:SelectNext', self, self.OnSelectNext)
-	NetEvents:Subscribe('NodeEditor:SelectPrevious', self, self.OnSelectPrevious)
-	NetEvents:Subscribe('NodeEditor:ClearSelection', self, self.OnClearSelection)
-	NetEvents:Subscribe('NodeEditor:SetInputNode', self, self.OnSetInputNode)
-	NetEvents:Subscribe('NodeEditor:LinkNodes', self, self.OnLinkNodes)
-	NetEvents:Subscribe('NodeEditor:UnlinkNodes', self, self.OnUnlinkNodes)
-	NetEvents:Subscribe('NodeEditor:MergeNodes', self, self.OnMergeNodes)
-	NetEvents:Subscribe('NodeEditor:TeleportToEdge', self, self.OnTeleportToEdge)
-	NetEvents:Subscribe('NodeEditor:SplitNode', self, self.OnSplitNode)
-	NetEvents:Subscribe('NodeEditor:RemoveNode', self, self.OnRemoveNode)
+	-- EDIT-Events from Client. All of them require the waypoint-editor permission.
+	local s_Permission = 'UserInterface.WaypointEditor'
+	m_PermissionManager:SubscribeNetEvent('NodeEditor:Select', s_Permission, self, self.OnSelect)
+	m_PermissionManager:SubscribeNetEvent('NodeEditor:Deselect', s_Permission, self, self.OnDeselect)
+	m_PermissionManager:SubscribeNetEvent('NodeEditor:SelectBetween', s_Permission, self, self.OnSelectBetween)
+	m_PermissionManager:SubscribeNetEvent('NodeEditor:SelectNext', s_Permission, self, self.OnSelectNext)
+	m_PermissionManager:SubscribeNetEvent('NodeEditor:SelectPrevious', s_Permission, self, self.OnSelectPrevious)
+	m_PermissionManager:SubscribeNetEvent('NodeEditor:ClearSelection', s_Permission, self, self.OnClearSelection)
+	m_PermissionManager:SubscribeNetEvent('NodeEditor:SetInputNode', s_Permission, self, self.OnSetInputNode)
+	m_PermissionManager:SubscribeNetEvent('NodeEditor:LinkNodes', s_Permission, self, self.OnLinkNodes)
+	m_PermissionManager:SubscribeNetEvent('NodeEditor:UnlinkNodes', s_Permission, self, self.OnUnlinkNodes)
+	m_PermissionManager:SubscribeNetEvent('NodeEditor:MergeNodes', s_Permission, self, self.OnMergeNodes)
+	m_PermissionManager:SubscribeNetEvent('NodeEditor:TeleportToEdge', s_Permission, self, self.OnTeleportToEdge)
+	m_PermissionManager:SubscribeNetEvent('NodeEditor:SplitNode', s_Permission, self, self.OnSplitNode)
+	m_PermissionManager:SubscribeNetEvent('NodeEditor:RemoveNode', s_Permission, self, self.OnRemoveNode)
 
-	NetEvents:Subscribe('NodeEditor:AddMcom', self, self.OnAddMcom)
-	NetEvents:Subscribe('NodeEditor:AddVehicle', self, self.OnAddVehicle)
-	NetEvents:Subscribe('NodeEditor:ExitVehicle', self, self.OnExitVehicle)
-	NetEvents:Subscribe('NodeEditor:CustomAction', self, self.OnCustomAction)
-	NetEvents:Subscribe('NodeEditor:AddVehiclePath', self, self.OnAddVehiclePath)
-	NetEvents:Subscribe('NodeEditor:AddObjective', self, self.OnAddObjective)
-	NetEvents:Subscribe('NodeEditor:RemoveObjective', self, self.OnRemoveObjective)
-	NetEvents:Subscribe('NodeEditor:SetVehicleSpawn', self, self.OnSetVehicleSpawn)
-	NetEvents:Subscribe('NodeEditor:RemoveData', self, self.OnRemoveData)
+	m_PermissionManager:SubscribeNetEvent('NodeEditor:AddMcom', s_Permission, self, self.OnAddMcom)
+	m_PermissionManager:SubscribeNetEvent('NodeEditor:AddVehicle', s_Permission, self, self.OnAddVehicle)
+	m_PermissionManager:SubscribeNetEvent('NodeEditor:ExitVehicle', s_Permission, self, self.OnExitVehicle)
+	m_PermissionManager:SubscribeNetEvent('NodeEditor:CustomAction', s_Permission, self, self.OnCustomAction)
+	m_PermissionManager:SubscribeNetEvent('NodeEditor:AddVehiclePath', s_Permission, self, self.OnAddVehiclePath)
+	m_PermissionManager:SubscribeNetEvent('NodeEditor:AddObjective', s_Permission, self, self.OnAddObjective)
+	m_PermissionManager:SubscribeNetEvent('NodeEditor:RemoveObjective', s_Permission, self, self.OnRemoveObjective)
+	m_PermissionManager:SubscribeNetEvent('NodeEditor:SetVehicleSpawn', s_Permission, self, self.OnSetVehicleSpawn)
+	m_PermissionManager:SubscribeNetEvent('NodeEditor:RemoveData', s_Permission, self, self.OnRemoveData)
 
-	NetEvents:Subscribe('NodeEditor:RemoveAllObjectives', self, self.OnRemoveAllObjectives)
-	NetEvents:Subscribe('NodeEditor:SetPathLoops', self, self.OnSetLoopMode)
-	NetEvents:Subscribe('NodeEditor:AddSpawnPath', self, self.OnSetSpawnPath)
+	m_PermissionManager:SubscribeNetEvent('NodeEditor:RemoveAllObjectives', s_Permission, self, self.OnRemoveAllObjectives)
+	m_PermissionManager:SubscribeNetEvent('NodeEditor:SetPathLoops', s_Permission, self, self.OnSetLoopMode)
+	m_PermissionManager:SubscribeNetEvent('NodeEditor:AddSpawnPath', s_Permission, self, self.OnSetSpawnPath)
 
-	NetEvents:Subscribe('NodeEditor:SpawnBot', self, self.OnSpawnBot)
-	NetEvents:Subscribe('NodeEditor:UpdatePos', self, self.OnUpdatePos)
-	NetEvents:Subscribe('NodeEditor:AddNode', self, self.OnAddNode)
+	m_PermissionManager:SubscribeNetEvent('NodeEditor:SpawnBot', s_Permission, self, self.OnSpawnBot)
+	m_PermissionManager:SubscribeNetEvent('NodeEditor:UpdatePos', s_Permission, self, self.OnUpdatePos)
+	m_PermissionManager:SubscribeNetEvent('NodeEditor:AddNode', s_Permission, self, self.OnAddNode)
 
-	NetEvents:Subscribe('NodeEditor:JumpDetected', self, self.OnJumpDetected)
+	m_PermissionManager:SubscribeNetEvent('NodeEditor:JumpDetected', s_Permission, self, self.OnJumpDetected)
 
-	NetEvents:Subscribe('NodeEditor:RequestData', self, self.OnRequestData)
+	m_PermissionManager:SubscribeNetEvent('NodeEditor:RequestData', s_Permission, self, self.OnRequestData)
 
 
 	-- To-do: fill.
@@ -920,7 +923,7 @@ function NodeEditor:StartTrace(p_Player)
 	end
 	NetEvents:SendToLocal('ClientNodeEditor:ClearCustomTrace', p_Player)
 
-	self.m_CustomTrace[p_Player.onlineId] = NodeCollection(true)
+	self.m_CustomTrace[p_Player.onlineId] = NodeCollection()
 	self.m_CustomTraceTimer[p_Player.onlineId] = 0
 	self.m_JumpDetected[p_Player.onlineId] = 0
 	self.m_NodeWaitTimer[p_Player.onlineId] = 0

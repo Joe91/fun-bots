@@ -36,7 +36,7 @@ function Console:OnConsoleCommandRestore(p_Player, p_Args)
 	if PermissionManager:HasPermission(p_Player, 'UserInterface.Settings') == false then
 		s_Respone = "Missing Permissions"
 	else
-		m_SettingsManager:SaveAll()
+		m_SettingsManager:RestoreDefault()
 		s_Respone = "OK"
 	end
 
@@ -51,7 +51,7 @@ function Console:OnConsoleCommandSaveAll(p_Player, p_Args)
 	if PermissionManager:HasPermission(p_Player, 'UserInterface.Settings') == false then
 		s_Respone = "Missing Permissions"
 	else
-		m_SettingsManager:RestoreDefault()
+		m_SettingsManager:SaveAll()
 		s_Respone = "OK"
 	end
 

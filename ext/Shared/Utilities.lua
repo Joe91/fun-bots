@@ -16,7 +16,7 @@ function Utilities:getCameraPos(p_Player, p_IsTarget, p_AimForHead)
 	return Vec3(0.00, self:getTargetHeight(p_Player.soldier, p_IsTarget, p_AimForHead), 0.00)
 end
 
----@param p_Soldier Soldier
+---@param p_Soldier SoldierEntity
 ---@param p_IsTarget boolean
 ---@param p_AimForHead boolean
 ---@return number
@@ -78,6 +78,20 @@ function Utilities:DistanceFast(p_PosA, p_PosB)
 	return (math.abs(p_PosA.x - p_PosB.x) +
 		math.abs(p_PosA.y - p_PosB.y) +
 		math.abs(p_PosA.z - p_PosB.z))
+end
+
+---Pitch of a vehicle from the Euler angles of its rotation (x = yaw, y = roll, z = pitch).
+---The roll correction is clamped so the value stays finite while banking towards 90°.
+---@param p_Euler Vec3
+---@return number
+function Utilities:GetPitchFromEuler(p_Euler)
+	local s_CosRoll = math.cos(p_Euler.y)
+
+	if math.abs(s_CosRoll) < 0.2 then
+		s_CosRoll = s_CosRoll < 0 and -0.2 or 0.2
+	end
+
+	return -p_Euler.z / s_CosRoll
 end
 
 -- Do not use on numerically indexed tables, only tables with string keys.

@@ -77,6 +77,11 @@ function UIViews:execute(p_Script)
 	WebUI:ExecuteJS(p_Script)
 end
 
+-- Escape a string for use inside a single-quoted JS string literal.
+function UIViews:escape(p_Text)
+	return (tostring(p_Text):gsub('\\', '\\\\'):gsub('\'', '\\\''):gsub('\n', '\\n'):gsub('\r', '\\r'))
+end
+
 -- Change language.
 function UIViews:setLanguage(p_Name)
 	if p_Name ~= nil then
@@ -107,7 +112,7 @@ end
 
 -- Send an error to the specified view.
 function UIViews:error(p_Name, p_Text)
-	WebUI:ExecuteJS('BotEditor.error(\'' .. p_Name .. '\', \'' .. p_Text .. '\')')
+	WebUI:ExecuteJS('BotEditor.error(\'' .. p_Name .. '\', \'' .. self:escape(p_Text) .. '\')')
 end
 
 -- Handle WebUI when view-stack is empty.

@@ -11,6 +11,18 @@ local m_BotSpawner = require('BotSpawner')
 
 local m_CarParts
 
+-- Some commands use the caller's soldier; tell the caller instead of raising an error when they are dead.
+---@param p_Player Player
+---@return boolean
+local function _IsAlive(p_Player)
+	if p_Player.soldier == nil then
+		ChatManager:SendMessage('You need to be alive for this command.', p_Player)
+		return false
+	end
+
+	return true
+end
+
 function ChatCommands:Execute(p_Parts, p_Player)
 	if p_Player == nil or Config.DisableChatCommands == true then
 		return
@@ -28,6 +40,10 @@ function ChatCommands:Execute(p_Parts, p_Player)
 	elseif p_Parts[1] == '!weap' then
 		if PermissionManager:HasPermission(p_Player, 'ChatCommands') == false then
 			ChatManager:SendMessage('You have no permissions for this action (ChatCommands.KickAll).', p_Player)
+			return
+		end
+
+		if not _IsAlive(p_Player) then
 			return
 		end
 
@@ -243,6 +259,11 @@ function ChatCommands:Execute(p_Parts, p_Player)
 			end
 		end
 	elseif p_Parts[1] == '!dbg' then
+		if PermissionManager:HasPermission(p_Player, 'ChatCommands') == false then
+			ChatManager:SendMessage('You have no permissions for this action (ChatCommands).', p_Player)
+			return
+		end
+
 		local s_Index = tonumber(p_Parts[2]) or 1
 		if s_Index > 10 then
 			s_Index = 1
@@ -306,6 +327,10 @@ function ChatCommands:Execute(p_Parts, p_Player)
 			return
 		end
 
+		if not _IsAlive(p_Player) then
+			return
+		end
+
 		if tonumber(p_Parts[2]) == nil then
 			return
 		end
@@ -320,6 +345,10 @@ function ChatCommands:Execute(p_Parts, p_Player)
 			return
 		end
 
+		if not _IsAlive(p_Player) then
+			return
+		end
+
 		if tonumber(p_Parts[2]) == nil then
 			return
 		end
@@ -329,6 +358,10 @@ function ChatCommands:Execute(p_Parts, p_Player)
 	elseif p_Parts[1] == '!grid' then
 		if PermissionManager:HasPermission(p_Player, 'ChatCommands.Grid') == false then
 			ChatManager:SendMessage('You have no permissions for this action (ChatCommands.Grid).', p_Player)
+			return
+		end
+
+		if not _IsAlive(p_Player) then
 			return
 		end
 
@@ -377,7 +410,7 @@ function ChatCommands:Execute(p_Parts, p_Player)
 		local s_ActiveWayIndex = tonumber(p_Parts[3]) or 1
 		s_ActiveWayIndex = math.min(math.max(s_ActiveWayIndex, 1), m_NodeCollection:GetNrOfPaths())
 
-		m_BotSpawner:SpawnWayBots(p_Player, s_Amount, false, s_ActiveWayIndex)
+		m_BotSpawner:SpawnWayBots(s_Amount, false, s_ActiveWayIndex)
 	elseif p_Parts[1] == '!spawnbots' then
 		if PermissionManager:HasPermission(p_Player, 'ChatCommands.SpawnBots') == false then
 			ChatManager:SendMessage('You have no permissions for this action (ChatCommands.SpawnBots).', p_Player)
@@ -390,7 +423,7 @@ function ChatCommands:Execute(p_Parts, p_Player)
 
 		local s_Amount = tonumber(p_Parts[2])
 
-		m_BotSpawner:SpawnWayBots(p_Player, s_Amount, true)
+		m_BotSpawner:SpawnWayBots(s_Amount, true)
 		-- Respawn moving bots.
 	elseif p_Parts[1] == '!respawn' then
 		if PermissionManager:HasPermission(p_Player, 'ChatCommands.Respawn') == false then
@@ -431,8 +464,8 @@ function ChatCommands:Execute(p_Parts, p_Player)
 
 		local s_KitNumber = tonumber(p_Parts[2]) or 1
 
-		if s_KitNumber <= 4 and s_KitNumber >= 0 then
-			Config.BotKit = BotKits[s_KitNumber]
+		if s_KitNumber < BotKits.Count and s_KitNumber >= 0 then
+			Config.BotKit = s_KitNumber
 		end
 	elseif p_Parts[1] == '!setbotcolor' then
 		if PermissionManager:HasPermission(p_Player, 'ChatCommands.SetBotColor') == false then
@@ -442,8 +475,8 @@ function ChatCommands:Execute(p_Parts, p_Player)
 
 		local s_BotColor = tonumber(p_Parts[2]) or 1
 
-		if s_BotColor <= #BotColors and s_BotColor >= 0 then
-			Config.BotColor = BotColors[s_BotColor]
+		if s_BotColor < BotColors.Count and s_BotColor >= 0 then
+			Config.BotColor = s_BotColor
 		end
 	elseif p_Parts[1] == '!setaim' then
 		if PermissionManager:HasPermission(p_Player, 'ChatCommands.SetAim') == false then
@@ -483,7 +516,7 @@ function ChatCommands:Execute(p_Parts, p_Player)
 		end
 
 		m_BotManager:SetOptionForAll('shoot', false)
-		m_BotManager:SetOptionForAll('respawning', false)
+		m_BotManager:SetOptionForAll('respawn', false)
 		m_BotManager:SetOptionForAll('moveMode', 0)
 	elseif p_Parts[1] == '!stop' then
 		if PermissionManager:HasPermission(p_Player, 'ChatCommands.Stop') == false then
@@ -492,9 +525,9 @@ function ChatCommands:Execute(p_Parts, p_Player)
 		end
 
 		m_BotManager:SetOptionForPlayer(p_Player, 'shoot', false)
-		m_BotManager:SetOptionForPlayer(p_Player, 'respawning', false)
+		m_BotManager:SetOptionForPlayer(p_Player, 'respawn', false)
 		m_BotManager:SetOptionForPlayer(p_Player, 'moveMode', 0)
-	elseif p_Parts[1] == '!kickp_Player' then
+	elseif p_Parts[1] == '!kickplayer' then
 		if PermissionManager:HasPermission(p_Player, 'ChatCommands.KickPlayer') == false then
 			ChatManager:SendMessage('You have no permissions for this action (ChatCommands.KickPlayer).', p_Player)
 			return
@@ -579,6 +612,10 @@ function ChatCommands:Execute(p_Parts, p_Player)
 	elseif p_Parts[1] == '!printtrans' then
 		if PermissionManager:HasPermission(p_Player, 'ChatCommands.PrintTransform') == false then
 			ChatManager:SendMessage('You have no permissions for this action (ChatCommands.PrintTransform).', p_Player)
+			return
+		end
+
+		if not _IsAlive(p_Player) then
 			return
 		end
 

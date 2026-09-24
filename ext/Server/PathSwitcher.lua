@@ -151,7 +151,7 @@ function PathSwitcher:GetNewPath(p_Bot, p_BotId, p_Point, p_Objective, p_InVehic
 
 			-- Check for beacon
 			if m_GameDirector:IsBeaconPath(s_PathNode.Data.Objectives[1]) then
-				if p_Bot.m_SecondaryGadget.type == WeaponTypes.Beacon
+				if p_Bot.m_SecondaryGadget ~= nil and p_Bot.m_SecondaryGadget.type == WeaponTypes.Beacon
 					and not p_Bot.m_HasBeacon
 					and m_Utilities:CheckProbability(Registry.BOT.PROBABILITY_SWITCH_TO_BEACON_PATH)
 				then
@@ -231,12 +231,14 @@ function PathSwitcher:GetNewPath(p_Bot, p_BotId, p_Point, p_Objective, p_InVehic
 		end
 
 
-		if s_Priority > s_HighestPriority then
-			s_HighestPriority = s_Priority
-		end
-
 		-- evalute and insert to target path
 		if s_CurrentPathStatus <= s_NewPathStatus and s_CurrentPriority <= s_Priority and (not s_NewBasePath or (s_OnBasePath and s_CountOld == 1) or s_Priority == 5) then
+			-- Only valid paths count for the highest priority, so a filtered-out link
+			-- can't hide a valid path with a higher priority than the current one.
+			if s_Priority > s_HighestPriority then
+				s_HighestPriority = s_Priority
+			end
+
 			table.insert(s_ValidPaths, {
 				Priority = s_Priority,
 				Point = s_NewPoint,

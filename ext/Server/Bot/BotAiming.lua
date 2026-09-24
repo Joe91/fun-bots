@@ -183,20 +183,27 @@ local function _DefaultAimingAction(p_Bot)
 	end
 
 	local s_ActiveWeaponType = p_Bot.m_ActiveWeapon.type
+	local s_ShootPlayer = p_Bot._ShootPlayer
+	---@cast s_ShootPlayer -nil
+	local s_TargetSoldier = s_ShootPlayer.soldier
+	local s_BotSoldier = p_Bot.m_Player.soldier
+	-- Both soldiers are checked by the guard above / in Bot:UpdateAiming.
+	---@cast s_TargetSoldier -nil
+	---@cast s_BotSoldier -nil
+	-- Read once: every engine property access crosses into C++ and allocates a new Vec3.
+	local s_BotTrans = s_BotSoldier.worldTransform.trans
 
 	-- Interpolate target-player movement.
 	local s_TargetMovement = Vec3.zero
 	local s_PitchCorrection = 0.0
 	local s_FullPositionTarget = nil
-	local s_FullPositionBot = nil
-
-	s_FullPositionBot = p_Bot.m_Player.soldier.worldTransform.trans:Clone() + m_Utilities:getCameraPos(p_Bot.m_Player, false, false)
+	local s_FullPositionBot = Vec3(s_BotTrans.x, s_BotTrans.y + m_Utilities:getTargetHeight(s_BotSoldier, false, false), s_BotTrans.z)
 
 	if p_Bot._ShootPlayerVehicleType == VehicleTypes.MavBot or p_Bot._ShootPlayerVehicleType == VehicleTypes.MobileArtillery then
-		s_FullPositionTarget = p_Bot._ShootPlayer.controlledControllable.transform.trans:Clone()
+		---@diagnostic disable-next-line: need-check-nil
+		s_FullPositionTarget = s_ShootPlayer.controlledControllable.transform.trans
 	else
 		local s_AimForHead = false
-		local s_AdditionalOffset = Vec3.zero
 
 		if s_ActiveWeaponType == WeaponTypes.Sniper then
 			s_AimForHead = Config.AimForHeadSniper
@@ -206,14 +213,15 @@ local function _DefaultAimingAction(p_Bot)
 			s_AimForHead = Config.AimForHead
 		end
 
-		s_FullPositionTarget = p_Bot._ShootPlayer.soldier.worldTransform.trans:Clone()
-		s_FullPositionTarget = s_FullPositionTarget + m_Utilities:getCameraPos(p_Bot._ShootPlayer, true, s_AimForHead) + s_AdditionalOffset
+		local s_TargetTrans = s_TargetSoldier.worldTransform.trans
+		s_FullPositionTarget = Vec3(s_TargetTrans.x, s_TargetTrans.y + m_Utilities:getTargetHeight(s_TargetSoldier, true, s_AimForHead), s_TargetTrans.z)
 	end
 
 	if p_Bot._ShootPlayerVehicleType == VehicleTypes.NoVehicle then
-		s_TargetMovement = p_Bot._ShootPlayer.soldier.velocity:Clone()
+		s_TargetMovement = s_TargetSoldier.velocity
 	else
-		s_TargetMovement = p_Bot._ShootPlayer.controlledControllable.velocity:Clone()
+		---@diagnostic disable-next-line: need-check-nil
+		s_TargetMovement = s_ShootPlayer.controlledControllable.velocity
 	end
 
 	-- Calculate how long the distance is → time to travel.
@@ -247,10 +255,11 @@ local function _DefaultAimingAction(p_Bot)
 
 	-- Calculate yaw and pitch.
 	if p_Bot.m_KnifeMode and #p_Bot._KnifeWayPositions > 0 then
-		s_DifferenceZ = p_Bot._KnifeWayPositions[1].z - p_Bot.m_Player.soldier.worldTransform.trans.z
-		s_DifferenceX = p_Bot._KnifeWayPositions[1].x - p_Bot.m_Player.soldier.worldTransform.trans.x
+		local s_KnifeWayPosition = p_Bot._KnifeWayPositions[1]
+		s_DifferenceZ = s_KnifeWayPosition.z - s_BotTrans.z
+		s_DifferenceX = s_KnifeWayPosition.x - s_BotTrans.x
 
-		if p_Bot.m_Player.soldier.worldTransform.trans:Distance(p_Bot._KnifeWayPositions[1]) < 1.5 then
+		if s_BotTrans:Distance(s_KnifeWayPosition) < 1.5 then
 			table.remove(p_Bot._KnifeWayPositions, 1)
 		end
 	else

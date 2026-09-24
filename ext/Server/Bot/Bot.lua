@@ -97,6 +97,7 @@ function Bot:__init(p_Player)
 	self._SpawnDelayTimer = 0.0
 	self._WayWaitTimer = 0.0
 	self._VehicleWaitTimer = 0.0
+	self._VehicleLookAroundTimer = 0.0
 	self._VehicleSeatTimer = 0.0
 	self._VehicleTakeoffTimer = 0.0
 	self._WayWaitYawTimer = 0.0
@@ -155,6 +156,7 @@ function Bot:__init(p_Player)
 	self._PathIndex = 0
 	self._LastWayDistance = 1000.0
 	self._LastActionId = -1
+	self._StuckRerouteCount = 0
 	self._InvertPathDirection = false
 	self._ExitVehicleActive = false
 	self._ObstacleRetryCounter = 0
@@ -403,29 +405,35 @@ function Bot:_CheckShouldExitVehicleIfPassenger(p_VehicleEntity, p_OnVehicle)
 		return
 	end
 
-	local s_ShouldExit = false
 	local s_ExitDistance = Registry.BOT.PASSENGER_EXIT_DISTANCE
+	local s_ExitDistanceSquared = s_ExitDistance * s_ExitDistance
+	local s_CurrentPosition = self.m_Player.soldier.worldTransform.trans
+	local s_CurrentX = s_CurrentPosition.x
+	local s_CurrentZ = s_CurrentPosition.z
+
+	-- Horizontal (x/z) distance only, compared squared to avoid allocations and sqrt.
+	local function _IsInExitRange(p_Position)
+		local s_DeltaX = p_Position.x - s_CurrentX
+		local s_DeltaZ = p_Position.z - s_CurrentZ
+		return (s_DeltaX * s_DeltaX + s_DeltaZ * s_DeltaZ) < s_ExitDistanceSquared
+	end
+
+	local s_ShouldExit = false
 	local s_AllCapturePoints = g_GameDirector:GetAllCapturePoints()
-	local s_ActiveMcoms = g_GameDirector:GetActiveMcomPositions()
-	local s_CurrentPosition = self.m_Player.soldier.worldTransform.trans:Clone()
-	s_CurrentPosition.y = 0
-
-	local s_Coordinates = {}
 	for l_Index = 1, #s_AllCapturePoints do
-		s_Coordinates[#s_Coordinates + 1] = s_AllCapturePoints[l_Index].transform.trans:Clone()
-	end
-	for l_Index = 1, #s_ActiveMcoms do
-		s_Coordinates[#s_Coordinates + 1] = s_ActiveMcoms[l_Index]
-	end
-
-	for l_Index = 1, #s_Coordinates do
-		local l_Coord = s_Coordinates[l_Index]
-		local s_Position = l_Coord:Clone()
-		s_Position.y = 0
-
-		if s_Position:Distance(s_CurrentPosition) < s_ExitDistance then
+		if _IsInExitRange(s_AllCapturePoints[l_Index].transform.trans) then
 			s_ShouldExit = true
 			break
+		end
+	end
+
+	if not s_ShouldExit then
+		local s_ActiveMcoms = g_GameDirector:GetActiveMcomPositions()
+		for l_Index = 1, #s_ActiveMcoms do
+			if _IsInExitRange(s_ActiveMcoms[l_Index]) then
+				s_ShouldExit = true
+				break
+			end
 		end
 	end
 
@@ -443,6 +451,11 @@ function Bot:ClearPlayer(p_Player)
 
 	if self._TargetPlayer == p_Player then
 		self._TargetPlayer = nil
+	end
+
+	if self._FollowTargetPlayer == p_Player then
+		self._FollowTargetPlayer = nil
+		self._FollowWayPoints = {}
 	end
 
 	local s_CurrentShootPlayer = PlayerManager:GetPlayerById(self._ShootPlayerId)
@@ -493,19 +506,19 @@ function Bot:_UpdateLookAroundPassenger(p_DeltaTime)
 	self._TargetYaw = (s_AtanDzDx > math.pi / 2) and (s_AtanDzDx - math.pi / 2) or (s_AtanDzDx + 3 * math.pi / 2)
 	self._TargetPitch = 0.0
 
-	self._VehicleWaitTimer = self._VehicleWaitTimer + p_DeltaTime
+	self._VehicleLookAroundTimer = self._VehicleLookAroundTimer + p_DeltaTime
 
-	if self._VehicleWaitTimer > 9.0 then
-		self._VehicleWaitTimer = 0.0
-	elseif self._VehicleWaitTimer >= 6.0 then
-	elseif self._VehicleWaitTimer >= 3.0 then
+	if self._VehicleLookAroundTimer > 9.0 then
+		self._VehicleLookAroundTimer = 0.0
+	elseif self._VehicleLookAroundTimer >= 6.0 then
+	elseif self._VehicleLookAroundTimer >= 3.0 then
 		self._TargetYaw = self._TargetYaw - 1.0 -- 60° rotation left.
 		self._TargetPitch = 0.2
 
 		if self._TargetYaw < 0.0 then
 			self._TargetYaw = self._TargetYaw + (2 * math.pi)
 		end
-	elseif self._VehicleWaitTimer >= 0.0 then
+	elseif self._VehicleLookAroundTimer >= 0.0 then
 		self._TargetYaw = self._TargetYaw + 1.0 -- 60° rotation right.
 		self._TargetPitch = -0.2
 
@@ -529,17 +542,28 @@ function Bot:_UpdateInputs(p_DeltaTime)
 		end
 	end
 
-	for l_Index = 1, #self.m_DelayedInputs do
-		local l_DelayedInput = self.m_DelayedInputs[l_Index]
+	-- Apply every expired delayed input in insertion order and keep the rest, compacting the list in place.
+	local s_DelayedInputs = self.m_DelayedInputs
+	local s_Count = #s_DelayedInputs
+	local s_Remaining = 0
+
+	for l_Index = 1, s_Count do
+		local l_DelayedInput = s_DelayedInputs[l_Index]
 		l_DelayedInput.delay = l_DelayedInput.delay - p_DeltaTime
+
 		if l_DelayedInput.delay <= 0 then
 			self.m_ActiveInputs[l_DelayedInput.input] = {
 				value = l_DelayedInput.value,
 				reset = l_DelayedInput.value == 0,
 			}
-			table.remove(self.m_DelayedInputs, l_Index)
-			break
+		else
+			s_Remaining = s_Remaining + 1
+			s_DelayedInputs[s_Remaining] = l_DelayedInput
 		end
+	end
+
+	for l_Index = s_Count, s_Remaining + 1, -1 do
+		s_DelayedInputs[l_Index] = nil
 	end
 end
 

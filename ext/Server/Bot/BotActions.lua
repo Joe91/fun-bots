@@ -16,6 +16,9 @@ function Bot:Revive(p_Player)
 	-- These gamemodes don't allow revives.
 	if Globals.IsGm or Globals.IsScavenger then return end
 
+	-- Only revive teammates. The request comes from a client raycast report.
+	if p_Player.teamId ~= self.m_Player.teamId then return end
+
 	-- The player to revive is not revivable. Could be already alive or dead.
 	if not p_Player.corpse or p_Player.corpse.isDead then return end
 
@@ -321,10 +324,13 @@ function Bot:_EnterVehicleEntity(p_Entity, p_PlayerIsDriver)
 
 	for l_IndexOfSeat = 0, s_MaxEntries - 1 do
 		local s_SeatIndex = l_IndexOfSeat
+		local s_SeatReserved = false
 		if s_VehicleData.Type == VehicleTypes.Gunship then
 			s_SeatIndex = s_SeatIndex + 1
+			s_SeatReserved = g_GameDirector:IsGunshipEntryReserved(s_SeatIndex)
 		end
-		if p_Entity:GetPlayerInEntry(s_SeatIndex) == nil or Globals.IsAirSuperiority or (Globals.MapHasDynamiJetSpawns and m_Vehicles:IsVehicleType(s_VehicleData, VehicleTypes.Plane)) then -- already in this seat in air superiority
+		-- A reserved seat is kept free for a player.
+		if not s_SeatReserved and (p_Entity:GetPlayerInEntry(s_SeatIndex) == nil or Globals.IsAirSuperiority or (Globals.MapHasDynamiJetSpawns and m_Vehicles:IsVehicleType(s_VehicleData, VehicleTypes.Plane))) then -- already in this seat in air superiority
 			self.m_Player:EnterVehicle(p_Entity, s_SeatIndex)
 			self._ExitVehicleHealth = PhysicsEntity(p_Entity).internalHealth * (Registry.VEHICLES.VEHICLE_EXIT_HEALTH / 100.0)
 			-- Get ID.

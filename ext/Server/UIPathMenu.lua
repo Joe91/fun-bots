@@ -12,6 +12,8 @@ Language = require('__shared/Language')
 local m_NodeCollection = require('NodeCollection')
 -- @type NodeEditor
 local m_NodeEditor = require('NodeEditor')
+---@type PermissionManager
+local m_PermissionManager = require('PermissionManager')
 
 function FunBotUIPathMenu:__init()
 	-- To-do: remove? Unused.
@@ -19,10 +21,11 @@ function FunBotUIPathMenu:__init()
 	self.m_InPathMenu = false
 
 	if Config.DisableUserInterface ~= true then
-		NetEvents:Subscribe('PathMenu:Request', self, self._OnPathMenuRequest)
-		NetEvents:Subscribe('PathMenu:Open', self, self._OnPathMenuOpen)
+		-- The path menu edits waypoint data. Hiding and closing it is always allowed.
+		m_PermissionManager:SubscribeNetEvent('PathMenu:Request', 'UserInterface.WaypointEditor', self, self._OnPathMenuRequest)
+		m_PermissionManager:SubscribeNetEvent('PathMenu:Open', 'UserInterface.WaypointEditor', self, self._OnPathMenuOpen)
 		NetEvents:Subscribe('PathMenu:Hide', self, self._OnPathMenuHide)
-		NetEvents:Subscribe('PathMenu:Unhide', self, self._OnPathMenuUnhide)
+		m_PermissionManager:SubscribeNetEvent('PathMenu:Unhide', 'UserInterface.WaypointEditor', self, self._OnPathMenuUnhide)
 		NetEvents:Subscribe('PathMenu:Close', self, self._OnPathMenuClose)
 	end
 end

@@ -39,7 +39,8 @@ function VehicleJetControl:UpdateMovementJet(p_DeltaTime, p_Bot)
 		end
 	end
 
-	local s_TargetPosition = g_GameDirector:GetActiveTargetPointPosition(p_Bot.m_Player.teamId):Clone()
+	local s_TargetPosition = g_GameDirector:GetActiveTargetPointPosition(p_Bot.m_Player.teamId,
+		p_Bot.m_Player.controlledControllable and p_Bot.m_Player.controlledControllable.transform.trans):Clone()
 	if Globals.IsAirSuperiority then
 		s_TargetPosition.y = s_TargetPosition.y + 0 -- no offset
 	else

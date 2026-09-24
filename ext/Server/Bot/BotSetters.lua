@@ -174,6 +174,7 @@ function Bot:ResetSpawnVars()
 	self._SpawnDelayTimer = 0.0
 	self._WayWaitTimer = 0.0
 	self._VehicleWaitTimer = 0.0
+	self._VehicleLookAroundTimer = 0.0
 	self._VehicleSeatTimer = 0.0
 	self._VehicleTakeoffTimer = 0.0
 	self._WayWaitYawTimer = 0.0
@@ -197,6 +198,7 @@ function Bot:ResetSpawnVars()
 	self._DeployTimer = MathUtils:GetRandomInt(1, Config.DeployCycle)
 
 	self._ObstacleRetryCounter = 0
+	self._StuckRerouteCount = 0
 	self._LastWayDistance = 1000.0
 	self._LastActionId = -1
 	self._ShootPlayer = nil

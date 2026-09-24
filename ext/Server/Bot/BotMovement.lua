@@ -15,6 +15,7 @@ local flags = RayCastFlags.DontCheckWater |
 -- >>> SMART PATH OFFSET (with zig-zag and stairs fixes)
 function Bot:ApplyPathOffset(p_OriginalPoint, p_NextPoint, p_NextToNextPoint)
 	-- PRIORITY 1: Recovery mode - disable offset
+	-- m_OffsetRecoveryNodes counts update cycles (one per call), not nodes.
 	if self.m_PathSide ~= 0 and self.m_OffsetRecoveryNodes and self.m_OffsetRecoveryNodes > 0 then
 		self.m_OffsetRecoveryNodes = self.m_OffsetRecoveryNodes - 1
 		-- if self.m_OffsetRecoveryNodes == 0 then - Stay on one side of one path
@@ -67,8 +68,8 @@ function Bot:ApplyPathOffset(p_OriginalPoint, p_NextPoint, p_NextToNextPoint)
 	local dir = Vec3(delta.x / length2D, 0, delta.z / length2D)
 	local right = Vec3(dir.z, 0, -dir.x)
 
-	-- Calculate delta and direction for NextNode
-	local deltaNext = p_NextPoint.Position - p_OriginalPoint.Position
+	-- Calculate delta and direction for NextNode (the segment after it, so corners are offset correctly)
+	local deltaNext = p_NextToNextPoint.Position - p_NextPoint.Position
 	local length2DNext = math.sqrt(deltaNext.x * deltaNext.x + deltaNext.z * deltaNext.z)
 	if length2DNext < 0.01 then
 		return p_OriginalPoint, p_NextPoint
@@ -82,7 +83,7 @@ function Bot:ApplyPathOffset(p_OriginalPoint, p_NextPoint, p_NextToNextPoint)
 	-- >>> FIX 2: stairs/passages vertical → center
 	local verticalDelta = math.abs(p_NextPoint.Position.y - p_OriginalPoint.Position.y)
 	if verticalDelta > 0.35 then
-		self.m_OffsetRecoveryNodes = 15 -- force center for 10 cycles
+		self.m_OffsetRecoveryNodes = 15 -- force center for 15 cycles
 		return p_OriginalPoint, p_NextPoint
 	end
 
@@ -104,7 +105,7 @@ function Bot:ApplyPathOffset(p_OriginalPoint, p_NextPoint, p_NextToNextPoint)
 	-- 	-- offsetPosition = p_OriginalPoint.Position + right * (self.m_PathSide * comfortableDistance)
 	-- 	-- offsetPositionNext = p_NextPoint.Position + right * (self.m_PathSide * comfortableDistance)
 
-	-- 	self.m_OffsetRecoveryNodes = 5 -- force center for 3 nodes
+	-- 	self.m_OffsetRecoveryNodes = 5 -- force center for 5 cycles
 	-- 	return p_OriginalPoint, p_NextPoint
 	-- end
 
@@ -136,19 +137,17 @@ function Bot:_ExecuteActionIfNeeded(p_Point, p_DeltaTime)
 						local s_Node = g_GameDirector:FindClosestPath(s_Position, true, false, self.m_ActiveVehicle.Terrain)
 
 						if s_Node ~= nil then
-							-- Switch to vehicle.
-							p_Point = s_Node
+							-- Switch to the vehicle path. The next update picks up the new point.
 							self._InvertPathDirection = false
 							self._PathIndex = s_Node.PathIndex
 							self._CurrentWayPoint = s_Node.PointIndex
-							p_NextPoint = m_NodeCollection:Get(self:_GetWayIndex(1), self._PathIndex)
 							self._LastWayDistance = 1000.0
 						end
 					end
 				end
 				self:_ResetActionFlag(BotActionFlags.OtherActionActive)
 			elseif p_Point.Data.Action.type == "beacon"
-				and self.m_SecondaryGadget.type == WeaponTypes.Beacon
+				and self.m_SecondaryGadget ~= nil and self.m_SecondaryGadget.type == WeaponTypes.Beacon
 				and not self.m_HasBeacon
 			then
 				self._WeaponToUse = BotWeapons.Gadget2
@@ -185,6 +184,7 @@ function Bot:_ExecuteActionIfNeeded(p_Point, p_DeltaTime)
 	end
 end
 
+---@return boolean true if defending took over the movement this tick
 function Bot:_HandleDefendingIfNeeded(p_DeltaTime)
 	if self._ObjectiveMode == BotObjectiveModes.Defend and g_GameDirector:IsAtTargetObjective(self._PathIndex, self._Objective) then
 		self._DefendTimer = self._DefendTimer + p_DeltaTime
@@ -213,19 +213,21 @@ function Bot:_HandleDefendingIfNeeded(p_DeltaTime)
 
 			-- TODO: look at target
 			-- don't do anything else
-			return
+			return true
 		elseif self._DefendTimer >= (s_TargetTime - 2) then
 			self.m_ActiveSpeedValue = BotMoveSpeeds.Backwards
 			local s_StrafeValue = 1.0
-			if self.m_Id % 2 then
+			if self.m_Id % 2 == 0 then
 				s_StrafeValue = -1.0
 			end
 			self:_SetInput(EntryInputActionEnum.EIAStrafe, s_StrafeValue)
-			return
+			return true
 		end
 	else
 		self._DefendTimer = 0.0
 	end
+
+	return false
 end
 
 function Bot:_ApplyReactionAction(p_DeltaTime)
@@ -378,8 +380,10 @@ function Bot:_ObstacleHandling(p_Velocity, p_DistanceSquared, p_HeightDistance, 
 				end
 
 				if (Globals.IsConquest or Globals.IsRush) then
-					if g_GameDirector:IsOnObjectivePath(self._PathIndex) then
-						self._InvertPathDirection = m_Utilities:CheckProbability(Registry.BOT.PROBABILITY_CHANGE_DIRECTION_IF_STUCK)
+					if g_GameDirector:IsOnObjectivePath(self._PathIndex)
+						and m_Utilities:CheckProbability(Registry.BOT.PROBABILITY_CHANGE_DIRECTION_IF_STUCK)
+					then
+						self._InvertPathDirection = not self._InvertPathDirection
 					end
 				end
 			end
@@ -529,16 +533,19 @@ function Bot:UpdateNormalMovement(p_DeltaTime)
 			if s_Point == nil then
 				return
 			end
-			local s_ClosestDistance = self.m_Player.soldier.worldTransform.trans:Distance(s_Point.Position)
+			local s_SoldierPos = self.m_Player.soldier.worldTransform.trans
+			local s_ClosestDistance = s_SoldierPos:Distance(s_Point.Position)
 			local s_ClosestNode = s_ActivePointIndex
-			for i = 1, Registry.BOT.NUMBER_NODES_TO_SCAN_AFTER_ATTACK, 2 do
-				s_Point = m_NodeCollection:Get(s_ActivePointIndex - i, self._PathIndex)
-				if s_Point and self.m_Player.soldier.worldTransform.trans:Distance(s_Point.Position) < s_ClosestDistance then
-					s_ClosestNode = s_ActivePointIndex - i
-				end
-				s_Point = m_NodeCollection:Get(s_ActivePointIndex + i, self._PathIndex)
-				if s_Point and self.m_Player.soldier.worldTransform.trans:Distance(s_Point.Position) < s_ClosestDistance then
-					s_ClosestNode = s_ActivePointIndex + i
+			for i = 1, Registry.BOT.NUMBER_NODES_TO_SCAN_AFTER_ATTACK do
+				for _, l_Index in ipairs({ s_ActivePointIndex - i, s_ActivePointIndex + i }) do
+					s_Point = m_NodeCollection:Get(l_Index, self._PathIndex)
+					if s_Point then
+						local s_Distance = s_SoldierPos:Distance(s_Point.Position)
+						if s_Distance < s_ClosestDistance then
+							s_ClosestDistance = s_Distance
+							s_ClosestNode = l_Index
+						end
+					end
 				end
 			end
 			if s_ClosestDistance < 5.0 then
@@ -569,7 +576,9 @@ function Bot:UpdateNormalMovement(p_DeltaTime)
 			s_Point, s_NextPoint = self:ApplyPathOffset(s_Point, s_NextPoint, s_NextToNextPoint)
 		end
 
-		self:_HandleDefendingIfNeeded(p_DeltaTime)
+		if self:_HandleDefendingIfNeeded(p_DeltaTime) then
+			return -- DON'T DO ANYTHING ELSE.
+		end
 		self:_ExecuteActionIfNeeded(s_Point, p_DeltaTime)
 		-- return if action executed
 		if self._ActiveAction == BotActionFlags.OtherActionActive then
@@ -623,18 +632,30 @@ function Bot:UpdateNormalMovement(p_DeltaTime)
 
 			-- >>> OFFSET-AWARE STUCK RECOVERY (improved)
 			-- >>> PATCH: Hard reroute when stuck
-			if self._StuckTimer > 6.0 then
+			-- Only a limited number of times: after that the stuck timer keeps running,
+			-- so _ObstacleHandling kills the bot at 15 s.
+			if self._StuckTimer > 6.0 and self._StuckRerouteCount < Registry.BOT.MAX_STUCK_REROUTES then
 				local soldier = self.m_Player.soldier
 				if soldier ~= nil then
 					local s_Node = g_GameDirector:FindClosestPath(soldier.worldTransform.trans:Clone(), false, true, nil)
 					if s_Node ~= nil then
-						self._InvertPathDirection = false
 						self._PathIndex = s_Node.PathIndex
 						self._CurrentWayPoint = s_Node.PointIndex
+
+						-- Keep heading for the objective on the new path.
+						if self._Objective ~= '' then
+							local s_Direction = m_NodeCollection:ObjectiveDirection(s_Node, self._Objective, false)
+							if s_Direction then
+								self._InvertPathDirection = (s_Direction == 'Previous')
+							end
+						end
 					end
 
-					self.m_OffsetRecoveryNodes = 25 -- lock center for a while
+					self._StuckRerouteCount = self._StuckRerouteCount + 1
+					self.m_OffsetRecoveryNodes = 25 -- lock center for 25 cycles
 					self._StuckTimer = 0.0
+					self._ObstacleSequenceTimer = 0.0
+					self._LastWayDistance = 1000.0
 					return
 				end
 			end
@@ -666,6 +687,7 @@ function Bot:UpdateNormalMovement(p_DeltaTime)
 			if self:_IsTargetDistanceReached(s_DistanceFromTargetSquared, s_HeightDistance) then
 				if not s_NoStuckReset then
 					self._StuckTimer = 0.0
+					self._StuckRerouteCount = 0
 				end
 
 				if s_PointIncrement > 0 then
@@ -847,6 +869,7 @@ function Bot:UpdateNormalMovement(p_DeltaTime)
 			if self:_IsTargetDistanceReached(s_DistanceFromTargetSquared, s_HeightDistance) then
 				if not s_NoStuckReset then
 					self._StuckTimer = 0.0
+					self._StuckRerouteCount = 0
 				end
 
 				self._OnSwitch = false
@@ -1115,8 +1138,12 @@ function Bot:LookAround(p_DeltaTime)
 end
 
 function Bot:UpdateYaw()
-	local s_DeltaYaw = 0
-	s_DeltaYaw = self.m_Player.input.authoritativeAimingYaw - self._TargetYaw
+	-- Runs every tick for every bot: cache the input userdata, each access crosses into the engine.
+	local s_Input = self.m_Player.input
+	---@cast s_Input -nil
+	local s_CurrentYaw = s_Input.authoritativeAimingYaw
+	local s_TargetYaw = self._TargetYaw
+	local s_DeltaYaw = s_CurrentYaw - s_TargetYaw
 
 	if s_DeltaYaw > math.pi then
 		s_DeltaYaw = s_DeltaYaw - 2 * math.pi
@@ -1124,12 +1151,11 @@ function Bot:UpdateYaw()
 		s_DeltaYaw = s_DeltaYaw + 2 * math.pi
 	end
 
-	local s_AbsDeltaYaw = math.abs(s_DeltaYaw)
 	local s_Increment = Globals.YawPerFrame
 
-	if s_AbsDeltaYaw < s_Increment then
-		self.m_Player.input.authoritativeAimingYaw = self._TargetYaw
-		self.m_Player.input.authoritativeAimingPitch = self._TargetPitch
+	if math.abs(s_DeltaYaw) < s_Increment then
+		s_Input.authoritativeAimingYaw = s_TargetYaw
+		s_Input.authoritativeAimingPitch = self._TargetPitch
 		return
 	end
 
@@ -1137,7 +1163,7 @@ function Bot:UpdateYaw()
 		s_Increment = -s_Increment
 	end
 
-	local s_TempYaw = self.m_Player.input.authoritativeAimingYaw + s_Increment
+	local s_TempYaw = s_CurrentYaw + s_Increment
 
 	if s_TempYaw >= (math.pi * 2) then
 		s_TempYaw = s_TempYaw - (math.pi * 2)
@@ -1145,8 +1171,8 @@ function Bot:UpdateYaw()
 		s_TempYaw = s_TempYaw + (math.pi * 2)
 	end
 
-	self.m_Player.input.authoritativeAimingYaw = s_TempYaw
-	self.m_Player.input.authoritativeAimingPitch = self._TargetPitch
+	s_Input.authoritativeAimingYaw = s_TempYaw
+	s_Input.authoritativeAimingPitch = self._TargetPitch
 end
 
 function Bot:UpdateStaticMovement()

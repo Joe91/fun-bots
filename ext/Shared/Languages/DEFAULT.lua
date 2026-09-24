@@ -1,4 +1,4 @@
-local code = 'xx_XX' -- Add/replace the xx_XX here with your language code (like de_DE, en_US, or other)!
+local code = 'xx_XX' -- Add/replace the xx_XX here with your language code (like de_DE, en_EN, or other)!
 
 -- GENERAL
 Language:add(code, "Bot Weapon", "")
@@ -355,6 +355,7 @@ Language:add(code, "Commands", "")
 Language:add(code, "Attack Objective", "")
 Language:add(code, "Defend Objective", "")
 Language:add(code, "Repair Vehicle", "")
+Language:add(code, "Free Gunship Seat", "")
 Language:add(code, "Stop Following", "")
 Language:add(code, "Settings has been saved temporarily", "")
 Language:add(code, "Settings has been saved", "")

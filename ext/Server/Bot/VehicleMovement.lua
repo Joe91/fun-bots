@@ -353,6 +353,10 @@ function VehicleMovement:UpdateTargetMovementVehicle(p_Bot, p_DeltaTime)
 
 		if s_Distance < 3.0 then
 			p_Bot._TargetPoint = p_Bot._NextTargetPoint
+
+			if p_Bot._TargetPoint == nil then
+				return
+			end
 		end
 
 		local s_DifferenceY = p_Bot._TargetPoint.Position.z - p_Bot.m_Player.controlledControllable.transform.trans.z
@@ -369,7 +373,7 @@ end
 function VehicleMovement:UpdateVehicleLookAround(p_Bot, p_DeltaTime)
 	-- Move around a little.
 	if m_Vehicles:IsVehicleType(p_Bot.m_ActiveVehicle, VehicleTypes.Gunship) then
-		p_Bot._VehicleWaitTimer = p_Bot._VehicleWaitTimer + p_DeltaTime
+		p_Bot._VehicleLookAroundTimer = p_Bot._VehicleLookAroundTimer + p_DeltaTime
 
 		local s_TargetPosition = p_Bot.m_Player.controlledControllable.transform.trans:Clone()
 		local s_Forward = p_Bot.m_Player.controlledControllable.transform.left:Clone()
@@ -387,19 +391,19 @@ function VehicleMovement:UpdateVehicleLookAround(p_Bot, p_DeltaTime)
 			p_Bot._TargetYaw = (s_AtanDzDx > math.pi / 2) and (s_AtanDzDx - math.pi / 2) or (s_AtanDzDx + 3 * math.pi / 2)
 			p_Bot._TargetPitch = 0.0
 
-			p_Bot._VehicleWaitTimer = p_Bot._VehicleWaitTimer + p_DeltaTime
+			p_Bot._VehicleLookAroundTimer = p_Bot._VehicleLookAroundTimer + p_DeltaTime
 
-			if p_Bot._VehicleWaitTimer > 9.0 then
-				p_Bot._VehicleWaitTimer = 0.0
-			elseif p_Bot._VehicleWaitTimer >= 6.0 then
-			elseif p_Bot._VehicleWaitTimer >= 3.0 then
+			if p_Bot._VehicleLookAroundTimer > 9.0 then
+				p_Bot._VehicleLookAroundTimer = 0.0
+			elseif p_Bot._VehicleLookAroundTimer >= 6.0 then
+			elseif p_Bot._VehicleLookAroundTimer >= 3.0 then
 				p_Bot._TargetYaw = p_Bot._TargetYaw - 1.0 -- 60° rotation left.
 				p_Bot._TargetPitch = 0.5
 
 				if p_Bot._TargetYaw < 0.0 then
 					p_Bot._TargetYaw = p_Bot._TargetYaw + (2 * math.pi)
 				end
-			elseif p_Bot._VehicleWaitTimer >= 0.0 then
+			elseif p_Bot._VehicleLookAroundTimer >= 0.0 then
 				p_Bot._TargetYaw = p_Bot._TargetYaw + 1.0 -- 60° rotation right.
 				p_Bot._TargetPitch = -0.5
 
@@ -487,6 +491,8 @@ function VehicleMovement:UpdateYawVehicle(p_Bot, p_Attacking, p_IsStationaryLaun
 			s_Direction = p_Bot._TargetPoint.Position:Clone() - s_LinearTransformNew.trans:Clone()
 		end
 
+		-- Intentionally NOT the atan - pi/2 convention used elsewhere: the gunship's gunner entries are oriented
+		-- differently in the engine, and the raw atan(dz, dx) is what lines up in-game (verified; see B49).
 		p_Bot._TargetYaw = math.atan(s_Direction.z, s_Direction.x)
 		p_Bot._TargetPitch = 0.0
 	else
@@ -495,7 +501,7 @@ function VehicleMovement:UpdateYawVehicle(p_Bot, p_Attacking, p_IsStationaryLaun
 				local s_Euler = p_Bot.m_Player.controlledControllable.transform:ToQuatTransform(false).rotation:ToEuler()
 				local s_Yaw = -s_Euler.x
 				local s_Roll = s_Euler.y
-				local s_Pitch = -s_Euler.z / math.cos(s_Roll)
+				local s_Pitch = m_Utilities:GetPitchFromEuler(s_Euler)
 
 				-- TODO: delta pitch also needed?
 				s_DeltaYaw = s_Yaw - p_Bot._TargetYaw
@@ -517,7 +523,7 @@ function VehicleMovement:UpdateYawVehicle(p_Bot, p_Attacking, p_IsStationaryLaun
 					local s_Euler = p_Bot.m_Player.controlledControllable.physicsEntityBase:GetPartTransform(p_Bot._VehicleMovableId).rotation:ToEuler()
 					local s_Yaw = -s_Euler.x
 					local s_Roll = s_Euler.y
-					local s_Pitch = -s_Euler.z / math.cos(s_Roll)
+					local s_Pitch = m_Utilities:GetPitchFromEuler(s_Euler)
 
 					s_DeltaPitch = s_Pitch - p_Bot._TargetPitch
 					s_DeltaYaw = s_Yaw - p_Bot._TargetYaw
@@ -525,13 +531,17 @@ function VehicleMovement:UpdateYawVehicle(p_Bot, p_Attacking, p_IsStationaryLaun
 			end
 		else
 			if p_Bot._VehicleMovableId >= 0 then
-				local s_Euler = p_Bot.m_Player.controlledControllable.physicsEntityBase:GetPartTransform(p_Bot._VehicleMovableId).rotation:ToEuler()
+				local s_GunQuatTransform = p_Bot.m_Player.controlledControllable.physicsEntityBase:GetPartTransform(p_Bot._VehicleMovableId)
+				local s_Euler = s_GunQuatTransform.rotation:ToEuler()
 				local s_Yaw = -s_Euler.x
-				local s_Roll = s_Euler.y
-				local s_Pitch = -s_Euler.z / math.cos(s_Roll)
 
-				s_DeltaPitch = s_Pitch - p_Bot._TargetPitch
-				s_DeltaYaw = s_Yaw - p_Bot._TargetYaw
+				-- Compute the deviation in the gun's local frame. Turret/gun inputs rotate around the (tilted) vehicle axes,
+				-- so comparing world yaw/pitch fails on slopes. Target direction is rebuilt from the world yaw/pitch
+				-- (inverse of atan(dz, dx) - pi/2 used in VehicleAiming), which keeps the aim-worsening.
+				local s_CosPitch = math.cos(p_Bot._TargetPitch)
+				local s_TargetDirection = Vec3(-math.sin(p_Bot._TargetYaw) * s_CosPitch, math.sin(p_Bot._TargetPitch), math.cos(p_Bot._TargetYaw) * s_CosPitch)
+				local s_GunTransform = s_GunQuatTransform:ToLinearTransform()
+				s_DeltaYaw, s_DeltaPitch = self:CalculateDeviationRelativeToOrientation(s_GunTransform, s_GunTransform.trans + s_TargetDirection)
 
 				-- Detect direction for moving gun back.
 				local s_GunDeltaYaw = s_Yaw - p_Bot._LastVehicleYaw
@@ -552,7 +562,7 @@ function VehicleMovement:UpdateYawVehicle(p_Bot, p_Attacking, p_IsStationaryLaun
 
 				local s_Yaw = -s_Euler.x
 				local s_Roll = s_Euler.y
-				local s_Pitch = -s_Euler.z / math.cos(s_Roll)
+				local s_Pitch = m_Utilities:GetPitchFromEuler(s_Euler)
 
 				s_DeltaPitch = s_Pitch - p_Bot._TargetPitch
 				s_DeltaYaw = s_Yaw - p_Bot._TargetYaw

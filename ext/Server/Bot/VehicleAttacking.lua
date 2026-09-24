@@ -143,7 +143,7 @@ function VehicleAttacking:UpdateAttackingVehicle(p_DeltaTime, p_Bot)
 			p_Bot:_ResetActionFlag(BotActionFlags.C4Active)
 			p_Bot:_ResetActionFlag(BotActionFlags.GrenadeActive)
 		end
-	elseif p_Bot._ShootPlayer.soldier == nil then -- Reset if enemy is dead.
+	else -- Reset if enemy is dead or shooting is disabled.
 		p_Bot:AbortAttack()
 	end
 

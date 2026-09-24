@@ -43,8 +43,8 @@ function BotManager:RegisterVars()
 	self._BotBotReviveList = {}
 	self._RaycastsPerActivePlayer = 0
 
-	---@type table<string, boolean>
-	---`[botPlayer.id .. "-" .. enemyBotPlayer.id] -> boolean`
+	---@type table<integer, boolean>
+	---`[lowerId * 65536 + higherId] -> boolean`
 	self._ConnectionCheckState = {}
 
 	self._LastBotCheckIndex = 1
@@ -147,10 +147,13 @@ function BotManager:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 
 
 	-- Update every tick (base-update - needed every time)
+	local s_Bots = self._Bots
 	for l_Index = 1, s_BotCount do
-		local l_Bot = self._Bots[l_Index]
-		if l_Bot.m_Player.soldier then                                      -- only update bots with a soldier
-			l_Bot.m_Player.soldier:SingleStepEntry(l_Bot.m_Player.controlledEntryId) -- engine-requirement
+		local l_Bot = s_Bots[l_Index]
+		local l_Player = l_Bot.m_Player
+		local l_Soldier = l_Player.soldier
+		if l_Soldier then                                         -- only update bots with a soldier
+			l_Soldier:SingleStepEntry(l_Player.controlledEntryId) -- engine-requirement
 			l_Bot.m_ActiveState:UpdateVeryFast(l_Bot)
 		end
 	end
@@ -469,9 +472,12 @@ end
 ---@param p_Player Player
 ---@param p_RaycastResults RaycastResults[]
 function BotManager:OnClientRaycastResults(p_Player, p_RaycastResults)
-	if p_RaycastResults == nil then
+	if type(p_RaycastResults) ~= 'table' then
 		return
 	end
+
+	-- The client reports which bots can see each other. Bot:ShootAt still checks teams, distance and FOV,
+	-- and Bot:Revive checks that a revive is possible, so a forged report can't make bots shoot teammates.
 
 	for l_Index = 1, #p_RaycastResults do
 		local l_RaycastResult = p_RaycastResults[l_Index]
@@ -498,6 +504,10 @@ end
 ---@param p_Player Player
 ---@param p_SeatNumber integer
 function BotManager:OnRequestChangeSeatVehicle(p_Player, p_SeatNumber)
+	if type(p_SeatNumber) ~= 'number' or p_SeatNumber % 1 ~= 0 then
+		return
+	end
+
 	local s_TargetEntryId = p_SeatNumber - 1
 	local s_VehicleEntity = p_Player.controlledControllable
 
@@ -507,6 +517,11 @@ function BotManager:OnRequestChangeSeatVehicle(p_Player, p_SeatNumber)
 
 	-- No vehicle found.
 	if not s_VehicleEntity then
+		return
+	end
+
+	-- The seat number comes from the client.
+	if s_TargetEntryId < 0 or s_TargetEntryId >= s_VehicleEntity.entryCount then
 		return
 	end
 
@@ -846,9 +861,16 @@ function BotManager:CreateBot(p_Name, p_TeamId, p_SquadId)
 
 	-- Bot exists, so just reset him.
 	if s_Bot ~= nil and s_Bot.m_Player ~= nil and s_Bot.m_Player.input ~= nil then
+		local s_OldTeamId = s_Bot.m_Player.teamId
 		s_Bot.m_Player.teamId = p_TeamId
 		s_Bot.m_Player.squadId = p_SquadId
 		s_Bot:ResetVars()
+
+		-- Move the bot to its new team list right away. RefreshTables() doesn't run in manual mode.
+		if s_OldTeamId ~= p_TeamId then
+			self:RefreshTables()
+		end
+
 		return s_Bot
 	end
 
@@ -946,14 +968,16 @@ function BotManager:KillAll(p_Amount, p_TeamId)
 	p_Amount = p_Amount or #s_BotTable
 	-- start from the end, to kill the last spawned bots first
 	for l_Index = #s_BotTable, 1, -1 do
-		local l_Bot = s_BotTable[l_Index]
-
-		l_Bot:Kill()
-
-		p_Amount = p_Amount - 1
-
 		if p_Amount <= 0 then
 			return
+		end
+
+		local l_Bot = s_BotTable[l_Index]
+
+		-- Inactive bots are already out of the game and don't count towards the amount.
+		if not l_Bot:IsInactive() then
+			l_Bot:Kill()
+			p_Amount = p_Amount - 1
 		end
 	end
 end
@@ -971,6 +995,10 @@ function BotManager:DestroyAll(p_Amount, p_TeamId, p_Force)
 	p_Amount = p_Amount or #s_BotTable
 
 	for l_Index = #s_BotTable, 1, -1 do
+		if p_Amount <= 0 then
+			return
+		end
+
 		local l_Bot = s_BotTable[l_Index]
 		if p_Force then
 			self:DestroyBot(l_Bot)
@@ -979,10 +1007,6 @@ function BotManager:DestroyAll(p_Amount, p_TeamId, p_Force)
 		end
 
 		p_Amount = p_Amount - 1
-
-		if p_Amount <= 0 then
-			return
-		end
 	end
 end
 
@@ -1161,6 +1185,53 @@ function BotManager:ExitVehicle(p_Player)
 	end
 end
 
+-- One bot leaves the gunship of the player's team. The seat is kept free for a while, so the player can spawn into it.
+---@param p_Player Player
+function BotManager:FreeGunshipSeat(p_Player)
+	local s_Gunship = g_GameDirector:GetGunship(p_Player.teamId)
+
+	if not s_Gunship then
+		ChatManager:SendMessage('Your team has no gunship.', p_Player)
+		return
+	end
+
+	-- Prefer a seat that is already free, otherwise take the seat of the first bot.
+	local s_EntryId = nil
+	---@type Bot|nil
+	local s_BotToExit = nil
+
+	for l_EntryId = 1, s_Gunship.entryCount - 1 do
+		local s_Player = s_Gunship:GetPlayerInEntry(l_EntryId)
+
+		if s_Player == nil then
+			s_EntryId = l_EntryId
+			s_BotToExit = nil
+			break
+		elseif s_BotToExit == nil then
+			local s_Bot = self:GetBotById(s_Player.id)
+
+			if s_Bot then
+				s_EntryId = l_EntryId
+				s_BotToExit = s_Bot
+			end
+		end
+	end
+
+	if s_EntryId == nil then
+		ChatManager:SendMessage('No gunship seat can be freed.', p_Player)
+		return
+	end
+
+	g_GameDirector:ReserveGunshipEntry(s_EntryId)
+
+	if s_BotToExit then
+		s_BotToExit:ExitVehicle()
+	end
+
+	ChatManager:SendMessage(string.format('A gunship seat is kept free for you for %d seconds.',
+		Registry.COMMON.GUNSHIP_SEAT_RESERVE_TIME), p_Player)
+end
+
 ---@param p_Player Player
 ---@param p_Type string|'"ammo"'|'"medkit"'
 function BotManager:Deploy(p_Player, p_Type)
@@ -1262,7 +1333,10 @@ end
 
 ---@param p_Player Player
 ---@param p_Objective any To-do: add emmylua type
-function BotManager:Attack(p_Player, p_Objective)
+---@param p_ObjectiveMode? BotObjectiveModes defaults to BotObjectiveModes.Attack
+function BotManager:Attack(p_Player, p_Objective, p_ObjectiveMode)
+	p_ObjectiveMode = p_ObjectiveMode or BotObjectiveModes.Attack
+
 	if not Globals.IsConquest or not p_Player or not p_Player.soldier then
 		return
 	end
@@ -1278,7 +1352,7 @@ function BotManager:Attack(p_Player, p_Objective)
 			local s_Distance = s_BotSoldier.worldTransform.trans:Distance(s_SoldierPosition)
 
 			if s_Distance < Registry.COMMON.COMMAND_DISTANCE then
-				l_Bot:UpdateObjective(p_Objective, BotObjectiveModes.Attack)
+				l_Bot:UpdateObjective(p_Objective, p_ObjectiveMode)
 				s_MaxObjectiveBots = s_MaxObjectiveBots - 1
 
 				if s_MaxObjectiveBots == 0 then
@@ -1388,66 +1462,81 @@ function BotManager:_CheckForBotBotAttack()
 	local s_RaycastEntries = {}
 
 	local s_BotStates = g_BotStates
+	local s_AttackList = self._BotBotAttackList
+	local s_AttackListCount = #s_AttackList
+	local s_MaxRaycasts = #self._ActivePlayers * self._RaycastsPerActivePlayer
 
-	for i = self._LastBotCheckIndex, #self._BotBotAttackList do
-		-- Body.
-		local s_BotIdToCheck = self._BotBotAttackList[i]
-		local s_Bot = self:GetBotById(s_BotIdToCheck)
+	-- Per-call cache of the data needed per bot. Nothing changes within one frame, so every bot is read from
+	-- the engine once per call instead of once per pair. `false` marks bots without a soldier.
+	local s_BotInfos = {}
+	local function _GetBotInfo(p_BotId)
+		local s_Info = s_BotInfos[p_BotId]
+		if s_Info ~= nil then
+			return s_Info
+		end
 
-		if s_Bot and s_Bot.m_Player and s_Bot.m_Player.soldier and s_Bot:IsReadyToAttack(false, nil, false, true) then
-			local s_BotPosition = nil
-			if s_Bot.m_Player.controlledControllable then
-				s_BotPosition = s_Bot.m_Player.controlledControllable.transform.trans:Clone()
-			else
-				s_BotPosition = s_Bot.m_Player.soldier.worldTransform.trans:Clone()
+		s_Info = false
+		local s_InfoBot = self:GetBotById(p_BotId)
+		if s_InfoBot and s_InfoBot.m_Player then
+			local s_InfoPlayer = s_InfoBot.m_Player
+			local s_InfoSoldier = s_InfoPlayer.soldier
+			if s_InfoSoldier then
+				local s_Controllable = s_InfoPlayer.controlledControllable
+				s_Info = {
+					Bot = s_InfoBot,
+					TeamId = s_InfoPlayer.teamId,
+					Position = s_Controllable and s_Controllable.transform.trans or s_InfoSoldier.worldTransform.trans,
+					AttackDistance = s_InfoBot:GetAttackDistance(),
+					InVehicle = s_BotStates:IsInVehicleState(s_InfoBot.m_ActiveState),
+				}
 			end
+		end
 
-			for l_Index = 1, #self._BotBotAttackList do
-				local l_BotId = self._BotBotAttackList[l_Index]
+		s_BotInfos[p_BotId] = s_Info
+		return s_Info
+	end
+
+	for i = self._LastBotCheckIndex, s_AttackListCount do
+		-- Body.
+		local s_BotIdToCheck = s_AttackList[i]
+		local s_BotInfo = _GetBotInfo(s_BotIdToCheck)
+
+		if s_BotInfo and s_BotInfo.Bot:IsReadyToAttack(false, nil, false, true) then
+			local s_BotPosition = s_BotInfo.Position
+			local s_BotTeamId = s_BotInfo.TeamId
+
+			for l_Index = 1, s_AttackListCount do
+				local l_BotId = s_AttackList[l_Index]
 				if l_BotId ~= s_BotIdToCheck then
-					local s_EnemyBot = self:GetBotById(l_BotId)
+					local s_EnemyInfo = _GetBotInfo(l_BotId)
 
-					if s_EnemyBot and s_EnemyBot.m_Player and s_EnemyBot.m_Player.soldier and
-						s_EnemyBot.m_Player.teamId ~= s_Bot.m_Player.teamId then -- enemy does not have to be ready!
+					if s_EnemyInfo and s_EnemyInfo.TeamId ~= s_BotTeamId then -- enemy does not have to be ready!
 						-- Check connection-state.
-						local s_ConnectionValue = ""
-						local s_Id1 = s_BotIdToCheck
-						local s_Id2 = l_BotId
-
-						if s_Id1 > s_Id2 then
-							s_ConnectionValue = tostring(s_Id2) .. "-" .. tostring(s_Id1)
+						-- Integer key (player ids are < 65536) avoids building strings for every pair.
+						local s_ConnectionValue
+						if s_BotIdToCheck > l_BotId then
+							s_ConnectionValue = l_BotId * 65536 + s_BotIdToCheck
 						else
-							s_ConnectionValue = tostring(s_Id1) .. "-" .. tostring(s_Id2)
+							s_ConnectionValue = s_BotIdToCheck * 65536 + l_BotId
 						end
 
 						if not self._ConnectionCheckState[s_ConnectionValue] then
 							self._ConnectionCheckState[s_ConnectionValue] = true
 							-- Check distance.
-							local s_EnemyBotPosition = nil
-							if s_Bot.m_Player.controlledControllable then
-								s_EnemyBotPosition = s_EnemyBot.m_Player.controlledControllable.transform.trans:Clone()
-							else
-								s_EnemyBotPosition = s_EnemyBot.m_Player.soldier.worldTransform.trans:Clone()
-							end
-							local s_Distance = s_BotPosition:Distance(s_EnemyBotPosition)
+							local s_Distance = s_BotPosition:Distance(s_EnemyInfo.Position)
 							s_ChecksDone = s_ChecksDone + 1
-							local s_MaxDistance = s_Bot:GetAttackDistance()
-							local s_MaxDistanceEnemyBot = s_EnemyBot:GetAttackDistance()
-
-							if s_MaxDistanceEnemyBot > s_MaxDistance then
-								s_MaxDistance = s_MaxDistanceEnemyBot
-							end
+							local s_MaxDistance = math.max(s_BotInfo.AttackDistance, s_EnemyInfo.AttackDistance)
 
 							if s_Distance <= s_MaxDistance then
-								table.insert(s_RaycastEntries, {
+								s_RaycastEntries[#s_RaycastEntries + 1] = {
 									Bot1 = s_BotIdToCheck,
 									Bot2 = l_BotId,
-									Bot1InVehicle = s_BotStates:IsInVehicleState(s_Bot.m_ActiveState),
-									Bot2InVehicle = s_BotStates:IsInVehicleState(s_EnemyBot.m_ActiveState),
-								})
+									Bot1InVehicle = s_BotInfo.InVehicle,
+									Bot2InVehicle = s_EnemyInfo.InVehicle,
+								}
 								s_Raycasts = s_Raycasts + 1
 
-								if s_Raycasts >= (#self._ActivePlayers * self._RaycastsPerActivePlayer) then
+								if s_Raycasts >= s_MaxRaycasts then
 									self._LastBotCheckIndex = i
 									self:_DistributeRaycastsBotBotAttack(s_RaycastEntries)
 									return

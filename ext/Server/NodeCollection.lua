@@ -13,7 +13,7 @@
 ---@field Next nil|Waypoint
 
 ---@class NodeCollection
----@overload fun(p_DisableServerEvents?: boolean):NodeCollection
+---@overload fun():NodeCollection
 NodeCollection = class 'NodeCollection'
 
 ---@type Utilities
@@ -21,12 +21,8 @@ local m_Utilities = require('__shared/Utilities.lua')
 ---@type Logger
 local m_Logger = Logger('NodeCollection', Debug.Server.NODECOLLECTION)
 
-function NodeCollection:__init(p_DisableServerEvents)
+function NodeCollection:__init()
 	self:InitVars()
-	if p_DisableServerEvents == nil or not p_DisableServerEvents then
-		NetEvents:Subscribe('NodeCollection:Create', self, self.Create)
-		NetEvents:Subscribe('NodeCollection:Clear', self, self.Clear)
-	end
 end
 
 function NodeCollection:InitVars()
@@ -878,17 +874,17 @@ function NodeCollection:Clear()
 	self._Waypoints = {}
 	self._WaypointsByID = {}
 
-	-- special handling for exit while saving or loading
+	-- Special handling for exit while saving or loading. Neither keeps SQL open
+	-- between frames. A half-written staging table of an aborted save is dropped
+	-- by the next save; the saved traces stay untouched.
 	if self._LoadActive and self._LoadStateMachineCounter ~= 0 then
 		self._LoadActive = false
 		self._LoadStateMachineCounter = 0
-		SQL:Close()
 	end
 
 	if self._SaveActive and self._SaveStateMachineCounter ~= 0 then
 		self._SaveActive = false
 		self._SaveStateMachineCounter = 0
-		SQL:Close()
 	end
 
 	for l_PathIndex, _ in pairs(self._WaypointsByPathIndex) do
@@ -1283,6 +1279,8 @@ function NodeCollection:ProcessAllDataToLoad()
 			return
 		end
 
+		SQL:Close()
+
 		-- prepare vars
 		self:Clear()
 		self._LoadPathCount = 0
@@ -1295,14 +1293,22 @@ function NodeCollection:ProcessAllDataToLoad()
 
 		-- start to actually load
 	elseif self._LoadStateMachineCounter == 10 then
-		-- Fetch all rows from the table.
+		-- Fetch the next chunk of rows. SQL is opened and closed within each step, so
+		-- other code using the global SQL handle between frames can't break the load.
+		if not SQL:Open() then
+			m_Logger:Error('Failed to open SQL. ' .. SQL:Error())
+			self._LoadActive = false
+			return
+		end
+
 		local s_MaxEntries = Registry.COMMON.MAX_NUMBER_OF_NODES_PER_CYCLE
 		local s_Offset = self._LoadWaypointCount
 		local s_Results = SQL:Query('SELECT * FROM ' .. self._MapName .. '_table ORDER BY pathIndex, pointIndex ASC LIMIT ' .. tostring(s_MaxEntries) .. ' OFFSET ' .. tostring(s_Offset))
+		local s_Error = SQL:Error()
+		SQL:Close()
 
 		if not s_Results then
-			m_Logger:Error('Failed to retrieve waypoints for map [' .. self._MapName .. ']: ' .. SQL:Error())
-			SQL:Close()
+			m_Logger:Error('Failed to retrieve waypoints for map [' .. self._MapName .. ']: ' .. s_Error)
 			self._LoadActive = false
 			return
 		end
@@ -1354,7 +1360,6 @@ function NodeCollection:ProcessAllDataToLoad()
 			self._LoadStateMachineCounter = 20
 		end
 	elseif self._LoadStateMachineCounter == 20 then
-		SQL:Close()
 		self:RecalculateIndexes(self._LoadLastWaypoint)
 		self._LoadStateMachineCounter = 30
 	elseif self._LoadStateMachineCounter == 30 then
@@ -1508,7 +1513,7 @@ function NodeCollection:ProcessAllDataToSave()
 
 		self._SaveTraceQueriesDone = 0
 		self._InsertQuery = 'INSERT INTO ' ..
-			self._MapName .. '_table (pathIndex, pointIndex, transX, transY, transZ, inputVar, data) VALUES '
+			self._MapName .. '_table_new (pathIndex, pointIndex, transX, transY, transZ, inputVar, data) VALUES '
 		self._ValuesTable = nil
 		self._ValuesAdded = 0
 	elseif self._SaveStateMachineCounter == 2 then
@@ -1550,27 +1555,31 @@ function NodeCollection:ProcessAllDataToSave()
 			return -- Do this again.
 		end
 	elseif self._SaveStateMachineCounter == 3 then
+		-- Write into a staging table first. The saved traces are only replaced in the
+		-- final step, inside a transaction, once every batch has been written.
+		-- SQL is opened and closed within each step, so other code using the global
+		-- SQL handle between frames (e.g. Database:Query) can't break the save.
+		if self._MapName == '' or self._MapName == nil then
+			m_Logger:Error('Mapname not set. Abort Save')
+			self._SaveActive = false
+			return
+		end
+
 		if not SQL:Open() then
 			m_Logger:Error('Could not open database')
 			self._SaveActive = false
 			return
 		end
-		if self._MapName == '' or self._MapName == nil then
-			m_Logger:Error('Mapname not set. Abort Save')
-			self._SaveActive = false
-			SQL:Close()
-			return
-		end
 
-		if not SQL:Query('DROP TABLE IF EXISTS ' .. self._MapName .. '_table') then
-			m_Logger:Error('Failed to reset table for map [' .. self._MapName .. ']: ' .. SQL:Error())
+		if not SQL:Query('DROP TABLE IF EXISTS ' .. self._MapName .. '_table_new') then
+			m_Logger:Error('Failed to reset staging table for map [' .. self._MapName .. ']: ' .. SQL:Error())
 			self._SaveActive = false
 			SQL:Close()
 			return
 		end
 
 		local s_Query = [[
-			CREATE TABLE IF NOT EXISTS ]] .. self._MapName .. [[_table (
+			CREATE TABLE ]] .. self._MapName .. [[_table_new (
 			id INTEGER PRIMARY KEY AUTOINCREMENT,
 			pathIndex INTEGER,
 			pointIndex INTEGER,
@@ -1583,32 +1592,71 @@ function NodeCollection:ProcessAllDataToSave()
 		]]
 
 		if not SQL:Query(s_Query) then
-			m_Logger:Error('Failed to create table for map [' .. self._MapName .. ']: ' .. SQL:Error())
+			m_Logger:Error('Failed to create staging table for map [' .. self._MapName .. ']: ' .. SQL:Error())
 			self._SaveActive = false
 			SQL:Close()
 			return
 		end
+
+		SQL:Close()
 	elseif self._SaveStateMachineCounter == 4 then
 		local s_QueryIndex = 1 + self._SaveTracesQueryStringsDone
 
 		if self._SaveTracesQueryStrings[s_QueryIndex] then
+			if not SQL:Open() then
+				m_Logger:Error('Could not open database')
+				self._SaveActive = false
+				return
+			end
+
 			if not SQL:Query(self._SaveTracesQueryStrings[s_QueryIndex]) then
-				m_Logger:Write('Save -> Batch query failed [' .. self._SaveTraceQueriesDone .. ']: ' .. SQL:Error())
+				m_Logger:Error('Save -> Batch query failed [' .. self._SaveTraceQueriesDone .. ']: ' .. SQL:Error())
+				ChatManager:Yell(Language:I18N('Failed to execute query: %s', SQL:Error()), 5.5)
+				SQL:Query('DROP TABLE IF EXISTS ' .. self._MapName .. '_table_new')
 				self._SaveActive = false
 				SQL:Close()
 				return
 			end
+
+			SQL:Close()
 			self._SaveTracesQueryStringsDone = s_QueryIndex
 			return -- Do this again.
 		end
 	elseif self._SaveStateMachineCounter == 5 then
-		-- Fetch all rows from the table.
-		local s_Results = SQL:Query('SELECT * FROM ' .. self._MapName .. '_table')
+		if not SQL:Open() then
+			m_Logger:Error('Could not open database')
+			self._SaveActive = false
+			return
+		end
 
-		if not s_Results then
+		local s_QueriesTotal = #self._SaveTraceBatchQueries
+
+		-- Double-check the staging table before it replaces the saved traces.
+		local s_Results = SQL:Query('SELECT COUNT(*) AS count FROM ' .. self._MapName .. '_table_new')
+		local s_RowCount = s_Results and s_Results[1] and tonumber(s_Results[1].count)
+
+		if s_RowCount ~= s_QueriesTotal then
+			local s_Error = s_Results and ('expected ' .. s_QueriesTotal .. ' rows, found ' .. tostring(s_RowCount)) or SQL:Error()
 			m_Logger:Error('NodeCollection:Save -> Failed to double-check table entries for map [' ..
-				self._MapName .. ']: ' .. SQL:Error())
-			ChatManager:Yell(Language:I18N('Failed to execute query: %s', SQL:Error()), 5.5)
+				self._MapName .. ']: ' .. s_Error)
+			ChatManager:Yell(Language:I18N('Failed to execute query: %s', s_Error), 5.5)
+			SQL:Query('DROP TABLE IF EXISTS ' .. self._MapName .. '_table_new')
+			self._SaveActive = false
+			SQL:Close()
+			return
+		end
+
+		-- Swap the staging table in atomically.
+		local s_Swapped = SQL:Query('BEGIN TRANSACTION')
+			and SQL:Query('DROP TABLE IF EXISTS ' .. self._MapName .. '_table')
+			and SQL:Query('ALTER TABLE ' .. self._MapName .. '_table_new RENAME TO ' .. self._MapName .. '_table')
+			and SQL:Query('COMMIT')
+
+		if not s_Swapped then
+			local s_Error = SQL:Error()
+			SQL:Query('ROLLBACK')
+			m_Logger:Error('NodeCollection:Save -> Failed to replace traces for map [' .. self._MapName .. ']: ' .. s_Error)
+			ChatManager:Yell(Language:I18N('Failed to execute query: %s', s_Error), 5.5)
 			self._SaveActive = false
 			SQL:Close()
 			return
@@ -1616,7 +1664,6 @@ function NodeCollection:ProcessAllDataToSave()
 
 		SQL:Close()
 
-		local s_QueriesTotal = #self._SaveTraceBatchQueries
 		m_Logger:Write('Save -> Saved [' .. s_QueriesTotal .. '] waypoints for map [' .. self._MapName .. ']')
 		ChatManager:Yell(Language:I18N('Saved %d paths with %d waypoints for map %s', self._SavedPathCount, s_QueriesTotal,
 				self._MapName),

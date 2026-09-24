@@ -23,6 +23,8 @@ Registry = {
 		USE_BUGGED_HITBOXES = false,
 		-- Distance commands are heard by bots.
 		COMMAND_DISTANCE = 20,
+		-- Time in seconds a gunship seat is kept free for a player after the "Free Gunship Seat" command.
+		GUNSHIP_SEAT_RESERVE_TIME = 30.0,
 		-- Use load of Bundle to fix Bug of weapons disappearing (thanks to Lesley!) !!! THIS MIGHT CAUSE CRASHES OR OTHER ISSUES!!!
 		USE_LOAD_BUNDLE_BUGFIX = false,
 		-- Keep the last ticket in conquest for the gamemode counter
@@ -43,11 +45,11 @@ Registry = {
 		-- Major version.
 		VERSION_MAJ = 3,
 		-- Minor version.
-		VERSION_MIN = 0,
+		VERSION_MIN = 1,
 		-- Patch version.
 		VERSION_PATCH = 0,
 		-- Additional label for pre-releases and build metadata.
-		VERSION_LABEL = "dev15",
+		VERSION_LABEL = "dev1",
 		-- Current version type of this build.
 		VERSION_TYPE = VersionType.DevBuild,
 		-- The Version used for the Update-Check.
@@ -174,6 +176,8 @@ Registry = {
 		PROBABILITY_ATTACK_CHOPPER_WITH_RIFLE = 25,
 		-- If the game mode is Rush or Conquest, change direction if the bot is stuck on non-connecting paths.
 		PROBABILITY_CHANGE_DIRECTION_IF_STUCK = 50,
+		-- Hard reroutes to the closest path a stuck bot tries before it is killed.
+		MAX_STUCK_REROUTES = 2,
 		-- Trace delta, a bot uses when they are off a trace path to find his way back to the best path.
 		TRACE_DELTA_SHOOTING = 0.4,
 		-- The max time a bot tries to move to the repair-vehicle.
