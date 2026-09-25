@@ -40,6 +40,21 @@ function Bot:Revive(p_Player)
 	end
 end
 
+---Refreshes the vehicle to repair from the target player. Don't rely on a cached entity,
+---the vehicle can get destroyed or left while repairing.
+---@return ControllableEntity|nil
+function Bot:UpdateRepairVehicleEntity()
+	local s_ShootPlayer = self._ShootPlayer
+	local s_Controllable = s_ShootPlayer ~= nil and s_ShootPlayer.soldier ~= nil and s_ShootPlayer.controlledControllable or nil
+
+	if s_Controllable ~= nil and s_Controllable:Is('ServerSoldierEntity') then
+		s_Controllable = nil
+	end
+
+	self._RepairVehicleEntity = s_Controllable
+	return s_Controllable
+end
+
 ---@param p_Player Player
 function Bot:Repair(p_Player)
 	if self.m_Kit == BotKits.Engineer and p_Player.soldier ~= nil and p_Player.controlledControllable ~= nil then

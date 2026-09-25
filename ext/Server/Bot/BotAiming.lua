@@ -344,7 +344,7 @@ end
 
 ---@param p_Bot Bot
 local function _RepairAimingAction(p_Bot)
-	if p_Bot._ShootPlayer.soldier == nil or p_Bot._RepairVehicleEntity == nil then
+	if p_Bot:UpdateRepairVehicleEntity() == nil then
 		return
 	end
 
