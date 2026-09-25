@@ -3,7 +3,7 @@
 A technical map of the fun-bots codebase for people who want to change it. For installing and configuring the mod as a server owner, see the [README](../README.md) and the [wiki](https://github.com/Joe91/fun-bots/wiki).
 
 - **What it is:** a [Venice Unleashed](https://veniceunleashed.net/) (VU) mod that adds AI soldiers ("bots") to Battlefield 3 servers. Bots follow hand-authored waypoint graphs ("traces"), fight, revive, use vehicles (including jets, choppers and stationary AA), and play objectives in Conquest, Rush, TDM, SDM, GunMaster, Domination, CTF and Scavenger.
-- **Version:** `3.0.0-dev15` ([mod.json](../mod.json)), requires VEXT `>= 1.12.0`.
+- **Version:** see [mod.json](../mod.json) (currently `3.1.0-dev1`), requires VEXT `>= 1.12.0`.
 - **Size:** ~35k lines of Lua (server ~70%), a Vite WebUI and a Python helper tool.
 
 ---
@@ -23,9 +23,9 @@ fun-bots/
 ├── mapfiles/                 ~185 trace files (<Level>_<GameMode>.map), the source of truth in git
 ├── permission_and_config/    Text exports of the FB_Settings / FB_Config_Trace / FB_Permissions tables
 ├── fun-bots-helper/          Python/customtkinter GUI for DB import/export, map fixes, code generation
-├── tools/                    Older standalone Python scripts for map-file maintenance
+├── tools/                    check-lua.sh (luacheck + lua-language-server) and one-off map-file scripts
 ├── Supported-maps.md         Generated table of which maps/modes have traces
-└── .github/                  Changelog, contributing, coding guidelines, release workflow
+└── .github/                  Changelog, contributing, coding guidelines, CI workflows (release, luacheck)
 ```
 
 `.vummignore` keeps `mapfiles/*.map`, `permission_and_config/*.cfg` and `.vu/` out of the release package. Released builds ship `mod.db` with the traces already imported.
@@ -196,7 +196,7 @@ Plain JS classes (no framework) bundled by Vite with `@vextjs/vite-plugin`, rend
 - [classes/EntryElement.js](../WebUI/classes/EntryElement.js): custom `<ui-entry>` widgets for each setting type.
 - [languages/](../WebUI/languages): UI translations, separate from the Lua `Languages/`.
 
-Build: `cd WebUI && npm install && npm run build`, then compile the output to `ui.vuic` with VU's `vuicc` (the old CI job for this is in `.github/disabled-workflows/compile-vuicc.yml`).
+Build: `cd WebUI && npm install && npm run build`. This writes `ui.vuic` in the repo root directly: on Windows through `@vextjs/vite-plugin`, on Linux by running `vuicc.exe` through Wine (see [vite.config.js](../WebUI/vite.config.js)). `fun-bots-helper/CompileUI.bat` is a shortcut for the same build.
 
 ---
 
@@ -213,7 +213,9 @@ A Python GUI (`./fun-bots-helper.sh` or `fun-bots-helper.cmd`, Poetry project), 
 | Create maplist / update supported maps | Regenerate `MapList.txt` and `Supported-maps.md` |
 | Fix nodes / objectives / links, merge map files | Map-file maintenance |
 
-Tests: `fun-bots-helper/tests` (pytest). There are no automated tests for the Lua code.
+Tests: `fun-bots-helper/tests` (pytest, `make test`).
+
+There are no automated tests for the Lua code. [tools/check-lua.sh](../tools/check-lua.sh) runs `luacheck` (configured in [.luacheckrc](../.luacheckrc), also run in CI by `.github/workflows/lua-checks.yml`) and, if the VU type stubs exist in `.vua_data/`, `lua-language-server --check`. Run it before committing Lua changes.
 
 ---
 
@@ -250,6 +252,5 @@ See [.github/CODING_GUIDELINES.md](../.github/CODING_GUIDELINES.md). In short:
 
 ## 10. Related docs
 
-- [CHANGELOG](../.github/CHANGELOG.md), [CONTRIBUTING](../.github/CONTRIBUTING.md)
-- [REVIEW_FINDINGS.md](REVIEW_FINDINGS.md): known bugs and improvement candidates from a code review (September 2026)
-- `PROJECT_SUMMARY.md`, `SERVER_ARCHITECTURE_SUMMARY.md`, `CLIENT_AND_WEBUI_SUMMARY.md`, `REFACTOR_ROADMAP.md`: earlier high-level summaries. Where they conflict with this guide, trust this guide and the code.
+- [CHANGELOG](../.github/CHANGELOG.md), [CONTRIBUTING](../.github/CONTRIBUTING.md), [CODING_GUIDELINES](../.github/CODING_GUIDELINES.md)
+- [REVIEW_FINDINGS.md](REVIEW_FINDINGS.md): open items and things still to test from the September 2026 code review

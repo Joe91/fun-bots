@@ -98,7 +98,7 @@ function ClientNodeEditor:OnRegisterEvents()
 
 	NetEvents:Subscribe('UI_ClientNodeEditor_TraceData', self, self._OnUiTraceData)
 	NetEvents:Subscribe('ClientNodeEditor:PrintLog', self, self._OnPrintServerLog)
-	NetEvents:Subscribe('ClientNodeEditor:RevieveNodes', self, self._OnRecieveNodes)
+	NetEvents:Subscribe('ClientNodeEditor:ReceiveNodes', self, self._OnReceiveNodes)
 	NetEvents:Subscribe('ClientNodeEditor:UpdateNodes', self, self._OnUpdateNodes)
 	NetEvents:Subscribe('ClientNodeEditor:RemoveNodes', self, self._OnRemoveNodes)
 	NetEvents:Subscribe('ClientNodeEditor:AddNodes', self, self._OnAddNodes)
@@ -208,10 +208,10 @@ function ClientNodeEditor:_OnUiTraceData(p_TotalTraceNodes, p_TotalTraceDistance
 	end
 end
 
-function ClientNodeEditor:_OnRecieveNodes(p_WayPoints)
+function ClientNodeEditor:_OnReceiveNodes(p_WayPoints)
 	print('[ClientNodeEditor] Receiving waypoints from server...')
 	self.m_WayPoints = p_WayPoints or {}
-	print('[ClientNodeEditor] Recieved ' .. tostring(#self.m_WayPoints) .. ' waypoints from server.')
+	print('[ClientNodeEditor] Received ' .. tostring(#self.m_WayPoints) .. ' waypoints from server.')
 	self.m_FirstNodeInPath = {}
 	self.m_WayPointsById = {}
 	for i = 1, #self.m_WayPoints do
@@ -685,7 +685,6 @@ function ClientNodeEditor:OnUIPushScreen(p_HookCtx, p_Screen, p_Priority, p_Pare
 		self.m_CommoRoseEnabled and
 		p_Screen ~= nil and
 		UIScreenAsset(p_Screen).name == 'UI/Flow/Screen/CommoRoseScreen' then
-		-- self:Log('Blocked vanilla Commo Rose')
 		p_HookCtx:Return()
 		return
 	end
@@ -794,9 +793,7 @@ function ClientNodeEditor:OnClientUpdateInput(p_DeltaTime)
 		end
 
 		if InputManager:WentKeyDown(InputDeviceKeys.IDK_T) then
-			-- To-do: Not functional yet!
-			-- self:_onSwitchToArea()
-			-- NetEvents:SendLocal('WaypointEditor:ChangeMode', self.m_EditMode, {tostring(self.m_EditModeManualSpeed), self.m_EditPositionMode})
+			-- Reserved for switching to area mode (not implemented).
 			return
 		end
 	elseif self.m_EditMode == 'none' then
@@ -1288,7 +1285,6 @@ function ClientNodeEditor:Raycast(p_MaxDistance, p_UseAsync)
 
 	-- Perform raycast, returns a RayCastHit object.
 
-	---@type RayCastFlags
 	local s_Flags = RayCastFlags.DontCheckWater | RayCastFlags.DontCheckCharacter | RayCastFlags.DontCheckRagdoll |
 		RayCastFlags.CheckDetailMesh
 
@@ -1296,7 +1292,7 @@ function ClientNodeEditor:Raycast(p_MaxDistance, p_UseAsync)
 		s_Flags = s_Flags | RayCastFlags.IsAsyncRaycast
 	end
 
-	local s_RaycastHit = RaycastManager:Raycast(s_CastStart, s_CastEnd, s_Flags)
+	local s_RaycastHit = RaycastManager:Raycast(s_CastStart, s_CastEnd, s_Flags --[[@as RayCastFlags]])
 
 	return s_RaycastHit
 end

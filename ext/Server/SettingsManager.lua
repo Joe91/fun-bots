@@ -41,8 +41,6 @@ function SettingsManager:__init()
 	}, {
 		'PRIMARY KEY("Key")'
 	})
-
-	-- m_Database:Query('CREATE UNIQUE INDEX USKey ON FB_Settings(Key)')
 end
 
 ---VEXT Shared Extension:Loaded Event
@@ -59,9 +57,9 @@ function SettingsManager:OnExtensionLoaded()
 
 		-- If it doesn't exist, create it.
 		if s_Single == nil then
-			-- if Debug.Server.SETTINGS then
-			-- print('SettingsManager: ADD (' .. l_Name .. ' = ' .. tostring(l_Value) .. ')')
-			-- end
+			if Debug.Server.SETTINGS then
+				print('SettingsManager: ADD (' .. l_Name .. ' = ' .. tostring(l_Value) .. ')')
+			end
 
 			m_Database:Insert('FB_Config_Trace', {
 				Key = l_Name,
@@ -69,13 +67,7 @@ function SettingsManager:OnExtensionLoaded()
 				Time = m_Database:Now()
 			})
 
-			-- m_Database:Insert('FB_Settings', {
-			-- Key = l_Name,
-			-- Value = DatabaseField.NULL,
-			-- Time = DatabaseField.NULL
-			-- })
-
-			-- If it exists update Settings, if newer.
+		-- If it exists, update it when Config.lua changed.
 		else
 			local s_Old = s_Single.Value
 
@@ -83,15 +75,14 @@ function SettingsManager:OnExtensionLoaded()
 				s_Old = DatabaseField.NULL
 			end
 
-			-- To-do: check Time / Timestamp, if newer.
 			if tostring(l_Value) == tostring(s_Old) then
-				-- if Debug.Server.SETTINGS then
-				-- print('SettingsManager: SKIP (' .. l_Name .. ' = ' .. tostring(l_Value) .. ', NOT MODIFIED)')
-				-- end
+				if Debug.Server.SETTINGS then
+					print('SettingsManager: SKIP (' .. l_Name .. ' = ' .. tostring(l_Value) .. ', NOT MODIFIED)')
+				end
 			else
-				-- if Debug.Server.SETTINGS then
-				-- print('SettingsManager: UPDATE (' .. l_Name .. ' = ' .. tostring(l_Value) .. ', Old = ' .. tostring(s_Old) .. ')')
-				-- end
+				if Debug.Server.SETTINGS then
+					print('SettingsManager: UPDATE (' .. l_Name .. ' = ' .. tostring(l_Value) .. ', Old = ' .. tostring(s_Old) .. ')')
+				end
 
 				-- If changed, update SETTINGS SQL
 				m_Database:Update('FB_Config_Trace', {
@@ -128,10 +119,10 @@ function SettingsManager:OnExtensionLoaded()
 											`Config`.`Time` > `Settings`.`Time`]])
 
 	if s_Settings ~= nil then
-		for l_Name, l_Value in pairs(s_Settings) do
-			-- if Debug.Server.SETTINGS then
-			-- print('Updating Config Variable: ' .. tostring(l_Value.Key) .. ' = ' .. tostring(l_Value.Value) .. ' (' .. tostring(l_Value.Time) .. ')')
-			-- end
+		for _, l_Value in pairs(s_Settings) do
+			if Debug.Server.SETTINGS then
+				print('Updating Config Variable: ' .. tostring(l_Value.Key) .. ' = ' .. tostring(l_Value.Value) .. ' (' .. tostring(l_Value.Time) .. ')')
+			end
 			local s_TempValue = tonumber(l_Value.Value)
 
 			if s_TempValue then -- Number?

@@ -177,15 +177,15 @@ function BotSpawner:OnEngineUpdate(p_DeltaTime, p_SimulationDeltaTime)
 			end
 
 			if l_Bot.m_Player.soldier ~= nil then
-				local s_String, s_SpawnEntity = self:_GetSpecialSpawnEnity(l_Bot, l_Bot.m_Player.teamId)
-				if s_SpawnEntity then
+				local _, s_SpecialSpawnEntity = self:_GetSpecialSpawnEnity(l_Bot, l_Bot.m_Player.teamId)
+				if s_SpecialSpawnEntity then
 					table.remove(self._BotsWithoutPath, l_Index)
 					l_Bot:SetVarsWay(nil, true, 0, 0, false)
 
-					if l_Bot:_EnterVehicleEntity(s_SpawnEntity, false) ~= 0 then
+					if l_Bot:_EnterVehicleEntity(s_SpecialSpawnEntity, false) ~= 0 then
 						self:_KillSoldierKeepRespawn(l_Bot)
 					else
-						l_Bot:FindVehiclePath(s_SpawnEntity.transform.trans:Clone())
+						l_Bot:FindVehiclePath(s_SpecialSpawnEntity.transform.trans:Clone())
 
 						self:_ApplyCosumizationAfterSpawn(l_Bot)
 
@@ -858,7 +858,7 @@ function BotSpawner:SpawnWayBots(p_Amount, p_UseRandomWay, p_ActiveWayIndex, p_I
 		p_Amount = s_SlotsLeft
 	end
 
-	for i = 1, p_Amount do
+	for _ = 1, p_Amount do
 		---@type SpawnSet
 		local s_SpawnSet = {
 			PlayerVarOfBot = nil,
@@ -1212,12 +1212,9 @@ end
 
 ---@return boolean
 function BotSpawner:_HasMaxPlanePlayers(teamId)
-	-- print("Checking the playerData for planes for team " .. teamId)
 	local planeCount = 0
-	for playerName, playerData in pairs(g_PlayerData._Players) do
-		-- print(playerName .. " " .. playerData["Vehicle"] .. " " .. playerData["Team"])
+	for _, playerData in pairs(g_PlayerData._Players) do
 		if playerData.Vehicle == VehicleTypes.Plane and playerData.Team == teamId then
-			-- print("Plane found for " .. playerName)
 			planeCount = planeCount + 1
 			if planeCount == 2 then
 				return true
@@ -1251,7 +1248,6 @@ function BotSpawner:_CheckAndGetAvailableJetSpawn(p_TeamId)
 
 	while spawn do
 		if spawn.data:Is('CharacterSpawnReferenceObjectData') then
-			-- local spawnData = CharacterSpawnReferenceObjectData(spawn.data) -- the data attribs, meaning the EBX are always tatic, no need to check this really...
 			local spawnEntity = SpawnEntity(spawn)
 			if spawnEntity.teamId == p_TeamId and spawnEntity.enabled and
 				spawnEntity.spawnTimer == 0 and
@@ -1575,7 +1571,6 @@ function BotSpawner:_SpawnBot(p_Bot, p_Transform, p_SetKit)
 	end
 end
 
----@param p_Bot Bot
 ---Kills the soldier but keeps the bot active, so it respawns normally.
 ---Bot:Kill() would also reset the bot to NoRespawn and so disable it.
 ---@param p_Bot Bot
@@ -1868,13 +1863,13 @@ function BotSpawner:_GetUnlocks(p_Bot, p_TeamId, p_SquadId)
 	for l_Index = 1, #s_SquadPlayers do
 		local l_SquadPlayer = s_SquadPlayers[l_Index]
 		if l_SquadPlayer.id ~= p_Bot.m_Player.id then
-			for l_Index = 1, #l_SquadPlayer.selectedUnlocks do
-				local l_PlayerUnlock = l_SquadPlayer.selectedUnlocks[l_Index]
+			for l_UnlockIndex = 1, #l_SquadPlayer.selectedUnlocks do
+				local l_PlayerUnlock = l_SquadPlayer.selectedUnlocks[l_UnlockIndex]
 				local s_UsedSquadPerk = l_PlayerUnlock["partition"]["name"]
-				for l_Index = 1, #s_PossiblePerks do
-					local l_PossiblePerk = s_PossiblePerks[l_Index]
+				for l_PerkIndex = 1, #s_PossiblePerks do
+					local l_PossiblePerk = s_PossiblePerks[l_PerkIndex]
 					if l_PossiblePerk == s_UsedSquadPerk then
-						table.remove(s_PossiblePerks, l_Index)
+						table.remove(s_PossiblePerks, l_PerkIndex)
 						break
 					end
 				end

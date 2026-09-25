@@ -9,8 +9,8 @@
 ---@field ExtraMode integer
 ---@field OptValue integer
 ---@field Data table<string, table>
----@field Previous nil|Waypoint
----@field Next nil|Waypoint
+---@field Previous Waypoint|false|nil
+---@field Next Waypoint|false|nil
 
 ---@class NodeCollection
 ---@overload fun():NodeCollection
@@ -64,6 +64,9 @@ end
 -----------------------------
 -- Management.
 
+---@param p_Data table
+---@param p_Authoritative? boolean
+---@return Waypoint
 function NodeCollection:Create(p_Data, p_Authoritative)
 	p_Authoritative = p_Authoritative or false
 	local s_NewIndex = #self._Waypoints + 1
@@ -140,24 +143,12 @@ function NodeCollection:Register(p_Waypoint)
 
 	if #self._Waypoints ~= p_Waypoint.Index then
 		self._PrintDiagOnInvalidPointindex = true
-
-		-- local s_Diff = p_Waypoint.Index - #self._Waypoints
-		-- m_Logger:Warning('New Node Index does not match: p_Waypoint.Index:' ..
-		-- 	tostring(p_Waypoint.Index) .. ' | #self._Waypoints:' .. tostring(#self._Waypoints) .. ' | ' .. tostring(s_Diff))
 	end
 
-	-- table.insert(self._WaypointsByPathIndex[p_Waypoint.PathIndex], p_Waypoint)
 	self._WaypointsByPathIndex[p_Waypoint.PathIndex][#self._WaypointsByPathIndex[p_Waypoint.PathIndex] + 1] = p_Waypoint
 
 	if #self._WaypointsByPathIndex[p_Waypoint.PathIndex] ~= p_Waypoint.PointIndex then
 		self._PrintDiagOnInvalidPointindex = true
-
-		-- local s_Diff = p_Waypoint.PointIndex - #self._WaypointsByPathIndex[p_Waypoint.PathIndex]
-		-- m_Logger:Warning('New Node PointIndex does not match: p_Waypoint.PointIndex: ' ..
-		-- 	tostring(p_Waypoint.PointIndex) ..
-		-- 	' | #self._WaypointsByPathIndex[' ..
-		-- 	p_Waypoint.PathIndex ..
-		-- 	']: ' .. tostring(#self._WaypointsByPathIndex[p_Waypoint.PathIndex]) .. ' | ' .. tostring(s_Diff))
 	end
 
 	self._WaypointsByID[p_Waypoint.ID] = p_Waypoint
@@ -166,7 +157,7 @@ function NodeCollection:Register(p_Waypoint)
 end
 
 ---@param p_SelectionId integer
----@return Waypoint|boolean
+---@return Waypoint|false
 ---@return string
 function NodeCollection:Add(p_SelectionId)
 	local s_Selection = self:GetSelected(p_SelectionId)
@@ -987,7 +978,7 @@ function NodeCollection:GetSelected(p_SelectionId, p_PathIndex)
 	local s_Selection = {}
 
 	-- Copy selection into index-based array and sort results.
-	for l_WaypointID, l_Waypoint in pairs(self._SelectedWaypoints[p_SelectionId]) do
+	for _, l_Waypoint in pairs(self._SelectedWaypoints[p_SelectionId]) do
 		if self:IsSelected(p_SelectionId, l_Waypoint) and (p_PathIndex == nil or l_Waypoint.PathIndex == p_PathIndex) then
 			s_Selection[#s_Selection + 1] = l_Waypoint
 		end
@@ -1399,7 +1390,7 @@ function NodeCollection:ProcessAllDataToSave()
 
 		-- save info-node first,
 		-- then save spawn-points,
-		local s_JsonSaveData = ''
+		local s_InfoJsonSaveData = ''
 
 		if self._InfoNode == nil then
 			self._InfoNode = {}
@@ -1413,12 +1404,12 @@ function NodeCollection:ProcessAllDataToSave()
 		end
 		self._InfoNode.CompIndex = Registry.VERSION.COMP_MAP_TRACES
 		self._InfoNode.Date = os.date('%Y-%m-%d %H:%M:%S')
-		local s_JsonData, s_EncodeError = json.encode(self._InfoNode)
-		if s_JsonData == nil then
-			m_Logger:Warning('Infonode data could not encode: ' .. tostring(s_EncodeError))
+		local s_InfoJsonData, s_InfoEncodeError = json.encode(self._InfoNode)
+		if s_InfoJsonData == nil then
+			m_Logger:Warning('Infonode data could not encode: ' .. tostring(s_InfoEncodeError))
 		end
-		if s_JsonData ~= '{}' then
-			s_JsonSaveData = SQL:Escape(table.concat(s_JsonData:split('"'), '""'))
+		if s_InfoJsonData ~= '{}' then
+			s_InfoJsonSaveData = SQL:Escape(table.concat(s_InfoJsonData:split('"'), '""'))
 		end
 
 		-- info-node
@@ -1429,7 +1420,7 @@ function NodeCollection:ProcessAllDataToSave()
 			0, --y
 			0, --z
 			0, -- var
-			'"' .. s_JsonSaveData .. '"'
+			'"' .. s_InfoJsonSaveData .. '"'
 		}, ',') .. ')')
 
 		for l_Index = 1, #self._Waypoints do
@@ -1519,8 +1510,7 @@ function NodeCollection:ProcessAllDataToSave()
 	elseif self._SaveStateMachineCounter == 2 then
 		local s_QueriesTotal = #self._SaveTraceBatchQueries
 		if s_QueriesTotal > self._SaveTraceQueriesDone then
-			local s_StringLenght = #self._InsertQuery
-			local s_QueryCount = 0
+					local s_QueryCount = 0
 
 			if self._ValuesTable == nil then
 				self._ValuesTable = {}
@@ -1670,8 +1660,6 @@ function NodeCollection:ProcessAllDataToSave()
 			5.5)
 
 		self._SaveActive = false
-
-		--m_GameDirector:OnLevelLoaded()
 	end
 
 	self._SaveStateMachineCounter = self._SaveStateMachineCounter + 1

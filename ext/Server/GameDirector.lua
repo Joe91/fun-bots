@@ -157,7 +157,6 @@ function GameDirector:OnPlayerEnterExitCapturePoint(p_Player, p_CapturePoint)
 	p_CapturePoint = CapturePointEntity(p_CapturePoint)
 	local s_ObjectiveName = self:_TranslateObjective(p_CapturePoint.transform.trans:Clone(), p_CapturePoint.name)
 	self:_UpdateObjective(s_ObjectiveName, {
-		-- team = p_CapturePoint.team,
 		isAttacked = p_CapturePoint.isAttacked
 	})
 end
@@ -1375,7 +1374,6 @@ end
 function GameDirector:GetSpawnableBeaconOrMate(p_TeamId, p_SquadId)
 	local s_SquadMates = PlayerManager:GetPlayersBySquad(p_TeamId, p_SquadId)
 
-	local s_BotStates = g_BotStates
 	for l_Index = 1, #s_SquadMates do
 		local l_Player = s_SquadMates[l_Index]
 		local s_Beacon = self:GetPlayerBeacon(l_Player.name)
@@ -1497,7 +1495,6 @@ function GameDirector:GetSpawnPath(p_TeamId, p_SquadId, p_OnlyBase)
 			local isBot = m_Utilities:isBot(player)
 			local s_WayIndex, s_PointIndex, s_Invert, s_Vehicle = self:TrySpawnInVehicle(player, isBot, true)
 			if s_WayIndex and s_PointIndex and s_Vehicle then
-				-- print("Returning a SQUAD Vehicle Spawn")
 
 				return s_WayIndex, s_PointIndex, s_Invert, s_Vehicle
 			end
@@ -1510,7 +1507,6 @@ function GameDirector:GetSpawnPath(p_TeamId, p_SquadId, p_OnlyBase)
 			local isBot = m_Utilities:isBot(player)
 			local s_WayIndex, s_PointIndex, s_Invert, s_Vehicle = self:TrySpawnInVehicle(player, isBot, false)
 			if s_WayIndex and s_PointIndex and s_Vehicle then
-				-- print("Returning a TEAM Vehicle Spawn")
 
 				return s_WayIndex, s_PointIndex, s_Invert, s_Vehicle
 			end
@@ -1523,7 +1519,6 @@ function GameDirector:GetSpawnPath(p_TeamId, p_SquadId, p_OnlyBase)
 			local isBot = m_Utilities:isBot(player)
 			local s_WayIndex, s_PointIndex, s_Invert, s_Vehicle = self:TrySpawnOnSoldier(player, isBot, true)
 			if s_WayIndex and s_PointIndex then
-				-- print("Returning a SQUAD Soldier Spawn")
 
 				return s_WayIndex, s_PointIndex, s_Invert, s_Vehicle
 			end
@@ -1536,7 +1531,6 @@ function GameDirector:GetSpawnPath(p_TeamId, p_SquadId, p_OnlyBase)
 			local isBot = m_Utilities:isBot(player)
 			local s_WayIndex, s_PointIndex, s_Invert, s_Vehicle = self:TrySpawnOnSoldier(player, isBot, false)
 			if s_WayIndex and s_PointIndex then
-				-- print("Returning a TEAM Soldier Spawn")
 
 				return s_WayIndex, s_PointIndex, s_Invert, s_Vehicle
 			end
@@ -1548,7 +1542,6 @@ function GameDirector:GetSpawnPath(p_TeamId, p_SquadId, p_OnlyBase)
 		if player.soldier and player.isAllowedToSpawnOn then
 			local s_WayIndex, s_PointIndex, s_Invert, s_Vehicle = self:TrySpawnOnBeacon(player, true)
 			if s_WayIndex then
-				-- print("Returning a SQUAD beacon Spawn")
 
 				return s_WayIndex, s_PointIndex, s_Invert, s_Vehicle
 			end
@@ -1560,7 +1553,6 @@ function GameDirector:GetSpawnPath(p_TeamId, p_SquadId, p_OnlyBase)
 		if player.soldier and player.isAllowedToSpawnOn then
 			local s_WayIndex, s_PointIndex, s_Invert, s_Vehicle = self:TrySpawnOnBeacon(player, false)
 			if s_WayIndex then
-				-- print("Returning a TEAM beacon Spawn")
 				return s_WayIndex, s_PointIndex, s_Invert, s_Vehicle
 			end
 		end
@@ -1610,8 +1602,8 @@ function GameDirector:GetSpawnPath(p_TeamId, p_SquadId, p_OnlyBase)
 			return 0, 0
 		end
 
-		for l_Index = 1, #s_PathsWithObjective do
-			local l_Path = s_PathsWithObjective[l_Index]
+		for l_PathIndex = 1, #s_PathsWithObjective do
+			local l_Path = s_PathsWithObjective[l_PathIndex]
 			if s_PathsDone[l_Path] then
 				goto continue_paths_loop
 			end
@@ -2115,17 +2107,17 @@ function GameDirector:_InitFlagTeams()
 	end
 
 	for l_Index = 1, #self._AllCapturePoints do
-		local s_Entity = self._AllCapturePoints[l_Index]
+		local s_CapturePoint = self._AllCapturePoints[l_Index]
 
-		local s_ObjectiveName = self:_TranslateObjective(s_Entity.transform.trans:Clone(), s_Entity.name)
+		local s_ObjectiveName = self:_TranslateObjective(s_CapturePoint.transform.trans:Clone(), s_CapturePoint.name)
 		if s_ObjectiveName ~= "" then
 			local s_Objective = self:_GetObjectiveObject(s_ObjectiveName)
 
 			---@diagnostic disable-next-line: need-check-nil
 			if not s_Objective.isBase then
 				self:_UpdateObjective(s_ObjectiveName, {
-					team = s_Entity.team,
-					isAttacked = s_Entity.isAttacked
+					team = s_CapturePoint.team,
+					isAttacked = s_CapturePoint.isAttacked
 				})
 			end
 		end

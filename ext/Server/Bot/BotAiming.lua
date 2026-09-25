@@ -130,7 +130,7 @@ local function _CompensateRecoil(p_Bot, p_Skill)
 
 	local s_CurrentRecoilDeviation = s_GunSway.currentRecoilDeviation
 	local s_CurrentDispersionDeviation = s_GunSway.currentDispersionDeviation
-	-- local s_CurrentLagDeviation = s_GunSway.currentLagDeviation -- Lag is always zero. No need to use it
+	-- currentLagDeviation is always zero, so it is not used.
 
 	local s_CurrentRecoilDeviationPitch = s_CurrentRecoilDeviation.pitch + s_CurrentDispersionDeviation.pitch
 	local s_CurrentRecoilDeviationYaw = s_CurrentRecoilDeviation.yaw + s_CurrentDispersionDeviation.yaw
@@ -344,7 +344,7 @@ end
 
 ---@param p_Bot Bot
 local function _RepairAimingAction(p_Bot)
-	if p_Bot._ShootPlayer.soldier == nil or p_Bot._RepairVehicleEntity == nil then
+	if p_Bot:UpdateRepairVehicleEntity() == nil then
 		return
 	end
 

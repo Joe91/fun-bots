@@ -69,11 +69,11 @@ function ChatCommands:Execute(p_Parts, p_Player)
 			end
 		end
 		print(s_unlock_path)
-		local s_weapon = Weapon(s_name_of_weapon, '', {}, WeaponTypes.None, s_unlock_path)
-		s_weapon:learnStatsValues()
-		print(s_weapon.bulletDrop)
-		print(s_weapon.bulletSpeed)
-		print(s_weapon.damage)
+		local s_WeaponInfo = Weapon(s_name_of_weapon, '', {}, WeaponTypes.None, s_unlock_path)
+		s_WeaponInfo:learnStatsValues()
+		print(s_WeaponInfo.bulletDrop)
+		print(s_WeaponInfo.bulletSpeed)
+		print(s_WeaponInfo.damage)
 	elseif p_Parts[1] == '!car' then
 		if PermissionManager:HasPermission(p_Player, 'ChatCommands') == false then
 			ChatManager:SendMessage('You have no permissions for this action (ChatCommands).', p_Player)
@@ -95,23 +95,23 @@ function ChatCommands:Execute(p_Parts, p_Player)
 			print(p_Player.controlledControllable.physicsEntityBase.partCount)
 			s_VehicleEntity = p_Player.controlledControllable.physicsEntityBase
 
-			if Registry.DEBUG.VEHICLE_PROJECTILE_TRACE and Globals.LastPorjectile ~= nil then
+			if Registry.DEBUG.VEHICLE_PROJECTILE_TRACE and Globals.LastProjectile ~= nil then
 				print("Offset of vehicle to bullet:")
-				local s_Diff = Globals.LastPorjectile.trans:Clone() - p_Player.controlledControllable.transform.trans:Clone()
+				local s_Diff = Globals.LastProjectile.trans:Clone() - p_Player.controlledControllable.transform.trans:Clone()
 
-				local s_Left = Globals.LastPorjectile.left:Clone()
+				local s_Left = Globals.LastProjectile.left:Clone()
 				local s_FactLeft = s_Diff:Dot(s_Left) / s_Left:Dot(s_Left)
 				print("x: " .. string.format("%.3f", s_FactLeft))
 
-				local s_Up = Globals.LastPorjectile.up:Clone()
+				local s_Up = Globals.LastProjectile.up:Clone()
 				local s_FactUp = s_Diff:Dot(s_Up) / s_Up:Dot(s_Up)
 				print("y: " .. string.format("%.3f", s_FactUp))
 
-				local s_Forward = Globals.LastPorjectile.forward:Clone()
+				local s_Forward = Globals.LastProjectile.forward:Clone()
 				local s_FactForward = s_Diff:Dot(s_Forward) / s_Forward:Dot(s_Forward)
 				print("z: " .. string.format("%.3f", s_FactForward))
 
-				local s_DistToHit = (((s_Diff):Cross(Globals.LastPorjectile.forward)).magnitude) / Globals.LastPorjectile.forward.magnitude
+				local s_DistToHit = (((s_Diff):Cross(Globals.LastProjectile.forward)).magnitude) / Globals.LastProjectile.forward.magnitude
 				print("Distance: " .. string.format("%.3f", s_DistToHit))
 				print("-----")
 			end
@@ -128,33 +128,33 @@ function ChatCommands:Execute(p_Parts, p_Player)
 
 					local s_Direction = s_QuatTransform:ToLinearTransform().forward - s_Pos
 					local s_Position = s_QuatTransform:ToLinearTransform().trans:Clone()
-					if Registry.DEBUG.VEHICLE_PROJECTILE_TRACE and Globals.LastPorjectile ~= nil then
-						local s_DiffDir = s_QuatTransform:ToLinearTransform().forward:Clone() - Globals.LastPorjectile.forward
+					if Registry.DEBUG.VEHICLE_PROJECTILE_TRACE and Globals.LastProjectile ~= nil then
+						local s_DiffDir = s_QuatTransform:ToLinearTransform().forward:Clone() - Globals.LastProjectile.forward
 
 						if s_DiffDir.magnitude < 0.05 then
 							print("index: " .. j)
 							print(s_Direction)
 							print(s_DiffDir)
 							print("Offset to bullet:")
-							local s_Diff = Globals.LastPorjectile.trans - s_Position
+							local s_Diff = Globals.LastProjectile.trans - s_Position
 
-							local s_Left = Globals.LastPorjectile.left
+							local s_Left = Globals.LastProjectile.left
 							local s_FactLeft = s_Diff:Dot(s_Left) / s_Left:Dot(s_Left)
 							print("x: " .. string.format("%.3f", s_FactLeft))
 
-							local s_Up = Globals.LastPorjectile.up
+							local s_Up = Globals.LastProjectile.up
 							local s_FactUp = s_Diff:Dot(s_Up) / s_Up:Dot(s_Up)
 							print("y: " .. string.format("%.3f", s_FactUp))
 
-							local s_Forward = Globals.LastPorjectile.forward
+							local s_Forward = Globals.LastProjectile.forward
 							local s_FactForward = s_Diff:Dot(s_Forward) / s_Forward:Dot(s_Forward)
 							print("z: " .. string.format("%.3f", s_FactForward))
 
 							-- only for validatiaon
 							-- local s_NewEnd = s_Position + (s_Forward * s_FactForward) + (s_Left * s_FactLeft) + (s_Up * s_FactUp)
-							-- print(s_NewEnd - Globals.LastPorjectile.trans)
+							-- print(s_NewEnd - Globals.LastProjectile.trans)
 
-							local s_DistToHit = (((s_Diff):Cross(Globals.LastPorjectile.forward)).magnitude) / Globals.LastPorjectile.forward.magnitude
+							local s_DistToHit = (((s_Diff):Cross(Globals.LastProjectile.forward)).magnitude) / Globals.LastProjectile.forward.magnitude
 							print("Distance: " .. string.format("%.3f", s_DistToHit))
 						end
 					else
@@ -176,7 +176,6 @@ function ChatCommands:Execute(p_Parts, p_Player)
 
 		if p_Player.attachedControllable ~= nil then
 			local s_VehicleName = VehicleEntityData(p_Player.controlledControllable.data).controllableType:gsub(".+/.+/", "")
-			local s_Pos = p_Player.controlledControllable.transform.forward:Clone()
 			local s_PlayerPos = p_Player.soldier.worldTransform.trans:Clone()
 			print("-----------------------------")
 			print(s_VehicleName)
@@ -188,7 +187,6 @@ function ChatCommands:Execute(p_Parts, p_Player)
 			s_VehicleEntity = p_Player.controlledControllable.physicsEntityBase
 
 			print("Offset of vehicle to bullet:")
-			-- local s_DiffProjectile = Globals.LastPorjectile.trans - p_Player.controlledControllable.transform.trans
 			for j = 0, s_VehicleEntity.partCount - 1 do
 				if j == 1 then                                                   --j == 1 or j == 3
 					if p_Player.controlledControllable.physicsEntityBase:GetPart(j) ~= nil then -- And p_Player.controlledControllable.physicsEntityBase:GetPart(j):Is("ServerChildComponent") then
@@ -198,19 +196,6 @@ function ChatCommands:Execute(p_Parts, p_Player)
 						end
 
 						print("index: " .. j)
-
-						-- print(p_Player.controlledControllable.physicsEntityBase:GetPart(j).typeInfo.name)
-						-- local s_TempX = s_QuatTransform.rotation.x
-						-- local s_TempY = s_QuatTransform.rotation.y
-						-- local s_TempZ = s_QuatTransform.rotation.z
-						-- local s_TempW = s_QuatTransform.rotation.w
-						-- s_QuatTransform.rotation.x = s_TempY
-						-- s_QuatTransform.rotation.y = s_TempZ
-						-- s_QuatTransform.rotation.z = s_TempW
-						-- s_QuatTransform.rotation.w = s_TempX
-
-						-- tested: x,y ; y,z; ; z,w; x,w; y,w;
-						-- x, y, z, w
 
 						local s_Euler = s_QuatTransform.rotation:ToEuler()
 						s_Euler.x = s_Euler.x
@@ -223,13 +208,13 @@ function ChatCommands:Execute(p_Parts, p_Player)
 
 
 						local s_DirOld = s_QuatTransform:ToLinearTransform().forward:Clone() + p_Player.controlledControllable.transform.left:Clone()
-						local s_DirrBullet = (Globals.LastPorjectile.trans - s_QuatTransform:ToLinearTransform().trans):Normalize()
+						local s_DirrBullet = (Globals.LastProjectile.trans - s_QuatTransform:ToLinearTransform().trans):Normalize()
 
 						local s_AtanDzDx = math.atan(s_DirOld.z, s_DirOld.x)
 						local s_Yaw1 = (s_AtanDzDx > math.pi / 2) and (s_AtanDzDx - math.pi / 2) or (s_AtanDzDx + 3 * math.pi / 2)
 						local s_Pitch1 = math.asin(s_DirOld.y / 1.0)
 
-						local s_AtanDzDx = math.atan(s_DirrBullet.z, s_DirrBullet.x)
+						s_AtanDzDx = math.atan(s_DirrBullet.z, s_DirrBullet.x)
 						local s_Yaw2 = (s_AtanDzDx > math.pi / 2) and (s_AtanDzDx - math.pi / 2) or (s_AtanDzDx + 3 * math.pi / 2)
 						local s_Pitch2 = math.asin(s_DirrBullet.y / 1.0)
 
@@ -251,9 +236,6 @@ function ChatCommands:Execute(p_Parts, p_Player)
 
 						print(s_Yaw1 + s_Yaw4)
 						print(s_Pitch1 + s_Pitch4)
-						-- print(s_Yaw1 - s_Yaw3)
-						-- print(s_Pitch1 - s_Pitch3)
-						-- print(s_QuatTransform.rotation)
 					end
 				end
 			end
@@ -295,7 +277,6 @@ function ChatCommands:Execute(p_Parts, p_Player)
 
 		if p_Player.attachedControllable ~= nil then
 			local s_VehicleName = VehicleEntityData(p_Player.controlledControllable.data).controllableType:gsub(".+/.+/", "")
-			local s_Pos = p_Player.controlledControllable.transform.forward:Clone()
 			print(s_VehicleName)
 			local s_VehicleEntity
 
@@ -331,11 +312,12 @@ function ChatCommands:Execute(p_Parts, p_Player)
 			return
 		end
 
-		if tonumber(p_Parts[2]) == nil then
+		local s_Length = tonumber(p_Parts[2])
+
+		if s_Length == nil then
 			return
 		end
 
-		local s_Length = tonumber(p_Parts[2])
 		local s_Spacing = tonumber(p_Parts[3]) or 2
 
 		m_BotSpawner:SpawnBotRow(p_Player, s_Length, s_Spacing)
@@ -349,11 +331,12 @@ function ChatCommands:Execute(p_Parts, p_Player)
 			return
 		end
 
-		if tonumber(p_Parts[2]) == nil then
+		local s_Height = tonumber(p_Parts[2])
+
+		if s_Height == nil then
 			return
 		end
 
-		local s_Height = tonumber(p_Parts[2])
 		m_BotSpawner:SpawnBotTower(p_Player, s_Height)
 	elseif p_Parts[1] == '!grid' then
 		if PermissionManager:HasPermission(p_Player, 'ChatCommands.Grid') == false then
@@ -365,12 +348,13 @@ function ChatCommands:Execute(p_Parts, p_Player)
 			return
 		end
 
-		if tonumber(p_Parts[2]) == nil then
+		local s_Rows = tonumber(p_Parts[2])
+
+		if s_Rows == nil then
 			return
 		end
 
-		local s_Rows = tonumber(p_Parts[2])
-		local s_Columns = tonumber(p_Parts[3]) or tonumber(p_Parts[2])
+		local s_Columns = tonumber(p_Parts[3]) or s_Rows
 		local s_Spacing = tonumber(p_Parts[4]) or 2
 
 		m_BotSpawner:SpawnBotGrid(p_Player, s_Rows, s_Columns, s_Spacing)
@@ -417,11 +401,11 @@ function ChatCommands:Execute(p_Parts, p_Player)
 			return
 		end
 
-		if tonumber(p_Parts[2]) == nil then
+		local s_Amount = tonumber(p_Parts[2])
+
+		if s_Amount == nil then
 			return
 		end
-
-		local s_Amount = tonumber(p_Parts[2])
 
 		m_BotSpawner:SpawnWayBots(s_Amount, true)
 		-- Respawn moving bots.
@@ -485,7 +469,7 @@ function ChatCommands:Execute(p_Parts, p_Player)
 		end
 
 		Config.BotAimWorsening = tonumber(p_Parts[2]) or 0.5
-		-- self:_modifyWeapons(Config.BotAimWorsening) --causes lag. Instead, restart round.
+		-- Takes effect after a round restart (reloading the weapons right away causes lag).
 	elseif p_Parts[1] == '!shootback' then
 		if PermissionManager:HasPermission(p_Player, 'ChatCommands.ShootBack') == false then
 			ChatManager:SendMessage('You have no permissions for this action (ChatCommands.ShootBack).', p_Player)

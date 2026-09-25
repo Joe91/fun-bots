@@ -62,9 +62,9 @@ function Language:I18N(p_Input, ...)
 		s_Arguments[#s_Arguments + 1] = select(index, ...)
 	end
 
-	-- if Debug.Shared.LANGUAGE then
-	-- print(s_Arguments[1])
-	-- end
+	if Debug.Shared.LANGUAGE then
+		print(s_Arguments[1])
+	end
 
 	if self._Translations ~= nil then
 		if self._Translations[self._Language] ~= nil then

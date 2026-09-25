@@ -3,7 +3,6 @@
 VehicleAttacking = class('VehicleAttacking')
 
 ---@type Utilities
-local m_Utilities = require('__shared/Utilities')
 ---@type Vehicles
 local m_Vehicles = require("Vehicles")
 

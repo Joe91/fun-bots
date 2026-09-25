@@ -96,7 +96,7 @@ local function _RepairAttackingAction(p_DeltaTime, p_Bot)
 	p_Bot._ShootModeTimer = p_Bot._ShootModeTimer - p_DeltaTime
 	p_Bot.m_ActiveMoveMode = BotMoveModes.ReviveC4 -- Movement-mode : repair.
 
-	if p_Bot._RepairVehicleEntity then
+	if p_Bot:UpdateRepairVehicleEntity() then
 		local s_CurrentHealth = PhysicsEntity(p_Bot._RepairVehicleEntity).internalHealth
 
 		-- Check for repair if close to vehicle.

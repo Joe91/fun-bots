@@ -74,8 +74,6 @@ function Weapon:learnStatsValues()
 		return
 	end
 
-	-- m_Logger:Write(self.name..': '..tostring(aiData.name))
-
 	-- Stats depending on weapon-type.
 	local s_AiDataString = tostring(s_AiData.name)
 	local s_FireDuration = 0.0

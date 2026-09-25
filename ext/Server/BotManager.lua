@@ -76,16 +76,9 @@ end
 function BotManager:OnLevelDestroy()
 	m_Logger:Write("destroyLevel")
 
-	-- TODO: Alternative by Beschützer:
-	-- self:DestroyAll(nil, nil, true)
-	-- self:RegisterVars()
-
-	-- close to original behaviour, but maybe improved
 	self._InitDone = false
 	self:ResetAllBots()
 
-
-	-- self._BotInputs = {} -- TODO: maybe clear those and fill them again?
 	self._ActivePlayers = {}
 	self._BotAttackBotTimer = 0.0
 	self._BotReviveBotTimer = 0.0
@@ -855,8 +848,6 @@ end
 ---@param p_SquadId SquadId
 ---@return Bot|nil
 function BotManager:CreateBot(p_Name, p_TeamId, p_SquadId)
-	-- m_Logger:Write('botsByTeam['..#self._BotsByTeam[2]..'|'..#self._BotsByTeam[3]..']')
-
 	local s_Bot = self:GetBotByName(p_Name)
 
 	-- Bot exists, so just reset him.
@@ -1086,6 +1077,7 @@ function BotManager:DestroyBot(p_Bot)
 	if p_Bot == nil then
 		return
 	end
+	---@cast p_Bot Bot
 
 	for l_Index = #self._Bots, 1, -1 do
 		local s_Bot = self._Bots[l_Index]

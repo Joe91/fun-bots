@@ -6,7 +6,6 @@ StateInVehicleChopperControl = class('StateInVehicleChopperControl')
 -- bot-methods
 local m_VehicleAiming = require('Bot/VehicleAiming')
 local m_VehicleAttacking = require('Bot/VehicleAttacking')
-local m_VehicleMovement = require('Bot/VehicleMovement')
 local m_ChopperControl = require('Bot/VehicleChopperControl')
 local m_VehicleWeaponHandling = require('Bot/VehicleWeaponHandling')
 
@@ -34,7 +33,6 @@ function StateInVehicleChopperControl:Update(p_Bot, p_DeltaTime)
 		m_VehicleAttacking:UpdateAttackingVehicle(p_DeltaTime, p_Bot)
 	else
 		m_ChopperControl:UpdateMovementChopper(p_DeltaTime, p_Bot)
-		-- m_VehicleMovement:UpdateNormalMovementVehicle(p_DeltaTime, p_Bot)
 	end
 
 	-- Common things.

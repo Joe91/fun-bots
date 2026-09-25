@@ -13,7 +13,6 @@ StateInVehicleAttacking = class('StateInVehicleAttacking')
 
 -- bot-methods
 local m_Vehicles = require('Vehicles')
-local m_AirTargets = require('AirTargets')
 local m_VehicleAiming = require('Bot/VehicleAiming')
 local m_VehicleAttacking = require('Bot/VehicleAttacking')
 local m_VehicleMovement = require('Bot/VehicleMovement')

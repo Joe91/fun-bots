@@ -64,7 +64,7 @@ local m_ChatCommands = require('Commands/Chat')
 ---@type Console
 local m_Console = require('Commands/Console')
 ---@type RCONCommands
-local m_RCONCommands = require('Commands/RCON')
+require('Commands/RCON')
 ---@type AirTargets
 local m_AirTargets = require('AirTargets')
 ---@type GameDirector
@@ -575,11 +575,8 @@ function FunBotServer:OnEntityFactoryCreate(p_HookCtx, p_EntityData, p_Transform
 	end
 	if Registry.DEBUG.VEHICLE_PROJECTILE_TRACE then
 		if p_EntityData.typeInfo.name == "ProjectileEntityData" or p_EntityData.typeInfo.name == "BulletEntityData" or p_EntityData.typeInfo.name == "MissileEntityData" then
-			local s_CreatedEntity = p_HookCtx:Call()
-			if s_CreatedEntity then
-				local s_SpartialEntity = SpatialEntity(s_CreatedEntity)
-				-- Globals.LastPorjectile = s_SpartialEntity.transform
-			end
+			p_HookCtx:Call()
+			-- To trace projectiles: Globals.LastProjectile = SpatialEntity(<created entity>).transform
 		end
 	end
 end
@@ -594,7 +591,7 @@ function FunBotServer:OnBulletEntityCollision(p_HookCtx, p_Entity, p_Hit, p_Give
 	end
 
 	if Registry.DEBUG.VEHICLE_PROJECTILE_TRACE then
-		Globals.LastPorjectile = SpatialEntity(p_Entity).transform
+		Globals.LastProjectile = SpatialEntity(p_Entity).transform
 	end
 
 	if p_GiverInfo.giver and p_GiverInfo.giver.onlineId == 0 then
@@ -729,12 +726,8 @@ function FunBotServer:OnStationaryAACallback(p_FiringFunctionData)
 	p_FiringFunctionData = FiringFunctionData(p_FiringFunctionData)
 	p_FiringFunctionData:MakeWritable()
 	p_FiringFunctionData.overHeat.heatPerBullet = 0.0001
-	p_FiringFunctionData.dispersion[1].minAngle = 0.2 -- Config.spreadMinAngle
-	p_FiringFunctionData.dispersion[1].maxAngle = 0.6 -- Config.spreadMaxAngle
-	-- p_FiringFunctionData.shot.initialSpeed = Vec3(0, 0, Config.bulletSpeed)
-	-- p_FiringFunctionData.shot.initialPosition = Vec3(0, 0, 35)
-	-- p_FiringFunctionData.fireLogic.rateOfFire = Config.rateOfFire
-	-- p_FiringFunctionData.fireLogic.clientFireRateMultiplier = Config.clientFireRateMultiplier
+	p_FiringFunctionData.dispersion[1].minAngle = 0.2
+	p_FiringFunctionData.dispersion[1].maxAngle = 0.6
 end
 
 -- Tweak team setup.

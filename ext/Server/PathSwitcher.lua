@@ -255,14 +255,6 @@ function PathSwitcher:GetNewPath(p_Bot, p_BotId, p_Point, p_Objective, p_InVehic
 		return false
 	end
 
-	-- Remove paths below our highest priority.
-
-	-- m_Logger:Write('Full List -> ' .. g_Utilities:dump(s_Paths, true, 2))
-
-	-- m_Logger:Write('Trimmed Priority List -> ' .. g_Utilities:dump(s_ValidPaths, true, 2))
-	-- m_Logger:Write('Current Priority -> ' .. s_CurrentPriority)
-	-- m_Logger:Write('#s_Paths -> '..(#s_Paths))
-
 	if #s_ValidPaths == 0 then
 		return false
 	end

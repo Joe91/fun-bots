@@ -12,7 +12,6 @@ StateInVehicleStationaryAAControl = class('StateInVehicleStationaryAAControl')
 -- - idle (on death)
 
 -- bot-methods
-local m_Vehicles = require('Vehicles')
 local m_AirTargets = require('AirTargets')
 local m_VehicleAttacking = require('Bot/VehicleAttacking')
 local m_VehicleMovement = require('Bot/VehicleMovement')

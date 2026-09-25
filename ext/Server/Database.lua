@@ -193,8 +193,6 @@ function Database:BatchQuery(p_TableName, p_Parameters, p_Where)
 		end
 	end
 
-	-- m_Batches:add('UPDATE `' .. p_TableName .. '` SET ' .. s_Fields:join(', ') .. ' WHERE `' .. p_Where .. '`=\'' .. s_Found .. '\'')
-	-- m_Batches:add('INSERT OR REPLACE INTO ' .. p_TableName .. ' (' .. s_Names:join(', ') .. ') VALUES (' .. s_Values:join(', ') .. ')')
 	m_Batched = 'INSERT INTO ' .. p_TableName .. ' (' .. s_Names:join(', ') .. ') VALUES '
 	m_Batches:add('(' .. s_Values:join(', ') .. ')')
 

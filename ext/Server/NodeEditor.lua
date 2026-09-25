@@ -35,9 +35,6 @@ function NodeEditor:RegisterVars()
 end
 
 function NodeEditor:RegisterCustomEvents()
-	-- Remove them?
-	-- NetEvents:Subscribe('UI_Request_Save_Settings', self, self.OnUIRequestSaveSettings)
-
 	-- EDIT-Events from Client. All of them require the waypoint-editor permission.
 	local s_Permission = 'UserInterface.WaypointEditor'
 	m_PermissionManager:SubscribeNetEvent('NodeEditor:Select', s_Permission, self, self.OnSelect)
@@ -657,7 +654,7 @@ function NodeEditor:OnRequestData(p_Player)
 	print('[NodeEditor] Sending ' .. tostring(#s_SerializedNodes) .. ' waypoints to client.')
 
 	-- TODO: better handling here for all Players
-	self:SendToAllPlayers('ClientNodeEditor:RevieveNodes', s_SerializedNodes)
+	self:SendToAllPlayers('ClientNodeEditor:ReceiveNodes', s_SerializedNodes)
 	print('[NodeEditor] Sent waypoints to client.')
 end
 
@@ -885,7 +882,7 @@ function NodeEditor:_getNewIndex()
 
 	local s_HighestIndex = 0
 
-	for l_PathIndex, l_Points in pairs(s_AllPaths) do
+	for l_PathIndex in pairs(s_AllPaths) do
 		if l_PathIndex > s_HighestIndex then
 			s_HighestIndex = l_PathIndex
 		end
@@ -968,19 +965,16 @@ function NodeEditor:EndTrace(p_Player)
 	local s_FirstWaypoint = self.m_CustomTrace[p_Player.onlineId]:GetFirst()
 
 	if s_FirstWaypoint then
-		local s_FirstWaypoint = self.m_CustomTrace[p_Player.onlineId]:GetFirst()
-
 		local s_StartPos = s_FirstWaypoint.Position + Vec3.up
 		local s_EndPos = self.m_CustomTrace[p_Player.onlineId]:GetLast().Position + Vec3.up
 		local s_RayHits = nil
 
 		local s_FlagsMaterial = MaterialFlags.MfNoCollisionResponse
-		---@type RayCastFlags
 		local s_RaycastFlags = RayCastFlags.DontCheckWater | RayCastFlags.DontCheckCharacter | RayCastFlags.DontCheckRagdoll |
 			RayCastFlags.CheckDetailMesh
 
 
-		s_RayHits = RaycastManager:DetailedRaycast(s_StartPos, s_EndPos, 2, s_FlagsMaterial, s_RaycastFlags)
+		s_RayHits = RaycastManager:DetailedRaycast(s_StartPos, s_EndPos, 2, s_FlagsMaterial, s_RaycastFlags --[[@as RayCastFlags]])
 
 		self.m_CustomTrace[p_Player.onlineId]:ClearSelection()
 		self.m_CustomTrace[p_Player.onlineId]:Select(nil, s_FirstWaypoint)
@@ -1130,9 +1124,9 @@ function NodeEditor:SaveTrace(p_Player, p_PathIndex)
 		local s_NewWaypoint = m_NodeCollection:Create(s_CurrentWaypoint)
 
 		if s_Direction == 'Next' then
-			m_NodeCollection:InsertAfter(s_ReferrenceWaypoint, s_NewWaypoint)
+			m_NodeCollection:InsertAfter(s_ReferrenceWaypoint --[[@as Waypoint]], s_NewWaypoint)
 		else
-			m_NodeCollection:InsertBefore(s_ReferrenceWaypoint, s_NewWaypoint)
+			m_NodeCollection:InsertBefore(s_ReferrenceWaypoint --[[@as Waypoint]], s_NewWaypoint)
 		end
 
 		s_ReferrenceWaypoint = s_NewWaypoint
@@ -1196,7 +1190,7 @@ end
 function NodeEditor:EndOfLoad()
 	m_NodeCollection:ParseObjectives()
 	local s_Counter = 0
-	local s_Waypoints = m_NodeCollection:Get()
+	local s_Waypoints = m_NodeCollection:Get() --[[@as Waypoint[] ]]
 
 	for i = 1, #s_Waypoints do
 		local s_Waypoint = s_Waypoints[i]
@@ -1312,7 +1306,7 @@ function NodeEditor:OnEngineUpdate(p_DeltaTime, p_SimulationDeltaTime)
 						if s_Player.soldier.weaponsComponent.currentWeaponSlot == WeaponSlot.WeaponSlot_0 then
 							self.m_NodeWaitTimer[l_PlayerGuid] = 0.0
 
-							local s_NewWaypoint, s_Msg = self.m_CustomTrace[l_PlayerGuid]:Add()
+							local s_NewWaypoint = self.m_CustomTrace[l_PlayerGuid]:Add()
 							self.m_CustomTrace[l_PlayerGuid]:Update(s_NewWaypoint, {
 								Position = s_PlayerPos,
 							})

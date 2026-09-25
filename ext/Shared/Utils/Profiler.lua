@@ -47,7 +47,6 @@ end
 function Profiler:PrintStats(p_EventName)
 	local s_Data = self.m_Stats[p_EventName]
 	local s_AvgTime = s_Data.total_time / s_Data.count / (1000 * 1000)
-	local s_TotalTime = s_Data.total_time / (1000 * 1000)
 	local s_MaxTime = s_Data.max_time / (1000 * 1000)
 	print(string.format(
 		"Event: %s - Avg:  %.4f ms,  Max: %.2f ms",

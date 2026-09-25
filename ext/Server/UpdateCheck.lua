@@ -76,11 +76,9 @@ local function CompareVersion(p_CurrentVersion, p_ExternalVersion)
 		-- Compare numbers.
 		local s_TempVersion = p_CurrentVersion:gsub("V", "", 1):gsub("v", "", 1)
 		local s_NumericPartsCurrentVersion = s_TempVersion:split("-")[1]:split(".")
-		-- print(s_NumericPartsCurrentVersion)
 		s_TempVersion = p_ExternalVersion:gsub("V", "", 1):gsub("v", "", 1)
 		local s_NumericPartsRemoteVersion = s_TempVersion:split("-")[1]:split(".")
 
-		-- print(s_NumericPartsRemoteVersion)
 		for i = 1, #s_NumericPartsCurrentVersion do
 			local s_NumberCurrent = tonumber(s_NumericPartsCurrentVersion[i])
 			local s_NumberRemote = tonumber(s_NumericPartsRemoteVersion[i])

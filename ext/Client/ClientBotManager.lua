@@ -39,6 +39,7 @@ function ClientBotManager:OnClientUpdateInput(p_DeltaTime)
 	-- To-do: find a better solution for that!!!
 	if InputManager:WentKeyDown(InputDeviceKeys.IDK_Q) then
 		-- Execute Vehicle Enter Detection here.
+		self.m_Player = PlayerManager:GetLocalPlayer()
 		if self.m_Player ~= nil and self.m_Player.inVehicle then
 			local s_Transform = ClientUtils:GetCameraTransform()
 
@@ -83,6 +84,8 @@ function ClientBotManager:OnInputPreUpdate(p_HookCtx, p_Cache, p_DeltaTime)
 		return
 	end
 
+	-- Don't use a cached player, the local player object can be destroyed at round end.
+	self.m_Player = PlayerManager:GetLocalPlayer()
 	if self.m_Player ~= nil and self.m_Player.alive and self.m_Player.inVehicle then
 		for i = 1, 8 do
 			local s_Varname = "ConceptSelectPosition" .. tostring(i)
@@ -108,7 +111,6 @@ function ClientBotManager:OnEngineMessage(p_Message)
 	end
 
 	if p_Message.type == MessageType.ClientConnectionUnloadLevelMessage or
-		-- p_Message.type == MessageType.ClientCharacterLocalPlayerDeletedMessage or
 		p_Message.type == MessageType.UIRequestEndOfRoundMessage then
 		print("End: " .. tostring(p_Message.type))
 		self.m_ReadyToUpdate = false
@@ -224,7 +226,7 @@ function ClientBotManager:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 
 		local s_RaycastEntriesDone = 0
 
-		for i = 1, s_MaxRaycastsBotBot do
+		for _ = 1, s_MaxRaycastsBotBot do
 			if (#self.m_BotBotRaycastsToDo > 0) then
 				---@type RaycastRequests
 				local s_RaycastCheckEntry = table.remove(self.m_BotBotRaycastsToDo, 1)
@@ -267,13 +269,10 @@ function ClientBotManager:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 		end
 	end
 
+	self.m_Player = PlayerManager:GetLocalPlayer()
 	if self.m_Player == nil then
-		self.m_Player = PlayerManager:GetLocalPlayer()
-
-		if self.m_Player == nil then
-			self:SendRaycastResults(s_RaycastResultsToSend)
-			return
-		end
+		self:SendRaycastResults(s_RaycastResultsToSend)
+		return
 	end
 
 	if s_SkipEnemyCheck then

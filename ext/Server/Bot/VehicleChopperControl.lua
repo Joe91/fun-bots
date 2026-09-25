@@ -5,7 +5,6 @@ VehicleChopperControl = class('VehicleChopperControl')
 ---@type Utilities
 local m_Utilities = require('__shared/Utilities')
 ---@type Vehicles
-local m_Vehicles = require('Vehicles')
 
 function VehicleChopperControl:__init()
 	-- Nothing to do.
@@ -146,19 +145,14 @@ function VehicleChopperControl:UpdateYawChopperPilot(p_Bot, p_Attacking) -- only
 		p_Bot.m_Player.input:SetLevel(EntryInputActionEnum.EIABrake, 0.0)
 	end
 
-	-- FORWARD (depending on speed).
-	-- A: use distance horizontally between points for speed-value → not that good for that.
-	-- local DeltaX = p_Bot._NextTargetPoint.Position.x - p_Bot._TargetPoint.Position.x
-	-- local DeltaZ = p_Bot._NextTargetPoint.Position.z - p_Bot._TargetPoint.Position.z
-	-- local Distance = math.sqrt(DeltaX*DeltaX + DeltaZ*DeltaZ)
-	-- B: just fly with constant speed →
+	-- FORWARD: fly with a constant forward tilt (scaling it by the distance between points didn't work well).
 
 	local s_Delta_Tilt = 0
 	if p_Attacking then
 		s_Delta_Tilt = -s_DeltaPitch
 	else
-		local s_Tartget_Tilt = -0.35 -- = 20°
-		s_Delta_Tilt = s_Tartget_Tilt - s_Current_Pitch
+		local s_Target_Tilt = -0.35 -- = 20°
+		s_Delta_Tilt = s_Target_Tilt - s_Current_Pitch
 	end
 
 	local s_Output_Tilt = p_Bot._Pid_Drv_Tilt:Update(s_Delta_Tilt)
