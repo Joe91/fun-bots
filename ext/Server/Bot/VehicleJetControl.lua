@@ -99,9 +99,6 @@ function VehicleJetControl:CalculateDeviationRelativeToOrientation(p_Transform, 
 	-- Calculate the dot product
 	local dotProduct = normalizedDirection:Dot(normalizedToTarget)
 
-	-- Calculate the angle between the vectors - not needed
-	-- local angle = math.acos(dotProduct)
-
 	-- Calculate the cross product to determine the sign of the angle
 	local crossProduct = normalizedDirection:Cross(normalizedToTarget)
 
@@ -123,7 +120,6 @@ function VehicleJetControl:UpdateYawJet(p_Bot, p_Attacking)
 
 	local s_DeltaYaw, s_DeltaPitch = 0, 0
 	if p_Attacking then
-		-- print({ p_Bot._AttackPosition, p_Bot.m_Player.controlledControllable.transform.trans })
 		s_DeltaYaw, s_DeltaPitch = self:CalculateDeviationRelativeToOrientation(p_Bot.m_Player.controlledControllable.transform:Clone(), p_Bot._AttackPosition)
 		if p_Bot.m_Player.controlledControllable.transform.trans.y > p_Bot._TargetPoint.Position.y + 120 then
 			p_Bot._JetTakeoffActive = false
@@ -136,38 +132,8 @@ function VehicleJetControl:UpdateYawJet(p_Bot, p_Attacking)
 		s_DeltaYaw, s_DeltaPitch = self:CalculateDeviationRelativeToOrientation(p_Bot.m_Player.controlledControllable.transform:Clone(), p_Bot._TargetPoint.Position)
 	end
 
-	-- local s_FacingDown = p_Bot.m_Player.controlledControllable.transform.forward.y < 0.2
-	-- local s_FacingUp = p_Bot.m_Player.controlledControllable.transform.forward.y > 0.2
-	-- local s_IsUpwards = p_Bot.m_Player.controlledControllable.transform.up.y > 0.0
-	-- local s_IsBelowTarget = p_Bot.m_Player.controlledControllable.transform.up.y < s_TargetPosition.y
-	-- if s_FacingDown then
-	-- 	if math.abs(s_DeltaPitch) > math.pi / 2 then
-	-- 		if s_IsBelowTarget then
-	-- 			if s_IsUpwards and s_DeltaPitch < 0 then
-	-- 				s_DeltaPitch = 2 * math.pi + s_DeltaPitch
-	-- 			elseif not s_IsUpwards and s_DeltaPitch > 0 then
-	-- 				s_DeltaPitch = -2 * math.pi + s_DeltaPitch
-	-- 			end
-	-- 		else
-	-- 			if s_IsUpwards and s_DeltaPitch > 0 then
-	-- 				s_DeltaPitch = -2 * math.pi + s_DeltaPitch
-	-- 			elseif not s_IsUpwards and s_DeltaPitch < 0 then
-	-- 				s_DeltaPitch = 2 * math.pi + s_DeltaPitch
-	-- 			end
-	-- 		end
-	-- 	end
-	-- end
-
-	-- local s_Euler = p_Bot.m_Player.controlledControllable.transform:ToQuatTransform(false).rotation:ToEuler()
-	-- local s_Roll = s_Euler.y
-
-	-- s_Roll = s_Roll + math.pi
-
-	-- local s_TargetRoll = math.pi
-	-- local s_DelateRoll = s_TargetRoll - s_Roll
-
 	-- Roll
-	p_Bot.m_Player.input:SetLevel(EntryInputActionEnum.EIARoll, -3 * s_DeltaYaw) -- Use delta-yaw for this? s_DeltaRoll
+	p_Bot.m_Player.input:SetLevel(EntryInputActionEnum.EIARoll, -3 * s_DeltaYaw) -- Roll into the turn.
 
 	-- TILT
 	p_Bot.m_Player.input:SetLevel(EntryInputActionEnum.EIAPitch, 3 * s_DeltaPitch)

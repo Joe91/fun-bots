@@ -33,7 +33,6 @@ function StateInVehicleChopperControl:Update(p_Bot, p_DeltaTime)
 		m_VehicleAttacking:UpdateAttackingVehicle(p_DeltaTime, p_Bot)
 	else
 		m_ChopperControl:UpdateMovementChopper(p_DeltaTime, p_Bot)
-		-- m_VehicleMovement:UpdateNormalMovementVehicle(p_DeltaTime, p_Bot)
 	end
 
 	-- Common things.

@@ -587,8 +587,8 @@ VehicleData = {
 		Parts = { -1, { 1, 3 }, { 0, 2 } },
 		Speed = { 300, { 600, 900 }, { 250, 900 } },
 		Drop = { 0.0, { 0.0, 0.0 }, { 0.0, 0.0 } },
-		--FirstPassengerSeat = 3, although the 1st one should be the piolt one is disabled due to the auto driving logic in a certain orbit
-		FirstPassengerSeat = 4,                                                                                                                         --Lets try with 4 as its index ?
+		-- Seat 3 (first gunner) is left out: it is driven by the auto-orbit logic.
+		FirstPassengerSeat = 4,
 		RotationOffset = { Vec3(0, 0, 0), { Vec3(math.pi / 2, 0.52, 0), Vec3(math.pi / 2, 0, 0) }, { Vec3(math.pi / 2, 0.375, 0), Vec3(math.pi / 2, 0, 0) } } -- use yaw and pitch as offset here
 	},
 	-- AA Stationary.

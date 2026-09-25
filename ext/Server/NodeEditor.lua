@@ -35,9 +35,6 @@ function NodeEditor:RegisterVars()
 end
 
 function NodeEditor:RegisterCustomEvents()
-	-- Remove them?
-	-- NetEvents:Subscribe('UI_Request_Save_Settings', self, self.OnUIRequestSaveSettings)
-
 	-- EDIT-Events from Client. All of them require the waypoint-editor permission.
 	local s_Permission = 'UserInterface.WaypointEditor'
 	m_PermissionManager:SubscribeNetEvent('NodeEditor:Select', s_Permission, self, self.OnSelect)
@@ -657,7 +654,7 @@ function NodeEditor:OnRequestData(p_Player)
 	print('[NodeEditor] Sending ' .. tostring(#s_SerializedNodes) .. ' waypoints to client.')
 
 	-- TODO: better handling here for all Players
-	self:SendToAllPlayers('ClientNodeEditor:RevieveNodes', s_SerializedNodes)
+	self:SendToAllPlayers('ClientNodeEditor:ReceiveNodes', s_SerializedNodes)
 	print('[NodeEditor] Sent waypoints to client.')
 end
 

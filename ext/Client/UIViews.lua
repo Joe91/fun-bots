@@ -6,7 +6,6 @@ require('__shared/ArrayMap')
 
 function UIViews:__init()
 	self._views = ArrayMap()
-	-- Events:Subscribe('UI_Close', self, self._onUIClose)
 end
 
 -- Events.
@@ -22,31 +21,13 @@ function UIViews:OnExtensionUnloading()
 	WebUI:Hide()
 end
 
-function UIViews:_onUIClose(p_Name)
-	-- To-do: p_Name of closing view.
-	-- if self:isVisible() and self._views:isEmpty() then
-	-- self:close()
-	-- end
-end
-
--- Open the complete WebUI.
--- function UIViews:open()
--- WebUI:Show()
--- end
-
--- Close the complete WebUI.
--- function UIViews:close()
--- WebUI:Hide()
--- self:disable()
--- end
-
 -- Enable Mouse/Keyboard actions.
 function UIViews:enable()
 	WebUI:EnableMouse()
 	WebUI:EnableKeyboard()
 end
 
--- Enable Mouse/Keyboard actions.
+-- Enable Mouse actions only.
 function UIViews:enableMouseOnly()
 	WebUI:EnableMouse()
 end
@@ -97,7 +78,6 @@ function UIViews:show(p_Name)
 
 	self._views:add(p_Name)
 	WebUI:ExecuteJS('BotEditor.show(\'' .. p_Name .. '\')')
-	-- self:_handleViewManagement()
 end
 
 -- Hide a view.
@@ -107,21 +87,11 @@ function UIViews:hide(p_Name)
 	end
 
 	WebUI:ExecuteJS('BotEditor.hide(\'' .. p_Name .. '\')')
-	-- self:_handleViewManagement()
 end
 
 -- Send an error to the specified view.
 function UIViews:error(p_Name, p_Text)
 	WebUI:ExecuteJS('BotEditor.error(\'' .. p_Name .. '\', \'' .. self:escape(p_Text) .. '\')')
 end
-
--- Handle WebUI when view-stack is empty.
--- function UIViews:_handleViewManagement()
--- if self._views:isEmpty() then
--- self:close()
--- else
--- self:open()
--- end
--- end
 
 return UIViews

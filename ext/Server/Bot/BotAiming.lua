@@ -130,7 +130,7 @@ local function _CompensateRecoil(p_Bot, p_Skill)
 
 	local s_CurrentRecoilDeviation = s_GunSway.currentRecoilDeviation
 	local s_CurrentDispersionDeviation = s_GunSway.currentDispersionDeviation
-	-- local s_CurrentLagDeviation = s_GunSway.currentLagDeviation -- Lag is always zero. No need to use it
+	-- currentLagDeviation is always zero, so it is not used.
 
 	local s_CurrentRecoilDeviationPitch = s_CurrentRecoilDeviation.pitch + s_CurrentDispersionDeviation.pitch
 	local s_CurrentRecoilDeviationYaw = s_CurrentRecoilDeviation.yaw + s_CurrentDispersionDeviation.yaw

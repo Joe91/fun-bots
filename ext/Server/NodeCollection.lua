@@ -143,24 +143,12 @@ function NodeCollection:Register(p_Waypoint)
 
 	if #self._Waypoints ~= p_Waypoint.Index then
 		self._PrintDiagOnInvalidPointindex = true
-
-		-- local s_Diff = p_Waypoint.Index - #self._Waypoints
-		-- m_Logger:Warning('New Node Index does not match: p_Waypoint.Index:' ..
-		-- 	tostring(p_Waypoint.Index) .. ' | #self._Waypoints:' .. tostring(#self._Waypoints) .. ' | ' .. tostring(s_Diff))
 	end
 
-	-- table.insert(self._WaypointsByPathIndex[p_Waypoint.PathIndex], p_Waypoint)
 	self._WaypointsByPathIndex[p_Waypoint.PathIndex][#self._WaypointsByPathIndex[p_Waypoint.PathIndex] + 1] = p_Waypoint
 
 	if #self._WaypointsByPathIndex[p_Waypoint.PathIndex] ~= p_Waypoint.PointIndex then
 		self._PrintDiagOnInvalidPointindex = true
-
-		-- local s_Diff = p_Waypoint.PointIndex - #self._WaypointsByPathIndex[p_Waypoint.PathIndex]
-		-- m_Logger:Warning('New Node PointIndex does not match: p_Waypoint.PointIndex: ' ..
-		-- 	tostring(p_Waypoint.PointIndex) ..
-		-- 	' | #self._WaypointsByPathIndex[' ..
-		-- 	p_Waypoint.PathIndex ..
-		-- 	']: ' .. tostring(#self._WaypointsByPathIndex[p_Waypoint.PathIndex]) .. ' | ' .. tostring(s_Diff))
 	end
 
 	self._WaypointsByID[p_Waypoint.ID] = p_Waypoint
@@ -1672,8 +1660,6 @@ function NodeCollection:ProcessAllDataToSave()
 			5.5)
 
 		self._SaveActive = false
-
-		--m_GameDirector:OnLevelLoaded()
 	end
 
 	self._SaveStateMachineCounter = self._SaveStateMachineCounter + 1

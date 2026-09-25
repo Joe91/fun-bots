@@ -14,9 +14,6 @@ function Bot:ApplyPathOffset(p_OriginalPoint, p_NextPoint, p_NextToNextPoint)
 	-- m_OffsetRecoveryNodes counts update cycles (one per call), not nodes.
 	if self.m_PathSide ~= 0 and self.m_OffsetRecoveryNodes and self.m_OffsetRecoveryNodes > 0 then
 		self.m_OffsetRecoveryNodes = self.m_OffsetRecoveryNodes - 1
-		-- if self.m_OffsetRecoveryNodes == 0 then - Stay on one side of one path
-		-- 	self.m_PathSide = math.random(-1, 1)
-		-- end
 		return p_OriginalPoint, p_NextPoint
 	end
 
@@ -86,24 +83,6 @@ function Bot:ApplyPathOffset(p_OriginalPoint, p_NextPoint, p_NextToNextPoint)
 	-- Calculate offset position
 	local offsetPosition = p_OriginalPoint.Position + right * (self.m_PathSide * self.m_OffsetDistance)
 	local offsetPositionNext = p_NextPoint.Position + rightNext * (self.m_PathSide * self.m_OffsetDistance)
-
-
-	-- -- Wall-slide check
-	-- local rayOrigin = p_OriginalPoint.Position + Vec3(0, 0.5, 0)
-	-- local sideCheck = RaycastManager:CollisionRaycast(
-	-- 	rayOrigin + Vec3(0, 0.5, 0),
-	-- 	offsetPosition + Vec3(0, 0.5, 0) + right * (self.m_PathSide * 0.4),
-	-- 	1, 0,
-	-- 	flags
-	-- )
-	-- if #sideCheck > 0 and sideCheck[1].position then
-	-- 	-- local comfortableDistance = sideCheck[1].position:Distance(rayOrigin) - 0.4
-	-- 	-- offsetPosition = p_OriginalPoint.Position + right * (self.m_PathSide * comfortableDistance)
-	-- 	-- offsetPositionNext = p_NextPoint.Position + right * (self.m_PathSide * comfortableDistance)
-
-	-- 	self.m_OffsetRecoveryNodes = 5 -- force center for 5 cycles
-	-- 	return p_OriginalPoint, p_NextPoint
-	-- end
 
 	return {
 			Position = offsetPosition,
@@ -207,7 +186,6 @@ function Bot:_HandleDefendingIfNeeded(p_DeltaTime)
 
 			self:LookAround(p_DeltaTime)
 
-			-- TODO: look at target
 			-- don't do anything else
 			return true
 		elseif self._DefendTimer >= (s_TargetTime - 2) then

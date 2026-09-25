@@ -36,7 +36,7 @@ function Bot:__init(p_Player)
 	-- statemachine-part
 	-- The active state object.
 	-- TODO: think about making use of subclasses which work like `class ("StateAttacking", BaseSoldierState)` & `class ("StateInVehicleAttacking", BaseInVehicleState)` & `class ("BaseInVehicleState", BaseVehicleState)`.
-	---@type StateAttacking|StateIdle|StateInVehicleAttacking|StateInVehicleChopperControl|StateInVehicleIdle|StateInVehicleJetControl|StateInVehicleMoving|StateInVehicleStationaryAAControl|StateMoving|StateOnVehicleAttacking|StateOnVehicleIdle
+	---@type StateAttacking|StateIdle|StateInVehicleAttacking|StateInVehicleChopperControl|StateInVehicleJetControl|StateInVehicleMoving|StateInVehicleStationaryAAControl|StateMoving|StateOnVehicleAttacking|StateOnVehicleIdle
 	self.m_ActiveState = g_BotStates.States.Idle
 	-- TODO: only used in StateInVehicleAttacking. Might make sense to move it to that class. Or move it to a BaseState class and inherit that in every other state as a subclass.
 	-- The timer of the current state.
@@ -496,7 +496,7 @@ end
 ---@param p_DeltaTime number
 function Bot:_UpdateLookAroundPassenger(p_DeltaTime)
 	-- Move around a little.
-	-- TODO: why is this check needed sometimes?
+	-- Can be nil while the bot enters or leaves the vehicle.
 	if self.m_Player.attachedControllable == nil then
 		return
 	end

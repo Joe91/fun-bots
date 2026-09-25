@@ -22,7 +22,7 @@ local BotSpawner = require('BotSpawner')
 
 function FunBotUIServer:__init()
 	-- To-do: remove? Unused.
-	self.m_NavigaionPath = {}
+	self.m_NavigationPath = {}
 	self.m_InPathMenu = false
 
 

@@ -108,7 +108,6 @@ function ClientBotManager:OnEngineMessage(p_Message)
 	end
 
 	if p_Message.type == MessageType.ClientConnectionUnloadLevelMessage or
-		-- p_Message.type == MessageType.ClientCharacterLocalPlayerDeletedMessage or
 		p_Message.type == MessageType.UIRequestEndOfRoundMessage then
 		print("End: " .. tostring(p_Message.type))
 		self.m_ReadyToUpdate = false

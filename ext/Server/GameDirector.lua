@@ -157,7 +157,6 @@ function GameDirector:OnPlayerEnterExitCapturePoint(p_Player, p_CapturePoint)
 	p_CapturePoint = CapturePointEntity(p_CapturePoint)
 	local s_ObjectiveName = self:_TranslateObjective(p_CapturePoint.transform.trans:Clone(), p_CapturePoint.name)
 	self:_UpdateObjective(s_ObjectiveName, {
-		-- team = p_CapturePoint.team,
 		isAttacked = p_CapturePoint.isAttacked
 	})
 end
@@ -1496,7 +1495,6 @@ function GameDirector:GetSpawnPath(p_TeamId, p_SquadId, p_OnlyBase)
 			local isBot = m_Utilities:isBot(player)
 			local s_WayIndex, s_PointIndex, s_Invert, s_Vehicle = self:TrySpawnInVehicle(player, isBot, true)
 			if s_WayIndex and s_PointIndex and s_Vehicle then
-				-- print("Returning a SQUAD Vehicle Spawn")
 
 				return s_WayIndex, s_PointIndex, s_Invert, s_Vehicle
 			end
@@ -1509,7 +1507,6 @@ function GameDirector:GetSpawnPath(p_TeamId, p_SquadId, p_OnlyBase)
 			local isBot = m_Utilities:isBot(player)
 			local s_WayIndex, s_PointIndex, s_Invert, s_Vehicle = self:TrySpawnInVehicle(player, isBot, false)
 			if s_WayIndex and s_PointIndex and s_Vehicle then
-				-- print("Returning a TEAM Vehicle Spawn")
 
 				return s_WayIndex, s_PointIndex, s_Invert, s_Vehicle
 			end
@@ -1522,7 +1519,6 @@ function GameDirector:GetSpawnPath(p_TeamId, p_SquadId, p_OnlyBase)
 			local isBot = m_Utilities:isBot(player)
 			local s_WayIndex, s_PointIndex, s_Invert, s_Vehicle = self:TrySpawnOnSoldier(player, isBot, true)
 			if s_WayIndex and s_PointIndex then
-				-- print("Returning a SQUAD Soldier Spawn")
 
 				return s_WayIndex, s_PointIndex, s_Invert, s_Vehicle
 			end
@@ -1535,7 +1531,6 @@ function GameDirector:GetSpawnPath(p_TeamId, p_SquadId, p_OnlyBase)
 			local isBot = m_Utilities:isBot(player)
 			local s_WayIndex, s_PointIndex, s_Invert, s_Vehicle = self:TrySpawnOnSoldier(player, isBot, false)
 			if s_WayIndex and s_PointIndex then
-				-- print("Returning a TEAM Soldier Spawn")
 
 				return s_WayIndex, s_PointIndex, s_Invert, s_Vehicle
 			end
@@ -1547,7 +1542,6 @@ function GameDirector:GetSpawnPath(p_TeamId, p_SquadId, p_OnlyBase)
 		if player.soldier and player.isAllowedToSpawnOn then
 			local s_WayIndex, s_PointIndex, s_Invert, s_Vehicle = self:TrySpawnOnBeacon(player, true)
 			if s_WayIndex then
-				-- print("Returning a SQUAD beacon Spawn")
 
 				return s_WayIndex, s_PointIndex, s_Invert, s_Vehicle
 			end
@@ -1559,7 +1553,6 @@ function GameDirector:GetSpawnPath(p_TeamId, p_SquadId, p_OnlyBase)
 		if player.soldier and player.isAllowedToSpawnOn then
 			local s_WayIndex, s_PointIndex, s_Invert, s_Vehicle = self:TrySpawnOnBeacon(player, false)
 			if s_WayIndex then
-				-- print("Returning a TEAM beacon Spawn")
 				return s_WayIndex, s_PointIndex, s_Invert, s_Vehicle
 			end
 		end

@@ -280,7 +280,6 @@ function VehicleMovement:UpdateNormalMovementVehicle(p_DeltaTime, p_Bot)
 				end
 			end
 		end
-		-- else -- no point: do nothing.
 	end
 end
 
@@ -427,9 +426,6 @@ function VehicleMovement:CalculateDeviationRelativeToOrientation(p_Transform, ta
 	-- Calculate the dot product
 	local dotProduct = normalizedDirection:Dot(normalizedToTarget)
 
-	-- Calculate the angle between the vectors - not needed
-	-- local angle = math.acos(dotProduct)
-
 	-- Calculate the cross product to determine the sign of the angle
 	local crossProduct = normalizedDirection:Cross(normalizedToTarget)
 
@@ -483,7 +479,6 @@ function VehicleMovement:UpdateYawVehicle(p_Bot, p_Attacking, p_IsStationaryLaun
 
 		local s_Direction = Vec3.zero
 		if p_Attacking then
-			-- print({ p_Bot._AttackPosition, p_Bot.m_Player.controlledControllable.transform.trans })
 			s_DeltaYaw, s_DeltaPitch = self:CalculateDeviationRelativeToOrientation(s_LinearTransformNew, p_Bot._AttackPosition)
 			s_Direction = p_Bot._AttackPosition:Clone() - s_LinearTransformNew.trans:Clone()
 		elseif p_Bot._TargetPoint then
@@ -502,7 +497,6 @@ function VehicleMovement:UpdateYawVehicle(p_Bot, p_Attacking, p_IsStationaryLaun
 				local s_Yaw = -s_Euler.x
 				local s_Pitch = m_Utilities:GetPitchFromEuler(s_Euler)
 
-				-- TODO: delta pitch also needed?
 				s_DeltaYaw = s_Yaw - p_Bot._TargetYaw
 				s_DeltaPitch = s_Pitch - p_Bot._TargetPitch
 
@@ -649,12 +643,10 @@ function VehicleMovement:UpdateYawVehicle(p_Bot, p_Attacking, p_IsStationaryLaun
 		end
 
 		p_Bot.m_Player.input:SetLevel(EntryInputActionEnum.EIARoll, -s_Output)
-		-- p_Bot.m_Player.input:SetLevel(EntryInputActionEnum.EIACameraYaw, -s_Output)
 
 		-- Pitch.
 		s_Output = p_Bot._Pid_Att_Pitch:Update(s_DeltaPitch)
 		p_Bot.m_Player.input:SetLevel(EntryInputActionEnum.EIAPitch, -s_Output)
-		-- p_Bot.m_Player.input:SetLevel(EntryInputActionEnum.EIACameraPitch, -s_Output)
 	end
 end
 

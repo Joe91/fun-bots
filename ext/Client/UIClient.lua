@@ -55,15 +55,7 @@ function FunBotUIClient:_onUIToggle()
 	end
 
 	self._views:execute('BotEditor.Hide()')
-	-- NetEvents:Send('PathMenu:Hide')
 	self._views:disable()
-
-	-- if self._views:isVisible() then
-	-- self._views:close()
-	-- else
-	-- self._views:open()
-	-- self._views:focus()
-	-- end
 end
 
 function FunBotUIClient:_onUICommoRose(p_Data)
@@ -166,7 +158,6 @@ function FunBotUIClient:_onUISettings(p_Data)
 		end
 
 		self._views:hide('settings')
-		-- self._views:blur()
 		return
 	end
 

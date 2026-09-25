@@ -10,7 +10,6 @@ function BotStates:__init()
 		Reviving = nil,
 		Repairing = nil,
 
-		-- InVehicleIdle = require('BotStates/StateInVehicleIdle'),
 		InVehicleMoving = require('BotStates/StateInVehicleMoving'),
 		InVehicleAttacking = require('BotStates/StateInVehicleAttacking'),
 

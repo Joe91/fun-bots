@@ -20,28 +20,6 @@ class BotEditor {
             view.dataset.show = false;
         });
 
-        // /* Coloring */
-        // [].map.call(document.querySelectorAll("ui-box"), (box) => {
-        //     const prop = window.getComputedStyle(box).getPropertyValue("background-image");
-        //     const re = /url\((['"])?(.*?)\1\)/gi;
-        //     const images = [];
-        //     let matches;
-
-        //     while ((matches = re.exec(prop)) !== null) {
-        //         images.push(matches[2]);
-        //     }
-
-        //     this.imagesHandler(images, (results) => {
-        //         let build = [];
-
-        //         results.forEach((entry) => {
-        //             build.push("url(" + entry + ")");
-        //         });
-
-        //         box.style.backgroundImage = build.join(", ");
-        //     });
-        // });
-
         this.bindMouseEvents();
         this.bindKeyboardEvents();
         this.bindKeyUpEvents();
@@ -72,62 +50,6 @@ class BotEditor {
 
     Hide() {
         this.hide("toolbar");
-    }
-
-    imagesHandler(images, callback) {
-        let finished = 0;
-
-        images.forEach((image, index) => {
-            this.imageHandler(image, (result) => {
-                images[index] = result;
-                ++finished;
-            });
-        });
-
-        let _watcher = setInterval(() => {
-            if (images.length == finished) {
-                clearInterval(_watcher);
-                callback(images);
-                return;
-            }
-        }, 0);
-    }
-
-    buildColor(string) {
-        // RGB
-        if (string.indexOf(",") > -1) {
-            let parts = string.split(",");
-
-            if (parts.length == 3) {
-                return "rgb(" + parts.join(", ") + ")";
-            }
-            // With Alpha-Transparency
-            else if (parts.length == 4) {
-                return "rgba(" + parts.join(", ") + ")";
-            }
-        }
-        // HEX
-        else {
-            return "#" + string;
-        }
-    }
-
-    imageHandler(url, callback) {
-        let image = new Image();
-        image.src = url;
-        image.crossOrigin = "Anonymous";
-        image.onload = () => {
-            let color = url.split("#")[1];
-            let canvas = document.createElement("canvas");
-            var context = canvas.getContext("2d");
-            canvas.width = image.width;
-            canvas.height = image.height;
-            context.fillStyle = this.buildColor(color);
-            context.fillRect(0, 0, canvas.width, canvas.height);
-            context.globalCompositeOperation = "destination-in";
-            context.drawImage(image, 0, 0);
-            callback(canvas.toDataURL("image/png"));
-        };
     }
 
     bindMouseEvents() {

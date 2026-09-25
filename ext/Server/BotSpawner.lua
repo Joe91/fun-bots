@@ -1212,12 +1212,9 @@ end
 
 ---@return boolean
 function BotSpawner:_HasMaxPlanePlayers(teamId)
-	-- print("Checking the playerData for planes for team " .. teamId)
 	local planeCount = 0
 	for _, playerData in pairs(g_PlayerData._Players) do
-		-- print(playerName .. " " .. playerData["Vehicle"] .. " " .. playerData["Team"])
 		if playerData.Vehicle == VehicleTypes.Plane and playerData.Team == teamId then
-			-- print("Plane found for " .. playerName)
 			planeCount = planeCount + 1
 			if planeCount == 2 then
 				return true
@@ -1251,7 +1248,6 @@ function BotSpawner:_CheckAndGetAvailableJetSpawn(p_TeamId)
 
 	while spawn do
 		if spawn.data:Is('CharacterSpawnReferenceObjectData') then
-			-- local spawnData = CharacterSpawnReferenceObjectData(spawn.data) -- the data attribs, meaning the EBX are always tatic, no need to check this really...
 			local spawnEntity = SpawnEntity(spawn)
 			if spawnEntity.teamId == p_TeamId and spawnEntity.enabled and
 				spawnEntity.spawnTimer == 0 and

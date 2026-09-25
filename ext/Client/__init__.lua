@@ -69,7 +69,6 @@ function FunBotClient:RegisterEvents()
 	Events:Subscribe('Level:Loaded', self, self.OnLevelLoaded)
 	Events:Subscribe('Player:Deleted', self, self.OnPlayerDeleted)
 	Events:Subscribe('Client:UpdateInput', self, self.OnClientUpdateInput)
-	Events:Subscribe('Engine:Update', self, self.OnEngineUpdate)
 	Events:Subscribe('Player:Respawn', self, self.OnPlayerRespawn)
 	Events:Subscribe('UI:DrawHud', self, self.OnUIDrawHud)
 	Events:Subscribe('Partition:Loaded', self, self.OnPartitionLoaded)
@@ -154,20 +153,12 @@ function FunBotClient:OnClientUpdateInput(p_DeltaTime)
 	m_FunBotUIClient:OnClientUpdateInput(p_DeltaTime)
 end
 
----VEXT Shared Engine:Update Event
----@param p_DeltaTime number
----@param p_SimulationDeltaTime number
-function FunBotClient:OnEngineUpdate(p_DeltaTime, p_SimulationDeltaTime)
-	-- m_ClientNodeEditor:OnEngineUpdate(p_DeltaTime, p_SimulationDeltaTime)
-end
-
 ---VEXT Client UI:DrawHud Event
 function FunBotClient:OnUIDrawHud()
 	if not self._ReadyToUpdate then
 		return
 	end
 	m_ClientNodeEditor:OnUIDrawHud()
-	-- m_ClientSpawnPointHelper:OnUIDrawHud()
 
 	if Registry.COMMON.USE_EXPERIMENTAL_NAMETAGS then
 		-- Just adding custom nametags to see the names of the friendly bots ... needs some clean up and a config to enable and disable it

@@ -75,7 +75,6 @@ function ClientSpawnPointHelper:Update(p_PlayerPos, p_NodesToDraw, p_LinesToDraw
 		local l_Pos = l_Transform.trans:Clone()
 		local s_Diff = l_Pos - p_PlayerPos
 		if s_Diff.x * s_Diff.x + s_Diff.y * s_Diff.y + s_Diff.z * s_Diff.z <= s_RangeSq then
-			-- self:DrawSpawnPoint(l_Transform, l_Index)
 			local s_Color = Vec4(1, 1, 1, 0.5)
 			local s_PointScreenPos = ClientUtils:WorldToScreen(l_Pos)
 
@@ -85,10 +84,6 @@ function ClientSpawnPointHelper:Update(p_PlayerPos, p_NodesToDraw, p_LinesToDraw
 				self.m_SelectedSpawnPointIndex = l_Index
 				s_Color = Vec4(0, 0, 1, 0.5)
 			end
-			-- end
-
-			-- local s_Up = Vec3(0, 1.5, 0)
-			-- local s_Offset = self:GetForwardOffsetFromLT(p_Transform)
 
 			table.insert(p_NodesToDraw, {
 				pos = l_Pos,
@@ -97,33 +92,6 @@ function ClientSpawnPointHelper:Update(p_PlayerPos, p_NodesToDraw, p_LinesToDraw
 				renderLines = true,
 				smallSizeSegmentDecrease = false,
 			})
-			-- table.insert(p_NodesToDraw, {
-			-- 	pos = l_Pos + s_Up,
-			-- 	radius = 0.3,
-			-- 	color = s_Color,
-			-- 	renderLines = true,
-			-- 	smallSizeSegmentDecrease = false,
-			-- })
-			-- table.insert(p_NodesToDraw, {
-			-- 	pos = s_Offset + s_Up,
-			-- 	radius = 0.1,
-			-- 	color = s_Color,
-			-- 	renderLines = true,
-			-- 	smallSizeSegmentDecrease = false,
-			-- })
-
-			-- table.insert(p_LinesToDraw, {
-			-- 	from = l_Pos,
-			-- 	to = l_Pos + s_Up,
-			-- 	colorFrom = s_Color,
-			-- 	colorTo = s_Color,
-			-- })
-			-- table.insert(p_LinesToDraw, {
-			-- 	from = l_Pos + s_Up,
-			-- 	to = s_Offset + s_Up,
-			-- 	colorFrom = s_Color,
-			-- 	colorTo = s_Color,
-			-- })
 		end
 	end
 end
@@ -144,19 +112,6 @@ function ClientSpawnPointHelper:OnClientUpdateInput(p_DeltaTime)
 
 		NetEvents:SendLocal("SpawnPointHelper:TeleportTo", self.m_SelectedSpawnPoint)
 	end
-end
-
--- Returns a Vec3 that's offset in the direction of the linearTransform.
-function ClientSpawnPointHelper:GetForwardOffsetFromLT(p_Transform)
-	-- We get the direction from the forward vector.
-	local s_Direction = p_Transform.forward
-
-	local s_Forward = Vec3(
-		p_Transform.trans.x + (s_Direction.x * 0.4),
-		p_Transform.trans.y + (s_Direction.y * 0.4),
-		p_Transform.trans.z + (s_Direction.z * 0.4))
-
-	return s_Forward
 end
 
 if g_ClientSpawnPointHelper == nil then

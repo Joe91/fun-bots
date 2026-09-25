@@ -46,7 +46,7 @@ function StateAttacking:Update(p_Bot, p_DeltaTime)
 
 
 	-- default-handling
-	p_Bot:UpdateWeaponSelection(p_DeltaTime) -- TODO: maybe compbine with reload now?
+	p_Bot:UpdateWeaponSelection(p_DeltaTime) -- TODO: maybe combine with reload now?
 
 	-- TODO: split revive, repari, c4 and so on
 	p_Bot:UpdateAttacking(p_DeltaTime)
