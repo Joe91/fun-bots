@@ -6,8 +6,6 @@ Open items from a static review of `ext/`, `WebUI/` and `fun-bots-helper/`. Fixe
 
 ## Open
 
-**Test in-game: chopper bank direction.** The fix for choppers banking the same way on every turn was made from source only and still needs checking in a live game.
-
 **I3. Table-driven command dispatch.** `Chat.lua` and `UIServer:_onBotEditorEvent` are long `if/elseif` chains. A table of `{permission, handler}` per command is shorter and makes a missing permission check obvious. Move debug-only commands (`!car`, `!caryaw`, `!cardiff`, `!weap`, `!dbg`, `!perks`, `!objectives`) behind `Registry.DEBUG`.
 
 **I4. Safer persistence (remaining).**
@@ -36,7 +34,7 @@ Collected from `TODO` comments. Each needs a design decision or an in-game test,
 
 **T4. Passenger look-around uses relative yaws.** `StateOnVehicleIdle` notes that `_UpdateLookAroundPassenger` is "little broken" and should set absolute yaws ([StateOnVehicleIdle.lua](../ext/Server/BotStates/StateOnVehicleIdle.lua)).
 
-**T5. `UpdateVehicleMovableId` resets all spawn vars.** It calls `ResetSpawnVars()` on every vehicle enter/exit, with `TODO: this might be too hard? Only Inputs relevant?` ([Bot.lua](../ext/Server/Bot/Bot.lua)). Check whether resetting only the inputs is enough.
+**T5. `UpdateVehicleMovableId` resets all spawn vars.** It calls `ResetSpawnVars()` on every vehicle enter/exit, with `TODO: this might be too hard? Only Inputs relevant?` ([Bot.lua](../ext/Server/Bot/Bot.lua)). Check whether resetting only the inputs is enough. If it is narrowed down, keep the PID-controller resets in it, so no stale integral or derivative carries over into the new seat.
 
 **T6. Bot names can collide with players.** `BotCreator` picks a name without checking for an existing player or bot of that name (`TODO: check for existing player or Bot?`, [BotCreator.lua](../ext/Server/BotCreator.lua)).
 

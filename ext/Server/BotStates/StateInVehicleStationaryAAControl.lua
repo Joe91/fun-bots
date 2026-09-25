@@ -85,7 +85,7 @@ function StateInVehicleStationaryAAControl:UpdateFast(p_Bot, p_DeltaTime)
 		m_VehicleMovement:UpdateVehicleLookAround(p_Bot, p_DeltaTime)
 	end
 
-	m_VehicleMovement:UpdateYawVehicle(p_Bot, s_IsAttacking, true)
+	m_VehicleMovement:UpdateYawVehicle(p_Bot, s_IsAttacking, true, p_DeltaTime)
 end
 
 ---update in every frame

@@ -449,7 +449,8 @@ end
 ---@param p_Bot Bot
 ---@param p_Attacking boolean
 ---@param p_IsStationaryLauncher boolean
-function VehicleMovement:UpdateYawVehicle(p_Bot, p_Attacking, p_IsStationaryLauncher)
+---@param p_DeltaTime number
+function VehicleMovement:UpdateYawVehicle(p_Bot, p_Attacking, p_IsStationaryLauncher, p_DeltaTime)
 	local s_DeltaYaw = 0
 	local s_DeltaPitch = 0
 	local s_CorrectGunYaw = false
@@ -550,10 +551,7 @@ function VehicleMovement:UpdateYawVehicle(p_Bot, p_Attacking, p_IsStationaryLaun
 					p_Bot._VehicleDirBackPositive = true
 				end
 			elseif m_Vehicles:IsAirVehicle(p_Bot.m_ActiveVehicle) and p_Bot.m_Player.controlledEntryId == 0 then
-				local s_Euler = p_Bot.m_Player.controlledControllable.transform:ToQuatTransform(false).rotation:ToEuler()
-
-				local s_Yaw = -s_Euler.x
-				local s_Pitch = m_Utilities:GetPitchFromEuler(s_Euler)
+				local s_Yaw, s_Pitch = m_Utilities:GetYawPitchRoll(p_Bot.m_Player.controlledControllable.transform)
 
 				s_DeltaPitch = s_Pitch - p_Bot._TargetPitch
 				s_DeltaYaw = s_Yaw - p_Bot._TargetYaw
@@ -585,7 +583,7 @@ function VehicleMovement:UpdateYawVehicle(p_Bot, p_Attacking, p_IsStationaryLaun
 
 	if not p_Attacking then
 		if p_Bot.m_Player.controlledEntryId == 0 and not p_IsStationaryLauncher then -- Driver.
-			local s_Output = p_Bot._Pid_Drv_Yaw:Update(s_DeltaYaw)
+			local s_Output = p_Bot._Pid_Drv_Yaw:Update(s_DeltaYaw, p_DeltaTime)
 
 			if p_Bot.m_ActiveSpeedValue == BotMoveSpeeds.Backwards then
 				p_Bot.m_Player.input:SetLevel(EntryInputActionEnum.EIAYaw, s_Output)
@@ -604,16 +602,16 @@ function VehicleMovement:UpdateYawVehicle(p_Bot, p_Attacking, p_IsStationaryLaun
 			end
 		else -- Passenger.
 			if p_Bot._VehicleMovableId >= 0 then
-				local s_Output = p_Bot._Pid_Att_Yaw:Update(s_DeltaYaw)
+				local s_Output = p_Bot._Pid_Att_Yaw:Update(s_DeltaYaw, p_DeltaTime)
 				p_Bot.m_Player.input:SetLevel(EntryInputActionEnum.EIARoll, -s_Output)
 
-				s_Output = p_Bot._Pid_Att_Pitch:Update(s_DeltaPitch)
+				s_Output = p_Bot._Pid_Att_Pitch:Update(s_DeltaPitch, p_DeltaTime)
 				p_Bot.m_Player.input:SetLevel(EntryInputActionEnum.EIAPitch, -s_Output)
 			end
 		end
 	else -- Attacking.
 		-- Yaw
-		local s_Output = p_Bot._Pid_Att_Yaw:Update(s_DeltaYaw)
+		local s_Output = p_Bot._Pid_Att_Yaw:Update(s_DeltaYaw, p_DeltaTime)
 
 		if p_Bot._VehicleMoveWhileShooting and p_Bot.m_Player.controlledEntryId == 0 and not p_IsStationaryLauncher then -- Driver
 			s_Pos = p_Bot.m_Player.controlledControllable.transform.forward:Clone()
@@ -627,7 +625,7 @@ function VehicleMovement:UpdateYawVehicle(p_Bot, p_Attacking, p_IsStationaryLaun
 				s_DeltaYawDriving = s_DeltaYawDriving + 2 * math.pi
 			end
 
-			local s_OutputDriving = p_Bot._Pid_Drv_Yaw:Update(s_DeltaYawDriving)
+			local s_OutputDriving = p_Bot._Pid_Drv_Yaw:Update(s_DeltaYawDriving, p_DeltaTime)
 
 			if p_Bot.m_ActiveSpeedValue == BotMoveSpeeds.Backwards then
 				p_Bot.m_Player.input:SetLevel(EntryInputActionEnum.EIAYaw, s_OutputDriving)
@@ -645,7 +643,7 @@ function VehicleMovement:UpdateYawVehicle(p_Bot, p_Attacking, p_IsStationaryLaun
 		p_Bot.m_Player.input:SetLevel(EntryInputActionEnum.EIARoll, -s_Output)
 
 		-- Pitch.
-		s_Output = p_Bot._Pid_Att_Pitch:Update(s_DeltaPitch)
+		s_Output = p_Bot._Pid_Att_Pitch:Update(s_DeltaPitch, p_DeltaTime)
 		p_Bot.m_Player.input:SetLevel(EntryInputActionEnum.EIAPitch, -s_Output)
 	end
 end

@@ -94,6 +94,24 @@ function Utilities:GetPitchFromEuler(p_Euler)
 	return -p_Euler.z / s_CosRoll
 end
 
+---Attitude of an object, taken directly from the axes of its transform (no Euler decomposition, so no
+---coupling between the angles and no singularities while flying).
+---yaw: same convention as the target yaw of the bots (atan(dz, dx) shifted to [0, 2pi], decreasing = turning left).
+---pitch: positive = nose up. roll: positive = rolled right (left side up).
+---@param p_Transform LinearTransform
+---@return number yaw
+---@return number pitch
+---@return number roll
+function Utilities:GetYawPitchRoll(p_Transform)
+	local s_Forward = p_Transform.forward
+	local s_AtanDzDx = math.atan(s_Forward.z, s_Forward.x)
+	local s_Yaw = (s_AtanDzDx > math.pi / 2) and (s_AtanDzDx - math.pi / 2) or (s_AtanDzDx + 3 * math.pi / 2)
+	local s_Pitch = math.asin(math.max(-1.0, math.min(1.0, s_Forward.y)))
+	-- Bank angle around the forward axis, independent of the pitch.
+	local s_Roll = math.atan(p_Transform.left.y, p_Transform.up.y)
+	return s_Yaw, s_Pitch, s_Roll
+end
+
 -- Do not use on numerically indexed tables, only tables with string keys.
 -- This is a shallow merge, does not recurse deeper than one p_Level.
 ---@param p_OriginalTable table

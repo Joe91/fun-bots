@@ -113,7 +113,8 @@ end
 
 ---@param p_Bot Bot
 ---@param p_Attacking boolean
-function VehicleJetControl:UpdateYawJet(p_Bot, p_Attacking)
+---@param p_DeltaTime number
+function VehicleJetControl:UpdateYawJet(p_Bot, p_Attacking, p_DeltaTime)
 	if p_Bot._TargetPoint == nil or p_Bot.m_Player.controlledControllable == nil then
 		return
 	end
@@ -139,13 +140,13 @@ function VehicleJetControl:UpdateYawJet(p_Bot, p_Attacking)
 	p_Bot.m_Player.input:SetLevel(EntryInputActionEnum.EIAPitch, 3 * s_DeltaPitch)
 
 	-- YAW
-	-- No backwards in planes.
-	p_Bot.m_Player.input:SetLevel(EntryInputActionEnum.EIAYaw, s_DeltaYaw)
+	-- No backwards in planes. s_DeltaYaw > 0 → target on the left → negative yaw-input (same convention as chopper / ground).
+	p_Bot.m_Player.input:SetLevel(EntryInputActionEnum.EIAYaw, -s_DeltaYaw)
 
 	-- Throttle.
 	-- Target velocity == 313 km/h → 86.9444 m/s
 	local s_Delta_Speed = 86.9444 - PhysicsEntity(p_Bot.m_Player.controlledControllable).velocity.magnitude
-	local s_Output_Throttle = p_Bot._Pid_Drv_Throttle:Update(s_Delta_Speed)
+	local s_Output_Throttle = p_Bot._Pid_Drv_Throttle:Update(s_Delta_Speed, p_DeltaTime)
 	if s_Output_Throttle > 0 then
 		p_Bot.m_Player.input:SetLevel(EntryInputActionEnum.EIAThrottle, s_Output_Throttle)
 		p_Bot.m_Player.input:SetLevel(EntryInputActionEnum.EIABrake, 0.0)

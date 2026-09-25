@@ -233,6 +233,15 @@ function Bot:ResetSpawnVars()
 	self.m_AttackPriority = 1
 	self.m_DelayedInputs = {}
 
+	self._Pid_Drv_Yaw:Reset()
+	self._Pid_Drv_Throttle:Reset()
+	self._Pid_Drv_YawChopper:Reset()
+	self._Pid_Drv_Height:Reset()
+	self._Pid_Drv_Tilt:Reset()
+	self._Pid_Drv_Roll:Reset()
+	self._Pid_Att_Yaw:Reset()
+	self._Pid_Att_Pitch:Reset()
+
 	-- Reset all input-vars.
 	---@type EntryInputActionEnum
 	for l_EIA = 0, 36 do

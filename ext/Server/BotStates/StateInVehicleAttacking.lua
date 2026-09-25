@@ -98,7 +98,7 @@ function StateInVehicleAttacking:UpdateFast(p_Bot, p_DeltaTime)
 		m_VehicleAiming:UpdateAimingVehicle(p_Bot, false)
 	end
 
-	m_VehicleMovement:UpdateYawVehicle(p_Bot, true, s_IsStationaryLauncher)
+	m_VehicleMovement:UpdateYawVehicle(p_Bot, true, s_IsStationaryLauncher, p_DeltaTime)
 end
 
 ---update in every frame

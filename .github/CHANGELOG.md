@@ -15,6 +15,7 @@ This is the changelog for release **V3.1.0**. Don't forget to [join us on Discor
 * World-Compensation for vehicle-guns
 * Try to fix Auto-AA on Rush
 * Add logic for jets in Rush
+* Improved Air-Vehicle-Control (much smoother now)
 
 
 ### Some optional TODOs:

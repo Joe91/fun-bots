@@ -59,7 +59,7 @@ function StateInVehicleChopperControl:UpdateFast(p_Bot, p_DeltaTime)
 		m_ChopperControl:UpdateTargetMovementChopper(p_Bot)
 	end
 
-	m_ChopperControl:UpdateYawChopperPilot(p_Bot, s_IsAttacking)
+	m_ChopperControl:UpdateYawChopperPilot(p_Bot, s_IsAttacking, p_DeltaTime)
 end
 
 ---update in every frame

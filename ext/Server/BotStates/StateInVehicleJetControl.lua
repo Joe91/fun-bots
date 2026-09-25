@@ -77,7 +77,7 @@ function StateInVehicleJetControl:UpdateFast(p_Bot, p_DeltaTime)
 		m_VehicleAiming:UpdateAimingVehicle(p_Bot, true)
 	end
 
-	m_JetControl:UpdateYawJet(p_Bot, s_IsAttacking)
+	m_JetControl:UpdateYawJet(p_Bot, s_IsAttacking, p_DeltaTime)
 end
 
 ---update in every frame

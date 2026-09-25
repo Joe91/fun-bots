@@ -183,22 +183,27 @@ function Bot:__init(p_Player)
 	self._ActiveVehicleWeaponSlot = 0
 	---@type ControllableEntity|nil
 	self._RepairVehicleEntity = nil
-	-- PID Controllers.
-	-- Normal driving.
+	-- PID Controllers (Kp, Ki [1/s], Kd [s], Limit), see PidController.
+	-- Normal driving (also chopper yaw).
 	---@type PidController
-	self._Pid_Drv_Yaw = PidController(5, 0.05, 0.2, 1.0)
-	-- Chopper / Plane
+	self._Pid_Drv_Yaw = PidController(5, 1.5, 0.007, 1.0)
+	-- Plane (speed).
 	---@type PidController
-	self._Pid_Drv_Throttle = PidController(3, 0.05, 0.2, 1.0)
+	self._Pid_Drv_Throttle = PidController(3, 1.5, 0.007, 1.0)
+	-- Chopper (yaw, height, tilt, roll). Derivative on the measurement to damp the motion.
 	---@type PidController
-	self._Pid_Drv_Tilt = PidController(6, 0.1, 0.2, 1.0)
+	self._Pid_Drv_YawChopper = PidController(3, 0.3, 1.2, 1.0, true)
 	---@type PidController
-	self._Pid_Drv_Roll = PidController(6, 0.1, 0.2, 1.0)
+	self._Pid_Drv_Height = PidController(1.0, 0.3, 1.0, 1.0)
+	---@type PidController
+	self._Pid_Drv_Tilt = PidController(3, 0.5, 1.0, 1.0)
+	---@type PidController
+	self._Pid_Drv_Roll = PidController(3, 0.5, 1.0, 1.0)
 	-- Guns.
 	---@type PidController
-	self._Pid_Att_Yaw = PidController(10, 2.0, 2.0, 1.0)
+	self._Pid_Att_Yaw = PidController(10, 60, 0.067, 1.0)
 	---@type PidController
-	self._Pid_Att_Pitch = PidController(10, 2.0, 2.0, 1.0)
+	self._Pid_Att_Pitch = PidController(10, 60, 0.067, 1.0)
 	-- movement
 
 	-- Shooting.
