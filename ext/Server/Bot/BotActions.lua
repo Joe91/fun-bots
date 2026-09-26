@@ -197,8 +197,8 @@ function Bot:ShootAt(p_Player, p_IgnoreYaw)
 
 		-- Transform the pitch and yaw to be relative to the bot's current
 		-- heading.
-		s_RelativePitch = m_Utilities:NormalizeAngleRad(s_Pitch - self.m_Player.input.authoritativeAimingPitch)
-		s_RelativeYaw = m_Utilities:NormalizeAngleRad(s_Yaw - self.m_Player.input.authoritativeAimingYaw)
+		s_RelativePitch = m_Utilities:NormalizeAngleRad(s_Pitch - self.m_Input.authoritativeAimingPitch)
+		s_RelativeYaw = m_Utilities:NormalizeAngleRad(s_Yaw - self.m_Input.authoritativeAimingYaw)
 
 		-- Halve configured horizontal & vertical FOVs and convert them to
 		-- radians.

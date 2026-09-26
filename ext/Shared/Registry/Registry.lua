@@ -79,6 +79,8 @@ Registry = {
 		RAYCAST_INTERVAL_ENEMY_CHECK = 0.03,
 		-- How often are the connections for a bot-bot-attack checked.
 		BOT_BOT_CHECK_INTERVAL = 0.05,
+		-- How long position and state of a bot are reused by the bot-bot-check before they are read again.
+		BOT_BOT_INFO_MAX_AGE = 0.25,
 		-- Hof often Bot-Revive-Bot-Raycast-chcks are done (costs server performance)
 		BOT_BOT_REVIVE_INTERVAL = 0.5,
 		-- Max checks per cycle.
@@ -243,6 +245,9 @@ Registry = {
 	DEBUG = {
 		-- enables prints on bullet-collistions for vehicle-offset-identification
 		VEHICLE_PROJECTILE_TRACE = false,
+		-- Seconds between prints of Lua memory, bot-update times, GC and table sizes. 0 = off.
+		-- Used to find what grows or stutters over long rounds.
+		ROUND_STATS_INTERVAL = 0.0,
 	},
 
 	-- Get the version of the current build as in a semantic format.

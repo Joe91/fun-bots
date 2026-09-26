@@ -112,6 +112,48 @@ function Utilities:GetYawPitchRoll(p_Transform)
 	return s_Yaw, s_Pitch, s_Roll
 end
 
+---Yaw and pitch deviation of a direction relative to the orientation of a transform.
+---Works on plain numbers: Vec3 math allocates and this runs every fast update for vehicle bots.
+---@param p_Transform LinearTransform
+---@param p_DirX number direction to the target (does not need to be normalized)
+---@param p_DirY number
+---@param p_DirZ number
+---@return number yawDeviation
+---@return number pitchDeviation
+function Utilities:GetDeviationFromTransform(p_Transform, p_DirX, p_DirY, p_DirZ)
+	local s_Length = math.sqrt(p_DirX * p_DirX + p_DirY * p_DirY + p_DirZ * p_DirZ)
+	if s_Length > 0 then
+		p_DirX, p_DirY, p_DirZ = p_DirX / s_Length, p_DirY / s_Length, p_DirZ / s_Length
+	end
+
+	local s_Forward = p_Transform.forward
+	local s_FX, s_FY, s_FZ = s_Forward.x, s_Forward.y, s_Forward.z
+
+	local s_Dot = s_FX * p_DirX + s_FY * p_DirY + s_FZ * p_DirZ
+
+	-- cross = forward x direction
+	local s_CX = s_FY * p_DirZ - s_FZ * p_DirY
+	local s_CY = s_FZ * p_DirX - s_FX * p_DirZ
+	local s_CZ = s_FX * p_DirY - s_FY * p_DirX
+
+	local s_Up = p_Transform.up
+	local s_Left = p_Transform.left
+	local s_YawDeviation = math.atan(s_CX * s_Up.x + s_CY * s_Up.y + s_CZ * s_Up.z, s_Dot)
+	local s_PitchDeviation = math.asin(s_CX * s_Left.x + s_CY * s_Left.y + s_CZ * s_Left.z)
+
+	return s_YawDeviation, s_PitchDeviation
+end
+
+---Same as GetDeviationFromTransform, with a target position instead of a direction.
+---@param p_Transform LinearTransform
+---@param p_Target Vec3
+---@return number yawDeviation
+---@return number pitchDeviation
+function Utilities:GetDeviationToTarget(p_Transform, p_Target)
+	local s_Trans = p_Transform.trans
+	return self:GetDeviationFromTransform(p_Transform, p_Target.x - s_Trans.x, p_Target.y - s_Trans.y, p_Target.z - s_Trans.z)
+end
+
 -- Do not use on numerically indexed tables, only tables with string keys.
 -- This is a shallow merge, does not recurse deeper than one p_Level.
 ---@param p_OriginalTable table

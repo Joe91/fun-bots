@@ -260,13 +260,195 @@ function FunBotServer:OnEngineUpdate(p_DeltaTime, p_SimulationDeltaTime)
 	m_GameDirector:OnEngineUpdate(p_DeltaTime)
 	m_BotSpawner:OnEngineUpdate(p_DeltaTime, p_SimulationDeltaTime)
 	m_NodeEditor:OnEngineUpdate(p_DeltaTime, p_SimulationDeltaTime)
+
+	if Registry.DEBUG.ROUND_STATS_INTERVAL > 0 then
+		self:_UpdateRoundStats(p_DeltaTime)
+	end
 end
 
 ---VEXT Shared UpdateManager:Update Event
 ---@param p_DeltaTime number
 ---@param p_UpdatePass UpdatePass|integer
 function FunBotServer:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
+	if Registry.DEBUG.ROUND_STATS_INTERVAL > 0 and p_UpdatePass == UpdatePass.UpdatePass_PostFrame then
+		local s_StartTime = SharedUtils:GetTimeNS()
+		m_BotManager:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
+		local s_ElapsedMs = (SharedUtils:GetTimeNS() - s_StartTime) / 1000000
+		self._StatsBotUpdateCount = (self._StatsBotUpdateCount or 0) + 1
+		self._StatsBotUpdateTotalMs = (self._StatsBotUpdateTotalMs or 0) + s_ElapsedMs
+		self._StatsBotUpdateMaxMs = math.max(self._StatsBotUpdateMaxMs or 0, s_ElapsedMs)
+		self._StatsDeltaMax = math.max(self._StatsDeltaMax or 0, p_DeltaTime)
+		return
+	end
+
 	m_BotManager:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
+end
+
+---Debug: measures once how many bytes common engine accesses allocate, using the first bot with a soldier.
+function FunBotServer:_BenchmarkAllocations()
+	local s_Player = nil
+	local s_Bots = m_BotManager._Bots
+	for l_Index = 1, #s_Bots do
+		if s_Bots[l_Index].m_Player.soldier ~= nil then
+			s_Player = s_Bots[l_Index].m_Player
+			break
+		end
+	end
+	if s_Player == nil then
+		return
+	end
+	self._StatsAllocBenchDone = true
+
+	local s_Soldier = s_Player.soldier
+	local s_Transform = s_Soldier.worldTransform
+	local s_Trans = s_Transform.trans
+	local s_Other = s_Trans:Clone()
+	local s_Runs = 1000
+	-- Keeps results alive. Slot 1 is reused, so the sink itself does not allocate.
+	local s_Sink = { false } -- luacheck: ignore 241
+
+	local s_Tests = {
+		{ "player.soldier", function() s_Sink[1] = s_Player.soldier end },
+		{ "soldier.worldTransform", function() s_Sink[1] = s_Soldier.worldTransform end },
+		{ "transform.trans", function() s_Sink[1] = s_Transform.trans end },
+		{ "soldier.worldTransform.trans", function() s_Sink[1] = s_Soldier.worldTransform.trans end },
+		{ "vec:Clone()", function() s_Sink[1] = s_Trans:Clone() end },
+		{ "vec - vec", function() s_Sink[1] = s_Trans - s_Other end },
+		{ "vec:Distance(vec)", function() s_Sink[1] = s_Trans:Distance(s_Other) end },
+		{ "vec.x", function() s_Sink[1] = s_Trans.x end },
+		{ "player.input", function() s_Sink[1] = s_Player.input end },
+		{ "player.teamId", function() s_Sink[1] = s_Player.teamId end },
+		{ "player.controlledControllable", function() s_Sink[1] = s_Player.controlledControllable end },
+		{ "{ a, b }", function() s_Sink[1] = { value = 1, reset = false } end },
+	}
+
+	local s_WasRunning = collectgarbage("isrunning")
+	collectgarbage("stop")
+	local s_Parts = {}
+	for l_Index = 1, #s_Tests do
+		local l_Test = s_Tests[l_Index]
+		local s_Func = l_Test[2]
+		local s_MemBefore = collectgarbage("count")
+		for _ = 1, s_Runs do
+			s_Func()
+		end
+		local s_Bytes = (collectgarbage("count") - s_MemBefore) * 1024 / s_Runs
+		s_Parts[#s_Parts + 1] = string.format("%s %.0f B", l_Test[1], s_Bytes)
+	end
+	if s_WasRunning then
+		collectgarbage("restart")
+	end
+
+	print("[RoundStats] Bytes per access: " .. table.concat(s_Parts, " | "))
+end
+
+---Debug: periodically print values that could grow during a round (Registry.DEBUG.ROUND_STATS_INTERVAL).
+---@param p_DeltaTime number
+function FunBotServer:_UpdateRoundStats(p_DeltaTime)
+	self._StatsTimer = (self._StatsTimer or 0) + p_DeltaTime
+	if self._StatsTimer < Registry.DEBUG.ROUND_STATS_INTERVAL then
+		return
+	end
+	self._StatsTimer = 0
+
+	-- Lua memory change since the last print.
+	local s_Mem = collectgarbage("count")
+	if self._StatsLastMem then
+		print(string.format("[RoundStats] Lua memory change since last print: %.0f KB", s_Mem - self._StatsLastMem))
+	end
+	self._StatsLastMem = s_Mem
+
+	local function _CountEntities(p_Type)
+		local s_Count = 0
+		local s_Iterator = EntityManager:GetIterator(p_Type)
+		local s_Entity = s_Iterator:Next()
+		while s_Entity ~= nil do
+			s_Count = s_Count + 1
+			s_Entity = s_Iterator:Next()
+		end
+		return s_Count
+	end
+
+	local function _CountCollection(p_Collection)
+		local s_Count = 0
+		for _, l_List in pairs(p_Collection or {}) do
+			s_Count = s_Count + #l_List
+		end
+		return s_Count
+	end
+
+	local s_ConnectionChecks = 0
+	for _ in pairs(m_BotManager._ConnectionCheckState) do
+		s_ConnectionChecks = s_ConnectionChecks + 1
+	end
+
+	local s_Beacons = 0
+	for _ in pairs(m_GameDirector.m_Beacons) do
+		s_Beacons = s_Beacons + 1
+	end
+
+	local s_UpdateCount = math.max(self._StatsBotUpdateCount or 0, 1)
+
+	print(string.format(
+		"[RoundStats] LuaMem: %.1f MB | BotUpdate avg %.3f ms max %.2f ms | maxDelta %.1f ms | Bots %d | SpawnSets %d | ToDestroy %d | BotBotList %d | ConnChecks %d | AirTargets %d | Beacons %d | VehSpawnable %d | VehAvailable %d | VehMobile %d | VehAA %d | EngineVehicles %d | Players %d",
+		collectgarbage("count") / 1024,
+		(self._StatsBotUpdateTotalMs or 0) / s_UpdateCount, self._StatsBotUpdateMaxMs or 0,
+		(self._StatsDeltaMax or 0) * 1000,
+		#m_BotManager._Bots, #m_BotSpawner._SpawnSets, #m_BotManager._BotsToDestroy,
+		#m_BotManager._BotBotAttackList, s_ConnectionChecks,
+		m_AirTargets:GetTargetCount(), s_Beacons,
+		_CountCollection(m_GameDirector.m_SpawnableVehicles), _CountCollection(m_GameDirector.m_AvailableVehicles),
+		_CountCollection(m_GameDirector.m_MobileRespawnVehicles), _CountCollection(m_GameDirector.m_SpawnableStationaryAas),
+		_CountEntities("ServerVehicleEntity"), PlayerManager:GetPlayerCount()
+	))
+
+	self._StatsBotUpdateCount = 0
+	self._StatsBotUpdateTotalMs = 0
+	self._StatsBotUpdateMaxMs = 0
+	self._StatsDeltaMax = 0
+
+	if not self._StatsAllocBenchDone then
+		self:_BenchmarkAllocations()
+	end
+
+	-- Breakdown of the bot update. The first call only starts the collection.
+	local s_Profile = m_BotManager:TakeProfileStats()
+	if s_Profile == nil then
+		return
+	end
+
+	local s_Parts = {}
+	for l_Name, l_Entry in pairs(s_Profile.Sections) do
+		s_Parts[#s_Parts + 1] = string.format("%s sum %.0f max %.1f alloc %.0f KB", l_Name, l_Entry.Total, l_Entry.Max, l_Entry.AllocKb)
+	end
+	table.sort(s_Parts)
+	print("[RoundStats] Sections (ms): " .. table.concat(s_Parts, " | "))
+
+	-- The five bot calls with the highest single-call time.
+	local s_Calls = {}
+	for l_Key, l_Entry in pairs(s_Profile.WorstBotCalls) do
+		s_Calls[#s_Calls + 1] = { Key = l_Key, Entry = l_Entry }
+	end
+	table.sort(s_Calls, function(a, b) return a.Entry.Max > b.Entry.Max end)
+	s_Parts = {}
+	for l_Index = 1, math.min(5, #s_Calls) do
+		local l_Call = s_Calls[l_Index]
+		s_Parts[#s_Parts + 1] = string.format("%s max %.1f (%s) sum %.0f n %d",
+			l_Call.Key, l_Call.Entry.Max, l_Call.Entry.Bot, l_Call.Entry.Total, l_Call.Entry.Count)
+	end
+	print("[RoundStats] Worst bot calls (ms): " .. table.concat(s_Parts, " | "))
+
+	-- The bot calls that allocate the most memory (exact only while no GC step runs inside).
+	table.sort(s_Calls, function(a, b) return a.Entry.AllocKb > b.Entry.AllocKb end)
+	s_Parts = {}
+	for l_Index = 1, math.min(8, #s_Calls) do
+		local l_Call = s_Calls[l_Index]
+		s_Parts[#s_Parts + 1] = string.format("%s %.0f KB (%.2f KB/call)",
+			l_Call.Key, l_Call.Entry.AllocKb, l_Call.Entry.AllocKb / math.max(l_Call.Entry.Count, 1))
+	end
+	print("[RoundStats] Top allocating bot calls: " .. table.concat(s_Parts, " | "))
+	print(string.format("[RoundStats] Bot calls >= 5 ms: %d, with GC running inside: %d (%s)",
+		s_Profile.Spikes, s_Profile.SpikesWithGc, _VERSION))
 end
 
 function FunBotServer:OnScoringStatEvent(p_Player, p_ObjectPlayer, p_StatEvent, p_ParamX, p_ParamY, p_Value)

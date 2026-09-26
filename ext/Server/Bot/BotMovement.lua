@@ -51,38 +51,45 @@ function Bot:ApplyPathOffset(p_OriginalPoint, p_NextPoint, p_NextToNextPoint)
 		return p_OriginalPoint, p_NextPoint
 	end
 
+	-- Plain numbers instead of Vec3 math: every Vec3 operation allocates and this runs on every movement update.
+	local s_Pos = p_OriginalPoint.Position
+	local s_NextPos = p_NextPoint.Position
+	local s_NextToNextPos = p_NextToNextPoint.Position
+
 	-- Calculate delta and direction for Node
-	local delta = p_NextPoint.Position - p_OriginalPoint.Position
-	local length2D = math.sqrt(delta.x * delta.x + delta.z * delta.z)
+	local s_DeltaX = s_NextPos.x - s_Pos.x
+	local s_DeltaZ = s_NextPos.z - s_Pos.z
+	local length2D = math.sqrt(s_DeltaX * s_DeltaX + s_DeltaZ * s_DeltaZ)
 	if length2D < 0.01 then
 		return p_OriginalPoint, p_NextPoint
 	end
 
-	local dir = Vec3(delta.x / length2D, 0, delta.z / length2D)
-	local right = Vec3(dir.z, 0, -dir.x)
+	-- right = (dir.z, 0, -dir.x)
+	local s_RightX = s_DeltaZ / length2D
+	local s_RightZ = -s_DeltaX / length2D
 
 	-- Calculate delta and direction for NextNode (the segment after it, so corners are offset correctly)
-	local deltaNext = p_NextToNextPoint.Position - p_NextPoint.Position
-	local length2DNext = math.sqrt(deltaNext.x * deltaNext.x + deltaNext.z * deltaNext.z)
+	local s_DeltaNextX = s_NextToNextPos.x - s_NextPos.x
+	local s_DeltaNextZ = s_NextToNextPos.z - s_NextPos.z
+	local length2DNext = math.sqrt(s_DeltaNextX * s_DeltaNextX + s_DeltaNextZ * s_DeltaNextZ)
 	if length2DNext < 0.01 then
 		return p_OriginalPoint, p_NextPoint
 	end
 
-	local dirNext = Vec3(deltaNext.x / length2DNext, 0, deltaNext.z / length2DNext)
-	local rightNext = Vec3(dirNext.z, 0, -dirNext.x)
-
-
+	local s_RightNextX = s_DeltaNextZ / length2DNext
+	local s_RightNextZ = -s_DeltaNextX / length2DNext
 
 	-- >>> FIX 2: stairs/passages vertical → center
-	local verticalDelta = math.abs(p_NextPoint.Position.y - p_OriginalPoint.Position.y)
+	local verticalDelta = math.abs(s_NextPos.y - s_Pos.y)
 	if verticalDelta > 0.35 then
 		self.m_OffsetRecoveryNodes = 15 -- force center for 15 cycles
 		return p_OriginalPoint, p_NextPoint
 	end
 
 	-- Calculate offset position
-	local offsetPosition = p_OriginalPoint.Position + right * (self.m_PathSide * self.m_OffsetDistance)
-	local offsetPositionNext = p_NextPoint.Position + rightNext * (self.m_PathSide * self.m_OffsetDistance)
+	local s_Offset = self.m_PathSide * self.m_OffsetDistance
+	local offsetPosition = Vec3(s_Pos.x + s_RightX * s_Offset, s_Pos.y, s_Pos.z + s_RightZ * s_Offset)
+	local offsetPositionNext = Vec3(s_NextPos.x + s_RightNextX * s_Offset, s_NextPos.y, s_NextPos.z + s_RightNextZ * s_Offset)
 
 	return {
 			Position = offsetPosition,
@@ -556,17 +563,19 @@ function Bot:UpdateNormalMovement(p_DeltaTime)
 		self:_ExecuteActionIfNeeded(s_Point, p_DeltaTime)
 		-- return if action executed
 		if self._ActiveAction == BotActionFlags.OtherActionActive then
-			local s_DifferenceY = s_Point.Position.z - self.m_Player.soldier.worldTransform.trans.z
-			local s_DifferenceX = s_Point.Position.x - self.m_Player.soldier.worldTransform.trans.x
+			local s_Soldier = self.m_Player.soldier
+			local s_SoldierPos = s_Soldier.worldTransform.trans
+			local s_DifferenceY = s_Point.Position.z - s_SoldierPos.z
+			local s_DifferenceX = s_Point.Position.x - s_SoldierPos.x
 			local s_DistanceFromTargetSquared = s_DifferenceX ^ 2 + s_DifferenceY ^ 2
 
 			if s_Point.Data and s_Point.Data.Action and s_Point.Data.Action.type == 'mcom' and s_DistanceFromTargetSquared < (1.7 * 1.7) then
-				if self.m_Player.soldier.pose ~= CharacterPoseType.CharacterPoseType_Crouch then
-					self.m_Player.soldier:SetPose(CharacterPoseType.CharacterPoseType_Crouch, true, true)
+				if s_Soldier.pose ~= CharacterPoseType.CharacterPoseType_Crouch then
+					s_Soldier:SetPose(CharacterPoseType.CharacterPoseType_Crouch, true, true)
 				end
 			else
-				if self.m_Player.soldier.pose ~= CharacterPoseType.CharacterPoseType_Stand then
-					self.m_Player.soldier:SetPose(CharacterPoseType.CharacterPoseType_Stand, true, true)
+				if s_Soldier.pose ~= CharacterPoseType.CharacterPoseType_Stand then
+					s_Soldier:SetPose(CharacterPoseType.CharacterPoseType_Stand, true, true)
 				end
 			end
 
@@ -591,16 +600,19 @@ function Bot:UpdateNormalMovement(p_DeltaTime)
 			self:_HandleSidwardsMovement(p_DeltaTime)
 
 			-- Use parachute if needed.
-			local s_Velocity = PhysicsEntity(self.m_Player.soldier).velocity
+			-- Every access of an engine object allocates. Read soldier and position once.
+			local s_Soldier = self.m_Player.soldier
+			local s_SoldierPos = s_Soldier.worldTransform.trans
+			local s_Velocity = PhysicsEntity(s_Soldier).velocity
 			local s_VelocityFalling = s_Velocity.y
 			if s_VelocityFalling < -25.0 then
 				self:_SetInput(EntryInputActionEnum.EIAToggleParachute, 1)
 			end
 
-			local s_DifferenceY = s_Point.Position.z - self.m_Player.soldier.worldTransform.trans.z
-			local s_DifferenceX = s_Point.Position.x - self.m_Player.soldier.worldTransform.trans.x
+			local s_DifferenceY = s_Point.Position.z - s_SoldierPos.z
+			local s_DifferenceX = s_Point.Position.x - s_SoldierPos.x
 			local s_DistanceFromTargetSquared = s_DifferenceX ^ 2 + s_DifferenceY ^ 2
-			local s_HeightDistance = math.abs(s_Point.Position.y - self.m_Player.soldier.worldTransform.trans.y)
+			local s_HeightDistance = math.abs(s_Point.Position.y - s_SoldierPos.y)
 
 			-- Detect obstacle and move over or around.
 
@@ -609,9 +621,8 @@ function Bot:UpdateNormalMovement(p_DeltaTime)
 			-- Only a limited number of times: after that the stuck timer keeps running,
 			-- so _ObstacleHandling kills the bot at 15 s.
 			if self._StuckTimer > 6.0 and self._StuckRerouteCount < Registry.BOT.MAX_STUCK_REROUTES then
-				local soldier = self.m_Player.soldier
-				if soldier ~= nil then
-					local s_Node = g_GameDirector:FindClosestPath(soldier.worldTransform.trans:Clone(), false, true, nil)
+				if s_Soldier ~= nil then
+					local s_Node = g_GameDirector:FindClosestPath(s_SoldierPos, false, true, nil)
 					if s_Node ~= nil then
 						self._PathIndex = s_Node.PathIndex
 						self._CurrentWayPoint = s_Node.PointIndex
@@ -639,9 +650,9 @@ function Bot:UpdateNormalMovement(p_DeltaTime)
 			self._NextTargetPoint = s_NextPoint
 
 			-- do the obstacle-handling
-			local s_Result = self:_ObstacleHandling(s_Velocity, s_DistanceFromTargetSquared, s_HeightDistance, p_DeltaTime, self.m_Player.soldier.worldTransform.trans:Clone())
+			local s_Result = self:_ObstacleHandling(s_Velocity, s_DistanceFromTargetSquared, s_HeightDistance, p_DeltaTime, s_SoldierPos)
 			if s_Result == nil then
-				self.m_Player.soldier:Kill()
+				s_Soldier:Kill()
 				m_Logger:Write(self.m_Player.name .. ' got stuck. Kill')
 				return
 			else
@@ -811,21 +822,24 @@ function Bot:UpdateNormalMovement(p_DeltaTime)
 			self:_HandleSidwardsMovement(p_DeltaTime)
 
 			-- Use parachute if needed.
-			local s_Velocity = PhysicsEntity(self.m_Player.soldier).velocity
+			-- Every access of an engine object allocates. Read soldier and position once.
+			local s_Soldier = self.m_Player.soldier
+			local s_SoldierPos = s_Soldier.worldTransform.trans
+			local s_Velocity = PhysicsEntity(s_Soldier).velocity
 			local s_VelocityFalling = s_Velocity.y
 			if s_VelocityFalling < -25.0 then
 				self:_SetInput(EntryInputActionEnum.EIAToggleParachute, 1)
 			end
 
-			local s_DifferenceY = s_Point.Position.z - self.m_Player.soldier.worldTransform.trans.z
-			local s_DifferenceX = s_Point.Position.x - self.m_Player.soldier.worldTransform.trans.x
+			local s_DifferenceY = s_Point.Position.z - s_SoldierPos.z
+			local s_DifferenceX = s_Point.Position.x - s_SoldierPos.x
 			local s_DistanceFromTargetSquared = s_DifferenceX ^ 2 + s_DifferenceY ^ 2
-			local s_HeightDistance = math.abs(s_Point.Position.y - self.m_Player.soldier.worldTransform.trans.y)
+			local s_HeightDistance = math.abs(s_Point.Position.y - s_SoldierPos.y)
 
 			self._TargetPoint = s_Point
 			self._NextTargetPoint = s_NextPoint
 
-			local s_Result = self:_ObstacleHandling(s_Velocity, 0, s_HeightDistance, p_DeltaTime, self.m_Player.soldier.worldTransform.trans:Clone())
+			local s_Result = self:_ObstacleHandling(s_Velocity, 0, s_HeightDistance, p_DeltaTime, s_SoldierPos)
 			if s_Result == nil then
 				self._StuckTimer = 0.0
 				return
@@ -914,13 +928,14 @@ function Bot:UpdateShootMovement(p_DeltaTime)
 				self.m_ActiveWeapon.type == WeaponTypes.MissileAir or
 				self.m_ActiveWeapon.type == WeaponTypes.MissileLand or not self._MoveWhileShooting) and
 			not self.m_KnifeMode) then -- Don't move while shooting some weapons.
+		local s_Soldier = self.m_Player.soldier
 		if self._AttackMode == BotAttackModes.Crouch then
-			if self.m_Player.soldier.pose ~= CharacterPoseType.CharacterPoseType_Crouch then
-				self.m_Player.soldier:SetPose(CharacterPoseType.CharacterPoseType_Crouch, true, true)
+			if s_Soldier.pose ~= CharacterPoseType.CharacterPoseType_Crouch then
+				s_Soldier:SetPose(CharacterPoseType.CharacterPoseType_Crouch, true, true)
 			end
 		else
-			if self.m_Player.soldier.pose ~= CharacterPoseType.CharacterPoseType_Stand then
-				self.m_Player.soldier:SetPose(CharacterPoseType.CharacterPoseType_Stand, true, true)
+			if s_Soldier.pose ~= CharacterPoseType.CharacterPoseType_Stand then
+				s_Soldier:SetPose(CharacterPoseType.CharacterPoseType_Stand, true, true)
 			end
 		end
 
@@ -989,7 +1004,8 @@ end
 
 function Bot:UpdateSpeedOfMovement(p_InAttackMode)
 	-- Additional movement.
-	if self.m_Player.soldier == nil then
+	local s_Soldier = self.m_Player.soldier
+	if s_Soldier == nil then
 		return
 	end
 
@@ -1004,26 +1020,26 @@ function Bot:UpdateSpeedOfMovement(p_InAttackMode)
 		if self.m_ActiveSpeedValue == BotMoveSpeeds.VerySlowProne then
 			s_SpeedVal = 1.0
 
-			if self.m_Player.soldier.pose ~= CharacterPoseType.CharacterPoseType_Prone then
-				self.m_Player.soldier:SetPose(CharacterPoseType.CharacterPoseType_Prone, true, true)
+			if s_Soldier.pose ~= CharacterPoseType.CharacterPoseType_Prone then
+				s_Soldier:SetPose(CharacterPoseType.CharacterPoseType_Prone, true, true)
 			end
 		elseif self.m_ActiveSpeedValue == BotMoveSpeeds.SlowCrouch then
 			s_SpeedVal = 1.0
 
-			if self.m_Player.soldier.pose ~= CharacterPoseType.CharacterPoseType_Crouch then
-				self.m_Player.soldier:SetPose(CharacterPoseType.CharacterPoseType_Crouch, true, true)
+			if s_Soldier.pose ~= CharacterPoseType.CharacterPoseType_Crouch then
+				s_Soldier:SetPose(CharacterPoseType.CharacterPoseType_Crouch, true, true)
 			end
 		elseif self.m_ActiveSpeedValue == BotMoveSpeeds.Slow then
 			s_SpeedVal = 0.7
 
-			if self.m_Player.soldier.pose ~= CharacterPoseType.CharacterPoseType_Stand then
-				self.m_Player.soldier:SetPose(CharacterPoseType.CharacterPoseType_Stand, true, true)
+			if s_Soldier.pose ~= CharacterPoseType.CharacterPoseType_Stand then
+				s_Soldier:SetPose(CharacterPoseType.CharacterPoseType_Stand, true, true)
 			end
 		elseif self.m_ActiveSpeedValue >= BotMoveSpeeds.Normal then
 			s_SpeedVal = 1.0
 
-			if self.m_Player.soldier.pose ~= CharacterPoseType.CharacterPoseType_Stand then
-				self.m_Player.soldier:SetPose(CharacterPoseType.CharacterPoseType_Stand, true, true)
+			if s_Soldier.pose ~= CharacterPoseType.CharacterPoseType_Stand then
+				s_Soldier:SetPose(CharacterPoseType.CharacterPoseType_Stand, true, true)
 			end
 		end
 	end
@@ -1044,8 +1060,10 @@ function Bot:UpdateSpeedOfMovement(p_InAttackMode)
 end
 
 function Bot:UpdateTargetMovement()
-	if self._TargetPoint and self.m_Player.soldier then
-		local s_Distance = self.m_Player.soldier.worldTransform.trans:Distance(self._TargetPoint.Position)
+	local s_Soldier = self._TargetPoint and self.m_Player.soldier
+	if s_Soldier then
+		local s_SoldierPos = s_Soldier.worldTransform.trans
+		local s_Distance = s_SoldierPos:Distance(self._TargetPoint.Position)
 
 		if self._NextTargetPoint then
 			if s_Distance < 0.2 then
@@ -1062,8 +1080,9 @@ function Bot:UpdateTargetMovement()
 			end
 		end
 
-		local s_DifferenceY = self._TargetPoint.Position.z - self.m_Player.soldier.worldTransform.trans.z
-		local s_DifferenceX = self._TargetPoint.Position.x - self.m_Player.soldier.worldTransform.trans.x
+		local s_TargetPos = self._TargetPoint.Position
+		local s_DifferenceY = s_TargetPos.z - s_SoldierPos.z
+		local s_DifferenceX = s_TargetPos.x - s_SoldierPos.x
 		local s_AtanDzDx = math.atan(s_DifferenceY, s_DifferenceX)
 		local s_Yaw = (s_AtanDzDx > math.pi / 2) and (s_AtanDzDx - math.pi / 2) or (s_AtanDzDx + 3 * math.pi / 2)
 		self._TargetYaw = s_Yaw
@@ -1112,8 +1131,8 @@ function Bot:LookAround(p_DeltaTime)
 end
 
 function Bot:UpdateYaw()
-	-- Runs every tick for every bot: cache the input userdata, each access crosses into the engine.
-	local s_Input = self.m_Player.input
+	-- Runs every tick for every bot: use the stored input, every access of player.input allocates.
+	local s_Input = self.m_Input
 	---@cast s_Input -nil
 	local s_CurrentYaw = s_Input.authoritativeAimingYaw
 	local s_TargetYaw = self._TargetYaw

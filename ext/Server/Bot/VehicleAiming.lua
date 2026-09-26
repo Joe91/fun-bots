@@ -11,20 +11,23 @@ function VehicleAiming:__init()
 	-- Nothing to do.
 end
 
+-- Works on plain numbers: vector math and method calls on Vec3 allocate, this runs for every attacking vehicle bot.
 ---@param p_Bot Bot
 ---@param p_Speed number
----@param p_FullPositionBot Vec3
----@param p_FullPositionTarget Vec3
----@param p_TargetMovement Vec3
+---@param p_DiffX number target - bot
+---@param p_DiffY number
+---@param p_DiffZ number
+---@param p_MoveX number target movement
+---@param p_MoveY number
+---@param p_MoveZ number
 ---@param p_AdvancedAlgorithm boolean
 ---@return number
-local function _GetTimeToTravel(p_Bot, p_Speed, p_FullPositionBot, p_FullPositionTarget, p_TargetMovement, p_AdvancedAlgorithm)
+local function _GetTimeToTravel(p_Bot, p_Speed, p_DiffX, p_DiffY, p_DiffZ, p_MoveX, p_MoveY, p_MoveZ, p_AdvancedAlgorithm)
 	if p_AdvancedAlgorithm then
-		local s_VectorBetween = p_FullPositionTarget - p_FullPositionBot
 		-- Calculate how long the distance is → time to travel.
-		local A = p_TargetMovement:Dot(p_TargetMovement) - p_Speed * p_Speed
-		local B = 2.0 * p_TargetMovement:Dot(s_VectorBetween)
-		local C = s_VectorBetween:Dot(s_VectorBetween)
+		local A = (p_MoveX * p_MoveX + p_MoveY * p_MoveY + p_MoveZ * p_MoveZ) - p_Speed * p_Speed
+		local B = 2.0 * (p_MoveX * p_DiffX + p_MoveY * p_DiffY + p_MoveZ * p_DiffZ)
+		local C = p_DiffX * p_DiffX + p_DiffY * p_DiffY + p_DiffZ * p_DiffZ
 		local s_Determinant = math.sqrt(B * B - 4 * A * C)
 		local t1 = (-B + s_Determinant) / (2 * A)
 		local t2 = (-B - s_Determinant) / (2 * A)
@@ -46,80 +49,104 @@ end
 ---@param p_Bot Bot
 ---@param p_AdvancedAlgorithm boolean
 function VehicleAiming:UpdateAimingVehicle(p_Bot, p_AdvancedAlgorithm)
-	if p_Bot._ShootPlayer == nil or p_Bot.m_Player.soldier == nil then
+	-- Every access of an engine object (soldier, transform, trans, ...) and all Vec3 math allocate.
+	-- Read each object once and calculate with plain numbers.
+	local s_Player = p_Bot.m_Player
+	local s_ShootPlayer = p_Bot._ShootPlayer
+	if s_ShootPlayer == nil then
+		return
+	end
+	local s_Soldier = s_Player.soldier
+	if s_Soldier == nil then
 		return
 	end
 
-	if not p_Bot._Shoot or p_Bot._ShootPlayer.soldier == nil then
+	if not p_Bot._Shoot then
+		return
+	end
+	local s_TargetSoldier = s_ShootPlayer.soldier
+	if s_TargetSoldier == nil then
 		return
 	end
 
 	-- Interpolate target-player movement.
-	local s_TargetMovement = Vec3.zero
-	local s_PitchCorrection = 0.0
-	local s_FullPositionTarget = nil
-	local s_FullPositionBot = nil
 	local s_IsAirVehicle = m_Vehicles:IsAirVehicle(p_Bot.m_ActiveVehicle)
+	local s_EntryId = s_Player.controlledEntryId
+	local s_BotX, s_BotY, s_BotZ
 
-
+	local s_VehicleTrans = nil
 	if p_Bot._VehicleMovableId >= 0 then
-		local s_VehicleTrans = p_Bot.m_Player.controlledControllable.physicsEntityBase:GetPartTransform(p_Bot._VehicleMovableId):ToLinearTransform():Clone()
-		local s_Offsets = m_Vehicles:GetOffsets(p_Bot.m_ActiveVehicle, p_Bot.m_Player.controlledEntryId, p_Bot._ActiveVehicleWeaponSlot)
-		s_FullPositionBot = s_VehicleTrans.trans:Clone() + (s_VehicleTrans.left:Clone() * s_Offsets.x) + (s_VehicleTrans.up:Clone() * s_Offsets.y) + (s_VehicleTrans.forward:Clone() * s_Offsets.z)
-	elseif s_IsAirVehicle and p_Bot.m_Player.controlledEntryId == 0 then
+		s_VehicleTrans = s_Player.controlledControllable.physicsEntityBase:GetPartTransform(p_Bot._VehicleMovableId):ToLinearTransform()
+	elseif s_IsAirVehicle and s_EntryId == 0 then
 		-- main weapon of chopper or jet
-		local s_VehicleTrans = p_Bot.m_Player.controlledControllable.transform:Clone()
-		local s_Offsets = m_Vehicles:GetOffsets(p_Bot.m_ActiveVehicle, p_Bot.m_Player.controlledEntryId, p_Bot._ActiveVehicleWeaponSlot)
-		s_FullPositionBot = s_VehicleTrans.trans:Clone() + (s_VehicleTrans.left:Clone() * s_Offsets.x) + (s_VehicleTrans.up:Clone() * s_Offsets.y) + (s_VehicleTrans.forward:Clone() * s_Offsets.z)
-	else
-		s_FullPositionBot = p_Bot.m_Player.soldier.worldTransform.trans:Clone() +
-			m_Utilities:getCameraPos(p_Bot.m_Player, false, false)
+		s_VehicleTrans = s_Player.controlledControllable.transform
 	end
 
-	if p_Bot._ShootPlayerVehicleType == VehicleTypes.MavBot or p_Bot._ShootPlayerVehicleType == VehicleTypes.MobileArtillery then
-		s_FullPositionTarget = p_Bot._ShootPlayer.controlledControllable.transform.trans:Clone()
+	if s_VehicleTrans then
+		-- Weapon position = trans + left * offset.x + up * offset.y + forward * offset.z
+		local s_Offsets = m_Vehicles:GetOffsets(p_Bot.m_ActiveVehicle, s_EntryId, p_Bot._ActiveVehicleWeaponSlot)
+		local s_OffX, s_OffY, s_OffZ = s_Offsets.x, s_Offsets.y, s_Offsets.z
+		local s_Trans = s_VehicleTrans.trans
+		local s_Left = s_VehicleTrans.left
+		local s_Up = s_VehicleTrans.up
+		local s_Forward = s_VehicleTrans.forward
+		s_BotX = s_Trans.x + s_Left.x * s_OffX + s_Up.x * s_OffY + s_Forward.x * s_OffZ
+		s_BotY = s_Trans.y + s_Left.y * s_OffX + s_Up.y * s_OffY + s_Forward.y * s_OffZ
+		s_BotZ = s_Trans.z + s_Left.z * s_OffX + s_Up.z * s_OffY + s_Forward.z * s_OffZ
 	else
-		if p_Bot.m_Player.controlledEntryId == 0 and p_Bot._ShootPlayerVehicleType == VehicleTypes.NoVehicle and
+		local s_Trans = s_Soldier.worldTransform.trans
+		s_BotX = s_Trans.x
+		s_BotY = s_Trans.y + m_Utilities:getTargetHeight(s_Soldier, false, false)
+		s_BotZ = s_Trans.z
+	end
+
+	local s_TargetX, s_TargetY, s_TargetZ
+	if p_Bot._ShootPlayerVehicleType == VehicleTypes.MavBot or p_Bot._ShootPlayerVehicleType == VehicleTypes.MobileArtillery then
+		local s_Trans = s_ShootPlayer.controlledControllable.transform.trans
+		s_TargetX, s_TargetY, s_TargetZ = s_Trans.x, s_Trans.y, s_Trans.z
+	else
+		local s_Trans = s_TargetSoldier.worldTransform.trans
+		s_TargetX, s_TargetZ = s_Trans.x, s_Trans.z
+		if s_EntryId == 0 and p_Bot._ShootPlayerVehicleType == VehicleTypes.NoVehicle and
 			p_Bot._ActiveVehicleWeaponSlot == 1 then
 			-- Add nothing (0.1) → aim for the feet of the target.
-			s_FullPositionTarget = p_Bot._ShootPlayer.soldier.worldTransform.trans:Clone()
-			s_FullPositionTarget.y = s_FullPositionTarget.y + 0.1
+			s_TargetY = s_Trans.y + 0.1
 		else
-			s_FullPositionTarget = p_Bot._ShootPlayer.soldier.worldTransform.trans:Clone() +
-				m_Utilities:getCameraPos(p_Bot._ShootPlayer, true, false)
+			s_TargetY = s_Trans.y + m_Utilities:getTargetHeight(s_TargetSoldier, true, false)
 		end
 	end
 
+	local s_Velocity
 	if p_Bot._ShootPlayerVehicleType == VehicleTypes.NoVehicle then
-		s_TargetMovement = PhysicsEntity(p_Bot._ShootPlayer.soldier).velocity
+		s_Velocity = PhysicsEntity(s_TargetSoldier).velocity
 	else
-		s_TargetMovement = PhysicsEntity(p_Bot._ShootPlayer.controlledControllable).velocity
+		s_Velocity = PhysicsEntity(s_ShootPlayer.controlledControllable).velocity
 	end
+	local s_MoveX, s_MoveY, s_MoveZ = s_Velocity.x, s_Velocity.y, s_Velocity.z
 
-	p_Bot._DistanceToPlayer = s_FullPositionTarget:Distance(s_FullPositionBot)
+	local s_DiffX = s_TargetX - s_BotX
+	local s_DiffY = s_TargetY - s_BotY
+	local s_DiffZ = s_TargetZ - s_BotZ
+	p_Bot._DistanceToPlayer = math.sqrt(s_DiffX * s_DiffX + s_DiffY * s_DiffY + s_DiffZ * s_DiffZ)
 
-	local s_Drop = 0.0
-	local s_Speed = 0.0
-	local s_TimeToTravel = 0.0
-
-	s_Speed, s_Drop = m_Vehicles:GetSpeedAndDrop(p_Bot.m_ActiveVehicle, p_Bot.m_Player.controlledEntryId,
+	local s_Speed, s_Drop = m_Vehicles:GetSpeedAndDrop(p_Bot.m_ActiveVehicle, s_EntryId,
 		p_Bot._ActiveVehicleWeaponSlot)
 
-	s_TimeToTravel = _GetTimeToTravel(p_Bot, s_Speed, s_FullPositionBot, s_FullPositionTarget, s_TargetMovement, p_AdvancedAlgorithm)
+	local s_TimeToTravel = _GetTimeToTravel(p_Bot, s_Speed, s_DiffX, s_DiffY, s_DiffZ, s_MoveX, s_MoveY, s_MoveZ, p_AdvancedAlgorithm)
 
-	s_PitchCorrection = 0.5 * s_TimeToTravel * s_TimeToTravel * s_Drop
+	local s_PitchCorrection = 0.5 * s_TimeToTravel * s_TimeToTravel * s_Drop
 
-	s_TargetMovement = (s_TargetMovement * s_TimeToTravel)
+	s_MoveX = s_MoveX * s_TimeToTravel
+	s_MoveY = s_MoveY * s_TimeToTravel
+	s_MoveZ = s_MoveZ * s_TimeToTravel
 
 	-- only for jet aiming for now
-	local s_AimAtPos = s_FullPositionTarget:Clone() + s_TargetMovement
-	s_AimAtPos.y = s_AimAtPos.y + s_PitchCorrection
-	p_Bot._AttackPosition = s_AimAtPos:Clone()
+	p_Bot._AttackPosition = Vec3(s_TargetX + s_MoveX, s_TargetY + s_MoveY + s_PitchCorrection, s_TargetZ + s_MoveZ)
 
 	-- Calculate yaw and pitch.
-	local s_DifferenceZ = s_FullPositionTarget.z + s_TargetMovement.z - s_FullPositionBot.z
-	local s_DifferenceX = s_FullPositionTarget.x + s_TargetMovement.x - s_FullPositionBot.x
-	local s_DifferenceY = s_FullPositionTarget.y + s_TargetMovement.y + s_PitchCorrection - s_FullPositionBot.y
+	local s_DifferenceZ = s_DiffZ + s_MoveZ
+	local s_DifferenceX = s_DiffX + s_MoveX
+	local s_DifferenceY = s_DiffY + s_MoveY + s_PitchCorrection
 
 	local s_AtanDzDx = math.atan(s_DifferenceZ, s_DifferenceX)
 	local s_Yaw = (s_AtanDzDx > math.pi / 2) and (s_AtanDzDx - math.pi / 2) or (s_AtanDzDx + 3 * math.pi / 2)
@@ -154,7 +181,7 @@ function VehicleAiming:UpdateAimingVehicle(p_Bot, p_AdvancedAlgorithm)
 	p_Bot._TargetYaw = s_Yaw + s_WorseningYaw
 
 	-- Abort attacking in chopper or jet if too steep or too low.
-	if s_IsAirVehicle and p_Bot.m_Player.controlledEntryId == 0 then
+	if s_IsAirVehicle and s_EntryId == 0 then
 		-- Abort attacking if behind only if not an air vehicle
 		if not m_Vehicles:IsAirVehicleType(p_Bot._ShootPlayerVehicleType) then
 			local s_PitchHalf = Config.FovVerticleChopperForShooting / 360 * math.pi
@@ -166,11 +193,11 @@ function VehicleAiming:UpdateAimingVehicle(p_Bot, p_AdvancedAlgorithm)
 		end
 
 		if m_Vehicles:IsVehicleType(p_Bot.m_ActiveVehicle, VehicleTypes.Plane) and
-			s_FullPositionBot:Distance(s_FullPositionTarget) < Registry.VEHICLES.ABORT_ATTACK_AIR_DISTANCE_JET then
+			p_Bot._DistanceToPlayer < Registry.VEHICLES.ABORT_ATTACK_AIR_DISTANCE_JET then
 			p_Bot:AbortAttack()
 		end
 		if not m_Vehicles:IsAirVehicleType(p_Bot._ShootPlayerVehicleType) then
-			local s_DiffVertical = s_FullPositionBot.y - s_FullPositionTarget.y
+			local s_DiffVertical = s_BotY - s_TargetY
 			if m_Vehicles:IsChopper(p_Bot.m_ActiveVehicle) then
 				if s_DiffVertical < Registry.VEHICLES.ABORT_ATTACK_HEIGHT_CHOPPER then -- Too low to the ground.
 					p_Bot:AbortAttack()

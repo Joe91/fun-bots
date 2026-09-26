@@ -105,12 +105,12 @@ local function _GetGrenadePitch(p_Distance)
 	end
 end
 
----@param p_Bot Bot
+---@param p_Soldier SoldierEntity
 ---@param p_Skill number
 ---@return number compensationPitch
 ---@return number compensationYaw
-local function _CompensateRecoil(p_Bot, p_Skill)
-	local s_CurrentWeapon = p_Bot.m_Player.soldier.weaponsComponent.currentWeapon
+local function _CompensateRecoil(p_Soldier, p_Skill)
+	local s_CurrentWeapon = p_Soldier.weaponsComponent.currentWeapon
 
 	if not s_CurrentWeapon then
 		return 0.0, 0.0
@@ -145,19 +145,22 @@ local function _CompensateRecoil(p_Bot, p_Skill)
 	return s_CurrentRecoilDeviationPitch * s_SkillFactorRecoil, s_CurrentRecoilDeviationYaw * s_SkillFactorRecoil
 end
 
+-- Works on plain numbers: vector math and method calls on Vec3 allocate, this runs for every attacking bot.
 ---@param p_Bot Bot
 ---@param p_Speed number
----@param p_FullPositionBot Vec3
----@param p_FullPositionTarget Vec3
----@param p_TargetMovement Vec3
+---@param p_DiffX number target - bot
+---@param p_DiffY number
+---@param p_DiffZ number
+---@param p_MoveX number target movement
+---@param p_MoveY number
+---@param p_MoveZ number
 ---@return number
-local function _GetTimeToTravel(p_Bot, p_Speed, p_FullPositionBot, p_FullPositionTarget, p_TargetMovement)
+local function _GetTimeToTravel(p_Bot, p_Speed, p_DiffX, p_DiffY, p_DiffZ, p_MoveX, p_MoveY, p_MoveZ)
 	if Registry.BOT.USE_ADVANCED_AIMING then
-		local s_VectorBetween = p_FullPositionTarget - p_FullPositionBot
 		-- Calculate how long the distance is → time to travel.
-		local A = p_TargetMovement:Dot(p_TargetMovement) - p_Speed * p_Speed
-		local B = 2.0 * p_TargetMovement:Dot(s_VectorBetween)
-		local C = s_VectorBetween:Dot(s_VectorBetween)
+		local A = (p_MoveX * p_MoveX + p_MoveY * p_MoveY + p_MoveZ * p_MoveZ) - p_Speed * p_Speed
+		local B = 2.0 * (p_MoveX * p_DiffX + p_MoveY * p_DiffY + p_MoveZ * p_DiffZ)
+		local C = p_DiffX * p_DiffX + p_DiffY * p_DiffY + p_DiffZ * p_DiffZ
 		local s_Determinant = math.sqrt(B * B - 4 * A * C)
 		local t1 = (-B + s_Determinant) / (2 * A)
 		local t2 = (-B - s_Determinant) / (2 * A)
@@ -177,31 +180,34 @@ local function _GetTimeToTravel(p_Bot, p_Speed, p_FullPositionBot, p_FullPositio
 end
 
 ---@param p_Bot Bot
-local function _DefaultAimingAction(p_Bot)
-	if not p_Bot._Shoot or p_Bot._ShootPlayer.soldier == nil or p_Bot.m_ActiveWeapon == nil then
+---@param p_BotSoldier SoldierEntity
+local function _DefaultAimingAction(p_Bot, p_BotSoldier)
+	if not p_Bot._Shoot or p_Bot.m_ActiveWeapon == nil then
+		return
+	end
+	local s_ShootPlayer = p_Bot._ShootPlayer
+	---@cast s_ShootPlayer -nil
+	local s_TargetSoldier = s_ShootPlayer.soldier
+	if s_TargetSoldier == nil then
 		return
 	end
 
 	local s_ActiveWeaponType = p_Bot.m_ActiveWeapon.type
-	local s_ShootPlayer = p_Bot._ShootPlayer
-	---@cast s_ShootPlayer -nil
-	local s_TargetSoldier = s_ShootPlayer.soldier
-	local s_BotSoldier = p_Bot.m_Player.soldier
-	-- Both soldiers are checked by the guard above / in Bot:UpdateAiming.
-	---@cast s_TargetSoldier -nil
-	---@cast s_BotSoldier -nil
-	-- Read once: every engine property access crosses into C++ and allocates a new Vec3.
-	local s_BotTrans = s_BotSoldier.worldTransform.trans
+	-- Every access of an engine object and all Vec3 math allocate. Read each object once and calculate
+	-- with plain numbers.
+	local s_BotTrans = p_BotSoldier.worldTransform.trans
+	local s_BotX = s_BotTrans.x
+	local s_BotY = s_BotTrans.y + m_Utilities:getTargetHeight(p_BotSoldier, false, false)
+	local s_BotZ = s_BotTrans.z
 
 	-- Interpolate target-player movement.
-	local s_TargetMovement = Vec3.zero
 	local s_PitchCorrection = 0.0
-	local s_FullPositionTarget = nil
-	local s_FullPositionBot = Vec3(s_BotTrans.x, s_BotTrans.y + m_Utilities:getTargetHeight(s_BotSoldier, false, false), s_BotTrans.z)
+	local s_TargetX, s_TargetY, s_TargetZ
 
 	if p_Bot._ShootPlayerVehicleType == VehicleTypes.MavBot or p_Bot._ShootPlayerVehicleType == VehicleTypes.MobileArtillery then
 		---@diagnostic disable-next-line: need-check-nil
-		s_FullPositionTarget = s_ShootPlayer.controlledControllable.transform.trans
+		local s_TargetTrans = s_ShootPlayer.controlledControllable.transform.trans
+		s_TargetX, s_TargetY, s_TargetZ = s_TargetTrans.x, s_TargetTrans.y, s_TargetTrans.z
 	else
 		local s_AimForHead = false
 
@@ -214,18 +220,25 @@ local function _DefaultAimingAction(p_Bot)
 		end
 
 		local s_TargetTrans = s_TargetSoldier.worldTransform.trans
-		s_FullPositionTarget = Vec3(s_TargetTrans.x, s_TargetTrans.y + m_Utilities:getTargetHeight(s_TargetSoldier, true, s_AimForHead), s_TargetTrans.z)
+		s_TargetX = s_TargetTrans.x
+		s_TargetY = s_TargetTrans.y + m_Utilities:getTargetHeight(s_TargetSoldier, true, s_AimForHead)
+		s_TargetZ = s_TargetTrans.z
 	end
 
+	local s_Velocity
 	if p_Bot._ShootPlayerVehicleType == VehicleTypes.NoVehicle then
-		s_TargetMovement = s_TargetSoldier.velocity
+		s_Velocity = s_TargetSoldier.velocity
 	else
 		---@diagnostic disable-next-line: need-check-nil
-		s_TargetMovement = s_ShootPlayer.controlledControllable.velocity
+		s_Velocity = s_ShootPlayer.controlledControllable.velocity
 	end
+	local s_MoveX, s_MoveY, s_MoveZ = s_Velocity.x, s_Velocity.y, s_Velocity.z
 
 	-- Calculate how long the distance is → time to travel.
-	p_Bot._DistanceToPlayer = s_FullPositionTarget:Distance(s_FullPositionBot)
+	local s_DiffX = s_TargetX - s_BotX
+	local s_DiffY = s_TargetY - s_BotY
+	local s_DiffZ = s_TargetZ - s_BotZ
+	p_Bot._DistanceToPlayer = math.sqrt(s_DiffX * s_DiffX + s_DiffY * s_DiffY + s_DiffZ * s_DiffZ)
 
 	if not p_Bot.m_KnifeMode then
 		local s_Drop = 0.0
@@ -239,14 +252,16 @@ local function _DefaultAimingAction(p_Bot)
 				p_Bot._DistanceToPlayer = 3.0 -- Don't throw them too close.
 			end
 		elseif s_ActiveWeaponType < WeaponTypes.Rocket then
-			s_TimeToTravel = _GetTimeToTravel(p_Bot, s_Speed, s_FullPositionBot, s_FullPositionTarget, s_TargetMovement)
+			s_TimeToTravel = _GetTimeToTravel(p_Bot, s_Speed, s_DiffX, s_DiffY, s_DiffZ, s_MoveX, s_MoveY, s_MoveZ)
 			s_PitchCorrection = 0.5 * s_TimeToTravel * s_TimeToTravel * s_Drop
 		elseif s_ActiveWeaponType == WeaponTypes.Rocket then -- No idea why, but works this way...
-			s_TimeToTravel = _GetTimeToTravel(p_Bot, s_Speed, s_FullPositionBot, s_FullPositionTarget, s_TargetMovement)
+			s_TimeToTravel = _GetTimeToTravel(p_Bot, s_Speed, s_DiffX, s_DiffY, s_DiffZ, s_MoveX, s_MoveY, s_MoveZ)
 			s_PitchCorrection = 0.25 * s_TimeToTravel * s_TimeToTravel * s_Drop
 		end
 
-		s_TargetMovement = (s_TargetMovement * s_TimeToTravel)
+		s_MoveX = s_MoveX * s_TimeToTravel
+		s_MoveY = s_MoveY * s_TimeToTravel
+		s_MoveZ = s_MoveZ * s_TimeToTravel
 	end
 
 	local s_DifferenceY = 0
@@ -263,9 +278,9 @@ local function _DefaultAimingAction(p_Bot)
 			table.remove(p_Bot._KnifeWayPositions, 1)
 		end
 	else
-		s_DifferenceZ = s_FullPositionTarget.z + s_TargetMovement.z - s_FullPositionBot.z
-		s_DifferenceX = s_FullPositionTarget.x + s_TargetMovement.x - s_FullPositionBot.x
-		s_DifferenceY = s_FullPositionTarget.y + s_TargetMovement.y + s_PitchCorrection - s_FullPositionBot.y
+		s_DifferenceZ = s_DiffZ + s_MoveZ
+		s_DifferenceX = s_DiffX + s_MoveX
+		s_DifferenceY = s_DiffY + s_MoveY + s_PitchCorrection
 	end
 
 	local s_AtanDzDx = math.atan(s_DifferenceZ, s_DifferenceX)
@@ -305,7 +320,7 @@ local function _DefaultAimingAction(p_Bot)
 		local s_WorseningSkillY = (MathUtils:GetRandom(-1.0, 1.0) * s_SkillFactor)
 
 		-- Compensate for recoil based on accuracy
-		local s_RecoilCompensationPitch, s_RecoilCompensationYaw = _CompensateRecoil(p_Bot, s_SkillCompensation)
+		local s_RecoilCompensationPitch, s_RecoilCompensationYaw = _CompensateRecoil(p_BotSoldier, s_SkillCompensation)
 
 		-- Recoil from gunSway is negative → add recoil to yaw.
 		s_Yaw = s_Yaw + s_WorseningSkillX + s_RecoilCompensationYaw
@@ -368,7 +383,8 @@ local function _RepairAimingAction(p_Bot)
 end
 
 function Bot:UpdateAiming()
-	if self._ShootPlayer == nil or self.m_Player.soldier == nil then
+	local s_Soldier = self._ShootPlayer and self.m_Player.soldier
+	if not s_Soldier then
 		return
 	end
 
@@ -377,6 +393,6 @@ function Bot:UpdateAiming()
 	elseif self._ActiveAction == BotActionFlags.RepairActive then
 		_RepairAimingAction(self)
 	else
-		_DefaultAimingAction(self)
+		_DefaultAimingAction(self, s_Soldier)
 	end
 end

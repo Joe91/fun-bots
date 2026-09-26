@@ -29,6 +29,10 @@ function Bot:__init(p_Player)
 	-- Player Object.
 	---@type Player
 	self.m_Player = p_Player
+	-- The input the BotManager created for this player (player.input is the same object). Use this instead of
+	-- m_Player.input: every access of player.input creates a new wrapper object for the GC.
+	---@type EntryInput
+	self.m_Input = p_Player.input
 	-- The ID of the player.
 	---@type integer
 	self.m_Id = p_Player.id
@@ -485,6 +489,7 @@ end
 function Bot:Destroy()
 	self:ResetVars()
 	self.m_Player.input = nil
+	self.m_Input = nil
 
 	if self.m_Player.soldier ~= nil then
 		self.m_Player.soldier:Destroy()
@@ -535,15 +540,18 @@ end
 
 ---@param p_DeltaTime number
 function Bot:_UpdateInputs(p_DeltaTime)
+	local s_Input = self.m_Input
+	local s_ActiveInputs = self.m_ActiveInputs
 	---@type EntryInputActionEnum
 	for i = 0, 36 do
-		if self.m_ActiveInputs[i].reset then
-			self.m_Player.input:SetLevel(i, 0)
-			self.m_ActiveInputs[i].value = 0
-			self.m_ActiveInputs[i].reset = false
-		elseif self.m_ActiveInputs[i].value ~= 0 then
-			self.m_Player.input:SetLevel(i, self.m_ActiveInputs[i].value)
-			self.m_ActiveInputs[i].reset = true
+		local s_ActiveInput = s_ActiveInputs[i]
+		if s_ActiveInput.reset then
+			s_Input:SetLevel(i, 0)
+			s_ActiveInput.value = 0
+			s_ActiveInput.reset = false
+		elseif s_ActiveInput.value ~= 0 then
+			s_Input:SetLevel(i, s_ActiveInput.value)
+			s_ActiveInput.reset = true
 		end
 	end
 
@@ -557,10 +565,7 @@ function Bot:_UpdateInputs(p_DeltaTime)
 		l_DelayedInput.delay = l_DelayedInput.delay - p_DeltaTime
 
 		if l_DelayedInput.delay <= 0 then
-			self.m_ActiveInputs[l_DelayedInput.input] = {
-				value = l_DelayedInput.value,
-				reset = l_DelayedInput.value == 0,
-			}
+			self:_SetInput(l_DelayedInput.input, l_DelayedInput.value)
 		else
 			s_Remaining = s_Remaining + 1
 			s_DelayedInputs[s_Remaining] = l_DelayedInput
@@ -666,7 +671,7 @@ function Bot:AbortAttack()
 		self._Pid_Drv_Roll:Reset()
 	end
 
-	self.m_Player.input.zoomLevel = 0
+	self.m_Input.zoomLevel = 0
 	self._ShootPlayerId = -1
 	self._ShootPlayer = nil
 	self._ShootModeTimer = 0.0

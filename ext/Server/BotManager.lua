@@ -107,10 +107,90 @@ function BotManager:UpdateBotsInBatches(p_Bots, p_BotCount, p_Counter, p_Ratio, 
 	local s_BatchSize = math.floor(p_BotCount / p_Ratio) + 1
 	local s_StartIndex = s_BatchSize * p_Counter + 1
 	local s_EndIndex = math.min(s_StartIndex + s_BatchSize - 1, p_BotCount)
+	local s_Profile = self._ProfileStats
 	for l_Index = s_StartIndex, s_EndIndex do
 		local s_Bot = p_Bots[l_Index]
-		s_Bot.m_ActiveState[p_UpdateMethod](s_Bot.m_ActiveState, s_Bot, p_CycleTime)
+		if s_Profile then
+			local s_State = s_Bot.m_ActiveState
+			local s_MemBefore = collectgarbage("count")
+			local s_StartTime = SharedUtils:GetTimeNS()
+			s_State[p_UpdateMethod](s_State, s_Bot, p_CycleTime)
+			self:_ProfileBotCall(p_UpdateMethod, s_State, s_Bot, SharedUtils:GetTimeNS() - s_StartTime, s_MemBefore)
+		else
+			s_Bot.m_ActiveState[p_UpdateMethod](s_Bot.m_ActiveState, s_Bot, p_CycleTime)
+		end
 	end
+end
+
+-- =============================================
+-- Debug profiling (Registry.DEBUG.ROUND_STATS_INTERVAL)
+-- =============================================
+
+---@param p_Section string
+---@param p_ElapsedNs number
+function BotManager:_ProfileSection(p_Section, p_ElapsedNs)
+	local s_Sections = self._ProfileStats.Sections
+	local s_Ms = p_ElapsedNs / 1000000
+	local s_Entry = s_Sections[p_Section]
+	if s_Entry == nil then
+		s_Entry = { Total = 0, Max = 0, Count = 0, AllocKb = 0 }
+		s_Sections[p_Section] = s_Entry
+	end
+	-- Only exact while no GC step runs in between, otherwise freed memory is subtracted.
+	local s_Mem = collectgarbage("count")
+	s_Entry.AllocKb = s_Entry.AllocKb + math.max(0, s_Mem - self._ProfileSectionMem)
+	self._ProfileSectionMem = s_Mem
+	s_Entry.Total = s_Entry.Total + s_Ms
+	s_Entry.Count = s_Entry.Count + 1
+	if s_Ms > s_Entry.Max then
+		s_Entry.Max = s_Ms
+	end
+end
+
+---@param p_Method string
+---@param p_State table
+---@param p_Bot Bot
+---@param p_ElapsedNs number
+---@param p_MemBefore number Lua memory in KB before the call. Less memory afterwards means the GC ran inside the call.
+function BotManager:_ProfileBotCall(p_Method, p_State, p_Bot, p_ElapsedNs, p_MemBefore)
+	local s_Ms = p_ElapsedNs / 1000000
+	local s_MemAfter = collectgarbage("count")
+	if s_Ms >= 5 then
+		local s_Stats = self._ProfileStats
+		s_Stats.Spikes = s_Stats.Spikes + 1
+		if s_MemAfter < p_MemBefore then
+			s_Stats.SpikesWithGc = s_Stats.SpikesWithGc + 1
+		end
+	end
+	local s_Worst = self._ProfileStats.WorstBotCalls
+	local s_Key = p_Method .. ":" .. (self._StateNames[p_State] or "?")
+	local s_Entry = s_Worst[s_Key]
+	if s_Entry == nil then
+		s_Entry = { Total = 0, Max = 0, Count = 0, Bot = "", AllocKb = 0 }
+		s_Worst[s_Key] = s_Entry
+	end
+	s_Entry.AllocKb = s_Entry.AllocKb + math.max(0, s_MemAfter - p_MemBefore)
+	s_Entry.Total = s_Entry.Total + s_Ms
+	s_Entry.Count = s_Entry.Count + 1
+	if s_Ms > s_Entry.Max then
+		s_Entry.Max = s_Ms
+		s_Entry.Bot = p_Bot.m_Player and p_Bot.m_Player.name or "?"
+	end
+end
+
+---Returns the collected profile data and starts a new collection.
+---@return table
+function BotManager:TakeProfileStats()
+	if self._StateNames == nil then
+		self._StateNames = {}
+		for l_Name, l_State in pairs(g_BotStates.States) do
+			self._StateNames[l_State] = l_Name
+		end
+	end
+
+	local s_Stats = self._ProfileStats
+	self._ProfileStats = { Sections = {}, WorstBotCalls = {}, Spikes = 0, SpikesWithGc = 0 }
+	return s_Stats
 end
 
 ---VEXT Shared UpdateManager:Update Event
@@ -132,12 +212,23 @@ function BotManager:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 	end
 
 
+	local s_Profile = self._ProfileStats
+	local s_SectionStart = s_Profile and SharedUtils:GetTimeNS()
+	if s_Profile then
+		self._ProfileSectionMem = collectgarbage("count")
+	end
+
 	self:UpdateBotsInBatches(self._Bots, s_BotCount, self._L1Counter, self._RatioL0L2, "Update", self._L2CycleTime)
 
 	self:UpdateBotsInBatches(self._Bots, s_BotCount, self._L0Counter, self._RatioL0L1, "UpdateFast", self._L1CycleTime)
 
 	self:UpdateBotsInBatches(self._Bots, s_BotCount, self._L2Counter, self._RatioL0L3, "UpdateSlow", self._L3CycleTime)
 
+	if s_Profile then
+		local s_Now = SharedUtils:GetTimeNS()
+		self:_ProfileSection("Batches", s_Now - s_SectionStart)
+		s_SectionStart = s_Now
+	end
 
 	-- Update every tick (base-update - needed every time)
 	local s_Bots = self._Bots
@@ -146,9 +237,28 @@ function BotManager:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 		local l_Player = l_Bot.m_Player
 		local l_Soldier = l_Player.soldier
 		if l_Soldier then                                         -- only update bots with a soldier
-			l_Soldier:SingleStepEntry(l_Player.controlledEntryId) -- engine-requirement
-			l_Bot.m_ActiveState:UpdateVeryFast(l_Bot)
+			if s_Profile then
+				local s_MemBefore = collectgarbage("count")
+				local s_StartTime = SharedUtils:GetTimeNS()
+				l_Soldier:SingleStepEntry(l_Player.controlledEntryId)
+				local s_StepEnd = SharedUtils:GetTimeNS()
+				local s_State = l_Bot.m_ActiveState
+				self:_ProfileBotCall("SingleStepEntry", s_State, l_Bot, s_StepEnd - s_StartTime, s_MemBefore)
+				s_MemBefore = collectgarbage("count")
+				s_StepEnd = SharedUtils:GetTimeNS()
+				s_State:UpdateVeryFast(l_Bot)
+				self:_ProfileBotCall("UpdateVeryFast", s_State, l_Bot, SharedUtils:GetTimeNS() - s_StepEnd, s_MemBefore)
+			else
+				l_Soldier:SingleStepEntry(l_Player.controlledEntryId) -- engine-requirement
+				l_Bot.m_ActiveState:UpdateVeryFast(l_Bot)
+			end
 		end
+	end
+
+	if s_Profile then
+		local s_Now = SharedUtils:GetTimeNS()
+		self:_ProfileSection("VeryFast", s_Now - s_SectionStart)
+		s_SectionStart = s_Now
 	end
 
 	-- Optimize counter reset logic
@@ -162,6 +272,11 @@ function BotManager:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 		if self._BotAttackBotTimer >= Registry.GAME_RAYCASTING.BOT_BOT_CHECK_INTERVAL then
 			self._BotAttackBotTimer = 0.0
 			self:_CheckForBotBotAttack()
+			if s_Profile then
+				local s_Now = SharedUtils:GetTimeNS()
+				self:_ProfileSection("BotBotAttack", s_Now - s_SectionStart)
+				s_SectionStart = s_Now
+			end
 		end
 
 		self._BotAttackBotTimer = self._BotAttackBotTimer + p_DeltaTime
@@ -173,6 +288,11 @@ function BotManager:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 		if self._BotReviveBotTimer >= Registry.GAME_RAYCASTING.BOT_BOT_REVIVE_INTERVAL then
 			self._BotReviveBotTimer = 0.0
 			self:_CheckForBotBotRevive()
+			if s_Profile then
+				local s_Now = SharedUtils:GetTimeNS()
+				self:_ProfileSection("BotBotRevive", s_Now - s_SectionStart)
+				s_SectionStart = s_Now
+			end
 		end
 
 		self._BotReviveBotTimer = self._BotReviveBotTimer + p_DeltaTime
@@ -182,6 +302,9 @@ function BotManager:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 		if self._DestroyBotsTimer >= Registry.BOT.BOT_DESTROY_DELAY then
 			self._DestroyBotsTimer = 0.0
 			self:DestroyBot(table.remove(self._BotsToDestroy))
+			if s_Profile then
+				self:_ProfileSection("DestroyBot", SharedUtils:GetTimeNS() - s_SectionStart)
+			end
 		end
 
 		self._DestroyBotsTimer = self._DestroyBotsTimer + p_DeltaTime
@@ -893,6 +1016,7 @@ function BotManager:CreateBot(p_Name, p_TeamId, p_SquadId)
 
 	---@type Bot
 	s_Bot = Bot(s_BotPlayer)
+	s_Bot.m_Input = s_BotInput
 
 	self._Bots[#self._Bots + 1] = s_Bot
 	self._BotsByName[p_Name] = s_Bot
@@ -1395,8 +1519,8 @@ function BotManager:ChechFovBotBot(p_Bot, p_EnemyBot, p_EnemyReady)
 	local s_ValidFov = false
 
 	local s_DiffVec = (p_Bot.m_Player.soldier.worldTransform.trans:Clone() - p_EnemyBot.m_Player.soldier.worldTransform.trans:Clone()):Normalize()
-	local s_Yaw = p_Bot.m_Player.input.authoritativeAimingYaw
-	local s_Pitch = p_Bot.m_Player.input.authoritativeAimingPitch
+	local s_Yaw = p_Bot.m_Input.authoritativeAimingYaw
+	local s_Pitch = p_Bot.m_Input.authoritativeAimingPitch
 	local x = math.cos(s_Pitch) * math.cos(s_Yaw)
 	local y = math.sin(s_Pitch)
 	local z = math.cos(s_Pitch) * math.sin(s_Yaw)
@@ -1409,8 +1533,8 @@ function BotManager:ChechFovBotBot(p_Bot, p_EnemyBot, p_EnemyReady)
 	end
 
 	if not s_ValidFov and p_EnemyReady then
-		s_Yaw = p_EnemyBot.m_Player.input.authoritativeAimingYaw
-		s_Pitch = p_EnemyBot.m_Player.input.authoritativeAimingPitch
+		s_Yaw = p_EnemyBot.m_Input.authoritativeAimingYaw
+		s_Pitch = p_EnemyBot.m_Input.authoritativeAimingPitch
 		x = math.cos(s_Pitch) * math.cos(s_Yaw)
 		y = math.sin(s_Pitch)
 		z = math.cos(s_Pitch) * math.sin(s_Yaw)
@@ -1458,33 +1582,45 @@ function BotManager:_CheckForBotBotAttack()
 	local s_AttackListCount = #s_AttackList
 	local s_MaxRaycasts = #self._ActivePlayers * self._RaycastsPerActivePlayer
 
-	-- Per-call cache of the data needed per bot. Nothing changes within one frame, so every bot is read from
-	-- the engine once per call instead of once per pair. `false` marks bots without a soldier.
-	local s_BotInfos = {}
+	-- Data needed per bot, kept on the bot and reused for BOT_BOT_INFO_MAX_AGE. This check runs 20 times per
+	-- second over all bots, and every engine access allocates: reading everything each call fed the GC a lot.
+	-- The position is only used for the distance pre-check (the raycast uses live positions), so a slightly
+	-- older one is fine. It is stored as numbers, so no engine object is kept alive. Returns nil without soldier.
+	local s_Now = SharedUtils:GetTime()
+	local s_MaxAge = Registry.GAME_RAYCASTING.BOT_BOT_INFO_MAX_AGE
 	local function _GetBotInfo(p_BotId)
-		local s_Info = s_BotInfos[p_BotId]
-		if s_Info ~= nil then
-			return s_Info
+		local s_InfoBot = self:GetBotById(p_BotId)
+		if s_InfoBot == nil or s_InfoBot.m_Player == nil then
+			return nil
 		end
 
-		s_Info = false
-		local s_InfoBot = self:GetBotById(p_BotId)
-		if s_InfoBot and s_InfoBot.m_Player then
+		local s_Info = s_InfoBot._BotBotInfo
+		if s_Info == nil then
+			s_Info = { Time = -1, HasSoldier = false }
+			s_InfoBot._BotBotInfo = s_Info
+		end
+
+		if s_Now - s_Info.Time > s_MaxAge then
+			s_Info.Time = s_Now
 			local s_InfoPlayer = s_InfoBot.m_Player
 			local s_InfoSoldier = s_InfoPlayer.soldier
+			s_Info.HasSoldier = s_InfoSoldier ~= nil
 			if s_InfoSoldier then
 				local s_Controllable = s_InfoPlayer.controlledControllable
-				s_Info = {
-					Bot = s_InfoBot,
-					TeamId = s_InfoPlayer.teamId,
-					Position = s_Controllable and s_Controllable.transform.trans or s_InfoSoldier.worldTransform.trans,
-					AttackDistance = s_InfoBot:GetAttackDistance(),
-					InVehicle = s_BotStates:IsInVehicleState(s_InfoBot.m_ActiveState),
-				}
+				local s_Position = s_Controllable and s_Controllable.transform.trans or s_InfoSoldier.worldTransform.trans
+				s_Info.Bot = s_InfoBot
+				s_Info.TeamId = s_InfoPlayer.teamId
+				s_Info.X = s_Position.x
+				s_Info.Y = s_Position.y
+				s_Info.Z = s_Position.z
+				s_Info.AttackDistance = s_InfoBot:GetAttackDistance()
+				s_Info.InVehicle = s_BotStates:IsInVehicleState(s_InfoBot.m_ActiveState)
 			end
 		end
 
-		s_BotInfos[p_BotId] = s_Info
+		if not s_Info.HasSoldier then
+			return nil
+		end
 		return s_Info
 	end
 
@@ -1494,7 +1630,7 @@ function BotManager:_CheckForBotBotAttack()
 		local s_BotInfo = _GetBotInfo(s_BotIdToCheck)
 
 		if s_BotInfo and s_BotInfo.Bot:IsReadyToAttack(false, nil, false, true) then
-			local s_BotPosition = s_BotInfo.Position
+			local s_BotX, s_BotY, s_BotZ = s_BotInfo.X, s_BotInfo.Y, s_BotInfo.Z
 			local s_BotTeamId = s_BotInfo.TeamId
 
 			for l_Index = 1, s_AttackListCount do
@@ -1515,7 +1651,10 @@ function BotManager:_CheckForBotBotAttack()
 						if not self._ConnectionCheckState[s_ConnectionValue] then
 							self._ConnectionCheckState[s_ConnectionValue] = true
 							-- Check distance.
-							local s_Distance = s_BotPosition:Distance(s_EnemyInfo.Position)
+							local s_DiffX = s_BotX - s_EnemyInfo.X
+							local s_DiffY = s_BotY - s_EnemyInfo.Y
+							local s_DiffZ = s_BotZ - s_EnemyInfo.Z
+							local s_Distance = math.sqrt(s_DiffX * s_DiffX + s_DiffY * s_DiffY + s_DiffZ * s_DiffZ)
 							s_ChecksDone = s_ChecksDone + 1
 							local s_MaxDistance = math.max(s_BotInfo.AttackDistance, s_EnemyInfo.AttackDistance)
 

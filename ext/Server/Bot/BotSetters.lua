@@ -97,10 +97,17 @@ end
 ---@param p_Input EntryInputActionEnum|integer
 ---@param p_Value number
 function Bot:_SetInput(p_Input, p_Value)
-	self.m_ActiveInputs[p_Input] = {
-		value = p_Value,
-		reset = p_Value == 0,
-	}
+	-- Update the entry in place: this runs many times per frame, a new table each time only feeds the GC.
+	local s_ActiveInput = self.m_ActiveInputs[p_Input]
+	if s_ActiveInput then
+		s_ActiveInput.value = p_Value
+		s_ActiveInput.reset = p_Value == 0
+	else
+		self.m_ActiveInputs[p_Input] = {
+			value = p_Value,
+			reset = p_Value == 0,
+		}
+	end
 end
 
 ---@param p_Input EntryInputActionEnum|integer
@@ -249,7 +256,7 @@ function Bot:ResetSpawnVars()
 			value = 0,
 			reset = false,
 		}
-		self.m_Player.input:SetLevel(l_EIA, 0.0)
+		self.m_Input:SetLevel(l_EIA, 0.0)
 	end
 end
 
