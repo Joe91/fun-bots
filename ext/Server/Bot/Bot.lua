@@ -102,6 +102,11 @@ function Bot:__init(p_Player)
 	self._WayWaitTimer = 0.0
 	self._VehicleWaitTimer = 0.0
 	self._VehicleLookAroundTimer = 0.0
+	self._LookAroundYawOffset = 0.0
+	self._LookAroundYawGoal = 0.0
+	self._LookAroundPitch = 0.0
+	self._LookAroundPitchGoal = 0.0
+	self._LookAroundSide = 1
 	self._VehicleSeatTimer = 0.0
 	self._VehicleTakeoffTimer = 0.0
 	self._WayWaitYawTimer = 0.0
@@ -503,39 +508,71 @@ end
 -- Private Functions
 -- =============================================
 
+---Human-like scanning: glance at a random point, hold it for a moment, then pan smoothly to the next one.
+---Glances mostly alternate sides, so left and right both get covered, with an occasional check straight ahead.
+---Updates self._LookAroundYawOffset (relative to the vehicle forward) and self._LookAroundPitch (absolute).
+---@param p_DeltaTime number
+---@param p_MaxYaw number max yaw offset to either side in rad
+---@param p_MaxPitch number max pitch deviation from the horizon in rad
+function Bot:UpdateLookAroundGlance(p_DeltaTime, p_MaxYaw, p_MaxPitch)
+	self._VehicleLookAroundTimer = self._VehicleLookAroundTimer - p_DeltaTime
+
+	if self._VehicleLookAroundTimer <= 0.0 then
+		if MathUtils:GetRandom(0.0, 1.0) < 0.2 then
+			-- Check the front again.
+			self._LookAroundYawGoal = MathUtils:GetRandom(-0.15, 0.15)
+			self._VehicleLookAroundTimer = MathUtils:GetRandom(1.0, 2.5)
+		else
+			-- Usually switch sides, sometimes take a second look at the same side.
+			if MathUtils:GetRandom(0.0, 1.0) < 0.75 then
+				self._LookAroundSide = -self._LookAroundSide
+			end
+
+			self._LookAroundYawGoal = self._LookAroundSide * MathUtils:GetRandom(0.3 * p_MaxYaw, p_MaxYaw)
+			self._VehicleLookAroundTimer = MathUtils:GetRandom(1.5, 4.0)
+		end
+
+		-- Mostly scan the horizon, slightly more below than above.
+		self._LookAroundPitchGoal = MathUtils:GetRandom(-p_MaxPitch, 0.5 * p_MaxPitch)
+	end
+
+	-- Ease towards the goal: fast start, slow settle, capped turn rate.
+	local s_Ease = math.min(1.0, p_DeltaTime * 3.0)
+	local s_MaxStep = 1.2 * p_DeltaTime -- ~70°/s
+	local s_YawStep = (self._LookAroundYawGoal - self._LookAroundYawOffset) * s_Ease
+
+	if s_YawStep > s_MaxStep then
+		s_YawStep = s_MaxStep
+	elseif s_YawStep < -s_MaxStep then
+		s_YawStep = -s_MaxStep
+	end
+
+	self._LookAroundYawOffset = self._LookAroundYawOffset + s_YawStep
+	self._LookAroundPitch = self._LookAroundPitch + (self._LookAroundPitchGoal - self._LookAroundPitch) * s_Ease
+end
+
 ---@param p_DeltaTime number
 function Bot:_UpdateLookAroundPassenger(p_DeltaTime)
-	-- Move around a little.
 	-- Can be nil while the bot enters or leaves the vehicle.
 	if self.m_Player.attachedControllable == nil then
 		return
 	end
 
-	local s_Pos = self.m_Player.attachedControllable.transform.forward:Clone()
+	self:UpdateLookAroundGlance(p_DeltaTime, 1.4, 0.12)
+
+	local s_Pos = self.m_Player.attachedControllable.transform.forward
 	local s_AtanDzDx = math.atan(s_Pos.z, s_Pos.x)
-	self._TargetYaw = (s_AtanDzDx > math.pi / 2) and (s_AtanDzDx - math.pi / 2) or (s_AtanDzDx + 3 * math.pi / 2)
-	self._TargetPitch = 0.0
+	local s_Yaw = (s_AtanDzDx > math.pi / 2) and (s_AtanDzDx - math.pi / 2) or (s_AtanDzDx + 3 * math.pi / 2)
+	s_Yaw = s_Yaw + self._LookAroundYawOffset
 
-	self._VehicleLookAroundTimer = self._VehicleLookAroundTimer + p_DeltaTime
-
-	if self._VehicleLookAroundTimer > 9.0 then
-		self._VehicleLookAroundTimer = 0.0
-	elseif self._VehicleLookAroundTimer >= 6.0 then
-	elseif self._VehicleLookAroundTimer >= 3.0 then
-		self._TargetYaw = self._TargetYaw - 1.0 -- 60° rotation left.
-		self._TargetPitch = 0.2
-
-		if self._TargetYaw < 0.0 then
-			self._TargetYaw = self._TargetYaw + (2 * math.pi)
-		end
-	elseif self._VehicleLookAroundTimer >= 0.0 then
-		self._TargetYaw = self._TargetYaw + 1.0 -- 60° rotation right.
-		self._TargetPitch = -0.2
-
-		if self._TargetYaw > (math.pi * 2) then
-			self._TargetYaw = self._TargetYaw - (2 * math.pi)
-		end
+	if s_Yaw < 0.0 then
+		s_Yaw = s_Yaw + (2 * math.pi)
+	elseif s_Yaw > (2 * math.pi) then
+		s_Yaw = s_Yaw - (2 * math.pi)
 	end
+
+	self._TargetYaw = s_Yaw
+	self._TargetPitch = self._LookAroundPitch
 end
 
 ---@param p_DeltaTime number

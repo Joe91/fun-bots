@@ -126,6 +126,18 @@ Registry = {
 		JET_ABORT_JET_ATTACK_TIME = 4.0,
 		-- Target height for jets.
 		JET_TARGET_HEIGHT = 350,
+		-- Seconds between target-scans of a jet that is not attacking (while attacking: BotVehicleFireModeDuration).
+		JET_TARGET_SCAN_INTERVAL = 1.0,
+		-- Target-selection of jets: metres added to the distance per radian the target is away from the nose.
+		-- Prefers targets in front, that can be attacked sooner. 0 = closest target only.
+		JET_TARGET_ANGLE_PENALTY = 400,
+		-- A jet fires once the shot would pass the lead-point closer than this (m).
+		JET_FIRE_HIT_RADIUS = 15.0,
+		-- Limits of that fire-angle (rad): always allowed below MIN, never above MAX.
+		JET_FIRE_MIN_ANGLE = 0.03,
+		JET_FIRE_MAX_ANGLE = 0.2,
+		-- Gain of the rudder while attacking. Fine corrections without rolling.
+		JET_ATTACK_YAW_GAIN = 3.0,
 		-- Target height for choppers.
 		CHOPPER_TARGET_HEIGHT = 110,
 		-- Percentage of vehicle health to leave vehicle with (currently no passive events for bot-only vehicles)
@@ -245,6 +257,11 @@ Registry = {
 	DEBUG = {
 		-- enables prints on bullet-collistions for vehicle-offset-identification
 		VEHICLE_PROJECTILE_TRACE = false,
+		-- Aim-evaluation of vehicle-weapons on start (toggle ingame with "!aimeval on|off"). Prints measured offsets,
+		-- misalignment of the aiming-parts and the aim-error of the bots. See AimEvaluation.lua.
+		AIM_EVALUATION = false,
+		-- Seconds between the automatic reports of the aim-evaluation.
+		AIM_EVALUATION_REPORT_INTERVAL = 15.0,
 		-- Seconds between prints of Lua memory, bot-update times, GC and table sizes. 0 = off.
 		-- Used to find what grows or stutters over long rounds.
 		ROUND_STATS_INTERVAL = 0.0,

@@ -12,6 +12,9 @@
 	- Shoot with selected weapon (don't look in default direction)
 	- Without further moving, enter "!car" in the chat
 	- Offset of the relevant Indexes will be printed out
+10. Or automatic: "!aimeval on", let bots (or yourself) shoot with the vehicle, "!aimeval report".
+	- Prints measured Offset and AimOffset per seat / weapon, the part that really follows the gun,
+	  the aim-error of the bots and measured bullet-speed / gravity.
 --]]
 
 ---@class VehicleDataInner
@@ -25,6 +28,7 @@
 ---@field Offset Vec3[]
 ---@field FirstPassengerSeat integer
 ---@field RotationOffset Vec3[]|nil
+---@field AimOffset Vec3[]|nil Vec3(yaw, pitch, 0) of the shot relative to the aiming-part, same structure as Offset. Measure with "!aimeval".
 
 ---@class VehicleData
 ---@type VehicleDataInner[]

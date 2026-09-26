@@ -288,7 +288,29 @@ function Vehicles:GetOffsets(p_VehicleData, p_Index, p_WeaponSelection)
 		end
 	end
 
-	return s_Offset
+	return s_Offset or Vec3.zero
+end
+
+---Angle of the shot relative to the forward of the aiming-part (as measured with "!aimeval").
+---@param p_VehicleData VehicleDataInner
+---@param p_Index integer
+---@param p_WeaponSelection integer
+---@return number yaw > 0 → shot goes left of the part-forward
+---@return number pitch < 0 → shot goes above the part-forward
+function Vehicles:GetAimOffsets(p_VehicleData, p_Index, p_WeaponSelection)
+	if p_VehicleData == nil or p_VehicleData.AimOffset == nil then
+		return 0.0, 0.0
+	end
+
+	local s_Offset = p_VehicleData.AimOffset[p_Index + 1]
+	if type(s_Offset) == "table" then
+		s_Offset = s_Offset[p_WeaponSelection ~= 0 and p_WeaponSelection or 1]
+	end
+	if s_Offset == nil then
+		return 0.0, 0.0
+	end
+
+	return s_Offset.x, s_Offset.y
 end
 
 ---@param p_VehicleData VehicleDataInner

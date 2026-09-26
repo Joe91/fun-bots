@@ -47,12 +47,17 @@ end
 -- Public functions
 ---@param p_Player Player
 ---@param p_MaxDistance number
-function AirTargets:GetTarget(p_Player, p_MaxDistance)
+---@param p_AnglePenalty number|nil metres added to the distance per radian the target is away from the nose (prefer targets in front)
+function AirTargets:GetTarget(p_Player, p_MaxDistance, p_AnglePenalty)
 	local s_Team = p_Player.teamId
 	local s_ClosestDistance = nil
 	local s_ClosestTarget = nil
 	local s_ClosestTarget2 = nil
 	local s_ClosestTarget3 = nil
+
+	local s_OwnTransform = p_Player.controlledControllable.transform
+	local s_OwnPos = s_OwnTransform.trans
+	local s_Forward = s_OwnTransform.forward
 
 	for l_Index = 1, #self._Targets do
 		local l_Target = self._Targets[l_Index]
@@ -60,16 +65,21 @@ function AirTargets:GetTarget(p_Player, p_MaxDistance)
 
 		if s_TargetPlayer ~= nil and s_TargetPlayer.teamId ~= s_Team and s_TargetPlayer.soldier ~= nil
 			and s_TargetPlayer.controlledControllable ~= nil then
-			local s_CurrentDistance = p_Player.controlledControllable.transform.trans:Distance(s_TargetPlayer.controlledControllable
-				.transform.trans)
+			local s_TargetPos = s_TargetPlayer.controlledControllable.transform.trans
+			local s_RealDistance = s_OwnPos:Distance(s_TargetPos)
+			local s_CurrentDistance = s_RealDistance
 
-			if s_ClosestDistance == nil then
-				if s_CurrentDistance < p_MaxDistance then
+			if p_AnglePenalty and p_AnglePenalty > 0 and s_RealDistance > 0 then
+				local s_Dot = (s_Forward.x * (s_TargetPos.x - s_OwnPos.x) + s_Forward.y * (s_TargetPos.y - s_OwnPos.y)
+					+ s_Forward.z * (s_TargetPos.z - s_OwnPos.z)) / s_RealDistance
+				s_CurrentDistance = s_RealDistance + p_AnglePenalty * math.acos(math.max(-1.0, math.min(1.0, s_Dot)))
+			end
+
+			if s_RealDistance < p_MaxDistance then
+				if s_ClosestDistance == nil then
 					s_ClosestDistance = s_CurrentDistance
 					s_ClosestTarget = s_TargetPlayer
-				end
-			else
-				if s_CurrentDistance < s_ClosestDistance then
+				elseif s_CurrentDistance < s_ClosestDistance then
 					s_ClosestDistance = s_CurrentDistance
 					s_ClosestTarget3 = s_ClosestTarget2
 					s_ClosestTarget2 = s_ClosestTarget

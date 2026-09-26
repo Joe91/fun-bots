@@ -17,6 +17,8 @@ This is the changelog for release **V3.1.0**. Don't forget to [join us on Discor
 * Add logic for jets in Rush
 * Improved Air-Vehicle-Control (much smoother now)
 * Much improved GC times
+* Some Jet aim rework
+* improved "lookaround" from passengers
 
 
 ### Some optional TODOs:

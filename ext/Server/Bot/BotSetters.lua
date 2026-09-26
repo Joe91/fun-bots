@@ -182,6 +182,11 @@ function Bot:ResetSpawnVars()
 	self._WayWaitTimer = 0.0
 	self._VehicleWaitTimer = 0.0
 	self._VehicleLookAroundTimer = 0.0
+	self._LookAroundYawOffset = 0.0
+	self._LookAroundYawGoal = 0.0
+	self._LookAroundPitch = 0.0
+	self._LookAroundPitchGoal = 0.0
+	self._LookAroundSide = 1
 	self._VehicleSeatTimer = 0.0
 	self._VehicleTakeoffTimer = 0.0
 	self._WayWaitYawTimer = 0.0

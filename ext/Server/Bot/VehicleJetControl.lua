@@ -3,7 +3,7 @@
 VehicleJetControl = class('VehicleJetControl')
 
 ---@type Vehicles
-
+local m_Vehicles = require('Vehicles')
 ---@type Utilities
 local m_Utilities = require('__shared/Utilities')
 
@@ -109,8 +109,25 @@ function VehicleJetControl:UpdateYawJet(p_Bot, p_Attacking, p_DeltaTime)
 
 	local s_DeltaYaw, s_DeltaPitch = 0, 0
 	if p_Attacking then
-		s_DeltaYaw, s_DeltaPitch = self:CalculateDeviationRelativeToOrientation(s_Transform, p_Bot._AttackPosition)
-		local s_Height = s_Transform.trans.y
+		-- Aim with the gun, not with the center of the jet: from the muzzle, corrected by the angle of the gun.
+		local s_EntryId = p_Bot.m_Player.controlledEntryId
+		local s_Slot = p_Bot._ActiveVehicleWeaponSlot
+		local s_Offset = m_Vehicles:GetOffsets(p_Bot.m_ActiveVehicle, s_EntryId, s_Slot)
+		local s_OffX, s_OffY, s_OffZ = s_Offset.x, s_Offset.y, s_Offset.z
+		local s_Trans = s_Transform.trans
+		local s_Left = s_Transform.left
+		local s_Up = s_Transform.up
+		local s_Forward = s_Transform.forward
+		local s_Target = p_Bot._AttackPosition
+		local s_DirX = s_Target.x - (s_Trans.x + s_Left.x * s_OffX + s_Up.x * s_OffY + s_Forward.x * s_OffZ)
+		local s_DirY = s_Target.y - (s_Trans.y + s_Left.y * s_OffX + s_Up.y * s_OffY + s_Forward.y * s_OffZ)
+		local s_DirZ = s_Target.z - (s_Trans.z + s_Left.z * s_OffX + s_Up.z * s_OffY + s_Forward.z * s_OffZ)
+		s_DeltaYaw, s_DeltaPitch = m_Utilities:GetDeviationFromTransform(s_Transform, s_DirX, s_DirY, s_DirZ)
+		local s_AimOffsetYaw, s_AimOffsetPitch = m_Vehicles:GetAimOffsets(p_Bot.m_ActiveVehicle, s_EntryId, s_Slot)
+		s_DeltaYaw = s_DeltaYaw - s_AimOffsetYaw
+		s_DeltaPitch = s_DeltaPitch - s_AimOffsetPitch
+
+		local s_Height = s_Trans.y
 		if s_Height > p_Bot._TargetPoint.Position.y + 120 then
 			p_Bot._JetTakeoffActive = false
 			p_Bot:AbortAttack()
@@ -130,7 +147,9 @@ function VehicleJetControl:UpdateYawJet(p_Bot, p_Attacking, p_DeltaTime)
 
 	-- YAW
 	-- No backwards in planes. s_DeltaYaw > 0 → target on the left → negative yaw-input (same convention as chopper / ground).
-	s_Input:SetLevel(EntryInputActionEnum.EIAYaw, -s_DeltaYaw)
+	-- While attacking the rudder does the fine corrections, rolling is too coarse for the last few degrees.
+	local s_YawGain = p_Attacking and Registry.VEHICLES.JET_ATTACK_YAW_GAIN or 1.0
+	s_Input:SetLevel(EntryInputActionEnum.EIAYaw, math.max(-1.0, math.min(1.0, -s_YawGain * s_DeltaYaw)))
 
 	-- Throttle.
 	-- Target velocity == 313 km/h → 86.9444 m/s
@@ -144,8 +163,13 @@ function VehicleJetControl:UpdateYawJet(p_Bot, p_Attacking, p_DeltaTime)
 		s_Input:SetLevel(EntryInputActionEnum.EIABrake, -s_Output_Throttle)
 	end
 
-	if p_Attacking and math.abs(s_DeltaYaw) < 0.2 and math.abs(s_DeltaPitch) < 0.2 then
-		p_Bot._VehicleReadyToShoot = true
+	-- Fire once the shot passes the lead-point close enough: wide angle when close, narrow when far away.
+	-- Shooting too early only overheats the gun.
+	if p_Attacking then
+		local s_Distance = math.max(p_Bot._DistanceToPlayer, 1.0)
+		local s_FireAngle = math.max(Registry.VEHICLES.JET_FIRE_MIN_ANGLE,
+			math.min(Registry.VEHICLES.JET_FIRE_MAX_ANGLE, math.atan(Registry.VEHICLES.JET_FIRE_HIT_RADIUS, s_Distance)))
+		p_Bot._VehicleReadyToShoot = (s_DeltaYaw * s_DeltaYaw + s_DeltaPitch * s_DeltaPitch) < s_FireAngle * s_FireAngle
 	else
 		p_Bot._VehicleReadyToShoot = false
 	end

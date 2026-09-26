@@ -253,6 +253,32 @@ function ChatCommands:Execute(p_Parts, p_Player)
 		local s_Value = tonumber(p_Parts[3]) or 0.0
 
 		Debug.Vars[s_Index] = s_Value
+	elseif p_Parts[1] == '!aimeval' then
+		if PermissionManager:HasPermission(p_Player, 'ChatCommands') == false then
+			ChatManager:SendMessage('You have no permissions for this action (ChatCommands).', p_Player)
+			return
+		end
+
+		local s_AimEvaluation = require('AimEvaluation')
+		local s_Mode = p_Parts[2] or (s_AimEvaluation:IsEnabled() and 'off' or 'on')
+		if s_Mode == 'on' then
+			s_AimEvaluation:SetEnabled(true)
+			ChatManager:SendMessage('AimEval on. Report in the server-console every ' ..
+				Registry.DEBUG.AIM_EVALUATION_REPORT_INTERVAL .. ' s or with "!aimeval report".', p_Player)
+		elseif s_Mode == 'off' then
+			s_AimEvaluation:SetEnabled(false)
+			ChatManager:SendMessage('AimEval off.', p_Player)
+		elseif s_Mode == 'report' then
+			s_AimEvaluation:PrintReport(p_Player)
+		elseif s_Mode == 'reset' then
+			s_AimEvaluation:Reset()
+			ChatManager:SendMessage('AimEval statistics cleared.', p_Player)
+		elseif s_Mode == 'verbose' then
+			s_AimEvaluation:SetVerbose(p_Parts[3] ~= 'off')
+			ChatManager:SendMessage('AimEval per-shot output ' .. (p_Parts[3] ~= 'off' and 'on' or 'off') .. '.', p_Player)
+		else
+			ChatManager:SendMessage('Usage: !aimeval [on|off|report|reset|verbose [off]]', p_Player)
+		end
 	elseif p_Parts[1] == '!perks' then
 		if PermissionManager:HasPermission(p_Player, 'ChatCommands') == false then
 			ChatManager:SendMessage('You have no permissions for this action (ChatCommands).', p_Player)

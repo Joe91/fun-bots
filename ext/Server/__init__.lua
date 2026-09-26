@@ -69,6 +69,8 @@ require('Commands/RCON')
 local m_AirTargets = require('AirTargets')
 ---@type GameDirector
 local m_GameDirector = require('GameDirector')
+---@type AimEvaluation
+local m_AimEvaluation = require('AimEvaluation')
 ---@type PermissionManager
 PermissionManager = require('PermissionManager')
 
@@ -260,6 +262,7 @@ function FunBotServer:OnEngineUpdate(p_DeltaTime, p_SimulationDeltaTime)
 	m_GameDirector:OnEngineUpdate(p_DeltaTime)
 	m_BotSpawner:OnEngineUpdate(p_DeltaTime, p_SimulationDeltaTime)
 	m_NodeEditor:OnEngineUpdate(p_DeltaTime, p_SimulationDeltaTime)
+	m_AimEvaluation:OnEngineUpdate(p_DeltaTime)
 
 	if Registry.DEBUG.ROUND_STATS_INTERVAL > 0 then
 		self:_UpdateRoundStats(p_DeltaTime)
@@ -562,6 +565,7 @@ function FunBotServer:OnLevelDestroy()
 	m_NodeEditor:OnLevelDestroy()
 	m_AirTargets:OnLevelDestroy()
 	m_GameDirector:OnLevelDestroy()
+	m_AimEvaluation:OnLevelDestroy()
 	local s_OldMemory = math.floor(collectgarbage("count") / 1024)
 	collectgarbage('collect')
 	m_Logger:Write("*Collecting Garbage on Level Destroy: " ..
@@ -742,23 +746,32 @@ function FunBotServer:OnSoldierDamage(p_HookCtx, p_Soldier, p_Info, p_GiverInfo)
 end
 
 function FunBotServer:OnEntityFactoryCreate(p_HookCtx, p_EntityData, p_Transform)
-	if p_EntityData.typeInfo.name == "MissileEntityData" then
+	local s_TypeName = p_EntityData.typeInfo.name
+	-- The original may only be called once, keep the created entity for all users.
+	local s_CreatedEntity = nil
+	local s_Called = false
+
+	if s_TypeName == "MissileEntityData" then
 		local s_MissileEntityData = MissileEntityData(p_EntityData)
 		if s_MissileEntityData.lockingController then
-			local s_CreatedEntity = p_HookCtx:Call()
-			if not s_CreatedEntity then
-				return
-			end
-			local s_TimeDelay = s_MissileEntityData.engineTimeToIgnition + s_MissileEntityData.timeToActivateGuidingSystem
-			local s_MaxSpeed = s_MissileEntityData.maxSpeed
+			s_CreatedEntity = p_HookCtx:Call()
+			s_Called = true
+			if s_CreatedEntity then
+				local s_TimeDelay = s_MissileEntityData.engineTimeToIgnition + s_MissileEntityData.timeToActivateGuidingSystem
+				local s_MaxSpeed = s_MissileEntityData.maxSpeed
 
-			m_BotManager:CheckForFlareOrSmoke(s_CreatedEntity, s_MaxSpeed, s_TimeDelay)
+				m_BotManager:CheckForFlareOrSmoke(s_CreatedEntity, s_MaxSpeed, s_TimeDelay)
+			end
 		end
 	end
-	if Registry.DEBUG.VEHICLE_PROJECTILE_TRACE then
-		if p_EntityData.typeInfo.name == "ProjectileEntityData" or p_EntityData.typeInfo.name == "BulletEntityData" or p_EntityData.typeInfo.name == "MissileEntityData" then
-			p_HookCtx:Call()
-			-- To trace projectiles: Globals.LastProjectile = SpatialEntity(<created entity>).transform
+
+	if (Registry.DEBUG.VEHICLE_PROJECTILE_TRACE or m_AimEvaluation:IsEnabled()) and
+		(s_TypeName == "ProjectileEntityData" or s_TypeName == "BulletEntityData" or s_TypeName == "MissileEntityData") then
+		if not s_Called then
+			s_CreatedEntity = p_HookCtx:Call()
+		end
+		if m_AimEvaluation:IsEnabled() then
+			m_AimEvaluation:OnProjectileCreated(p_Transform, s_CreatedEntity, s_TypeName)
 		end
 	end
 end
@@ -768,6 +781,10 @@ end
 ---@param p_Hit RayCastHit
 ---@param p_GiverInfo DamageGiverInfo
 function FunBotServer:OnBulletEntityCollision(p_HookCtx, p_Entity, p_Hit, p_GiverInfo)
+	if m_AimEvaluation:IsEnabled() then
+		m_AimEvaluation:OnBulletCollision(p_Entity, p_Hit, p_GiverInfo)
+	end
+
 	if Registry.COMMON.USE_BUGGED_HITBOXES then
 		return
 	end

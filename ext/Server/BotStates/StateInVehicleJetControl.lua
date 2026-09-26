@@ -55,9 +55,11 @@ function StateInVehicleJetControl:UpdateFast(p_Bot, p_DeltaTime)
 
 	local s_IsAttacking = p_Bot._ShootPlayer ~= nil
 
-	-- assign new target after some time
-	if p_Bot._DeployTimer > (Config.BotVehicleFireModeDuration - 0.5) and p_Bot._VehicleTakeoffTimer <= 0.0 then
-		local s_Target = m_AirTargets:GetTarget(p_Bot.m_Player, Registry.VEHICLES.MAX_ATTACK_DISTANCE_JET)
+	-- assign new target after some time. Without a target scan often, to attack as soon as possible.
+	local s_ScanInterval = s_IsAttacking and (Config.BotVehicleFireModeDuration - 0.5) or Registry.VEHICLES.JET_TARGET_SCAN_INTERVAL
+	if p_Bot._DeployTimer > s_ScanInterval and p_Bot._VehicleTakeoffTimer <= 0.0 then
+		local s_Target = m_AirTargets:GetTarget(p_Bot.m_Player, Registry.VEHICLES.MAX_ATTACK_DISTANCE_JET,
+			Registry.VEHICLES.JET_TARGET_ANGLE_PENALTY)
 		local s_TargetData = s_Target and g_PlayerData:GetData(s_Target.id)
 		if s_Target ~= nil and s_TargetData ~= nil then
 			p_Bot._ShootPlayerId = s_Target.id

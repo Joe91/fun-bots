@@ -177,6 +177,16 @@ function VehicleAiming:UpdateAimingVehicle(p_Bot, p_AdvancedAlgorithm)
 		s_WorseningYaw = (MathUtils:GetRandom(-1.0, 1.0) * s_WorseningValue)
 	end
 
+	-- Chopper main-guns are aimed with the whole chopper: point the nose so that the shot (AimOffset relative to the
+	-- nose) hits. Yaw decreases to the left, AimOffset-yaw > 0 is left → nose further right. Same for pitch.
+	-- Parts and jets correct the AimOffset in their local frame (VehicleMovement / VehicleJetControl).
+	if s_IsAirVehicle and s_EntryId == 0 and p_Bot._VehicleMovableId < 0 and
+		not m_Vehicles:IsVehicleType(p_Bot.m_ActiveVehicle, VehicleTypes.Plane) then
+		local s_AimOffsetYaw, s_AimOffsetPitch = m_Vehicles:GetAimOffsets(p_Bot.m_ActiveVehicle, s_EntryId, p_Bot._ActiveVehicleWeaponSlot)
+		s_Yaw = s_Yaw + s_AimOffsetYaw
+		s_Pitch = s_Pitch + s_AimOffsetPitch
+	end
+
 	p_Bot._TargetPitch = s_Pitch + s_WorseningPitch
 	p_Bot._TargetYaw = s_Yaw + s_WorseningYaw
 

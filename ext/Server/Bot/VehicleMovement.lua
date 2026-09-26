@@ -391,31 +391,21 @@ function VehicleMovement:UpdateVehicleLookAround(p_Bot, p_DeltaTime)
 		p_Bot._TargetPoint = s_Waypoint
 	else
 		if p_Bot._VehicleMovableId >= 0 then
-			local s_Pos = p_Bot.m_Player.controlledControllable.transform.forward:Clone()
+			p_Bot:UpdateLookAroundGlance(p_DeltaTime, 1.9, 0.08)
+
+			local s_Pos = p_Bot.m_Player.controlledControllable.transform.forward
 			local s_AtanDzDx = math.atan(s_Pos.z, s_Pos.x)
-			p_Bot._TargetYaw = (s_AtanDzDx > math.pi / 2) and (s_AtanDzDx - math.pi / 2) or (s_AtanDzDx + 3 * math.pi / 2)
-			p_Bot._TargetPitch = 0.0
+			local s_Yaw = (s_AtanDzDx > math.pi / 2) and (s_AtanDzDx - math.pi / 2) or (s_AtanDzDx + 3 * math.pi / 2)
+			s_Yaw = s_Yaw + p_Bot._LookAroundYawOffset
 
-			p_Bot._VehicleLookAroundTimer = p_Bot._VehicleLookAroundTimer + p_DeltaTime
-
-			if p_Bot._VehicleLookAroundTimer > 9.0 then
-				p_Bot._VehicleLookAroundTimer = 0.0
-			elseif p_Bot._VehicleLookAroundTimer >= 6.0 then
-			elseif p_Bot._VehicleLookAroundTimer >= 3.0 then
-				p_Bot._TargetYaw = p_Bot._TargetYaw - 1.0 -- 60° rotation left.
-				p_Bot._TargetPitch = 0.5
-
-				if p_Bot._TargetYaw < 0.0 then
-					p_Bot._TargetYaw = p_Bot._TargetYaw + (2 * math.pi)
-				end
-			elseif p_Bot._VehicleLookAroundTimer >= 0.0 then
-				p_Bot._TargetYaw = p_Bot._TargetYaw + 1.0 -- 60° rotation right.
-				p_Bot._TargetPitch = -0.5
-
-				if p_Bot._TargetYaw > (math.pi * 2) then
-					p_Bot._TargetYaw = p_Bot._TargetYaw - (2 * math.pi)
-				end
+			if s_Yaw < 0.0 then
+				s_Yaw = s_Yaw + (2 * math.pi)
+			elseif s_Yaw > (2 * math.pi) then
+				s_Yaw = s_Yaw - (2 * math.pi)
 			end
+
+			p_Bot._TargetYaw = s_Yaw
+			p_Bot._TargetPitch = p_Bot._LookAroundPitch
 		end
 	end
 end
@@ -528,6 +518,10 @@ function VehicleMovement:UpdateYawVehicle(p_Bot, p_Attacking, p_IsStationaryLaun
 				local s_GunTransform = s_GunQuatTransform:ToLinearTransform()
 				s_DeltaYaw, s_DeltaPitch = m_Utilities:GetDeviationFromTransform(s_GunTransform,
 					-math.sin(p_Bot._TargetYaw) * s_CosPitch, math.sin(p_Bot._TargetPitch), math.cos(p_Bot._TargetYaw) * s_CosPitch)
+				-- The shot does not leave exactly along the part-forward (AimOffset = shot relative to part).
+				local s_AimOffsetYaw, s_AimOffsetPitch = m_Vehicles:GetAimOffsets(p_Bot.m_ActiveVehicle, s_EntryId, p_Bot._ActiveVehicleWeaponSlot)
+				s_DeltaYaw = s_DeltaYaw - s_AimOffsetYaw
+				s_DeltaPitch = s_DeltaPitch - s_AimOffsetPitch
 
 				-- Detect direction for moving gun back.
 				local s_GunDeltaYaw = s_Yaw - p_Bot._LastVehicleYaw
