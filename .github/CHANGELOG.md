@@ -18,11 +18,10 @@ This is the changelog for release **V3.1.0**. Don't forget to [join us on Discor
 * Improved Air-Vehicle-Control (much smoother now)
 * Much improved GC times
 * Some Jet aim rework
-* improved "lookaround" from passengers
+* improved "lookaround"
 
 
 ### Some optional TODOs:
-* Chopper: handle different heights and positions depending on capture points
 * Fully support default spawn method? (for now only on TDM/GM/SDM by default)
 * (Rework raycasts for better performance)
 * (Improve node editor)

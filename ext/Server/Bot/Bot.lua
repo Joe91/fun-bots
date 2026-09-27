@@ -107,9 +107,10 @@ function Bot:__init(p_Player)
 	self._LookAroundPitch = 0.0
 	self._LookAroundPitchGoal = 0.0
 	self._LookAroundSide = 1
+	self._LookAroundBaseYaw = 0.0
+	self._LookAroundLastTime = 0.0
 	self._VehicleSeatTimer = 0.0
 	self._VehicleTakeoffTimer = 0.0
-	self._WayWaitYawTimer = 0.0
 	self._ObstacleSequenceTimer = 0.0
 	self._StuckTimer = 0.0
 	self._ShotTimer = 0.0
@@ -510,7 +511,7 @@ end
 
 ---Human-like scanning: glance at a random point, hold it for a moment, then pan smoothly to the next one.
 ---Glances mostly alternate sides, so left and right both get covered, with an occasional check straight ahead.
----Updates self._LookAroundYawOffset (relative to the vehicle forward) and self._LookAroundPitch (absolute).
+---Updates self._LookAroundYawOffset (relative to the vehicle forward or the soldier's base yaw) and self._LookAroundPitch (absolute).
 ---@param p_DeltaTime number
 ---@param p_MaxYaw number max yaw offset to either side in rad
 ---@param p_MaxPitch number max pitch deviation from the horizon in rad

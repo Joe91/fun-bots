@@ -587,7 +587,6 @@ function Bot:UpdateNormalMovement(p_DeltaTime)
 
 		if s_Point.SpeedMode ~= BotMoveSpeeds.NoMovement then -- Movement.
 			self._WayWaitTimer = 0.0
-			self._WayWaitYawTimer = 0.0
 			self.m_ActiveSpeedValue = s_Point.SpeedMode -- Speed.
 
 			self:_ApplyReactionAction(p_DeltaTime)
@@ -809,7 +808,6 @@ function Bot:UpdateNormalMovement(p_DeltaTime)
 
 		if s_Point.SpeedMode ~= BotMoveSpeeds.NoMovement then -- Movement.
 			self._WayWaitTimer = 0.0
-			self._WayWaitYawTimer = 0.0
 			self.m_ActiveSpeedValue = s_Point.SpeedMode -- Speed.
 
 			self:_ApplyReactionAction(p_DeltaTime)
@@ -1092,42 +1090,34 @@ end
 
 ---@param p_DeltaTime number
 function Bot:LookAround(p_DeltaTime)
-	-- Move around a little.
-	local s_LastYawTimer = self._WayWaitYawTimer
-	self._WayWaitYawTimer = self._WayWaitYawTimer + p_DeltaTime
 	self.m_ActiveSpeedValue = BotMoveSpeeds.NoMovement
 	self._TargetPoint = nil
-	self._TargetPitch = 0.0
 
-	if self._WayWaitYawTimer > 8.0 then
-		self._WayWaitYawTimer = 0.0 + MathUtils:GetRandom(0.0, 0.5)       -- randomize delay a bit
-		self._TargetYaw = self._TargetYaw + 1.0 + MathUtils:GetRandom(0.0, 0.6) -- 60° rotation right.
+	-- A new look-around phase: scan around the direction the bot was facing when it stopped.
+	local s_Now = SharedUtils:GetTime()
 
-		if self._TargetYaw > (math.pi * 2) then
-			self._TargetYaw = self._TargetYaw - (2 * math.pi)
-		end
-	elseif self._WayWaitYawTimer >= 5.5 and s_LastYawTimer < 5.5 then
-		self._WayWaitYawTimer = self._WayWaitYawTimer + MathUtils:GetRandom(0.0, 1.0) -- randomize delay a bit
-		self._TargetYaw = self._TargetYaw - 1.0 - MathUtils:GetRandom(0.0, 0.6) -- 60° rotation left.
-
-		if self._TargetYaw < 0.0 then
-			self._TargetYaw = self._TargetYaw + (2 * math.pi)
-		end
-	elseif self._WayWaitYawTimer >= 4.0 and s_LastYawTimer < 4.0 then
-		self._WayWaitYawTimer = self._WayWaitYawTimer + MathUtils:GetRandom(0.0, 0.5) -- randomize delay a bit
-		self._TargetYaw = self._TargetYaw - 1.0 - MathUtils:GetRandom(0.0, 0.6) -- 60° rotation left.
-
-		if self._TargetYaw < 0.0 then
-			self._TargetYaw = self._TargetYaw + (2 * math.pi)
-		end
-	elseif self._WayWaitYawTimer >= 1.5 and s_LastYawTimer < 1.5 then
-		self._WayWaitYawTimer = self._WayWaitYawTimer + MathUtils:GetRandom(0.0, 0.5) -- randomize delay a bit
-		self._TargetYaw = self._TargetYaw + 1.0 + MathUtils:GetRandom(0.0, 0.6) -- 60° rotation right.
-
-		if self._TargetYaw > (math.pi * 2) then
-			self._TargetYaw = self._TargetYaw - (2 * math.pi)
-		end
+	if s_Now - self._LookAroundLastTime > 0.5 then
+		self._LookAroundBaseYaw = self._TargetYaw
+		self._LookAroundYawOffset = 0.0
+		self._LookAroundYawGoal = 0.0
+		self._LookAroundPitchGoal = 0.0
+		self._VehicleLookAroundTimer = MathUtils:GetRandom(0.3, 1.2) -- short settle before the first glance
 	end
+
+	self._LookAroundLastTime = s_Now
+
+	self:UpdateLookAroundGlance(p_DeltaTime, 2.2, 0.15)
+
+	local s_Yaw = self._LookAroundBaseYaw + self._LookAroundYawOffset
+
+	if s_Yaw < 0.0 then
+		s_Yaw = s_Yaw + (2 * math.pi)
+	elseif s_Yaw >= (2 * math.pi) then
+		s_Yaw = s_Yaw - (2 * math.pi)
+	end
+
+	self._TargetYaw = s_Yaw
+	self._TargetPitch = self._LookAroundPitch
 end
 
 function Bot:UpdateYaw()
