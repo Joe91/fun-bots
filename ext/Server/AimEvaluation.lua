@@ -92,6 +92,7 @@ function AimEvaluation:Reset()
 	self._NoVehicleNear = 0  -- no player in a vehicle close to the spawn (e.g. infantry)
 	self._NoSeatMatch = 0    -- vehicle close, but no seat / weapon pointing that way
 	self._UnknownVehicle = 0 -- vehicle close, but not in VehicleData
+	self._MovingAtImpact = 0 -- only matched at impact, but the vehicle moved in between
 	self._MatchedAtSpawn = 0
 	self._MatchedAtImpact = 0
 	self._Collisions = 0
@@ -144,6 +145,39 @@ function AimEvaluation:_GetAimTransform(p_Vehicle, p_VehicleData, p_EntryId, p_S
 	return nil, s_PartId
 end
 
+---Configured angle of the shot relative to the aiming-part. Gunships have their own field (RotationOffset: yaw around
+---up, then pitch around the new left), which ends up in the same convention as AimOffset.
+---@return number yaw
+---@return number pitch
+---@return string fieldName
+local function _ConfiguredShotAngles(p_VehicleData, p_EntryId, p_Slot)
+	if m_Vehicles:IsGunship(p_VehicleData) then
+		local s_Rotation = m_Vehicles:GetRotationOffsets(p_VehicleData, p_EntryId, p_Slot) or Vec3.zero
+		return s_Rotation.x, s_Rotation.y, "RotationOffset"
+	end
+	local s_Yaw, s_Pitch = m_Vehicles:GetAimOffsets(p_VehicleData, p_EntryId, p_Slot)
+	return s_Yaw, s_Pitch, "AimOffset"
+end
+
+---True if a soldier on foot is that close to the position (then the shot is probably from infantry).
+---@param p_Pos Vec3
+---@param p_Radius number
+local function _SoldierOnFootNear(p_Pos, p_Radius)
+	local s_Players = PlayerManager:GetPlayers()
+	for l_Index = 1, #s_Players do
+		local l_Player = s_Players[l_Index]
+		local s_Soldier = l_Player.soldier
+		if s_Soldier ~= nil and l_Player.attachedControllable == nil then
+			local s_Trans = s_Soldier.worldTransform.trans
+			local s_DX, s_DY, s_DZ = s_Trans.x - p_Pos.x, s_Trans.y + 1.2 - p_Pos.y, s_Trans.z - p_Pos.z
+			if s_DX * s_DX + s_DY * s_DY + s_DZ * s_DZ < p_Radius * p_Radius then
+				return true
+			end
+		end
+	end
+	return false
+end
+
 ---Part whose forward matches the shot best. Ties (parts that did not rotate) are decided by the distance to the muzzle.
 ---@param p_Vehicle ControllableEntity
 ---@param p_Spawn LinearTransform
@@ -189,6 +223,10 @@ end
 function AimEvaluation:_FindShooter(p_Pos, p_Dir, p_OnlyPlayer)
 	local s_Best = nil
 	local s_BestScore = math.huge
+	-- Seat close enough, but the shot points elsewhere than configured (e.g. wrong part or a wrong / missing offset).
+	-- That is what this mode is for, so use it as long as no soldier on foot could have fired.
+	local s_Weak = nil
+	local s_WeakScore = math.huge
 	local s_Reason = "novehicle"
 	local s_Nearest = math.huge
 	local s_Players = p_OnlyPlayer and { p_OnlyPlayer } or PlayerManager:GetPlayers()
@@ -224,32 +262,47 @@ function AimEvaluation:_FindShooter(p_Pos, p_Dir, p_OnlyPlayer)
 						local s_AimTransform, s_PartId = self:_GetAimTransform(s_Vehicle, s_VehicleData, s_EntryId, l_Slot)
 						local s_RefTransform = s_AimTransform or s_VehicleTransform
 						local s_YawDev, s_PitchDev = m_Utilities:GetDeviationFromTransform(s_RefTransform, p_Dir.x, p_Dir.y, p_Dir.z)
-						local s_Angle = math.sqrt(s_YawDev * s_YawDev + s_PitchDev * s_PitchDev)
+						-- Compare against the configured shot-direction (gunship-guns point sideways).
+						local s_CfgYaw, s_CfgPitch = _ConfiguredShotAngles(s_VehicleData, s_EntryId, l_Slot)
+						local s_ErrYaw = _Wrap(s_YawDev - s_CfgYaw)
+						local s_ErrPitch = s_PitchDev - s_CfgPitch
+						local s_Angle = math.sqrt(s_ErrYaw * s_ErrYaw + s_ErrPitch * s_ErrPitch)
 						-- Without an aiming-transform (soldier-based aiming) the angle to the vehicle says nothing.
 						-- With a known shooter the angle must not reject: a wrong part is exactly what we look for.
 						if s_AimTransform == nil or p_OnlyPlayer ~= nil then
 							s_Angle = 0.0
 						end
-						local s_Score = s_RefTransform.trans:Distance(p_Pos) + s_Angle * 40.0
-						if s_Angle < MAX_MATCH_ANGLE and s_Score < s_BestScore then
-							s_BestScore = s_Score
-							s_Best = {
-								Player = l_Player,
-								Bot = s_Bot,
-								Vehicle = s_Vehicle,
-								VehicleData = s_VehicleData,
-								EntryId = s_EntryId,
-								Slot = l_Slot,
-								PartId = s_PartId,
-								AimTransform = s_AimTransform,
-								YawDev = s_YawDev,
-								PitchDev = s_PitchDev,
-							}
+						local s_Distance = s_RefTransform.trans:Distance(p_Pos)
+						local s_Score = s_Distance + s_Angle * 40.0
+						local s_Candidate = {
+							Player = l_Player,
+							Bot = s_Bot,
+							Vehicle = s_Vehicle,
+							VehicleData = s_VehicleData,
+							EntryId = s_EntryId,
+							Slot = l_Slot,
+							PartId = s_PartId,
+							AimTransform = s_AimTransform,
+							YawDev = s_YawDev,
+							PitchDev = s_PitchDev,
+						}
+						if s_Angle < MAX_MATCH_ANGLE then
+							if s_Score < s_BestScore then
+								s_BestScore = s_Score
+								s_Best = s_Candidate
+							end
+						elseif s_Distance < s_WeakScore then
+							s_WeakScore = s_Distance
+							s_Weak = s_Candidate
 						end
 					end
 				end
 			end
 		end
+	end
+
+	if s_Best == nil and s_Weak ~= nil and not _SoldierOnFootNear(p_Pos, 3.0) then
+		s_Best = s_Weak
 	end
 
 	return s_Best, s_Best == nil and s_Reason or nil, s_Nearest
@@ -438,6 +491,15 @@ function AimEvaluation:OnBulletCollision(p_Entity, p_Hit, p_GiverInfo)
 			return
 		end
 		local s_Best, s_Reason = self:_FindShooter(s_Spawn.trans, s_Spawn.forward, s_Giver)
+		-- The vehicle kept moving while the bullet flew: offsets against its current position would be wrong.
+		if s_Best ~= nil then
+			local s_Speed = PhysicsEntity(s_Best.Vehicle).velocity.magnitude
+			local s_FlightTime = s_Shot and (SharedUtils:GetTime() - s_Shot.Time) or nil
+			if (s_FlightTime and s_Speed * s_FlightTime > 1.0) or (s_FlightTime == nil and s_Speed > 1.0) then
+				self._MovingAtImpact = self._MovingAtImpact + 1
+				return
+			end
+		end
 		if s_Best == nil then
 			if s_Shot == nil then
 				-- Not seen on spawn either (only collisions arrive for this type).
@@ -578,9 +640,9 @@ function AimEvaluation:PrintReport(p_Player)
 		s_Seen[#s_Seen + 1] = l_Type .. ": " .. l_Count
 	end
 	local s_Status = string.format("projectiles seen [%s], impacts %d, matched at spawn %d / at impact %d, "
-		.. "not matched: no vehicle near %d, vehicle not in VehicleData %d, no seat pointing that way %d",
+		.. "not matched: no vehicle near %d, vehicle not in VehicleData %d, no seat pointing that way %d, vehicle moved until impact %d",
 		table.concat(s_Seen, ", "), self._Collisions, self._MatchedAtSpawn, self._MatchedAtImpact,
-		self._NoVehicleNear, self._UnknownVehicle, self._NoSeatMatch)
+		self._NoVehicleNear, self._UnknownVehicle, self._NoSeatMatch, self._MovingAtImpact)
 	print(s_Status)
 	if p_Player then
 		ChatManager:SendMessage('AimEval ' .. (self.m_Enabled and 'on' or 'OFF') .. ': ' .. s_Status, p_Player)
@@ -609,14 +671,14 @@ function AimEvaluation:PrintReport(p_Player)
 
 		if s_Group.OffX.n > 0 then
 			local s_Configured = m_Vehicles:GetOffsets(s_Data, s_Group.EntryId, s_Group.Slot)
-			local s_CfgYaw, s_CfgPitch = m_Vehicles:GetAimOffsets(s_Data, s_Group.EntryId, s_Group.Slot)
+			local s_CfgYaw, s_CfgPitch, s_Field = _ConfiguredShotAngles(s_Data, s_Group.EntryId, s_Group.Slot)
 			print("  Offset    measured:    " .. string.format("Vec3(%.3f, %.3f, %.3f)", _Mean(s_Group.OffX), _Mean(s_Group.OffY), _Mean(s_Group.OffZ))
 				.. string.format("  spread (%.3f, %.3f, %.3f)", _Std(s_Group.OffX), _Std(s_Group.OffY), _Std(s_Group.OffZ)))
 			print("            configured:  " .. string.format("Vec3(%.3f, %.3f, %.3f)", s_Configured.x, s_Configured.y, s_Configured.z))
-			print("  AimOffset measured:    " .. string.format("Vec3(%.4f, %.4f, 0)", _Mean(s_Group.BoreYaw), _Mean(s_Group.BorePitch))
+			print(string.format("  %-16s measured: ", s_Field) .. string.format("Vec3(%.4f, %.4f, 0)", _Mean(s_Group.BoreYaw), _Mean(s_Group.BorePitch))
 				.. string.format("  spread (%.4f, %.4f)", _Std(s_Group.BoreYaw), _Std(s_Group.BorePitch))
 				.. "  = shot " .. _Words(_Mean(s_Group.BoreYaw), _Mean(s_Group.BorePitch)) .. " of part-forward")
-			print("            configured:  " .. string.format("Vec3(%.4f, %.4f, 0)", s_CfgYaw, s_CfgPitch))
+			print("                   configured: " .. string.format("Vec3(%.4f, %.4f, 0)", s_CfgYaw, s_CfgPitch))
 			if _Std(s_Group.BoreYaw) > 0.02 or _Std(s_Group.BorePitch) > 0.02 then
 				print("  WARNING: shot-direction does not follow the part → probably wrong part-id (see best matching parts)")
 			end

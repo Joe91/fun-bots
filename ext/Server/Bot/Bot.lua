@@ -311,6 +311,19 @@ function Bot:UpdateDontAttackFlag()
 			return
 		end
 	end
+
+	-- Seats without an aimable part (-1) can't aim their weapon (passengers or fixed guns like on the M1128).
+	-- Only the main guns of attack-/scout-choppers and jets are aimed with the whole vehicle.
+	if g_BotStates:IsInVehicleState(self.m_ActiveState) and self._VehicleMovableId < 0 then
+		local s_AimWithVehicle = self.m_Player.controlledEntryId == 0 and
+			(m_Vehicles:IsVehicleType(self.m_ActiveVehicle, VehicleTypes.Chopper)
+				or m_Vehicles:IsVehicleType(self.m_ActiveVehicle, VehicleTypes.ScoutChopper)
+				or m_Vehicles:IsVehicleType(self.m_ActiveVehicle, VehicleTypes.Plane))
+		if not s_AimWithVehicle then
+			self._DontAttackPlayers = true
+			return
+		end
+	end
 	self._DontAttackPlayers = false
 end
 
