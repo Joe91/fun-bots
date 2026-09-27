@@ -65,12 +65,12 @@ function Weapon:learnStatsValues()
 	s_BulletData, s_Success = g_EbxEditUtils:GetWritableContainer(s_FireData, 'shot.ProjectileData')
 
 	if not s_Success then
-		m_Logger:Warning('No bulletData for: ' .. self.name)
+		m_Logger:Write('No bulletData for: ' .. self.name)
 		return
 	end
 
 	if not s_BulletData:Is('BulletEntityData') then
-		m_Logger:Warning('No bulletData for: ' .. self.name)
+		m_Logger:Write('No bulletData for: ' .. self.name)
 		return
 	end
 

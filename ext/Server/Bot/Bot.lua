@@ -280,10 +280,7 @@ function Bot:UpdateDontAttackFlag()
 	-- Don't attack as driver in some vehicles.
 	if g_BotStates:IsInVehicleState(self.m_ActiveState) and self.m_Player.controlledEntryId == 0 then
 		if m_Vehicles:IsVehicleType(self.m_ActiveVehicle, VehicleTypes.Chopper) then                               -- do not include ScoutChopper here (they can attack)
-			if self._VehicleMovableId == -1 then
-				self._DontAttackPlayers = true                                                                     -- Tranotort-choppers don't attack as driver.
-				return
-			elseif self.m_Player.controlledControllable:GetPlayerInEntry(1) ~= nil and not Config.ChopperDriversAttack then -- Don't attack if gunner available and config is false.
+			if self.m_Player.controlledControllable:GetPlayerInEntry(1) ~= nil and not Config.ChopperDriversAttack then -- Don't attack if gunner available and config is false.
 				self._DontAttackPlayers = true
 				return
 			end
@@ -313,16 +310,10 @@ function Bot:UpdateDontAttackFlag()
 	end
 
 	-- Seats without an aimable part (-1) can't aim their weapon (passengers or fixed guns like on the M1128).
-	-- Only the main guns of attack-/scout-choppers and jets are aimed with the whole vehicle.
-	if g_BotStates:IsInVehicleState(self.m_ActiveState) and self._VehicleMovableId < 0 then
-		local s_AimWithVehicle = self.m_Player.controlledEntryId == 0 and
-			(m_Vehicles:IsVehicleType(self.m_ActiveVehicle, VehicleTypes.Chopper)
-				or m_Vehicles:IsVehicleType(self.m_ActiveVehicle, VehicleTypes.ScoutChopper)
-				or m_Vehicles:IsVehicleType(self.m_ActiveVehicle, VehicleTypes.Plane))
-		if not s_AimWithVehicle then
-			self._DontAttackPlayers = true
-			return
-		end
+	-- Weapons aimed with the whole vehicle (chopper / jet main guns) use -2.
+	if g_BotStates:IsInVehicleState(self.m_ActiveState) and self._VehicleMovableId == -1 then
+		self._DontAttackPlayers = true
+		return
 	end
 	self._DontAttackPlayers = false
 end
