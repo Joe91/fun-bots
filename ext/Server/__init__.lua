@@ -71,6 +71,13 @@ local m_AirTargets = require('AirTargets')
 local m_GameDirector = require('GameDirector')
 ---@type AimEvaluation
 local m_AimEvaluation = require('AimEvaluation')
+---@type ServerRaycasts
+local m_ServerRaycasts = require('ServerRaycasts')
+---@type DebugBridge
+local m_DebugBridge = require('Debug/DebugBridge')
+---@type DebugSnapshots
+local m_DebugSnapshots = require('Debug/DebugSnapshots')
+require('Debug/DebugCommands')
 ---@type PermissionManager
 PermissionManager = require('PermissionManager')
 
@@ -263,6 +270,7 @@ function FunBotServer:OnEngineUpdate(p_DeltaTime, p_SimulationDeltaTime)
 	m_BotSpawner:OnEngineUpdate(p_DeltaTime, p_SimulationDeltaTime)
 	m_NodeEditor:OnEngineUpdate(p_DeltaTime, p_SimulationDeltaTime)
 	m_AimEvaluation:OnEngineUpdate(p_DeltaTime)
+	m_DebugBridge:OnEngineUpdate(p_DeltaTime)
 
 	if Registry.DEBUG.ROUND_STATS_INTERVAL > 0 then
 		self:_UpdateRoundStats(p_DeltaTime)
@@ -531,6 +539,7 @@ function FunBotServer:OnLevelLoaded(p_LevelName, p_GameMode, p_Round, p_RoundsPe
 	m_AirTargets:OnLevelLoaded()
 	m_BotSpawner:OnLevelLoaded(Globals.Round)
 	m_NodeEditor:OnLevelLoaded(p_LevelName, p_GameMode, s_CustomGameMode)
+	m_DebugSnapshots:OnLevelLoaded(p_LevelName, p_GameMode)
 end
 
 function FunBotServer:OnFinishedLoading()
@@ -566,6 +575,8 @@ function FunBotServer:OnLevelDestroy()
 	m_AirTargets:OnLevelDestroy()
 	m_GameDirector:OnLevelDestroy()
 	m_AimEvaluation:OnLevelDestroy()
+	m_ServerRaycasts:OnLevelDestroy()
+	m_DebugBridge:OnLevelDestroy()
 	local s_OldMemory = math.floor(collectgarbage("count") / 1024)
 	collectgarbage('collect')
 	m_Logger:Write("*Collecting Garbage on Level Destroy: " ..
@@ -630,6 +641,7 @@ end
 function FunBotServer:OnPlayerKilled(p_Player, p_Inflictor, p_Position, p_Weapon, p_IsRoadKill, p_IsHeadShot, p_WasVictimInReviveState, p_Info)
 	m_NodeEditor:OnPlayerKilled(p_Player)
 	m_AirTargets:OnPlayerKilled(p_Player)
+	m_DebugSnapshots:OnPlayerKilled(p_Player, p_Inflictor, p_Position, p_Weapon, p_IsRoadKill, p_IsHeadShot)
 end
 
 ---VEXT Server Player:Chat Event
@@ -827,6 +839,7 @@ function FunBotServer:OnRequestClientSettings(p_Player)
 	m_Console:RegisterConsoleCommands(p_Player)
 	m_BotManager:RegisterActivePlayer(p_Player)
 	m_NodeEditor:RegisterActivePlayer(p_Player)
+	m_ServerRaycasts:SendStateToPlayer(p_Player)
 end
 
 function FunBotServer:OnRequestEnterVehicle(p_Player, p_BotName)

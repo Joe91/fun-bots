@@ -14,6 +14,8 @@ local m_BotCreator = require('BotCreator')
 local m_WeaponList = require('__shared/WeaponList')
 ---@type Utilities
 local m_Utilities = require('__shared/Utilities')
+---@type DebugBridge
+local m_DebugBridge = require('Debug/DebugBridge')
 ---@type Logger
 local m_Logger = Logger("BotSpawner", Debug.Server.BOT)
 local m_Vehicles = require('Vehicles')
@@ -480,6 +482,13 @@ function BotSpawner:UpdateBotAmountAndTeam()
 
 		s_TeamCount[i] = s_CountBots[i] + s_CountPlayers[i] + s_BotsToDelay[i]
 		s_PlayerCount = s_PlayerCount + s_CountPlayers[i]
+	end
+
+	-- The debug-bridge watches the game without a player: spawn the bots as if one player joined the player-team.
+	if s_PlayerCount == 0 and m_DebugBridge:IsEnabled() then
+		s_CountPlayers[s_PlayerTeam] = 1
+		s_TeamCount[s_PlayerTeam] = s_TeamCount[s_PlayerTeam] + 1
+		s_PlayerCount = 1
 	end
 
 	self._NrOfPlayers = s_PlayerCount

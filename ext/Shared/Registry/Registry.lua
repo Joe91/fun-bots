@@ -86,7 +86,15 @@ Registry = {
 		-- Max checks per cycle.
 		BOT_BOT_MAX_CHECKS = 30,
 		-- Max Raycaststs Bot-Bot-Revive
-		BOT_BOT_REVIVE_MAX_RAYCASTS = 15
+		BOT_BOT_REVIVE_MAX_RAYCASTS = 15,
+		-- Do all sight-checks (bot-bot, bot-player, player-revive) with server-side raycasts instead of sending
+		-- them to the clients. No client is needed then: bots also fight each other on an empty server.
+		-- Costs server performance. Toggle ingame with "!serverraycasts on|off" or RCON "funbots.serverRaycasts".
+		USE_SERVER_RAYCASTS = false,
+		-- Max server-raycasts per bot-bot-check (every BOT_BOT_CHECK_INTERVAL).
+		SERVER_RAYCASTS_BOT_BOT = 6,
+		-- Max server-raycasts per real player and update for the bot-player- and revive-checks.
+		SERVER_RAYCASTS_PER_PLAYER = 1,
 	},
 	GAME_DIRECTOR = {
 		UPDATE_OBJECTIVES_CYCLE = 1.5,
@@ -265,6 +273,13 @@ Registry = {
 		-- Seconds between prints of Lua memory, bot-update times, GC and table sizes. 0 = off.
 		-- Used to find what grows or stutters over long rounds.
 		ROUND_STATS_INTERVAL = 0.0,
+		-- Streams the game-state to the external debug-server (tools/debug-server) and executes its commands.
+		-- Toggle ingame with "!debugbridge on|off" or RCON "funbots.debugBridge".
+		DEBUG_BRIDGE = false,
+		-- Address of the debug-server.
+		DEBUG_BRIDGE_URL = "http://127.0.0.1:8765",
+		-- Seconds between two snapshots sent to the debug-server.
+		DEBUG_BRIDGE_INTERVAL = 0.2,
 	},
 
 	-- Get the version of the current build as in a semantic format.

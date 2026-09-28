@@ -242,7 +242,8 @@ function ClientBotManager:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 	local s_RaycastResultsToSend = {}
 
 	self.m_RaycastTimer = self.m_RaycastTimer + p_DeltaTime
-	local s_SkipEnemyCheck = not Config.BotsAttackPlayers or
+	-- With server-raycasts the server checks the enemy-bots and revives of this player as well.
+	local s_SkipEnemyCheck = not Config.BotsAttackPlayers or Registry.GAME_RAYCASTING.USE_SERVER_RAYCASTS or
 		(self.m_RaycastTimer < Registry.GAME_RAYCASTING.RAYCAST_INTERVAL_ENEMY_CHECK)
 
 	-- Check bot-bot attack.
@@ -486,6 +487,15 @@ function ClientBotManager:OnWriteClientSettings(p_NewConfig, p_UpdateWeaponSets)
 
 	self.m_Player = PlayerManager:GetLocalPlayer()
 	self.m_ReadyToUpdate = true
+end
+
+---The server does all raycasts itself (Registry.GAME_RAYCASTING.USE_SERVER_RAYCASTS).
+---@param p_Enabled boolean
+function ClientBotManager:OnServerRaycastsSetEnabled(p_Enabled)
+	Registry.GAME_RAYCASTING.USE_SERVER_RAYCASTS = p_Enabled
+	if p_Enabled then
+		self.m_BotBotRaycastsToDo = {}
+	end
 end
 
 function ClientBotManager:CheckForBotBotAttack(p_RaycastData)

@@ -8,6 +8,8 @@ require('Bot/Bot')
 local m_Utilities = require('__shared/Utilities')
 local m_Vehicles = require("Vehicles")
 local m_BotCreator = require('BotCreator')
+---@type ServerRaycasts
+local m_ServerRaycasts = require('ServerRaycasts')
 ---@type Logger
 local m_Logger = Logger("BotManager", Debug.Server.BOT)
 
@@ -280,6 +282,15 @@ function BotManager:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 		end
 
 		self._BotAttackBotTimer = self._BotAttackBotTimer + p_DeltaTime
+	end
+
+	if m_ServerRaycasts.m_Enabled then
+		m_ServerRaycasts:UpdatePlayerChecks(self, self._ActivePlayers, p_DeltaTime)
+		if s_Profile then
+			local s_Now = SharedUtils:GetTimeNS()
+			self:_ProfileSection("ServerRaycasts", s_Now - s_SectionStart)
+			s_SectionStart = s_Now
+		end
 	end
 
 	if Config.BotsReviveBots
@@ -1483,6 +1494,26 @@ end
 -- Private Functions
 -- =============================================
 
+---Runs the bot-bot-raycasts on the server (Registry.GAME_RAYCASTING.USE_SERVER_RAYCASTS) or sends them to the clients.
+---@param p_RaycastData RaycastRequests[]
+function BotManager:_DispatchRaycastsBotBotAttack(p_RaycastData)
+	if not m_ServerRaycasts.m_Enabled then
+		self:_DistributeRaycastsBotBotAttack(p_RaycastData)
+		return
+	end
+
+	for l_Index = 1, #p_RaycastData do
+		local l_Entry = p_RaycastData[l_Index]
+		local s_Bot1 = self:GetBotById(l_Entry.Bot1)
+		local s_Bot2 = self:GetBotById(l_Entry.Bot2)
+
+		if s_Bot1 and s_Bot2 and
+			m_ServerRaycasts:CheckBotBot(s_Bot1, s_Bot2, l_Entry.Bot1InVehicle, l_Entry.Bot2InVehicle) then
+			self:OnBotShootAtBot(l_Entry.Bot1, l_Entry.Bot2)
+		end
+	end
+end
+
 ---@param p_RaycastData RaycastRequests[] To-do: add emmylua type
 function BotManager:_DistributeRaycastsBotBotAttack(p_RaycastData)
 	local s_RaycastIndex = 0
@@ -1549,8 +1580,9 @@ function BotManager:ChechFovBotBot(p_Bot, p_EnemyBot, p_EnemyReady)
 end
 
 function BotManager:_CheckForBotBotAttack()
+	local s_ServerRaycasts = m_ServerRaycasts.m_Enabled
 	-- Not enough on either team and no players to use.
-	if #self._ActivePlayers == 0 then
+	if #self._ActivePlayers == 0 and not s_ServerRaycasts then
 		return
 	end
 
@@ -1580,7 +1612,8 @@ function BotManager:_CheckForBotBotAttack()
 	local s_BotStates = g_BotStates
 	local s_AttackList = self._BotBotAttackList
 	local s_AttackListCount = #s_AttackList
-	local s_MaxRaycasts = #self._ActivePlayers * self._RaycastsPerActivePlayer
+	local s_MaxRaycasts = s_ServerRaycasts and Registry.GAME_RAYCASTING.SERVER_RAYCASTS_BOT_BOT or
+		#self._ActivePlayers * self._RaycastsPerActivePlayer
 
 	-- Data needed per bot, kept on the bot and reused for BOT_BOT_INFO_MAX_AGE. This check runs 20 times per
 	-- second over all bots, and every engine access allocates: reading everything each call fed the GC a lot.
@@ -1669,14 +1702,14 @@ function BotManager:_CheckForBotBotAttack()
 
 								if s_Raycasts >= s_MaxRaycasts then
 									self._LastBotCheckIndex = i
-									self:_DistributeRaycastsBotBotAttack(s_RaycastEntries)
+									self:_DispatchRaycastsBotBotAttack(s_RaycastEntries)
 									return
 								end
 							end
 
 							if s_ChecksDone >= Registry.GAME_RAYCASTING.BOT_BOT_MAX_CHECKS then
 								self._LastBotCheckIndex = i
-								self:_DistributeRaycastsBotBotAttack(s_RaycastEntries)
+								self:_DispatchRaycastsBotBotAttack(s_RaycastEntries)
 								return
 							end
 						end
@@ -1688,7 +1721,7 @@ function BotManager:_CheckForBotBotAttack()
 		self._LastBotCheckIndex = i
 	end
 
-	self:_DistributeRaycastsBotBotAttack(s_RaycastEntries)
+	self:_DispatchRaycastsBotBotAttack(s_RaycastEntries)
 
 	-- Should only reach here if every connection has been checked.
 	-- Clear the cache and start over.
@@ -1698,8 +1731,8 @@ function BotManager:_CheckForBotBotAttack()
 end
 
 function BotManager:_CheckForBotBotRevive()
-	-- Not enough on either team and no players to use.
-	if #self._ActivePlayers == 0 then
+	-- Not enough on either team and no players to use. The raycasts are done on the server anyway.
+	if #self._ActivePlayers == 0 and not m_ServerRaycasts.m_Enabled then
 		return
 	end
 

@@ -279,6 +279,36 @@ function ChatCommands:Execute(p_Parts, p_Player)
 		else
 			ChatManager:SendMessage('Usage: !aimeval [on|off|report|reset|verbose [off]]', p_Player)
 		end
+	elseif p_Parts[1] == '!serverraycasts' then
+		if PermissionManager:HasPermission(p_Player, 'ChatCommands') == false then
+			ChatManager:SendMessage('You have no permissions for this action (ChatCommands).', p_Player)
+			return
+		end
+
+		local s_ServerRaycasts = require('ServerRaycasts')
+		local s_Mode = p_Parts[2] or (s_ServerRaycasts:IsEnabled() and 'off' or 'on')
+		if s_Mode == 'on' or s_Mode == 'off' then
+			s_ServerRaycasts:SetEnabled(s_Mode == 'on')
+			ChatManager:SendMessage('Server-raycasts ' .. s_Mode .. '.', p_Player)
+		else
+			ChatManager:SendMessage('Usage: !serverraycasts [on|off]', p_Player)
+		end
+	elseif p_Parts[1] == '!debugbridge' then
+		if PermissionManager:HasPermission(p_Player, 'ChatCommands') == false then
+			ChatManager:SendMessage('You have no permissions for this action (ChatCommands).', p_Player)
+			return
+		end
+
+		local s_DebugBridge = require('Debug/DebugBridge')
+		local s_Mode = p_Parts[2] or (s_DebugBridge:IsEnabled() and 'off' or 'on')
+		if s_Mode == 'on' or s_Mode == 'off' then
+			s_DebugBridge:SetEnabled(s_Mode == 'on')
+		elseif s_Mode ~= 'status' then
+			ChatManager:SendMessage('Usage: !debugbridge [on|off|status]', p_Player)
+			return
+		end
+		ChatManager:SendMessage('DebugBridge ' .. (s_DebugBridge:IsEnabled() and 'on' or 'off') .. ', ' ..
+			(s_DebugBridge:IsConnected() and 'connected to ' or 'not connected to ') .. s_DebugBridge:GetUrl(), p_Player)
 	elseif p_Parts[1] == '!perks' then
 		if PermissionManager:HasPermission(p_Player, 'ChatCommands') == false then
 			ChatManager:SendMessage('You have no permissions for this action (ChatCommands).', p_Player)

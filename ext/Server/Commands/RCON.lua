@@ -126,6 +126,52 @@ function RCONCommands:__init()
 			end)
 		},
 
+		-- Server-side raycasts <on|off>. Without argument it returns the current state.
+		SERVER_RAYCASTS = {
+			Name = 'funbots.serverRaycasts',
+			Parameters = { 'on|off' },
+			Callback = (function(p_Command, p_Args)
+				local s_ServerRaycasts = require('ServerRaycasts')
+				local s_Mode = p_Args[1] and string.lower(p_Args[1])
+
+				if s_Mode == 'on' or s_Mode == 'true' or s_Mode == '1' then
+					s_ServerRaycasts:SetEnabled(true)
+				elseif s_Mode == 'off' or s_Mode == 'false' or s_Mode == '0' then
+					s_ServerRaycasts:SetEnabled(false)
+				elseif s_Mode ~= nil then
+					return { 'ERROR', 'Needing <on|off>.' }
+				end
+
+				return { 'OK', s_ServerRaycasts:IsEnabled() and 'on' or 'off' }
+			end)
+		},
+
+		-- Debug-bridge to the debug-server (tools/debug-server) <on|off> [url].
+		-- Without argument it returns the current state.
+		DEBUG_BRIDGE = {
+			Name = 'funbots.debugBridge',
+			Parameters = { 'on|off', 'Url' },
+			Callback = (function(p_Command, p_Args)
+				local s_DebugBridge = require('Debug/DebugBridge')
+				local s_Mode = p_Args[1] and string.lower(p_Args[1])
+
+				if p_Args[2] ~= nil then
+					s_DebugBridge:SetUrl(p_Args[2])
+				end
+
+				if s_Mode == 'on' or s_Mode == 'true' or s_Mode == '1' then
+					s_DebugBridge:SetEnabled(true)
+				elseif s_Mode == 'off' or s_Mode == 'false' or s_Mode == '0' then
+					s_DebugBridge:SetEnabled(false)
+				elseif s_Mode ~= nil then
+					return { 'ERROR', 'Needing <on|off> [url].' }
+				end
+
+				return { 'OK', (s_DebugBridge:IsEnabled() and 'on' or 'off'),
+					(s_DebugBridge:IsConnected() and 'connected' or 'not connected'), s_DebugBridge:GetUrl() }
+			end)
+		},
+
 		-- Spawn <Amount> <Team>
 		SPAWN = {
 			Name = 'funbots.spawn',
