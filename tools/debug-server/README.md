@@ -68,7 +68,10 @@ raycast shows up on the map as a trace: green if the target is visible, red up t
   works while the mod reloads. Chat
   commands run either as a real player in the game (with their permissions and soldier, answers also go to their
   chat) or as *debug-server*: all permissions, but no soldier, so commands like `!row` or `!trace` need a player.
-  Up and down go through the history. Two lines above the output show whether RCON is logged in and whether the
+  While typing, matching commands are suggested (any part of the name, any case). Tab or a click takes one, the
+  arrow keys choose, and the arguments stay visible while typing them. A known RCON command in the wrong case is
+  corrected before it is sent. `?` or `help [filter]` lists the commands (BF3, VU, fun-bots). Without suggestions,
+  up and down go through the history. Two lines above the output show whether RCON is logged in and whether the
   running mod is new enough for the console (the mod sends its command list in `meta.commands`).
 - **Objectives**: all capture points and MCOMs with their state. Click one to jump to it.
 - **Selection**: the snapshot of the selected bot. *Full details* shows every plain field of the `Bot` object.

@@ -7,6 +7,7 @@
   POST /api/rcon       {words} -> {words}. Any RCON-command, straight to the RCON-port of the game-server.
   POST /api/scans/clear  {scan} -> {cleared}. Forgets one scan (no scan = all) and stops it if it still runs.
   GET  /api/commands   the last commands and their answers
+  GET  /api/console    the commands the console knows (chat and RCON), see console_commands.py
   GET  /               the web-interface (web/)
 """
 
@@ -22,6 +23,7 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from urllib.parse import parse_qs, urlparse
 
+from .console_commands import catalog
 from .hub import Hub
 from .rcon import RconError
 
@@ -69,6 +71,8 @@ class Handler(BaseHTTPRequestHandler):
             self._send_json(self.server.hub.snapshot())
         elif url.path == "/api/commands":
             self._send_json(self.server.hub.commands.history())
+        elif url.path == "/api/console":
+            self._send_json(catalog())
         elif url.path.startswith("/api/"):
             self._send_json({"error": "not found"}, HTTPStatus.NOT_FOUND)
         else:

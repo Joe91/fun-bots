@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import re
 import socket
 import struct
 import sys
@@ -18,6 +19,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from funbots_debug.analyzers import create_analyzers  # noqa: E402
 from funbots_debug.analyzers.combat import CombatAnalyzer  # noqa: E402
 from funbots_debug.analyzers.stuck import StuckBotAnalyzer  # noqa: E402
+from funbots_debug.console_commands import MOD_EXT, catalog  # noqa: E402
 from funbots_debug.hub import Hub  # noqa: E402
 from funbots_debug.protocol import as_list, yaw_to_direction  # noqa: E402
 from funbots_debug.rcon import RconClient, RconError, decode_packet, encode_packet  # noqa: E402
@@ -236,6 +238,11 @@ class HttpTest(unittest.TestCase):
         with self.assertRaises(urllib.error.HTTPError):
             self.post("/api/scans/clear", {"scan": "x"})
 
+    def test_console_commands(self):
+        with urllib.request.urlopen(self.url + "/api/console", timeout=5) as response:
+            commands = json.loads(response.read())
+        self.assertTrue(commands["chat"] and commands["rcon"])
+
     def test_static_files(self):
         with urllib.request.urlopen(self.url + "/", timeout=5) as response:
             self.assertIn(b"fun-bots", response.read())
@@ -245,6 +252,29 @@ class HttpTest(unittest.TestCase):
     def test_stream_hello(self):
         with urllib.request.urlopen(self.url + "/api/stream", timeout=5) as response:
             self.assertEqual(response.readline().strip(), b"event: hello")
+
+
+class ConsoleCommandsTest(unittest.TestCase):
+    def test_catalog(self):
+        commands = catalog()
+        chat = {entry["name"]: entry for entry in commands["chat"]}
+        rcon = {entry["name"]: entry for entry in commands["rcon"]}
+        # Every chat-command of the mod is in the list.
+        source = (MOD_EXT / "Server/Commands/Chat.lua").read_text(encoding="utf-8")
+        self.assertEqual(set(chat), set(re.findall(r"p_Parts\[1\] == '(![^']+)'", source)))
+        self.assertEqual(chat["!spawnbots"]["args"], "<Amount>")
+        self.assertEqual(chat["!grid"]["args"], "<Rows> [Columns] [Spacing]")
+        self.assertEqual(rcon["funbots.spawn"]["args"], "<Amount> <Team>")
+        self.assertEqual(rcon["funbots.kickAll"]["help"], "Kick All")
+        for name in ("mapList.runNextRound", "vars.friendlyFire", "modList.ReloadExtensions", "vu.TimeScale",
+                     "funbots.config.BotKit"):
+            self.assertIn(name, rcon)
+
+    def test_missing_mod(self):
+        with tempfile.TemporaryDirectory() as folder:
+            commands = catalog(Path(folder))
+        self.assertEqual(commands["chat"], [])
+        self.assertIn("mapList.runNextRound", {entry["name"] for entry in commands["rcon"]})
 
 
 class FakeRconServer:

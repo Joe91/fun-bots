@@ -27,7 +27,7 @@ function RCONCommands:__init()
 			end)
 		},
 
-		-- Save config.
+		-- Restore the default config.
 		CONFIG_RESET = {
 			Name = 'funbots.restore',
 			Callback = (function(p_Command, p_Args)

@@ -315,10 +315,60 @@ table.kv td:first-child {
 	letter-spacing: 0.04em;
 }
 
-#console-input {
+.console-field {
+	position: relative;
 	flex: 1;
 	min-width: 0;
+}
+
+#console-input {
+	width: 100%;
 	font-family: ui-monospace, "Cascadia Mono", Consolas, monospace;
+}
+
+.complete {
+	position: absolute;
+	top: 100%;
+	left: 0;
+	width: max(100%, 330px);
+	z-index: 10;
+	list-style: none;
+	margin: 2px 0 0;
+	padding: 2px;
+	max-height: 260px;
+	overflow-y: auto;
+	background: var(--panel);
+	border: 1px solid var(--border);
+	border-radius: 5px;
+	box-shadow: 0 4px 14px rgb(0 0 0 / 25%);
+	font: 12px/1.35 ui-monospace, "Cascadia Mono", Consolas, monospace;
+}
+
+.complete li {
+	padding: 2px 6px;
+	border-radius: 3px;
+	cursor: pointer;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+.complete li.active {
+	background: color-mix(in srgb, var(--accent) 22%, transparent);
+}
+
+.complete li.hint {
+	cursor: default;
+	white-space: normal;
+}
+
+.complete .args,
+.complete .about {
+	color: var(--muted);
+}
+
+.complete .about {
+	font-family: system-ui, sans-serif;
 }
 
 #console-player {
@@ -344,6 +394,15 @@ table.kv td:first-child {
 
 pre.console .in {
 	color: var(--accent);
+}
+
+pre.console .help {
+	color: var(--muted);
+}
+
+pre.console .help b {
+	color: var(--text);
+	font-weight: 600;
 }
 
 pre.console .error {

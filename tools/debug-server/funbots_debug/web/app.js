@@ -867,7 +867,7 @@ async function clearScans(scan = null) {
 // Console: RCON- and chat-commands
 // =============================================
 
-const CONSOLE_LINES = 300;
+const CONSOLE_LINES = 1000;
 const CONSOLE_TIMEOUT = 15000; // ms until a missing answer is reported
 const CONSOLE_COMMANDS = ["chat", "rcon"]; // bridge-commands the mod needs for the console
 const consoleHistory = load("consoleHistory", []);
@@ -893,11 +893,134 @@ function parseRcon(line) {
 	return { command: parts[0], args: parts.slice(1) };
 }
 
+// The commands the console knows (GET /api/console): {chat: [...], rcon: [...]}, entries {group, name, args, help}.
+let consoleCatalog = { chat: [], rcon: [] };
+
+async function loadConsoleCatalog() {
+	try {
+		consoleCatalog = await (await fetch("/api/console")).json();
+	} catch (error) {
+		consolePrint("error", "Could not load the command list: " + error);
+	}
+}
+
+// =============================================
+// Console: completion
+// =============================================
+
+const MAX_COMPLETIONS = 15;
+// Shown entries: {command, hint}. active = index chosen with the arrow keys, -1 = none.
+const completion = { entries: [], active: -1 };
+
+// Chat-commands match with or without "!".
+const bareName = (name) => name.toLowerCase().replace(/^!/, "");
+
+function findCommand(name) {
+	const needle = bareName(name);
+	return (consoleCatalog[$("console-mode").value] || []).find((c) => bareName(c.name) === needle) || null;
+}
+
+// While the command is typed: all commands that contain it (the ones that start with it first). Once the command
+// is complete or its arguments are typed: the command with its arguments as hint.
+function updateCompletion() {
+	const value = $("console-input").value;
+	const space = value.search(/\s/);
+	const word = bareName(space < 0 ? value : value.slice(0, space));
+	let entries = [];
+	if (word) {
+		const exact = findCommand(word);
+		if (space >= 0) {
+			if (exact) entries = [{ command: exact, hint: true }];
+		} else {
+			const matches = (consoleCatalog[$("console-mode").value] || [])
+				.filter((c) => bareName(c.name).includes(word))
+				.sort((a, b) => (bareName(b.name) === word) - (bareName(a.name) === word) || bareName(b.name).startsWith(word) - bareName(a.name).startsWith(word));
+			entries = matches.length === 1 && exact ? [{ command: exact, hint: true }] : matches.slice(0, MAX_COMPLETIONS).map((command) => ({ command }));
+		}
+	}
+	completion.entries = entries;
+	completion.active = -1;
+	renderCompletion();
+}
+
+function renderCompletion() {
+	const list = $("console-complete");
+	list.hidden = !completion.entries.length;
+	list.innerHTML = completion.entries.map(({ command: c, hint }, index) =>
+		`<li data-index="${index}" class="${hint ? "hint" : ""}${index === completion.active ? " active" : ""}" title="${escapeHtml(c.help)}">` +
+		`${escapeHtml(c.name)} <span class="args">${escapeHtml(c.args)}</span>${hint && c.help ? `<br><span class="about">${escapeHtml(c.help)}</span>` : ""}</li>`).join("");
+	const active = list.querySelector("li.active");
+	if (active) active.scrollIntoView({ block: "nearest" });
+}
+
+function hideCompletion() {
+	completion.entries = [];
+	renderCompletion();
+}
+
+// Puts the command into the input, keeps typed arguments.
+function applyCompletion(index) {
+	const entry = completion.entries[index];
+	if (!entry || entry.hint) return false;
+	const input = $("console-input");
+	const space = input.value.search(/\s/);
+	const rest = space < 0 ? "" : input.value.slice(space).trimStart();
+	input.value = entry.command.name + (entry.command.args || rest ? " " + rest : "");
+	input.focus();
+	updateCompletion();
+	return true;
+}
+
+// Known command in the wrong case (RCON is case-sensitive): use the right one.
+function fixCommandCase(line) {
+	const space = line.search(/\s/);
+	const word = space < 0 ? line : line.slice(0, space);
+	const command = findCommand(word);
+	return !command || command.name === word ? line : command.name + (space < 0 ? "" : line.slice(space));
+}
+
+// Prints the commands of the current mode. Settings are only listed with a filter, there are too many.
+function printHelp(filter = "") {
+	const mode = $("console-mode").value;
+	const needle = filter.toLowerCase().replace(/^!/, "");
+	const matches = (consoleCatalog[mode] || []).filter((c) => !needle || `${c.name} ${c.help}`.toLowerCase().includes(needle));
+	if (!matches.length) {
+		consolePrint("help", `No ${mode}-command matches "${filter}".`);
+		return;
+	}
+	const groups = new Map();
+	for (const c of matches) groups.set(c.group, [...(groups.get(c.group) || []), c]);
+	const lines = [];
+	for (const [group, commands] of groups) {
+		if (!needle && group === "fun-bots settings") {
+			lines.push({ group, text: `funbots.config.<Setting> [value]  - ${commands.length} settings, list them with: help config` });
+			continue;
+		}
+		lines.push({ group });
+		for (const c of commands) lines.push({ command: c });
+	}
+	for (const line of lines) {
+		if (line.command) store.console.push({ kind: "help", html: `  <b>${escapeHtml(line.command.name)}</b> ${escapeHtml(line.command.args)}${line.command.help ? "  - " + escapeHtml(line.command.help) : ""}` });
+		else store.console.push({ kind: "help", html: `<b>${escapeHtml(line.group)}</b>${line.text ? ": " + escapeHtml(line.text) : ""}` });
+	}
+	if (store.console.length > CONSOLE_LINES) store.console.splice(0, store.console.length - CONSOLE_LINES);
+	renderConsole();
+}
+
 function runConsole() {
 	const input = $("console-input");
 	let line = input.value.trim();
 	if (!line) return;
 	const mode = $("console-mode").value;
+	hideCompletion();
+	if (mode === "rcon") line = fixCommandCase(line);
+	const help = line.match(/^(?:help|\?)(?:\s+(.*))?$/i);
+	if (help) {
+		input.value = "";
+		consolePrint("in", "> " + line);
+		printHelp(help[1] || "");
+		return;
+	}
 	if (consoleHistory[consoleHistory.length - 1] !== line) consoleHistory.push(line);
 	if (consoleHistory.length > 50) consoleHistory.splice(0, consoleHistory.length - 50);
 	save("consoleHistory", consoleHistory);
@@ -989,7 +1112,7 @@ function renderConsole() {
 	const output = $("console-output");
 	output.hidden = !store.console.length;
 	const atBottom = output.scrollTop + output.clientHeight >= output.scrollHeight - 4;
-	setHtml(output, store.console.map((l) => `<span class="${l.kind}">${escapeHtml(l.text)}</span>` + (l.pending ? `<span class="muted">  waiting…</span>` : "")).join("\n"));
+	setHtml(output, store.console.map((l) => `<span class="${l.kind}">${l.html !== undefined ? l.html : escapeHtml(l.text)}</span>` + (l.pending ? `<span class="muted">  waiting…</span>` : "")).join("\n"));
 	if (atBottom) output.scrollTop = output.scrollHeight;
 }
 
@@ -997,7 +1120,7 @@ function renderConsoleControls() {
 	const mode = $("console-mode").value;
 	const select = $("console-player");
 	select.hidden = mode !== "chat";
-	$("console-input").placeholder = mode === "chat" ? "!spawnbots 5" : store.status.rcon ? "admin.nextLevel" : "funbots.kickAll (via the mod)";
+	$("console-input").placeholder = mode === "chat" ? "!spawnbots 5" : store.status.rcon ? "serverInfo" : "funbots.kickAll (via the mod)";
 	$("console-mode").title = store.status.rcon ? `RCON goes straight to ${store.status.rcon.address}` : "RCON goes through the mod (only the commands of the mods). Give the debug-server --rcon-password for all commands";
 	const players = [...store.players.values()].sort((a, b) => a.name.localeCompare(b.name));
 	const options = [`<option value="" title="All permissions, but no soldier">as debug-server</option>`,
@@ -1386,16 +1509,48 @@ function setupControls() {
 	$("console-mode").addEventListener("change", (event) => {
 		save("consoleMode", event.target.value);
 		renderConsoleControls();
+		updateCompletion();
 	});
+	$("console-help").addEventListener("click", () => printHelp($("console-input").value.trim()));
+	loadConsoleCatalog();
 	$("console-form").addEventListener("submit", (event) => {
 		event.preventDefault();
 		runConsole();
 	});
-	$("console-input").addEventListener("keydown", (event) => {
-		if (event.key !== "ArrowUp" && event.key !== "ArrowDown") return;
+	const consoleInput = $("console-input");
+	consoleInput.addEventListener("input", updateCompletion);
+	consoleInput.addEventListener("focus", updateCompletion);
+	consoleInput.addEventListener("blur", hideCompletion);
+	consoleInput.addEventListener("keydown", (event) => {
+		const choices = completion.entries.filter((entry) => !entry.hint).length;
+		if (event.key === "Tab" && choices) {
+			// The chosen command, or the first one.
+			event.preventDefault();
+			applyCompletion(Math.max(0, completion.active));
+		} else if (event.key === "Enter" && completion.active >= 0 && applyCompletion(completion.active)) {
+			event.preventDefault(); // takes the chosen command, the next Enter runs it
+		} else if (event.key === "Escape" && completion.entries.length) {
+			event.preventDefault();
+			event.stopPropagation();
+			hideCompletion();
+		} else if ((event.key === "ArrowUp" || event.key === "ArrowDown") && choices) {
+			event.preventDefault();
+			// -1 (nothing chosen) -> 0 -> ... -> last -> -1
+			if (event.key === "ArrowDown") completion.active = completion.active < choices - 1 ? completion.active + 1 : -1;
+			else completion.active = completion.active > -1 ? completion.active - 1 : choices - 1;
+			renderCompletion();
+		} else if (event.key === "ArrowUp" || event.key === "ArrowDown") {
+			// History, while no command is suggested.
+			event.preventDefault();
+			historyIndex = Math.max(0, Math.min(consoleHistory.length, historyIndex + (event.key === "ArrowUp" ? -1 : 1)));
+			consoleInput.value = consoleHistory[historyIndex] || "";
+		}
+	});
+	// mousedown: the input would lose the focus (and hide the list) before a click.
+	$("console-complete").addEventListener("mousedown", (event) => {
 		event.preventDefault();
-		historyIndex = Math.max(0, Math.min(consoleHistory.length, historyIndex + (event.key === "ArrowUp" ? -1 : 1)));
-		event.target.value = consoleHistory[historyIndex] || "";
+		const item = event.target.closest("li[data-index]");
+		if (item) applyCompletion(Number(item.dataset.index));
 	});
 	$("scan-info").addEventListener("click", (event) => {
 		const button = event.target.closest("button[data-scan]");

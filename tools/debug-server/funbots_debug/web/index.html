@@ -74,8 +74,12 @@
 					<select id="console-player" title="The chat-command runs as this player, with their permissions and their soldier"></select>
 				</div>
 				<div class="row">
-					<input id="console-input" type="text" autocomplete="off" spellcheck="false">
+					<div class="console-field">
+						<input id="console-input" type="text" autocomplete="off" spellcheck="false">
+						<ul id="console-complete" class="complete" hidden></ul>
+					</div>
 					<button id="console-run" type="submit">Run</button>
+					<button id="console-help" type="button" title="List the commands (matching the input). Or type: help [filter]">?</button>
 				</div>
 			</form>
 			<div id="console-status" class="small"></div>
