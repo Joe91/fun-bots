@@ -79,14 +79,22 @@ function PathSwitcher:GetNewPath(p_Bot, p_BotId, p_Point, p_Objective, p_InVehic
 	local s_CurrentPriority = 0
 
 	local s_PossiblePaths = {}
+	-- On foot: paths of the vehicles only if the junction has nothing else.
+	local s_VehiclePaths = {}
 
 	for i = 1, #p_Point.Data.Links do
 		local s_NewPoint = m_NodeCollection:Get(p_Point.Data.Links[i])
 
 		if s_NewPoint ~= nil then
 			if not p_InVehicle then
-				-- todo: prevent air-paths?
-				s_PossiblePaths[#s_PossiblePaths + 1] = s_NewPoint
+				local s_PathNode = m_NodeCollection:GetFirst(s_NewPoint.PathIndex)
+
+				if s_PathNode and type(s_PathNode) ~= 'boolean' and s_PathNode.Data.Vehicles ~= nil
+					and #s_PathNode.Data.Vehicles > 0 then
+					s_VehiclePaths[#s_VehiclePaths + 1] = s_NewPoint
+				else
+					s_PossiblePaths[#s_PossiblePaths + 1] = s_NewPoint
+				end
 			else
 				local s_PathNode = m_NodeCollection:GetFirst(s_NewPoint.PathIndex)
 
@@ -119,6 +127,10 @@ function PathSwitcher:GetNewPath(p_Bot, p_BotId, p_Point, p_Objective, p_InVehic
 				end
 			end
 		end
+	end
+
+	if #s_PossiblePaths == 0 then
+		s_PossiblePaths = s_VehiclePaths
 	end
 
 	-- Loop through each possible path.

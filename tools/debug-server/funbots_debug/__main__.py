@@ -16,6 +16,10 @@ from .recorder import Recorder, replay
 from .server import DebugServer
 
 
+# mapfiles/ of the repository this debug-server is part of (tools/debug-server/funbots_debug/__main__.py).
+MAPFILES = Path(__file__).resolve().parents[3] / "mapfiles"
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(prog="funbots_debug", description="Debug-server for fun-bots.")
     parser.add_argument("--host", default="127.0.0.1",
@@ -34,6 +38,8 @@ def main() -> None:
                         help="RCON-password (default: $FUNBOTS_RCON_PASSWORD, else admin.password of the Startup.txt "
                              "this folder lies in)")
     parser.add_argument("--no-rcon", action="store_true", help="no direct RCON-connection")
+    parser.add_argument("--mapfiles", type=Path, metavar="DIR", default=MAPFILES,
+                        help="waypoint-files the labeler writes into (default: mapfiles/ of this repository)")
     parser.add_argument("--open", action="store_true", help="open the browser")
     parser.add_argument("--verbose", action="store_true", help="log every request")
     args = parser.parse_args()
@@ -42,7 +48,8 @@ def main() -> None:
         print(f"plugins: {', '.join(load_plugins(args.plugins)) or 'none'}")
     analyzers = create_analyzers(set(args.disable))
     recorder = Recorder(args.record) if args.record else None
-    hub = Hub(analyzers, recorder=recorder, accept_commands=args.replay is None, rcon=create_rcon(args))
+    hub = Hub(analyzers, recorder=recorder, accept_commands=args.replay is None, rcon=create_rcon(args),
+              mapfiles=args.mapfiles if args.mapfiles and args.mapfiles.is_dir() else None)
 
     server = DebugServer((args.host, args.port), hub, quiet=not args.verbose)
     url = f"http://{'127.0.0.1' if args.host in ('0.0.0.0', '') else args.host}:{args.port}/"

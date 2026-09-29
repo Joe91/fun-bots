@@ -6,6 +6,9 @@
   POST /api/command    {type, args} -> {id}. With ?wait=<seconds> it blocks until the mod answered.
   POST /api/rcon       {words} -> {words}. Any RCON-command, straight to the RCON-port of the game-server.
   POST /api/scans/clear  {scan} -> {cleared}. Forgets one scan (no scan = all) and stops it if it still runs.
+  POST /api/paths/label  {relabel, relink, crossings, vehicles, loops} -> the labels for the loaded waypoints
+  POST /api/paths/apply  {save} -> the answer of the mod. Sends the labels to the game (and saves them in mod.db).
+  POST /api/paths/write  {} -> {file}. Writes the labels into mapfiles/<level>_<mode>.map.
   GET  /api/commands   the last commands and their answers
   GET  /api/console    the commands the console knows (chat and RCON), see console_commands.py
   GET  /               the web-interface (web/)
@@ -24,7 +27,7 @@ from pathlib import Path
 from urllib.parse import parse_qs, urlparse
 
 from .console_commands import catalog
-from .hub import Hub
+from .hub import Hub, LabelError
 from .rcon import RconError
 
 WEB_DIR = Path(__file__).parent / "web"
@@ -104,6 +107,8 @@ class Handler(BaseHTTPRequestHandler):
                 self._send_json({"error": "scan must be an id"}, HTTPStatus.BAD_REQUEST)
                 return
             self._send_json({"cleared": self.server.hub.clear_scans(scan)})
+        elif url.path in ("/api/paths/label", "/api/paths/apply", "/api/paths/write"):
+            self._paths(url.path.rsplit("/", 1)[-1], data if isinstance(data, dict) else {})
         else:
             self._send_json({"error": "not found"}, HTTPStatus.NOT_FOUND)
 
@@ -123,6 +128,18 @@ class Handler(BaseHTTPRequestHandler):
         if wait:
             hub.commands.wait(command, min(float(wait[0]), 120.0))
         self._send_json(command.to_json())
+
+    def _paths(self, action: str, data: dict) -> None:
+        hub = self.server.hub
+        try:
+            if action == "label":
+                self._send_json(hub.label_paths(data))
+            elif action == "apply":
+                self._send_json(hub.apply_labels(save=data.get("save", True) is not False))
+            else:
+                self._send_json(hub.write_labels())
+        except LabelError as error:
+            self._send_json({"error": str(error)}, HTTPStatus.CONFLICT)
 
     def _rcon(self, data) -> None:
         words = data.get("words") if isinstance(data, dict) else None

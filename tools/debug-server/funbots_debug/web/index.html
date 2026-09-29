@@ -64,6 +64,26 @@
 		</details>
 
 		<details class="panel" open>
+			<summary>Path labels <span id="labels-count" class="count"></span></summary>
+			<div class="muted small">Objectives, links and loop of the loaded waypoints, from the capture points of the game. Load the waypoints first.</div>
+			<div class="row">
+				<label title="Also recompute paths that already have capture point / base objectives"><input id="label-relabel" type="checkbox"> relabel</label>
+				<label title="Drop all links between walkable paths and link them anew"><input id="label-relink" type="checkbox"> relink</label>
+				<label title="Also link paths where they cross (the hand-made maps hardly do)"><input id="label-crossings" type="checkbox"> crossings</label>
+				<label title="Also link land vehicle paths among each other and set their loop"><input id="label-vehicles" type="checkbox"> vehicles</label>
+				<label title="Closed paths loop, open ones are walked back and forth"><input id="label-loops" type="checkbox" checked> loop</label>
+			</div>
+			<div class="row">
+				<button id="label-run" title="Compute the labels and show them on the map (nothing changes in the game yet)">Auto-label</button>
+				<button id="label-apply" title="Send the labels to the game">Apply to game</button>
+				<label title="Save the paths in mod.db after applying (like the save of the node-editor)"><input id="label-save" type="checkbox" checked> save</label>
+				<button id="label-write" title="Write the labels into mapfiles/&lt;level&gt;_&lt;mode&gt;.map (it has to hold the same paths as the game)">Write .map</button>
+			</div>
+			<div id="label-status" class="small"></div>
+			<ul id="label-changes" class="list"></ul>
+		</details>
+
+		<details class="panel" open>
 			<summary>Console</summary>
 			<form id="console-form">
 				<div class="row">

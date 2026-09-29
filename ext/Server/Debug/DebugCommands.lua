@@ -11,6 +11,8 @@ DebugCommands = class('DebugCommands')
 --   raycast         { from, to, detailed, maxHits }   -> all hits of one raycast
 --   bot             { id }                      -> all plain fields of a bot (Bot.lua)
 --   nodes           {}                          streams all waypoints as "nodes" events
+--   paths_apply     { paths, save }             objectives, loop and links from the labeler of the debug-server
+--                                               (funbots_debug/paths), see DebugCommands.PathsApply
 --   scan            see MapScanner:Start        streams the scan as "scan_row" events
 --   scan_stop       { scan }                    stops one (or all) scans
 --   rcon            { command, args }           any RCON-command (also the vanilla ones) -> { lines }
@@ -29,6 +31,10 @@ local m_BotManager = require('BotManager')
 local m_NodeCollection = require('NodeCollection')
 ---@type ChatCommands
 local m_ChatCommands = require('Commands/Chat')
+---@type NodeEditor
+local m_NodeEditor = require('NodeEditor')
+---@type GameDirector
+local m_GameDirector = require('GameDirector')
 
 local _Vec = DebugBridge.Vec
 local _Round = DebugBridge.Round
@@ -78,6 +84,30 @@ local function _PlainValue(p_Value)
 	return nil
 end
 
+---Data of a waypoint as it is saved: the links as {path, point} instead of waypoint-IDs (NodeCollection:Save).
+---@param p_Data table
+---@return table
+local function _SavedData(p_Data)
+	local s_Data = {}
+	for l_Key, l_Value in pairs(p_Data) do
+		s_Data[l_Key] = l_Value
+	end
+	if type(p_Data.Links) == 'table' then
+		local s_Links = {}
+		for l_Index = 1, #p_Data.Links do
+			local l_Link = p_Data.Links[l_Index]
+			local s_Linked = type(l_Link) == 'string' and m_NodeCollection:Get(l_Link) or nil
+			if s_Linked ~= nil then
+				s_Links[#s_Links + 1] = { s_Linked.PathIndex, s_Linked.PointIndex }
+			elseif type(l_Link) == 'table' then
+				s_Links[#s_Links + 1] = l_Link -- Pointed nowhere at load.
+			end
+		end
+		s_Data.Links = s_Links
+	end
+	return s_Data
+end
+
 function DebugCommands:__init()
 	m_DebugBridge:RegisterCommand('ping', self.Ping)
 	m_DebugBridge:RegisterCommand('channels', self.Channels)
@@ -86,6 +116,7 @@ function DebugCommands:__init()
 	m_DebugBridge:RegisterCommand('raycast', self.Raycast)
 	m_DebugBridge:RegisterCommand('bot', self.Bot)
 	m_DebugBridge:RegisterCommand('nodes', self.Nodes)
+	m_DebugBridge:RegisterCommand('paths_apply', self.PathsApply)
 	m_DebugBridge:RegisterCommand('scan', self.Scan)
 	m_DebugBridge:RegisterCommand('scan_stop', self.ScanStop)
 	m_DebugBridge:RegisterCommand('rcon', self.Rcon)
@@ -205,16 +236,31 @@ function DebugCommands.Nodes(p_Args, p_Bridge, p_Command)
 		local s_First = p_Task.Point
 		local s_Last = math.min(#s_Waypoints, s_First + NODES_PER_EVENT - 1)
 		local s_Points = {}
+		local s_Inputs = {}
+		local s_Data = {}
 		for l_Index = s_First, s_Last do
-			s_Points[#s_Points + 1] = _Vec(s_Waypoints[l_Index].Position)
+			local l_Waypoint = s_Waypoints[l_Index]
+			s_Points[#s_Points + 1] = _Vec(l_Waypoint.Position)
+			s_Inputs[#s_Inputs + 1] = l_Waypoint.InputVar
+			if type(l_Waypoint.Data) == 'table' and next(l_Waypoint.Data) ~= nil then
+				s_Data[#s_Data + 1] = { l_Index, _SavedData(l_Waypoint.Data) }
+			end
 		end
 
-		local s_Event = { path = s_PathIndex, first = s_First, points = s_Points, last = s_Last >= #s_Waypoints }
+		-- inputs: inputVar of every point, data: {point, data} of the points with data, links as {path, point}.
+		local s_Event = {
+			path = s_PathIndex,
+			first = s_First,
+			points = s_Points,
+			inputs = s_Inputs,
+			data = s_Data,
+			last = s_Last >= #s_Waypoints,
+		}
 		-- Objectives and vehicles of the path are stored at its first waypoint.
-		local s_Data = s_First == 1 and s_Waypoints[1] and s_Waypoints[1].Data
-		if type(s_Data) == 'table' then
-			s_Event.objectives = s_Data.Objectives
-			s_Event.vehicles = s_Data.Vehicles
+		local s_FirstData = s_First == 1 and s_Waypoints[1] and s_Waypoints[1].Data
+		if type(s_FirstData) == 'table' then
+			s_Event.objectives = s_FirstData.Objectives
+			s_Event.vehicles = s_FirstData.Vehicles
 		end
 		p_TaskBridge:Event('nodes', s_Event)
 
@@ -234,6 +280,93 @@ function DebugCommands.Nodes(p_Args, p_Bridge, p_Command)
 
 	p_Bridge:AddTask(s_Task)
 	return DebugBridge.ASYNC
+end
+
+---Takes over the objectives, loop and links the labeler of the debug-server computed (funbots_debug/paths).
+---  paths: { { path, count, objectives?, loop?, links? = { { point, { { path, point }, ... } }, ... } }, ... }
+---         count is the number of waypoints the labeler saw, objectives an empty list removes them, links replace
+---         the links of each listed point.
+---  save:  save the paths into the database afterwards.
+---Everything is checked before anything changes, so paths edited in the meantime are refused as a whole.
+function DebugCommands.PathsApply(p_Args)
+	local s_Entries = type(p_Args.paths) == 'table' and p_Args.paths or {}
+	-- Not NodeCollection:Get(point, path), it adds an empty path for an unknown index.
+	local s_Paths = m_NodeCollection:GetPaths()
+
+	local function _Waypoint(p_Link)
+		local s_Waypoints = type(p_Link) == 'table' and s_Paths[tonumber(p_Link[1])]
+		local s_Waypoint = s_Waypoints and s_Waypoints[tonumber(p_Link[2])]
+		if not s_Waypoint then
+			error('no waypoint ' .. tostring(p_Link and p_Link[1]) .. ':' .. tostring(p_Link and p_Link[2]))
+		end
+		return s_Waypoint
+	end
+
+	for l_Index = 1, #s_Entries do
+		local l_Entry = s_Entries[l_Index]
+		local s_Waypoints = s_Paths[tonumber(l_Entry.path)] or {}
+		if #s_Waypoints == 0 or #s_Waypoints ~= tonumber(l_Entry.count) then
+			error('path ' .. tostring(l_Entry.path) .. ' changed in the meantime, load the waypoints again')
+		end
+		for l_LinkIndex = 1, #(l_Entry.links or {}) do
+			local l_Links = l_Entry.links[l_LinkIndex]
+			_Waypoint({ l_Entry.path, l_Links[1] })
+			for l_TargetIndex = 1, #(l_Links[2] or {}) do
+				_Waypoint(l_Links[2][l_TargetIndex])
+			end
+		end
+	end
+
+	local s_Updated = {}
+	local s_Count = 0
+	for l_Index = 1, #s_Entries do
+		local l_Entry = s_Entries[l_Index]
+		local s_First = s_Paths[tonumber(l_Entry.path)][1]
+
+		if l_Entry.objectives ~= nil then
+			s_First.Data.Objectives = #l_Entry.objectives > 0 and l_Entry.objectives or nil
+			s_Updated[s_First.ID] = s_First
+		end
+
+		if l_Entry.loop ~= nil then
+			s_First.OptValue = l_Entry.loop and 0 or 0xFF
+			m_NodeCollection:UpdateInputVar(s_First)
+			s_Updated[s_First.ID] = s_First
+		end
+
+		for l_LinkIndex = 1, #(l_Entry.links or {}) do
+			local l_Links = l_Entry.links[l_LinkIndex]
+			local s_Waypoint = _Waypoint({ l_Entry.path, l_Links[1] })
+			local s_Ids = {}
+			for l_TargetIndex = 1, #(l_Links[2] or {}) do
+				s_Ids[#s_Ids + 1] = _Waypoint(l_Links[2][l_TargetIndex]).ID
+			end
+			if #s_Ids > 0 then
+				s_Waypoint.Data.LinkMode = s_Waypoint.Data.LinkMode or 0
+				s_Waypoint.Data.Links = s_Ids
+			else
+				s_Waypoint.Data.LinkMode = nil
+				s_Waypoint.Data.Links = nil
+			end
+			s_Updated[s_Waypoint.ID] = s_Waypoint
+		end
+		s_Count = s_Count + 1
+	end
+
+	m_NodeCollection:ParseObjectives()
+	m_GameDirector:ReloadObjectives()
+
+	local s_UpdatedList = {}
+	for _, l_Waypoint in pairs(s_Updated) do
+		s_UpdatedList[#s_UpdatedList + 1] = l_Waypoint
+	end
+	-- Players with the node-editor open see the changes too.
+	m_NodeEditor:SendToAllPlayers('ClientNodeEditor:UpdateNodes', m_NodeEditor:GetNodesForPlayer(s_UpdatedList))
+
+	if p_Args.save then
+		m_NodeCollection:Save('debug-server')
+	end
+	return { paths = s_Count, waypoints = #s_UpdatedList, saved = p_Args.save == true }
 end
 
 function DebugCommands.Scan(p_Args, p_Bridge, p_Command)

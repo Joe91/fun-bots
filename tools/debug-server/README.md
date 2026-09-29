@@ -73,11 +73,78 @@ raycast shows up on the map as a trace: green if the target is visible, red up t
   corrected before it is sent. `?` or `help [filter]` lists the commands (BF3, VU, fun-bots). Without suggestions,
   up and down go through the history. Two lines above the output show whether RCON is logged in and whether the
   running mod is new enough for the console (the mod sends its command list in `meta.commands`).
+- **Path labels**: label and link the waypoints automatically, see *Labeling and linking paths* below.
 - **Objectives**: all capture points and MCOMs with their state. Click one to jump to it.
 - **Selection**: the snapshot of the selected bot. *Full details* shows every plain field of the `Bot` object.
 - **Findings**: problems found by the analyzers. Click one to jump to it.
 - **Statistics**: numbers from the analyzers (kills, raycast rates, visible ratio, server hitches, Lua memory).
 - **Raw data**: snapshot parts without their own view yet, so a new collector shows up at once.
+
+## Labeling and linking paths
+
+Bots need three things from the waypoints (`GameDirector.lua`, `PathSwitcher.lua`):
+
+- **Objectives** on the first node of each path. One objective (`a`, `base us`) makes it the path of that objective:
+  the bots capture, defend and spawn there. Two or more (`a, b`) make it a path between these objectives.
+- **Links** (junctions): where a bot may switch to another path. It walks straight to the linked node.
+- **Loop**: a closed path loops, an open one has to be walked back and forth, otherwise a bot walks straight from its
+  last node to its first one.
+
+The labeler (`funbots_debug/paths/`) sets all three from the positions of the capture points and HQs of the running game:
+
+1. A path that stays in the area of one objective (up to half the distance to the next one) gets that objective.
+2. Every other path gets the objectives at its two ends: the area it ends in, or the objective path next to it. An end
+   at a junction takes over the objectives of the path it joins, an end at nothing the closest other objective. A base
+   only if the end is at it (within 80 m of the HQ).
+3. Closed paths loop, paths whose ends are more than 15 m apart are walked back and forth.
+4. Each path end at an objective is linked to that objective path (up to 15 m away), other ends to the closest path within
+   5 m. No end a bot can reach stays without a junction: it follows the direction of its last 5 m for up to 30 m and is
+   linked to the first path it crosses, else to the closest path within 15 m. What is still left is reported as dead
+   end (ends of looping paths and the vehicle end of paths to a vehicle need no junction). Links to missing nodes are
+   removed, one-sided links completed. With *crossings*, paths are also linked where they cross (at least 30°, same
+   height).
+
+It only fills in what's missing: paths that have objectives keep them (*relabel* recomputes capture point and base
+objectives), existing links stay (*relink* drops the links between walkable paths first), and an end that already has a
+junction nearby gets no new one. Other objectives (`vehicle tank1 us`, `spawn a`, `mcom 1`, `beacon`, ...) are never
+changed, those paths are only linked. Paths with `Vehicles` keep their objectives and belong to the vehicle network:
+they are only linked with *vehicles* (land paths among each other; an end at a vehicle spawn needs no junction), unless
+they are walkable too, i.e. recorded on foot: a loop around one flag, or a path already linked to foot paths. Soldiers
+only switch onto a path with `Vehicles` if the junction has nothing else (`PathSwitcher.lua`), so the end of a foot path
+joins one only if no foot path is in reach, and *relink* drops the links between foot paths and the vehicle network.
+Air paths are never touched.
+
+A base objective belongs only to the paths directly at the base: bots on a path with a base leave it at every
+junction, and never switch onto it from elsewhere. So it's removed from any path that doesn't come to the base (80 m
+around the HQ), isn't linked to a path of the base and doesn't end at one, e.g. a vehicle loop through the capture
+points labeled `a, b, base ru, c`. The path gets the capture points it passes instead; if that's fewer than two, it's
+only reported. This needs the HQs of the running game, offline the position of a base is a guess.
+
+Vehicles always have to leave their base, so vehicle paths out of a base (or away from a vehicle spawn) are handled
+without *vehicles* too: they are walked back and forth, and their far end is linked to the next vehicle path of the same
+terrain, labeled or not (straight ahead, else the closest one within 30 m; another base exit only outside of the base).
+Where the vehicles can't get out (no vehicle path in reach, or the junctions only lead to other base exits), it's
+reported. Rush has no capture points, so there only links and loops are set.
+
+In the web interface: **Load waypoints**, then **Auto-label** in *Path labels*. The map shows the result: the areas of
+the objectives, new objectives in blue, new links green, removed ones red. Click a change to jump to it. Nothing changes
+in the game until:
+
+- **Apply to game**: the mod takes the labels over at once (`paths_apply`), the bots use them right away. With *save*
+  it saves the paths into `mod.db`, like the save of the node-editor.
+- **Write .map**: patches `mapfiles/<level>_<mode>.map` of this repository (`--mapfiles DIR` for another folder). The
+  file has to hold the same paths as the game, so export the waypoints with the fun-bots-helper first if you changed
+  them in the game.
+
+The labeler also works on waypoint-files without the game:
+```
+python -m funbots_debug.paths ../../mapfiles/MP_001_ConquestSmall0.map -v            # only show what it would do
+python -m funbots_debug.paths ../../mapfiles/MP_001_ConquestSmall0.map --write
+python -m funbots_debug.paths ../../mapfiles/*.map --server http://127.0.0.1:8765     # capture points of the game
+```
+Without `--server` (or `--flags FILE` with the `flags` of `/api/state`), the objectives come from the paths that
+already carry exactly one objective. Measured on the hand-made conquest maps, the labeler finds the same objectives for
+87 % of the paths, and about as many links as the authors made.
 
 ## RCON
 
@@ -111,9 +178,10 @@ answer             {"commands": [{"id": 1, "type": "scan", "args": {...}}]}
 - **Snapshot**: `{"t", "meta", "bots", "players", "vehicles", "objectives", ...}`, one key per collector. Positions are `[x, y, z]`
   in metres, where y is up. The yaw of bots points to `x = -sin(yaw), z = cos(yaw)`.
 - **Event**: `{"t", "type", ...}`. The built-in types are `ray`, `kill`, `level_loaded`, `level_destroyed`,
-  `nodes_started`, `nodes`, `scan_started`, `scan_row`, `command_result`, and `error`.
-- **Commands**: `ping`, `channels`, `interval`, `server_raycasts`, `raycast`, `bot`, `nodes`, `scan`, `scan_stop`,
-  `rcon`, and `chat`
+  `nodes_started`, `nodes`, `scan_started`, `scan_row`, `command_result`, and `error`. `nodes` has the positions, the
+  `inputs` (inputVar) and the `data` (`[point, data]`, links as `[path, point]`) of a part of a path.
+- **Commands**: `ping`, `channels`, `interval`, `server_raycasts`, `raycast`, `bot`, `nodes`, `paths_apply`, `scan`,
+  `scan_stop`, `rcon`, and `chat`
   (see the header of `DebugCommands.lua`). Each command is answered with a `command_result` event.
 
 While the debug-server is unreachable, the mod only sends a small hello every 3 seconds.
@@ -163,6 +231,8 @@ to convert world coordinates to screen coordinates.
 
 **Scripts.** `GET /api/state` returns the whole model. `POST /api/command?wait=10` blocks until the mod has
 answered. `POST /api/scans/clear` with `{"scan": id}` (or `{}` for all) removes scans from the server and all browsers.
+`POST /api/paths/label` (with the switches `relabel`, `relink`, `crossings`, `vehicles`, `loops`), `/api/paths/apply`
+(`{"save": true}`) and `/api/paths/write` run the labeler.
 
 ## Towards nav meshes
 

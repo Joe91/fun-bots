@@ -4,13 +4,18 @@ all browsers (and other subscribers)."""
 from __future__ import annotations
 
 import json
+import math
 import queue
 import threading
 import time
+from pathlib import Path
 from typing import Any, Callable
 
 from .analyzers import Analyzer
 from .commands import Command, CommandQueue
+from .paths.labeler import (Options, anchors_from_flags, anchors_from_labels, apply_patch, label, make_patch,
+                            merge_anchors, uses_objectives)
+from .paths.mapfile import MapData
 from .protocol import as_list
 from .rcon import RconClient, RconError
 from .recorder import Recorder
@@ -22,6 +27,16 @@ MOD_TIMEOUT = 4.0
 ANALYSIS_INTERVAL = 1.0
 # Events that get a message of their own. All others go with the next "frame" message.
 OWN_MESSAGE_EVENTS = {"nodes", "nodes_started", "scan_started", "scan_row", "command_result"}
+# Switches of the labeler the browser may set (paths/labeler.py, Options).
+LABEL_OPTIONS = ("relabel", "relink", "crossings", "vehicles", "loops")
+# Seconds to wait for the mod to take over the labels.
+APPLY_TIMEOUT = 30.0
+# Metres a node of a waypoint-file may be off the one in the game (the mod sends positions rounded to cm).
+WRITE_TOLERANCE = 0.05
+
+
+class LabelError(Exception):
+    """The labeler can't run, or its result can't be applied."""
 
 
 class Subscriber:
@@ -45,7 +60,7 @@ class Subscriber:
 
 class Hub:
     def __init__(self, analyzers: list[Analyzer], recorder: Recorder | None = None, accept_commands: bool = True,
-                 rcon: RconClient | None = None):
+                 rcon: RconClient | None = None, mapfiles: Path | None = None):
         self.lock = threading.RLock()
         self.state = WorldState()
         self.commands = CommandQueue()
@@ -63,6 +78,10 @@ class Hub:
         self.requests = 0
         self.bytes_received = 0
         self.dropped_events = 0
+        # The waypoint-files (mapfiles/ of the repository), for writing the labels.
+        self.mapfiles = mapfiles
+        # Last run of the labeler: {"level", "result", "patch"}, see label_paths.
+        self.labels: dict | None = None
         # Hooks for own code: called with (payload) after every request of the mod, under the lock.
         self.on_ingest: list[Callable[[dict], None]] = []
 
@@ -96,6 +115,10 @@ class Hub:
                     continue
                 if self.state.apply_event(event) == "reset":
                     self._reset(messages, already_reset=True)
+                if event.get("type") == "nodes_started" and self.labels is not None:
+                    # New waypoints, the labels were made for the old ones.
+                    self.labels = None
+                    messages.append(("labels", None))
                 if event.get("type") == "command_result":
                     command = self.commands.resolve(event)
                     if command is not None:
@@ -138,6 +161,7 @@ class Hub:
     def _reset(self, messages: list, already_reset: bool = False) -> None:
         if not already_reset:
             self.state.reset()
+        self.labels = None
         for analyzer in self.analyzers:
             analyzer.reset()
         if self.recorder is not None:
@@ -195,6 +219,103 @@ class Hub:
             pass
         self._publish([("status", self._status())])
 
+    # --- labeling the paths (paths/labeler.py) ------------------------------------------------------------------
+
+    def label_paths(self, options: dict | None = None) -> dict:
+        """Runs the labeler on the waypoints of the game (load them first). Nothing changes in the game yet: the
+        result waits in self.labels for apply_labels or write_labels, the browsers show it."""
+        options = options or {}
+        with self.lock:
+            rows = self.state.paths
+            if not rows:
+                raise LabelError("no waypoints: load the waypoints first")
+            if any("inputs" not in entry for entry in rows.values()):
+                raise LabelError("the waypoints came without links: update the mod and load them again")
+            before = MapData.from_rows(rows)
+            data = MapData.from_rows(rows)
+            flags = list(self.state.objectives.get("flags") or [])
+            meta = self.state.meta
+            mode = str(meta.get("mode") or "")
+            level = meta.get("paths") or f"{str(meta.get('level') or '').rsplit('/', 1)[-1]}_{mode}"
+
+        anchors = merge_anchors(anchors_from_flags(flags), anchors_from_labels(before))
+        switches = {key: bool(options[key]) for key in LABEL_OPTIONS if key in options}
+        result = label(data, anchors, Options(objectives=uses_objectives(mode), **switches))
+        labels = {"level": level, "result": result.to_json(), "patch": make_patch(before, data)}
+        with self.lock:
+            self.labels = labels
+            answer = self._labels_json()
+        self._publish([("labels", answer)])
+        return answer
+
+    def apply_labels(self, save: bool = True, timeout: float = APPLY_TIMEOUT) -> dict:
+        """Sends the labels to the mod (paths_apply), which saves them into mod.db with save. Blocks until the
+        mod answered."""
+        with self.lock:
+            labels = self._current_labels()
+            if not labels["patch"]:
+                raise LabelError("nothing to change")
+        if not self.accept_commands:
+            raise LabelError("replay-mode, no mod to send the labels to")
+        command = self.submit_command("paths_apply", {"paths": labels["patch"], "save": save})
+        self.commands.wait(command, timeout)
+        if command.status == "ok":
+            with self.lock:
+                try:
+                    self._patch_rows(labels["patch"])
+                except (KeyError, ValueError):
+                    pass  # The waypoints were loaded again in the meantime, they are up to date.
+                if self.labels is labels:
+                    self.labels = None
+                paths = json.loads(json.dumps(self.state.paths))
+            self._publish([("labels", None), ("paths", paths)])
+        return command.to_json()
+
+    def write_labels(self) -> dict:
+        """Writes the labels into the waypoint-file of the level. The file has to hold the same paths as the game."""
+        with self.lock:
+            labels = self._current_labels()
+            rows = {entry["path"]: self.state.paths.get(entry["path"]) for entry in labels["patch"]}
+        if self.mapfiles is None:
+            raise LabelError("no folder for the waypoint-files, start with --mapfiles")
+        file = self.mapfiles / f"{labels['level']}.map"
+        if not file.is_file():
+            raise LabelError(f"{file} doesn't exist: export the waypoints with the fun-bots-helper first")
+        data = MapData.load(file)
+        try:
+            apply_patch(data, labels["patch"])
+            for index, row in rows.items():
+                for node, pos in zip(data.paths[index].nodes, (row or {}).get("points") or []):
+                    if math.dist(node.pos, pos) > WRITE_TOLERANCE:
+                        raise ValueError(f"node {index}:{node.point} is somewhere else")
+        except ValueError as error:
+            raise LabelError(f"{file.name} doesn't hold the paths of the game ({error}): save them in the game and "
+                             f"export them with the fun-bots-helper first") from error
+        data.save(file)
+        return {"file": str(file), "paths": len(labels["patch"])}
+
+    def _current_labels(self) -> dict:
+        if self.labels is None:
+            raise LabelError("no labels: run the labeler first")
+        return self.labels
+
+    def _labels_json(self) -> dict | None:
+        if self.labels is None:
+            return None
+        return dict(self.labels["result"], level=self.labels["level"], patched=len(self.labels["patch"]))
+
+    def _patch_rows(self, patch: list[dict]) -> None:
+        """Takes the applied labels over into the waypoints of the state."""
+        rows = self.state.paths
+        data = MapData.from_rows(rows)
+        apply_patch(data, patch)
+        for entry in patch:
+            path = data.paths[entry["path"]]
+            row = rows[entry["path"]]
+            row["inputs"] = [node.input for node in path.nodes]
+            row["data"] = {str(node.point): node.data for node in path.nodes if node.data}
+            row["objectives"] = path.objectives
+
     def subscribe(self) -> Subscriber:
         subscriber = Subscriber()
         with self._subscribers_lock:
@@ -212,6 +333,7 @@ class Hub:
             data["status"] = self._status()
             data["analysis"] = self._analysis()
             data["commands"] = self.commands.history()[:50]
+            data["labels"] = self._labels_json()
             return data
 
     # --- helpers -----------------------------------------------------------------------------------------------

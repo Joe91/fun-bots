@@ -28,20 +28,48 @@ def terrain(x: float, z: float) -> tuple[float, float]:
     return height, 1 / math.sqrt(1 + dx * dx + dz * dz)
 
 
+# Capture points (x, z) and HQs of the made-up map, see FakeMod.objectives.
+FLAGS = {"CP_A": (-150, -60), "CP_B": (0, 0), "CP_C": (150, 60)}
+HQS = {"US_HQ": (1, -260, 0), "RU_HQ": (2, 260, 0)}
+
+
 def make_paths() -> dict[int, list[tuple[float, float, float]]]:
+    """Unlabeled, unlinked paths as freshly recorded: a loop around every objective and paths between them."""
+
+    def point(x, z):
+        return x, terrain(x, z)[0], z
+
+    def loop(cx, cz, radius):
+        steps = int(radius * 2 * math.pi / 2)
+        angles = (step * 2 * math.pi / steps for step in range(steps + 1))
+        return [point(cx + radius * math.cos(angle), cz + radius * math.sin(angle)) for angle in angles]
+
+    def between(a, b, bend):
+        (ax, az), (bx, bz) = a, b
+        length = math.hypot(bx - ax, bz - az)
+        steps = int(length / 2)
+        nx, nz = -(bz - az) / length, (bx - ax) / length
+        return [point(ax + (bx - ax) * f + nx * bend * math.sin(f * math.pi),
+                      az + (bz - az) * f + nz * bend * math.sin(f * math.pi))
+                for f in (step / steps for step in range(steps + 1))]
+
+    spots = {name: pos for name, pos in FLAGS.items()}
+    spots.update({name: (x, z) for name, (_, x, z) in HQS.items()})
     paths = {}
-    for index, radius in enumerate((80, 160, 240), start=1):
-        points = []
-        for step in range(int(radius * 2 * math.pi / 3)):
-            angle = step * 3 / radius
-            x, z = radius * math.cos(angle), radius * math.sin(angle)
-            points.append((x, terrain(x, z)[0], z))
-        paths[index] = points
-    points = []
-    for step in range(200):
-        x, z = -300 + step * 3, -40 + 30 * math.sin(step / 15)
-        points.append((x, terrain(x, z)[0], z))
-    paths[4] = points
+    for name, (x, z) in spots.items():
+        paths[len(paths) + 1] = loop(x, z, 25 if name.endswith("HQ") else 15)
+
+    def edge(a, b):
+        # From the edge of one loop to the edge of the other.
+        (ax, az), (bx, bz) = spots[a], spots[b]
+        length = math.hypot(bx - ax, bz - az)
+        ra, rb = (25 if a.endswith("HQ") else 15), (25 if b.endswith("HQ") else 15)
+        return ((ax + (bx - ax) * ra / length, az + (bz - az) * ra / length),
+                (bx - (bx - ax) * rb / length, bz - (bz - az) * rb / length))
+
+    for a, b, bend in (("US_HQ", "CP_A", 20), ("CP_A", "CP_B", -25), ("CP_A", "CP_B", 30), ("CP_B", "CP_C", 20),
+                       ("CP_C", "RU_HQ", -20), ("CP_A", "CP_C", 90)):
+        paths[len(paths) + 1] = between(*edge(a, b), bend)
     return paths
 
 
@@ -131,6 +159,9 @@ class FakeMod:
     def __init__(self, url: str, bot_count: int, interval: float):
         self.url, self.interval = url.rstrip("/"), interval
         self.paths = make_paths()
+        # Like the waypoints of NodeCollection: inputVar of every point (3 = walk, loop) and the data of the points.
+        self.inputs = {path: [3] * len(points) for path, points in self.paths.items()}
+        self.data: dict[int, dict[int, dict]] = {path: {} for path in self.paths}
         self.bots = [Bot(index + 1, 1 + index % 2, 1 + index % len(self.paths), self.paths)
                      for index in range(bot_count)]
         self.events: list[dict] = []
@@ -138,8 +169,8 @@ class FakeMod:
         self.channels = {"traces": True, "meta": True, "bots": True, "players": True, "vehicles": True,
                          "objectives": True}
         self.server_raycasts = True
-        self.commands = ["bot", "channels", "chat", "interval", "nodes", "ping", "raycast", "rcon", "scan", "scan_stop",
-                         "server_raycasts"]
+        self.commands = ["bot", "channels", "chat", "interval", "nodes", "paths_apply", "ping", "raycast", "rcon",
+                         "scan", "scan_stop", "server_raycasts"]
         self.time = 0.0
         self.seq = 0
         self.scan_id = 0
@@ -169,7 +200,8 @@ class FakeMod:
     def snapshot(self) -> dict:
         frame = {"t": round(self.time, 3)}
         if self.channels.get("meta", True):
-            frame["meta"] = {"level": "Levels/FAKE_001/FAKE_001", "mode": "ConquestLarge0", "round": 1,
+            frame["meta"] = {"level": "Levels/FAKE_001/FAKE_001", "mode": "ConquestLarge0",
+                             "paths": "FAKE_001_ConquestLarge0", "round": 1,
                              "tickrate": 30, "bots": len(self.bots), "players": len(self.bots),
                              "serverRaycasts": self.server_raycasts, "luaMemoryKb": 80000 + int(self.time * 10),
                              "version": "fake", "commands": self.commands}
@@ -186,14 +218,14 @@ class FakeMod:
     def objectives(self) -> dict:
         # Conquest-flags and rush-MCOMs at once, so both show up in the UI.
         flags = []
-        for index, (name, x, z) in enumerate((("CP_A", -150, -60), ("CP_B", 0, 0), ("CP_C", 150, 60))):
+        for index, (name, (x, z)) in enumerate(FLAGS.items()):
             raised = (self.time * 4 + index * 40) % 200
             team = 1 + (int((self.time * 4 + index * 40) // 200) + index) % 2
             flags.append({"name": name, "objective": name[-1], "hq": False, "pos": rounded((x, terrain(x, z)[0], z)),
                           "team": team, "attacked": raised < 100, "controlled": raised >= 100,
                           "flag": round(min(raised, 100.0), 1)})
-        for name, team, x in (("US_HQ", 1, -260), ("RU_HQ", 2, 260)):
-            flags.append({"name": name, "hq": True, "pos": rounded((x, terrain(x, 0)[0], 0)), "team": team,
+        for name, (team, x, z) in HQS.items():
+            flags.append({"name": name, "hq": True, "pos": rounded((x, terrain(x, z)[0], z)), "team": team,
                           "attacked": False, "controlled": True, "flag": 100.0})
         stage = 1 + int(self.time // 60) % 2
         mcoms = []
@@ -255,6 +287,8 @@ class FakeMod:
                 self.reply(command_id, True, self.raycast(args["from"], args["to"]))
             elif kind == "nodes":
                 self.tasks.append(self.nodes_task(command_id))
+            elif kind == "paths_apply":
+                self.reply(command_id, True, self.paths_apply(args))
             elif kind == "scan":
                 self.tasks.append(self.scan_task(command_id, args))
             elif kind == "scan_stop":
@@ -287,12 +321,46 @@ class FakeMod:
                 chunk = points[first:first + 100]
                 total += len(chunk)
                 event = {"path": path, "first": first + 1, "points": [rounded(p) for p in chunk],
+                         "inputs": self.inputs[path][first:first + 100],
+                         "data": [[point, data] for point, data in sorted(self.data[path].items())
+                                  if first < point <= first + 100],
                          "last": first + 100 >= len(points)}
-                if first == 0:
-                    event["objectives"] = [f"objective {path}"]
+                if first == 0 and self.data[path].get(1, {}).get("Objectives"):
+                    event["objectives"] = self.data[path][1]["Objectives"]
                 self.event("nodes", **event)
                 yield
         self.reply(command_id, True, {"paths": len(self.paths), "points": total})
+
+    def paths_apply(self, args) -> dict:
+        """Like DebugCommands.PathsApply: checks everything first, then takes over objectives, loop and links."""
+        entries = args.get("paths") or []
+        for entry in entries:
+            if len(self.paths.get(entry["path"], ())) != entry["count"]:
+                raise ValueError(f"path {entry['path']} changed in the meantime, load the waypoints again")
+            for point, targets in entry.get("links", []):
+                for path, target in [[entry["path"], point]] + targets:
+                    if not 1 <= target <= len(self.paths.get(path, ())):
+                        raise ValueError(f"no waypoint {path}:{target}")
+        for entry in entries:
+            path = entry["path"]
+            first = self.data[path].setdefault(1, {})
+            if "objectives" in entry:
+                if entry["objectives"]:
+                    first["Objectives"] = entry["objectives"]
+                else:
+                    first.pop("Objectives", None)
+            if "loop" in entry:
+                self.inputs[path][0] = (self.inputs[path][0] & 0xFF) | ((0 if entry["loop"] else 0xFF) << 8)
+            for point, targets in entry.get("links", []):
+                data = self.data[path].setdefault(point, {})
+                if targets:
+                    data.update(LinkMode=0, Links=targets)
+                else:
+                    data.pop("Links", None)
+                    data.pop("LinkMode", None)
+            for point in [point for point, data in self.data[path].items() if not data]:
+                del self.data[path][point]
+        return {"paths": len(entries), "saved": bool(args.get("save"))}
 
     def scan_task(self, command_id, args):
         step = max(0.25, float(args.get("step", 2)))

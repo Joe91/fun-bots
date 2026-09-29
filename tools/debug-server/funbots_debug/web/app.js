@@ -1,7 +1,8 @@
 "use strict";
 
 // Live map of the game. The data comes as server-sent events from /api/stream (see hub.py):
-//   hello (whole state), frame, nodes, scan_started, scan_row, scans_cleared, command, analysis, status, reset.
+//   hello (whole state), frame, nodes, scan_started, scan_row, scans_cleared, command, analysis, status, reset,
+//   labels (preview of the labeler, paths/labeler.py), paths (all waypoints after the labels were applied).
 // A new map layer is one entry in LAYERS (drawn in list order). A new sidebar panel reads from `store`.
 // World: x/z is the map, y is up. Positions are [x, y, z] in m.
 
@@ -50,7 +51,9 @@ const store = {
 	trails: new Map(), // bot-id -> [[x, z, time]]
 	traces: [], // ray-events + arrival (ms)
 	kills: [], // kill-events + arrival (ms)
-	paths: {}, // path-index -> {points, objectives}
+	paths: {}, // path-index -> {points, objectives, inputs, data: {point: {Links, ...}}}
+	labels: null, // preview of the labeler (hub.label_paths): {changes, counts, anchors, paths, level, patched}
+	labelStatus: null, // {kind: "ok" | "error", text} of the last action of the path-labels panel
 	objectives: { flags: [], mcoms: [], stage: 0 }, // see DebugSnapshots.CollectObjectives
 	scans: new Map(), // scan-id -> ScanLayer
 	findings: [],
@@ -212,7 +215,7 @@ const theme = {};
 
 function readTheme() {
 	const style = getComputedStyle(document.documentElement);
-	for (const name of ["text", "muted", "grid", "grid-major", "map-bg"]) theme[name] = style.getPropertyValue("--" + name).trim();
+	for (const name of ["text", "muted", "grid", "grid-major", "map-bg", "accent", "ok", "error"]) theme[name] = style.getPropertyValue("--" + name).trim();
 }
 
 // =============================================
@@ -280,10 +283,81 @@ function drawPaths() {
 			for (const p of points) ctx.fillRect(sx(p[0]) - 1.5, sy(p[2]) - 1.5, 3, 3);
 		}
 		if (view.scale > 0.6) {
-			const label = path.objectives && path.objectives.length ? `${index} ${path.objectives.join(", ")}` : index;
+			const preview = store.labels && store.labels.paths[index];
+			const objectives = preview ? preview.objectives : path.objectives || [];
+			const changed = preview && objectives.join() !== (path.objectives || []).join();
+			const label = objectives.length ? `${index} ${objectives.join(", ")}` : index;
+			if (changed) ctx.fillStyle = theme["accent"];
 			ctx.fillText(label, sx(points[0][0]) + 4, sy(points[0][2]) - 4);
+			if (changed) ctx.fillStyle = "rgba(160, 170, 190, 0.8)";
 		}
 	}
+}
+
+// Point of a path, [x, y, z].
+function pathPoint(path, point) {
+	const entry = store.paths[path];
+	return entry ? entry.points[point - 1] : undefined;
+}
+
+// Links (junctions) of the waypoints, or of the labels while there is a preview: grey the ones that stay, green the
+// new ones, red the removed ones. With a preview also the areas of the objectives the labeler used.
+function drawLinks() {
+	const labels = store.labels;
+	const size = view.scale > 2 ? 3 : 2;
+	const junction = (p) => ctx.fillRect(sx(p[0]) - size, sy(p[2]) - size, 2 * size, 2 * size);
+	const link = (a, b, color, dash) => {
+		const p = pathPoint(a[0], a[1]);
+		const q = pathPoint(b[0], b[1]);
+		if (!p || !q) return;
+		ctx.strokeStyle = color;
+		ctx.fillStyle = color;
+		ctx.setLineDash(dash);
+		line(p, q);
+		junction(p);
+		junction(q);
+	};
+	ctx.lineWidth = 1.5;
+	if (labels) {
+		ctx.font = "12px system-ui, sans-serif";
+		ctx.setLineDash([6, 4]);
+		for (const anchor of labels.anchors) {
+			ctx.strokeStyle = anchor.source === "game" ? "rgba(90, 162, 255, 0.6)" : "rgba(245, 184, 65, 0.6)";
+			ctx.beginPath();
+			ctx.arc(sx(anchor.pos[0]), sy(anchor.pos[2]), Math.max(2, anchor.radius * view.scale), 0, Math.PI * 2);
+			ctx.stroke();
+			ctx.fillStyle = ctx.strokeStyle;
+			ctx.fillText(anchor.name, sx(anchor.pos[0]) + 6, sy(anchor.pos[2]) + 14);
+		}
+	}
+	const stays = "rgba(170, 180, 200, 0.75)";
+	for (const [index, entry] of Object.entries(labels ? labels.paths : store.paths)) {
+		const path = Number(index);
+		if (labels) {
+			for (const [point, targetPath, targetPoint] of entry.links) {
+				if (path < targetPath || (path === targetPath && point < targetPoint)) link([path, point], [targetPath, targetPoint], stays, []);
+			}
+		} else {
+			for (const [point, data] of Object.entries(entry.data || {})) {
+				for (const [targetPath, targetPoint] of listOf(data.Links)) {
+					if (path < targetPath || (path === targetPath && Number(point) < targetPoint)) link([path, Number(point)], [targetPath, targetPoint], stays, []);
+				}
+			}
+		}
+	}
+	if (labels) {
+		for (const change of labels.changes) {
+			if (!change.target) continue;
+			if (change.kind === "link-added") link([change.path, change.point], change.target, theme["ok"], []);
+			else if (change.kind === "link-removed") link([change.path, change.point], change.target, theme["error"], [4, 3]);
+		}
+	}
+	ctx.setLineDash([]);
+}
+
+// A Lua-array from the mod as JS-array (the VU json-encoder sends an empty table as {}).
+function listOf(value) {
+	return Array.isArray(value) ? value : value ? Object.values(value) : [];
 }
 
 function objectiveRadius() {
@@ -567,6 +641,7 @@ const LAYERS = [
 	{ id: "grid", label: "Grid", on: true, draw: drawGrid },
 	{ id: "heightmap", label: "Height-map", on: true, draw: drawHeightmap },
 	{ id: "paths", label: "Waypoints", on: true, draw: drawPaths },
+	{ id: "links", label: "Links", on: true, draw: drawLinks },
 	{ id: "objectives", label: "Objectives", on: true, draw: () => { drawFlags(); drawMcoms(); } },
 	{ id: "trails", label: "Trails", on: true, draw: drawTrails },
 	{ id: "traces", label: "Raycasts", on: true, draw: drawTraces },
@@ -707,8 +782,14 @@ function addEvents(events) {
 
 function applyNodes(event) {
 	const path = store.paths[event.path] || (store.paths[event.path] = { points: [] });
-	if (event.first === 1) path.points = [];
+	if (event.first === 1) {
+		path.points = [];
+		path.inputs = [];
+		path.data = {};
+	}
 	path.points.push(...(event.points || []));
+	path.inputs.push(...listOf(event.inputs));
+	for (const [point, data] of listOf(event.data)) path.data[point] = data;
 	if (event.objectives) path.objectives = event.objectives;
 }
 
@@ -726,6 +807,7 @@ function resetStore() {
 	store.traces = [];
 	store.kills = [];
 	store.paths = {};
+	store.labels = null;
 	store.scans.clear();
 	store.extras = {};
 	store.botDetails = null;
@@ -747,6 +829,7 @@ const handlers = {
 		const old = performance.now() - TRACE_LIFETIME * 0.7;
 		store.traces = (data.traces || []).map((trace) => Object.assign(trace, { arrival: old }));
 		store.paths = data.paths || {};
+		store.labels = data.labels || null;
 		for (const scan of data.scans || []) {
 			const layer = new ScanLayer(scan);
 			for (const [row, heights, normals] of scan.rowData) layer.setRow(row, heights, normals);
@@ -773,8 +856,15 @@ const handlers = {
 	},
 	nodes_started() {
 		store.paths = {};
+		store.labels = null;
 	},
 	nodes: applyNodes,
+	labels(data) {
+		store.labels = data;
+	},
+	paths(data) {
+		store.paths = data || {};
+	},
 	scan_started(event) {
 		store.scans.set(event.scan, new ScanLayer(event));
 	},
@@ -1220,6 +1310,7 @@ function renderSidebar() {
 		`<button class="icon" data-scan="${s.scan}" title="Remove this scan (stops it if it still runs)">×</button></li>`).join(""));
 
 	renderObjectives();
+	renderLabels();
 	renderConsoleControls();
 	renderConsoleStatus();
 
@@ -1260,6 +1351,83 @@ function renderObjectives() {
 		`<span class="grow">${escapeHtml(mcomLabel(m))}</span><span class="muted small">${m.active ? "active" : ""}</span></li>`);
 	const stageItem = mcoms.length ? [`<li class="muted small">rush stage ${escapeHtml(stage)}</li>`] : [];
 	setHtml($("objectives"), [...flagItems, ...stageItem, ...mcomItems].join("") || `<li class="muted">none (conquest flags and rush MCOMs show up here)</li>`);
+}
+
+const LABEL_KINDS = { warning: "warning", objectives: "objectives", loop: "loop", "link-added": "links added", "link-removed": "links removed" };
+
+function renderLabels() {
+	const labels = store.labels;
+	const hasPaths = Object.keys(store.paths).length > 0;
+	const canApply = !!labels && labels.patched > 0;
+	$("label-run").disabled = !hasPaths;
+	$("label-apply").disabled = !canApply || store.status.acceptCommands === false;
+	$("label-write").disabled = !canApply;
+	$("labels-count").textContent = labels ? `(${labels.patched} paths)` : "";
+
+	const status = store.labelStatus;
+	let html = status ? `<div class="${status.kind === "error" ? "sev-error" : "status-ok"}">${escapeHtml(status.text)}</div>` : "";
+	if (labels) {
+		const counts = Object.entries(LABEL_KINDS).filter(([kind]) => labels.counts[kind]).map(([kind, name]) => `${labels.counts[kind]} ${name}`);
+		html += `<div class="muted">${escapeHtml(labels.level)}: ${escapeHtml(counts.join(" · ") || "nothing to change")}</div>`;
+	}
+	setHtml($("label-status"), html);
+
+	const order = Object.keys(LABEL_KINDS);
+	const changes = labels ? labels.changes.map((change, index) => [change, index]).sort(([a], [b]) => order.indexOf(a.kind) - order.indexOf(b.kind)) : [];
+	setHtml($("label-changes"), changes.slice(0, 500).map(([c, index]) => {
+		const where = c.path ? `${c.path}${c.point ? ":" + c.point : ""}${c.target ? " → " + c.target.join(":") : ""}` : "";
+		const color = { warning: "sev-warn", "link-added": "status-ok", "link-removed": "sev-error" }[c.kind] || "sev-info";
+		return `<li data-index="${index}"><span class="${color}">●</span><span class="muted small">${escapeHtml(where)}</span>` +
+			`<span class="grow" title="${escapeHtml(c.message)}">${escapeHtml(c.message)}</span></li>`;
+	}).join("") + (changes.length > 500 ? `<li class="muted small">… ${changes.length - 500} more</li>` : ""));
+}
+
+async function pathsRequest(action, body = {}) {
+	store.labelStatus = { kind: "ok", text: { label: "labeling…", apply: "sending to the game…", write: "writing…" }[action] };
+	renderSidebar();
+	try {
+		const response = await fetch(`/api/paths/${action}`, {
+			method: "POST",
+			headers: { "Content-Type": "application/json" },
+			body: JSON.stringify(body),
+		});
+		const data = await response.json();
+		if (!response.ok) throw new Error(data.error || response.statusText);
+		return data;
+	} catch (error) {
+		store.labelStatus = { kind: "error", text: String(error.message || error) };
+		renderSidebar();
+		return null;
+	}
+}
+
+async function runLabeler() {
+	const options = {};
+	for (const name of ["relabel", "relink", "crossings", "vehicles", "loops"]) options[name] = $("label-" + name).checked;
+	const labels = await pathsRequest("label", options);
+	if (!labels) return;
+	store.labels = labels;
+	store.labelStatus = { kind: "ok", text: "Preview on the map: green links are new, red ones removed. Nothing changed in the game yet." };
+	renderSidebar();
+	requestDraw();
+}
+
+async function applyLabels() {
+	const save = $("label-save").checked;
+	const result = await pathsRequest("apply", { save });
+	if (!result) return;
+	store.labelStatus = result.status === "ok"
+		? { kind: "ok", text: `Applied to ${result.result.paths} paths${result.result.saved ? ", saving in mod.db" : " (not saved)"}.` }
+		: { kind: "error", text: `The mod refused: ${result.error || result.status}` };
+	renderSidebar();
+	requestDraw();
+}
+
+async function writeLabels() {
+	const result = await pathsRequest("write");
+	if (!result) return;
+	store.labelStatus = { kind: "ok", text: `Wrote ${result.paths} paths into ${result.file}` };
+	renderSidebar();
 }
 
 function renderFindings() {
@@ -1502,6 +1670,25 @@ function setupControls() {
 		}));
 	$("interval").addEventListener("change", (event) => command("interval", { seconds: Number(event.target.value) }));
 	$("load-nodes").addEventListener("click", () => command("nodes"));
+	const labelOptions = load("labelOptions", {});
+	for (const name of ["relabel", "relink", "crossings", "vehicles", "loops", "save"]) {
+		const box = $("label-" + name);
+		if (labelOptions[name] !== undefined) box.checked = labelOptions[name];
+		box.addEventListener("change", () => {
+			labelOptions[name] = box.checked;
+			save("labelOptions", labelOptions);
+		});
+	}
+	$("label-run").addEventListener("click", runLabeler);
+	$("label-apply").addEventListener("click", applyLabels);
+	$("label-write").addEventListener("click", writeLabels);
+	$("label-changes").addEventListener("click", (event) => {
+		const item = event.target.closest("li[data-index]");
+		const change = item && store.labels && store.labels.changes[Number(item.dataset.index)];
+		if (!change) return;
+		const pos = pathPoint(change.path, change.point || 1);
+		if (pos) focusOn(pos);
+	});
 	$("ping").addEventListener("click", () => command("ping"));
 	$("scan-stop").addEventListener("click", () => command("scan_stop"));
 	$("scan-clear").addEventListener("click", () => clearScans());

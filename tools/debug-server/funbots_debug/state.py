@@ -96,7 +96,8 @@ class WorldState:
         self.objectives: dict[str, Any] = {"flags": [], "mcoms": [], "stage": 0}
         self.trails: dict[int, deque] = {}
         self.extras: dict[str, Any] = {}
-        # path-index -> {"points": [[x, y, z]], "objectives": [...], "vehicles": [...]}
+        # path-index -> {"points": [[x, y, z]], "inputs": [inputVar], "data": {"<point>": {...}}, "objectives": [...],
+        # "vehicles": [...]}. inputs and data only come from mods that send them (the labeler needs them).
         self.paths: dict[int, dict] = {}
         self.scans: dict[int, ScanGrid] = {}
         self.traces.clear()
@@ -209,7 +210,16 @@ class WorldState:
         points = as_list(event.get("points"))
         if first == 1:
             entry["points"] = []
+            entry.pop("inputs", None)
+            entry.pop("data", None)
         entry["points"].extend(points)
+        if "inputs" in event:
+            entry.setdefault("inputs", []).extend(as_list(event["inputs"]))
+            data = entry.setdefault("data", {})
+            for item in as_list(event.get("data")):
+                pair = as_list(item)
+                if len(pair) >= 2 and isinstance(pair[1], dict):
+                    data[str(int(pair[0]))] = pair[1]
         if "objectives" in event:
             entry["objectives"] = as_list(event["objectives"])
         if "vehicles" in event:

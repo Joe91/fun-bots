@@ -12,6 +12,8 @@ local m_DebugBridge = require('Debug/DebugBridge')
 local m_BotManager = require('BotManager')
 ---@type ServerRaycasts
 local m_ServerRaycasts = require('ServerRaycasts')
+---@type NodeCollection
+local m_NodeCollection = require('NodeCollection')
 
 local _Vec = DebugBridge.Vec
 local _Round = DebugBridge.Round
@@ -55,6 +57,7 @@ function DebugSnapshots.CollectMeta()
 	return {
 		level = SharedUtils:GetLevelName(),
 		mode = SharedUtils:GetCurrentGameMode(),
+		paths = m_NodeCollection:GetMapName(), -- the waypoints of this mode, mapfiles/<paths>.map
 		round = Globals.Round,
 		tickrate = SharedUtils:GetTickrate(),
 		bots = m_BotManager:GetBotCount(),
