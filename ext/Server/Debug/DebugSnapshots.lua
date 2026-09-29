@@ -111,6 +111,9 @@ function DebugSnapshots.CollectBots()
 			s_Entry.health = _Round(s_Soldier.health, 1)
 			s_Entry.pose = s_Soldier.pose
 			s_Entry.stuck = l_Bot._ObstacleSequenceTimer ~= 0
+			-- Standing on purpose: defending, waiting on a node, executing an action, waiting for passengers.
+			s_Entry.holding = l_Bot._DefendTimer > 0.0 or l_Bot._WayWaitTimer > 0.0 or l_Bot._VehicleWaitTimer > 0.0 or
+				l_Bot._ActiveAction == BotActionFlags.OtherActionActive
 
 			local s_TargetPoint = l_Bot._TargetPoint
 			if type(s_TargetPoint) == 'table' and s_TargetPoint.Position ~= nil then

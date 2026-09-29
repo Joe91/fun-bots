@@ -123,7 +123,7 @@ class Bot:
         if self.alive:
             points = self.paths[self.path]
             entry.update(pos=rounded(self.pos), yaw=round(self.yaw, 3), pitch=0.0, health=self.health, pose=0,
-                         stuck=False, waypoint=rounded(points[(self.point + self.direction) % len(points)]))
+                         stuck=False, holding=False, waypoint=rounded(points[(self.point + self.direction) % len(points)]))
         return entry
 
 

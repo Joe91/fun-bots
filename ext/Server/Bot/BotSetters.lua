@@ -212,6 +212,10 @@ function Bot:ResetSpawnVars()
 
 	self._ObstacleRetryCounter = 0
 	self._StuckRerouteCount = 0
+	self._LowSpeedTimer = 0.0
+	self._NoProgressTimer = 0.0
+	self._ProgressNode = nil
+	self._ObstacleStartDistance = 0.0
 	self._LastWayDistance = 1000.0
 	self._LastActionId = -1
 	self._ShootPlayer = nil
@@ -226,6 +230,12 @@ function Bot:ResetSpawnVars()
 	self._NextTargetPoint = nil
 	self._ActiveAction = BotActionFlags.NoActionActive
 	self._KnifeWayPositions = {}
+
+	-- New side for the path-offset every life. Starts centered and fades in.
+	self.m_PathSide = nil
+	self.m_OffsetFactor = 0.0
+	self.m_OffsetCenterTimer = 0.0
+	self.m_PathOffsetCache = {}
 	self._ActiveDelay = 0.0
 	self._TargetPitch = 0.0
 	self._Objective = '' -- Reset objective on spawn, as another spawn-point might have chosen...

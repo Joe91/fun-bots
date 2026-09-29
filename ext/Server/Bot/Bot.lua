@@ -149,6 +149,22 @@ function Bot:__init(p_Player)
 	self.m_YawOffset = 0.0
 	self.m_StrafeValue = 0.0
 
+	-- Path-offset (see Bot:ApplyPathOffset).
+	---@type integer|nil
+	self.m_PathSide = nil
+	self.m_OffsetDistance = 0.0
+	self.m_OffsetFactor = 0.0
+	self.m_OffsetCenterTimer = 0.0
+	self.m_PathOffsetCache = {}
+
+	-- Obstacle-detection (see Bot:_DetectObstacle).
+	self._LowSpeedTimer = 0.0
+	self._NoProgressTimer = 0.0
+	self._ProgressNode = nil
+	self._ProgressBestDistance = 0.0
+	self._ProgressLastTime = 0.0
+	self._ObstacleStartDistance = 0.0
+
 	-- Advanced movement.
 	---@type BotAttackModes
 	self._AttackMode = BotAttackModes.RandomNotSet

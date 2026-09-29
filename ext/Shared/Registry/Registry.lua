@@ -200,6 +200,8 @@ Registry = {
 		PROBABILITY_CHANGE_DIRECTION_IF_STUCK = 50,
 		-- Hard reroutes to the closest path a stuck bot tries before it is killed.
 		MAX_STUCK_REROUTES = 2,
+		-- Seconds a bot tries to free a stuck ground-vehicle before they exit it and continue on foot.
+		VEHICLE_STUCK_EXIT_TIME = 30.0,
 		-- Trace delta, a bot uses when they are off a trace path to find his way back to the best path.
 		TRACE_DELTA_SHOOTING = 0.4,
 		-- The max time a bot tries to move to the repair-vehicle.

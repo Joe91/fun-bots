@@ -34,7 +34,8 @@ class StuckBotAnalyzer(Analyzer):
             key = f"stuck:{bot_id}"
             pos = vec(bot.get("pos"))
             bot_state = bot.get("state")
-            if pos is None or not bot.get("alive") or bot_state not in MOVING_STATES:
+            # "holding": the bot stands on purpose (defending, waiting on a node, action, waiting for passengers).
+            if pos is None or not bot.get("alive") or bot_state not in MOVING_STATES or bot.get("holding"):
                 self._history.pop(bot_id, None)
                 self.resolve(key)
                 continue

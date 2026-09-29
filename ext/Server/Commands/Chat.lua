@@ -629,7 +629,7 @@ function ChatCommands:Execute(p_Parts, p_Player)
 			_SendMessage('You have no permissions for this action (ChatCommands.KickAll).', p_Player)
 			return
 		end
-
+		Globals.SpawnMode = SpawnModes.manual
 		m_BotManager:DestroyAll()
 	elseif p_Parts[1] == '!kill' then
 		if _HasPermission(p_Player, 'ChatCommands.Kill') == false then

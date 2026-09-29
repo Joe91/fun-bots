@@ -170,6 +170,13 @@ class AnalyzerTest(unittest.TestCase):
             hub.ingest(payload([frame(step * 0.2, [bot(1, (step * 1.0, 0, 0))])]))
         self.assertEqual(hub.analyzers[0].findings(), [])
 
+    def test_holding_bot_is_not_stuck(self):
+        # Defending / waiting bots stand on purpose.
+        hub = Hub([StuckBotAnalyzer()])
+        for step in range(60):
+            hub.ingest(payload([frame(step * 0.2, [bot(1, (0, 0, 0), holding=True)])]))
+        self.assertEqual(hub.analyzers[0].findings(), [])
+
     def test_friendly_target(self):
         hub = Hub([CombatAnalyzer()])
         hub.ingest(payload([frame(1.0, [bot(1, (0, 0, 0), target=2), bot(2, (1, 0, 1)), bot(3, (5, 0, 5), team=2,
