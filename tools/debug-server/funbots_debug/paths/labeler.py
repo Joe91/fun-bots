@@ -23,9 +23,10 @@ offline, the middle of the paths that already carry a single objective. Then:
 Paths with other objectives ("vehicle tank1 us", "spawn a", "mcom 1", "beacon", ...) keep them, they are only linked.
 Paths with "Vehicles" belong to the vehicle network and keep their objectives. They are only linked with vehicles=True
 (land paths among each other), unless they are walkable as well (recorded on foot): a loop around one flag, or a path
-already linked to foot paths. The end of a foot path joins a path with "Vehicles" only if no foot path is in reach,
-the soldiers use those only if a junction has nothing else. Vehicle paths out of a base (or away from a vehicle spawn)
-are always linked at their far end to the next vehicle path, vehicles have to get out. Air paths are never touched.
+between flags. Soldiers never switch onto a path with "Vehicles" and no objectives (out of a base) or a closed loop
+through several objectives (around the map), so links between those and foot paths are removed. Vehicle paths out of a
+base (or away from a vehicle spawn) are always linked at their far end to the next vehicle path, vehicles have to get
+out. Air paths are never touched.
 """
 
 from __future__ import annotations
@@ -47,6 +48,9 @@ FOOT_STEP = 2.5
 SPAWN_RADIUS = 10.0
 # Paths with a vehicle-objective ("vehicle tank1 us") up to this length lead to the vehicle, longer ones are driven.
 ENTER_PATH_NODES = 100
+# Ends of a loop of the vehicles through several objectives at most this far apart (or 5 % of its length). The loop
+# flag of the hand-made paths isn't reliable. Same in PathSwitcher:IsWalkable.
+DRIVEN_LOOP_GAP = 15.0
 # Longest distance between two nodes that is searched for crossings.
 MAX_SEGMENT = 6.0
 # Metres of a path its end direction is taken from (for the trajectory of the end).
@@ -253,14 +257,9 @@ class Labeler:
             # Short: walked to the vehicle. Long: driven with it.
             return "vehicle" if len(path.nodes) > ENTER_PATH_NODES else "special"
         if vehicles:
-            # Part of the vehicle network. Walkable as well if recorded on foot: a loop around a flag, or a path the
-            # authors linked to foot paths already. A path recorded in a vehicle stays one, even if linked to foot
-            # paths (else every crossing would lead the soldiers onto it).
-            linked_to_foot = any(self.data.paths.get(target[0]) is not None
-                                 and not self.data.paths[target[0]].vehicles
-                                 for node in path.nodes for target in node.links)
-            walkable = path.step <= FOOT_STEP and (len(objectives) == 1 or linked_to_foot)
-            return "shared" if objectives and walkable else "vehicle"
+            # Part of the vehicle network. Walkable as well if recorded on foot: a loop around one flag, or a path
+            # between flags. Never a path soldiers don't use (_driven).
+            return "shared" if objectives and path.step <= FOOT_STEP and not self._driven(path) else "vehicle"
         if any(not FLAG_NAME.match(name) for name in objectives):
             return "special"
         if len(path.nodes) > 2 and path.step > VEHICLE_STEP and not objectives:
@@ -295,13 +294,21 @@ class Labeler:
                     and self._compatible(index, other)}
         return {other for other in linkable if other != index and self._compatible(index, other)}
 
-    def _on_foot_first(self, index: int, targets: set[int]) -> list[set[int]]:
-        """The targets to try one after the other: soldiers only use paths of the vehicles if there is nothing else
-        (PathSwitcher.lua), so the end of a foot path joins one only if no foot path is in reach."""
-        if self.kinds[index] not in ("foot", "special"):
-            return [targets]
-        on_foot = {other for other in targets if not self.data.paths[other].vehicles}
-        return [on_foot, targets] if on_foot != targets else [targets]
+    def _on_foot(self, index: int) -> bool:
+        """Soldiers walk it, and it isn't the way to a vehicle."""
+        path = self.data.paths[index]
+        return not path.vehicles and not any("vehicle" in name.lower() for name in path.objectives)
+
+    @staticmethod
+    def _driven(path: PathData) -> bool:
+        """Only vehicles use it (PathSwitcher:IsWalkable): "Vehicles" and no objectives (out of a base), or a closed
+        loop through several objectives (around the map). Air paths too, but those are left alone."""
+        if not path.vehicles or "air" in path.vehicles or len(path.objectives) == 1:
+            return False
+        if not path.objectives:
+            return True
+        length = sum(math.dist(a.pos, b.pos) for a, b in zip(path.nodes, path.nodes[1:]))
+        return math.dist(path.nodes[0].pos, path.nodes[-1].pos) <= max(DRIVEN_LOOP_GAP, 0.05 * length)
 
     def _outside(self, index: int, found: dict[int, tuple[float, int]]) -> dict[int, tuple[float, int]]:
         """For the far end of a base exit: drop the nodes of other base exits that lie in a base."""
@@ -531,6 +538,7 @@ class Labeler:
         links: set[tuple[tuple[int, int], tuple[int, int]]] = set()
         directed: set[tuple[tuple[int, int], tuple[int, int]]] = set()
         dropped: set[tuple[tuple[int, int], tuple[int, int]]] = set()
+        unused: set[tuple[tuple[int, int], tuple[int, int]]] = set()  # between foot paths and the vehicle network
         for index, path in data.paths.items():
             for node in path.nodes:
                 source = (index, node.point)
@@ -540,9 +548,13 @@ class Labeler:
                                                    target))
                     elif target == source:
                         self.changes.append(Change("link-removed", index, "points to itself", node.point, target))
-                    elif options.relink and ((index in linkable and target[0] in linkable)
-                                             or {self.kinds[index], self.kinds.get(target[0])} == {"foot", "vehicle"}):
-                        # Also the links between foot paths and the vehicle network: soldiers avoid it.
+                    elif self._on_foot(index) and self._driven(data.paths[target[0]]) or \
+                            self._on_foot(target[0]) and self._driven(path):
+                        if _pair(source, target) not in unused:
+                            unused.add(_pair(source, target))
+                            self.changes.append(Change("link-removed", index, "soldiers don't use this path of the "
+                                                       "vehicles", node.point, target))
+                    elif options.relink and index in linkable and target[0] in linkable:
                         dropped.add(_pair(source, target))
                     else:
                         links.add(_pair(source, target))
@@ -586,9 +598,7 @@ class Labeler:
                 closest = self._nearest(node.pos, options.attach_radius, own & same_class)
                 reason = "path end at objective"
                 if not closest:
-                    # A path of the vehicles only if there is no foot path further away either (see below).
-                    targets = self._on_foot_first(index, same_class)[0]
-                    closest = self._outside(index, self._nearest(node.pos, options.end_radius, targets))
+                    closest = self._outside(index, self._nearest(node.pos, options.end_radius, same_class))
                     reason = "path end"
                 if closest:
                     other = min(closest, key=lambda key: closest[key])
@@ -657,10 +667,7 @@ class Labeler:
                 if index in self.exits:
                     found, reason = self._way_out(path, end, same_class)
                 else:
-                    for targets in self._on_foot_first(index, same_class):
-                        found, reason = self._continuation(path, end, targets, options.attach_radius)
-                        if found is not None:
-                            break
+                    found, reason = self._continuation(path, end, same_class, options.attach_radius)
                 if found is None:
                     what = "vehicles can't leave the base" if index in self.exits else "dead end"
                     why = f"no path within {options.attach_radius:.0f} m or ahead within {options.extend_radius:.0f} m"
@@ -715,7 +722,8 @@ class Labeler:
         return None, ""
 
     def _check_exits(self, links: set) -> None:
-        """Every base exit has to lead (over other exits maybe) to a vehicle path that is no base exit."""
+        """Every base exit has to lead (over other exits maybe) to a vehicle path that is no base exit, or that has
+        objectives (the vehicles follow them)."""
         network: dict[int, set[int]] = defaultdict(set)
         for a, b in links:
             if a[0] != b[0] and self._compatible(a[0], b[0]):
@@ -729,7 +737,7 @@ class Labeler:
                 for other in network[todo.pop()] - seen:
                     seen.add(other)
                     todo.append(other)
-            if all(other in self.exits for other in seen):
+            if all(other in self.exits and not self.data.paths[other].objectives for other in seen):
                 others = ", ".join(str(other) for other in sorted(seen - {index})) or "none"
                 self.changes.append(Change("warning", index, f"vehicles can't leave the base: its junctions only lead "
                                                              f"to other base exits ({others})"))
@@ -796,6 +804,9 @@ class Labeler:
         for index, path in data.paths.items():
             if self.kinds[index] not in ("foot", "special", "shared"):
                 continue
+            names = " ".join(path.objectives).lower()
+            if "vehicle" in names and ("spawn" in names or "base" in names):
+                continue  # the bot spawns into the vehicle
             if not any(node.links for node in path.nodes):
                 self.changes.append(Change("warning", index, "no links: bots on this path can't leave it"))
 

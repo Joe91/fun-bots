@@ -294,31 +294,36 @@ class LabelerTest(unittest.TestCase):
         self.assertEqual({target for _, _, target in links(data) if target[0] == 1}, before)
 
     def test_foot_paths_avoid_the_vehicle_network(self):
-        # 8: walkable (recorded on foot, linked to a foot path), with "Vehicles". 9 ends 4 m before 8 and 14 m before
-        # the foot path a - b: soldiers only use 8 if there is nothing else, so 9 joins a - b.
+        # Like MP_012 ConquestSmall: 8 loops through a and b for the vehicles (closed, recorded in the vehicle), 9 leads
+        # out of the base. Both are linked to foot paths: soldiers never use them (PathSwitcher:IsWalkable).
         data = level()
-        data.paths[8] = PathData(8, [Node(8, point, pos) for point, pos in enumerate(straight(20, 180, 10), start=1)])
+        steps = 150
+        data.paths[8] = PathData(8, [Node(8, point, (100 + 100 * math.cos(i * 2 * math.pi / steps), 0.0,
+                                                    100 * math.sin(i * 2 * math.pi / steps)))
+                                     for point, i in enumerate(range(steps + 1), start=1)])
         data.paths[8].objectives = ["a", "b"]
         data.paths[8].first.data["Vehicles"] = ["land"]
-        data.paths[8].first.set_links([(1, 1)])
-        data.paths[1].first.set_links([(8, 1)])
-        data.paths[9] = PathData(9, [Node(9, point, (100.0, 0.0, float(z))) for point, z in
-                                     enumerate(range(60, 12, -2), start=1)])
-        # 10: recorded in a vehicle (4 m between the nodes) and linked to a foot path: still a vehicle path.
-        data.paths[10] = PathData(10, [Node(10, point, (float(x), 0.0, 80.0)) for point, x in
-                                       enumerate(range(0, 200, 4), start=1)])
+        data.paths[9] = PathData(9, [Node(9, point, (-200.0, 0.0, float(z))) for point, z in
+                                     enumerate(range(0, 200, 4), start=1)])
+        data.paths[9].first.data["Vehicles"] = ["land"]
+        # 10: between a and b, recorded on foot, vehicles may use it too: walkable.
+        data.paths[10] = PathData(10, [Node(10, point, pos) for point, pos in
+                                       enumerate(straight(20, 180, -12), start=1)])
         data.paths[10].objectives = ["a", "b"]
         data.paths[10].first.data["Vehicles"] = ["land"]
-        data.paths[10].nodes[10].set_links([(9, 1)])
-        data.paths[9].first.set_links([(10, 11)])
-        self.assertEqual(Labeler(data, anchors_from_flags(FLAGS)).kinds[8], "shared")
-        self.assertEqual(Labeler(data, anchors_from_flags(FLAGS)).kinds[10], "vehicle")
+        for a, b in (((8, 30), (5, 40)), ((9, 1), (3, 1)), ((10, 40), (5, 40))):
+            data.node(*a).set_links(data.node(*a).links + [b])
+            data.node(*b).set_links(data.node(*b).links + [a])
+        labeler = Labeler(data, anchors_from_flags(FLAGS))
+        self.assertEqual((labeler.kinds[8], labeler.kinds[9], labeler.kinds[10]), ("vehicle", "vehicle", "shared"))
 
-        label(data, anchors_from_flags(FLAGS))
-        self.assertEqual({target[0] for target in data.paths[9].nodes[-1].links}, {5})
-        self.assertEqual(data.paths[9].first.links, [(10, 11)])  # kept
-        label(data, anchors_from_flags(FLAGS), Options(relink=True))
-        self.assertFalse(any({index, target[0]} == {9, 10} for index, _, target in links(data)))
+        result = label(data, anchors_from_flags(FLAGS))
+        pairs = {frozenset((index, target[0])) for index, _, target in links(data)}
+        self.assertNotIn(frozenset((8, 5)), pairs)
+        self.assertNotIn(frozenset((9, 3)), pairs)
+        self.assertIn(frozenset((10, 5)), pairs)
+        removed = [change for change in result.changes if change.kind == "link-removed"]
+        self.assertEqual(len(removed), 2)  # once per link, not per node
 
     def test_existing_labels_stay_unless_relabel(self):
         data = level()

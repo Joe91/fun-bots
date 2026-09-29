@@ -109,10 +109,10 @@ objectives), existing links stay (*relink* drops the links between walkable path
 junction nearby gets no new one. Other objectives (`vehicle tank1 us`, `spawn a`, `mcom 1`, `beacon`, ...) are never
 changed, those paths are only linked. Paths with `Vehicles` keep their objectives and belong to the vehicle network:
 they are only linked with *vehicles* (land paths among each other; an end at a vehicle spawn needs no junction), unless
-they are walkable too, i.e. recorded on foot: a loop around one flag, or a path already linked to foot paths. Soldiers
-only switch onto a path with `Vehicles` if the junction has nothing else (`PathSwitcher.lua`), so the end of a foot path
-joins one only if no foot path is in reach, and *relink* drops the links between foot paths and the vehicle network.
-Air paths are never touched.
+they are walkable too, i.e. recorded on foot: a loop around one flag, or a path between flags. Soldiers never switch
+onto a path with `Vehicles` that has no objectives (out of a base) or is a closed loop through several objectives
+(around the map; ends within 15 m or 5 % of its length), see `PathSwitcher:IsWalkable`. Links between those and foot
+paths are useless, so they are removed. Air paths are never touched.
 
 A base objective belongs only to the paths directly at the base: bots on a path with a base leave it at every
 junction, and never switch onto it from elsewhere. So it's removed from any path that doesn't come to the base (80 m
