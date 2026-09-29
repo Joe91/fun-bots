@@ -117,6 +117,7 @@ class Hub:
                     "bots": list(self.state.bots.values()),
                     "players": list(self.state.players.values()),
                     "vehicles": list(self.state.vehicles.values()),
+                    "objectives": self.state.objectives,
                     "extras": self.state.extras,
                     "events": frame_events,
                 }))
@@ -160,6 +161,17 @@ class Hub:
         command = self.submit_command(command_type, args)
         self.commands.wait(command, timeout)
         return command
+
+    def clear_scans(self, scan: int | None = None) -> list[int]:
+        """Forgets one scan (None = all), also in all browsers. A scan that is still running gets stopped."""
+        with self.lock:
+            removed = self.state.clear_scans(scan)
+        running = [grid.scan for grid in removed if not grid.complete]
+        if running and self.accept_commands:
+            self.submit_command("scan_stop", {} if scan is None else {"scan": scan})
+        ids = [grid.scan for grid in removed]
+        self._publish([("scans_cleared", {"scans": ids})])
+        return ids
 
     def subscribe(self) -> Subscriber:
         subscriber = Subscriber()

@@ -4,6 +4,7 @@
   GET  /api/stream     the browser: server-sent events (first "hello" with the whole state, then changes)
   GET  /api/state      the whole state as JSON (for scripts)
   POST /api/command    {type, args} -> {id}. With ?wait=<seconds> it blocks until the mod answered.
+  POST /api/scans/clear  {scan} -> {cleared}. Forgets one scan (no scan = all) and stops it if it still runs.
   GET  /api/commands   the last commands and their answers
   GET  /               the web-interface (web/)
 """
@@ -89,6 +90,12 @@ class Handler(BaseHTTPRequestHandler):
             self._send_json(self.server.hub.ingest(data, len(body)))
         elif url.path == "/api/command":
             self._command(data, parse_qs(url.query))
+        elif url.path == "/api/scans/clear":
+            scan = data.get("scan") if isinstance(data, dict) else None
+            if scan is not None and not isinstance(scan, int):
+                self._send_json({"error": "scan must be an id"}, HTTPStatus.BAD_REQUEST)
+                return
+            self._send_json({"cleared": self.server.hub.clear_scans(scan)})
         else:
             self._send_json({"error": "not found"}, HTTPStatus.NOT_FOUND)
 

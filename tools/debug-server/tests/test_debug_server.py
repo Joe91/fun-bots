@@ -116,6 +116,32 @@ class HubTest(unittest.TestCase):
         self.assertEqual(grid.height_at(0, 0), 10.5)
         self.assertIsNone(grid.height_at(2, 0))
 
+    def test_objectives(self):
+        flag = {"name": "CP_A", "pos": [1, 2, 3], "team": 1, "flag": 50.0}
+        self.hub.ingest(payload([frame(1.0, objectives={"flags": [flag], "mcoms": {}, "stage": 0})]))
+        self.assertEqual(self.hub.state.objectives, {"flags": [flag], "mcoms": [], "stage": 0})
+        self.assertNotIn("objectives", self.hub.state.extras)
+        self.assertEqual(self.hub.snapshot()["objectives"]["flags"], [flag])
+
+    def test_clear_scans(self):
+        self.hub.ingest(payload(events=[
+            {"type": "scan_started", "scan": 1, "x0": 0, "z0": 0, "step": 1, "columns": 1, "rows": 1, "t": 1},
+            {"type": "scan_row", "scan": 1, "row": 0, "heights": [1], "normals": [1], "t": 1},
+            {"type": "scan_started", "scan": 2, "x0": 0, "z0": 0, "step": 1, "columns": 1, "rows": 2, "t": 1},
+        ]))
+        self.assertEqual(self.hub.snapshot()["scans"][0]["rowData"], [[0, [1.0], [1.0]]])
+        subscriber = self.hub.subscribe()
+        self.assertEqual(self.hub.clear_scans(1), [1])
+        self.assertEqual(self.hub.commands.take_pending(), [])  # finished, nothing to stop
+        self.assertEqual(self.hub.clear_scans(), [2])
+        self.assertEqual(self.hub.commands.take_pending()[0]["type"], "scan_stop")  # still running
+        self.assertEqual(self.hub.state.scans, {})
+        messages = [subscriber.queue.get_nowait() for _ in range(subscriber.queue.qsize())]
+        self.assertIn(("scans_cleared", '{"scans":[2]}'), messages)
+        # Rows of a cleared scan are ignored.
+        self.hub.ingest(payload(events=[{"type": "scan_row", "scan": 2, "row": 1, "heights": [1], "normals": [1]}]))
+        self.assertEqual(self.hub.state.scans, {})
+
     def test_subscriber_overflow_resyncs(self):
         subscriber = self.hub.subscribe()
         for index in range(subscriber.queue.maxsize + 5):
@@ -200,6 +226,11 @@ class HttpTest(unittest.TestCase):
             state = json.loads(response.read())
         self.assertEqual(len(state["bots"]), 1)
         self.assertTrue(state["status"]["modConnected"])
+
+    def test_clear_scans(self):
+        self.assertEqual(self.post("/api/scans/clear", {}), {"cleared": []})
+        with self.assertRaises(urllib.error.HTTPError):
+            self.post("/api/scans/clear", {"scan": "x"})
 
     def test_static_files(self):
         with urllib.request.urlopen(self.url + "/", timeout=5) as response:

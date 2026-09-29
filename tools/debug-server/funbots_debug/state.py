@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import math
+from array import array
 from collections import deque
 from dataclasses import dataclass, field
 from typing import Any
@@ -10,7 +12,7 @@ from .protocol import as_dict, as_list, vec
 
 # Parts of a snapshot the state knows. Everything else lands in WorldState.extras, so a new collector in the
 # mod shows up (raw) without any change here.
-KNOWN_FRAME_KEYS = {"t", "meta", "bots", "players", "vehicles"}
+KNOWN_FRAME_KEYS = {"t", "meta", "bots", "players", "vehicles", "objectives"}
 
 
 @dataclass
@@ -24,8 +26,28 @@ class ScanGrid:
     columns: int
     rows: int
     layers: int = 1
-    # row -> (heights, normals). A cell is a number, false (no hit) or a list (layers > 1).
-    data: dict[int, tuple[list, list]] = field(default_factory=dict)
+    # row -> (heights, normals). With one layer a row is a compact array (NaN = no hit), with more layers a list
+    # where a cell is false (no hit) or a list of heights (top down).
+    data: dict[int, tuple[array | list, array | list]] = field(default_factory=dict)
+
+    def set_row(self, row: int, heights: list, normals: list) -> None:
+        if self.layers == 1:
+            heights, normals = self._pack(heights), self._pack(normals)
+        self.data[row] = (heights, normals)
+
+    @property
+    def complete(self) -> bool:
+        return len(self.data) >= self.rows
+
+    @staticmethod
+    def _pack(cells: list) -> array:
+        return array("d", (math.nan if cell is False or cell is None or isinstance(cell, list) else cell
+                           for cell in cells))
+
+    @staticmethod
+    def _unpack(cells: array | list) -> list:
+        # JSON has no NaN, the browser takes null as no hit.
+        return [None if cell != cell else cell for cell in cells] if isinstance(cells, array) else cells
 
     def to_json(self) -> dict:
         return {
@@ -36,7 +58,8 @@ class ScanGrid:
             "columns": self.columns,
             "rows": self.rows,
             "layers": self.layers,
-            "rowData": [[row, heights, normals] for row, (heights, normals) in sorted(self.data.items())],
+            "rowData": [[row, self._unpack(heights), self._unpack(normals)]
+                        for row, (heights, normals) in sorted(self.data.items())],
         }
 
     def height_at(self, x: float, z: float) -> float | None:
@@ -49,7 +72,7 @@ class ScanGrid:
         cell = heights[column]
         if isinstance(cell, list):
             cell = cell[0] if cell else None
-        return None if cell is False or cell is None else float(cell)
+        return None if cell is False or cell is None or cell != cell else float(cell)
 
 
 class WorldState:
@@ -69,6 +92,8 @@ class WorldState:
         self.bots: dict[int, dict] = {}
         self.players: dict[int, dict] = {}
         self.vehicles: dict[int, dict] = {}
+        # {"flags": [...], "mcoms": [...], "stage": n}, see DebugSnapshots.CollectObjectives
+        self.objectives: dict[str, Any] = {"flags": [], "mcoms": [], "stage": 0}
         self.trails: dict[int, deque] = {}
         self.extras: dict[str, Any] = {}
         # path-index -> {"points": [[x, y, z]], "objectives": [...], "vehicles": [...]}
@@ -115,6 +140,10 @@ class WorldState:
             self.vehicles = {vehicle["id"]: vehicle for vehicle in as_list(frame["vehicles"]) if "id" in vehicle}
             for vehicle in self.vehicles.values():
                 vehicle["occupants"] = as_list(vehicle.get("occupants"))
+        if "objectives" in frame:
+            objectives = as_dict(frame["objectives"])
+            self.objectives = {"flags": as_list(objectives.get("flags")), "mcoms": as_list(objectives.get("mcoms")),
+                               "stage": objectives.get("stage", 0)}
 
         for key, value in frame.items():
             if key not in KNOWN_FRAME_KEYS:
@@ -156,7 +185,7 @@ class WorldState:
         elif kind == "scan_row":
             grid = self.scans.get(int(event.get("scan", -1)))
             if grid is not None:
-                grid.data[int(event["row"])] = (as_list(event.get("heights")), as_list(event.get("normals")))
+                grid.set_row(int(event["row"]), as_list(event.get("heights")), as_list(event.get("normals")))
         elif kind == "level_loaded":
             # Also a new round on the same map: waypoints, scans and history belong to the old one.
             self.log.append(event)
@@ -167,6 +196,11 @@ class WorldState:
         else:
             self.log.append(event)
         return None
+
+    def clear_scans(self, scan: int | None = None) -> list[ScanGrid]:
+        """Removes one scan (None = all). Returns the removed ones."""
+        ids = list(self.scans) if scan is None else [scan] if scan in self.scans else []
+        return [self.scans.pop(scan_id) for scan_id in ids]
 
     def _apply_nodes(self, event: dict) -> None:
         path = int(event.get("path", -1))
@@ -191,6 +225,7 @@ class WorldState:
             "bots": list(self.bots.values()),
             "players": list(self.players.values()),
             "vehicles": list(self.vehicles.values()),
+            "objectives": self.objectives,
             "trails": {bot_id: [[x, z] for _, x, z in trail] for bot_id, trail in self.trails.items()},
             "traces": list(self.traces)[-300:],
             "kills": list(self.kills)[-100:],

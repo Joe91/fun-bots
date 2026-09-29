@@ -55,10 +55,13 @@ raycast shows up on the map as a trace: green if the target is visible, red up t
 ## The web UI
 
 - **Map**: bots (heading, trail, current target, the waypoint they walk to), players, vehicles (forward
-  direction and 1-second velocity vector, altitude for aircraft), raycast traces, kills, waypoints, and height maps
-  of scans. Drag to pan, scroll to zoom, click to select. F fits the view, C follows the selection.
+  direction and 1-second velocity vector, altitude for aircraft), objectives (capture points with team and flag
+  progress, dashed when attacked; rush MCOMs: yellow = active, red = armed, crossed = destroyed), raycast traces,
+  kills, waypoints, and height maps of scans. Drag to pan, scroll to zoom, click to select. F fits the view, C follows the selection.
 - **Mod**: toggle server raycasts, toggle sending traces, set the snapshot interval, load all waypoints, and
-  scan the visible area.
+  scan the visible area (up to 4,000,000 cells; *rays/update* sets the speed). *Clear scans* or the × next to a
+  scan removes it again, and stops it if it still runs.
+- **Objectives**: all capture points and MCOMs with their state. Click one to jump to it.
 - **Selection**: the snapshot of the selected bot. *Full details* shows every plain field of the `Bot` object.
 - **Findings**: problems found by the analyzers. Click one to jump to it.
 - **Statistics**: numbers from the analyzers (kills, raycast rates, visible ratio, server hitches, Lua memory).
@@ -83,7 +86,7 @@ POST /api/ingest   {"v": 1, "seq": n, "frames": [snapshot], "events": [event], "
 answer             {"commands": [{"id": 1, "type": "scan", "args": {...}}]}
 ```
 
-- **Snapshot**: `{"t", "meta", "bots", "players", "vehicles", ...}`, one key per collector. Positions are `[x, y, z]`
+- **Snapshot**: `{"t", "meta", "bots", "players", "vehicles", "objectives", ...}`, one key per collector. Positions are `[x, y, z]`
   in metres, where y is up. The yaw of bots points to `x = -sin(yaw), z = cos(yaw)`.
 - **Event**: `{"t", "type", ...}`. The built-in types are `ray`, `kill`, `level_loaded`, `level_destroyed`,
   `nodes_started`, `nodes`, `scan_started`, `scan_row`, `command_result`, and `error`.
@@ -136,7 +139,7 @@ class LowHealthAnalyzer(Analyzer):
 to convert world coordinates to screen coordinates.
 
 **Scripts.** `GET /api/state` returns the whole model. `POST /api/command?wait=10` blocks until the mod has
-answered.
+answered. `POST /api/scans/clear` with `{"scan": id}` (or `{}` for all) removes scans from the server and all browsers.
 
 ## Towards nav meshes
 

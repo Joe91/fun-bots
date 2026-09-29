@@ -182,6 +182,11 @@ button:disabled {
 	cursor: default;
 }
 
+button.icon {
+	padding: 0 6px;
+	line-height: 1.3;
+}
+
 button.toggle.on,
 .chip.on {
 	background: color-mix(in srgb, var(--accent) 22%, var(--panel-2));

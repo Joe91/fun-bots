@@ -43,6 +43,7 @@ function DebugSnapshots:__init()
 	m_DebugBridge:RegisterCollector('bots', self.CollectBots)
 	m_DebugBridge:RegisterCollector('players', self.CollectPlayers)
 	m_DebugBridge:RegisterCollector('vehicles', self.CollectVehicles)
+	m_DebugBridge:RegisterCollector('objectives', self.CollectObjectives)
 end
 
 -- =============================================
@@ -201,6 +202,62 @@ function DebugSnapshots.CollectVehicles()
 	end
 
 	return s_Result
+end
+
+---Capture points (all modes, straight from the entities) and the MCOMs of rush (positions of the
+---"mcom N interact" paths, state from the GameDirector).
+---@return table { flags = { ... }, mcoms = { ... }, stage }
+function DebugSnapshots.CollectObjectives()
+	local s_Flags = {}
+	local s_Translations = g_GameDirector.m_Translations
+	local s_Iterator = EntityManager:GetIterator('ServerCapturePointEntity')
+	local s_Entity = s_Iterator:Next()
+
+	while s_Entity ~= nil do
+		local s_CapturePoint = CapturePointEntity(s_Entity)
+		s_Flags[#s_Flags + 1] = {
+			name = s_CapturePoint.name,
+			objective = s_Translations[s_CapturePoint.name],
+			hq = string.sub(s_CapturePoint.name, -2) == 'HQ',
+			pos = _Vec(s_CapturePoint.transform.trans),
+			team = s_CapturePoint.team,
+			attacked = s_CapturePoint.isAttacked,
+			controlled = s_CapturePoint.isControlled,
+			flag = _Round(s_CapturePoint.flagLocation, 1),
+		}
+		s_Entity = s_Iterator:Next()
+	end
+
+	local s_Mcoms = {}
+	if Globals.IsRush then
+		-- State of the objectives "mcom N" (the name-case is up to the waypoint-files).
+		local s_States = {}
+		local s_Objectives = g_GameDirector.m_AllObjectives
+		for l_Index = 1, #s_Objectives do
+			local l_Objective = s_Objectives[l_Index]
+			local s_McomIndex = tonumber(l_Objective.name:lower():match('^mcom (%d+)$'))
+			if s_McomIndex ~= nil then
+				s_States[s_McomIndex] = l_Objective
+			end
+		end
+
+		for l_McomIndex, l_Position in pairs(g_GameDirector._McomPositions) do
+			local s_State = s_States[l_McomIndex]
+			local s_Armed = s_State and g_GameDirector.m_ArmedMcoms[s_State.name]
+			s_Mcoms[#s_Mcoms + 1] = {
+				index = l_McomIndex,
+				name = s_State and s_State.name or ('mcom ' .. l_McomIndex),
+				pos = _Vec(l_Position),
+				active = s_State ~= nil and s_State.active,
+				destroyed = s_State ~= nil and s_State.destroyed,
+				-- Seconds since it was armed.
+				armed = s_Armed and _Round(s_Armed + g_GameDirector.m_UpdateTimer, 1) or nil,
+			}
+		end
+		table.sort(s_Mcoms, function(p_A, p_B) return p_A.index < p_B.index end)
+	end
+
+	return { flags = s_Flags, mcoms = s_Mcoms, stage = g_GameDirector.m_RushStageCounter }
 end
 
 -- =============================================

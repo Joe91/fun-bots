@@ -10,8 +10,8 @@ MapScanner = class('MapScanner')
 -- floors of buildings and tunnels get found as well. Experimental, depends on how the engine hits the geometry
 -- from inside.
 
--- Protects the server from typos in the area. 1000 x 1000 cells.
-local MAX_CELLS = 1000000
+-- Protects the server from typos in the area. 2000 x 2000 cells.
+local MAX_CELLS = 4000000
 -- The ray continues this far below a hit to find the next layer.
 local LAYER_GAP = 0.3
 -- Every material ends the ray.

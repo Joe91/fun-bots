@@ -1,7 +1,7 @@
 "use strict";
 
 // Live map of the game. The data comes as server-sent events from /api/stream (see hub.py):
-//   hello (whole state), frame, nodes, scan_started, scan_row, command, analysis, status, reset.
+//   hello (whole state), frame, nodes, scan_started, scan_row, scans_cleared, command, analysis, status, reset.
 // A new map layer is one entry in LAYERS (drawn in list order). A new sidebar panel reads from `store`.
 // World: x/z is the map, y is up. Positions are [x, y, z] in m.
 
@@ -10,6 +10,8 @@ const AIR_TYPES = new Set([4, 5, 13, 14, 17, 18]); // VehicleTypes (BotEnums.lua
 const TRACE_LIFETIME = 2500; // ms a raycast stays on the map
 const KILL_LIFETIME = 8000; // ms a kill stays on the map
 const TRAIL_SECONDS = 15; // game-seconds of the trails
+const MAX_SCAN_CELLS = 4000000; // MAX_CELLS in MapScanner.lua
+const MAX_SCAN_SIDE = 16384; // cells per side, bigger canvases fail in the browsers
 const HEIGHT_RAMP = [[0, [44, 62, 140]], [0.25, [42, 157, 143]], [0.5, [138, 177, 125]], [0.75, [233, 196, 106]], [1, [244, 241, 222]]];
 
 // =============================================
@@ -49,6 +51,7 @@ const store = {
 	traces: [], // ray-events + arrival (ms)
 	kills: [], // kill-events + arrival (ms)
 	paths: {}, // path-index -> {points, objectives}
+	objectives: { flags: [], mcoms: [], stage: 0 }, // see DebugSnapshots.CollectObjectives
 	scans: new Map(), // scan-id -> ScanLayer
 	findings: [],
 	stats: {},
@@ -282,6 +285,88 @@ function drawPaths() {
 	}
 }
 
+function objectiveRadius() {
+	return Math.min(40, Math.max(8, 4 * view.scale));
+}
+
+function drawFlags() {
+	ctx.font = "11px system-ui, sans-serif";
+	const radius = objectiveRadius();
+	for (const flag of store.objectives.flags) {
+		if (!flag.pos) continue;
+		const x = sx(flag.pos[0]);
+		const y = sy(flag.pos[2]);
+		const color = teamColor(flag.team);
+		const r = flag.hq ? radius * 0.7 : radius;
+
+		ctx.beginPath();
+		ctx.arc(x, y, r, 0, Math.PI * 2);
+		ctx.fillStyle = color + (flag.hq ? "18" : "30");
+		ctx.fill();
+		ctx.lineWidth = 1.5;
+		ctx.strokeStyle = color + "88";
+		ctx.stroke();
+		// How far the flag is raised for its team.
+		if (!flag.hq && flag.flag > 0) {
+			ctx.beginPath();
+			ctx.arc(x, y, r, -Math.PI / 2, -Math.PI / 2 + (Math.PI * 2 * Math.min(100, flag.flag)) / 100);
+			ctx.lineWidth = 3;
+			ctx.strokeStyle = color;
+			ctx.stroke();
+		}
+		if (flag.attacked) {
+			ctx.setLineDash([4, 3]);
+			ctx.lineWidth = 2;
+			ctx.strokeStyle = "#f5b841";
+			ctx.beginPath();
+			ctx.arc(x, y, r + 4, 0, Math.PI * 2);
+			ctx.stroke();
+			ctx.setLineDash([]);
+		}
+
+		ctx.fillStyle = theme["text"];
+		const label = flagLabel(flag);
+		ctx.fillText(label, x - ctx.measureText(label).width / 2, y - r - 5);
+	}
+}
+
+function drawMcoms() {
+	ctx.font = "11px system-ui, sans-serif";
+	const size = Math.max(5, Math.min(12, 1.2 * view.scale));
+	for (const mcom of store.objectives.mcoms) {
+		if (!mcom.pos) continue;
+		const x = sx(mcom.pos[0]);
+		const y = sy(mcom.pos[2]);
+		const armed = mcom.armed !== undefined && mcom.armed !== null;
+		const color = mcom.destroyed ? theme["muted"] : armed ? "#ff5d5d" : mcom.active ? "#f5b841" : "#8b94a3";
+
+		if (mcom.active && !mcom.destroyed) {
+			ctx.beginPath();
+			ctx.arc(x, y, size + 6, 0, Math.PI * 2);
+			ctx.fillStyle = color + "30";
+			ctx.fill();
+		}
+		ctx.fillStyle = mcom.destroyed ? "transparent" : color;
+		ctx.fillRect(x - size, y - size, size * 2, size * 2);
+		ctx.lineWidth = 1.5;
+		ctx.strokeStyle = color;
+		ctx.strokeRect(x - size, y - size, size * 2, size * 2);
+		if (mcom.destroyed) cross(mcom.pos, size, color);
+
+		ctx.fillStyle = theme["text"];
+		ctx.fillText(mcomLabel(mcom), x + size + 4, y + 4);
+	}
+}
+
+function flagLabel(flag) {
+	return flag.objective && flag.objective !== flag.name ? `${flag.name} (${flag.objective})` : flag.name;
+}
+
+function mcomLabel(mcom) {
+	const armed = mcom.armed !== undefined && mcom.armed !== null;
+	return `MCOM ${mcom.index}` + (mcom.destroyed ? " destroyed" : armed ? ` armed ${Math.round(mcom.armed)} s` : "");
+}
+
 function drawTrails() {
 	ctx.lineWidth = 1.5;
 	for (const [id, trail] of store.trails) {
@@ -481,6 +566,7 @@ const LAYERS = [
 	{ id: "grid", label: "Grid", on: true, draw: drawGrid },
 	{ id: "heightmap", label: "Height-map", on: true, draw: drawHeightmap },
 	{ id: "paths", label: "Waypoints", on: true, draw: drawPaths },
+	{ id: "objectives", label: "Objectives", on: true, draw: () => { drawFlags(); drawMcoms(); } },
 	{ id: "trails", label: "Trails", on: true, draw: drawTrails },
 	{ id: "traces", label: "Raycasts", on: true, draw: drawTraces },
 	{ id: "targets", label: "Targets", on: true, draw: drawTargets },
@@ -625,7 +711,13 @@ function applyNodes(event) {
 	if (event.objectives) path.objectives = event.objectives;
 }
 
+function setObjectives(objectives) {
+	const list = (value) => (Array.isArray(value) ? value : value ? Object.values(value) : []);
+	store.objectives = objectives ? { flags: list(objectives.flags), mcoms: list(objectives.mcoms), stage: objectives.stage || 0 } : store.objectives;
+}
+
 function resetStore() {
+	store.objectives = { flags: [], mcoms: [], stage: 0 };
 	store.bots.clear();
 	store.players.clear();
 	store.vehicles.clear();
@@ -648,6 +740,7 @@ const handlers = {
 		setEntities(store.bots, data.bots);
 		setEntities(store.players, data.players);
 		setEntities(store.vehicles, data.vehicles);
+		setObjectives(data.objectives);
 		for (const [id, points] of Object.entries(data.trails || {})) store.trails.set(Number(id), points.map(([x, z]) => [x, z, store.time]));
 		// Old traces fade out quickly.
 		const old = performance.now() - TRACE_LIFETIME * 0.7;
@@ -671,6 +764,7 @@ const handlers = {
 		setEntities(store.bots, data.bots);
 		setEntities(store.players, data.players);
 		setEntities(store.vehicles, data.vehicles);
+		setObjectives(data.objectives);
 		store.extras = data.extras || {};
 		updateTrails();
 		addEvents(data.events);
@@ -686,6 +780,9 @@ const handlers = {
 	scan_row(event) {
 		const layer = store.scans.get(event.scan);
 		if (layer) layer.setRow(event.row, event.heights || [], event.normals || []);
+	},
+	scans_cleared(data) {
+		for (const scan of data.scans || []) store.scans.delete(scan);
 	},
 	command(command) {
 		store.commands.set(command.id, command);
@@ -749,6 +846,20 @@ async function command(type, args = {}, callback = null) {
 		store.log.push({ type: "error", source: "command " + type, message: String(error) });
 		scheduleSidebar();
 	}
+}
+
+async function clearScans(scan = null) {
+	try {
+		const response = await fetch("/api/scans/clear", {
+			method: "POST",
+			headers: { "Content-Type": "application/json" },
+			body: JSON.stringify(scan === null ? {} : { scan }),
+		});
+		if (!response.ok) store.log.push({ type: "error", source: "clear scans", message: (await response.json()).error });
+	} catch (error) {
+		store.log.push({ type: "error", source: "clear scans", message: String(error) });
+	}
+	scheduleSidebar();
 }
 
 // =============================================
@@ -830,7 +941,11 @@ function renderSidebar() {
 	for (const id of ["server-raycasts", "traces-channel", "load-nodes", "ping", "scan", "scan-stop", "interval"]) $(id).disabled = store.status.acceptCommands === false;
 
 	const scans = [...store.scans.values()];
-	setHtml($("scan-info"), scans.map((s) => `scan ${s.scan}: ${s.columns}×${s.rows} @ ${s.step} m, ${Math.round((100 * s.rowsDone) / s.rows)} %`).join("<br>"));
+	$("scan-clear").disabled = !scans.length;
+	setHtml($("scan-info"), scans.map((s) => `<li><span class="grow">scan ${s.scan}: ${s.columns}×${s.rows} @ ${s.step} m, ${Math.round((100 * s.rowsDone) / s.rows)} %</span>` +
+		`<button class="icon" data-scan="${s.scan}" title="Remove this scan (stops it if it still runs)">×</button></li>`).join(""));
+
+	renderObjectives();
 
 	renderSelection();
 	renderFindings();
@@ -855,6 +970,20 @@ function renderSelection() {
 		html += `<div class="muted small" style="margin-top:6px">All fields of the bot (Bot.lua):</div>` + kvTable(store.botDetails.fields);
 	}
 	setHtml($("selection"), html);
+}
+
+function renderObjectives() {
+	const { flags, mcoms, stage } = store.objectives;
+	$("objectives-count").textContent = flags.length + mcoms.length ? `(${flags.length + mcoms.length})` : "";
+	const flagItems = [...flags]
+		.sort((a, b) => a.hq - b.hq || a.name.localeCompare(b.name))
+		.map((f) => `<li data-pos="${f.pos}"><span class="dot" style="background:${teamColor(f.team)}"></span>` +
+			`<span class="grow">${escapeHtml(flagLabel(f))}</span>` +
+			`<span class="muted small">${f.hq ? "HQ" : `${escapeHtml(f.flag)} %`}${f.attacked ? " · attacked" : ""}</span></li>`);
+	const mcomItems = mcoms.map((m) => `<li data-pos="${m.pos}"><span class="dot" style="background:${m.destroyed ? "transparent" : m.armed !== undefined && m.armed !== null ? "#ff5d5d" : m.active ? "#f5b841" : "#8b94a3"}"></span>` +
+		`<span class="grow">${escapeHtml(mcomLabel(m))}</span><span class="muted small">${m.active ? "active" : ""}</span></li>`);
+	const stageItem = mcoms.length ? [`<li class="muted small">rush stage ${escapeHtml(stage)}</li>`] : [];
+	setHtml($("objectives"), [...flagItems, ...stageItem, ...mcomItems].join("") || `<li class="muted">none (conquest flags and rush MCOMs show up here)</li>`);
 }
 
 function renderFindings() {
@@ -899,6 +1028,9 @@ function fit() {
 	const points = [];
 	for (const map of [store.bots, store.players, store.vehicles]) {
 		for (const entry of map.values()) if (entry.pos) points.push(entry.pos);
+	}
+	if (!points.length) {
+		for (const objective of [...store.objectives.flags, ...store.objectives.mcoms]) if (objective.pos) points.push(objective.pos);
 	}
 	if (!points.length) {
 		for (const path of Object.values(store.paths)) points.push(...path.points);
@@ -948,6 +1080,23 @@ function entityAt(px, py, radius) {
 	return best;
 }
 
+function objectiveAt(px, py) {
+	if (!LAYERS.find((layer) => layer.id === "objectives").on) return null;
+	const radius = objectiveRadius();
+	for (const mcom of store.objectives.mcoms) {
+		if (mcom.pos && Math.hypot(sx(mcom.pos[0]) - px, sy(mcom.pos[2]) - py) < 12) {
+			return { label: mcomLabel(mcom), detail: `${mcom.name} · ${mcom.active ? "active" : "inactive"} · y ${Math.round(mcom.pos[1])}` };
+		}
+	}
+	for (const flag of store.objectives.flags) {
+		if (flag.pos && Math.hypot(sx(flag.pos[0]) - px, sy(flag.pos[2]) - py) < radius) {
+			const state = flag.hq ? "HQ" : `flag ${flag.flag} %${flag.controlled ? " · controlled" : ""}${flag.attacked ? " · attacked" : ""}`;
+			return { label: flagLabel(flag), detail: `team ${flag.team} · ${state} · y ${Math.round(flag.pos[1])}` };
+		}
+	}
+	return null;
+}
+
 function setupInteraction() {
 	let drag = null;
 	canvas.addEventListener("mousedown", (event) => {
@@ -980,8 +1129,14 @@ function setupInteraction() {
 		}
 		$("coords").textContent = coords + `  ·  ${view.scale.toFixed(2)} px/m`;
 		const hover = drag ? null : entityAt(px, py, 12);
+		const objective = drag || hover ? null : objectiveAt(px, py);
 		const tooltip = $("tooltip");
-		if (hover) {
+		if (objective) {
+			tooltip.innerHTML = `<b>${escapeHtml(objective.label)}</b><br><span class="muted">${escapeHtml(objective.detail)}</span>`;
+			tooltip.style.left = px + 14 + "px";
+			tooltip.style.top = py + 10 + "px";
+			tooltip.hidden = false;
+		} else if (hover) {
 			const e = hover.entry;
 			const detail = hover.kind === "vehicle"
 				? `${e.occupants.length} occupants · health ${e.health}`
@@ -1073,20 +1228,28 @@ function setupControls() {
 	$("load-nodes").addEventListener("click", () => command("nodes"));
 	$("ping").addEventListener("click", () => command("ping"));
 	$("scan-stop").addEventListener("click", () => command("scan_stop"));
+	$("scan-clear").addEventListener("click", () => clearScans());
+	$("scan-info").addEventListener("click", (event) => {
+		const button = event.target.closest("button[data-scan]");
+		if (button) clearScans(Number(button.dataset.scan));
+	});
 	$("scan").addEventListener("click", () => {
 		const step = Math.max(0.25, Number($("scan-step").value) || 2);
 		const layerCount = Math.max(1, Math.round(Number($("scan-layers").value) || 1));
+		const perUpdate = Math.max(1, Math.round(Number($("scan-speed").value) || 100));
 		const xA = wx(0);
 		const xB = wx(view.width);
 		const zA = wz(0);
 		const zB = wz(view.height);
-		const cells = (Math.floor(Math.abs(xB - xA) / step) + 1) * (Math.floor(Math.abs(zB - zA) / step) + 1);
-		if (cells > 1000000) {
-			alert(`${cells.toLocaleString()} cells are too many (max 1,000,000). Zoom in or use a bigger step.`);
+		const columns = Math.floor(Math.abs(xB - xA) / step) + 1;
+		const rows = Math.floor(Math.abs(zB - zA) / step) + 1;
+		const cells = columns * rows;
+		if (cells > MAX_SCAN_CELLS || columns > MAX_SCAN_SIDE || rows > MAX_SCAN_SIDE) {
+			alert(`${columns.toLocaleString()} × ${rows.toLocaleString()} cells are too many (max ${MAX_SCAN_CELLS.toLocaleString()}, ${MAX_SCAN_SIDE.toLocaleString()} per side). Zoom in or use a bigger step.`);
 			return;
 		}
-		if (cells > 200000 && !confirm(`Scan ${cells.toLocaleString()} cells (${layerCount} layer(s))? This takes a while.`)) return;
-		command("scan", { x0: xA, z0: zA, x1: xB, z1: zB, step, layers: layerCount });
+		if (cells > 1000000 && !confirm(`Scan ${cells.toLocaleString()} cells (${layerCount} layer(s), ${perUpdate} rays per update)? This takes a while.`)) return;
+		command("scan", { x0: xA, z0: zA, x1: xB, z1: zB, step, layers: layerCount, perUpdate });
 	});
 
 	$("bot-filter").addEventListener("input", () => renderSidebar());
@@ -1097,6 +1260,10 @@ function setupControls() {
 		select({ kind: "bot", id });
 		const bot = store.bots.get(id);
 		if (bot && bot.pos) focusOn(bot.pos);
+	});
+	$("objectives").addEventListener("click", (event) => {
+		const item = event.target.closest("li[data-pos]");
+		if (item && item.dataset.pos) focusOn(item.dataset.pos.split(",").map(Number));
 	});
 	$("findings").addEventListener("click", (event) => {
 		const item = event.target.closest("li[data-index]");

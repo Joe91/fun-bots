@@ -135,7 +135,8 @@ class FakeMod:
                      for index in range(bot_count)]
         self.events: list[dict] = []
         self.tasks: list = []
-        self.channels = {"traces": True, "meta": True, "bots": True, "players": True, "vehicles": True}
+        self.channels = {"traces": True, "meta": True, "bots": True, "players": True, "vehicles": True,
+                         "objectives": True}
         self.server_raycasts = True
         self.time = 0.0
         self.seq = 0
@@ -176,7 +177,30 @@ class FakeMod:
             frame["players"] = []
         if self.channels.get("vehicles", True):
             frame["vehicles"] = self.vehicles()
+        if self.channels.get("objectives", True):
+            frame["objectives"] = self.objectives()
         return frame
+
+    def objectives(self) -> dict:
+        # Conquest-flags and rush-MCOMs at once, so both show up in the UI.
+        flags = []
+        for index, (name, x, z) in enumerate((("CP_A", -150, -60), ("CP_B", 0, 0), ("CP_C", 150, 60))):
+            raised = (self.time * 4 + index * 40) % 200
+            team = 1 + (int((self.time * 4 + index * 40) // 200) + index) % 2
+            flags.append({"name": name, "objective": name[-1], "hq": False, "pos": rounded((x, terrain(x, z)[0], z)),
+                          "team": team, "attacked": raised < 100, "controlled": raised >= 100,
+                          "flag": round(min(raised, 100.0), 1)})
+        for name, team, x in (("US_HQ", 1, -260), ("RU_HQ", 2, 260)):
+            flags.append({"name": name, "hq": True, "pos": rounded((x, terrain(x, 0)[0], 0)), "team": team,
+                          "attacked": False, "controlled": True, "flag": 100.0})
+        stage = 1 + int(self.time // 60) % 2
+        mcoms = []
+        for index, (x, z) in enumerate(((-80, 120), (-40, 150), (60, 130), (100, 160)), start=1):
+            active = (index + 1) // 2 == stage
+            mcoms.append({"index": index, "name": f"MCOM {index}", "pos": rounded((x, terrain(x, z)[0], z)),
+                          "active": active, "destroyed": (index + 1) // 2 < stage,
+                          "armed": round(self.time % 60, 1) if active and index % 2 and self.time % 60 > 30 else None})
+        return {"flags": flags, "mcoms": mcoms, "stage": stage}
 
     def vehicles(self) -> list[dict]:
         result = []
@@ -265,7 +289,7 @@ class FakeMod:
         x0, x1 = sorted((float(args["x0"]), float(args["x1"])))
         z0, z1 = sorted((float(args["z0"]), float(args["z1"])))
         columns, rows = int((x1 - x0) / step) + 1, int((z1 - z0) / step) + 1
-        if columns * rows > 1_000_000:
+        if columns * rows > 4_000_000:
             self.reply(command_id, False, f"scan too big: {columns} x {rows}")
             return
         self.scan_id += 1

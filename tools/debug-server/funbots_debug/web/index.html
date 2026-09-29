@@ -53,9 +53,19 @@
 				<input id="scan-step" type="number" min="0.25" step="0.25" value="2">
 				<label for="scan-layers">layers</label>
 				<input id="scan-layers" type="number" min="1" max="8" step="1" value="1">
-				<button id="scan-stop" title="Stop all running scans">Stop</button>
 			</div>
-			<div id="scan-info" class="muted small"></div>
+			<div class="row">
+				<label for="scan-speed" title="Raycasts per server-update. More is faster, but costs server performance">rays/update</label>
+				<input id="scan-speed" type="number" min="1" max="5000" step="50" value="100">
+				<button id="scan-stop" title="Stop all running scans">Stop</button>
+				<button id="scan-clear" title="Remove all scans from the map (stops running ones)">Clear scans</button>
+			</div>
+			<ul id="scan-info" class="list muted small"></ul>
+		</details>
+
+		<details class="panel">
+			<summary>Objectives <span id="objectives-count" class="count"></span></summary>
+			<ul id="objectives" class="list"></ul>
 		</details>
 
 		<details class="panel" open>
