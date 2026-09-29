@@ -12,6 +12,7 @@ from typing import Any, Callable
 from .analyzers import Analyzer
 from .commands import Command, CommandQueue
 from .protocol import as_list
+from .rcon import RconClient, RconError
 from .recorder import Recorder
 from .state import WorldState
 
@@ -43,7 +44,8 @@ class Subscriber:
 
 
 class Hub:
-    def __init__(self, analyzers: list[Analyzer], recorder: Recorder | None = None, accept_commands: bool = True):
+    def __init__(self, analyzers: list[Analyzer], recorder: Recorder | None = None, accept_commands: bool = True,
+                 rcon: RconClient | None = None):
         self.lock = threading.RLock()
         self.state = WorldState()
         self.commands = CommandQueue()
@@ -51,6 +53,8 @@ class Hub:
         self.recorder = recorder
         # False in replay-mode: nobody would answer.
         self.accept_commands = accept_commands
+        # Direct connection to the RCON-port of the game-server, None without password.
+        self.rcon = rcon
         self._subscribers: set[Subscriber] = set()
         self._subscribers_lock = threading.Lock()
         self._last_request = 0.0
@@ -173,6 +177,24 @@ class Hub:
         self._publish([("scans_cleared", {"scans": ids})])
         return ids
 
+    def run_rcon(self, words: list[str]) -> list[str]:
+        """A command over the RCON-port. Raises RconError. The browsers get the new RCON-state."""
+        assert self.rcon is not None
+        try:
+            return self.rcon.command(words)
+        finally:
+            self._publish([("status", self._status())])
+
+    def check_rcon(self) -> None:
+        """Logs in once, so problems show up at the start and not with the first command."""
+        if self.rcon is None:
+            return
+        try:
+            self.rcon.connect()
+        except RconError:
+            pass
+        self._publish([("status", self._status())])
+
     def subscribe(self) -> Subscriber:
         subscriber = Subscriber()
         with self._subscribers_lock:
@@ -202,6 +224,7 @@ class Hub:
             "bytesReceived": self.bytes_received,
             "droppedEvents": self.dropped_events,
             "recording": str(self.recorder.path) if self.recorder and self.recorder.path else None,
+            "rcon": self.rcon.to_json() if self.rcon else None,
         }
 
     def _analysis(self) -> dict:

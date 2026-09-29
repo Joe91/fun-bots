@@ -13,6 +13,9 @@ DebugCommands = class('DebugCommands')
 --   nodes           {}                          streams all waypoints as "nodes" events
 --   scan            see MapScanner:Start        streams the scan as "scan_row" events
 --   scan_stop       { scan }                    stops one (or all) scans
+--   rcon            { command, args }           any RCON-command (also the vanilla ones) -> { lines }
+--   chat            { message, player }         a chat-command, as the player with that id or (no player) as
+--                                               ChatCommands.CONSOLE with all permissions -> { lines }
 
 ---@type DebugBridge
 local m_DebugBridge = require('Debug/DebugBridge')
@@ -24,6 +27,8 @@ local m_ServerRaycasts = require('ServerRaycasts')
 local m_BotManager = require('BotManager')
 ---@type NodeCollection
 local m_NodeCollection = require('NodeCollection')
+---@type ChatCommands
+local m_ChatCommands = require('Commands/Chat')
 
 local _Vec = DebugBridge.Vec
 local _Round = DebugBridge.Round
@@ -83,6 +88,8 @@ function DebugCommands:__init()
 	m_DebugBridge:RegisterCommand('nodes', self.Nodes)
 	m_DebugBridge:RegisterCommand('scan', self.Scan)
 	m_DebugBridge:RegisterCommand('scan_stop', self.ScanStop)
+	m_DebugBridge:RegisterCommand('rcon', self.Rcon)
+	m_DebugBridge:RegisterCommand('chat', self.Chat)
 end
 
 function DebugCommands.Ping()
@@ -236,6 +243,37 @@ end
 
 function DebugCommands.ScanStop(p_Args, p_Bridge)
 	return { stopped = m_MapScanner:Stop(p_Bridge, tonumber(p_Args.scan)) }
+end
+
+function DebugCommands.Rcon(p_Args)
+	if type(p_Args.command) ~= 'string' or p_Args.command == '' then
+		error('rcon needs a command')
+	end
+
+	local s_Args = {}
+	if type(p_Args.args) == 'table' then
+		for l_Index = 1, #p_Args.args do
+			s_Args[l_Index] = tostring(p_Args.args[l_Index])
+		end
+	end
+
+	return { lines = RCON:SendCommand(p_Args.command, s_Args) }
+end
+
+function DebugCommands.Chat(p_Args)
+	if type(p_Args.message) ~= 'string' or p_Args.message == '' then
+		error('chat needs a message')
+	end
+
+	local s_Player = nil
+	if p_Args.player ~= nil then
+		s_Player = PlayerManager:GetPlayerById(tonumber(p_Args.player) or -1)
+		if s_Player == nil then
+			error('no player with id ' .. tostring(p_Args.player))
+		end
+	end
+
+	return { lines = m_ChatCommands:ExecuteCaptured(p_Args.message, s_Player) }
 end
 
 if g_DebugCommands == nil then

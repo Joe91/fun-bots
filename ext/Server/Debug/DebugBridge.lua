@@ -160,6 +160,17 @@ function DebugBridge:RegisterCommand(p_Type, p_Callback)
 	self._Commands[p_Type] = p_Callback
 end
 
+---The registered commands, sorted. Tells the debug-server whether the running mod is older than itself.
+---@return string[]
+function DebugBridge:GetCommandNames()
+	local s_Names = {}
+	for l_Name, _ in pairs(self._Commands) do
+		s_Names[#s_Names + 1] = l_Name
+	end
+	table.sort(s_Names)
+	return s_Names
+end
+
 ---@param p_Type string
 ---@param p_Data? table plain table, gets the fields "type" and "t"
 function DebugBridge:Event(p_Type, p_Data)

@@ -138,6 +138,8 @@ class FakeMod:
         self.channels = {"traces": True, "meta": True, "bots": True, "players": True, "vehicles": True,
                          "objectives": True}
         self.server_raycasts = True
+        self.commands = ["bot", "channels", "chat", "interval", "nodes", "ping", "raycast", "rcon", "scan", "scan_stop",
+                         "server_raycasts"]
         self.time = 0.0
         self.seq = 0
         self.scan_id = 0
@@ -170,7 +172,7 @@ class FakeMod:
             frame["meta"] = {"level": "Levels/FAKE_001/FAKE_001", "mode": "ConquestLarge0", "round": 1,
                              "tickrate": 30, "bots": len(self.bots), "players": len(self.bots),
                              "serverRaycasts": self.server_raycasts, "luaMemoryKb": 80000 + int(self.time * 10),
-                             "version": "fake"}
+                             "version": "fake", "commands": self.commands}
         if self.channels.get("bots", True):
             frame["bots"] = [bot.snapshot() for bot in self.bots]
         if self.channels.get("players", True):
@@ -233,6 +235,14 @@ class FakeMod:
             elif kind == "interval":
                 self.interval = max(0.02, float(args["seconds"]))
                 self.reply(command_id, True, {"seconds": self.interval})
+            elif kind == "rcon":
+                if not args.get("command"):
+                    raise ValueError("rcon needs a command")
+                self.reply(command_id, True, {"lines": ["OK", f"fake rcon: {args['command']} {args.get('args', [])}"]})
+            elif kind == "chat":
+                if args.get("player") is not None:
+                    raise ValueError(f"no player with id {args['player']}")
+                self.reply(command_id, True, {"lines": [f"fake chat-command: {args.get('message', '').lower()}"]})
             elif kind == "server_raycasts":
                 if "enabled" in args:
                     self.server_raycasts = bool(args["enabled"])

@@ -62,6 +62,7 @@ function DebugSnapshots.CollectMeta()
 		serverRaycasts = m_ServerRaycasts.m_Enabled,
 		luaMemoryKb = math.floor(collectgarbage('count')),
 		version = Registry.GetVersion(),
+		commands = m_DebugBridge:GetCommandNames(),
 	}
 end
 

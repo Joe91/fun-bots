@@ -2,7 +2,10 @@
 
 from __future__ import annotations
 
+import hashlib
 import json
+import socket
+import struct
 import sys
 import tempfile
 import threading
@@ -17,6 +20,7 @@ from funbots_debug.analyzers.combat import CombatAnalyzer  # noqa: E402
 from funbots_debug.analyzers.stuck import StuckBotAnalyzer  # noqa: E402
 from funbots_debug.hub import Hub  # noqa: E402
 from funbots_debug.protocol import as_list, yaw_to_direction  # noqa: E402
+from funbots_debug.rcon import RconClient, RconError, decode_packet, encode_packet  # noqa: E402
 from funbots_debug.recorder import Recorder, read_recording, replay  # noqa: E402
 from funbots_debug.server import DebugServer  # noqa: E402
 
@@ -241,6 +245,113 @@ class HttpTest(unittest.TestCase):
     def test_stream_hello(self):
         with urllib.request.urlopen(self.url + "/api/stream", timeout=5) as response:
             self.assertEqual(response.readline().strip(), b"event: hello")
+
+
+class FakeRconServer:
+    """Answers like a game-server: login.hashed with salt, then echoes every command."""
+
+    SALT = "0A1B2C3D"
+    PASSWORD = "secret"
+
+    def __init__(self):
+        self.acks = 0
+        self.listener = socket.socket()
+        self.listener.bind(("127.0.0.1", 0))
+        self.listener.listen()
+        self.port = self.listener.getsockname()[1]
+        threading.Thread(target=self._serve, daemon=True).start()
+
+    def _serve(self):
+        while True:
+            try:
+                connection, _ = self.listener.accept()
+            except OSError:
+                return
+            with connection:
+                try:
+                    self._handle(connection)
+                except OSError:
+                    pass
+
+    def _handle(self, connection):
+        logged_in = False
+        while True:
+            head = connection.recv(12, socket.MSG_WAITALL)
+            if len(head) < 12:
+                return
+            size = struct.unpack("<III", head)[1]
+            header, words = decode_packet(head + connection.recv(size - 12, socket.MSG_WAITALL))
+            if header & 0x80000000:
+                self.acks += 1  # the client acknowledges an event
+                continue
+            if words == ["login.hashed"]:
+                answer = ["OK", self.SALT]
+            elif words[0] == "login.hashed":
+                expected = hashlib.md5(bytes.fromhex(self.SALT) + self.PASSWORD.encode()).hexdigest().upper()
+                logged_in = words[1] == expected
+                answer = ["OK"] if logged_in else ["InvalidPasswordHash"]
+            elif not logged_in:
+                answer = ["LogInRequired"]
+            elif words[0] == "admin.eventsEnabled":
+                answer = ["OK"]
+            else:
+                answer = ["OK", *words]
+            # An event in between must be skipped (and acknowledged) by the client.
+            connection.sendall(encode_packet(7, ["player.onChat", "Server", "hi"], from_server=True))
+            connection.sendall(encode_packet(header, answer, response=True))
+
+    def close(self):
+        self.listener.close()
+
+
+class RconTest(unittest.TestCase):
+    def setUp(self):
+        self.server = FakeRconServer()
+
+    def tearDown(self):
+        self.server.close()
+
+    def test_packet_roundtrip(self):
+        header, words = decode_packet(encode_packet(5, ["admin.say", "hällo all", ""]))
+        self.assertEqual(header, 5)  # a request of the client: no flags
+        self.assertEqual(decode_packet(encode_packet(5, ["OK"], from_server=True, response=True))[0], 0xC0000005)
+        self.assertEqual(words, ["admin.say", "hällo all", ""])
+
+    def test_login_and_command(self):
+        client = RconClient("127.0.0.1", self.server.port, FakeRconServer.PASSWORD, log=False)
+        self.assertEqual(client.command(["admin.nextLevel"]), ["OK", "admin.nextLevel"])
+        self.assertEqual(client.command(["modList.reloadExtensions"]), ["OK", "modList.reloadExtensions"])
+        client.close()
+        self.assertGreater(self.server.acks, 0)
+
+    def test_wrong_password(self):
+        client = RconClient("127.0.0.1", self.server.port, "wrong", log=False)
+        with self.assertRaises(RconError):
+            client.command(["serverInfo"])
+        self.assertFalse(client.ok)
+        self.assertIn("InvalidPasswordHash", client.state)
+
+    def test_no_server(self):
+        self.server.close()
+        client = RconClient("127.0.0.1", self.server.port, "x", log=False)
+        with self.assertRaises(RconError):
+            client.connect()
+        self.assertFalse(client.ok)
+
+    def test_http(self):
+        hub = Hub([], rcon=RconClient("127.0.0.1", self.server.port, FakeRconServer.PASSWORD, log=False))
+        server = DebugServer(("127.0.0.1", 0), hub)
+        threading.Thread(target=server.serve_forever, daemon=True).start()
+        try:
+            request = urllib.request.Request(f"http://127.0.0.1:{server.server_address[1]}/api/rcon",
+                                             data=json.dumps({"words": ["serverInfo"]}).encode(), method="POST")
+            with urllib.request.urlopen(request, timeout=5) as response:
+                self.assertEqual(json.loads(response.read()), {"words": ["OK", "serverInfo"]})
+            self.assertEqual(hub.snapshot()["status"]["rcon"],
+                             {"address": f"127.0.0.1:{self.server.port}", "state": "logged in", "ok": True})
+        finally:
+            server.shutdown()
+            server.server_close()
 
 
 if __name__ == "__main__":

@@ -24,7 +24,8 @@ mod (ext/Server/Debug)  ── POST /api/ingest (snapshots + events) ──▶  
 3. Open http://127.0.0.1:8765.
 
 If the game server runs on another machine, start with `--host 0.0.0.0` and set `DEBUG_BRIDGE_URL` (or pass the URL
-to the RCON command). There is no authentication, so only do this in a trusted network.
+to the RCON command). There is no authentication, and everyone who reaches the debug-server can run any RCON command on
+the game server (see *Console*), so only do this in a trusted network.
 
 To work on the server or the UI without the game, use the simulator. It speaks the same protocol:
 ```
@@ -61,11 +62,29 @@ raycast shows up on the map as a trace: green if the target is visible, red up t
 - **Mod**: toggle server raycasts, toggle sending traces, set the snapshot interval, load all waypoints, and
   scan the visible area (up to 4,000,000 cells; *rays/update* sets the speed). *Clear scans* or the × next to a
   scan removes it again, and stops it if it still runs.
+- **Console**: run fun-bots chat commands (`!spawnbots 5`) or any RCON command (`admin.nextLevel`,
+  `modList.reloadExtensions`, `admin.say "hello all" all`). The answer is shown below, for chat commands also
+  everything they printed. RCON goes straight to the RCON port of the game server (see *RCON* below), so it also
+  works while the mod reloads. Chat
+  commands run either as a real player in the game (with their permissions and soldier, answers also go to their
+  chat) or as *debug-server*: all permissions, but no soldier, so commands like `!row` or `!trace` need a player.
+  Up and down go through the history. Two lines above the output show whether RCON is logged in and whether the
+  running mod is new enough for the console (the mod sends its command list in `meta.commands`).
 - **Objectives**: all capture points and MCOMs with their state. Click one to jump to it.
 - **Selection**: the snapshot of the selected bot. *Full details* shows every plain field of the `Bot` object.
 - **Findings**: problems found by the analyzers. Click one to jump to it.
 - **Statistics**: numbers from the analyzers (kills, raycast rates, visible ratio, server hitches, Lua memory).
 - **Raw data**: snapshot parts without their own view yet, so a new collector shows up at once.
+
+## RCON
+
+The console connects to the RCON port of the game server itself (`--rcon`, default `127.0.0.1:47200`) and logs in
+with the password from `--rcon-password`, `$FUNBOTS_RCON_PASSWORD`, or `admin.password` in the `Startup.txt` of the
+server this folder is in (`Admin/Startup.txt`). It logs in right at the start, and prints the result and every
+RCON packet (`rcon >` / `rcon <`) in its terminal. Without a password (or with `--no-rcon`), the console sends RCON
+commands through the mod instead. That way not every server command works
+(e.g. `admin.nextLevel` or `modList.reloadExtensions`), and a mod that is older than the debug-server answers
+`unknown command: rcon`.
 
 ## Recording and replay
 
@@ -90,7 +109,8 @@ answer             {"commands": [{"id": 1, "type": "scan", "args": {...}}]}
   in metres, where y is up. The yaw of bots points to `x = -sin(yaw), z = cos(yaw)`.
 - **Event**: `{"t", "type", ...}`. The built-in types are `ray`, `kill`, `level_loaded`, `level_destroyed`,
   `nodes_started`, `nodes`, `scan_started`, `scan_row`, `command_result`, and `error`.
-- **Commands**: `ping`, `channels`, `interval`, `server_raycasts`, `raycast`, `bot`, `nodes`, `scan`, and `scan_stop`
+- **Commands**: `ping`, `channels`, `interval`, `server_raycasts`, `raycast`, `bot`, `nodes`, `scan`, `scan_stop`,
+  `rcon`, and `chat`
   (see the header of `DebugCommands.lua`). Each command is answered with a `command_result` event.
 
 While the debug-server is unreachable, the mod only sends a small hello every 3 seconds.

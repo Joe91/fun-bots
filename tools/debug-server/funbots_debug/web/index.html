@@ -63,6 +63,25 @@
 			<ul id="scan-info" class="list muted small"></ul>
 		</details>
 
+		<details class="panel" open>
+			<summary>Console</summary>
+			<form id="console-form">
+				<div class="row">
+					<select id="console-mode" title="Chat: fun-bots chat-commands like !spawnbots 5. RCON: any RCON-command like funbots.kickAll">
+						<option value="chat">Chat</option>
+						<option value="rcon">RCON</option>
+					</select>
+					<select id="console-player" title="The chat-command runs as this player, with their permissions and their soldier"></select>
+				</div>
+				<div class="row">
+					<input id="console-input" type="text" autocomplete="off" spellcheck="false">
+					<button id="console-run" type="submit">Run</button>
+				</div>
+			</form>
+			<div id="console-status" class="small"></div>
+			<pre id="console-output" class="console" hidden></pre>
+		</details>
+
 		<details class="panel">
 			<summary>Objectives <span id="objectives-count" class="count"></span></summary>
 			<ul id="objectives" class="list"></ul>

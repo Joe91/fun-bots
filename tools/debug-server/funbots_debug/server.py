@@ -4,6 +4,7 @@
   GET  /api/stream     the browser: server-sent events (first "hello" with the whole state, then changes)
   GET  /api/state      the whole state as JSON (for scripts)
   POST /api/command    {type, args} -> {id}. With ?wait=<seconds> it blocks until the mod answered.
+  POST /api/rcon       {words} -> {words}. Any RCON-command, straight to the RCON-port of the game-server.
   POST /api/scans/clear  {scan} -> {cleared}. Forgets one scan (no scan = all) and stops it if it still runs.
   GET  /api/commands   the last commands and their answers
   GET  /               the web-interface (web/)
@@ -22,6 +23,7 @@ from pathlib import Path
 from urllib.parse import parse_qs, urlparse
 
 from .hub import Hub
+from .rcon import RconError
 
 WEB_DIR = Path(__file__).parent / "web"
 MAX_BODY = 64 * 1024 * 1024
@@ -90,6 +92,8 @@ class Handler(BaseHTTPRequestHandler):
             self._send_json(self.server.hub.ingest(data, len(body)))
         elif url.path == "/api/command":
             self._command(data, parse_qs(url.query))
+        elif url.path == "/api/rcon":
+            self._rcon(data)
         elif url.path == "/api/scans/clear":
             scan = data.get("scan") if isinstance(data, dict) else None
             if scan is not None and not isinstance(scan, int):
@@ -115,6 +119,20 @@ class Handler(BaseHTTPRequestHandler):
         if wait:
             hub.commands.wait(command, min(float(wait[0]), 120.0))
         self._send_json(command.to_json())
+
+    def _rcon(self, data) -> None:
+        words = data.get("words") if isinstance(data, dict) else None
+        if not isinstance(words, list) or not words or not all(isinstance(word, str) for word in words):
+            self._send_json({"error": "needs {words: [command, args...]}"}, HTTPStatus.BAD_REQUEST)
+            return
+        rcon = self.server.hub.rcon
+        if rcon is None:
+            self._send_json({"error": "no RCON-password, start with --rcon-password"}, HTTPStatus.SERVICE_UNAVAILABLE)
+            return
+        try:
+            self._send_json({"words": self.server.hub.run_rcon(words)})
+        except RconError as error:
+            self._send_json({"error": str(error)}, HTTPStatus.BAD_GATEWAY)
 
     def _stream(self) -> None:
         hub = self.server.hub

@@ -315,6 +315,41 @@ table.kv td:first-child {
 	letter-spacing: 0.04em;
 }
 
+#console-input {
+	flex: 1;
+	min-width: 0;
+	font-family: ui-monospace, "Cascadia Mono", Consolas, monospace;
+}
+
+#console-player {
+	flex: 1;
+	min-width: 0;
+}
+
+#console-status div::before {
+	content: "● ";
+}
+
+#console-status .ok::before {
+	color: var(--ok);
+}
+
+#console-status .warn::before {
+	color: var(--warn);
+}
+
+#console-status .bad::before {
+	color: var(--error);
+}
+
+pre.console .in {
+	color: var(--accent);
+}
+
+pre.console .error {
+	color: var(--error);
+}
+
 pre {
 	font: 11px/1.35 ui-monospace, "Cascadia Mono", Consolas, monospace;
 	white-space: pre-wrap;

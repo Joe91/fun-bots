@@ -60,6 +60,7 @@ const store = {
 	log: [],
 	tracesChannel: true,
 	botDetails: null, // answer of the "bot" command for the selection
+	console: [], // {kind: "in" | "out" | "error", text} of the console-panel
 };
 
 const view = {
@@ -863,6 +864,156 @@ async function clearScans(scan = null) {
 }
 
 // =============================================
+// Console: RCON- and chat-commands
+// =============================================
+
+const CONSOLE_LINES = 300;
+const CONSOLE_TIMEOUT = 15000; // ms until a missing answer is reported
+const CONSOLE_COMMANDS = ["chat", "rcon"]; // bridge-commands the mod needs for the console
+const consoleHistory = load("consoleHistory", []);
+let historyIndex = consoleHistory.length;
+
+// Returns the (last) entry. An entry with pending = true shows "waiting…" until the answer is there.
+function consolePrint(kind, text, pending = false) {
+	let entry = null;
+	for (const line of String(text).split("\n")) store.console.push((entry = { kind, text: line, pending }));
+	if (store.console.length > CONSOLE_LINES) store.console.splice(0, store.console.length - CONSOLE_LINES);
+	renderConsole();
+	return entry;
+}
+
+function consoleDone(entry) {
+	entry.pending = false;
+	renderConsole();
+}
+
+// Splits an RCON-line into command and args, "quoted args" may contain spaces.
+function parseRcon(line) {
+	const parts = [...line.matchAll(/"([^"]*)"|(\S+)/g)].map((match) => (match[1] !== undefined ? match[1] : match[2]));
+	return { command: parts[0], args: parts.slice(1) };
+}
+
+function runConsole() {
+	const input = $("console-input");
+	let line = input.value.trim();
+	if (!line) return;
+	const mode = $("console-mode").value;
+	if (consoleHistory[consoleHistory.length - 1] !== line) consoleHistory.push(line);
+	if (consoleHistory.length > 50) consoleHistory.splice(0, consoleHistory.length - 50);
+	save("consoleHistory", consoleHistory);
+	historyIndex = consoleHistory.length;
+	input.value = "";
+
+	// Answers of the mod. Without one after CONSOLE_TIMEOUT, say so instead of staying silent.
+	let answered = false;
+	let sent = null;
+	const answer = (c) => {
+		answered = true;
+		consoleDone(sent);
+		if (c.status === "error") {
+			consolePrint("error", c.error);
+			if (String(c.error).startsWith("unknown command:")) consolePrint("error", modOutdatedHint());
+			return;
+		}
+		const lines = c.result && c.result.lines ? (Array.isArray(c.result.lines) ? c.result.lines : Object.values(c.result.lines)) : [];
+		consolePrint("out", lines.length ? lines.join("\n") : "(no answer)");
+	};
+	if (mode === "rcon") {
+		const { command: name, args } = parseRcon(line);
+		if (store.status.rcon) {
+			rcon([name, ...args], consolePrint("in", `> ${line}   (RCON ${store.status.rcon.address})`, true));
+		} else {
+			// No RCON-password on the debug-server: the mod runs it, but only knows the commands of the mods.
+			sent = consolePrint("in", `> ${line}   (RCON through the mod)`, true);
+			command("rcon", { command: name, args }, answer);
+			setTimeout(() => answered || consolePrint("error", noModAnswerHint()), CONSOLE_TIMEOUT);
+		}
+	} else {
+		if (!line.startsWith("!")) line = "!" + line;
+		const player = $("console-player").value;
+		const as = player === "" ? "" : ` (as ${(store.players.get(Number(player)) || {}).name || player})`;
+		sent = consolePrint("in", "> " + line + as, true);
+		command("chat", player === "" ? { message: line } : { message: line, player: Number(player) }, answer);
+		setTimeout(() => answered || consolePrint("error", noModAnswerHint()), CONSOLE_TIMEOUT);
+	}
+}
+
+function modOutdatedHint() {
+	return "The mod running in the game is older than the debug-server and doesn't know this command yet. Reload it: RCON modList.reloadExtensions, or restart the game-server.";
+}
+
+function noModAnswerHint() {
+	return `No answer from the mod after ${CONSOLE_TIMEOUT / 1000} s.` + (store.status.modConnected ? " It is connected, but busy or stuck?" : " It is not connected to the debug-server.");
+}
+
+async function rcon(words, sent) {
+	const abort = new AbortController();
+	const timer = setTimeout(() => abort.abort(), CONSOLE_TIMEOUT + 10000);
+	try {
+		const response = await fetch("/api/rcon", {
+			method: "POST",
+			headers: { "Content-Type": "application/json" },
+			body: JSON.stringify({ words }),
+			signal: abort.signal,
+		});
+		const data = await response.json();
+		if (response.ok) consolePrint("out", data.words.join(" ") || "(empty answer)");
+		else consolePrint("error", data.error);
+	} catch (error) {
+		consolePrint("error", error.name === "AbortError" ? "No answer from the debug-server (RCON), see its terminal." : String(error));
+	} finally {
+		clearTimeout(timer);
+		consoleDone(sent);
+	}
+}
+
+// What the console can reach right now: the RCON-port and the mod.
+function renderConsoleStatus() {
+	const rconState = store.status.rcon;
+	let rconLine;
+	if (!rconState) rconLine = ["warn", "RCON: no password found, commands go through the mod (only the commands of the mods). Start the debug-server with --rcon-password."];
+	else if (rconState.ok === true) rconLine = ["ok", `RCON: logged in to ${rconState.address}`];
+	else if (rconState.ok === false) rconLine = ["bad", `RCON: ${rconState.state}`];
+	else rconLine = ["warn", `RCON: ${rconState.address}, not connected yet`];
+
+	const commands = store.meta.commands ? (Array.isArray(store.meta.commands) ? store.meta.commands : Object.values(store.meta.commands)) : null;
+	let modLine;
+	if (!store.status.modConnected) modLine = ["bad", "Mod: not connected, chat-commands need it"];
+	else if (!commands || !CONSOLE_COMMANDS.every((name) => commands.includes(name))) modLine = ["warn", "Mod: older than the debug-server, chat-commands don't work yet. Reload it (RCON modList.reloadExtensions) or restart the game-server."];
+	else modLine = ["ok", "Mod: connected"];
+
+	setHtml($("console-status"), [rconLine, modLine].map(([kind, text]) => `<div class="${kind}">${escapeHtml(text)}</div>`).join(""));
+}
+
+function renderConsole() {
+	const output = $("console-output");
+	output.hidden = !store.console.length;
+	const atBottom = output.scrollTop + output.clientHeight >= output.scrollHeight - 4;
+	setHtml(output, store.console.map((l) => `<span class="${l.kind}">${escapeHtml(l.text)}</span>` + (l.pending ? `<span class="muted">  waiting…</span>` : "")).join("\n"));
+	if (atBottom) output.scrollTop = output.scrollHeight;
+}
+
+function renderConsoleControls() {
+	const mode = $("console-mode").value;
+	const select = $("console-player");
+	select.hidden = mode !== "chat";
+	$("console-input").placeholder = mode === "chat" ? "!spawnbots 5" : store.status.rcon ? "admin.nextLevel" : "funbots.kickAll (via the mod)";
+	$("console-mode").title = store.status.rcon ? `RCON goes straight to ${store.status.rcon.address}` : "RCON goes through the mod (only the commands of the mods). Give the debug-server --rcon-password for all commands";
+	const players = [...store.players.values()].sort((a, b) => a.name.localeCompare(b.name));
+	const options = [`<option value="" title="All permissions, but no soldier">as debug-server</option>`,
+		...players.map((p) => `<option value="${p.id}">as ${escapeHtml(p.name)}</option>`)].join("");
+	if (select._html !== options) {
+		const value = select.value;
+		setHtml(select, options);
+		select.value = players.some((p) => String(p.id) === value) ? value : "";
+	}
+	const disabled = store.status.acceptCommands === false;
+	$("console-player").disabled = disabled;
+	// Direct RCON also works without a mod (e.g. during modList.reloadExtensions) and in replay-mode.
+	for (const id of ["console-input", "console-run"]) $(id).disabled = disabled && !(mode === "rcon" && store.status.rcon);
+}
+
+// =============================================
 // Sidebar
 // =============================================
 
@@ -946,6 +1097,8 @@ function renderSidebar() {
 		`<button class="icon" data-scan="${s.scan}" title="Remove this scan (stops it if it still runs)">×</button></li>`).join(""));
 
 	renderObjectives();
+	renderConsoleControls();
+	renderConsoleStatus();
 
 	renderSelection();
 	renderFindings();
@@ -1229,6 +1382,21 @@ function setupControls() {
 	$("ping").addEventListener("click", () => command("ping"));
 	$("scan-stop").addEventListener("click", () => command("scan_stop"));
 	$("scan-clear").addEventListener("click", () => clearScans());
+	$("console-mode").value = load("consoleMode", "chat");
+	$("console-mode").addEventListener("change", (event) => {
+		save("consoleMode", event.target.value);
+		renderConsoleControls();
+	});
+	$("console-form").addEventListener("submit", (event) => {
+		event.preventDefault();
+		runConsole();
+	});
+	$("console-input").addEventListener("keydown", (event) => {
+		if (event.key !== "ArrowUp" && event.key !== "ArrowDown") return;
+		event.preventDefault();
+		historyIndex = Math.max(0, Math.min(consoleHistory.length, historyIndex + (event.key === "ArrowUp" ? -1 : 1)));
+		event.target.value = consoleHistory[historyIndex] || "";
+	});
 	$("scan-info").addEventListener("click", (event) => {
 		const button = event.target.closest("button[data-scan]");
 		if (button) clearScans(Number(button.dataset.scan));
