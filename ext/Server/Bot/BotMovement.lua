@@ -224,6 +224,7 @@ function Bot:ApplyPathOffset(p_OriginalPoint, p_NextPoint, p_NextToNextPoint, p_
 	return _GetOffsetPoint(s_Entry, s_Offset), _GetOffsetPoint(s_NextEntry, s_Offset)
 end
 
+---@return boolean true if the bot entered a vehicle
 function Bot:_ExecuteActionIfNeeded(p_Point, p_DeltaTime)
 	if self._ActiveAction == BotActionFlags.OtherActionActive then
 		if p_Point.Data ~= nil and p_Point.Data.Action ~= nil then
@@ -242,6 +243,8 @@ function Bot:_ExecuteActionIfNeeded(p_Point, p_DeltaTime)
 							self._CurrentWayPoint = s_Node.PointIndex
 							self._LastWayDistance = 1000.0
 						end
+						self._LastActionId = p_Point.Index
+						return true
 					end
 				end
 				self:_ResetActionFlag(BotActionFlags.OtherActionActive)
@@ -281,6 +284,8 @@ function Bot:_ExecuteActionIfNeeded(p_Point, p_DeltaTime)
 			self._LastActionId = p_Point.Index                   -- remember last action node to continue from here
 		end
 	end
+
+	return false
 end
 
 ---@return boolean true if defending took over the movement this tick
@@ -759,7 +764,11 @@ function Bot:UpdateNormalMovement(p_DeltaTime)
 			self:_StopObstacleSequence()
 			return -- DON'T DO ANYTHING ELSE.
 		end
-		self:_ExecuteActionIfNeeded(s_Point, p_DeltaTime)
+		if self:_ExecuteActionIfNeeded(s_Point, p_DeltaTime) then
+			-- In a vehicle now: the point belongs to the foot path. Reaching it would switch to a linked foot path
+			-- or overwrite the point on the vehicle path, and the vehicle can't leave a foot path any more.
+			return
+		end
 		-- return if action executed
 		if self._ActiveAction == BotActionFlags.OtherActionActive then
 			self:_StopObstacleSequence()

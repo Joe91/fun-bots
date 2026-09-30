@@ -201,7 +201,7 @@ class FakeMod:
         frame = {"t": round(self.time, 3)}
         if self.channels.get("meta", True):
             frame["meta"] = {"level": "Levels/FAKE_001/FAKE_001", "mode": "ConquestLarge0",
-                             "paths": "FAKE_001_ConquestLarge0", "round": 1,
+                             "paths": "FAKE_001_ConquestLarge0", "round": 1, "roundStart": 0, "modStart": 0,
                              "tickrate": 30, "bots": len(self.bots), "players": len(self.bots),
                              "serverRaycasts": self.server_raycasts, "luaMemoryKb": 80000 + int(self.time * 10),
                              "version": "fake", "commands": self.commands}

@@ -814,6 +814,23 @@ function resetStore() {
 	view.fitted = false;
 }
 
+// t is SharedUtils:GetTime() (Unix-time in s). roundStart is missing after a reload of the mod mid-round,
+// both are missing while the mod is older than the debug-server: then the clock-time is shown instead.
+function formatDuration(seconds) {
+	seconds = Math.max(0, Math.floor(seconds));
+	const [h, m, s] = [Math.floor(seconds / 3600), Math.floor(seconds / 60) % 60, seconds % 60];
+	const pad = (value) => String(value).padStart(2, "0");
+	return h ? `${h}:${pad(m)}:${pad(s)}` : `${m}:${pad(s)}`;
+}
+
+function timesHtml() {
+	const { roundStart, modStart } = store.meta;
+	const parts = [];
+	if (typeof roundStart === "number") parts.push(`<span>round-time <b>${formatDuration(store.time - roundStart)}</b></span>`);
+	if (typeof modStart === "number") parts.push(`<span title="since the mod was loaded: the start of the game-server, or the last reload of the mod">mod up <b>${formatDuration(store.time - modStart)}</b></span>`);
+	return parts.length ? parts.join("") : `<span>time <b>${new Date(store.time * 1000).toLocaleTimeString()}</b></span>`;
+}
+
 const handlers = {
 	hello(data) {
 		resetStore();
@@ -1297,7 +1314,7 @@ function renderSidebar() {
 	const teamHtml = Object.entries(teams)
 		.map(([team, t]) => `<span><span class="dot" style="display:inline-block;background:${teamColor(Number(team))}"></span> team ${team}: <b>${t.alive}</b>/${t.total}</span>`)
 		.join("");
-	setHtml($("summary"), `${teamHtml}<span>players <b>${store.players.size}</b></span><span>vehicles <b>${store.vehicles.size}</b></span><span>t <b>${Math.round(store.time)}</b> s</span>` +
+	setHtml($("summary"), `${teamHtml}<span>players <b>${store.players.size}</b></span><span>vehicles <b>${store.vehicles.size}</b></span>${timesHtml()}` +
 		(store.status.recording ? `<span class="muted small">recording</span>` : ""));
 
 	$("server-raycasts").classList.toggle("on", !!meta.serverRaycasts);

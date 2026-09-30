@@ -35,6 +35,10 @@ local s_MoveModeNames = _Names(BotMoveModes)
 local s_KitNames = _Names(BotKits)
 -- The state-objects are created with g_BotStates, so this is built on first use.
 local s_StateNames = nil
+-- SharedUtils:GetTime() at the last level-load (every round), nil after a reload of the mod until the next level.
+local s_RoundStart = nil
+-- SharedUtils:GetTime() when the mod was loaded: the start of the game-server, or the last reload of the mod.
+local s_ModStart = _Round(SharedUtils:GetTime(), 3)
 
 ---@param p_Entity ControllableEntity
 ---@return string
@@ -61,6 +65,8 @@ function DebugSnapshots.CollectMeta()
 		mode = SharedUtils:GetCurrentGameMode(),
 		paths = m_NodeCollection:GetMapName(), -- the waypoints of this mode, mapfiles/<paths>.map
 		round = Globals.Round,
+		roundStart = s_RoundStart,
+		modStart = s_ModStart,
 		tickrate = SharedUtils:GetTickrate(),
 		bots = m_BotManager:GetBotCount(),
 		players = PlayerManager:GetPlayerCount(),
@@ -277,6 +283,7 @@ end
 ---@param p_LevelName string
 ---@param p_GameMode string
 function DebugSnapshots:OnLevelLoaded(p_LevelName, p_GameMode)
+	s_RoundStart = _Round(SharedUtils:GetTime(), 3)
 	m_DebugBridge:Event('level_loaded', { level = p_LevelName, mode = p_GameMode })
 end
 

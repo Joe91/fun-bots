@@ -716,7 +716,7 @@ function ChatCommands:ExecuteCaptured(p_Message, p_Player)
 
 	local s_Print = print
 	s_Output = {}
-	print = function(...)
+	print = function(...) -- luacheck: ignore 121
 		local s_Parts = {}
 		for l_Index = 1, select('#', ...) do
 			s_Parts[l_Index] = tostring((select(l_Index, ...)))
@@ -726,7 +726,7 @@ function ChatCommands:ExecuteCaptured(p_Message, p_Player)
 	end
 
 	local s_Ok, s_Error = pcall(self.Execute, self, string.lower(p_Message):split(' '), p_Player or ChatCommands.CONSOLE)
-	print = s_Print
+	print = s_Print -- luacheck: ignore 121
 	local s_Lines = s_Output
 	s_Output = nil
 

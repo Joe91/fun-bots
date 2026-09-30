@@ -67,7 +67,10 @@ function VehicleMovement:UpdateNormalMovementVehicle(p_DeltaTime, p_Bot)
 	-- Move along points.
 	if m_NodeCollection:Get(1, p_Bot._PathIndex) ~= nil then -- Check for valid point.
 		-- Get next point.
-		local s_ActivePointIndex = p_Bot:_GetWayIndex(0)
+		-- Apply the turnaround at the end of reversing paths, otherwise the vehicle circles around the last node.
+		local s_ActivePointIndex, s_InvertPathDirection = p_Bot:_GetWayIndex(0)
+		p_Bot._CurrentWayPoint = s_ActivePointIndex
+		p_Bot._InvertPathDirection = s_InvertPathDirection
 
 		local s_Point = nil
 		local s_NextPoint = nil
