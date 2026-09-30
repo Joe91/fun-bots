@@ -485,7 +485,8 @@ function BotSpawner:UpdateBotAmountAndTeam()
 	end
 
 	-- The debug-bridge watches the game without a player: spawn the bots as if one player joined the player-team.
-	if s_PlayerCount == 0 and m_DebugBridge:IsEnabled() then
+	-- Not on TDM: creating a bot-player (PlayerManager:CreatePlayer) on a TDM-server without a real player crashes it.
+	if s_PlayerCount == 0 and m_DebugBridge:IsEnabled() and not Globals.IsTdm then
 		s_CountPlayers[s_PlayerTeam] = 1
 		s_TeamCount[s_PlayerTeam] = s_TeamCount[s_PlayerTeam] + 1
 		s_PlayerCount = 1

@@ -102,7 +102,8 @@ function DebugSnapshots.CollectBots()
 		if s_Soldier ~= nil then
 			local s_InVehicle = g_BotStates:IsInVehicleState(l_Bot.m_ActiveState)
 			local s_Controllable = s_Player.controlledControllable
-			if s_InVehicle and s_Controllable ~= nil then
+			-- The cast to the vehicle-data crashes on a soldier: check the entity, not only the state.
+			if s_InVehicle and s_Controllable ~= nil and not s_Controllable:Is('ServerSoldierEntity') then
 				s_Entry.pos = _Vec(s_Controllable.transform.trans)
 				s_Entry.vehicle = l_Bot.m_ActiveVehicle and l_Bot.m_ActiveVehicle.Name or _VehicleName(s_Controllable)
 				s_Entry.seat = s_Player.controlledEntryId
