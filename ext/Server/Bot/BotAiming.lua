@@ -71,7 +71,8 @@ end
 
 ---@param p_Bot Bot
 ---@param p_BotSoldier SoldierEntity
-local function _DefaultAimingAction(p_Bot, p_BotSoldier)
+---@param p_DeltaTime number
+local function _DefaultAimingAction(p_Bot, p_BotSoldier, p_DeltaTime)
 	if not p_Bot._Shoot or p_Bot.m_ActiveWeapon == nil then
 		return
 	end
@@ -133,17 +134,25 @@ local function _DefaultAimingAction(p_Bot, p_BotSoldier)
 
 	-- Aim error only for normal weapons. Not for nades, rockets, missiles, ...
 	local s_UseAimError = s_ActiveWeaponType <= WeaponTypes.Sniper
-	local s_DeltaTime = p_Bot:GetAimDeltaTime()
 	local s_SkillFactor = p_Bot:GetAimSkillFactor()
+	local s_AimError = Config.BotAimError
+
+	if s_ActiveWeaponType == WeaponTypes.Sniper then
+		s_AimError = Config.BotSniperAimError
+	elseif s_ActiveWeaponType == WeaponTypes.LMG then
+		s_AimError = Config.BotSupportAimError
+	end
+
+	local s_ErrorScale = p_Bot:GetAimErrorScale(s_AimError)
 
 	if not p_Bot.m_KnifeMode then
 		-- Lead with the movement the bot perceives: it notices changes of the direction late, so the aim lags behind
 		-- a strafing target: aim = target + seenVelocity * timeToTravel + (seenVelocity - velocity) * lag.
 		local s_TrackingLag = 0.0
 		if s_UseAimError then
-			s_TrackingLag = Registry.BOT.AIM_TRACKING_LAG * (0.5 + 0.5 * s_SkillFactor)
+			s_TrackingLag = Registry.BOT.AIM_TRACKING_LAG * (0.5 + 0.5 * s_SkillFactor) * s_ErrorScale
 		end
-		local s_SeenVelX, s_SeenVelY, s_SeenVelZ = p_Bot:UpdateSeenVelocity(s_DeltaTime, s_TrackingLag, s_VelX, s_VelY, s_VelZ)
+		local s_SeenVelX, s_SeenVelY, s_SeenVelZ = p_Bot:UpdateSeenVelocity(p_DeltaTime, s_TrackingLag, s_VelX, s_VelY, s_VelZ)
 
 		local s_Drop = 0.0
 		local s_Speed = 0.0
@@ -207,24 +216,18 @@ local function _DefaultAimingAction(p_Bot, p_BotSoldier)
 	-- Humanlike aim error: an angle (not a distance), so hits get rarer on greater distances.
 	if s_UseAimError then
 		local s_Registry = Registry.BOT
-		local s_AimError = Config.BotAimError
 
-		if s_ActiveWeaponType == WeaponTypes.Sniper then
-			s_AimError = Config.BotSniperAimError
-		elseif s_ActiveWeaponType == WeaponTypes.LMG then
-			s_AimError = Config.BotSupportAimError
-		end
-
-		-- Harder to aim while moving and at targets crossing the view fast.
+		-- Harder to aim while moving and at targets crossing the view fast. Only the movement of the target counts
+		-- for that, the own movement is known and part of AIM_ERROR_SELF_SPEED.
 		local s_BotVelocity = p_BotSoldier.velocity
-		local s_BotVelX, s_BotVelY, s_BotVelZ = s_BotVelocity.x, s_BotVelocity.y, s_BotVelocity.z
+		local s_BotVelX, s_BotVelZ = s_BotVelocity.x, s_BotVelocity.z
 		local s_BotSpeed = math.sqrt(s_BotVelX * s_BotVelX + s_BotVelZ * s_BotVelZ)
 		local s_AngularSpeed = m_Utilities:GetAngularSpeed(s_DiffX, s_DiffY, s_DiffZ, p_Bot._DistanceToPlayer,
-			s_VelX - s_BotVelX, s_VelY - s_BotVelY, s_VelZ - s_BotVelZ)
+			s_VelX, s_VelY, s_VelZ)
 
 		local s_Sigma = (s_AimError * 0.001 * (1.0 + s_Registry.AIM_ERROR_SELF_SPEED * s_BotSpeed) +
-			s_AngularSpeed * s_Registry.AIM_TRACKING_ERROR) * s_SkillFactor
-		local s_ErrorYaw, s_ErrorPitch = p_Bot:UpdateAimError(s_DeltaTime, s_Sigma, s_Yaw, s_Pitch, true)
+			s_AngularSpeed * s_Registry.AIM_TRACKING_ERROR * s_ErrorScale) * s_SkillFactor
+		local s_ErrorYaw, s_ErrorPitch = p_Bot:UpdateAimError(p_DeltaTime, s_Sigma, s_ErrorScale, s_Yaw, s_Pitch, true)
 
 		-- Better bots control the recoil better. The spread can't be known, only emulate aiming down sights.
 		local s_RecoilControl = Config.BotRecoilControlBest +
@@ -292,7 +295,8 @@ local function _RepairAimingAction(p_Bot)
 	p_Bot._TargetYaw = s_Yaw
 end
 
-function Bot:UpdateAiming()
+---@param p_DeltaTime number
+function Bot:UpdateAiming(p_DeltaTime)
 	local s_Soldier = self._ShootPlayer and self.m_Player.soldier
 	if not s_Soldier then
 		return
@@ -303,6 +307,6 @@ function Bot:UpdateAiming()
 	elseif self._ActiveAction == BotActionFlags.RepairActive then
 		_RepairAimingAction(self)
 	else
-		_DefaultAimingAction(self, s_Soldier)
+		_DefaultAimingAction(self, s_Soldier, p_DeltaTime)
 	end
 end

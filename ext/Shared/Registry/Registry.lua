@@ -219,13 +219,17 @@ Registry = {
 		-- Use of path-Offset
 		USE_PATH_OFFSETS = true,
 		-- Humanlike aim error (see Bot/BotAimError.lua). The base error is set in the config in mrad. Angles in rad, times in s.
+		-- Configured aim error (mrad) at which flick, flinch and tracking have the values below. They scale linearly with
+		-- it, so an aim error of 0 is a perfect aim.
+		AIM_ERROR_REFERENCE = 6.0,
 		-- Time constant of the slow drift of the crosshair around the target.
 		AIM_ERROR_DRIFT_TIME = 0.3,
 		-- Vertical aim error relative to the horizontal one (humans miss more to the sides).
 		AIM_ERROR_PITCH_FACTOR = 0.7,
 		-- Additional aim error per m/s of own movement (0.15 → moving with 4 m/s = +60 %).
 		AIM_ERROR_SELF_SPEED = 0.15,
-		-- Aim error from tracking a moving target: angular speed of the target (rad/s) multiplied by this.
+		-- Aim error from tracking a moving target: angular speed of the target (rad/s, own movement of the target only)
+		-- multiplied by this.
 		AIM_TRACKING_ERROR = 0.03,
 		-- Delay with which an average bot notices changes of the target movement (e.g. strafing). Scaled with skill.
 		AIM_TRACKING_LAG = 0.15,
@@ -236,10 +240,8 @@ Registry = {
 		-- Probability that the flick overshoots instead of undershooting.
 		AIM_PROBABILITY_OVERSHOOT = 25,
 		-- Kick of the aim when the bot gets hit and its decay-time.
-		AIM_FLINCH = 0.03,
+		AIM_FLINCH = 0.01,
 		AIM_FLINCH_TIME = 0.2,
-		-- Aiming paused longer than this → the bot has to acquire the target again.
-		AIM_ERROR_MAX_GAP = 0.5,
 		-- Share of the weapon spread the bots compensate. Bots can't aim down sights, this emulates it (0 = hip-fire spread).
 		AIM_SPREAD_COMPENSATION = 0.8,
 		-- Fitts' law for the first shot: extra delay per doubling of the angle to the target. The angle is measured in

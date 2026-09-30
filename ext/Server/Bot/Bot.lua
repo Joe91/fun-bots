@@ -246,7 +246,6 @@ function Bot:__init(p_Player)
 	self._ShootPlayerId = -1
 	self._DistanceToPlayer = 0.0
 	-- Aim error (see BotAimError).
-	self._AimErrorTime = 0.0
 	self._AimAcquire = true
 	self._AimDriftYaw = 0.0
 	self._AimDriftPitch = 0.0

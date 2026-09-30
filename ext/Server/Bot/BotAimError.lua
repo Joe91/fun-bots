@@ -5,6 +5,7 @@
 --   acquisition: offset after acquiring a new target (under- or overshoot of the flick), decays over time
 --   flinch:      short kick of the aim after the bot got hit
 -- Besides that, the bot perceives the movement of its target with a delay (see Bot:UpdateSeenVelocity).
+-- All parts scale with the configured aim error (see Bot:GetAimErrorScale): an aim error of 0 is a perfect aim.
 
 ---@type Utilities
 local m_Utilities = require('__shared/Utilities')
@@ -42,19 +43,12 @@ function Bot:GetAimSkillFactor()
 	return math.max(1.0 + Config.BotAimErrorSpread * (2.0 * self.m_Inaccuracy - 1.0), 0.0)
 end
 
----Time since the last aiming-update. A longer pause means the bot has to acquire its target again.
+---Scale of the situational parts of the error (flick, flinch, tracking) for a configured aim error in mrad.
+---1 at the reference aim error, 0 for a perfect aim.
+---@param p_AimError number
 ---@return number
-function Bot:GetAimDeltaTime()
-	local s_Now = SharedUtils:GetTime()
-	local s_DeltaTime = s_Now - self._AimErrorTime
-	self._AimErrorTime = s_Now
-
-	if s_DeltaTime < 0.0 or s_DeltaTime > Registry.BOT.AIM_ERROR_MAX_GAP then
-		self._AimAcquire = true
-		return 0.0
-	end
-
-	return s_DeltaTime
+function Bot:GetAimErrorScale(p_AimError)
+	return p_AimError / Registry.BOT.AIM_ERROR_REFERENCE
 end
 
 ---Movement of the target, as the bot perceives it. It follows the real movement with a delay, so the bot notices
@@ -84,12 +78,13 @@ end
 
 ---@param p_DeltaTime number
 ---@param p_Sigma number standard deviation of the drift (already scaled with skill and situation)
+---@param p_Scale number see Bot:GetAimErrorScale
 ---@param p_Yaw number yaw the bot needs to hit, to measure the flick on a new target
 ---@param p_Pitch number
 ---@param p_UseFlick boolean false: the current aim is no measure for the flick (vehicles)
 ---@return number yawError
 ---@return number pitchError
-function Bot:UpdateAimError(p_DeltaTime, p_Sigma, p_Yaw, p_Pitch, p_UseFlick)
+function Bot:UpdateAimError(p_DeltaTime, p_Sigma, p_Scale, p_Yaw, p_Pitch, p_UseFlick)
 	local s_Registry = Registry.BOT
 	local s_SkillFactor = self:GetAimSkillFactor()
 
@@ -105,7 +100,7 @@ function Bot:UpdateAimError(p_DeltaTime, p_Sigma, p_Yaw, p_Pitch, p_UseFlick)
 
 		if p_UseFlick then
 			local s_Input = self.m_Input
-			local s_Factor = s_Registry.AIM_ACQUISITION_ERROR * s_SkillFactor * MathUtils:GetRandom(0.5, 1.5)
+			local s_Factor = s_Registry.AIM_ACQUISITION_ERROR * p_Scale * s_SkillFactor * MathUtils:GetRandom(0.5, 1.5)
 
 			if math.random() * 100 < s_Registry.AIM_PROBABILITY_OVERSHOOT then
 				s_Factor = -s_Factor
@@ -131,23 +126,26 @@ function Bot:UpdateAimError(p_DeltaTime, p_Sigma, p_Yaw, p_Pitch, p_UseFlick)
 		local s_AcquireDecay = math.exp(-p_DeltaTime / (s_Registry.AIM_ACQUISITION_TIME * (0.5 + 0.5 * s_SkillFactor)))
 		self._AimAcquireYaw = self._AimAcquireYaw * s_AcquireDecay
 		self._AimAcquirePitch = self._AimAcquirePitch * s_AcquireDecay
+	end
 
+	-- The flinch is set on every hit, so it decays here independent of the attack.
+	if p_DeltaTime > 0.0 then
 		local s_FlinchDecay = math.exp(-p_DeltaTime / s_Registry.AIM_FLINCH_TIME)
 		self._AimFlinchYaw = self._AimFlinchYaw * s_FlinchDecay
 		self._AimFlinchPitch = self._AimFlinchPitch * s_FlinchDecay
 	end
 
-	local s_YawError = self._AimDriftYaw * p_Sigma + self._AimAcquireYaw + self._AimFlinchYaw
+	local s_YawError = self._AimDriftYaw * p_Sigma + self._AimAcquireYaw + self._AimFlinchYaw * p_Scale
 	local s_PitchError = self._AimDriftPitch * p_Sigma * s_Registry.AIM_ERROR_PITCH_FACTOR + self._AimAcquirePitch +
-		self._AimFlinchPitch
+		self._AimFlinchPitch * p_Scale
 
 	return s_YawError, s_PitchError
 end
 
----The bot got hit: kick its aim, mostly upwards.
+---The bot got hit: kick its aim, mostly upwards. Several hits add up to a limit.
 function Bot:AddAimFlinch()
 	local s_Flinch = Registry.BOT.AIM_FLINCH
-	local s_Max = s_Flinch * 3.0
+	local s_Max = s_Flinch * 2.0
 	self._AimFlinchYaw = _Clamp(self._AimFlinchYaw + MathUtils:GetRandom(-1.0, 1.0) * s_Flinch, s_Max)
 	self._AimFlinchPitch = _Clamp(self._AimFlinchPitch + MathUtils:GetRandom(0.3, 1.0) * s_Flinch, s_Max)
 end

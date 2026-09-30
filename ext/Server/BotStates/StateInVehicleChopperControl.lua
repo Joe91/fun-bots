@@ -54,7 +54,7 @@ function StateInVehicleChopperControl:UpdateFast(p_Bot, p_DeltaTime)
 
 	local s_IsAttacking = p_Bot._ShootPlayer ~= nil
 	if s_IsAttacking then
-		m_VehicleAiming:UpdateAimingVehicle(p_Bot, true)
+		m_VehicleAiming:UpdateAimingVehicle(p_Bot, true, p_DeltaTime)
 	else
 		m_ChopperControl:UpdateTargetMovementChopper(p_Bot)
 	end

@@ -48,7 +48,8 @@ end
 
 ---@param p_Bot Bot
 ---@param p_AdvancedAlgorithm boolean
-function VehicleAiming:UpdateAimingVehicle(p_Bot, p_AdvancedAlgorithm)
+---@param p_DeltaTime number
+function VehicleAiming:UpdateAimingVehicle(p_Bot, p_AdvancedAlgorithm, p_DeltaTime)
 	-- Every access of an engine object (soldier, transform, trans, ...) and all Vec3 math allocate.
 	-- Read each object once and calculate with plain numbers.
 	local s_Player = p_Bot.m_Player
@@ -174,8 +175,10 @@ function VehicleAiming:UpdateAimingVehicle(p_Bot, p_AdvancedAlgorithm)
 	-- (jets) would dominate, and its movement is part of the flying.
 	local s_AngularSpeed = m_Utilities:GetAngularSpeed(s_DiffX, s_DiffY, s_DiffZ, p_Bot._DistanceToPlayer,
 		s_Velocity.x, s_Velocity.y, s_Velocity.z)
-	local s_Sigma = (s_AimError * 0.001 + s_AngularSpeed * Registry.BOT.AIM_TRACKING_ERROR) * p_Bot:GetAimSkillFactor()
-	local s_ErrorYaw, s_ErrorPitch = p_Bot:UpdateAimError(p_Bot:GetAimDeltaTime(), s_Sigma, s_Yaw, s_Pitch, false)
+	local s_ErrorScale = p_Bot:GetAimErrorScale(s_AimError)
+	local s_Sigma = (s_AimError * 0.001 + s_AngularSpeed * Registry.BOT.AIM_TRACKING_ERROR * s_ErrorScale) *
+		p_Bot:GetAimSkillFactor()
+	local s_ErrorYaw, s_ErrorPitch = p_Bot:UpdateAimError(p_DeltaTime, s_Sigma, s_ErrorScale, s_Yaw, s_Pitch, false)
 
 	-- Chopper main-guns are aimed with the whole chopper: point the nose so that the shot (AimOffset relative to the
 	-- nose) hits. Yaw decreases to the left, AimOffset-yaw > 0 is left → nose further right. Same for pitch.
