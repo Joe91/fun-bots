@@ -2,12 +2,13 @@
 
 import operator
 import os
+import re
 import sqlite3
+import time
 from io import TextIOWrapper
 from typing import Any, Callable, Dict, List, Tuple
 
 import requests
-from deep_translator import GoogleTranslator
 from loguru import logger
 
 # GLOBALS
@@ -30,6 +31,18 @@ ALL_GAME_MODES = [
     "Tank Superiority",
     "Air Superiority",
 ]
+DEEPL_TARGET_LANGUAGES = {
+    "cn": "ZH-HANS",
+    "pt": "PT-PT",
+}
+DEEPL_BATCH_SIZE = 50
+DEEPL_MAX_RETRIES = 5
+DEEPL_CONTEXT = (
+    "Short UI labels, settings descriptions and chat messages of fun-bots, "
+    "a bot mod for the game Battlefield 3 (Venice Unleashed)."
+)
+LUA_LANGUAGE_ENTRY = re.compile(r'^Language:add\(code, "([^"]*)", "(.*)"\)\s*$')
+JS_LANGUAGE_ENTRY = re.compile(r'^\s*"([^"]*)"\s*:\s*"(.*)"\s*,?\s*$')
 GAME_MODE_TRANSLATIONS = {
     "TDM": "TeamDeathMatch0",
     "SDM": "SquadDeathMatch0",
@@ -451,34 +464,31 @@ def get_updated_lines_lua(in_file: TextIOWrapper) -> List[str]:
     out_file_lines = in_file.read().splitlines()
 
     LANG = out_file_lines[0].split("'")[1].split("_")[0]
-    if LANG == "cn":
-        LANG = "zh-CN"
 
-    translator = GoogleTranslator(source="en", target=LANG)
-
-    lines_to_remove = [
-        out_line for out_line in out_file_lines if "Language:add" in out_line
+    default_entries = [
+        match for line in lua_lines if (match := LUA_LANGUAGE_ENTRY.match(line))
     ]
-    lines_to_add = []
+    default_keys = {match.group(1) for match in default_entries}
+    existing_keys = {
+        match.group(1)
+        for line in out_file_lines
+        if (match := LUA_LANGUAGE_ENTRY.match(line))
+    }
+    missing_entries = [
+        match for match in default_entries if match.group(1) not in existing_keys
+    ]
+    translations = get_deepl_translations(
+        LANG, [match.group(1) for match in missing_entries]
+    )
 
-    for line in lua_lines:
-        if "Language:add" in line:
-            line_found = False
-            line_part = line.split('",')[0]
-            for out_line in out_file_lines:
-                if "Language:add" in out_line:
-                    line_part_2 = out_line.split('",')[0]
-                    if line_part == line_part_2:
-                        line_found = True
-                        if out_line in lines_to_remove:
-                            lines_to_remove.remove(out_line)
-                        break
-            if not line_found:
-                lines_to_add.append(get_translation(translator, line))
-    for remove_line in lines_to_remove:
-        out_file_lines.remove(remove_line)
-    for add_line in lines_to_add:
-        out_file_lines.append(add_line)
+    out_file_lines = [
+        line
+        for line in out_file_lines
+        if not (match := LUA_LANGUAGE_ENTRY.match(line))
+        or match.group(1) in default_keys
+    ]
+    for match, translation in zip(missing_entries, translations):
+        out_file_lines.append(get_line_with_translation(match, translation))
     return out_file_lines
 
 
@@ -499,34 +509,39 @@ def get_updated_lines_js(in_file: TextIOWrapper) -> List[str]:
     out_file_lines = in_file.read().splitlines()
 
     LANG = out_file_lines[0].split("'")[1].split("_")[0]
-    if LANG == "cn":
-        LANG = "zh-CN"
-    translator = GoogleTranslator(source="en", target=LANG)
 
-    lines_to_remove = [out_line for out_line in out_file_lines[6:] if ":" in out_line]
-    lines_to_add = []
+    # Entries start after the "__LANGUAGE_INFO" block, which ends with "},".
+    js_start = get_js_entries_start(js_lines)
+    out_start = get_js_entries_start(out_file_lines)
 
-    for line in js_lines[6:]:
-        if ":" in line:
-            line_found = False
-            line_part = line.split('": ')[0].replace(" ", "").replace("	", "")
-            for out_line in out_file_lines[6:]:
-                if ":" in line:
-                    line_part_2 = (
-                        out_line.split('": ')[0].replace(" ", "").replace("	", "")
-                    )
-                    if line_part == line_part_2:
-                        line_found = True
-                        if out_line in lines_to_remove:
-                            lines_to_remove.remove(out_line)
-                        break
-            if not line_found:
-                if line.startswith('\t"') and not line.split(":")[0].startswith('\t""'):
-                    lines_to_add.append(get_translation(translator, line))
-    for remove_line in lines_to_remove:
-        out_file_lines.remove(remove_line)
-    for add_line in lines_to_add:
-        out_file_lines.insert(-1, add_line)
+    default_entries = [
+        match
+        for line in js_lines[js_start:]
+        if (match := JS_LANGUAGE_ENTRY.match(line))
+    ]
+    default_keys = {match.group(1) for match in default_entries}
+    existing_keys = {
+        match.group(1)
+        for line in out_file_lines[out_start:]
+        if (match := JS_LANGUAGE_ENTRY.match(line))
+    }
+    missing_entries = [
+        match
+        for match in default_entries
+        if match.group(1) not in existing_keys and match.group(1) != ""
+    ]
+    translations = get_deepl_translations(
+        LANG, [match.group(1) for match in missing_entries]
+    )
+
+    out_file_lines = out_file_lines[:out_start] + [
+        line
+        for line in out_file_lines[out_start:]
+        if not (match := JS_LANGUAGE_ENTRY.match(line))
+        or match.group(1) in default_keys
+    ]
+    for match, translation in zip(missing_entries, translations):
+        out_file_lines.insert(-1, get_line_with_translation(match, translation))
 
     return out_file_lines
 
@@ -752,6 +767,116 @@ def get_links_and_vehicles_fixed(in_file: TextIOWrapper) -> List[str]:
 
 
 # Auxiliary functions.
+
+
+def get_deepl_translations(lang: str, texts: List[str]) -> List[str]:
+    """Translate english texts with the DeepL API in batches.
+
+    The API key is read from the DEEPL_API_KEY environment variable or,
+    if not set, from the gitignored .env file in the repository root.
+    Keys of the free plan end with ":fx" and use the free endpoint.
+
+    Args:
+        - lang - The language code of the file (like de, cn, pt)
+        - texts - The english texts to be translated
+
+    Returns:
+        - List[str] - The translated texts, in the same order
+    """
+    if not texts or lang == "en":
+        return texts
+
+    api_key = os.getenv("DEEPL_API_KEY") or get_env_file_value("DEEPL_API_KEY")
+    if not api_key:
+        raise RuntimeError(
+            "DEEPL_API_KEY is not set (environment or .env). "
+            "Get a free key at https://www.deepl.com/pro-api"
+        )
+
+    host = "api-free.deepl.com" if api_key.endswith(":fx") else "api.deepl.com"
+    target = DEEPL_TARGET_LANGUAGES.get(lang, lang.upper())
+    translations: List[str] = []
+
+    for index in range(0, len(texts), DEEPL_BATCH_SIZE):
+        batch = texts[index : index + DEEPL_BATCH_SIZE]
+        for attempt in range(DEEPL_MAX_RETRIES):
+            response = requests.post(
+                f"https://{host}/v2/translate",
+                headers={"Authorization": f"DeepL-Auth-Key {api_key}"},
+                json={
+                    "text": batch,
+                    "source_lang": "EN",
+                    "target_lang": target,
+                    "context": DEEPL_CONTEXT,
+                    "preserve_formatting": True,
+                },
+                timeout=30,
+            )
+            if response.status_code != 429 and response.status_code < 500:
+                break
+            logger.warning(
+                f"DeepL returned {response.status_code}, retrying ({attempt + 1})"
+            )
+            time.sleep(2**attempt)
+
+        if response.status_code == 403:
+            raise RuntimeError("DeepL rejected the API key (DEEPL_API_KEY)")
+        if response.status_code == 456:
+            raise RuntimeError("DeepL character quota for this month is exceeded")
+        response.raise_for_status()
+
+        translations += [t["text"] for t in response.json()["translations"]]
+
+    logger.info(f"Translated {len(texts)} texts to {target}")
+    return translations
+
+
+def get_env_file_value(name: str, env_file: str = ".env") -> str:
+    """Read a value from a KEY=value file.
+
+    Args:
+        - name - The key to look for
+        - env_file - The path of the file
+
+    Returns:
+        - str - The value, or an empty string if the file or key is missing
+    """
+    if not os.path.isfile(env_file):
+        return ""
+    with open(env_file, "r", encoding="utf8") as file:
+        for line in file.read().splitlines():
+            key, separator, value = line.partition("=")
+            if separator and key.strip() == name:
+                return value.strip().strip("\"'")
+    return ""
+
+
+def get_js_entries_start(lines: List[str]) -> int:
+    """Get the index of the first line after the "__LANGUAGE_INFO" block.
+
+    Args:
+        - lines - The lines of a JS language file
+
+    Returns:
+        - int - The index of the first translation entry
+    """
+    return next(index for index, line in enumerate(lines) if "}," in line) + 1
+
+
+def get_line_with_translation(match: re.Match, translation: str) -> str:
+    """Insert a translation into the value of a matched language entry line.
+
+    Args:
+        - match - The LUA_LANGUAGE_ENTRY or JS_LANGUAGE_ENTRY match of the line
+        - translation - The translated text
+
+    Returns:
+        - str - The line with the translation as value
+    """
+    line = match.string
+    # A plain " would end the string literal early.
+    translation = translation.replace('"', "'")
+    return line[: match.start(2)] + translation + line[match.end(2) :]
 
 
 def get_translation(translator: Any, line: str) -> str:
