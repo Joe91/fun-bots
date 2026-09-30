@@ -4,10 +4,11 @@ local m_Utilities = require('__shared/Utilities')
 local QUARTER_PI = math.pi / 4
 
 ---@param p_Soldier SoldierEntity
----@param p_Skill number
+---@param p_RecoilFactor number share of the recoil to compensate
+---@param p_SpreadFactor number share of the spread to compensate (a human can't know it, bots can't aim down sights)
 ---@return number compensationPitch
 ---@return number compensationYaw
-local function _CompensateRecoil(p_Soldier, p_Skill)
+local function _CompensateRecoil(p_Soldier, p_RecoilFactor, p_SpreadFactor)
 	local s_CurrentWeapon = p_Soldier.weaponsComponent.currentWeapon
 
 	if not s_CurrentWeapon then
@@ -30,17 +31,8 @@ local function _CompensateRecoil(p_Soldier, p_Skill)
 	local s_CurrentDispersionDeviation = s_GunSway.currentDispersionDeviation
 	-- currentLagDeviation is always zero, so it is not used.
 
-	local s_CurrentRecoilDeviationPitch = s_CurrentRecoilDeviation.pitch + s_CurrentDispersionDeviation.pitch
-	local s_CurrentRecoilDeviationYaw = s_CurrentRecoilDeviation.yaw + s_CurrentDispersionDeviation.yaw
-
-	-- Worsen compensation dependant on skill?
-	local s_SkillFactorRecoil = (1.0 - p_Skill) -- only use range from 0.5 to 1.0
-
-	if s_SkillFactorRecoil < 0 then
-		s_SkillFactorRecoil = 0.0
-	end
-
-	return s_CurrentRecoilDeviationPitch * s_SkillFactorRecoil, s_CurrentRecoilDeviationYaw * s_SkillFactorRecoil
+	return s_CurrentRecoilDeviation.pitch * p_RecoilFactor + s_CurrentDispersionDeviation.pitch * p_SpreadFactor,
+		s_CurrentRecoilDeviation.yaw * p_RecoilFactor + s_CurrentDispersionDeviation.yaw * p_SpreadFactor
 end
 
 -- Works on plain numbers: vector math and method calls on Vec3 allocate, this runs for every attacking bot.
@@ -130,7 +122,8 @@ local function _DefaultAimingAction(p_Bot, p_BotSoldier)
 		---@diagnostic disable-next-line: need-check-nil
 		s_Velocity = s_ShootPlayer.controlledControllable.velocity
 	end
-	local s_MoveX, s_MoveY, s_MoveZ = s_Velocity.x, s_Velocity.y, s_Velocity.z
+	local s_VelX, s_VelY, s_VelZ = s_Velocity.x, s_Velocity.y, s_Velocity.z
+	local s_MoveX, s_MoveY, s_MoveZ = s_VelX, s_VelY, s_VelZ
 
 	-- Calculate how long the distance is → time to travel.
 	local s_DiffX = s_TargetX - s_BotX
@@ -138,7 +131,20 @@ local function _DefaultAimingAction(p_Bot, p_BotSoldier)
 	local s_DiffZ = s_TargetZ - s_BotZ
 	p_Bot._DistanceToPlayer = math.sqrt(s_DiffX * s_DiffX + s_DiffY * s_DiffY + s_DiffZ * s_DiffZ)
 
+	-- Aim error only for normal weapons. Not for nades, rockets, missiles, ...
+	local s_UseAimError = s_ActiveWeaponType <= WeaponTypes.Sniper
+	local s_DeltaTime = p_Bot:GetAimDeltaTime()
+	local s_SkillFactor = p_Bot:GetAimSkillFactor()
+
 	if not p_Bot.m_KnifeMode then
+		-- Lead with the movement the bot perceives: it notices changes of the direction late, so the aim lags behind
+		-- a strafing target: aim = target + seenVelocity * timeToTravel + (seenVelocity - velocity) * lag.
+		local s_TrackingLag = 0.0
+		if s_UseAimError then
+			s_TrackingLag = Registry.BOT.AIM_TRACKING_LAG * (0.5 + 0.5 * s_SkillFactor)
+		end
+		local s_SeenVelX, s_SeenVelY, s_SeenVelZ = p_Bot:UpdateSeenVelocity(s_DeltaTime, s_TrackingLag, s_VelX, s_VelY, s_VelZ)
+
 		local s_Drop = 0.0
 		local s_Speed = 0.0
 		local s_TimeToTravel = 0.0
@@ -146,16 +152,16 @@ local function _DefaultAimingAction(p_Bot, p_BotSoldier)
 		s_Speed = p_Bot.m_ActiveWeapon.bulletSpeed
 
 		if s_ActiveWeaponType < WeaponTypes.Rocket then
-			s_TimeToTravel = _GetTimeToTravel(p_Bot, s_Speed, s_DiffX, s_DiffY, s_DiffZ, s_MoveX, s_MoveY, s_MoveZ)
+			s_TimeToTravel = _GetTimeToTravel(p_Bot, s_Speed, s_DiffX, s_DiffY, s_DiffZ, s_SeenVelX, s_SeenVelY, s_SeenVelZ)
 			s_PitchCorrection = 0.5 * s_TimeToTravel * s_TimeToTravel * s_Drop
 		elseif s_ActiveWeaponType == WeaponTypes.Rocket then -- No idea why, but works this way...
-			s_TimeToTravel = _GetTimeToTravel(p_Bot, s_Speed, s_DiffX, s_DiffY, s_DiffZ, s_MoveX, s_MoveY, s_MoveZ)
+			s_TimeToTravel = _GetTimeToTravel(p_Bot, s_Speed, s_DiffX, s_DiffY, s_DiffZ, s_SeenVelX, s_SeenVelY, s_SeenVelZ)
 			s_PitchCorrection = 0.25 * s_TimeToTravel * s_TimeToTravel * s_Drop
 		end
 
-		s_MoveX = s_MoveX * s_TimeToTravel
-		s_MoveY = s_MoveY * s_TimeToTravel
-		s_MoveZ = s_MoveZ * s_TimeToTravel
+		s_MoveX = s_SeenVelX * s_TimeToTravel + (s_SeenVelX - s_VelX) * s_TrackingLag
+		s_MoveY = s_SeenVelY * s_TimeToTravel + (s_SeenVelY - s_VelY) * s_TrackingLag
+		s_MoveZ = s_SeenVelZ * s_TimeToTravel + (s_SeenVelZ - s_VelZ) * s_TrackingLag
 	end
 
 	local s_DifferenceY = 0
@@ -198,35 +204,37 @@ local function _DefaultAimingAction(p_Bot, p_BotSoldier)
 		s_Pitch = math.atan(s_DifferenceY, s_Distance)
 	end
 
-	-- Worsen yaw and pitch depending on bot-skill. Don't use Skill for Nades, Rockets, Missiles, ...
-	if s_ActiveWeaponType <= WeaponTypes.Sniper then -- All normal weapons.
-		-- Skaling: Worsening of 1.0 should be up to 1 meter off of target without modifier.
-		local s_DistanceFactor = 1.0 / (p_Bot._DistanceToPlayer * Registry.BOT.WORSENING_FACTOR_DISTANCE)
-
-		-- Determine base worsening factor based on weapon type and class
-		local s_AimWorseningBase = Config.BotAimWorsening
-		local s_SkillCompensation = Config.BotWorseningSkill * p_Bot.m_Accuracy -- full range from 0.0 to Max-Skill for Recoul-Compensation
+	-- Humanlike aim error: an angle (not a distance), so hits get rarer on greater distances.
+	if s_UseAimError then
+		local s_Registry = Registry.BOT
+		local s_AimError = Config.BotAimError
 
 		if s_ActiveWeaponType == WeaponTypes.Sniper then
-			s_AimWorseningBase = Config.BotSniperAimWorsening
-			s_SkillCompensation = Config.BotSniperWorseningSkill * p_Bot.m_Accuracy -- full range from 0.0 to Max-Skill for Recoul-Compensation
+			s_AimError = Config.BotSniperAimError
 		elseif s_ActiveWeaponType == WeaponTypes.LMG then
-			s_AimWorseningBase = Config.BotSupportAimWorsening
+			s_AimError = Config.BotSupportAimError
 		end
 
-		-- Apply accuracy modifier (±50% based on bot accuracy)
-		local s_AimWorseningSkill = s_AimWorseningBase + s_AimWorseningBase * (p_Bot.m_Accuracy - 0.5)
+		-- Harder to aim while moving and at targets crossing the view fast.
+		local s_BotVelocity = p_BotSoldier.velocity
+		local s_BotVelX, s_BotVelY, s_BotVelZ = s_BotVelocity.x, s_BotVelocity.y, s_BotVelocity.z
+		local s_BotSpeed = math.sqrt(s_BotVelX * s_BotVelX + s_BotVelZ * s_BotVelZ)
+		local s_AngularSpeed = m_Utilities:GetAngularSpeed(s_DiffX, s_DiffY, s_DiffZ, p_Bot._DistanceToPlayer,
+			s_VelX - s_BotVelX, s_VelY - s_BotVelY, s_VelZ - s_BotVelZ)
 
-		local s_SkillFactor = s_AimWorseningSkill * s_DistanceFactor
-		local s_WorseningSkillX = (MathUtils:GetRandom(-1.0, 1.0) * s_SkillFactor)
-		local s_WorseningSkillY = (MathUtils:GetRandom(-1.0, 1.0) * s_SkillFactor)
+		local s_Sigma = (s_AimError * 0.001 * (1.0 + s_Registry.AIM_ERROR_SELF_SPEED * s_BotSpeed) +
+			s_AngularSpeed * s_Registry.AIM_TRACKING_ERROR) * s_SkillFactor
+		local s_ErrorYaw, s_ErrorPitch = p_Bot:UpdateAimError(s_DeltaTime, s_Sigma, s_Yaw, s_Pitch, true)
 
-		-- Compensate for recoil based on accuracy
-		local s_RecoilCompensationPitch, s_RecoilCompensationYaw = _CompensateRecoil(p_BotSoldier, s_SkillCompensation)
+		-- Better bots control the recoil better. The spread can't be known, only emulate aiming down sights.
+		local s_RecoilControl = Config.BotRecoilControlBest +
+			(Config.BotRecoilControlWorst - Config.BotRecoilControlBest) * p_Bot.m_Inaccuracy
+		local s_RecoilCompensationPitch, s_RecoilCompensationYaw = _CompensateRecoil(p_BotSoldier, s_RecoilControl,
+			s_Registry.AIM_SPREAD_COMPENSATION)
 
 		-- Recoil from gunSway is negative → add recoil to yaw.
-		s_Yaw = s_Yaw + s_WorseningSkillX + s_RecoilCompensationYaw
-		s_Pitch = s_Pitch + s_WorseningSkillY + s_RecoilCompensationPitch
+		s_Yaw = s_Yaw + s_ErrorYaw + s_RecoilCompensationYaw
+		s_Pitch = s_Pitch + s_ErrorPitch + s_RecoilCompensationPitch
 	end
 
 	p_Bot._TargetPitch = s_Pitch

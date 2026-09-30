@@ -1353,9 +1353,20 @@ function Bot:UpdateYaw()
 
 	local s_Increment = Globals.YawPerFrame
 
+	-- Pitch turns with the same max speed as yaw, humans don't snap vertically either.
+	local s_TargetPitch = self._TargetPitch
+	local s_DeltaPitch = s_TargetPitch - s_Input.authoritativeAimingPitch
+
+	if s_DeltaPitch > s_Increment then
+		s_TargetPitch = s_Input.authoritativeAimingPitch + s_Increment
+	elseif s_DeltaPitch < -s_Increment then
+		s_TargetPitch = s_Input.authoritativeAimingPitch - s_Increment
+	end
+
+	s_Input.authoritativeAimingPitch = s_TargetPitch
+
 	if math.abs(s_DeltaYaw) < s_Increment then
 		s_Input.authoritativeAimingYaw = s_TargetYaw
-		s_Input.authoritativeAimingPitch = self._TargetPitch
 		return
 	end
 
@@ -1372,7 +1383,6 @@ function Bot:UpdateYaw()
 	end
 
 	s_Input.authoritativeAimingYaw = s_TempYaw
-	s_Input.authoritativeAimingPitch = self._TargetPitch
 end
 
 function Bot:UpdateStaticMovement()

@@ -570,7 +570,7 @@ function VehicleMovement:UpdateYawVehicle(p_Bot, p_Attacking, p_IsStationaryLaun
 
 				-- Compute the deviation in the gun's local frame. Turret/gun inputs rotate around the (tilted) vehicle axes,
 				-- so comparing world yaw/pitch fails on slopes. Target direction is rebuilt from the world yaw/pitch
-				-- (inverse of atan(dz, dx) - pi/2 used in VehicleAiming), which keeps the aim-worsening.
+				-- (inverse of atan(dz, dx) - pi/2 used in VehicleAiming), which keeps the aim-error.
 				local s_CosPitch = math.cos(p_Bot._TargetPitch)
 				local s_GunTransform = s_GunQuatTransform:ToLinearTransform()
 				s_DeltaYaw, s_DeltaPitch = m_Utilities:GetDeviationFromTransform(s_GunTransform,

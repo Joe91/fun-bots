@@ -218,8 +218,34 @@ Registry = {
 		USE_ADVANCED_AIMING = false,
 		-- Use of path-Offset
 		USE_PATH_OFFSETS = true,
-		-- Worsening bots on larger distances. Factor 1.0 = no worsening, always same offset
-		WORSENING_FACTOR_DISTANCE = 0.95,
+		-- Humanlike aim error (see Bot/BotAimError.lua). The base error is set in the config in mrad. Angles in rad, times in s.
+		-- Time constant of the slow drift of the crosshair around the target.
+		AIM_ERROR_DRIFT_TIME = 0.3,
+		-- Vertical aim error relative to the horizontal one (humans miss more to the sides).
+		AIM_ERROR_PITCH_FACTOR = 0.7,
+		-- Additional aim error per m/s of own movement (0.15 → moving with 4 m/s = +60 %).
+		AIM_ERROR_SELF_SPEED = 0.15,
+		-- Aim error from tracking a moving target: angular speed of the target (rad/s) multiplied by this.
+		AIM_TRACKING_ERROR = 0.03,
+		-- Delay with which an average bot notices changes of the target movement (e.g. strafing). Scaled with skill.
+		AIM_TRACKING_LAG = 0.15,
+		-- Error after the flick to a new target, as share of the turned angle. Decays with AIM_ACQUISITION_TIME.
+		AIM_ACQUISITION_ERROR = 0.1,
+		AIM_ACQUISITION_TIME = 0.25,
+		AIM_ACQUISITION_MAX_ERROR = 0.25,
+		-- Probability that the flick overshoots instead of undershooting.
+		AIM_PROBABILITY_OVERSHOOT = 25,
+		-- Kick of the aim when the bot gets hit and its decay-time.
+		AIM_FLINCH = 0.03,
+		AIM_FLINCH_TIME = 0.2,
+		-- Aiming paused longer than this → the bot has to acquire the target again.
+		AIM_ERROR_MAX_GAP = 0.5,
+		-- Share of the weapon spread the bots compensate. Bots can't aim down sights, this emulates it (0 = hip-fire spread).
+		AIM_SPREAD_COMPENSATION = 0.8,
+		-- Fitts' law for the first shot: extra delay per doubling of the angle to the target. The angle is measured in
+		-- multiples of FIRST_SHOT_TARGET_ANGLE (180° → +0.24 s, 20° → +0.12 s).
+		FIRST_SHOT_DELAY_PER_BIT = 0.04,
+		FIRST_SHOT_TARGET_ANGLE = 0.05,
 		PROBABILITY_SWITCH_TO_BEACON_PATH = 80,
 		PROBABILITY_SWITCH_TO_EXPLORE_PATH = 60,
 		PROBABILITY_KEEP_KIT_IF_HAS_BEACON = 80,

@@ -258,6 +258,31 @@ function Utilities:NormalizeAngleRad(p_Angle)
 	return p_Angle
 end
 
+---Angular speed (rad/s) of a target moving across the view: velocity perpendicular to the line of sight / distance.
+---Works on plain numbers, Vec3 math allocates.
+---@param p_DiffX number target - viewer
+---@param p_DiffY number
+---@param p_DiffZ number
+---@param p_Distance number length of the difference
+---@param p_VelX number velocity of the target relative to the viewer
+---@param p_VelY number
+---@param p_VelZ number
+---@return number
+function Utilities:GetAngularSpeed(p_DiffX, p_DiffY, p_DiffZ, p_Distance, p_VelX, p_VelY, p_VelZ)
+	if p_Distance < 0.1 then
+		return 0.0
+	end
+
+	local s_Radial = (p_VelX * p_DiffX + p_VelY * p_DiffY + p_VelZ * p_DiffZ) / p_Distance
+	local s_PerpendicularSq = p_VelX * p_VelX + p_VelY * p_VelY + p_VelZ * p_VelZ - s_Radial * s_Radial
+
+	if s_PerpendicularSq <= 0.0 then
+		return 0.0
+	end
+
+	return math.sqrt(s_PerpendicularSq) / p_Distance
+end
+
 function Utilities:has(p_Object, p_Value)
 	for i = 1, #p_Object do
 		if p_Object[i] == p_Value then

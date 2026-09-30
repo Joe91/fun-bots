@@ -3,6 +3,7 @@
 Bot = class('Bot')
 
 require('Bot/BotAiming')
+require('Bot/BotAimError')
 require('Bot/BotAttacking')
 require('Bot/BotMovement')
 require('Bot/BotWeaponHandling')
@@ -55,9 +56,10 @@ function Bot:__init(p_Player)
 	-- create some character proporties
 	---@type BotBehavior
 	self.m_Behavior = nil
+	-- 0 = fastest, 1 = slowest reaction.
 	self.m_Reaction = 0.0
-	self.m_Accuracy = 0.0
-	self.m_Skill = 0.0
+	-- 0 = best, 1 = worst aim.
+	self.m_Inaccuracy = 0.0
 	self.m_PrefWeapon = ""
 	self.m_PrefVehicle = ""
 
@@ -243,6 +245,19 @@ function Bot:__init(p_Player)
 	self._ShootPlayerVehicleType = VehicleTypes.NoVehicle
 	self._ShootPlayerId = -1
 	self._DistanceToPlayer = 0.0
+	-- Aim error (see BotAimError).
+	self._AimErrorTime = 0.0
+	self._AimAcquire = true
+	self._AimDriftYaw = 0.0
+	self._AimDriftPitch = 0.0
+	self._AimAcquireYaw = 0.0
+	self._AimAcquirePitch = 0.0
+	self._AimFlinchYaw = 0.0
+	self._AimFlinchPitch = 0.0
+	-- Movement of the target as the bot perceives it.
+	self._AimVelX = 0.0
+	self._AimVelY = 0.0
+	self._AimVelZ = 0.0
 	-- Position of the target, when the bot saw it the last time.
 	---@type Vec3|nil
 	self._LastSeenPosition = nil

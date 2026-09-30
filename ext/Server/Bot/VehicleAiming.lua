@@ -155,27 +155,27 @@ function VehicleAiming:UpdateAimingVehicle(p_Bot, p_AdvancedAlgorithm)
 	local s_Distance = math.sqrt(s_DifferenceZ ^ 2 + s_DifferenceX ^ 2)
 	local s_Pitch = math.atan(s_DifferenceY, s_Distance)
 
-	local s_WorseningPitch = 0.0
-	local s_WorseningYaw = 0.0
-	local s_WorseningValue = 0.0
+	-- Humanlike aim error (see BotAimError): an angle, so hits get rarer on greater distances.
+	local s_AimError = 0.0
 
 	if not s_IsAirVehicle then
-		s_WorseningValue = Config.VehicleAimWorsening
+		s_AimError = Config.VehicleAimError
 	elseif m_Vehicles:IsAAVehicle(p_Bot.m_ActiveVehicle) then
-		s_WorseningValue = Config.VehicleAAAimWorsening
+		s_AimError = Config.VehicleAAAimError
 	elseif m_Vehicles:IsGunship(p_Bot.m_ActiveVehicle) then
-		s_WorseningValue = Config.VehicleGunshipAimWorsening
+		s_AimError = Config.VehicleGunshipAimError
 	elseif m_Vehicles:IsChopper(p_Bot.m_ActiveVehicle) then
-		s_WorseningValue = Config.VehicleChopperAimWorsening
+		s_AimError = Config.VehicleChopperAimError
 	else
-		s_WorseningValue = Config.VehiclePlaneAimWorsening
+		s_AimError = Config.VehiclePlaneAimError
 	end
-	if s_WorseningValue > 0.0 then
-		local s_SkillDistanceFactor = 1 / (p_Bot._DistanceToPlayer * Registry.BOT.WORSENING_FACTOR_DISTANCE)
-		s_WorseningValue = s_WorseningValue * s_SkillDistanceFactor
-		s_WorseningPitch = (MathUtils:GetRandom(-1.0, 1.0) * s_WorseningValue)
-		s_WorseningYaw = (MathUtils:GetRandom(-1.0, 1.0) * s_WorseningValue)
-	end
+
+	-- Targets crossing the view fast are harder to track. Only the own movement of the target: the own vehicle
+	-- (jets) would dominate, and its movement is part of the flying.
+	local s_AngularSpeed = m_Utilities:GetAngularSpeed(s_DiffX, s_DiffY, s_DiffZ, p_Bot._DistanceToPlayer,
+		s_Velocity.x, s_Velocity.y, s_Velocity.z)
+	local s_Sigma = (s_AimError * 0.001 + s_AngularSpeed * Registry.BOT.AIM_TRACKING_ERROR) * p_Bot:GetAimSkillFactor()
+	local s_ErrorYaw, s_ErrorPitch = p_Bot:UpdateAimError(p_Bot:GetAimDeltaTime(), s_Sigma, s_Yaw, s_Pitch, false)
 
 	-- Chopper main-guns are aimed with the whole chopper: point the nose so that the shot (AimOffset relative to the
 	-- nose) hits. Yaw decreases to the left, AimOffset-yaw > 0 is left → nose further right. Same for pitch.
@@ -187,8 +187,8 @@ function VehicleAiming:UpdateAimingVehicle(p_Bot, p_AdvancedAlgorithm)
 		s_Pitch = s_Pitch + s_AimOffsetPitch
 	end
 
-	p_Bot._TargetPitch = s_Pitch + s_WorseningPitch
-	p_Bot._TargetYaw = s_Yaw + s_WorseningYaw
+	p_Bot._TargetPitch = s_Pitch + s_ErrorPitch
+	p_Bot._TargetYaw = s_Yaw + s_ErrorYaw
 
 	-- Abort attacking in chopper or jet if too steep or too low.
 	if s_IsAirVehicle and s_EntryId == 0 then

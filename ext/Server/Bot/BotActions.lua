@@ -181,25 +181,22 @@ function Bot:ShootAt(p_Player, p_IgnoreYaw)
 		p_IgnoreYaw = true
 	end
 
-	local s_RelativePitch = 0
-	local s_RelativeYaw = 0
+	-- Determine the target's position relative to the bot. Also needed without FOV-check, for the first-shot-delay.
+	local s_Vector = s_TargetPos - s_PlayerPos
+
+	-- Compute the pitch and yaw between the bot and its target. These
+	-- angles are relative to the absolute coordinate system; pitch is
+	-- measured from the x-z plane while yaw is measured from the z axis.
+	local s_TargetPitch = math.atan(s_Vector.y, math.sqrt(s_Vector.x ^ 2 + s_Vector.z ^ 2))
+	local s_TargetYaw = -math.atan(s_Vector.x, s_Vector.z)
+
+	-- Transform the pitch and yaw to be relative to the bot's current
+	-- heading.
+	local s_RelativePitch = m_Utilities:NormalizeAngleRad(s_TargetPitch - self.m_Input.authoritativeAimingPitch)
+	local s_RelativeYaw = m_Utilities:NormalizeAngleRad(s_TargetYaw - self.m_Input.authoritativeAimingYaw)
 	local s_HalfHfov = 0
 	local s_HalfVfov = 0
 	if not p_IgnoreYaw then
-		-- Determine the target's position relative to the bot.
-		local s_Vector = s_TargetPos - s_PlayerPos
-
-		-- Compute the pitch and yaw between the bot and its target. These
-		-- angles are relative to the absolute coordinate system; pitch is
-		-- measured from the x-z plane while yaw is measured from the z axis.
-		local s_Pitch = math.atan(s_Vector.y, math.sqrt(s_Vector.x ^ 2 + s_Vector.z ^ 2))
-		local s_Yaw = -math.atan(s_Vector.x, s_Vector.z)
-
-		-- Transform the pitch and yaw to be relative to the bot's current
-		-- heading.
-		s_RelativePitch = m_Utilities:NormalizeAngleRad(s_Pitch - self.m_Input.authoritativeAimingPitch)
-		s_RelativeYaw = m_Utilities:NormalizeAngleRad(s_Yaw - self.m_Input.authoritativeAimingYaw)
-
 		-- Halve configured horizontal & vertical FOVs and convert them to
 		-- radians.
 		if s_InVehicle then
@@ -234,8 +231,13 @@ function Bot:ShootAt(p_Player, p_IgnoreYaw)
 		if self._Shoot then
 			-- only reset ShotTimer, if not already attacking
 			if self._ShootModeTimer <= 0 then
-				self._ShotTimer = -self:GetFirstShotDelay(self._DistanceToPlayer, false)
+				self._ShotTimer = -self:GetFirstShotDelay(self._DistanceToPlayer, false,
+					math.sqrt(s_RelativeYaw * s_RelativeYaw + s_RelativePitch * s_RelativePitch))
 				self._GrenadeTried = false
+			end
+			if self._ShootModeTimer <= 0 or s_NewTarget then
+				-- The aim has to settle on the new target.
+				self._AimAcquire = true
 			end
 			self._LastSeenPosition = s_TargetPos
 			if s_InVehicle then

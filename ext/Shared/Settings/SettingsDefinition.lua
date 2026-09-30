@@ -75,63 +75,75 @@ SettingsDefinition = {
 
 		-- Difficulty.
 		{
-			Name = "BotAimWorsening",
-			Text = "Bot Aim Worsening",
+			Name = "BotAimError",
+			Text = "Bot Aim Error",
 			---@type Type|integer
 			Type = Type.Float,
-			Value = Config.BotAimWorsening,
-			Description = "Make bots aim worse: for difficulty: 0 = no offset (hard), 1 or even greater = more sway (easy)",
-			Reference = Range(0.00, 10.00, 0.05),
-			Default = 0.2,
+			Value = Config.BotAimError,
+			Description = "Aim error of an average bot in milliradians (1 = 1 cm off per 10 m distance): 0 = perfect aim (hard), 10 or more = easy",
+			Reference = Range(0.00, 50.00, 0.50),
+			Default = 6.0,
 			UpdateFlag = UpdateFlag.None,
 			Category = "DIFFICULTY"
 		},
 		{
-			Name = "BotSniperAimWorsening",
-			Text = "Bot Aim Worsening of Snipers",
+			Name = "BotSniperAimError",
+			Text = "Bot Aim Error of Snipers",
 			---@type Type|integer
 			Type = Type.Float,
-			Value = Config.BotSniperAimWorsening,
-			Description = "See botAimWorsening, only for Sniper-rifles",
-			Reference = Range(0.00, 10.00, 0.05),
-			Default = 0.1,
+			Value = Config.BotSniperAimError,
+			Description = "See BotAimError, only for Sniper-rifles",
+			Reference = Range(0.00, 50.00, 0.50),
+			Default = 3.0,
 			UpdateFlag = UpdateFlag.None,
 			Category = "DIFFICULTY"
 		},
 		{
-			Name = "BotSupportAimWorsening",
-			Text = "Bot Aim Worsening of Support",
+			Name = "BotSupportAimError",
+			Text = "Bot Aim Error of Support",
 			---@type Type|integer
 			Type = Type.Float,
-			Value = Config.BotSupportAimWorsening,
-			Description = "See botAimWorsening, only for LMGs",
-			Reference = Range(0.00, 10.00, 0.05),
-			Default = 0.3,
+			Value = Config.BotSupportAimError,
+			Description = "See BotAimError, only for LMGs",
+			Reference = Range(0.00, 50.00, 0.50),
+			Default = 8.0,
 			UpdateFlag = UpdateFlag.None,
 			Category = "DIFFICULTY"
 		},
 		{
-			Name = "BotWorseningSkill",
-			Text = "Bot Worsening Skill",
+			Name = "BotAimErrorSpread",
+			Text = "Bot Aim Error Spread",
 			---@type Type|integer
 			Type = Type.Float,
-			Value = Config.BotWorseningSkill,
-			Description = "Variation of the skill of a single bot. The higher, the worse the bots can get compared to the original settings",
+			Value = Config.BotAimErrorSpread,
+			Description = "Difference between single bots: the best bot has (1 - x), the worst (1 + x) times the aim error",
 			Reference = Range(0.00, 1.00, 0.05),
-			Default = 0.40,
-			UpdateFlag = UpdateFlag.Skill,
+			Default = 0.6,
+			UpdateFlag = UpdateFlag.None,
 			Category = "DIFFICULTY"
 		},
 		{
-			Name = "BotSniperWorseningSkill",
-			Text = "Bot Sniper Worsening Skill",
+			Name = "BotRecoilControlBest",
+			Text = "Recoil Control of best Bot",
 			---@type Type|integer
 			Type = Type.Float,
-			Value = Config.BotSniperWorseningSkill,
-			Description = "See BotWorseningSkill - only for BOTs using sniper bolt-action rifles",
+			Value = Config.BotRecoilControlBest,
+			Description = "Share of the weapon recoil the best bot compensates (0 = none, 1 = all)",
 			Reference = Range(0.00, 1.00, 0.05),
-			Default = 0.30,
-			UpdateFlag = UpdateFlag.Skill,
+			Default = 0.9,
+			UpdateFlag = UpdateFlag.None,
+			Category = "DIFFICULTY"
+		},
+		{
+			Name = "BotRecoilControlWorst",
+			Text = "Recoil Control of worst Bot",
+			---@type Type|integer
+			Type = Type.Float,
+			Value = Config.BotRecoilControlWorst,
+			Description = "Share of the weapon recoil the worst bot compensates (0 = none, 1 = all)",
+			Reference = Range(0.00, 1.00, 0.05),
+			Default = 0.5,
+			UpdateFlag = UpdateFlag.None,
 			Category = "DIFFICULTY"
 		},
 		{
@@ -140,9 +152,9 @@ SettingsDefinition = {
 			---@type Type|integer
 			Type = Type.Float,
 			Value = Config.ReactionTime,
-			Description = "Additional delay for bots, dependant of skill (might also be 0)",
+			Description = "Additional delay for the first shot in seconds, scaled by the reaction of each bot (0 to 1)",
 			Reference = Range(0.00, 2.00, 0.10),
-			Default = 0.2,
+			Default = 0.3,
 			UpdateFlag = UpdateFlag.None,
 			Category = "DIFFICULTY"
 		},
@@ -154,7 +166,7 @@ SettingsDefinition = {
 			Value = Config.DamageFactorAssault,
 			Description = "Original Damage from bots gets multiplied by this",
 			Reference = Range(0.00, 2.00, 0.10),
-			Default = 0.8,
+			Default = 1.0,
 			UpdateFlag = UpdateFlag.None,
 			Category = "DIFFICULTY"
 		},
@@ -166,7 +178,7 @@ SettingsDefinition = {
 			Value = Config.DamageFactorCarabine,
 			Description = "Original Damage from bots gets multiplied by this",
 			Reference = Range(0.00, 2.00, 0.10),
-			Default = 0.8,
+			Default = 1.0,
 			UpdateFlag = UpdateFlag.None,
 			Category = "DIFFICULTY"
 		},
@@ -178,7 +190,7 @@ SettingsDefinition = {
 			Value = Config.DamageFactorLMG,
 			Description = "Original Damage from bots gets multiplied by this",
 			Reference = Range(0.00, 2.00, 0.10),
-			Default = 0.8,
+			Default = 1.0,
 			UpdateFlag = UpdateFlag.None,
 			Category = "DIFFICULTY"
 		},
@@ -190,7 +202,7 @@ SettingsDefinition = {
 			Value = Config.DamageFactorPDW,
 			Description = "Original Damage from bots gets multiplied by this",
 			Reference = Range(0.00, 2.00, 0.10),
-			Default = 0.8,
+			Default = 1.0,
 			UpdateFlag = UpdateFlag.None,
 			Category = "DIFFICULTY"
 		},
@@ -202,7 +214,7 @@ SettingsDefinition = {
 			Value = Config.DamageFactorSniper,
 			Description = "Original Damage from bots gets multiplied by this",
 			Reference = Range(0.00, 2.00, 0.10),
-			Default = 0.8,
+			Default = 1.0,
 			UpdateFlag = UpdateFlag.None,
 			Category = "DIFFICULTY"
 		},
@@ -214,7 +226,7 @@ SettingsDefinition = {
 			Value = Config.DamageFactorShotgun,
 			Description = "Original Damage from bots gets multiplied by this",
 			Reference = Range(0.00, 2.00, 0.10),
-			Default = 0.8,
+			Default = 1.0,
 			UpdateFlag = UpdateFlag.None,
 			Category = "DIFFICULTY"
 		},
@@ -226,7 +238,7 @@ SettingsDefinition = {
 			Value = Config.DamageFactorPistol,
 			Description = "Original Damage from bots gets multiplied by this",
 			Reference = Range(0.00, 2.00, 0.10),
-			Default = 0.8,
+			Default = 1.0,
 			UpdateFlag = UpdateFlag.None,
 			Category = "DIFFICULTY"
 		},
@@ -243,62 +255,62 @@ SettingsDefinition = {
 			Category = "DIFFICULTY"
 		},
 		{
-			Name = "VehicleAimWorsening",
-			Text = "Vehicle Aim Worsening",
+			Name = "VehicleAimError",
+			Text = "Vehicle Aim Error",
 			---@type Type|integer
 			Type = Type.Float,
-			Value = Config.VehicleAimWorsening,
-			Description = "Make bots in vehicles aim worse: for difficulty: 0 = no offset (hard), 1 or even greater = more sway (easy)",
-			Reference = Range(0.00, 10.00, 0.05),
-			Default = 0.05,
+			Value = Config.VehicleAimError,
+			Description = "Aim error of bots in ground vehicles in milliradians (1 = 1 cm off per 10 m distance): 0 = perfect aim (hard)",
+			Reference = Range(0.00, 50.00, 0.50),
+			Default = 3.0,
 			UpdateFlag = UpdateFlag.None,
 			Category = "DIFFICULTY"
 		},
 		{
-			Name = "VehicleAAAimWorsening",
-			Text = "AA Aim Worsening",
+			Name = "VehicleAAAimError",
+			Text = "AA Aim Error",
 			---@type Type|integer
 			Type = Type.Float,
-			Value = Config.VehicleAAAimWorsening,
-			Description = "Make bots in AA aim worse: for difficulty: 0 = no offset (hard), 1 or even greater = more sway (easy)",
-			Reference = Range(0.00, 10.00, 0.05),
-			Default = 0.9,
+			Value = Config.VehicleAAAimError,
+			Description = "See VehicleAimError, only for AA",
+			Reference = Range(0.00, 50.00, 0.50),
+			Default = 4.0,
 			UpdateFlag = UpdateFlag.None,
 			Category = "DIFFICULTY"
 		},
 		{
-			Name = "VehicleGunshipAimWorsening",
-			Text = "Gunship Aim Worsening",
+			Name = "VehicleGunshipAimError",
+			Text = "Gunship Aim Error",
 			---@type Type|integer
 			Type = Type.Float,
-			Value = Config.VehicleGunshipAimWorsening,
-			Description = "Make bots in Gunships aim worse: for difficulty: 0 = no offset (hard), 1 or even greater = more sway (easy)",
-			Reference = Range(0.00, 10.00, 0.05),
-			Default = 0.8,
+			Value = Config.VehicleGunshipAimError,
+			Description = "See VehicleAimError, only for Gunships",
+			Reference = Range(0.00, 50.00, 0.50),
+			Default = 3.0,
 			UpdateFlag = UpdateFlag.None,
 			Category = "DIFFICULTY"
 		},
 		{
-			Name = "VehicleChopperAimWorsening",
-			Text = "Chopper Aim Worsening",
+			Name = "VehicleChopperAimError",
+			Text = "Chopper Aim Error",
 			---@type Type|integer
 			Type = Type.Float,
-			Value = Config.VehicleChopperAimWorsening,
-			Description = "Make bots in Choppers aim worse: for difficulty: 0 = no offset (hard), 1 or even greater = more sway (easy)",
-			Reference = Range(0.00, 10.00, 0.05),
-			Default = 0.5,
+			Value = Config.VehicleChopperAimError,
+			Description = "See VehicleAimError, only for Choppers",
+			Reference = Range(0.00, 50.00, 0.50),
+			Default = 4.0,
 			UpdateFlag = UpdateFlag.None,
 			Category = "DIFFICULTY"
 		},
 		{
-			Name = "VehiclePlaneAimWorsening",
-			Text = "Vehicle Plane Aim Worsening",
+			Name = "VehiclePlaneAimError",
+			Text = "Vehicle Plane Aim Error",
 			---@type Type|integer
 			Type = Type.Float,
-			Value = Config.VehiclePlaneAimWorsening,
-			Description = "See VehicleAimWorsening, only for Planes",
-			Reference = Range(0.00, 10.00, 0.05),
-			Default = 0.02,
+			Value = Config.VehiclePlaneAimError,
+			Description = "See VehicleAimError, only for Planes",
+			Reference = Range(0.00, 50.00, 0.50),
+			Default = 1.0,
 			UpdateFlag = UpdateFlag.None,
 			Category = "DIFFICULTY"
 		},
@@ -1561,9 +1573,9 @@ SettingsDefinition = {
 			---@type Type|integer
 			Type = Type.Float,
 			Value = Config.BotFirstShotDelay,
-			Description = "Delay for first shot. If too small, there will be great spread in first cycle because it is not compensated yet",
-			Reference = Range(0.00, 10.00, 0.10),
-			Default = 0.15,
+			Description = "Minimum delay for the first shot at a new target in seconds (human reaction time)",
+			Reference = Range(0.00, 10.00, 0.05),
+			Default = 0.2,
 			UpdateFlag = UpdateFlag.None,
 			Category = "EXPERT"
 		},

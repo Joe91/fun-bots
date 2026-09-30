@@ -550,8 +550,8 @@ function ChatCommands:Execute(p_Parts, p_Player)
 			return
 		end
 
-		Config.BotAimWorsening = tonumber(p_Parts[2]) or 0.5
-		-- Takes effect after a round restart (reloading the weapons right away causes lag).
+		-- Aim error in mrad (1 = 1 cm per 10 m distance).
+		Config.BotAimError = tonumber(p_Parts[2]) or 6.0
 	elseif p_Parts[1] == '!shootback' then
 		if _HasPermission(p_Player, 'ChatCommands.ShootBack') == false then
 			_SendMessage('You have no permissions for this action (ChatCommands.ShootBack).', p_Player)

@@ -450,6 +450,12 @@ function BotManager:OnSoldierDamage(p_HookCtx, p_Soldier, p_Info, p_GiverInfo)
 
 	-- This is a bot.
 	if m_Utilities:isBot(p_Soldier.player) then
+		-- Getting hit shakes the aim.
+		local s_HitBot = self:GetBotById(p_Soldier.player.id)
+		if s_HitBot then
+			s_HitBot:AddAimFlinch()
+		end
+
 		if p_GiverInfo and p_GiverInfo.giver then
 			-- Detect if we need to shoot back.
 			if Config.ShootBackIfHit then
