@@ -45,7 +45,7 @@ Registry = {
 		-- Major version.
 		VERSION_MAJ = 3,
 		-- Minor version.
-		VERSION_MIN = 1,
+		VERSION_MIN = 6,
 		-- Patch version.
 		VERSION_PATCH = 0,
 		-- Additional label for pre-releases and build metadata.
