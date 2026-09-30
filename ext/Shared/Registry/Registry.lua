@@ -184,10 +184,16 @@ Registry = {
 		PROBABILITY_TELEPORT_IF_STUCK = 80,
 		-- Chance that the bot will teleport when they are stuck in a vehicle.
 		PROBABILITY_TELEPORT_IF_STUCK_IN_VEHICLE = 20,
-		-- At the end of an attack cycle, chance of throwing a grenade.
+		-- Chance of throwing a grenade once the target is out of sight (rolled once per attack).
 		PROBABILITY_THROW_GRENADE = 50,
-		-- At the end of an attack cycle, chance of throwing a grenade, if behavior priorizes this.
+		-- Chance of throwing a grenade once the target is out of sight, if behavior priorizes this.
 		PROBABILITY_THROW_GRENADE_PRIO = 95,
+		-- Seconds without sight of the target before a bot throws a grenade at its last known position.
+		GRENADE_LOST_SIGHT_TIME = 1.2,
+		-- Throw-speed of a grenade in m/s, used to calculate the throw-pitch.
+		GRENADE_THROW_SPEED = 15.5,
+		-- Max time for switching to the grenade and throwing it, before the bot gives up.
+		GRENADE_THROW_TIMEOUT = 3.0,
 		-- The probability to use the rocket instead of the primary.
 		PROBABILITY_SHOOT_ROCKET = 20,
 		-- The probability to use the rocket, if behavior of bot priorizes this
@@ -206,7 +212,7 @@ Registry = {
 		TRACE_DELTA_SHOOTING = 0.4,
 		-- The max time a bot tries to move to the repair-vehicle.
 		MAX_TIME_TRY_REPAIR = 10,
-		-- The minimum distance to throw a nade
+		-- The minimum distance to throw a nade (horizontal, to the last known position of the target)
 		MIN_DISTANCE_NADE = 12,
 		-- Advanced aiming makes a difference on huge distances, but costs more performance.
 		USE_ADVANCED_AIMING = false,

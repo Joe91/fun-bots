@@ -136,6 +136,23 @@ function Bot:GetFirstShotDelay(p_DistanceToTarget, p_ReducedTiming)
 	return s_Delay
 end
 
+local GRAVITY = 9.81
+local MIN_GRENADE_DISTANCE = 3.0 -- Don't throw them too close.
+
+---High-arc throw-pitch to hit a point, so the grenade gets over cover.
+---@param p_Distance number horizontal distance to the target
+---@param p_Height number height of the target relative to the bot (feet to feet)
+---@return number|nil pitch nil if the target is out of reach
+function Bot:GetGrenadePitch(p_Distance, p_Height)
+	local s_Speed2 = Registry.BOT.GRENADE_THROW_SPEED * Registry.BOT.GRENADE_THROW_SPEED
+	local s_Distance = math.max(p_Distance, MIN_GRENADE_DISTANCE)
+	local s_Root = s_Speed2 * s_Speed2 - GRAVITY * (GRAVITY * s_Distance * s_Distance + 2.0 * p_Height * s_Speed2)
+	if s_Root < 0.0 then
+		return nil
+	end
+	return math.atan((s_Speed2 + math.sqrt(s_Root)) / (GRAVITY * s_Distance))
+end
+
 ---@param p_RelativeYaw number radians from bot center, normalized
 ---@param p_RelativePitch number radians from bot center, normalized
 ---@param p_HalfHfov number half horizontal FOV in radians

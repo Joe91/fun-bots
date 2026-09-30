@@ -235,7 +235,9 @@ function Bot:ShootAt(p_Player, p_IgnoreYaw)
 			-- only reset ShotTimer, if not already attacking
 			if self._ShootModeTimer <= 0 then
 				self._ShotTimer = -self:GetFirstShotDelay(self._DistanceToPlayer, false)
+				self._GrenadeTried = false
 			end
+			self._LastSeenPosition = s_TargetPos
 			if s_InVehicle then
 				self._ShootModeTimer = Config.BotVehicleFireModeDuration
 			else

@@ -243,6 +243,12 @@ function Bot:__init(p_Player)
 	self._ShootPlayerVehicleType = VehicleTypes.NoVehicle
 	self._ShootPlayerId = -1
 	self._DistanceToPlayer = 0.0
+	-- Position of the target, when the bot saw it the last time.
+	---@type Vec3|nil
+	self._LastSeenPosition = nil
+	-- Only one grenade-attempt per attack.
+	self._GrenadeTried = false
+	self._GrenadeTimer = 0.0
 	---@type BotWeapons
 	self._WeaponToUse = BotWeapons.Primary
 	-- To-do: add emmylua type.
