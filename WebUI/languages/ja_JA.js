@@ -64,4 +64,6 @@ Language['ja_JA'] /* Add/replace the xx_XX here with your language code (like
         "End Trace" : "終了トレース",
         "[Paths]" : "【パス】",
         "Refresh" : "リフレッシュ",
+        "Recording..." : "録音中...",
+        "Press ALT for Interaction with the Editor" : "ALTキーを押してエディタを操作してください",
       };

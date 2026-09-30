@@ -123,8 +123,9 @@ end
 
 ---@param p_DistanceToTarget number
 ---@param p_ReducedTiming boolean
+---@param p_AngleToTarget number|nil angle between the aim and the target in rad
 ---@return number
-function Bot:GetFirstShotDelay(p_DistanceToTarget, p_ReducedTiming)
+function Bot:GetFirstShotDelay(p_DistanceToTarget, p_ReducedTiming, p_AngleToTarget)
 	local s_Delay = (Config.BotFirstShotDelay + (Config.ReactionTime * MathUtils:GetRandom(0.8, 1.2) * self.m_Reaction))
 
 	if p_ReducedTiming then
@@ -133,7 +134,31 @@ function Bot:GetFirstShotDelay(p_DistanceToTarget, p_ReducedTiming)
 
 	-- Slower reaction on greater distances. 100 m = 0.5 extra seconda.
 	s_Delay = s_Delay + (p_DistanceToTarget * 0.005 * (1.0 + ((self.m_Reaction - 0.5) * 0.4))) -- +-20% depending on reaction-characteristic of bot
+
+	-- Fitts' law: aiming at a target far off the crosshair takes longer, growing with log2 of the angle.
+	if p_AngleToTarget and p_AngleToTarget > 0.0 then
+		s_Delay = s_Delay + Registry.BOT.FIRST_SHOT_DELAY_PER_BIT *
+			math.log(1.0 + p_AngleToTarget / Registry.BOT.FIRST_SHOT_TARGET_ANGLE, 2)
+	end
+
 	return s_Delay
+end
+
+local GRAVITY = 9.81
+local MIN_GRENADE_DISTANCE = 3.0 -- Don't throw them too close.
+
+---High-arc throw-pitch to hit a point, so the grenade gets over cover.
+---@param p_Distance number horizontal distance to the target
+---@param p_Height number height of the target relative to the bot (feet to feet)
+---@return number|nil pitch nil if the target is out of reach
+function Bot:GetGrenadePitch(p_Distance, p_Height)
+	local s_Speed2 = Registry.BOT.GRENADE_THROW_SPEED * Registry.BOT.GRENADE_THROW_SPEED
+	local s_Distance = math.max(p_Distance, MIN_GRENADE_DISTANCE)
+	local s_Root = s_Speed2 * s_Speed2 - GRAVITY * (GRAVITY * s_Distance * s_Distance + 2.0 * p_Height * s_Speed2)
+	if s_Root < 0.0 then
+		return nil
+	end
+	return math.atan((s_Speed2 + math.sqrt(s_Root)) / (GRAVITY * s_Distance))
 end
 
 ---@param p_RelativeYaw number radians from bot center, normalized

@@ -71,6 +71,15 @@ local m_AirTargets = require('AirTargets')
 local m_GameDirector = require('GameDirector')
 ---@type AimEvaluation
 local m_AimEvaluation = require('AimEvaluation')
+---@type ServerRaycasts
+local m_ServerRaycasts = require('ServerRaycasts')
+---@type DebugBridge
+local m_DebugBridge = require('Debug/DebugBridge')
+---@type DebugSnapshots
+local m_DebugSnapshots = require('Debug/DebugSnapshots')
+require('Debug/DebugCommands')
+-- Last: wraps functions of the modules above (only with Registry.DEBUG.ROUND_STATS_INTERVAL > 0).
+require('Debug/FunctionProfiler')
 ---@type PermissionManager
 PermissionManager = require('PermissionManager')
 
@@ -263,6 +272,7 @@ function FunBotServer:OnEngineUpdate(p_DeltaTime, p_SimulationDeltaTime)
 	m_BotSpawner:OnEngineUpdate(p_DeltaTime, p_SimulationDeltaTime)
 	m_NodeEditor:OnEngineUpdate(p_DeltaTime, p_SimulationDeltaTime)
 	m_AimEvaluation:OnEngineUpdate(p_DeltaTime)
+	m_DebugBridge:OnEngineUpdate(p_DeltaTime)
 
 	if Registry.DEBUG.ROUND_STATS_INTERVAL > 0 then
 		self:_UpdateRoundStats(p_DeltaTime)
@@ -280,6 +290,8 @@ function FunBotServer:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 		self._StatsBotUpdateCount = (self._StatsBotUpdateCount or 0) + 1
 		self._StatsBotUpdateTotalMs = (self._StatsBotUpdateTotalMs or 0) + s_ElapsedMs
 		self._StatsBotUpdateMaxMs = math.max(self._StatsBotUpdateMaxMs or 0, s_ElapsedMs)
+		-- Sum of the bot updates since the last frame-start, to see whether slow frames come from Lua.
+		self._StatsBotUpdateInFrameMs = (self._StatsBotUpdateInFrameMs or 0) + s_ElapsedMs
 		self._StatsDeltaMax = math.max(self._StatsDeltaMax or 0, p_DeltaTime)
 		return
 	end
@@ -306,7 +318,7 @@ function FunBotServer:_BenchmarkAllocations()
 	local s_Transform = s_Soldier.worldTransform
 	local s_Trans = s_Transform.trans
 	local s_Other = s_Trans:Clone()
-	local s_Runs = 1000
+	local s_Runs = 5000
 	-- Keeps results alive. Slot 1 is reused, so the sink itself does not allocate.
 	local s_Sink = { false } -- luacheck: ignore 241
 
@@ -323,6 +335,11 @@ function FunBotServer:_BenchmarkAllocations()
 		{ "player.teamId", function() s_Sink[1] = s_Player.teamId end },
 		{ "player.controlledControllable", function() s_Sink[1] = s_Player.controlledControllable end },
 		{ "{ a, b }", function() s_Sink[1] = { value = 1, reset = false } end },
+		{ "soldier.velocity", function() s_Sink[1] = s_Soldier.velocity end },
+		{ "soldier.pose", function() s_Sink[1] = s_Soldier.pose end },
+		{ "soldier.weaponsComponent.currentWeapon", function() s_Sink[1] = s_Soldier.weaponsComponent.currentWeapon end },
+		{ "SharedUtils:GetTimeNS()", function() s_Sink[1] = SharedUtils:GetTimeNS() end },
+		{ "collectgarbage('count')", function() s_Sink[1] = collectgarbage("count") end },
 	}
 
 	local s_WasRunning = collectgarbage("isrunning")
@@ -332,12 +349,64 @@ function FunBotServer:_BenchmarkAllocations()
 		local l_Test = s_Tests[l_Index]
 		local s_Func = l_Test[2]
 		local s_MemBefore = collectgarbage("count")
+		local s_TimeBefore = SharedUtils:GetTimeNS()
 		for _ = 1, s_Runs do
 			s_Func()
 		end
+		local s_Us = (SharedUtils:GetTimeNS() - s_TimeBefore) / 1000 / s_Runs
 		local s_Bytes = (collectgarbage("count") - s_MemBefore) * 1024 / s_Runs
-		s_Parts[#s_Parts + 1] = string.format("%s %.0f B", l_Test[1], s_Bytes)
+		s_Parts[#s_Parts + 1] = string.format("%s %.0f B %.2f us", l_Test[1], s_Bytes, s_Us)
 	end
+	-- Iterating entities is much more expensive: fewer runs.
+	local s_IterRuns = 50
+	local s_IterStart = SharedUtils:GetTimeNS()
+	local s_IterCount = 0
+	for _ = 1, s_IterRuns do
+		local s_Iterator = EntityManager:GetIterator('ServerVehicleEntity')
+		local s_Entity = s_Iterator:Next()
+		while s_Entity ~= nil do
+			s_IterCount = s_IterCount + 1
+			s_Sink[1] = VehicleEntityData(s_Entity.data).controllableType
+			s_Entity = s_Iterator:Next()
+		end
+	end
+	s_Parts[#s_Parts + 1] = string.format("iterate ServerVehicleEntity + data-cast (%d entities) %.1f us",
+		s_IterCount / s_IterRuns, (SharedUtils:GetTimeNS() - s_IterStart) / 1000 / s_IterRuns)
+
+	s_IterStart = SharedUtils:GetTimeNS()
+	local s_FirstVehicle = nil
+	for _ = 1, s_IterRuns do
+		local s_Iterator = EntityManager:GetIterator('ServerVehicleEntity')
+		local s_Entity = s_Iterator:Next()
+		s_FirstVehicle = s_FirstVehicle or s_Entity
+		while s_Entity ~= nil do
+			s_Entity = s_Iterator:Next()
+		end
+	end
+	s_Parts[#s_Parts + 1] = string.format("iterate ServerVehicleEntity only %.1f us",
+		(SharedUtils:GetTimeNS() - s_IterStart) / 1000 / s_IterRuns)
+
+	if s_FirstVehicle ~= nil then
+		local s_Data = s_FirstVehicle.data
+		local s_CastTests = {
+			{ "entity.data", function() s_Sink[1] = s_FirstVehicle.data end },
+			{ "VehicleEntityData(data)", function() s_Sink[1] = VehicleEntityData(s_Data) end },
+			{ "VehicleEntityData(data).controllableType", function() s_Sink[1] = VehicleEntityData(s_Data).controllableType end },
+			{ "controllableType:gsub", function() s_Sink[1] = ("Vehicles/XP1/Something/SomeVehicle"):gsub(".+/.+/", "") end },
+			{ "ControllableEntity(entity).transform", function() s_Sink[1] = ControllableEntity(s_FirstVehicle).transform end },
+			{ "PhysicsEntity(entity).velocity", function() s_Sink[1] = PhysicsEntity(s_FirstVehicle).velocity end },
+		}
+		for l_Index = 1, #s_CastTests do
+			local l_Test = s_CastTests[l_Index]
+			local s_Start = SharedUtils:GetTimeNS()
+			for _ = 1, s_IterRuns * 20 do
+				l_Test[2]()
+			end
+			s_Parts[#s_Parts + 1] = string.format("%s %.2f us", l_Test[1],
+				(SharedUtils:GetTimeNS() - s_Start) / 1000 / (s_IterRuns * 20))
+		end
+	end
+
 	if s_WasRunning then
 		collectgarbage("restart")
 	end
@@ -348,10 +417,28 @@ end
 ---Debug: periodically print values that could grow during a round (Registry.DEBUG.ROUND_STATS_INTERVAL).
 ---@param p_DeltaTime number
 function FunBotServer:_UpdateRoundStats(p_DeltaTime)
+	-- Real frames of the server: Engine:Update runs once per frame. p_DeltaTime is the fixed step, so the real
+	-- frame time comes from the clock (1 ms resolution).
+	local s_Now = SharedUtils:GetTimeNS()
+	if self._StatsLastFrameNs then
+		local s_FrameMs = (s_Now - self._StatsLastFrameNs) / 1000000
+		self._StatsFrameMax = math.max(self._StatsFrameMax or 0, s_FrameMs)
+		if s_FrameMs > 20.0 then
+			self._StatsSlowFrames = (self._StatsSlowFrames or 0) + 1
+			if (self._StatsBotUpdateInFrameMs or 0) > 5.0 then
+				self._StatsSlowFramesLua = (self._StatsSlowFramesLua or 0) + 1
+			end
+		end
+	end
+	self._StatsBotUpdateInFrameMs = 0
+	self._StatsLastFrameNs = s_Now
+	self._StatsFrames = (self._StatsFrames or 0) + 1
+	self._StatsWallStartNs = self._StatsWallStartNs or s_Now
 	self._StatsTimer = (self._StatsTimer or 0) + p_DeltaTime
 	if self._StatsTimer < Registry.DEBUG.ROUND_STATS_INTERVAL then
 		return
 	end
+	local s_StatsElapsed = self._StatsTimer
 	self._StatsTimer = 0
 
 	-- Lua memory change since the last print.
@@ -391,6 +478,15 @@ function FunBotServer:_UpdateRoundStats(p_DeltaTime)
 	end
 
 	local s_UpdateCount = math.max(self._StatsBotUpdateCount or 0, 1)
+	local s_WallSeconds = math.max((SharedUtils:GetTimeNS() - (self._StatsWallStartNs or 0)) / 1000000000, s_StatsElapsed)
+	print(string.format("[RoundStats] Server: %.1f fps, longest frame %.1f ms, frames > 20 ms: %d (bot update > 5 ms in %d of them), tickrate %d",
+		(self._StatsFrames or 0) / s_WallSeconds, self._StatsFrameMax or 0, self._StatsSlowFrames or 0,
+		self._StatsSlowFramesLua or 0, SharedUtils:GetTickrate()))
+	self._StatsSlowFramesLua = 0
+	self._StatsFrames = 0
+	self._StatsFrameMax = 0
+	self._StatsSlowFrames = 0
+	self._StatsWallStartNs = nil
 
 	print(string.format(
 		"[RoundStats] LuaMem: %.1f MB | BotUpdate avg %.3f ms max %.2f ms | maxDelta %.1f ms | Bots %d | SpawnSets %d | ToDestroy %d | BotBotList %d | ConnChecks %d | AirTargets %d | Beacons %d | VehSpawnable %d | VehAvailable %d | VehMobile %d | VehAA %d | EngineVehicles %d | Players %d",
@@ -427,19 +523,39 @@ function FunBotServer:_UpdateRoundStats(p_DeltaTime)
 	table.sort(s_Parts)
 	print("[RoundStats] Sections (ms): " .. table.concat(s_Parts, " | "))
 
-	-- The five bot calls with the highest single-call time.
+	-- Frames in this interval, to show the costs per frame. The timer has a resolution of 1 ms: only sums are exact.
+	local s_Frames = math.max(Registry.DEBUG.ROUND_STATS_INTERVAL * SharedUtils:GetTickrate(), 1)
+
+	-- The bot calls with the highest total time.
 	local s_Calls = {}
 	for l_Key, l_Entry in pairs(s_Profile.WorstBotCalls) do
 		s_Calls[#s_Calls + 1] = { Key = l_Key, Entry = l_Entry }
 	end
-	table.sort(s_Calls, function(a, b) return a.Entry.Max > b.Entry.Max end)
+	table.sort(s_Calls, function(a, b) return a.Entry.Total > b.Entry.Total end)
 	s_Parts = {}
-	for l_Index = 1, math.min(5, #s_Calls) do
+	for l_Index = 1, math.min(8, #s_Calls) do
 		local l_Call = s_Calls[l_Index]
-		s_Parts[#s_Parts + 1] = string.format("%s max %.1f (%s) sum %.0f n %d",
-			l_Call.Key, l_Call.Entry.Max, l_Call.Entry.Bot, l_Call.Entry.Total, l_Call.Entry.Count)
+		s_Parts[#s_Parts + 1] = string.format("%s %.2f ms/frame (max %.0f, n %d)",
+			l_Call.Key, l_Call.Entry.Total / s_Frames, l_Call.Entry.Max, l_Call.Entry.Count)
 	end
-	print("[RoundStats] Worst bot calls (ms): " .. table.concat(s_Parts, " | "))
+	print("[RoundStats] Bot calls by time: " .. table.concat(s_Parts, " | "))
+
+	-- Single functions (Debug/FunctionProfiler), inclusive: callers contain the time of the functions they call.
+	if s_Profile.Functions ~= nil then
+		local s_Functions = {}
+		for l_Key, l_Entry in pairs(s_Profile.Functions) do
+			s_Functions[#s_Functions + 1] = { Key = l_Key, Entry = l_Entry }
+		end
+		table.sort(s_Functions, function(a, b) return a.Entry.Total > b.Entry.Total end)
+		s_Parts = {}
+		for l_Index = 1, math.min(25, #s_Functions) do
+			local l_Function = s_Functions[l_Index]
+			s_Parts[#s_Parts + 1] = string.format("%s %.2f ms/frame %.0f/s %.2f KB/call", l_Function.Key,
+				l_Function.Entry.Total / s_Frames, l_Function.Entry.Count / Registry.DEBUG.ROUND_STATS_INTERVAL,
+				l_Function.Entry.AllocKb / math.max(l_Function.Entry.Count, 1))
+		end
+		print("[RoundStats] Functions: " .. table.concat(s_Parts, " | "))
+	end
 
 	-- The bot calls that allocate the most memory (exact only while no GC step runs inside).
 	table.sort(s_Calls, function(a, b) return a.Entry.AllocKb > b.Entry.AllocKb end)
@@ -531,6 +647,7 @@ function FunBotServer:OnLevelLoaded(p_LevelName, p_GameMode, p_Round, p_RoundsPe
 	m_AirTargets:OnLevelLoaded()
 	m_BotSpawner:OnLevelLoaded(Globals.Round)
 	m_NodeEditor:OnLevelLoaded(p_LevelName, p_GameMode, s_CustomGameMode)
+	m_DebugSnapshots:OnLevelLoaded(p_LevelName, p_GameMode)
 end
 
 function FunBotServer:OnFinishedLoading()
@@ -566,6 +683,8 @@ function FunBotServer:OnLevelDestroy()
 	m_AirTargets:OnLevelDestroy()
 	m_GameDirector:OnLevelDestroy()
 	m_AimEvaluation:OnLevelDestroy()
+	m_ServerRaycasts:OnLevelDestroy()
+	m_DebugBridge:OnLevelDestroy()
 	local s_OldMemory = math.floor(collectgarbage("count") / 1024)
 	collectgarbage('collect')
 	m_Logger:Write("*Collecting Garbage on Level Destroy: " ..
@@ -630,6 +749,7 @@ end
 function FunBotServer:OnPlayerKilled(p_Player, p_Inflictor, p_Position, p_Weapon, p_IsRoadKill, p_IsHeadShot, p_WasVictimInReviveState, p_Info)
 	m_NodeEditor:OnPlayerKilled(p_Player)
 	m_AirTargets:OnPlayerKilled(p_Player)
+	m_DebugSnapshots:OnPlayerKilled(p_Player, p_Inflictor, p_Position, p_Weapon, p_IsRoadKill, p_IsHeadShot)
 end
 
 ---VEXT Server Player:Chat Event
@@ -827,6 +947,7 @@ function FunBotServer:OnRequestClientSettings(p_Player)
 	m_Console:RegisterConsoleCommands(p_Player)
 	m_BotManager:RegisterActivePlayer(p_Player)
 	m_NodeEditor:RegisterActivePlayer(p_Player)
+	m_ServerRaycasts:SendStateToPlayer(p_Player)
 end
 
 function FunBotServer:OnRequestEnterVehicle(p_Player, p_BotName)

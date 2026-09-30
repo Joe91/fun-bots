@@ -11,25 +11,26 @@ Config = {
 	BotTeamNames = false,				-- If the bots shall have their names based on their team 
 
 	-- DIFFICULTY 
-	BotAimWorsening = 0.2,				-- Make bots aim worse: for difficulty: 0 = no offset (hard), 1 or even greater = more sway (easy) 
-	BotSniperAimWorsening = 0.1,		-- See botAimWorsening, only for Sniper-rifles 
-	BotSupportAimWorsening = 0.3,		-- See botAimWorsening, only for LMGs 
-	BotWorseningSkill = 0.40,			-- Variation of the skill of a single bot. The higher, the worse the bots can get compared to the original settings 
-	BotSniperWorseningSkill = 0.30,		-- See BotWorseningSkill - only for BOTs using sniper bolt-action rifles 
-	ReactionTime = 0.2,					-- Additional delay for bots, dependant of skill (might also be 0) 
-	DamageFactorAssault = 0.8,			-- Original Damage from bots gets multiplied by this 
-	DamageFactorCarabine = 0.8,			-- Original Damage from bots gets multiplied by this 
-	DamageFactorLMG = 0.8,				-- Original Damage from bots gets multiplied by this 
-	DamageFactorPDW = 0.8,				-- Original Damage from bots gets multiplied by this 
-	DamageFactorSniper = 0.8,			-- Original Damage from bots gets multiplied by this 
-	DamageFactorShotgun = 0.8,			-- Original Damage from bots gets multiplied by this 
-	DamageFactorPistol = 0.8,			-- Original Damage from bots gets multiplied by this 
+	BotAimError = 6.0,					-- Aim error of an average bot at 25 m in milliradians (1 = 1 cm off per 10 m distance), smaller angle on greater distances: 0 = perfect aim (hard), 10 or more = easy 
+	BotSniperAimError = 3.0,			-- See BotAimError, only for Sniper-rifles 
+	BotSupportAimError = 8.0,			-- See BotAimError, only for LMGs 
+	BotAimErrorSpread = 0.6,			-- Difference between single bots: the best bot has (1 - x), the worst (1 + x) times the aim error 
+	BotRecoilControlBest = 0.9,			-- Share of the weapon recoil the best bot compensates (0 = none, 1 = all) 
+	BotRecoilControlWorst = 0.5,		-- Share of the weapon recoil the worst bot compensates (0 = none, 1 = all) 
+	ReactionTime = 0.3,					-- Additional delay for the first shot in seconds, scaled by the reaction of each bot (0 to 1) 
+	DamageFactorAssault = 1.0,			-- Original Damage from bots gets multiplied by this 
+	DamageFactorCarabine = 1.0,			-- Original Damage from bots gets multiplied by this 
+	DamageFactorLMG = 1.0,				-- Original Damage from bots gets multiplied by this 
+	DamageFactorPDW = 1.0,				-- Original Damage from bots gets multiplied by this 
+	DamageFactorSniper = 1.0,			-- Original Damage from bots gets multiplied by this 
+	DamageFactorShotgun = 1.0,			-- Original Damage from bots gets multiplied by this 
+	DamageFactorPistol = 1.0,			-- Original Damage from bots gets multiplied by this 
 	DamageFactorKnife = 1.5,			-- Original Damage from bots gets multiplied by this 
-	VehicleAimWorsening = 0.05,			-- Make bots in vehicles aim worse: for difficulty: 0 = no offset (hard), 1 or even greater = more sway (easy) 
-	VehicleAAAimWorsening = 0.9,		-- Make bots in AA aim worse: for difficulty: 0 = no offset (hard), 1 or even greater = more sway (easy) 
-	VehicleGunshipAimWorsening = 0.8,	-- Make bots in Gunships aim worse: for difficulty: 0 = no offset (hard), 1 or even greater = more sway (easy) 
-	VehicleChopperAimWorsening = 0.5,	-- Make bots in Choppers aim worse: for difficulty: 0 = no offset (hard), 1 or even greater = more sway (easy) 
-	VehiclePlaneAimWorsening = 0.02,	-- See VehicleAimWorsening, only for Planes 
+	VehicleAimError = 3.0,				-- Aim error of bots in ground vehicles in milliradians (1 = 1 cm off per 10 m distance): 0 = perfect aim (hard) 
+	VehicleAAAimError = 4.0,			-- See VehicleAimError, only for AA 
+	VehicleGunshipAimError = 3.0,		-- See VehicleAimError, only for Gunships 
+	VehicleChopperAimError = 4.0,		-- See VehicleAimError, only for Choppers 
+	VehiclePlaneAimError = 1.0,			-- See VehicleAimError, only for Planes 
 	DamageFactorVehicles = 1.0,			-- Original Damage from bots in vehicles gets multiplied by this 
 
 	-- SPAWN 
@@ -37,7 +38,7 @@ Config = {
 	BalancePlayersIgnoringBots = false,	-- Counts players in each team to decide which team a player joins 
 	TeamSwitchMode = TeamSwitchModes.SwitchForRoundTwo,	-- Mode to switch the team 
 	SpawnInBothTeams = true,			-- Bots spawn in both teams 
-	InitNumberOfBots = 10,				-- Bots for spawnmode 
+	InitNumberOfBots = 20,				-- Bots for spawnmode 
 	NewBotsPerNewPlayer = 1.6,			-- Number to increase Bots by when new players join 
 	FactorPlayerTeamCount = 1.0,		-- Reduce player team in balanced_teams or fixed_number mode 
 	BotTeam = 0,						-- Default bot team (0 = neutral / auto, 1 = US, 2 = RU) TeamId.Team2 
@@ -51,13 +52,13 @@ Config = {
 
 	-- SPAWNLIMITS 
 	MaxBotsPerTeamDefault = 32,			-- Max number of bots in one team, if no other mode fits 
-	MaxBotsPerTeamTdm = 32,				-- Max number of bots in one team for TDM 
-	MaxBotsPerTeamTdmc = 8,				-- Max number of bots in one team for TDM-CQ 
+	MaxBotsPerTeamTdm = 24,				-- Max number of bots in one team for TDM 
+	MaxBotsPerTeamTdmc = 12,			-- Max number of bots in one team for TDM-CQ 
 	MaxBotsPerTeamSdm = 5,				-- Max number of bots in one team for Squad-DM 
 	MaxBotsPerTeamCl = 32,				-- Max number of bots in one team for CQ-Large 
-	MaxBotsPerTeamCs = 16,				-- Max number of bots in one team for CQ-Small 
+	MaxBotsPerTeamCs = 20,				-- Max number of bots in one team for CQ-Small 
 	MaxBotsPerTeamCal = 32,				-- Max number of bots in one team for CQ-Assault-Large 
-	MaxBotsPerTeamCas = 16,				-- Max number of bots in one team for CQ-Assault-Small 
+	MaxBotsPerTeamCas = 20,				-- Max number of bots in one team for CQ-Assault-Small 
 	MaxBotsPerTeamRl = 24,				-- Max number of bots in one team for Rush 
 	MaxBotsPerTeamCtf = 24,				-- Max number of bots in one team for CTF 
 	MaxBotsPerTeamD = 12,				-- Max number of bots in one team for Domination 
@@ -152,7 +153,7 @@ Config = {
 	DefendObjectives = true,			-- Bots will stay on captured objectives and defend them 
 
 	-- EXPERT 
-	BotFirstShotDelay = 0.15,			-- Delay for first shot. If too small, there will be great spread in first cycle because it is not compensated yet 
+	BotFirstShotDelay = 0.2,			-- Minimum delay for the first shot at a new target in seconds (human reaction time) 
 	BotMinTimeShootAtPlayer = 0.7,		-- The minimum time a bot shoots at one player 
 	BotVehicleMinTimeShootAtPlayer = 4.0,	-- The minimum time a bot shoots at one player if in vehicle - recommended minimum 2.5, below this you will have issues 
 	BotFireModeDuration = 4.5,			-- The minimum time a bot tries to shoot a player - recommended minimum 3.0, below this you will have issues 

@@ -13,8 +13,38 @@ local m_PathSwitcher = require('PathSwitcher')
 ---@type NodeCollection
 local m_NodeCollection = require('NodeCollection')
 
+-- Obstacle detection of ground vehicles.
+local VEHICLE_OBSTACLE_STANDSTILL_SPEED = 0.8     -- Horizontal m/s below which the vehicle counts as standing.
+local VEHICLE_OBSTACLE_STANDSTILL_TIME = 1.5      -- Seconds of standstill before the obstacle-sequence starts.
+local VEHICLE_OBSTACLE_RESOLVED_PROGRESS = 3.0    -- Meters closer to the target than at the start of the sequence.
+
 function VehicleMovement:__init()
 	-- Nothing to do.
+end
+
+---Detects a standing ground vehicle. A short standstill (starting, turning on the spot) is no obstacle.
+---@param p_Bot Bot
+---@param p_Vehicle ControllableEntity
+---@param p_Distance number distance to the target point
+---@param p_DeltaTime number
+---@return boolean true if the obstacle-sequence has to start
+function VehicleMovement:_DetectObstacle(p_Bot, p_Vehicle, p_Distance, p_DeltaTime)
+	local s_Velocity = PhysicsEntity(p_Vehicle).velocity
+	local s_Speed = math.sqrt(s_Velocity.x * s_Velocity.x + s_Velocity.z * s_Velocity.z)
+
+	if s_Speed < VEHICLE_OBSTACLE_STANDSTILL_SPEED then
+		p_Bot._LowSpeedTimer = p_Bot._LowSpeedTimer + p_DeltaTime
+	else
+		p_Bot._LowSpeedTimer = 0.0
+	end
+
+	if p_Bot._LowSpeedTimer >= VEHICLE_OBSTACLE_STANDSTILL_TIME then
+		p_Bot._LowSpeedTimer = 0.0
+		p_Bot._ObstacleStartDistance = p_Distance
+		return true
+	end
+
+	return false
 end
 
 ---@param p_DeltaTime number
@@ -37,7 +67,10 @@ function VehicleMovement:UpdateNormalMovementVehicle(p_DeltaTime, p_Bot)
 	-- Move along points.
 	if m_NodeCollection:Get(1, p_Bot._PathIndex) ~= nil then -- Check for valid point.
 		-- Get next point.
-		local s_ActivePointIndex = p_Bot:_GetWayIndex(0)
+		-- Apply the turnaround at the end of reversing paths, otherwise the vehicle circles around the last node.
+		local s_ActivePointIndex, s_InvertPathDirection = p_Bot:_GetWayIndex(0)
+		p_Bot._CurrentWayPoint = s_ActivePointIndex
+		p_Bot._InvertPathDirection = s_InvertPathDirection
 
 		local s_Point = nil
 		local s_NextPoint = nil
@@ -112,13 +145,16 @@ function VehicleMovement:UpdateNormalMovementVehicle(p_DeltaTime, p_Bot)
 			p_Bot.m_ActiveSpeedValue = s_Point.SpeedMode -- Speed.
 
 			-- To-do: use vehicle transform also for trace?
-			local s_DifferenceY = s_Point.Position.z - p_Bot.m_Player.controlledControllable.transform.trans.z
-			local s_DifferenceX = s_Point.Position.x - p_Bot.m_Player.controlledControllable.transform.trans.x
+			local s_Vehicle = p_Bot.m_Player.controlledControllable
+			local s_VehiclePos = s_Vehicle.transform.trans
+			local s_DifferenceY = s_Point.Position.z - s_VehiclePos.z
+			local s_DifferenceX = s_Point.Position.x - s_VehiclePos.x
 			local s_DistanceFromTarget = math.sqrt(s_DifferenceX ^ 2 + s_DifferenceY ^ 2)
-			local s_HeightDistance = math.abs(s_Point.Position.y - p_Bot.m_Player.controlledControllable.transform.trans.y)
+			local s_HeightDistance = math.abs(s_Point.Position.y - s_VehiclePos.y)
+			local s_StuckSkip = false
 
 			-- Detect obstacle and move over or around.
-			local s_CurrentWayPointDistance = p_Bot.m_Player.controlledControllable.transform.trans:Distance(s_Point.Position)
+			local s_CurrentWayPointDistance = s_VehiclePos:Distance(s_Point.Position)
 
 			if s_CurrentWayPointDistance > p_Bot._LastWayDistance + 0.02 and p_Bot._ObstacleSequenceTimer == 0 then
 				-- Skip one point.
@@ -129,14 +165,22 @@ function VehicleMovement:UpdateNormalMovementVehicle(p_DeltaTime, p_Bot)
 			p_Bot._TargetPoint = s_Point
 			p_Bot._NextTargetPoint = s_NextPoint
 
-			if math.abs(s_CurrentWayPointDistance - p_Bot._LastWayDistance) < 0.02 or p_Bot._ObstacleSequenceTimer ~= 0 then
-				if m_Vehicles:IsAirVehicle(p_Bot.m_ActiveVehicle) then
+			if m_Vehicles:IsAirVehicle(p_Bot.m_ActiveVehicle) then
+				if math.abs(s_CurrentWayPointDistance - p_Bot._LastWayDistance) < 0.02 or p_Bot._ObstacleSequenceTimer ~= 0 then
 					p_Bot._ObstacleRetryCounter = 0
 					p_Bot._ObstacleSequenceTimer = 0
 					s_DistanceFromTarget = 0
 					s_HeightDistance = 0
 
 					s_PointIncrement = 1
+				end
+			elseif p_Bot._ObstacleSequenceTimer ~= 0 or self:_DetectObstacle(p_Bot, s_Vehicle, s_CurrentWayPointDistance, p_DeltaTime) then
+				if p_Bot._ObstacleRetryCounter % 2 == 0 and
+					s_CurrentWayPointDistance < p_Bot._ObstacleStartDistance - VEHICLE_OBSTACLE_RESOLVED_PROGRESS then
+					-- Got along again (checked while driving forward, reversing increases the distance).
+					-- The retry-counter is kept, so a vehicle that gets stuck at the same spot again still escalates.
+					p_Bot._ObstacleSequenceTimer = 0
+					p_Bot._LowSpeedTimer = 0.0
 				else
 					-- Try to get around obstacle.
 					if p_Bot._ObstacleRetryCounter % 2 == 0 then
@@ -156,9 +200,18 @@ function VehicleMovement:UpdateNormalMovementVehicle(p_DeltaTime, p_Bot)
 					end
 
 					p_Bot._ObstacleSequenceTimer = p_Bot._ObstacleSequenceTimer + p_DeltaTime
+					p_Bot._StuckTimer = p_Bot._StuckTimer + p_DeltaTime
+
+					if p_Bot._StuckTimer > Registry.BOT.VEHICLE_STUCK_EXIT_TIME then
+						-- Nothing helped (flipped, stuck in terrain, ...): continue on foot.
+						m_Logger:Write(p_Bot.m_Player.name .. ' got stuck in vehicle. Exit')
+						p_Bot:ExitVehicle()
+						return
+					end
 
 					if p_Bot._ObstacleRetryCounter >= 4 then -- Try next waypoint.
 						p_Bot._ObstacleRetryCounter = 0
+						s_StuckSkip = true
 
 						s_DistanceFromTarget = 0
 						s_HeightDistance = 0
@@ -166,10 +219,12 @@ function VehicleMovement:UpdateNormalMovementVehicle(p_DeltaTime, p_Bot)
 						-- Teleport if stuck.
 						if Config.TeleportIfStuck and
 							m_Utilities:CheckProbability(Registry.BOT.PROBABILITY_TELEPORT_IF_STUCK_IN_VEHICLE) then
-							local s_Transform = p_Bot.m_Player.controlledControllable.transform:Clone()
+							local s_Transform = s_Vehicle.transform:Clone()
 							s_Transform.trans = p_Bot._TargetPoint.Position
-							s_Transform:LookAtTransform(p_Bot._TargetPoint.Position, p_Bot._NextTargetPoint.Position)
-							p_Bot.m_Player.controlledControllable.transform = s_Transform
+							if p_Bot._NextTargetPoint then
+								s_Transform:LookAtTransform(p_Bot._TargetPoint.Position, p_Bot._NextTargetPoint.Position)
+							end
+							s_Vehicle.transform = s_Transform
 							m_Logger:Write('teleported in vehicle of ' .. p_Bot.m_Player.name)
 						else
 							if MathUtils:GetRandomInt(1, 2) == 1 then
@@ -261,11 +316,17 @@ function VehicleMovement:UpdateNormalMovementVehicle(p_DeltaTime, p_Bot)
 					end
 				end
 
+				if not s_StuckSkip then
+					p_Bot._StuckTimer = 0.0
+					p_Bot._ObstacleRetryCounter = 0
+				end
 				p_Bot._ObstacleSequenceTimer = 0
+				p_Bot._LowSpeedTimer = 0.0
 				p_Bot._LastWayDistance = 1000.0
 			end
 		else -- Wait mode.
 			p_Bot._WayWaitTimer = p_Bot._WayWaitTimer + p_DeltaTime
+			p_Bot._LowSpeedTimer = 0.0
 
 			self:UpdateVehicleLookAround(p_Bot, p_DeltaTime)
 
@@ -512,7 +573,7 @@ function VehicleMovement:UpdateYawVehicle(p_Bot, p_Attacking, p_IsStationaryLaun
 
 				-- Compute the deviation in the gun's local frame. Turret/gun inputs rotate around the (tilted) vehicle axes,
 				-- so comparing world yaw/pitch fails on slopes. Target direction is rebuilt from the world yaw/pitch
-				-- (inverse of atan(dz, dx) - pi/2 used in VehicleAiming), which keeps the aim-worsening.
+				-- (inverse of atan(dz, dx) - pi/2 used in VehicleAiming), which keeps the aim-error.
 				local s_CosPitch = math.cos(p_Bot._TargetPitch)
 				local s_GunTransform = s_GunQuatTransform:ToLinearTransform()
 				s_DeltaYaw, s_DeltaPitch = m_Utilities:GetDeviationFromTransform(s_GunTransform,

@@ -45,7 +45,7 @@ Registry = {
 		-- Major version.
 		VERSION_MAJ = 3,
 		-- Minor version.
-		VERSION_MIN = 1,
+		VERSION_MIN = 6,
 		-- Patch version.
 		VERSION_PATCH = 0,
 		-- Additional label for pre-releases and build metadata.
@@ -86,7 +86,15 @@ Registry = {
 		-- Max checks per cycle.
 		BOT_BOT_MAX_CHECKS = 30,
 		-- Max Raycaststs Bot-Bot-Revive
-		BOT_BOT_REVIVE_MAX_RAYCASTS = 15
+		BOT_BOT_REVIVE_MAX_RAYCASTS = 15,
+		-- Do all sight-checks (bot-bot, bot-player, player-revive) with server-side raycasts instead of sending
+		-- them to the clients. No client is needed then: bots also fight each other on an empty server.
+		-- Costs server performance. Toggle ingame with "!serverraycasts on|off" or RCON "funbots.serverRaycasts".
+		USE_SERVER_RAYCASTS = false,
+		-- Max server-raycasts per bot-bot-check (every BOT_BOT_CHECK_INTERVAL).
+		SERVER_RAYCASTS_BOT_BOT = 6,
+		-- Max server-raycasts per real player and update for the bot-player- and revive-checks.
+		SERVER_RAYCASTS_PER_PLAYER = 1,
 	},
 	GAME_DIRECTOR = {
 		UPDATE_OBJECTIVES_CYCLE = 1.5,
@@ -176,10 +184,16 @@ Registry = {
 		PROBABILITY_TELEPORT_IF_STUCK = 80,
 		-- Chance that the bot will teleport when they are stuck in a vehicle.
 		PROBABILITY_TELEPORT_IF_STUCK_IN_VEHICLE = 20,
-		-- At the end of an attack cycle, chance of throwing a grenade.
+		-- Chance of throwing a grenade once the target is out of sight (rolled once per attack).
 		PROBABILITY_THROW_GRENADE = 50,
-		-- At the end of an attack cycle, chance of throwing a grenade, if behavior priorizes this.
+		-- Chance of throwing a grenade once the target is out of sight, if behavior priorizes this.
 		PROBABILITY_THROW_GRENADE_PRIO = 95,
+		-- Seconds without sight of the target before a bot throws a grenade at its last known position.
+		GRENADE_LOST_SIGHT_TIME = 1.2,
+		-- Throw-speed of a grenade in m/s, used to calculate the throw-pitch.
+		GRENADE_THROW_SPEED = 15.5,
+		-- Max time for switching to the grenade and throwing it, before the bot gives up.
+		GRENADE_THROW_TIMEOUT = 3.0,
 		-- The probability to use the rocket instead of the primary.
 		PROBABILITY_SHOOT_ROCKET = 20,
 		-- The probability to use the rocket, if behavior of bot priorizes this
@@ -192,18 +206,58 @@ Registry = {
 		PROBABILITY_CHANGE_DIRECTION_IF_STUCK = 50,
 		-- Hard reroutes to the closest path a stuck bot tries before it is killed.
 		MAX_STUCK_REROUTES = 2,
+		-- Seconds a bot tries to free a stuck ground-vehicle before they exit it and continue on foot.
+		VEHICLE_STUCK_EXIT_TIME = 30.0,
 		-- Trace delta, a bot uses when they are off a trace path to find his way back to the best path.
 		TRACE_DELTA_SHOOTING = 0.4,
 		-- The max time a bot tries to move to the repair-vehicle.
 		MAX_TIME_TRY_REPAIR = 10,
-		-- The minimum distance to throw a nade
+		-- The minimum distance to throw a nade (horizontal, to the last known position of the target)
 		MIN_DISTANCE_NADE = 12,
 		-- Advanced aiming makes a difference on huge distances, but costs more performance.
 		USE_ADVANCED_AIMING = false,
 		-- Use of path-Offset
 		USE_PATH_OFFSETS = true,
-		-- Worsening bots on larger distances. Factor 1.0 = no worsening, always same offset
-		WORSENING_FACTOR_DISTANCE = 0.95,
+		-- Humanlike aim error (see Bot/BotAimError.lua). The base error is set in the config in mrad. Angles in rad, times in s.
+		-- Configured aim error (mrad) at which flick, flinch and tracking have the values below. They scale linearly with
+		-- it, so an aim error of 0 is a perfect aim.
+		AIM_ERROR_REFERENCE = 6.0,
+		-- Players take more care on greater distances: the angle of the error shrinks with (REFERENCE_DISTANCE / distance)
+		-- ^ EXPONENT, the miss in m still grows. Exponent 0 = same angle on all distances, 1 = same miss in m.
+		-- The configured aim error is the one at REFERENCE_DISTANCE. Below MIN_DISTANCE the angle does not grow anymore.
+		AIM_ERROR_REFERENCE_DISTANCE = 25.0,
+		AIM_ERROR_DISTANCE_EXPONENT = 0.5,
+		AIM_ERROR_MIN_DISTANCE = 2.0,
+		-- Time constant of the slow drift of the crosshair around the target.
+		AIM_ERROR_DRIFT_TIME = 0.3,
+		-- Vertical aim error relative to the horizontal one (humans miss more to the sides).
+		AIM_ERROR_PITCH_FACTOR = 0.7,
+		-- Additional aim error per m/s of own movement (0.15 → moving with 4 m/s = +60 %).
+		AIM_ERROR_SELF_SPEED = 0.15,
+		-- Aim error from tracking a moving target: angular speed of the target (rad/s, own movement of the target only)
+		-- multiplied by this.
+		AIM_TRACKING_ERROR = 0.03,
+		-- Delay with which an average bot notices changes of the target movement (e.g. strafing). Scaled with skill.
+		AIM_TRACKING_LAG = 0.15,
+		-- Error after the flick to a new target, as share of the turned angle. Decays with AIM_ACQUISITION_TIME.
+		AIM_ACQUISITION_ERROR = 0.1,
+		AIM_ACQUISITION_TIME = 0.25,
+		AIM_ACQUISITION_MAX_ERROR = 0.25,
+		-- Probability that the flick overshoots instead of undershooting.
+		AIM_PROBABILITY_OVERSHOOT = 25,
+		-- Kick of the aim when the bot gets hit and its decay-time.
+		AIM_FLINCH = 0.01,
+		AIM_FLINCH_TIME = 0.2,
+		-- Share of the weapon spread the bots compensate. Bots can't aim down sights, this emulates it (0 = hip-fire spread).
+		-- Players fire from the hip on short distances: NEAR up to NEAR_DISTANCE, rising to FAR from FAR_DISTANCE on.
+		AIM_SPREAD_COMPENSATION_NEAR = 0.4,
+		AIM_SPREAD_COMPENSATION_NEAR_DISTANCE = 10.0,
+		AIM_SPREAD_COMPENSATION_FAR = 0.8,
+		AIM_SPREAD_COMPENSATION_FAR_DISTANCE = 30.0,
+		-- Fitts' law for the first shot: extra delay per doubling of the angle to the target. The angle is measured in
+		-- multiples of FIRST_SHOT_TARGET_ANGLE (180° → +0.24 s, 20° → +0.12 s).
+		FIRST_SHOT_DELAY_PER_BIT = 0.04,
+		FIRST_SHOT_TARGET_ANGLE = 0.05,
 		PROBABILITY_SWITCH_TO_BEACON_PATH = 80,
 		PROBABILITY_SWITCH_TO_EXPLORE_PATH = 60,
 		PROBABILITY_KEEP_KIT_IF_HAS_BEACON = 80,
@@ -265,6 +319,13 @@ Registry = {
 		-- Seconds between prints of Lua memory, bot-update times, GC and table sizes. 0 = off.
 		-- Used to find what grows or stutters over long rounds.
 		ROUND_STATS_INTERVAL = 0.0,
+		-- Streams the game-state to the external debug-server (tools/debug-server) and executes its commands.
+		-- Toggle ingame with "!debugbridge on|off" or RCON "funbots.debugBridge".
+		DEBUG_BRIDGE = false,
+		-- Address of the debug-server.
+		DEBUG_BRIDGE_URL = "http://127.0.0.1:8765",
+		-- Seconds between two snapshots sent to the debug-server.
+		DEBUG_BRIDGE_INTERVAL = 0.2,
 	},
 
 	-- Get the version of the current build as in a semantic format.

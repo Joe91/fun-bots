@@ -19,6 +19,8 @@ This is the changelog for release **V3.1.0**. Don't forget to [join us on Discor
 * Much improved GC times
 * Some Jet aim rework
 * improved "lookaround"
+* Optional server-side raycasts: bots also fight each other without any client ("!serverraycasts on")
+* Debug-server (tools/debug-server): live map, analyzers, recordings and map-scans in the browser ("!debugbridge on")
 
 
 ### Some optional TODOs:

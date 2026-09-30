@@ -653,7 +653,7 @@ function NodeEditor:OnRequestData(p_Player)
 
 	print('[NodeEditor] Sending ' .. tostring(#s_SerializedNodes) .. ' waypoints to client.')
 
-	-- TODO: better handling here for all Players
+	-- To all editing players on purpose: when several trace at the same time, all need the new nodes.
 	self:SendToAllPlayers('ClientNodeEditor:ReceiveNodes', s_SerializedNodes)
 	print('[NodeEditor] Sent waypoints to client.')
 end

@@ -28,11 +28,25 @@ function BotCreator:CreateBotAttributes()
 	m_Logger:Write("BotAttributes of " .. #self.AllBotAttributes .. " Bots created")
 end
 
+-- Deterministic pseudo-random value in [0, 1) per name, so a bot keeps its character over rounds.
+---@param p_Name string
+---@return number
+local function _RandomOfName(p_Name)
+	local s_Hash = 5381
+
+	for i = 1, #p_Name do
+		s_Hash = (s_Hash * 33 + p_Name:byte(i)) % 2147483647
+	end
+
+	return (s_Hash % 1000) / 1000
+end
+
 ---comment
 ---@param p_BotNames {}
 ---@param p_TeamId TeamId|integer
 function BotCreator:GenerateBotAtributes(p_BotNames, p_TeamId)
-	local s_NumberOfBotsPerKit = math.floor(#BotNames / 4)
+	-- Highest index of a bot inside its kit: the inaccuracy spreads from 0 (best) to 1 (worst) in each kit.
+	local s_MaxIndexInKit = math.max(math.floor((#p_BotNames - 1) / 4), 1)
 	if p_TeamId > 0 then
 		if p_TeamId % 2 == 0 then
 			p_TeamId = TeamId.Team2
@@ -52,7 +66,7 @@ function BotCreator:GenerateBotAtributes(p_BotNames, p_TeamId)
 	-- create bot-attributes out of each class
 	for l_Index, l_Name in pairs(p_BotNames) do
 		local s_Name = Registry.COMMON.BOT_TOKEN .. l_Name
-		local s_IndexInKit = math.floor(l_Index / 4)
+		local s_IndexInKit = math.floor((l_Index - 1) / 4)
 		local s_Kit = nil
 		if l_Index % 4 == 1 then -- assault
 			s_Kit = BotKits.Assault
@@ -64,14 +78,10 @@ function BotCreator:GenerateBotAtributes(p_BotNames, p_TeamId)
 			s_Kit = BotKits.Recon
 		end
 
-		local s_RelSkill = s_IndexInKit / s_NumberOfBotsPerKit
-		-- additional reaction time from 0 to 1
-		local s_RelReactionTime = 0.5 - s_RelSkill
-		if s_RelReactionTime < 0.0 then
-			s_RelReactionTime = s_RelReactionTime + 1.0
-		end
-		-- set accuracy to skill level
-		local s_RelAccuracy = s_RelSkill
+		-- 0 = best, 1 = worst aim.
+		local s_RelInaccuracy = s_IndexInKit / s_MaxIndexInKit
+		-- 0 = fastest, 1 = slowest reaction. Good aim and fast reaction go together loosely, like with humans.
+		local s_RelReactionTime = 0.6 * s_RelInaccuracy + 0.4 * _RandomOfName(l_Name)
 
 		-- rotate behavior over each class
 		local s_Behaviour = s_IndexInKit % BotBehavior.COUNT
@@ -85,10 +95,9 @@ function BotCreator:GenerateBotAtributes(p_BotNames, p_TeamId)
 			Name = s_Name,
 			Kit = s_Kit,
 			Color = s_Color,
-			Skill = s_RelSkill,
 			Behaviour = s_Behaviour,
 			ReactionTime = s_RelReactionTime,
-			Accuracy = s_RelAccuracy,
+			Inaccuracy = s_RelInaccuracy,
 			PrefWeapon = "",
 			PrefVehicle = ""
 		}
@@ -138,7 +147,6 @@ function BotCreator:GetNextBotName(p_BotKit, p_TeamId)
 				break
 			end
 		end
-		--TODO: check for existing player or Bot?
 
 		if s_NameAvailable then
 			s_PossibleNames[#s_PossibleNames + 1] = l_Attributes.Name
@@ -154,11 +162,11 @@ end
 function BotCreator:SetAttributesToBot(p_Bot)
 	local s_Attributes = self:GetAttributesOfBot(p_Bot.m_Player.name)
 	p_Bot.m_Kit = s_Attributes.Kit
+	p_Bot.m_PreferredKit = s_Attributes.Kit
 	p_Bot.m_Color = s_Attributes.Color
 	p_Bot.m_Behavior = s_Attributes.Behaviour
 	p_Bot.m_Reaction = s_Attributes.ReactionTime
-	p_Bot.m_Accuracy = s_Attributes.Accuracy
-	p_Bot.m_Skill = s_Attributes.Skill
+	p_Bot.m_Inaccuracy = s_Attributes.Inaccuracy
 	p_Bot.m_PrefWeapon = s_Attributes.PrefWeapon
 	p_Bot.m_PrefVehicle = s_Attributes.PrefVehicle
 end

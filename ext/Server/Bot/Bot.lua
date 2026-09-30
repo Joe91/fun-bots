@@ -3,6 +3,7 @@
 Bot = class('Bot')
 
 require('Bot/BotAiming')
+require('Bot/BotAimError')
 require('Bot/BotAttacking')
 require('Bot/BotMovement')
 require('Bot/BotWeaponHandling')
@@ -55,9 +56,10 @@ function Bot:__init(p_Player)
 	-- create some character proporties
 	---@type BotBehavior
 	self.m_Behavior = nil
+	-- 0 = fastest, 1 = slowest reaction.
 	self.m_Reaction = 0.0
-	self.m_Accuracy = 0.0
-	self.m_Skill = 0.0
+	-- 0 = best, 1 = worst aim.
+	self.m_Inaccuracy = 0.0
 	self.m_PrefWeapon = ""
 	self.m_PrefVehicle = ""
 
@@ -71,6 +73,11 @@ function Bot:__init(p_Player)
 	-- TODO: this whole block could be moved to an inner class `Bot.Loadout = class('Bot.Loadout')`.
 	---@type BotKits|integer
 	self.m_Kit = nil
+	-- Kit of the name of the bot. The spawner uses it, as long as the kit-limits allow it.
+	---@type BotKits|nil
+	self.m_PreferredKit = nil
+	-- The kit counts for the kit-limits: set on spawn, reset once the bot is deactivated (ResetVars).
+	self._KitInUse = false
 	-- Only used in BotSpawner.
 	-- The bot color is the soldier camo (color).
 	---@type BotColors|integer
@@ -148,6 +155,22 @@ function Bot:__init(p_Player)
 	-- Sidewards movement.
 	self.m_YawOffset = 0.0
 	self.m_StrafeValue = 0.0
+
+	-- Path-offset (see Bot:ApplyPathOffset).
+	---@type integer|nil
+	self.m_PathSide = nil
+	self.m_OffsetDistance = 0.0
+	self.m_OffsetFactor = 0.0
+	self.m_OffsetCenterTimer = 0.0
+	self.m_PathOffsetCache = {}
+
+	-- Obstacle-detection (see Bot:_DetectObstacle).
+	self._LowSpeedTimer = 0.0
+	self._NoProgressTimer = 0.0
+	self._ProgressNode = nil
+	self._ProgressBestDistance = 0.0
+	self._ProgressLastTime = 0.0
+	self._ObstacleStartDistance = 0.0
 
 	-- Advanced movement.
 	---@type BotAttackModes
@@ -227,6 +250,24 @@ function Bot:__init(p_Player)
 	self._ShootPlayerVehicleType = VehicleTypes.NoVehicle
 	self._ShootPlayerId = -1
 	self._DistanceToPlayer = 0.0
+	-- Aim error (see BotAimError).
+	self._AimAcquire = true
+	self._AimDriftYaw = 0.0
+	self._AimDriftPitch = 0.0
+	self._AimAcquireYaw = 0.0
+	self._AimAcquirePitch = 0.0
+	self._AimFlinchYaw = 0.0
+	self._AimFlinchPitch = 0.0
+	-- Movement of the target as the bot perceives it.
+	self._AimVelX = 0.0
+	self._AimVelY = 0.0
+	self._AimVelZ = 0.0
+	-- Position of the target, when the bot saw it the last time.
+	---@type Vec3|nil
+	self._LastSeenPosition = nil
+	-- Only one grenade-attempt per attack.
+	self._GrenadeTried = false
+	self._GrenadeTimer = 0.0
 	---@type BotWeapons
 	self._WeaponToUse = BotWeapons.Primary
 	-- To-do: add emmylua type.
@@ -311,7 +352,12 @@ function Bot:UpdateDontAttackFlag()
 
 	-- Seats without an aimable part (-1) can't aim their weapon (passengers or fixed guns like on the M1128).
 	-- Weapons aimed with the whole vehicle (chopper / jet main guns) use -2.
-	if g_BotStates:IsInVehicleState(self.m_ActiveState) and self._VehicleMovableId == -1 then
+	-- Drivers of mobile artillery and light AA attack anyway: they switch to the gunner seat (_CheckForVehicleActions).
+	if g_BotStates:IsInVehicleState(self.m_ActiveState) and self._VehicleMovableId == -1
+		and not (self.m_Player.controlledEntryId == 0
+			and (m_Vehicles:IsVehicleType(self.m_ActiveVehicle, VehicleTypes.MobileArtillery)
+				or m_Vehicles:IsVehicleType(self.m_ActiveVehicle, VehicleTypes.LightAA)))
+	then
 		self._DontAttackPlayers = true
 		return
 	end
@@ -363,8 +409,13 @@ function Bot:_CheckForVehicleActions(p_DeltaTime, p_AttackActive)
 		if s_DesiredSeat ~= self.m_Player.controlledEntryId
 			and s_VehicleEntity:GetPlayerInEntry(s_DesiredSeat) == nil
 		then
+			-- UpdateVehicleMovableId resets the target: keep it, to attack it from the gunner seat.
+			local s_ShootPlayer = self._ShootPlayer
+			local s_ShootPlayerId = self._ShootPlayerId
 			self.m_Player:EnterVehicle(s_VehicleEntity, s_DesiredSeat)
 			self:UpdateVehicleMovableId()
+			self._ShootPlayer = s_ShootPlayer
+			self._ShootPlayerId = s_ShootPlayerId
 		end
 	else
 		-- Check if better seat is available.

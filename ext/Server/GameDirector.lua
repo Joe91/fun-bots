@@ -2084,10 +2084,45 @@ function GameDirector:_InitObjectives()
 	self:_UpdateValidObjectives()
 end
 
+---Builds the objectives anew after their paths changed during the round (e.g. by the debug-server). Keeps the rush
+---stage and what is known about the objectives that still exist.
+function GameDirector:ReloadObjectives()
+	local s_Known = {}
+	for l_Index = 1, #self.m_AllObjectives do
+		local l_Objective = self.m_AllObjectives[l_Index]
+		s_Known[l_Objective.name] = {
+			team = l_Objective.team,
+			isAttacked = l_Objective.isAttacked,
+			destroyed = l_Objective.destroyed,
+			position = l_Objective.position,
+			-- Vehicle-objectives are switched on while their vehicle is there (_SetVehicleObjectiveState).
+			active = l_Objective.isEnterVehiclePath and l_Objective.active or nil,
+		}
+	end
+
+	self.m_Translations = {}
+	self.m_ObjectivePositions = {}
+	-- _InitObjectives counts the stage up outside of conquest (_UpdateValidObjectives), as at the start of the round.
+	if not Globals.IsConquest then
+		self.m_RushStageCounter = self.m_RushStageCounter - 1
+	end
+	self:_InitObjectives()
+
+	for l_Index = 1, #self.m_AllObjectives do
+		local l_Objective = self.m_AllObjectives[l_Index]
+		local s_Old = s_Known[l_Objective.name]
+		if s_Old ~= nil then
+			for l_Key, l_Value in pairs(s_Old) do
+				l_Objective[l_Key] = l_Value
+			end
+		end
+	end
+end
+
 function GameDirector:_InitFlagTeams()
 	self._AllCapturePoints = {}
 	self._AllBases = {}
-	if not Globals.IsConquest then -- Valid for all Conquest-types. TODO: check for rush?
+	if not Globals.IsConquest then -- Valid for all Conquest-types. Rush has no capture points.
 		return
 	end
 

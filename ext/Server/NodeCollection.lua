@@ -850,6 +850,12 @@ function NodeCollection:GetPaths()
 	return self._WaypointsByPathIndex
 end
 
+---Name of the loaded waypoints: table <name>_table in mod.db, mapfiles/<name>.map.
+---@return string
+function NodeCollection:GetMapName()
+	return self._MapName
+end
+
 function NodeCollection:GetNrOfPaths()
 	return self._LoadPathCount
 end

@@ -75,6 +75,7 @@ function FunBotClient:RegisterEvents()
 
 	NetEvents:Subscribe('WriteClientSettings', self, self.OnWriteClientSettings)
 	NetEvents:Subscribe('CheckBotBotAttack', self, self.CheckForBotBotAttack)
+	NetEvents:Subscribe('ServerRaycasts:SetEnabled', self, self.OnServerRaycastsSetEnabled)
 	NetEvents:Subscribe('UI_Settings', self, self.OnUISettings)
 
 	NetEvents:Subscribe('ConsoleCommands:RegisterCommands', self, self.OnRegisterConsoleCommands)
@@ -262,6 +263,11 @@ end
 ---@param p_RaycastData RaycastRequests
 function FunBotClient:CheckForBotBotAttack(p_RaycastData)
 	m_ClientBotManager:CheckForBotBotAttack(p_RaycastData)
+end
+
+---@param p_Enabled boolean
+function FunBotClient:OnServerRaycastsSetEnabled(p_Enabled)
+	m_ClientBotManager:OnServerRaycastsSetEnabled(p_Enabled)
 end
 
 ---@param p_Data any

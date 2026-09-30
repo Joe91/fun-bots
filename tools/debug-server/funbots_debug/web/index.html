@@ -1,0 +1,156 @@
+<!doctype html>
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<title>fun-bots Debug</title>
+	<link rel="stylesheet" href="style.css">
+</head>
+<body>
+	<aside id="sidebar">
+		<header class="panel head">
+			<div class="title-row">
+				<h1>fun-bots debug</h1>
+				<span id="status" class="pill off">waiting for mod</span>
+			</div>
+			<div id="level" class="muted">no level</div>
+			<div id="summary" class="summary"></div>
+		</header>
+
+		<details class="panel" open>
+			<summary>Map layers</summary>
+			<div id="layers" class="chips"></div>
+			<div class="row">
+				<button id="fit" title="Fit all bots into view (F)">Fit</button>
+				<button id="flip" title="Mirror the z-axis">Flip Z</button>
+				<button id="follow" title="Keep the selected entity centered (C)">Follow</button>
+				<button id="clear-traces" title="Remove the traces from the map">Clear traces</button>
+			</div>
+		</details>
+
+		<details class="panel" open>
+			<summary>Mod</summary>
+			<div class="row">
+				<button id="server-raycasts" class="toggle" title="Registry.GAME_RAYCASTING.USE_SERVER_RAYCASTS">Server raycasts</button>
+				<button id="traces-channel" class="toggle on" title="The mod sends every server-raycast">Send traces</button>
+			</div>
+			<div class="row">
+				<label for="interval">Snapshot interval</label>
+				<select id="interval">
+					<option value="0.1">0.1 s</option>
+					<option value="0.2" selected>0.2 s</option>
+					<option value="0.5">0.5 s</option>
+					<option value="1">1 s</option>
+				</select>
+			</div>
+			<div class="row">
+				<button id="load-nodes" title="Stream all waypoints of the level">Load waypoints</button>
+				<button id="ping">Ping</button>
+			</div>
+			<div class="row">
+				<button id="scan" title="Scan the visible area with vertical raycasts">Scan view</button>
+				<label for="scan-step">step</label>
+				<input id="scan-step" type="number" min="0.25" step="0.25" value="2">
+				<label for="scan-layers">layers</label>
+				<input id="scan-layers" type="number" min="1" max="8" step="1" value="1">
+			</div>
+			<div class="row">
+				<label for="scan-speed" title="Raycasts per server-update. More is faster, but costs server performance">rays/update</label>
+				<input id="scan-speed" type="number" min="1" max="5000" step="50" value="100">
+				<button id="scan-stop" title="Stop all running scans">Stop</button>
+				<button id="scan-clear" title="Remove all scans from the map (stops running ones)">Clear scans</button>
+			</div>
+			<ul id="scan-info" class="list muted small"></ul>
+		</details>
+
+		<details class="panel" open>
+			<summary>Path labels <span id="labels-count" class="count"></span></summary>
+			<div class="muted small">Objectives, links and loop of the loaded waypoints, from the capture points of the game. Load the waypoints first.</div>
+			<div class="row">
+				<label title="Also recompute paths that already have capture point / base objectives"><input id="label-relabel" type="checkbox"> relabel</label>
+				<label title="Drop all links between walkable paths and link them anew"><input id="label-relink" type="checkbox"> relink</label>
+				<label title="Also link paths where they cross (the hand-made maps hardly do)"><input id="label-crossings" type="checkbox"> crossings</label>
+				<label title="Also link land vehicle paths among each other and set their loop"><input id="label-vehicles" type="checkbox"> vehicles</label>
+				<label title="Closed paths loop, open ones are walked back and forth"><input id="label-loops" type="checkbox" checked> loop</label>
+			</div>
+			<div class="row">
+				<button id="label-run" title="Compute the labels and show them on the map (nothing changes in the game yet)">Auto-label</button>
+				<button id="label-apply" title="Send the labels to the game">Apply to game</button>
+				<label title="Save the paths in mod.db after applying (like the save of the node-editor)"><input id="label-save" type="checkbox" checked> save</label>
+				<button id="label-write" title="Write the labels into mapfiles/&lt;level&gt;_&lt;mode&gt;.map (it has to hold the same paths as the game)">Write .map</button>
+			</div>
+			<div id="label-status" class="small"></div>
+			<ul id="label-changes" class="list"></ul>
+		</details>
+
+		<details class="panel" open>
+			<summary>Console</summary>
+			<form id="console-form">
+				<div class="row">
+					<select id="console-mode" title="Chat: fun-bots chat-commands like !spawnbots 5. RCON: any RCON-command like funbots.kickAll">
+						<option value="chat">Chat</option>
+						<option value="rcon">RCON</option>
+					</select>
+					<select id="console-player" title="The chat-command runs as this player, with their permissions and their soldier"></select>
+				</div>
+				<div class="row">
+					<div class="console-field">
+						<input id="console-input" type="text" autocomplete="off" spellcheck="false">
+						<ul id="console-complete" class="complete" hidden></ul>
+					</div>
+					<button id="console-run" type="submit">Run</button>
+					<button id="console-help" type="button" title="List the commands (matching the input). Or type: help [filter]">?</button>
+				</div>
+			</form>
+			<div id="console-status" class="small"></div>
+			<pre id="console-output" class="console" hidden></pre>
+		</details>
+
+		<details class="panel">
+			<summary>Objectives <span id="objectives-count" class="count"></span></summary>
+			<ul id="objectives" class="list"></ul>
+		</details>
+
+		<details class="panel" open>
+			<summary>Selection</summary>
+			<div id="selection" class="muted">Click on a bot, player or vehicle.</div>
+		</details>
+
+		<details class="panel" open>
+			<summary>Findings <span id="findings-count" class="count"></span></summary>
+			<ul id="findings" class="list"></ul>
+		</details>
+
+		<details class="panel">
+			<summary>Bots <span id="bots-count" class="count"></span></summary>
+			<input id="bot-filter" type="search" placeholder="filter by name, state, team">
+			<ul id="bots" class="list"></ul>
+		</details>
+
+		<details class="panel">
+			<summary>Statistics</summary>
+			<div id="stats"></div>
+		</details>
+
+		<details class="panel">
+			<summary>Commands</summary>
+			<ul id="commands" class="list"></ul>
+		</details>
+
+		<details class="panel">
+			<summary>Raw data</summary>
+			<div class="muted small">Snapshot-parts without own view (new collectors) and the latest events.</div>
+			<pre id="raw"></pre>
+		</details>
+	</aside>
+
+	<main id="map-wrap">
+		<canvas id="map"></canvas>
+		<div id="tooltip" hidden></div>
+		<div id="coords" class="overlay"></div>
+		<div id="help" class="overlay">drag: pan · wheel: zoom · click: select · F: fit · C: follow · Esc: deselect</div>
+	</main>
+
+	<script src="app.js"></script>
+</body>
+</html>

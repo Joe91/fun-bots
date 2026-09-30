@@ -415,7 +415,6 @@ function ClientNodeEditor:_onSelectNode(p_Args)
 		return
 	end
 
-	-- TODO: don't always do this?
 	self.m_ScanForNode = true
 end
 

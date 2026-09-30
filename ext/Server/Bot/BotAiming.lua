@@ -1,115 +1,14 @@
 ---@type Utilities
 local m_Utilities = require('__shared/Utilities')
 
----@param p_Distance number
----@return number
-local function _GetGrenadePitch(p_Distance)
-	if p_Distance > 24.5 then
-		return 0.7504915783575616
-	elseif p_Distance > 24.0 then
-		return 0.8569566627292158
-	elseif p_Distance > 23.5 then
-		return 0.9023352232810685
-	elseif p_Distance > 23.0 then
-		return 0.9372418083209549
-	elseif p_Distance > 22.5 then
-		return 0.9651670763528643
-	elseif p_Distance > 22.0 then
-		return 0.9913470151327791
-	elseif p_Distance > 21.5 then
-		return 1.0157816246606999
-	elseif p_Distance > 21.0 then
-		return 1.0367255756846316
-	elseif p_Distance > 20.5 then
-		return 1.0559241974565694
-	elseif p_Distance > 20.0 then
-		return 1.0751228192285072
-	elseif p_Distance > 19.5 then
-		return 1.0943214410004447
-	elseif p_Distance > 19.0 then
-		return 1.111774733520388
-	elseif p_Distance > 18.5 then
-		return 1.1274826967883367
-	elseif p_Distance > 18.0 then
-		return 1.143190660056286
-	elseif p_Distance > 17.5 then
-		return 1.1588986233242349
-	elseif p_Distance > 17.0 then
-		return 1.1746065865921838
-	elseif p_Distance > 16.5 then
-		return 1.1885692206081382
-	elseif p_Distance > 16.0 then
-		return 1.202531854624093
-	elseif p_Distance > 15.5 then
-		return 1.2164944886400477
-	elseif p_Distance > 15.0 then
-		return 1.2304571226560022
-	elseif p_Distance > 14.5 then
-		return 1.2426744274199626
-	elseif p_Distance > 14.0 then
-		return 1.2566370614359172
-	elseif p_Distance > 13.5 then
-		return 1.2688543661998775
-	elseif p_Distance > 13.0 then
-		return 1.281071670963838
-	elseif p_Distance > 12.5 then
-		return 1.293288975727798
-	elseif p_Distance > 12.0 then
-		return 1.3055062804917585
-	elseif p_Distance > 11.5 then
-		return 1.3177235852557188
-	elseif p_Distance > 11.0 then
-		return 1.3299408900196792
-	elseif p_Distance > 10.5 then
-		return 1.3421581947836394
-	elseif p_Distance > 10.0 then
-		return 1.3526301702956054
-	elseif p_Distance > 9.5 then
-		return 1.3648474750595656
-	elseif p_Distance > 9.0 then
-		return 1.377064779823526
-	elseif p_Distance > 8.5 then
-		return 1.387536755335492
-	elseif p_Distance > 8.0 then
-		return 1.3980087308474578
-	elseif p_Distance > 7.5 then
-		return 1.4102260356114182
-	elseif p_Distance > 7.0 then
-		return 1.4206980111233845
-	elseif p_Distance > 6.5 then
-		return 1.43116998663535
-	elseif p_Distance > 6.0 then
-		return 1.4433872913993104
-	elseif p_Distance > 5.5 then
-		return 1.4538592669112764
-	elseif p_Distance > 5.0 then
-		return 1.4643312424232426
-	elseif p_Distance > 4.5 then
-		return 1.4748032179352084
-	elseif p_Distance > 4.0 then
-		return 1.4852751934471744
-	elseif p_Distance > 3.5 then
-		return 1.4957471689591406
-	elseif p_Distance > 3.0 then
-		return 1.5079644737231006
-	elseif p_Distance > 2.5 then
-		return 1.5184364492350666
-	elseif p_Distance > 2.0 then
-		return 1.5289084247470324
-	elseif p_Distance > 1.5 then
-		return 1.5393804002589986
-	elseif p_Distance > 1.0 then
-		return 1.5498523757709646
-	else
-		return 1.5603243512829308
-	end
-end
+local QUARTER_PI = math.pi / 4
 
 ---@param p_Soldier SoldierEntity
----@param p_Skill number
+---@param p_RecoilFactor number share of the recoil to compensate
+---@param p_SpreadFactor number share of the spread to compensate (a human can't know it, bots can't aim down sights)
 ---@return number compensationPitch
 ---@return number compensationYaw
-local function _CompensateRecoil(p_Soldier, p_Skill)
+local function _CompensateRecoil(p_Soldier, p_RecoilFactor, p_SpreadFactor)
 	local s_CurrentWeapon = p_Soldier.weaponsComponent.currentWeapon
 
 	if not s_CurrentWeapon then
@@ -132,17 +31,8 @@ local function _CompensateRecoil(p_Soldier, p_Skill)
 	local s_CurrentDispersionDeviation = s_GunSway.currentDispersionDeviation
 	-- currentLagDeviation is always zero, so it is not used.
 
-	local s_CurrentRecoilDeviationPitch = s_CurrentRecoilDeviation.pitch + s_CurrentDispersionDeviation.pitch
-	local s_CurrentRecoilDeviationYaw = s_CurrentRecoilDeviation.yaw + s_CurrentDispersionDeviation.yaw
-
-	-- Worsen compensation dependant on skill?
-	local s_SkillFactorRecoil = (1.0 - p_Skill) -- only use range from 0.5 to 1.0
-
-	if s_SkillFactorRecoil < 0 then
-		s_SkillFactorRecoil = 0.0
-	end
-
-	return s_CurrentRecoilDeviationPitch * s_SkillFactorRecoil, s_CurrentRecoilDeviationYaw * s_SkillFactorRecoil
+	return s_CurrentRecoilDeviation.pitch * p_RecoilFactor + s_CurrentDispersionDeviation.pitch * p_SpreadFactor,
+		s_CurrentRecoilDeviation.yaw * p_RecoilFactor + s_CurrentDispersionDeviation.yaw * p_SpreadFactor
 end
 
 -- Works on plain numbers: vector math and method calls on Vec3 allocate, this runs for every attacking bot.
@@ -181,7 +71,8 @@ end
 
 ---@param p_Bot Bot
 ---@param p_BotSoldier SoldierEntity
-local function _DefaultAimingAction(p_Bot, p_BotSoldier)
+---@param p_DeltaTime number
+local function _DefaultAimingAction(p_Bot, p_BotSoldier, p_DeltaTime)
 	if not p_Bot._Shoot or p_Bot.m_ActiveWeapon == nil then
 		return
 	end
@@ -232,7 +123,8 @@ local function _DefaultAimingAction(p_Bot, p_BotSoldier)
 		---@diagnostic disable-next-line: need-check-nil
 		s_Velocity = s_ShootPlayer.controlledControllable.velocity
 	end
-	local s_MoveX, s_MoveY, s_MoveZ = s_Velocity.x, s_Velocity.y, s_Velocity.z
+	local s_VelX, s_VelY, s_VelZ = s_Velocity.x, s_Velocity.y, s_Velocity.z
+	local s_MoveX, s_MoveY, s_MoveZ = s_VelX, s_VelY, s_VelZ
 
 	-- Calculate how long the distance is → time to travel.
 	local s_DiffX = s_TargetX - s_BotX
@@ -240,28 +132,45 @@ local function _DefaultAimingAction(p_Bot, p_BotSoldier)
 	local s_DiffZ = s_TargetZ - s_BotZ
 	p_Bot._DistanceToPlayer = math.sqrt(s_DiffX * s_DiffX + s_DiffY * s_DiffY + s_DiffZ * s_DiffZ)
 
+	-- Aim error only for normal weapons. Not for nades, rockets, missiles, ...
+	local s_UseAimError = s_ActiveWeaponType <= WeaponTypes.Sniper
+	local s_SkillFactor = p_Bot:GetAimSkillFactor()
+	local s_AimError = Config.BotAimError
+
+	if s_ActiveWeaponType == WeaponTypes.Sniper then
+		s_AimError = Config.BotSniperAimError
+	elseif s_ActiveWeaponType == WeaponTypes.LMG then
+		s_AimError = Config.BotSupportAimError
+	end
+
+	local s_ErrorScale = p_Bot:GetAimErrorScale(s_AimError)
+
 	if not p_Bot.m_KnifeMode then
+		-- Lead with the movement the bot perceives: it notices changes of the direction late, so the aim lags behind
+		-- a strafing target: aim = target + seenVelocity * timeToTravel + (seenVelocity - velocity) * lag.
+		local s_TrackingLag = 0.0
+		if s_UseAimError then
+			s_TrackingLag = Registry.BOT.AIM_TRACKING_LAG * (0.5 + 0.5 * s_SkillFactor) * s_ErrorScale
+		end
+		local s_SeenVelX, s_SeenVelY, s_SeenVelZ = p_Bot:UpdateSeenVelocity(p_DeltaTime, s_TrackingLag, s_VelX, s_VelY, s_VelZ)
+
 		local s_Drop = 0.0
 		local s_Speed = 0.0
 		local s_TimeToTravel = 0.0
 		s_Drop = p_Bot.m_ActiveWeapon.bulletDrop
 		s_Speed = p_Bot.m_ActiveWeapon.bulletSpeed
 
-		if s_ActiveWeaponType == WeaponTypes.Grenade then
-			if p_Bot._DistanceToPlayer < 3.0 then
-				p_Bot._DistanceToPlayer = 3.0 -- Don't throw them too close.
-			end
-		elseif s_ActiveWeaponType < WeaponTypes.Rocket then
-			s_TimeToTravel = _GetTimeToTravel(p_Bot, s_Speed, s_DiffX, s_DiffY, s_DiffZ, s_MoveX, s_MoveY, s_MoveZ)
+		if s_ActiveWeaponType < WeaponTypes.Rocket then
+			s_TimeToTravel = _GetTimeToTravel(p_Bot, s_Speed, s_DiffX, s_DiffY, s_DiffZ, s_SeenVelX, s_SeenVelY, s_SeenVelZ)
 			s_PitchCorrection = 0.5 * s_TimeToTravel * s_TimeToTravel * s_Drop
 		elseif s_ActiveWeaponType == WeaponTypes.Rocket then -- No idea why, but works this way...
-			s_TimeToTravel = _GetTimeToTravel(p_Bot, s_Speed, s_DiffX, s_DiffY, s_DiffZ, s_MoveX, s_MoveY, s_MoveZ)
+			s_TimeToTravel = _GetTimeToTravel(p_Bot, s_Speed, s_DiffX, s_DiffY, s_DiffZ, s_SeenVelX, s_SeenVelY, s_SeenVelZ)
 			s_PitchCorrection = 0.25 * s_TimeToTravel * s_TimeToTravel * s_Drop
 		end
 
-		s_MoveX = s_MoveX * s_TimeToTravel
-		s_MoveY = s_MoveY * s_TimeToTravel
-		s_MoveZ = s_MoveZ * s_TimeToTravel
+		s_MoveX = s_SeenVelX * s_TimeToTravel + (s_SeenVelX - s_VelX) * s_TrackingLag
+		s_MoveY = s_SeenVelY * s_TimeToTravel + (s_SeenVelY - s_VelY) * s_TrackingLag
+		s_MoveZ = s_SeenVelZ * s_TimeToTravel + (s_SeenVelZ - s_VelZ) * s_TrackingLag
 	end
 
 	local s_DifferenceY = 0
@@ -269,7 +178,15 @@ local function _DefaultAimingAction(p_Bot, p_BotSoldier)
 	local s_DifferenceZ = 0
 
 	-- Calculate yaw and pitch.
-	if p_Bot.m_KnifeMode and #p_Bot._KnifeWayPositions > 0 then
+	local s_LastSeen = p_Bot._LastSeenPosition
+	local s_GrenadePitch = nil
+	if s_ActiveWeaponType == WeaponTypes.Grenade and s_LastSeen then
+		-- Throw at the position the target was seen last, not at where it is now.
+		s_DifferenceZ = s_LastSeen.z - s_BotZ
+		s_DifferenceX = s_LastSeen.x - s_BotX
+		s_GrenadePitch = p_Bot:GetGrenadePitch(math.sqrt(s_DifferenceZ * s_DifferenceZ + s_DifferenceX * s_DifferenceX),
+			s_LastSeen.y - s_BotTrans.y) or QUARTER_PI -- Out of reach: max range.
+	elseif p_Bot.m_KnifeMode and #p_Bot._KnifeWayPositions > 0 then
 		local s_KnifeWayPosition = p_Bot._KnifeWayPositions[1]
 		s_DifferenceZ = s_KnifeWayPosition.z - s_BotTrans.z
 		s_DifferenceX = s_KnifeWayPosition.x - s_BotTrans.x
@@ -289,42 +206,48 @@ local function _DefaultAimingAction(p_Bot, p_BotSoldier)
 	-- Calculate pitch.
 	local s_Pitch = 0.0
 
-	if s_ActiveWeaponType == WeaponTypes.Grenade then
-		s_Pitch = _GetGrenadePitch(p_Bot._DistanceToPlayer)
+	if s_GrenadePitch then
+		s_Pitch = s_GrenadePitch
 	else
 		local s_Distance = math.sqrt((s_DifferenceZ * s_DifferenceZ) + (s_DifferenceX * s_DifferenceX))
 		s_Pitch = math.atan(s_DifferenceY, s_Distance)
 	end
 
-	-- Worsen yaw and pitch depending on bot-skill. Don't use Skill for Nades, Rockets, Missiles, ...
-	if s_ActiveWeaponType <= WeaponTypes.Sniper then -- All normal weapons.
-		-- Skaling: Worsening of 1.0 should be up to 1 meter off of target without modifier.
-		local s_DistanceFactor = 1.0 / (p_Bot._DistanceToPlayer * Registry.BOT.WORSENING_FACTOR_DISTANCE)
+	-- Humanlike aim error: an angle (not a distance), so hits get rarer on greater distances.
+	if s_UseAimError then
+		local s_Registry = Registry.BOT
 
-		-- Determine base worsening factor based on weapon type and class
-		local s_AimWorseningBase = Config.BotAimWorsening
-		local s_SkillCompensation = Config.BotWorseningSkill * p_Bot.m_Accuracy -- full range from 0.0 to Max-Skill for Recoul-Compensation
+		-- Harder to aim while moving and at targets crossing the view fast. Only the movement of the target counts
+		-- for that, the own movement is known and part of AIM_ERROR_SELF_SPEED.
+		local s_BotVelocity = p_BotSoldier.velocity
+		local s_BotVelX, s_BotVelZ = s_BotVelocity.x, s_BotVelocity.z
+		local s_BotSpeed = math.sqrt(s_BotVelX * s_BotVelX + s_BotVelZ * s_BotVelZ)
+		local s_AngularSpeed = m_Utilities:GetAngularSpeed(s_DiffX, s_DiffY, s_DiffZ, p_Bot._DistanceToPlayer,
+			s_VelX, s_VelY, s_VelZ)
 
-		if s_ActiveWeaponType == WeaponTypes.Sniper then
-			s_AimWorseningBase = Config.BotSniperAimWorsening
-			s_SkillCompensation = Config.BotSniperWorseningSkill * p_Bot.m_Accuracy -- full range from 0.0 to Max-Skill for Recoul-Compensation
-		elseif s_ActiveWeaponType == WeaponTypes.LMG then
-			s_AimWorseningBase = Config.BotSupportAimWorsening
-		end
+		-- More care on greater distances: the angle shrinks, the miss in m still grows (with the square root by default).
+		local s_Distance = math.max(p_Bot._DistanceToPlayer, s_Registry.AIM_ERROR_MIN_DISTANCE)
+		local s_DistanceFactor = (s_Registry.AIM_ERROR_REFERENCE_DISTANCE / s_Distance) ^ s_Registry.AIM_ERROR_DISTANCE_EXPONENT
 
-		-- Apply accuracy modifier (±50% based on bot accuracy)
-		local s_AimWorseningSkill = s_AimWorseningBase + s_AimWorseningBase * (p_Bot.m_Accuracy - 0.5)
+		local s_Sigma = (s_AimError * 0.001 * s_DistanceFactor * (1.0 + s_Registry.AIM_ERROR_SELF_SPEED * s_BotSpeed) +
+			s_AngularSpeed * s_Registry.AIM_TRACKING_ERROR * s_ErrorScale) * s_SkillFactor
+		local s_ErrorYaw, s_ErrorPitch = p_Bot:UpdateAimError(p_DeltaTime, s_Sigma, s_ErrorScale, s_Yaw, s_Pitch, true)
 
-		local s_SkillFactor = s_AimWorseningSkill * s_DistanceFactor
-		local s_WorseningSkillX = (MathUtils:GetRandom(-1.0, 1.0) * s_SkillFactor)
-		local s_WorseningSkillY = (MathUtils:GetRandom(-1.0, 1.0) * s_SkillFactor)
-
-		-- Compensate for recoil based on accuracy
-		local s_RecoilCompensationPitch, s_RecoilCompensationYaw = _CompensateRecoil(p_BotSoldier, s_SkillCompensation)
+		-- Better bots control the recoil better. The spread can't be known, only emulate aiming down sights: from the hip
+		-- on short distances, down the sights on greater ones.
+		local s_RecoilControl = Config.BotRecoilControlBest +
+			(Config.BotRecoilControlWorst - Config.BotRecoilControlBest) * p_Bot.m_Inaccuracy
+		local s_SightsShare = (s_Distance - s_Registry.AIM_SPREAD_COMPENSATION_NEAR_DISTANCE) /
+			(s_Registry.AIM_SPREAD_COMPENSATION_FAR_DISTANCE - s_Registry.AIM_SPREAD_COMPENSATION_NEAR_DISTANCE)
+		s_SightsShare = math.min(math.max(s_SightsShare, 0.0), 1.0)
+		local s_SpreadCompensation = s_Registry.AIM_SPREAD_COMPENSATION_NEAR +
+			(s_Registry.AIM_SPREAD_COMPENSATION_FAR - s_Registry.AIM_SPREAD_COMPENSATION_NEAR) * s_SightsShare
+		local s_RecoilCompensationPitch, s_RecoilCompensationYaw = _CompensateRecoil(p_BotSoldier, s_RecoilControl,
+			s_SpreadCompensation)
 
 		-- Recoil from gunSway is negative → add recoil to yaw.
-		s_Yaw = s_Yaw + s_WorseningSkillX + s_RecoilCompensationYaw
-		s_Pitch = s_Pitch + s_WorseningSkillY + s_RecoilCompensationPitch
+		s_Yaw = s_Yaw + s_ErrorYaw + s_RecoilCompensationYaw
+		s_Pitch = s_Pitch + s_ErrorPitch + s_RecoilCompensationPitch
 	end
 
 	p_Bot._TargetPitch = s_Pitch
@@ -382,7 +305,8 @@ local function _RepairAimingAction(p_Bot)
 	p_Bot._TargetYaw = s_Yaw
 end
 
-function Bot:UpdateAiming()
+---@param p_DeltaTime number
+function Bot:UpdateAiming(p_DeltaTime)
 	local s_Soldier = self._ShootPlayer and self.m_Player.soldier
 	if not s_Soldier then
 		return
@@ -393,6 +317,6 @@ function Bot:UpdateAiming()
 	elseif self._ActiveAction == BotActionFlags.RepairActive then
 		_RepairAimingAction(self)
 	else
-		_DefaultAimingAction(self, s_Soldier)
+		_DefaultAimingAction(self, s_Soldier, p_DeltaTime)
 	end
 end

@@ -66,4 +66,5 @@ Language['cn_CN'] /* Add/replace the xx_XX here with your language code (like
         "[Save / Load]" : "[保存/加载]",
         "[Paths]" : "[路径]",
         "Refresh" : "刷新",
+        "Recording..." : "正在录制...",
       };

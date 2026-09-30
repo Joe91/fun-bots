@@ -166,7 +166,9 @@ There are three ways to change a setting at runtime, and each has its own valida
 
 Path 0, point 0 is an info node (authors, compatibility index `COMP_MAP_TRACES`, date). Objective names are matched by substring in `GameDirector` (`base`, `spawn`, `beacon`, `vehicle`, `chopper`, `plane`, …), so naming conventions matter.
 
-In git, traces live as `mapfiles/*.map` (semicolon-separated, header `pathIndex;pointIndex;transX;transY;transZ;inputVar;data`). The helper moves them between the files and `mod.db`.
+On the first node of a path, the optional value `0xFF` means the path is walked back and forth; any other value makes it loop (the bot walks straight from the last node to the first).
+
+In git, traces live as `mapfiles/*.map` (semicolon-separated, header `pathIndex;pointIndex;transX;transY;transZ;inputVar;data`). The helper moves them between the files and `mod.db`. The debug-server labels and links paths automatically from the capture points of the running game (`tools/debug-server/README.md`, *Labeling and linking paths*).
 
 ---
 

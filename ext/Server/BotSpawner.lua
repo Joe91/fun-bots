@@ -14,6 +14,8 @@ local m_BotCreator = require('BotCreator')
 local m_WeaponList = require('__shared/WeaponList')
 ---@type Utilities
 local m_Utilities = require('__shared/Utilities')
+---@type DebugBridge
+local m_DebugBridge = require('Debug/DebugBridge')
 ---@type Logger
 local m_Logger = Logger("BotSpawner", Debug.Server.BOT)
 local m_Vehicles = require('Vehicles')
@@ -482,6 +484,14 @@ function BotSpawner:UpdateBotAmountAndTeam()
 		s_PlayerCount = s_PlayerCount + s_CountPlayers[i]
 	end
 
+	-- The debug-bridge watches the game without a player: spawn the bots as if one player joined the player-team.
+	-- Not on TDM: creating a bot-player (PlayerManager:CreatePlayer) on a TDM-server without a real player crashes it.
+	if s_PlayerCount == 0 and m_DebugBridge:IsEnabled() and not Globals.IsTdm then
+		s_CountPlayers[s_PlayerTeam] = 1
+		s_TeamCount[s_PlayerTeam] = s_TeamCount[s_PlayerTeam] + 1
+		s_PlayerCount = 1
+	end
+
 	self._NrOfPlayers = s_PlayerCount
 
 	-- Kill and destroy bots, if no player left.
@@ -922,7 +932,7 @@ end
 
 ---@param p_Bot Bot
 function BotSpawner:_SelectLoadout(p_Bot)
-	local s_WriteNewKit = false
+	local s_WriteNewKit = self:_ApplyKitLimit(p_Bot)
 
 	if p_Bot.m_ActiveWeapon == nil then
 		s_WriteNewKit = true
@@ -1530,7 +1540,7 @@ end
 ---@param p_Transform LinearTransform
 ---@param p_SetKit boolean
 function BotSpawner:_SpawnBot(p_Bot, p_Transform, p_SetKit)
-	local s_WriteNewKit = false
+	local s_WriteNewKit = self:_ApplyKitLimit(p_Bot)
 
 	if p_Bot.m_ActiveWeapon == nil then
 		s_WriteNewKit = true
@@ -2132,54 +2142,49 @@ function BotSpawner:_GetCustomization(p_Bot, p_Kit)
 	return p_SoldierCustomization
 end
 
+---@param p_Kit BotKits|integer
+---@param p_AllKitCounts table<BotKits|integer, integer>
+---@return boolean
+local function _IsKitAllowed(p_Kit, p_AllKitCounts)
+	local s_Limit = Config.MaxReconBots
+
+	if p_Kit == BotKits.Assault then
+		s_Limit = Config.MaxAssaultBots
+	elseif p_Kit == BotKits.Engineer then
+		s_Limit = Config.MaxEngineerBots
+	elseif p_Kit == BotKits.Support then
+		s_Limit = Config.MaxSupportBots
+	end
+
+	return s_Limit < 0 or p_AllKitCounts[p_Kit] < s_Limit
+end
+
 ---@param p_TeamId TeamId|integer
+---@param p_Kit? BotKits|integer wanted kit, random if nil
+---@param p_ExcludeBot? Bot the spawning bot, doesn't count for the limits
+---@param p_FallbackKit? BotKits|integer kit to keep, if the wanted one is over the limit
 ---@return BotKits|integer
-function BotSpawner:_GetSpawnBotKit(p_TeamId)
+function BotSpawner:_GetSpawnBotKit(p_TeamId, p_Kit, p_ExcludeBot, p_FallbackKit)
 	-- check for overwritten bot-kit
 	if Config.BotKit ~= BotKits.RANDOM_KIT then
 		return Config.BotKit
 	end
 	---@type BotKits|integer
-	local s_BotKit = MathUtils:GetRandomInt(1, BotKits.Count - 1) -- Kit enum goes from 1 to 4.
-	local s_ChangeKit = false
+	local s_BotKit = p_Kit or MathUtils:GetRandomInt(1, BotKits.Count - 1) -- Kit enum goes from 1 to 4.
 	-- Find out, if possible.
-	local s_AllKitCounts = m_BotManager:GetKitCount(p_TeamId)
+	local s_AllKitCounts = m_BotManager:GetKitCount(p_TeamId, p_ExcludeBot)
 
-	if s_BotKit == BotKits.Assault then
-		if Config.MaxAssaultBots >= 0 and s_AllKitCounts[BotKits.Assault] >= Config.MaxAssaultBots then
-			s_ChangeKit = true
+	if not _IsKitAllowed(s_BotKit, s_AllKitCounts) then
+		if p_FallbackKit and _IsKitAllowed(p_FallbackKit, s_AllKitCounts) then
+			return p_FallbackKit
 		end
-	elseif s_BotKit == BotKits.Engineer then
-		if Config.MaxEngineerBots >= 0 and s_AllKitCounts[BotKits.Engineer] >= Config.MaxEngineerBots then
-			s_ChangeKit = true
-		end
-	elseif s_BotKit == BotKits.Support then
-		if Config.MaxSupportBots >= 0 and s_AllKitCounts[BotKits.Support] >= Config.MaxSupportBots then
-			s_ChangeKit = true
-		end
-	else -- s_BotKit == BotKits.Recon
-		if Config.MaxReconBots >= 0 and s_AllKitCounts[BotKits.Recon] >= Config.MaxReconBots then
-			s_ChangeKit = true
-		end
-	end
 
-	if s_ChangeKit then
 		local s_AvailableKitList = {}
 
-		if (Config.MaxAssaultBots == -1) or (s_AllKitCounts[BotKits.Assault] < Config.MaxAssaultBots) then
-			s_AvailableKitList[#s_AvailableKitList + 1] = BotKits.Assault
-		end
-
-		if (Config.MaxEngineerBots == -1) or (s_AllKitCounts[BotKits.Engineer] < Config.MaxEngineerBots) then
-			s_AvailableKitList[#s_AvailableKitList + 1] = BotKits.Engineer
-		end
-
-		if (Config.MaxSupportBots == -1) or (s_AllKitCounts[BotKits.Support] < Config.MaxSupportBots) then
-			s_AvailableKitList[#s_AvailableKitList + 1] = BotKits.Support
-		end
-
-		if (Config.MaxReconBots == -1) or (s_AllKitCounts[BotKits.Recon] < Config.MaxReconBots) then
-			s_AvailableKitList[#s_AvailableKitList + 1] = BotKits.Recon
+		for l_Kit = 1, BotKits.Count - 1 do
+			if _IsKitAllowed(l_Kit, s_AllKitCounts) then
+				s_AvailableKitList[#s_AvailableKitList + 1] = l_Kit
+			end
 		end
 
 		if #s_AvailableKitList > 0 then
@@ -2188,6 +2193,18 @@ function BotSpawner:_GetSpawnBotKit(p_TeamId)
 	end
 
 	return s_BotKit
+end
+
+---Applies the kit-limits to a (re)spawning bot: it gets the kit of its name as long as the limits allow it, so it
+---goes back to it once the limit is raised again.
+---@param p_Bot Bot
+---@return boolean changed the kit changed, the weapons have to be selected again
+function BotSpawner:_ApplyKitLimit(p_Bot)
+	local s_OldKit = p_Bot.m_Kit
+	local s_Kit = self:_GetSpawnBotKit(p_Bot.m_Player.teamId, p_Bot.m_PreferredKit or s_OldKit, p_Bot, s_OldKit)
+	p_Bot.m_Kit = s_Kit
+	p_Bot._KitInUse = true
+	return s_Kit ~= s_OldKit
 end
 
 -- Tries to find first available kit.

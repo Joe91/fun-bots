@@ -64,4 +64,6 @@ Language['es_ES'] /* Add/replace the xx_XX here with your language code (like
         "[Save / Load]" : "[Guardar / Carga]",
         "[Paths]" : "[Caminos]",
         "Refresh" : "Refrescar",
+        "Recording..." : "Grabando...",
+        "Press ALT for Interaction with the Editor" : "Pulsa ALT para interactuar con el editor.",
       };

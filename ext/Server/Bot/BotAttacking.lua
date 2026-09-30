@@ -2,10 +2,102 @@
 local m_Utilities = require('__shared/Utilities')
 ---@type Vehicles
 local m_Vehicles = require("Vehicles")
+---@type ServerRaycasts
+local m_ServerRaycasts = require('ServerRaycasts')
+
+local GRAVITY = 9.81
+-- Number of raycasts along the flight-path of a grenade.
+local GRENADE_ARC_SEGMENTS = 4
 
 local function _Fire(p_Bot)
 	p_Bot._SoundTimer = 0.0
 	p_Bot:_SetInput(EntryInputActionEnum.EIAFire, 1)
+end
+
+---@param p_Bot Bot
+local function _StartGrenade(p_Bot)
+	p_Bot._ActiveAction = BotActionFlags.GrenadeActive
+	p_Bot._GrenadeTimer = 0.0
+end
+
+-- Checks the flight-path of the grenade for obstacles (ceilings, roofs over the target, ...).
+---@param p_Soldier SoldierEntity
+---@param p_Pitch number
+---@param p_DiffX number horizontal difference to the target
+---@param p_DiffZ number
+---@param p_Distance number horizontal distance to the target
+---@return boolean
+local function _IsGrenadeArcFree(p_Soldier, p_Pitch, p_DiffX, p_DiffZ, p_Distance)
+	local s_Eye = p_Soldier.worldTransform.trans:Clone()
+	s_Eye.y = s_Eye.y + m_Utilities:getTargetHeight(p_Soldier, false, false)
+
+	local s_SpeedHorizontal = Registry.BOT.GRENADE_THROW_SPEED * math.cos(p_Pitch)
+	local s_SpeedVertical = Registry.BOT.GRENADE_THROW_SPEED * math.sin(p_Pitch)
+	local s_FlightTime = p_Distance / s_SpeedHorizontal
+	local s_DirX = p_DiffX / p_Distance
+	local s_DirZ = p_DiffZ / p_Distance
+
+	local s_From = s_Eye
+	for l_Segment = 1, GRENADE_ARC_SEGMENTS do
+		local s_Time = s_FlightTime * l_Segment / GRENADE_ARC_SEGMENTS
+		local s_Horizontal = s_SpeedHorizontal * s_Time
+		local s_To = Vec3(
+			s_Eye.x + s_DirX * s_Horizontal,
+			s_Eye.y + s_SpeedVertical * s_Time - 0.5 * GRAVITY * s_Time * s_Time,
+			s_Eye.z + s_DirZ * s_Horizontal)
+		if not m_ServerRaycasts:CheckSight(s_From, s_To, false, nil, 'grenade') then
+			return false
+		end
+		s_From = s_To
+	end
+
+	return true
+end
+
+-- Decides if the bot throws a grenade at the last known position of the target.
+---@param p_Bot Bot
+---@param p_Soldier SoldierEntity
+---@param p_Weapons SoldierWeapon[]
+---@return boolean
+local function _ShouldThrowGrenade(p_Bot, p_Soldier, p_Weapons)
+	local s_LastSeen = p_Bot._LastSeenPosition
+	if s_LastSeen == nil or p_Bot.m_Grenade == nil then
+		p_Bot._GrenadeTried = true
+		return false
+	end
+
+	-- Grenades are not refilled during an attack, so no need to check again.
+	local s_Grenade = p_Weapons[7]
+	if not s_Grenade or s_Grenade.primaryAmmo <= 0 then
+		p_Bot._GrenadeTried = true
+		return false
+	end
+
+	local s_Trans = p_Soldier.worldTransform.trans
+	local s_DiffX = s_LastSeen.x - s_Trans.x
+	local s_DiffZ = s_LastSeen.z - s_Trans.z
+	local s_Distance = math.sqrt(s_DiffX * s_DiffX + s_DiffZ * s_DiffZ)
+	if s_Distance <= Registry.BOT.MIN_DISTANCE_NADE then
+		return false
+	end
+
+	local s_Pitch = p_Bot:GetGrenadePitch(s_Distance, s_LastSeen.y - s_Trans.y)
+	if s_Pitch == nil then -- Out of reach.
+		return false
+	end
+
+	-- Only decide once per attack. The raycasts are only done after that.
+	p_Bot._GrenadeTried = true
+
+	local s_ProbabilityGrenade = Registry.BOT.PROBABILITY_THROW_GRENADE
+	if p_Bot.m_Behavior == BotBehavior.LovesExplosives then
+		s_ProbabilityGrenade = Registry.BOT.PROBABILITY_THROW_GRENADE_PRIO
+	end
+	if not m_Utilities:CheckProbability(s_ProbabilityGrenade) then
+		return false
+	end
+
+	return _IsGrenadeArcFree(p_Soldier, s_Pitch, s_DiffX, s_DiffZ, s_Distance)
 end
 
 ---@param p_DeltaTime number
@@ -175,7 +267,10 @@ local function _DefaultAttackingAction(p_DeltaTime, p_Bot)
 	end
 
 	if p_Bot._ActiveAction == BotActionFlags.GrenadeActive then -- Throw grenade.
-		if s_Weapons[7].primaryAmmo <= 0 then
+		p_Bot._GrenadeTimer = p_Bot._GrenadeTimer + p_DeltaTime
+		local s_Grenade = s_Weapons[7]
+		-- Thrown, or give up if the throw does not happen.
+		if not s_Grenade or s_Grenade.primaryAmmo <= 0 or p_Bot._GrenadeTimer > Registry.BOT.GRENADE_THROW_TIMEOUT then
 			p_Bot:_ResetActionFlag(BotActionFlags.GrenadeActive)
 		end
 	end
@@ -186,7 +281,7 @@ local function _DefaultAttackingAction(p_DeltaTime, p_Bot)
 
 		if s_AttackMode ~= VehicleAttackModes.NoAttack then
 			if s_AttackMode == VehicleAttackModes.AttackWithNade then -- Grenade.
-				p_Bot._ActiveAction = BotActionFlags.GrenadeActive
+				_StartGrenade(p_Bot)
 			elseif s_AttackMode == VehicleAttackModes.AttackWithRocket or
 				s_AttackMode == VehicleAttackModes.AttackWithMissileAir or
 				s_AttackMode == VehicleAttackModes.AttackWithMissileLand then -- Rockets and missiles.
@@ -260,27 +355,19 @@ local function _DefaultAttackingAction(p_DeltaTime, p_Bot)
 					end
 				end
 			end
-			-- Use grenade from time to time.
-			if Config.BotsThrowGrenades then
-				local s_TargetTimeValue = p_Bot._ActiveShootDuration * 0.25 -- after 75 % of the attack-time
-				local s_ProbabilityGrenade = Registry.BOT.PROBABILITY_THROW_GRENADE
-				if p_Bot.m_Behavior == BotBehavior.LovesExplosives then
-					s_ProbabilityGrenade = Registry.BOT.PROBABILITY_THROW_GRENADE_PRIO
-				end
-
-				if p_Bot._WeaponToUse ~= BotWeapons.Gadget2 and
-					((p_Bot._ShootModeTimer <= (s_TargetTimeValue + 0.001)) and
-						(p_Bot._ShootModeTimer >= (s_TargetTimeValue - p_DeltaTime - 0.001)) and
-						(s_Weapons[7] and s_Weapons[7].primaryAmmo > 0) and
-						p_Bot._ActiveAction ~= BotActionFlags.GrenadeActive) or Config.BotWeapon == BotWeapons.Grenade then
-					-- Should be triggered only once per fireMode.
-					if m_Utilities:CheckProbability(s_ProbabilityGrenade) then
-						if p_Bot.m_Grenade ~= nil
-							and p_Bot._DistanceToPlayer > Registry.BOT.MIN_DISTANCE_NADE
-							and p_Bot._DistanceToPlayer < 25.0 then -- Algorithm only works for up to 25 m.
-							p_Bot._ActiveAction = BotActionFlags.GrenadeActive
-						end
+			-- Throw a grenade at the last known position, when the target is out of sight for a while.
+			-- Every sighting resets the shoot-mode-timer, so the elapsed time is the time since the last sighting.
+			-- Cheap checks first: engine objects are only read, once all of them pass.
+			if Config.BotsThrowGrenades and p_Bot._ActiveAction ~= BotActionFlags.GrenadeActive then
+				if Config.BotWeapon == BotWeapons.Grenade then
+					local s_Grenade = p_Bot.m_Grenade ~= nil and s_Weapons[7]
+					if s_Grenade and s_Grenade.primaryAmmo > 0 then
+						_StartGrenade(p_Bot)
 					end
+				elseif not p_Bot._GrenadeTried and p_Bot._WeaponToUse ~= BotWeapons.Gadget2 and
+					(p_Bot._ActiveShootDuration - p_Bot._ShootModeTimer) >= Registry.BOT.GRENADE_LOST_SIGHT_TIME and
+					_ShouldThrowGrenade(p_Bot, s_Soldier, s_Weapons) then
+					_StartGrenade(p_Bot)
 				end
 			end
 		end

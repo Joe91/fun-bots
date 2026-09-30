@@ -67,4 +67,6 @@ Language['pt_PT'] /* Add/replace the xx_XX here with your language code (like
         "End Trace" : "Finalizar Traço",
         "[Paths]" : "[Caminhos]",
         "Refresh" : "Atualizar",
+        "Recording..." : "A gravar...",
+        "Press ALT for Interaction with the Editor" : "Prima ALT para interagir com o editor",
       };

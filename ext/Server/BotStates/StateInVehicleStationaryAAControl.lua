@@ -80,7 +80,7 @@ function StateInVehicleStationaryAAControl:UpdateFast(p_Bot, p_DeltaTime)
 
 	-- Fast code.
 	if s_IsAttacking then
-		m_VehicleAiming:UpdateAimingVehicle(p_Bot, true)
+		m_VehicleAiming:UpdateAimingVehicle(p_Bot, true, p_DeltaTime)
 	else
 		m_VehicleMovement:UpdateVehicleLookAround(p_Bot, p_DeltaTime)
 	end

@@ -21,6 +21,11 @@ function Bot:_DoExitVehicle()
 			self._LastWayDistance = 1000.0
 		end
 		self._KillYourselfTimer = 0.0
+		-- The stuck-handling of the vehicle must not continue on foot.
+		self._StuckTimer = 0.0
+		self._StuckRerouteCount = 0
+		self._ObstacleRetryCounter = 0
+		self:_ResetObstacleSequence()
 		self._ExitVehicleActive = false
 		self._DontAttackPlayers = false
 		return true

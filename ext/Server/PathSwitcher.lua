@@ -46,6 +46,55 @@ function PathSwitcher:GetPriorityOfPath(p_Node, p_TargetObjective)
 	return s_Priority
 end
 
+---Whether soldiers may use a path. Paths with "Vehicles" are driven if they have no objectives (e.g. out of a base) or
+---are a closed loop through several objectives (around the map), air paths anyway. The others are walkable as well: a
+---loop around one objective, or a path between objectives.
+---@param p_PathIndex integer
+---@return boolean
+function PathSwitcher:IsWalkable(p_PathIndex)
+	local s_First = m_NodeCollection:GetFirst(p_PathIndex)
+
+	if not s_First or type(s_First) == 'boolean' or s_First.Data == nil then
+		return true
+	end
+
+	local s_Vehicles = s_First.Data.Vehicles
+
+	if s_Vehicles == nil or #s_Vehicles == 0 then
+		return true
+	end
+
+	for l_Index = 1, #s_Vehicles do
+		if s_Vehicles[l_Index]:lower() == "air" then
+			return false
+		end
+	end
+
+	local s_ObjectiveCount = s_First.Data.Objectives and #s_First.Data.Objectives or 0
+
+	if s_ObjectiveCount == 0 then
+		return false
+	elseif s_ObjectiveCount == 1 then
+		return true
+	end
+
+	-- Closed: the ends meet (15 m, or 5 % of the length on long loops). The loop flag of old paths isn't reliable.
+	local s_Nodes = m_NodeCollection:Get(nil, p_PathIndex)
+
+	if s_Nodes == nil or #s_Nodes < 2 then
+		return true
+	end
+
+	local s_Length = 0.0
+
+	for l_Index = 2, #s_Nodes do
+		s_Length = s_Length + s_Nodes[l_Index - 1].Position:Distance(s_Nodes[l_Index].Position)
+	end
+
+	local s_Gap = s_First.Position:Distance(s_Nodes[#s_Nodes].Position)
+	return s_Gap > math.max(15.0, 0.05 * s_Length)
+end
+
 ---@param p_Bot Bot
 ---@param p_BotId integer
 ---@param p_Point Waypoint
@@ -85,8 +134,9 @@ function PathSwitcher:GetNewPath(p_Bot, p_BotId, p_Point, p_Objective, p_InVehic
 
 		if s_NewPoint ~= nil then
 			if not p_InVehicle then
-				-- todo: prevent air-paths?
-				s_PossiblePaths[#s_PossiblePaths + 1] = s_NewPoint
+				if self:IsWalkable(s_NewPoint.PathIndex) then
+					s_PossiblePaths[#s_PossiblePaths + 1] = s_NewPoint
+				end
 			else
 				local s_PathNode = m_NodeCollection:GetFirst(s_NewPoint.PathIndex)
 

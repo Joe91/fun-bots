@@ -62,18 +62,6 @@ function Weapon:learnStatsValues()
 		return
 	end
 
-	s_BulletData, s_Success = g_EbxEditUtils:GetWritableContainer(s_FireData, 'shot.ProjectileData')
-
-	if not s_Success then
-		m_Logger:Write('No bulletData for: ' .. self.name)
-		return
-	end
-
-	if not s_BulletData:Is('BulletEntityData') then
-		m_Logger:Write('No bulletData for: ' .. self.name)
-		return
-	end
-
 	-- Stats depending on weapon-type.
 	local s_AiDataString = tostring(s_AiData.name)
 	local s_FireDuration = 0.0
@@ -194,17 +182,32 @@ function Weapon:learnStatsValues()
 		s_DelayedShot = false
 	end
 
+	-- Set before the checks of the projectile: grenades (and other non-bullets) need them as well. Without them the
+	-- fire-button is held all the time, and a grenade is never thrown.
+	self.fireCycle = s_FireDuration -- aiData.minBurstCoolDownTime
+	self.pauseCycle = s_FirePause -- (aiData.maxBurstCoolDownTime + aiData.minBurstCoolDownTime) / 2
+	self.delayed = s_DelayedShot
+
+	s_BulletData, s_Success = g_EbxEditUtils:GetWritableContainer(s_FireData, 'shot.ProjectileData')
+
+	if not s_Success then
+		m_Logger:Write('No bulletData for: ' .. self.name)
+		return
+	end
+
+	if not s_BulletData:Is('BulletEntityData') then
+		m_Logger:Write('No bulletData for: ' .. self.name)
+		return
+	end
+
 	self.damage = s_BulletData.startDamage
 	self.endDamage = s_BulletData.endDamage
 	self.damageFalloffStartDistance = s_BulletData.damageFalloffStartDistance
 	self.damageFalloffEndDistance = s_BulletData.damageFalloffStartDistance
 	self.bulletSpeed = s_FireData.shot.initialSpeed.z
 	self.bulletDrop = (s_BulletData.gravity or 0.0) * -1
-	self.fireCycle = s_FireDuration -- aiData.minBurstCoolDownTime
-	self.pauseCycle = s_FirePause -- (aiData.maxBurstCoolDownTime + aiData.minBurstCoolDownTime) / 2
 	---@type integer
 	self.reload = math.floor(s_FireData.ammo.magazineCapacity * 0.2)
-	self.delayed = s_DelayedShot
 	self.needvalues = false
 end
 
