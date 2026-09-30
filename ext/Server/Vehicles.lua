@@ -8,12 +8,37 @@ local m_Utilities = require('__shared/Utilities')
 ---@type Logger
 local m_Logger = Logger("Vehicles", Debug.Server.VEHICLES)
 
+-- The cast VehicleEntityData(data) costs ~150 µs, reading the guid ~2 µs. The data of a vehicle never changes,
+-- so the name is cached per data-instance.
+---@type table<string, string>
+local s_VehicleNameByDataGuid = {}
+
+---Name of the vehicle (key of VehicleData) of a vehicle-entity.
+---@param p_Entity ControllableEntity|Entity
+---@return string
+function Vehicles:GetVehicleNameOfEntity(p_Entity)
+	local s_Data = p_Entity.data
+	local s_Guid = s_Data.instanceGuid
+	local s_Key = s_Guid and s_Guid:ToString('D')
+	local s_Name = s_Key and s_VehicleNameByDataGuid[s_Key]
+
+	if s_Name == nil then
+		s_Name = (VehicleEntityData(s_Data).controllableType:gsub(".+/.+/", ""))
+		if s_Key then
+			s_VehicleNameByDataGuid[s_Key] = s_Name
+		end
+	end
+
+	return s_Name
+end
+
 ---@param p_Player Player
 function Vehicles:FindOutVehicleType(p_Player)
 	local s_VehicleType = VehicleTypes.NoVehicle -- No vehicle.
 
-	if p_Player and p_Player.controlledControllable and not p_Player.controlledControllable:Is("ServerSoldierEntity") then
-		local s_VehicleName = VehicleEntityData(p_Player.controlledControllable.data).controllableType:gsub(".+/.+/", "")
+	local s_Controllable = p_Player and p_Player.controlledControllable
+	if s_Controllable and not s_Controllable:Is("ServerSoldierEntity") then
+		local s_VehicleName = self:GetVehicleNameOfEntity(s_Controllable)
 
 		local s_VehicleData = VehicleData[s_VehicleName]
 		if s_VehicleData and s_VehicleData.Type then
@@ -26,8 +51,9 @@ end
 
 ---@param p_Player Player?
 function Vehicles:GetVehicleName(p_Player)
-	if p_Player and p_Player.controlledControllable and not p_Player.controlledControllable:Is("ServerSoldierEntity") then
-		return VehicleEntityData(p_Player.controlledControllable.data).controllableType:gsub(".+/.+/", "")
+	local s_Controllable = p_Player and p_Player.controlledControllable
+	if s_Controllable and not s_Controllable:Is("ServerSoldierEntity") then
+		return self:GetVehicleNameOfEntity(s_Controllable)
 	else
 		return nil
 	end
@@ -48,7 +74,7 @@ function Vehicles:GetVehicleByEntity(p_Entity)
 	local s_VehicleName = nil
 
 	if p_Entity then
-		s_VehicleName = VehicleEntityData(p_Entity.data).controllableType:gsub(".+/.+/", "")
+		s_VehicleName = self:GetVehicleNameOfEntity(p_Entity)
 	end
 
 	if s_VehicleName == nil then

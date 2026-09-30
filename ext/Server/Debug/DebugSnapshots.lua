@@ -14,6 +14,8 @@ local m_BotManager = require('BotManager')
 local m_ServerRaycasts = require('ServerRaycasts')
 ---@type NodeCollection
 local m_NodeCollection = require('NodeCollection')
+---@type Vehicles
+local m_Vehicles = require('Vehicles')
 
 local _Vec = DebugBridge.Vec
 local _Round = DebugBridge.Round
@@ -37,7 +39,7 @@ local s_StateNames = nil
 ---@param p_Entity ControllableEntity
 ---@return string
 local function _VehicleName(p_Entity)
-	return (VehicleEntityData(p_Entity.data).controllableType:gsub('.+/.+/', ''))
+	return m_Vehicles:GetVehicleNameOfEntity(p_Entity)
 end
 
 function DebugSnapshots:__init()
