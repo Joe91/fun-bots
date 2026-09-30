@@ -2122,7 +2122,7 @@ end
 function GameDirector:_InitFlagTeams()
 	self._AllCapturePoints = {}
 	self._AllBases = {}
-	if not Globals.IsConquest then -- Valid for all Conquest-types. TODO: check for rush?
+	if not Globals.IsConquest then -- Valid for all Conquest-types. Rush has no capture points.
 		return
 	end
 

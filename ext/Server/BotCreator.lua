@@ -147,7 +147,6 @@ function BotCreator:GetNextBotName(p_BotKit, p_TeamId)
 				break
 			end
 		end
-		--TODO: check for existing player or Bot?
 
 		if s_NameAvailable then
 			s_PossibleNames[#s_PossibleNames + 1] = l_Attributes.Name

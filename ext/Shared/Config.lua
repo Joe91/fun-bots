@@ -38,7 +38,7 @@ Config = {
 	BalancePlayersIgnoringBots = false,	-- Counts players in each team to decide which team a player joins 
 	TeamSwitchMode = TeamSwitchModes.SwitchForRoundTwo,	-- Mode to switch the team 
 	SpawnInBothTeams = true,			-- Bots spawn in both teams 
-	InitNumberOfBots = 10,				-- Bots for spawnmode 
+	InitNumberOfBots = 20,				-- Bots for spawnmode 
 	NewBotsPerNewPlayer = 1.6,			-- Number to increase Bots by when new players join 
 	FactorPlayerTeamCount = 1.0,		-- Reduce player team in balanced_teams or fixed_number mode 
 	BotTeam = 0,						-- Default bot team (0 = neutral / auto, 1 = US, 2 = RU) TeamId.Team2 
@@ -52,13 +52,13 @@ Config = {
 
 	-- SPAWNLIMITS 
 	MaxBotsPerTeamDefault = 32,			-- Max number of bots in one team, if no other mode fits 
-	MaxBotsPerTeamTdm = 32,				-- Max number of bots in one team for TDM 
-	MaxBotsPerTeamTdmc = 8,				-- Max number of bots in one team for TDM-CQ 
+	MaxBotsPerTeamTdm = 24,				-- Max number of bots in one team for TDM 
+	MaxBotsPerTeamTdmc = 12,			-- Max number of bots in one team for TDM-CQ 
 	MaxBotsPerTeamSdm = 5,				-- Max number of bots in one team for Squad-DM 
 	MaxBotsPerTeamCl = 32,				-- Max number of bots in one team for CQ-Large 
-	MaxBotsPerTeamCs = 16,				-- Max number of bots in one team for CQ-Small 
+	MaxBotsPerTeamCs = 20,				-- Max number of bots in one team for CQ-Small 
 	MaxBotsPerTeamCal = 32,				-- Max number of bots in one team for CQ-Assault-Large 
-	MaxBotsPerTeamCas = 16,				-- Max number of bots in one team for CQ-Assault-Small 
+	MaxBotsPerTeamCas = 20,				-- Max number of bots in one team for CQ-Assault-Small 
 	MaxBotsPerTeamRl = 24,				-- Max number of bots in one team for Rush 
 	MaxBotsPerTeamCtf = 24,				-- Max number of bots in one team for CTF 
 	MaxBotsPerTeamD = 12,				-- Max number of bots in one team for Domination 

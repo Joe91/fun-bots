@@ -223,7 +223,6 @@ VehicleData = {
 		Drop = { 0.0 },
 		Offset = { Vec3(0.169, 0.562, -1.230) }
 	},
-	-- TODO: Handling of Light vehicle needed?
 	["VodnikPhoenix"] = {
 		Name = "[VODNIK AA]",
 		Type = VehicleTypes.LightAA,

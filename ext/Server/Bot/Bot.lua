@@ -352,7 +352,12 @@ function Bot:UpdateDontAttackFlag()
 
 	-- Seats without an aimable part (-1) can't aim their weapon (passengers or fixed guns like on the M1128).
 	-- Weapons aimed with the whole vehicle (chopper / jet main guns) use -2.
-	if g_BotStates:IsInVehicleState(self.m_ActiveState) and self._VehicleMovableId == -1 then
+	-- Drivers of mobile artillery and light AA attack anyway: they switch to the gunner seat (_CheckForVehicleActions).
+	if g_BotStates:IsInVehicleState(self.m_ActiveState) and self._VehicleMovableId == -1
+		and not (self.m_Player.controlledEntryId == 0
+			and (m_Vehicles:IsVehicleType(self.m_ActiveVehicle, VehicleTypes.MobileArtillery)
+				or m_Vehicles:IsVehicleType(self.m_ActiveVehicle, VehicleTypes.LightAA)))
+	then
 		self._DontAttackPlayers = true
 		return
 	end
@@ -404,8 +409,13 @@ function Bot:_CheckForVehicleActions(p_DeltaTime, p_AttackActive)
 		if s_DesiredSeat ~= self.m_Player.controlledEntryId
 			and s_VehicleEntity:GetPlayerInEntry(s_DesiredSeat) == nil
 		then
+			-- UpdateVehicleMovableId resets the target: keep it, to attack it from the gunner seat.
+			local s_ShootPlayer = self._ShootPlayer
+			local s_ShootPlayerId = self._ShootPlayerId
 			self.m_Player:EnterVehicle(s_VehicleEntity, s_DesiredSeat)
 			self:UpdateVehicleMovableId()
+			self._ShootPlayer = s_ShootPlayer
+			self._ShootPlayerId = s_ShootPlayerId
 		end
 	else
 		-- Check if better seat is available.

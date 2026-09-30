@@ -382,7 +382,7 @@ SettingsDefinition = {
 			Value = Config.InitNumberOfBots,
 			Description = "Bots for spawnmode",
 			Reference = Range(0.00, 128.00, 1.0),
-			Default = 10,
+			Default = 20,
 			UpdateFlag = UpdateFlag.AmountAndTeam,
 			Category = "SPAWN"
 		},
@@ -527,7 +527,7 @@ SettingsDefinition = {
 			Value = Config.MaxBotsPerTeamTdm,
 			Description = "Max number of bots in one team for TDM",
 			Reference = Range(0.00, 128.00, 1.0),
-			Default = 32,
+			Default = 24,
 			UpdateFlag = UpdateFlag.MaxBots,
 			Category = "SPAWNLIMITS"
 		},
@@ -539,7 +539,7 @@ SettingsDefinition = {
 			Value = Config.MaxBotsPerTeamTdmc,
 			Description = "Max number of bots in one team for TDM-CQ",
 			Reference = Range(0.00, 128.00, 1.0),
-			Default = 8,
+			Default = 12,
 			UpdateFlag = UpdateFlag.MaxBots,
 			Category = "SPAWNLIMITS"
 		},
@@ -575,7 +575,7 @@ SettingsDefinition = {
 			Value = Config.MaxBotsPerTeamCs,
 			Description = "Max number of bots in one team for CQ-Small",
 			Reference = Range(0.00, 128.00, 1.0),
-			Default = 16,
+			Default = 20,
 			UpdateFlag = UpdateFlag.MaxBots,
 			Category = "SPAWNLIMITS"
 		},
@@ -599,7 +599,7 @@ SettingsDefinition = {
 			Value = Config.MaxBotsPerTeamCas,
 			Description = "Max number of bots in one team for CQ-Assault-Small",
 			Reference = Range(0.00, 128.00, 1.0),
-			Default = 16,
+			Default = 20,
 			UpdateFlag = UpdateFlag.MaxBots,
 			Category = "SPAWNLIMITS"
 		},
