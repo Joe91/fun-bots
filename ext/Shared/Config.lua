@@ -11,7 +11,7 @@ Config = {
 	BotTeamNames = false,				-- If the bots shall have their names based on their team 
 
 	-- DIFFICULTY 
-	BotAimError = 6.0,					-- Aim error of an average bot in milliradians (1 = 1 cm off per 10 m distance): 0 = perfect aim (hard), 10 or more = easy 
+	BotAimError = 6.0,					-- Aim error of an average bot at 25 m in milliradians (1 = 1 cm off per 10 m distance), smaller angle on greater distances: 0 = perfect aim (hard), 10 or more = easy 
 	BotSniperAimError = 3.0,			-- See BotAimError, only for Sniper-rifles 
 	BotSupportAimError = 8.0,			-- See BotAimError, only for LMGs 
 	BotAimErrorSpread = 0.6,			-- Difference between single bots: the best bot has (1 - x), the worst (1 + x) times the aim error 

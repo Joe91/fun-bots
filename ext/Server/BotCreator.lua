@@ -163,6 +163,7 @@ end
 function BotCreator:SetAttributesToBot(p_Bot)
 	local s_Attributes = self:GetAttributesOfBot(p_Bot.m_Player.name)
 	p_Bot.m_Kit = s_Attributes.Kit
+	p_Bot.m_PreferredKit = s_Attributes.Kit
 	p_Bot.m_Color = s_Attributes.Color
 	p_Bot.m_Behavior = s_Attributes.Behaviour
 	p_Bot.m_Reaction = s_Attributes.ReactionTime

@@ -80,7 +80,7 @@ SettingsDefinition = {
 			---@type Type|integer
 			Type = Type.Float,
 			Value = Config.BotAimError,
-			Description = "Aim error of an average bot in milliradians (1 = 1 cm off per 10 m distance): 0 = perfect aim (hard), 10 or more = easy",
+			Description = "Aim error of an average bot at 25 m in milliradians (1 = 1 cm off per 10 m distance), smaller angle on greater distances: 0 = perfect aim (hard), 10 or more = easy",
 			Reference = Range(0.00, 50.00, 0.50),
 			Default = 6.0,
 			UpdateFlag = UpdateFlag.None,

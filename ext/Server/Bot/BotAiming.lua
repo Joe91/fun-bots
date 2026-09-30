@@ -225,15 +225,25 @@ local function _DefaultAimingAction(p_Bot, p_BotSoldier, p_DeltaTime)
 		local s_AngularSpeed = m_Utilities:GetAngularSpeed(s_DiffX, s_DiffY, s_DiffZ, p_Bot._DistanceToPlayer,
 			s_VelX, s_VelY, s_VelZ)
 
-		local s_Sigma = (s_AimError * 0.001 * (1.0 + s_Registry.AIM_ERROR_SELF_SPEED * s_BotSpeed) +
+		-- More care on greater distances: the angle shrinks, the miss in m still grows (with the square root by default).
+		local s_Distance = math.max(p_Bot._DistanceToPlayer, s_Registry.AIM_ERROR_MIN_DISTANCE)
+		local s_DistanceFactor = (s_Registry.AIM_ERROR_REFERENCE_DISTANCE / s_Distance) ^ s_Registry.AIM_ERROR_DISTANCE_EXPONENT
+
+		local s_Sigma = (s_AimError * 0.001 * s_DistanceFactor * (1.0 + s_Registry.AIM_ERROR_SELF_SPEED * s_BotSpeed) +
 			s_AngularSpeed * s_Registry.AIM_TRACKING_ERROR * s_ErrorScale) * s_SkillFactor
 		local s_ErrorYaw, s_ErrorPitch = p_Bot:UpdateAimError(p_DeltaTime, s_Sigma, s_ErrorScale, s_Yaw, s_Pitch, true)
 
-		-- Better bots control the recoil better. The spread can't be known, only emulate aiming down sights.
+		-- Better bots control the recoil better. The spread can't be known, only emulate aiming down sights: from the hip
+		-- on short distances, down the sights on greater ones.
 		local s_RecoilControl = Config.BotRecoilControlBest +
 			(Config.BotRecoilControlWorst - Config.BotRecoilControlBest) * p_Bot.m_Inaccuracy
+		local s_SightsShare = (s_Distance - s_Registry.AIM_SPREAD_COMPENSATION_NEAR_DISTANCE) /
+			(s_Registry.AIM_SPREAD_COMPENSATION_FAR_DISTANCE - s_Registry.AIM_SPREAD_COMPENSATION_NEAR_DISTANCE)
+		s_SightsShare = math.min(math.max(s_SightsShare, 0.0), 1.0)
+		local s_SpreadCompensation = s_Registry.AIM_SPREAD_COMPENSATION_NEAR +
+			(s_Registry.AIM_SPREAD_COMPENSATION_FAR - s_Registry.AIM_SPREAD_COMPENSATION_NEAR) * s_SightsShare
 		local s_RecoilCompensationPitch, s_RecoilCompensationYaw = _CompensateRecoil(p_BotSoldier, s_RecoilControl,
-			s_Registry.AIM_SPREAD_COMPENSATION)
+			s_SpreadCompensation)
 
 		-- Recoil from gunSway is negative → add recoil to yaw.
 		s_Yaw = s_Yaw + s_ErrorYaw + s_RecoilCompensationYaw

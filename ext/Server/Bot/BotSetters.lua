@@ -151,6 +151,7 @@ end
 
 function Bot:ResetVars()
 	self._SpawnMode = BotSpawnModes.NoRespawn
+	self._KitInUse = false
 	self._ActiveAction = BotActionFlags.NoActionActive
 	self._PathIndex = 0
 	self._Respawning = false

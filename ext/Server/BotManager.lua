@@ -896,7 +896,10 @@ end
 ---Get the amount of bots using this kit
 ---@param p_TeamId TeamId|nil
 ---@return table<BotKits, integer>
-function BotManager:GetKitCount(p_TeamId)
+---Kits in use: of the bots that are spawned or about to spawn. Inactive bots (kept for the next round) don't count.
+---@param p_TeamId? TeamId|integer
+---@param p_ExcludeBot? Bot not counted, e.g. the bot that spawns right now
+function BotManager:GetKitCount(p_TeamId, p_ExcludeBot)
 	local s_AllCounts = {
 		[BotKits.Assault] = 0,
 		[BotKits.Support] = 0,
@@ -906,7 +909,8 @@ function BotManager:GetKitCount(p_TeamId)
 
 	for l_Index = 1, #self._Bots do
 		local l_Bot = self._Bots[l_Index]
-		if p_TeamId == nil or p_TeamId == l_Bot.m_Player.teamId then
+		if l_Bot._KitInUse and l_Bot ~= p_ExcludeBot and s_AllCounts[l_Bot.m_Kit] ~= nil and
+			(p_TeamId == nil or p_TeamId == l_Bot.m_Player.teamId) then
 			s_AllCounts[l_Bot.m_Kit] = s_AllCounts[l_Bot.m_Kit] + 1
 		end
 	end

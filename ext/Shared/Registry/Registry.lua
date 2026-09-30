@@ -222,6 +222,12 @@ Registry = {
 		-- Configured aim error (mrad) at which flick, flinch and tracking have the values below. They scale linearly with
 		-- it, so an aim error of 0 is a perfect aim.
 		AIM_ERROR_REFERENCE = 6.0,
+		-- Players take more care on greater distances: the angle of the error shrinks with (REFERENCE_DISTANCE / distance)
+		-- ^ EXPONENT, the miss in m still grows. Exponent 0 = same angle on all distances, 1 = same miss in m.
+		-- The configured aim error is the one at REFERENCE_DISTANCE. Below MIN_DISTANCE the angle does not grow anymore.
+		AIM_ERROR_REFERENCE_DISTANCE = 25.0,
+		AIM_ERROR_DISTANCE_EXPONENT = 0.5,
+		AIM_ERROR_MIN_DISTANCE = 2.0,
 		-- Time constant of the slow drift of the crosshair around the target.
 		AIM_ERROR_DRIFT_TIME = 0.3,
 		-- Vertical aim error relative to the horizontal one (humans miss more to the sides).
@@ -243,7 +249,11 @@ Registry = {
 		AIM_FLINCH = 0.01,
 		AIM_FLINCH_TIME = 0.2,
 		-- Share of the weapon spread the bots compensate. Bots can't aim down sights, this emulates it (0 = hip-fire spread).
-		AIM_SPREAD_COMPENSATION = 0.8,
+		-- Players fire from the hip on short distances: NEAR up to NEAR_DISTANCE, rising to FAR from FAR_DISTANCE on.
+		AIM_SPREAD_COMPENSATION_NEAR = 0.4,
+		AIM_SPREAD_COMPENSATION_NEAR_DISTANCE = 10.0,
+		AIM_SPREAD_COMPENSATION_FAR = 0.8,
+		AIM_SPREAD_COMPENSATION_FAR_DISTANCE = 30.0,
 		-- Fitts' law for the first shot: extra delay per doubling of the angle to the target. The angle is measured in
 		-- multiples of FIRST_SHOT_TARGET_ANGLE (180° → +0.24 s, 20° → +0.12 s).
 		FIRST_SHOT_DELAY_PER_BIT = 0.04,

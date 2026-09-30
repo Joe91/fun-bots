@@ -73,6 +73,11 @@ function Bot:__init(p_Player)
 	-- TODO: this whole block could be moved to an inner class `Bot.Loadout = class('Bot.Loadout')`.
 	---@type BotKits|integer
 	self.m_Kit = nil
+	-- Kit of the name of the bot. The spawner uses it, as long as the kit-limits allow it.
+	---@type BotKits|nil
+	self.m_PreferredKit = nil
+	-- The kit counts for the kit-limits: set on spawn, reset once the bot is deactivated (ResetVars).
+	self._KitInUse = false
 	-- Only used in BotSpawner.
 	-- The bot color is the soldier camo (color).
 	---@type BotColors|integer

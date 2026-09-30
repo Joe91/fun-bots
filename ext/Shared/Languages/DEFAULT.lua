@@ -12,7 +12,7 @@ Language:add(code, "If the bots shall have their names based on their team", "")
 
 -- DIFFICULTY
 Language:add(code, "Bot Aim Error", "")
-Language:add(code, "Aim error of an average bot in milliradians (1 = 1 cm off per 10 m distance): 0 = perfect aim (hard), 10 or more = easy", "")
+Language:add(code, "Aim error of an average bot at 25 m in milliradians (1 = 1 cm off per 10 m distance), smaller angle on greater distances: 0 = perfect aim (hard), 10 or more = easy", "")
 Language:add(code, "Bot Aim Error of Snipers", "")
 Language:add(code, "See BotAimError, only for Sniper-rifles", "")
 Language:add(code, "Bot Aim Error of Support", "")
