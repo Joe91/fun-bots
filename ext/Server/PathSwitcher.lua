@@ -117,6 +117,10 @@ function PathSwitcher:GetNewPath(p_Bot, p_BotId, p_Point, p_Objective, p_InVehic
 		s_CurrentPathStatus = m_GameDirector:GetEnableStateOfPath(s_CurrentPathFirst.Data.Objectives)
 		s_OnBasePath = m_GameDirector:IsBasePath(s_CurrentPathFirst.Data.Objectives)
 	end
+	-- Path of a base alone, where the bots spawn. They always leave it.
+	local s_OnSpawnBasePath = s_OnBasePath and #s_CurrentPathFirst.Data.Objectives == 1
+	local s_BaseExits = {}
+	local s_BestExitStatus = -1
 
 	-- To-do: get all paths via links, assign priority, sort by priority.
 	-- If multiple are top priority, choose at random.
@@ -229,6 +233,21 @@ function PathSwitcher:GetNewPath(p_Bot, p_BotId, p_Point, p_Objective, p_InVehic
 			end
 		end
 
+		-- Fallback way out of a base-path: any path but another base-path alone, the way to a vehicle or a beacon.
+		if s_OnSpawnBasePath then
+			local s_NewObjectives = s_PathNode.Data.Objectives or {}
+			local s_IsDeadEnd = #s_NewObjectives == 1 and (s_NewBasePath
+				or m_GameDirector:IsVehicleEnterPath(s_NewObjectives[1])
+				or m_GameDirector:IsBeaconPath(s_NewObjectives[1]))
+
+			if not s_IsDeadEnd then
+				s_BaseExits[#s_BaseExits + 1] = { Point = s_NewPoint, State = s_NewPathStatus }
+				if s_NewPathStatus > s_BestExitStatus then
+					s_BestExitStatus = s_NewPathStatus
+				end
+			end
+		end
+
 		-- GET PRIORITY of path here
 		local s_Priority = self:GetPriorityOfPath(s_PathNode, p_Objective)
 
@@ -303,6 +322,18 @@ function PathSwitcher:GetNewPath(p_Bot, p_BotId, p_Point, p_Objective, p_InVehic
 
 	if s_OnVehicleEnterObjective then
 		return false
+	end
+
+	-- No regular way out of the base (priority 5): leave it anyways, over the most active path. Better than staying.
+	if s_HighestPriority < 5 and #s_BaseExits > 0 then
+		local s_BestExits = {}
+		for i = 1, #s_BaseExits do
+			if s_BaseExits[i].State == s_BestExitStatus then
+				s_BestExits[#s_BestExits + 1] = s_BaseExits[i].Point
+			end
+		end
+		m_Logger:Write('no regular way out of the base-path, leave it anyways')
+		return true, s_BestExits[MathUtils:GetRandomInt(1, #s_BestExits)]
 	end
 
 	if #s_ValidPaths == 0 then

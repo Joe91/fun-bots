@@ -1644,6 +1644,17 @@ function GameDirector:GetSpawnPath(p_TeamId, p_SquadId, p_OnlyBase)
 		end
 	end
 
+	-- Only base-paths the bots can leave: e.g. the way to a vehicle only while it is there.
+	local s_LeavableBases = {}
+	for l_Index = 1, #s_PossibleBases do
+		if self:CanLeaveBasePath(s_PossibleBases[l_Index], p_TeamId) then
+			s_LeavableBases[#s_LeavableBases + 1] = s_PossibleBases[l_Index]
+		end
+	end
+	if #s_LeavableBases > 0 then
+		s_PossibleBases = s_LeavableBases
+	end
+
 	-- Spawn in base from time to time to get a vehicle.
 	-- To-do: do this dependant of vehicle available.
 	if not p_OnlyBase and #s_PossibleBases > 0 then
@@ -1772,6 +1783,46 @@ function GameDirector:IsBasePath(p_ObjectiveNames)
 		local s_Objective = self:_GetObjectiveObject(l_ObjectiveName)
 		if s_Objective ~= nil and s_Objective.isBase then
 			return true
+		end
+	end
+
+	return false
+end
+
+---Whether a bot spawned on this base-path can walk off it (PathSwitcher:GetNewPath makes it leave): a link to a
+---walkable path that isn't a base-path alone or the way to a beacon. The way to a vehicle only counts while the
+---vehicle is there.
+---@param p_PathIndex integer
+---@param p_TeamId TeamId|integer
+---@return boolean
+function GameDirector:CanLeaveBasePath(p_PathIndex, p_TeamId)
+	local s_Nodes = m_NodeCollection:Get(nil, p_PathIndex)
+
+	if s_Nodes == nil then
+		return false
+	end
+
+	for l_Index = 1, #s_Nodes do
+		local s_Links = s_Nodes[l_Index].Data and s_Nodes[l_Index].Data.Links
+
+		for l_LinkIndex = 1, #(s_Links or {}) do
+			local s_Target = m_NodeCollection:Get(s_Links[l_LinkIndex])
+
+			if s_Target ~= nil and s_Target.PathIndex ~= p_PathIndex
+				and (g_PathSwitcher == nil or g_PathSwitcher:IsWalkable(s_Target.PathIndex)) then
+				local s_First = m_NodeCollection:GetFirst(s_Target.PathIndex)
+				local s_Objectives = type(s_First) == 'table' and s_First.Data and s_First.Data.Objectives or {}
+
+				if #s_Objectives ~= 1 then
+					return true
+				elseif self:IsVehicleEnterPath(s_Objectives[1]) then
+					if self:UseVehicle(p_TeamId, s_Objectives[1]) then
+						return true
+					end
+				elseif not self:IsBasePath(s_Objectives) and not self:IsBeaconPath(s_Objectives[1]) then
+					return true
+				end
+			end
 		end
 	end
 

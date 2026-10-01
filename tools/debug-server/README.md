@@ -146,6 +146,25 @@ Without `--server` (or `--flags FILE` with the `flags` of `/api/state`), the obj
 already carry exactly one objective. Measured on the hand-made conquest maps, the labeler finds the same objectives for
 87 % of the paths, and about as many links as the authors made.
 
+### Ways out of the bases
+
+Bots spawn on the paths of a base alone (`base us`, `base ru 2`) and have to leave them. At a junction they always
+take a walkable path whose objectives are all active (in rush: of the current stage) and that isn't a base-path alone.
+`funbots_debug/paths/bases.py` finds the base-paths without such a junction, for every rush stage, and fixes them:
+
+1. **Relabel** (rush): a path out of a base that names an MCOM of another stage (`base us 2, mcom 2`) is only partly
+   active, bots don't take it. The MCOM becomes the one of the base's stage closest to an end of the path (80 m).
+2. **Relink**: the base-path is linked to the closest node of a way out within 20 m (not through the other team's base).
+3. **Remove**: a base-path without any links and nothing in reach is deleted, if its base has other paths.
+
+The rest is reported, mostly base-paths that only lead to vehicles. In the game, bots spawn on those only while one of
+their vehicles is there (`GameDirector:CanLeaveBasePath`), and a bot on a base-path without a way out leaves it over
+any other linked path (`PathSwitcher:GetNewPath`).
+```
+python -m funbots_debug.paths.fix_bases ../../mapfiles/*.map -v         # only show what it would do
+python -m funbots_debug.paths.fix_bases ../../mapfiles/*.map --write
+```
+
 ## RCON
 
 The console connects to the RCON port of the game server itself (`--rcon`, default `127.0.0.1:47200`) and logs in
