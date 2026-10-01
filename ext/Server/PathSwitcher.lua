@@ -117,8 +117,13 @@ function PathSwitcher:GetNewPath(p_Bot, p_BotId, p_Point, p_Objective, p_InVehic
 		s_CurrentPathStatus = m_GameDirector:GetEnableStateOfPath(s_CurrentPathFirst.Data.Objectives)
 		s_OnBasePath = m_GameDirector:IsBasePath(s_CurrentPathFirst.Data.Objectives)
 	end
-	-- Path of a base alone, where the bots spawn. They always leave it.
-	local s_OnSpawnBasePath = s_OnBasePath and #s_CurrentPathFirst.Data.Objectives == 1
+	-- Bots always leave a path of a base alone, where they spawn, and a path out of a base at its end (else they walk
+	-- it back to the base). Without a regular way out, over any other path (see below).
+	local s_LeaveBasePath = false
+	if s_OnBasePath then
+		s_LeaveBasePath = #s_CurrentPathFirst.Data.Objectives == 1 or p_Point.PointIndex == 1
+			or p_Point.PointIndex == #m_NodeCollection:Get(nil, p_Point.PathIndex)
+	end
 	local s_BaseExits = {}
 	local s_BestExitStatus = -1
 
@@ -234,7 +239,7 @@ function PathSwitcher:GetNewPath(p_Bot, p_BotId, p_Point, p_Objective, p_InVehic
 		end
 
 		-- Fallback way out of a base-path: any path but another base-path alone, the way to a vehicle or a beacon.
-		if s_OnSpawnBasePath then
+		if s_LeaveBasePath then
 			local s_NewObjectives = s_PathNode.Data.Objectives or {}
 			local s_IsDeadEnd = #s_NewObjectives == 1 and (s_NewBasePath
 				or m_GameDirector:IsVehicleEnterPath(s_NewObjectives[1])

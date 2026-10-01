@@ -150,16 +150,22 @@ already carry exactly one objective. Measured on the hand-made conquest maps, th
 
 Bots spawn on the paths of a base alone (`base us`, `base ru 2`) and have to leave them. At a junction they always
 take a walkable path whose objectives are all active (in rush: of the current stage) and that isn't a base-path alone.
-`funbots_debug/paths/bases.py` finds the base-paths without such a junction, for every rush stage, and fixes them:
+On a path out of a base (`base us 1, mcom 2`) they never switch onto another path with a base, so it needs a junction to
+an active path without one, best its objective (`mcom 2`). `funbots_debug/paths/bases.py` finds the paths without such
+a junction, for every rush stage, and fixes them:
 
 1. **Relabel** (rush): a path out of a base that names an MCOM of another stage (`base us 2, mcom 2`) is only partly
    active, bots don't take it. The MCOM becomes the one of the base's stage closest to an end of the path (80 m).
-2. **Relink**: the base-path is linked to the closest node of a way out within 20 m (not through the other team's base).
-3. **Remove**: a base-path without any links and nothing in reach is deleted, if its base has other paths.
+2. **Relink** a path out of a base to the closest node of the path of its objective within 20 m, else of a path to it,
+   else of any way out.
+3. **Relink** a base-path to the closest node of a way out within 20 m (not through the other team's base).
+4. **Remove**: a base-path without any links and nothing in reach is deleted, if its base has other paths.
 
-The rest is reported, mostly base-paths that only lead to vehicles. In the game, bots spawn on those only while one of
-their vehicles is there (`GameDirector:CanLeaveBasePath`), and a bot on a base-path without a way out leaves it over
-any other linked path (`PathSwitcher:GetNewPath`).
+The rest is reported: mostly base-paths that only lead to vehicles, and paths out of a base split into several pieces
+that all carry the base. In the game, bots spawn on base-paths only while they can leave them, e.g. while one of their
+vehicles is there (`GameDirector:CanLeaveBasePath`). Without a regular way out, a bot leaves a base-path at any
+junction, and a path out of a base at its end, over any other linked path but a base-path alone, the way to a vehicle or
+a beacon (`PathSwitcher:GetNewPath`).
 ```
 python -m funbots_debug.paths.fix_bases ../../mapfiles/*.map -v         # only show what it would do
 python -m funbots_debug.paths.fix_bases ../../mapfiles/*.map --write

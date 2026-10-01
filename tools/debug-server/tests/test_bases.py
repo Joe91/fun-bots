@@ -23,8 +23,8 @@ def link(data: MapData, a: tuple[int, int], b: tuple[int, int]) -> None:
 
 
 def rush() -> MapData:
-    """Stage 1: a base-path with a way out. Stage 2: the way out of a base names the MCOM of stage 1, a base-path only
-    leads to a vehicle, and two base-paths have no links at all."""
+    """Stage 1: a base-path with a way out, the path out of the base isn't linked to its MCOM. Stage 2: the path out of
+    the base names the MCOM of stage 1, a base-path only leads to a vehicle, and two base-paths have no links at all."""
     data = make_map({
         1: straight(0, 6),  # base us 1
         2: straight(8, 100),  # base us 1 - mcom 1
@@ -36,6 +36,7 @@ def rush() -> MapData:
         8: loop(300),  # mcom 3
         9: straight(500, 504),  # base us 2, nothing around
         10: straight(-500, -496),  # base ru 2, nothing around, its only path
+        11: straight(250, 260, 2),  # mcom 3 - mcom 4, along path 5
     }, {
         1: {"Objectives": ["base us 1"]},
         2: {"Objectives": ["base us 1", "mcom 1"]},
@@ -47,6 +48,7 @@ def rush() -> MapData:
         8: {"Objectives": ["mcom 3"]},
         9: {"Objectives": ["base us 2"]},
         10: {"Objectives": ["base ru 2"]},
+        11: {"Objectives": ["mcom 3", "mcom 4"]},
     })
     link(data, (1, 4), (2, 1))
     link(data, (4, 4), (5, 1))
@@ -75,8 +77,12 @@ class StageTest(unittest.TestCase):
 
 class CheckTest(unittest.TestCase):
     def test_dead_ends(self):
-        found = {(dead.stage, dead.path): dead.reason for dead in check(rush(), "RushLarge0")}
-        self.assertEqual(set(found), {(2, 4), (2, 6), (2, 9), (2, 10)})
+        dead_ends = check(rush(), "RushLarge0")
+        found = {(dead.stage, dead.path): dead.reason for dead in dead_ends}
+        self.assertEqual(set(found), {(1, 2), (2, 5), (2, 4), (2, 6), (2, 9), (2, 10)})
+        # The paths out of a base first: only a path without a base gets a bot off them.
+        self.assertEqual([dead.kind for dead in dead_ends[:2]], ["connection"] * 2)
+        self.assertIn("1 [base us 1] base-path", found[(1, 2)])
         self.assertIn("partly active", found[(2, 4)])
         self.assertIn("to a vehicle", found[(2, 6)])
         self.assertEqual(found[(2, 9)], "no links")
@@ -90,8 +96,8 @@ class CheckTest(unittest.TestCase):
                          3: {"Objectives": ["base us"]}})
         link(data, (1, 4), (2, 1))
         link(data, (3, 4), (4, 1))
-        # A path without objectives is never active: no way out.
-        self.assertEqual([dead.path for dead in check(data, "ConquestSmall0")], [3])
+        # A path without objectives is never active: no way out. Path 2 leads to "a", but isn't linked to it.
+        self.assertEqual([dead.path for dead in check(data, "ConquestSmall0")], [2, 3])
 
 
 class FixTest(unittest.TestCase):
@@ -106,11 +112,19 @@ class FixTest(unittest.TestCase):
     def test_relinks_to_the_closest_way_out(self):
         new = {(index, point, target) for index, point, target in links(self.data) if index == 6}
         self.assertEqual({target[0] for _, _, target in new}, {5, 7})
-        added = [change for change in self.result.changes if change.kind == "link-added"]
-        self.assertEqual([change.path for change in added], [6])  # path 4 got out by the relabel
+        added = {change.path: change for change in self.result.changes if change.kind == "link-added"}
+        self.assertEqual(set(added), {2, 5, 6})  # path 4 got out over path 5
         # On both nodes.
-        point, target = added[0].point, added[0].target
+        point, target = added[6].point, added[6].target
         self.assertIn((6, point), self.data.node(*target).links)
+
+    def test_links_a_path_out_of_a_base_to_its_objective(self):
+        added = {change.path: change for change in self.result.changes if change.kind == "link-added"}
+        self.assertEqual(added[2].target[0], 3)
+        # Where it reaches mcom 1 (the loop around x=100 with 15 m radius).
+        self.assertLessEqual(abs(self.data.node(2, added[2].point).pos[0] - 100.0), 16.0)
+        # The path of its MCOM, not the closer path that only passes it.
+        self.assertEqual(added[5].target[0], 8)
 
     def test_removes_a_base_path_without_links(self):
         self.assertNotIn(9, self.data.paths)
@@ -132,7 +146,7 @@ class CliTest(unittest.TestCase):
             output = io.StringIO()
             with redirect_stdout(output):
                 fix_bases_main([str(file)])
-            self.assertIn("1 link-added", output.getvalue())
+            self.assertIn("3 link-added", output.getvalue())
             self.assertEqual(MapData.load(file).dumps(), rush().dumps())  # only reported
             with redirect_stdout(io.StringIO()):
                 fix_bases_main([str(file), "--write"])
