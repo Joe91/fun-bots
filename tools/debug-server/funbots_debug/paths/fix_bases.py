@@ -1,6 +1,7 @@
 """python -m funbots_debug.paths.fix_bases MAPFILE... [--write]
 
-Finds the base-paths bots can't leave and relabels, relinks or removes them (see bases.py). Without --write it only
+Finds the base-paths bots can't leave and relabels, relinks or removes them (see bases.py), and in rush links the paths
+of each MCOM to the other MCOM of the stage (see mcoms.py). Without --write it only
 reports what it would change.
 """
 

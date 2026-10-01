@@ -117,15 +117,19 @@ function PathSwitcher:GetNewPath(p_Bot, p_BotId, p_Point, p_Objective, p_InVehic
 		s_CurrentPathStatus = m_GameDirector:GetEnableStateOfPath(s_CurrentPathFirst.Data.Objectives)
 		s_OnBasePath = m_GameDirector:IsBasePath(s_CurrentPathFirst.Data.Objectives)
 	end
-	-- Bots always leave a path of a base alone, where they spawn, and a path out of a base at its end (else they walk
-	-- it back to the base). Without a regular way out, over any other path (see below).
-	local s_LeaveBasePath = false
+	-- Bots always leave a path of a base alone, where they spawn, a path out of a base at its end (else they walk it
+	-- back to the base), and the path of a destroyed MCOM. Without a regular way out, over any other path (see below).
+	local s_LeavePath = false
+	local s_OnDestroyedPath = false
 	if s_OnBasePath then
-		s_LeaveBasePath = #s_CurrentPathFirst.Data.Objectives == 1 or p_Point.PointIndex == 1
+		s_LeavePath = #s_CurrentPathFirst.Data.Objectives == 1 or p_Point.PointIndex == 1
 			or p_Point.PointIndex == #m_NodeCollection:Get(nil, p_Point.PathIndex)
+	elseif s_CurrentPathFirst.Data ~= nil and s_CurrentPathFirst.Data.Objectives ~= nil then
+		s_OnDestroyedPath = m_GameDirector:IsDestroyedPath(s_CurrentPathFirst.Data.Objectives)
+		s_LeavePath = s_OnDestroyedPath
 	end
-	local s_BaseExits = {}
-	local s_BestExitStatus = -1
+	local s_Exits = {}
+	local s_BestExitScore = -1
 
 	-- To-do: get all paths via links, assign priority, sort by priority.
 	-- If multiple are top priority, choose at random.
@@ -238,17 +242,23 @@ function PathSwitcher:GetNewPath(p_Bot, p_BotId, p_Point, p_Objective, p_InVehic
 			end
 		end
 
-		-- Fallback way out of a base-path: any path but another base-path alone, the way to a vehicle or a beacon.
-		if s_LeaveBasePath then
+		-- Fallback way out: any path but a base-path alone, the way to a vehicle or a beacon, or another destroyed
+		-- objective. Paths to the objective of the bot first, then the most active ones.
+		if s_LeavePath then
 			local s_NewObjectives = s_PathNode.Data.Objectives or {}
 			local s_IsDeadEnd = #s_NewObjectives == 1 and (s_NewBasePath
 				or m_GameDirector:IsVehicleEnterPath(s_NewObjectives[1])
-				or m_GameDirector:IsBeaconPath(s_NewObjectives[1]))
+				or m_GameDirector:IsBeaconPath(s_NewObjectives[1])
+				or m_GameDirector:IsDestroyedPath(s_NewObjectives))
 
 			if not s_IsDeadEnd then
-				s_BaseExits[#s_BaseExits + 1] = { Point = s_NewPoint, State = s_NewPathStatus }
-				if s_NewPathStatus > s_BestExitStatus then
-					s_BestExitStatus = s_NewPathStatus
+				local s_Score = s_NewPathStatus
+				if p_Objective ~= '' and table.has(s_NewObjectives, p_Objective) then
+					s_Score = s_Score + 3
+				end
+				s_Exits[#s_Exits + 1] = { Point = s_NewPoint, Score = s_Score }
+				if s_Score > s_BestExitScore then
+					s_BestExitScore = s_Score
 				end
 			end
 		end
@@ -329,15 +339,17 @@ function PathSwitcher:GetNewPath(p_Bot, p_BotId, p_Point, p_Objective, p_InVehic
 		return false
 	end
 
-	-- No regular way out of the base (priority 5): leave it anyways, over the most active path. Better than staying.
-	if s_HighestPriority < 5 and #s_BaseExits > 0 then
+	-- No regular way out (off a base-path: priority 5, off a destroyed objective: a better path): leave it anyways.
+	-- Better than staying.
+	local s_RegularExit = s_HighestPriority >= 5 or (s_OnDestroyedPath and s_HighestPriority > s_CurrentPriority)
+	if not s_RegularExit and #s_Exits > 0 then
 		local s_BestExits = {}
-		for i = 1, #s_BaseExits do
-			if s_BaseExits[i].State == s_BestExitStatus then
-				s_BestExits[#s_BestExits + 1] = s_BaseExits[i].Point
+		for i = 1, #s_Exits do
+			if s_Exits[i].Score == s_BestExitScore then
+				s_BestExits[#s_BestExits + 1] = s_Exits[i].Point
 			end
 		end
-		m_Logger:Write('no regular way out of the base-path, leave it anyways')
+		m_Logger:Write('no regular way out of the base-path or destroyed objective, leave it anyways')
 		return true, s_BestExits[MathUtils:GetRandomInt(1, #s_BestExits)]
 	end
 

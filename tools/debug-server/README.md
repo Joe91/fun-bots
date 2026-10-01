@@ -156,16 +156,19 @@ a junction, for every rush stage, and fixes them:
 
 1. **Relabel** (rush): a path out of a base that names an MCOM of another stage (`base us 2, mcom 2`) is only partly
    active, bots don't take it. The MCOM becomes the one of the base's stage closest to an end of the path (80 m).
-2. **Relink** a path out of a base to the closest node of the path of its objective within 20 m, else of a path to it,
+2. **Relink** (rush) the paths of an MCOM to the other MCOM of the stage, if bots can't get there (`mcoms.py`): when
+   one is destroyed, the bots there go for the other one. Over the closest path within 20 m that names it.
+3. **Relink** a path out of a base to the closest node of the path of its objective within 20 m, else of a path to it,
    else of any way out.
-3. **Relink** a base-path to the closest node of a way out within 20 m (not through the other team's base).
-4. **Remove**: a base-path without any links and nothing in reach is deleted, if its base has other paths.
+4. **Relink** a base-path to the closest node of a way out within 20 m (not through the other team's base).
+5. **Remove**: a base-path without any links and nothing in reach is deleted, if its base has other paths.
 
 The rest is reported: mostly base-paths that only lead to vehicles, and paths out of a base split into several pieces
 that all carry the base. In the game, bots spawn on base-paths only while they can leave them, e.g. while one of their
 vehicles is there (`GameDirector:CanLeaveBasePath`). Without a regular way out, a bot leaves a base-path at any
-junction, and a path out of a base at its end, over any other linked path but a base-path alone, the way to a vehicle or
-a beacon (`PathSwitcher:GetNewPath`).
+junction, a path out of a base at its end, and the path of a destroyed MCOM, over any other linked path but a base-path
+alone, the way to a vehicle or a beacon (`PathSwitcher:GetNewPath`); bots that stay on the path of a destroyed MCOM
+are killed after a while, like on inactive paths.
 ```
 python -m funbots_debug.paths.fix_bases ../../mapfiles/*.map -v         # only show what it would do
 python -m funbots_debug.paths.fix_bases ../../mapfiles/*.map --write

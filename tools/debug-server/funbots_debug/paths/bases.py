@@ -14,11 +14,12 @@ then it may walk anywhere. So the paths are fixed:
   1. relabel (rush): a path out of a base ("base us 2, mcom 2") that names an MCOM of another stage is only partly
      active in the stage of its base. The MCOM is replaced by the MCOM of that stage closest to an end of the path
      (within relabel_radius), or dropped if the path already names that one.
-  2. For every path out of a base (in rush: in the stage of its base) without a way out:
+  2. Rush: the paths of an MCOM are linked to the other MCOM of their stage (mcoms.py).
+  3. For every path out of a base (in rush: in the stage of its base) without a way out:
      - relink: link it to the closest node of a path with one of its other objectives (within link_radius), else of
        any way out,
      - else it's reported.
-  3. For every base-path that is spawned on (in rush: in the stage of its base) and still has no way out:
+  4. For every base-path that is spawned on (in rush: in the stage of its base) and still has no way out:
      - relink: link it to the closest node of a path that is a way out (own or no base) within link_radius,
      - remove: a base-path without any links and nothing in reach is of no use, it's deleted (if its base has
        other paths to spawn on),
@@ -196,6 +197,8 @@ def fix(data: MapData, mode: str, options: Options | None = None) -> Result:
     changes: list[Change] = []
     if mode in RUSH_MODES:
         _relabel(data, mode, options, changes)
+        from .mcoms import fix as fix_mcoms  # mcoms uses this module
+        fix_mcoms(data, mode, options, changes)
     for dead in check(data, mode):
         path = data.paths.get(dead.path)
         if path is None:

@@ -13,6 +13,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from funbots_debug.paths.bases import Stage, check, fix  # noqa: E402
 from funbots_debug.paths.fix_bases import main as fix_bases_main  # noqa: E402
+from funbots_debug.paths.mcoms import check as check_mcoms, reaches, switches  # noqa: E402
 from funbots_debug.paths.mapfile import MapData  # noqa: E402
 from test_paths import links, loop, make_map, straight  # noqa: E402
 
@@ -53,6 +54,7 @@ def rush() -> MapData:
     link(data, (1, 4), (2, 1))
     link(data, (4, 4), (5, 1))
     link(data, (6, 1), (7, 1))
+    link(data, (8, 1), (11, 6))  # mcom 3 - mcom 4
     return data
 
 
@@ -136,6 +138,48 @@ class FixTest(unittest.TestCase):
     def test_nothing_left(self):
         self.assertEqual([dead.path for dead in check(self.data, "RushLarge0")], [10])
         self.assertEqual(fix(self.data, "RushLarge0").counts(), {"warning": 1})
+
+
+def mcoms() -> MapData:
+    """Stage 1 of rush: the paths of mcom 1 and mcom 2 are only joined by a path that is partly active (stage 1 and 2),
+    a path between both MCOMs passes path 1 at 5 m."""
+    data = make_map({
+        1: loop(0),  # mcom 1
+        2: loop(100),  # mcom 2
+        3: straight(15, 85),  # mcom 2 - mcom 3
+        4: straight(20, 80, 20),  # mcom 1 - mcom 2, not linked
+    }, {
+        1: {"Objectives": ["mcom 1"]},
+        2: {"Objectives": ["mcom 2"]},
+        3: {"Objectives": ["mcom 2", "mcom 3"]},
+        4: {"Objectives": ["mcom 1", "mcom 2"]},
+    })
+    link(data, (1, 1), (3, 1))
+    link(data, (2, len(data.paths[2].nodes) // 2 + 1), (3, len(data.paths[3].nodes)))
+    link(data, (2, 1), (4, len(data.paths[4].nodes)))
+    return data
+
+
+class McomsTest(unittest.TestCase):
+    def test_switches(self):
+        data = mcoms()
+        stage = Stage(data, "RushLarge0", 1)
+        # Partly active: no way from mcom 1 to mcom 2, but the other way round over path 4.
+        self.assertEqual(switches(data, stage, data.paths[1], "mcom 2"), set())
+        self.assertTrue(reaches(data, stage, 2, "mcom 1"))
+        self.assertFalse(reaches(data, stage, 1, "mcom 2"))
+
+    def test_check_and_fix(self):
+        data = mcoms()
+        gaps = check_mcoms(data, "RushLarge0")
+        self.assertEqual([(gap.path, gap.target) for gap in gaps], [(1, "mcom 2")])
+        result = fix(data, "RushLarge0")
+        added = [change for change in result.changes if change.kind == "link-added"]
+        self.assertEqual([(change.path, change.target[0]) for change in added], [(1, 4)])
+        self.assertEqual(check_mcoms(data, "RushLarge0"), [])
+
+    def test_only_rush(self):
+        self.assertEqual(check_mcoms(mcoms(), "ConquestSmall0"), [])
 
 
 class CliTest(unittest.TestCase):

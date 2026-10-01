@@ -239,16 +239,19 @@ function GameDirector:OnEngineUpdate(p_DeltaTime)
 				local s_CurrentPathStatus = 0
 				local s_OnVehiclePath = false
 				local s_OnBasePath = false
+				local s_OnDestroyedPath = false
 				if s_CurrentPathFirst and type(s_CurrentPathFirst) ~= 'boolean' and s_CurrentPathFirst.Data then
 					if s_CurrentPathFirst.Data.Objectives then
 						s_CurrentPathStatus = self:GetEnableStateOfPath(s_CurrentPathFirst.Data.Objectives)
 						s_OnBasePath = (self:IsBasePath(s_CurrentPathFirst.Data.Objectives) and (#s_CurrentPathFirst.Data.Objectives == 1))
+						s_OnDestroyedPath = self:IsDestroyedPath(s_CurrentPathFirst.Data.Objectives)
 					elseif s_CurrentPathFirst.Data.Vehicles and table.has(s_CurrentPathFirst.Data.Vehicles, "land") then
 						s_OnVehiclePath = true
 					end
 				end
 
-				if (s_CurrentPathStatus == 0 or s_OnBasePath) and not s_OnVehiclePath and not l_Bot._FollowTargetPlayer then
+				if (s_CurrentPathStatus <= 0 or s_OnBasePath or s_OnDestroyedPath) and not s_OnVehiclePath
+					and not l_Bot._FollowTargetPlayer then
 					l_Bot._KillYourselfTimer = l_Bot._KillYourselfTimer + Registry.GAME_DIRECTOR.UPDATE_OBJECTIVES_CYCLE
 				else
 					l_Bot._KillYourselfTimer = 0.0
@@ -534,7 +537,7 @@ function GameDirector:OnMcomArmed(p_Player)
 	end
 
 	if s_PlayerPos then
-		local s_Objective = self:_TranslateObjective(s_PlayerPos)
+		local s_Objective = self:_TranslateMcom(s_PlayerPos)
 		if not s_Objective then
 			return
 		end
@@ -557,7 +560,7 @@ function GameDirector:OnMcomDisarmed(p_Player)
 	end
 
 	if s_PlayerPos then
-		local s_Objective = self:_TranslateObjective(s_PlayerPos)
+		local s_Objective = self:_TranslateMcom(s_PlayerPos)
 		if not s_Objective then
 			return
 		end
@@ -1789,6 +1792,18 @@ function GameDirector:IsBasePath(p_ObjectiveNames)
 	return false
 end
 
+---Whether the objective of a path of one objective is destroyed (an MCOM or the way to it): nothing to do there.
+---@param p_ObjectiveNames string[]
+---@return boolean
+function GameDirector:IsDestroyedPath(p_ObjectiveNames)
+	if #p_ObjectiveNames ~= 1 then
+		return false
+	end
+
+	local s_Objective = self:_GetObjectiveObject(p_ObjectiveNames[1])
+	return s_Objective ~= nil and s_Objective.destroyed == true
+end
+
 ---Whether a bot spawned on this base-path can walk off it (PathSwitcher:GetNewPath makes it leave): a link to a
 ---walkable path that isn't a base-path alone or the way to a beacon. The way to a vehicle only counts while the
 ---vehicle is there.
@@ -2363,6 +2378,44 @@ function GameDirector:_GetDistanceFromObjective(p_Objective, p_Position)
 	end
 
 	return s_Distance
+end
+
+---The active MCOM ("mcom N") closest to the position: to any node of its paths, also of the path to it ("mcom N
+---interact"), where the soldier arms it. Not a base or another objective close by, the MCOM would never be destroyed.
+---@param p_Position Vec3
+---@return string|nil
+function GameDirector:_TranslateMcom(p_Position)
+	local s_ClosestObjective = nil
+	local s_ClosestDistance = nil
+
+	for l_Name, l_Paths in pairs(m_NodeCollection:GetKnownObjectives()) do
+		local s_Fields = l_Name:lower():split(" ")
+		local s_McomName = (#s_Fields == 2 or (#s_Fields == 3 and s_Fields[3] == "interact")) and s_Fields[1] == "mcom"
+			and "mcom " .. s_Fields[2] or nil
+		local s_Mcom = s_McomName and self:_GetObjectiveObject(s_McomName)
+
+		if s_Mcom and s_Mcom.active and not s_Mcom.destroyed then
+			for l_Index = 1, #l_Paths do
+				local s_First = m_NodeCollection:GetFirst(l_Paths[l_Index])
+
+				if type(s_First) == 'table' and s_First.Data.Objectives ~= nil and #s_First.Data.Objectives == 1 then
+					local s_Nodes = m_NodeCollection:Get(nil, l_Paths[l_Index]) or {}
+
+					for l_NodeIndex = 1, #s_Nodes do
+						local s_Distance = p_Position:Distance(s_Nodes[l_NodeIndex].Position)
+
+						if s_ClosestDistance == nil or s_Distance < s_ClosestDistance then
+							s_ClosestDistance = s_Distance
+							s_ClosestObjective = s_Mcom.name
+						end
+					end
+				end
+			end
+		end
+	end
+
+	-- Paths without the usual names: as before.
+	return s_ClosestObjective or self:_TranslateObjective(p_Position)
 end
 
 ---@param p_Position Vec3
