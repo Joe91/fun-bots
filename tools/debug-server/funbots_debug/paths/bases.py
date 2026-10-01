@@ -13,17 +13,21 @@ PathSwitcher:GetNewPath also makes a bot leave a base-path onto any other walkab
 then it may walk anywhere. So the paths are fixed:
   1. relabel (rush): an MCOM a path doesn't come near (80 m) is replaced by the one of the same stage it passes (30 m),
      e.g. "mcom 2, mcom 3" between mcom 3 and mcom 4. The positions of the MCOMs are the ends of their "interact"
-     paths. A path out of a base ("base us 2, mcom 2") that names an MCOM of another stage is only partly
-     active in the stage of its base. The MCOM is replaced by the MCOM of that stage closest to an end of the path
+     paths. A path that names both MCOMs of a stage and MCOMs of earlier ones is never fully active: the earlier ones
+     are dropped. A walked path without objectives that passes both MCOMs of a stage gets them. A path out of a base
+     ("base us 2, mcom 2") that names an MCOM of another stage is only partly active in the stage of its base. The MCOM is replaced by the MCOM of that stage closest to an end of the path
      (within relabel_radius), or dropped if the path already names that one.
   2. For every path out of a base (in rush: in the stage of its base) without a way out:
      - relink: link it to the closest node of a path with one of its other objectives (within link_radius), else of
-       any way out,
+       any way out, else (fallback) the closest way out at all,
      - else it's reported.
   3. For every base-path that is spawned on (in rush: in the stage of its base) and still has no way out:
      - relink: link it to the closest node of a path that is a way out (own or no base) within link_radius,
      - remove: a base-path without any links and nothing in reach is of no use, it's deleted (if its base has
        other paths to spawn on),
+     - else (fallback) it's linked to the closest way out at all: a bot may get stuck on the long link and teleport,
+       but doesn't stay on the base-path. Not a base-path that only leads to vehicles: bots spawn there only while one
+       is there (GameDirector:CanLeaveBasePath),
      - else it's reported (e.g. a base-path that only leads to vehicles, with no way out in reach).
   4. Rush: the paths bots get stuck on, on the way to their MCOM, are linked to it (routes.py).
 """
@@ -31,9 +35,9 @@ then it may walk anywhere. So the paths are fixed:
 from __future__ import annotations
 
 import math
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 
-from .labeler import Change, Labeler, Result, _Grid
+from .labeler import VEHICLE_STEP, Change, Labeler, Result, _Grid
 from .mapfile import MapData, PathData
 
 RUSH_MODES = ("RushLarge0", "SquadRush0")
@@ -43,10 +47,19 @@ RUSH_MODES = ("RushLarge0", "SquadRush0")
 class Options:
     link_radius: float = 20.0  # distance from a node of the base-path to the node of a way out it's linked to
     max_height: float = 2.5  # height difference of the two linked nodes (else another floor)
+    # Nothing within link_radius: link to the closest path that works anyways, up to fallback_radius. A bot may get
+    # stuck on the long link and teleport (Bot stuck handling), but doesn't stay on a path it can't leave. Further
+    # away, the GameDirector teleports bots that stay on a wrong path (TELEPORT_ON_INVALID_PATH_TIME).
+    fallback: bool = True
+    fallback_radius: float = 50.0
     remove: bool = True  # delete base-paths without links and without a way out in reach
     relabel_radius: float = 80.0  # end of a path out of a base to the MCOM of the stage that replaces another one
     misplaced_radius: float = 80.0  # a path that names an MCOM comes at least this close to it
     attach_radius: float = 30.0  # a path comes this close to the MCOM that replaces a misplaced one
+
+    def within(self) -> "Options":
+        """The same without the fallback."""
+        return replace(self, fallback=False)
 
 
 @dataclass
@@ -210,22 +223,33 @@ def fix(data: MapData, mode: str, options: Options | None = None) -> Result:
         connection = dead.kind == "connection"
         if connection and _has_way_out(data, stage, path):
             continue  # got one with a link made for another path
-        found = _closest_way_out(data, stage, path, options, connection)
+        found = _closest_way_out(data, stage, path, options.within() if not connection else options, connection)
         name = f"[{', '.join(path.objectives)}]" if connection else f"\"{path.objectives[0]}\""
-        if found is not None:
-            distance, own, target = found
-            _link(data, own, target)
-            other = data.paths[target[0]]
-            changes.append(Change("link-added", path.index, f"{where}way out of {name} to "
-                                                            f"[{', '.join(other.objectives)}], {distance:.1f} m",
-                                  own[1], target))
-        elif connection:
-            changes.append(Change("warning", path.index, f"{where}bots can't leave {name}: {dead.reason}, no way out "
-                                                         f"within {options.link_radius:.0f} m"))
-        elif options.remove and not any(node.links for node in path.nodes) and _other_spawn(data, path):
+        if found is None and not connection and options.remove and not any(node.links for node in path.nodes) \
+                and _other_spawn(data, path):
             _remove(data, path.index)
             changes.append(Change("removed", path.index, f"{where}\"{path.objectives[0]}\" without links and no way "
                                                          f"out within {options.link_radius:.0f} m"))
+            continue
+        if connection and _vehicles_only(data, path):
+            changes.append(Change("warning", path.index, f"{where}{name} only leads to vehicles: bots on foot don't get "
+                                                         f"there"))
+            continue
+        if found is None and not connection and _vehicles_only(data, path):
+            changes.append(Change("warning", path.index, f"{where}\"{path.objectives[0]}\" only leads to vehicles: bots "
+                                                         f"spawn there only while one of them is there"))
+            continue
+        if found is None and not connection:
+            found = _closest_way_out(data, stage, path, options, connection)
+        if found is not None:
+            _link(data, found.own, found.target)
+            other = data.paths[found.target[0]]
+            changes.append(Change("link-added", path.index, f"{where}way out of {name} to "
+                                                            f"[{', '.join(other.objectives)}], {found.distance:.1f} m"
+                                                            f"{found.note(options)}", found.own[1], found.target))
+        elif connection:
+            changes.append(Change("warning", path.index, f"{where}bots can't leave {name}: {dead.reason}, no way out "
+                                                         f"within {options.link_radius:.0f} m"))
         else:
             changes.append(Change("warning", path.index, f"{where}bots can't leave \"{path.objectives[0]}\": "
                                                          f"{dead.reason}, no way out within "
@@ -272,7 +296,59 @@ def _mcom_stage(name: str, mode: str) -> int | None:
 def _relabel(data: MapData, mode: str, options: Options, changes: list[Change]) -> None:
     mcoms = _mcom_positions(data)
     _relabel_misplaced(data, mode, mcoms, options, changes)
+    _relabel_cross_stage(data, mode, changes)
+    _label_unlabeled(data, mode, mcoms, options, changes)
     _relabel_stage(data, mode, mcoms, options, changes)
+
+
+def _stages_of(names, mode: str) -> dict[int, list[str]]:
+    by_stage: dict[int, list[str]] = {}
+    for name in names:
+        stage = _mcom_stage(name, mode)
+        if stage is not None:
+            by_stage.setdefault(stage, []).append(name)
+    return by_stage
+
+
+def _relabel_cross_stage(data: MapData, mode: str, changes: list[Change]) -> None:
+    """A path that names both MCOMs of its latest stage and MCOMs of earlier ones ("mcom 2, mcom 3, mcom 4") is never
+    fully active, bots on the paths of its MCOMs don't take it. The earlier ones are dropped: it still leads away from
+    them once their stage is over (from an inactive path). Paths to the next stage ("mcom 2, mcom 4") stay."""
+    if mode == "SquadRush0":
+        return  # one MCOM per stage
+    for path in data.paths.values():
+        objectives = path.objectives
+        if path.vehicles or any(_team(name) for name in objectives):
+            continue
+        by_stage = _stages_of(objectives, mode)
+        if len(by_stage) < 2 or len(by_stage[max(by_stage)]) < 2:
+            continue
+        earlier = sorted(name for stage, names in by_stage.items() if stage != max(by_stage) for name in names)
+        new = sorted(name for name in objectives if name not in earlier)
+        changes.append(Change("objectives", path.index, f"{', '.join(new)} (was {', '.join(objectives)}: "
+                                                        f"{', '.join(earlier)} of an earlier stage, never fully "
+                                                        f"active)"))
+        path.objectives = new
+
+
+def _label_unlabeled(data: MapData, mode: str, mcoms: dict[str, tuple], options: Options,
+                     changes: list[Change]) -> None:
+    """A walked path without objectives is never active in rush. If it passes both MCOMs of a stage (attach_radius),
+    it gets them (the latest such stage)."""
+    if mode == "SquadRush0":
+        return
+    for path in data.paths.values():
+        if path.objectives or path.vehicles or len(path.nodes) < 2 or path.step > VEHICLE_STEP:
+            continue
+        passed = [name for name, pos in mcoms.items()
+                  if min(math.dist(node.pos, pos) for node in path.nodes) <= options.attach_radius]
+        both = {stage: names for stage, names in _stages_of(passed, mode).items() if len(names) == 2}
+        if not both:
+            continue
+        new = sorted(both[max(both)])
+        changes.append(Change("objectives", path.index, f"{', '.join(new)} (had none: passes both MCOMs of stage "
+                                                        f"{max(both)})"))
+        path.objectives = new
 
 
 def _relabel_misplaced(data: MapData, mode: str, mcoms: dict[str, tuple], options: Options,
@@ -342,26 +418,67 @@ def _has_way_out(data: MapData, stage: Stage, path: PathData) -> bool:
                if target[0] in data.paths)
 
 
-def _closest_way_out(data: MapData, stage: Stage, path: PathData, options: Options, connection: bool = False):
-    """(distance, own node, node of the way out) closest to the path, or None. A path out of a base goes to its
-    objective: the path of that objective first, then paths to it, then any (see _preference)."""
-    team = next((_team(name) for name in path.objectives if _team(name)), None)
-    exits = {index for index, other in data.paths.items()
-             if index != path.index and stage.way_out(other, team, connection)}
-    own_objectives = {name for name in path.objectives if not _team(name)} if connection else set()
+@dataclass
+class Found:
+    distance: float
+    own: tuple[int, int]
+    target: tuple[int, int]
+    rank: int = 0
+    far: bool = False  # nothing within link_radius, the closest one (Options.fallback)
+
+    @property
+    def key(self) -> tuple:
+        return (self.far, self.rank, self.distance)
+
+    def note(self, options: Options) -> str:
+        return f", nothing within {options.link_radius:.0f} m: the closest one" if self.far else ""
+
+
+def closest_link(data: MapData, path: PathData, candidates: set[int], options: Options, rank=None) -> Found | None:
+    """The best link from a node of path to a node of one of the candidates: within link_radius (and max_height) the
+    lowest rank(other path), then the closest. Else with options.fallback the closest one at all (same height first).
+    Not to a node it's linked to already."""
+    rank = rank or (lambda other: 0)
     grid = _Grid(4.0)
-    for index in exits:
+    for index in candidates:
         for node in data.paths[index].nodes:
             grid.add(index, node.point, node.pos)
     best = None
     for node in path.nodes:
         for index, point, distance in grid.near(node.pos, options.link_radius):
-            if abs(data.node(index, point).pos[1] - node.pos[1]) > options.max_height:
+            if abs(data.node(index, point).pos[1] - node.pos[1]) > options.max_height or (index, point) in node.links:
                 continue
-            rank = (_preference(data.paths[index], own_objectives), distance)
-            if best is None or rank < best[0]:
-                best = (rank, (path.index, node.point), (index, point))
-    return None if best is None else (best[0][1], best[1], best[2])
+            found = Found(distance, (path.index, node.point), (index, point), rank(data.paths[index]))
+            if best is None or found.key < best.key:
+                best = found
+    if best is not None or not options.fallback:
+        return best
+    best_key = None
+    for node in path.nodes:
+        for index in candidates:
+            for other in data.paths[index].nodes:
+                if (index, other.point) in node.links:
+                    continue
+                distance = math.dist(node.pos, other.pos)
+                if distance > options.fallback_radius:
+                    continue
+                key = (abs(other.pos[1] - node.pos[1]) > options.max_height, distance)
+                if best_key is None or key < best_key:
+                    best_key = key
+                    best = Found(distance, (path.index, node.point), (index, other.point), rank(data.paths[index]),
+                                 True)
+    return best
+
+
+def _closest_way_out(data: MapData, stage: Stage, path: PathData, options: Options,
+                     connection: bool = False) -> Found | None:
+    """The link to the best way out next to the path, or None. A path out of a base goes to its objective: the path
+    of that objective first, then paths to it, then any (see _preference)."""
+    team = next((_team(name) for name in path.objectives if _team(name)), None)
+    exits = {index for index, other in data.paths.items()
+             if index != path.index and stage.way_out(other, team, connection)}
+    own_objectives = {name for name in path.objectives if not _team(name)} if connection else set()
+    return closest_link(data, path, exits, options, lambda other: _preference(other, own_objectives))
 
 
 def _preference(other: PathData, objectives: set[str]) -> int:
@@ -374,6 +491,20 @@ def _preference(other: PathData, objectives: set[str]) -> int:
     else:
         rank = 2
     return rank + (3 if other.vehicles else 0)
+
+
+def _vehicles_only(data: MapData, path: PathData) -> bool:
+    """Whether the links of the path only lead to vehicles (and other base-paths alone): bots spawn there only with a
+    vehicle (GameDirector:CanLeaveBasePath), and on foot they don't get onto a path out of a base like that."""
+    targets = [data.paths.get(index) for node in path.nodes for index, _ in node.links]
+
+    def vehicle(other) -> bool:
+        return other is not None and any("vehicle" in name.lower() for name in other.objectives)
+
+    def base(other) -> bool:
+        return other is not None and len(other.objectives) == 1 and _team(other.objectives[0]) is not None
+
+    return any(vehicle(other) for other in targets) and all(vehicle(other) or base(other) for other in targets)
 
 
 def _other_spawn(data: MapData, path: PathData) -> bool:

@@ -155,11 +155,15 @@ an active path without one, best its objective (`mcom 2`). `funbots_debug/paths/
 a junction, for every rush stage, and fixes them:
 
 1. **Relabel** (rush): an MCOM a path doesn't come near (80 m) becomes the MCOM of the same stage it passes (30 m), e.g.
-   `mcom 2, mcom 3` between mcom 3 and 4. The MCOMs are where their `mcom N interact` paths end. A path out of a base
+   `mcom 2, mcom 3` between mcom 3 and 4. The MCOMs are where their `mcom N interact` paths end. A path that names
+   both MCOMs of a stage and earlier ones (`mcom 2, mcom 3, mcom 4`) is never fully active: the earlier ones are
+   dropped (paths to the next stage like `mcom 2, mcom 4` stay). A walked path without objectives that passes both
+   MCOMs of a stage gets them. A path out of a base
    that names an MCOM of another stage (`base us 2, mcom 2`) is only partly active, bots don't take it. The MCOM becomes
    the one of the base's stage closest to an end of the path (80 m).
 2. **Relink** a path out of a base to the closest node of the path of its objective within 20 m, else of a path to it,
-   else of any way out.
+   else of any way out. If nothing is within 20 m, the closest one up to 50 m (`--fallback-radius`, `--no-fallback`):
+   a bot may get stuck on the long link and teleport, but doesn't stay there. This holds for steps 3 and 5 too.
 3. **Relink** a base-path to the closest node of a way out within 20 m (not through the other team's base).
 4. **Remove**: a base-path without any links and nothing in reach is deleted, if its base has other paths.
 5. **Routes** (rush, `routes.py`): plays the path-switches through for every stage, both teams, and with none or one
@@ -171,8 +175,10 @@ that all carry the base. In the game, bots spawn on base-paths only while they c
 vehicles is there (`GameDirector:CanLeaveBasePath`). If a path has no regular way out at all, a bot leaves it anyways
 over any other linked path but a base-path alone, the way to a vehicle or a beacon (`PathSwitcher:GetNewPath`): a
 base-path at any junction, a path out of a base at its ends, the path of a destroyed MCOM, and the way to a vehicle that
-isn't the bot's. Bots that stay on the path of a destroyed MCOM are killed after a while, like on
-inactive paths. Bots only take the way to a vehicle of their own team.
+isn't the bot's. Bots that still stay on a path without an active objective, a base-path alone or the path of a
+destroyed MCOM are teleported onto a path of their objective after 20 s if they don't fight
+(`TELEPORT_ON_INVALID_PATH_TIME`, with `TeleportIfStuck`), else killed after 50 s. Bots only take the way to a vehicle
+of their own team.
 ```
 python -m funbots_debug.paths.fix_bases ../../mapfiles/*.map -v         # only show what it would do
 python -m funbots_debug.paths.fix_bases ../../mapfiles/*.map --write

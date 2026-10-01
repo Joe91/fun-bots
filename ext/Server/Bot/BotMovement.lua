@@ -693,6 +693,35 @@ function Bot:_CheckAndDoPathSwitch(p_Point)
 	end
 end
 
+---Teleports the bot onto a node of another path and walks on there, heading for its objective (GameDirector, for bots
+---on paths they can't leave).
+---@param p_Node Waypoint
+function Bot:TeleportToPath(p_Node)
+	local s_Soldier = self.m_Player.soldier
+	if s_Soldier == nil then
+		return
+	end
+
+	local s_Transform = s_Soldier.worldTransform:Clone()
+	s_Transform.trans = p_Node.Position:Clone()
+	s_Soldier:SetTransform(s_Transform)
+
+	self._PathIndex = p_Node.PathIndex
+	self._CurrentWayPoint = p_Node.PointIndex
+	if self._Objective ~= '' then
+		local s_Direction = m_NodeCollection:ObjectiveDirection(p_Node, self._Objective, false)
+		if s_Direction then
+			self._InvertPathDirection = (s_Direction == 'Previous')
+		end
+	end
+
+	self:CenterPathOffset(4.0)
+	self._StuckTimer = 0.0
+	self._ObstacleRetryCounter = 0
+	self:_ResetObstacleSequence()
+	self._LastWayDistance = 1000.0
+end
+
 ---@param p_DeltaTime number
 function Bot:UpdateNormalMovement(p_DeltaTime)
 	-- Move along points.
@@ -823,6 +852,7 @@ function Bot:UpdateNormalMovement(p_DeltaTime)
 			local s_HeightDistance = math.abs(s_Point.Position.y - s_SoldierPos.y)
 
 			-- Hard reroute to the closest path when stuck for long (skipping nodes did not help).
+			-- (See also Bot:TeleportToPath for bots on paths they can't leave.)
 			-- Only a limited number of times: after that the stuck timer keeps running,
 			-- so _ObstacleHandling kills the bot at 15 s.
 			if self._StuckTimer > 6.0 and self._StuckRerouteCount < Registry.BOT.MAX_STUCK_REROUTES then

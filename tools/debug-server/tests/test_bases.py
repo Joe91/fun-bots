@@ -192,6 +192,23 @@ class MisplacedTest(unittest.TestCase):
         self.assertEqual(data.paths[5].objectives, ["mcom 1"])  # nothing near: only reported
         self.assertEqual([change.path for change in changes if change.kind == "warning"], [5])
 
+    def test_drops_mcoms_of_earlier_stages(self):
+        data = self.level()
+        data.paths[4].objectives = ["mcom 2", "mcom 3", "mcom 4"]  # never fully active
+        data.paths[3].objectives = ["mcom 2", "mcom 4"]  # to the next stage: stays
+        changes = []
+        _relabel(data, "RushLarge0", Options(), changes)
+        self.assertEqual(data.paths[4].objectives, ["mcom 3", "mcom 4"])
+        self.assertEqual(data.paths[3].objectives, ["mcom 2", "mcom 4"])
+
+    def test_labels_a_path_between_both_mcoms_of_a_stage(self):
+        data = self.level()
+        data.paths[4].objectives = []
+        data.paths[5].objectives = []  # passes nothing
+        _relabel(data, "RushLarge0", Options(), [])
+        self.assertEqual(data.paths[4].objectives, ["mcom 3", "mcom 4"])
+        self.assertEqual(data.paths[5].objectives, [])
+
 
 class RoutesTest(unittest.TestCase):
     def test_stuck(self):

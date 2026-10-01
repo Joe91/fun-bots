@@ -100,6 +100,9 @@ Registry = {
 		UPDATE_OBJECTIVES_CYCLE = 1.5,
 		-- Time after a MCO is considered destroyed.
 		MCOMS_CHECK_CYCLE = 26.5,
+		-- Teleport bots without valid paths (no active objective, base-path alone, destroyed MCOM) after this amount
+		-- of time onto a path of their objective, if they don't fight (and TeleportIfStuck is on).
+		TELEPORT_ON_INVALID_PATH_TIME = 20,
 		-- Kill Bots without valid paths after this amount of time
 		KILL_ON_INVALID_PATH_TIME = 50,
 		-- Increments of nodes to search best patch with.

@@ -17,15 +17,16 @@ The rules, as in PathSwitcher:GetNewPath and GameDirector:
   - A destroyed MCOM stays active (the path of its "interact" has status -1).
 
 fix() links the paths bots get stuck on to the closest path that names their MCOM (all objectives active, no base,
-within link_radius), shortest link first, until nothing more can be linked. The rest is reported.
+within link_radius, else the closest one), shortest link first, until nothing more can be linked. The rest is
+reported.
 """
 
 from __future__ import annotations
 
 from dataclasses import dataclass, field
 
-from .bases import RUSH_MODES, Options, Stage, _link, _team, stages
-from .labeler import Change, Labeler, _Grid
+from .bases import RUSH_MODES, Found, Options, Stage, _link, _team, closest_link, stages
+from .labeler import Change, Labeler
 from .mapfile import MapData, PathData
 
 
@@ -176,9 +177,22 @@ class Play:
             result[index] = found
         return result
 
+    def can_leave(self, path: PathData) -> bool:
+        """GameDirector:CanLeaveBasePath without vehicles: a link to a walkable path with an active objective that
+        isn't a base-path alone or the way to a vehicle or a beacon."""
+        for node in path.nodes:
+            for index, _ in node.links:
+                other = self.data.paths.get(index)
+                if other is None or other is path or not _walkable(other) or self.stage.status(other) <= 0:
+                    continue
+                objectives = other.objectives
+                if len(objectives) != 1 or not (_team(objectives[0]) or _special(objectives[0])):
+                    return True
+        return False
+
     def starts(self) -> list[int]:
-        """Where the bots of the team are: their base-paths (not those that only lead to vehicles, the bots spawn there
-        only with a vehicle), and the paths of the MCOMs of the stage."""
+        """Where the bots of the team are: the base-paths they spawn on (GameDirector:GetSpawnPath only takes those they
+        can leave, e.g. not those that only lead to a vehicle), and the paths of the MCOMs of the stage."""
         found = []
         for index, path in self.data.paths.items():
             objectives = path.objectives
@@ -186,9 +200,7 @@ class Play:
                 continue
             name = objectives[0]
             if _team(name) == self.situation.team and self.stage.active.get(name):
-                targets = [self.data.paths.get(target) for node in path.nodes for target, _ in node.links]
-                if any(other is not None and not any("vehicle" in n.lower() for n in other.objectives)
-                       for other in targets):
+                if self.can_leave(path):
                     found.append(index)
             elif _mcom(name) and self.stage.active.get(name):
                 found.append(index)
@@ -260,17 +272,18 @@ def fix(data: MapData, mode: str, options: Options, changes: list[Change]) -> No
                 found = _closest(data, stage, data.paths[index], entry.situation.target, options)
                 if found is None:
                     tried.add((index, entry.situation.target))
-                elif best is None or found[0] < best[0]:
-                    best = (found[0], found[1], found[2], entry.situation)
+                elif best is None or found.key < best[0].key:
+                    best = (found, entry.situation)
         if best is None:
             break
-        (_, distance), own, target, situation = best
-        tried.add((own[0], situation.target))  # one link per path and MCOM
-        _link(data, own, target)
-        path, other = data.paths[own[0]], data.paths[target[0]]
-        changes.append(Change("link-added", own[0], f"{situation}: from [{', '.join(path.objectives) or '-'}] "
-                                                    f"over [{', '.join(other.objectives)}], {distance:.1f} m",
-                              own[1], target))
+        found, situation = best
+        tried.add((found.own[0], situation.target))  # one link per path and MCOM
+        _link(data, found.own, found.target)
+        path, other = data.paths[found.own[0]], data.paths[found.target[0]]
+        changes.append(Change("link-added", found.own[0], f"{situation}: from [{', '.join(path.objectives) or '-'}] "
+                                                          f"over [{', '.join(other.objectives)}], "
+                                                          f"{found.distance:.1f} m{found.note(options)}",
+                              found.own[1], found.target))
     # What is left, once per path and MCOM.
     reported: dict[tuple[int, str], list[str]] = {}
     for entry in check(data, mode):
@@ -278,29 +291,17 @@ def fix(data: MapData, mode: str, options: Options, changes: list[Change]) -> No
             reported.setdefault((index, entry.situation.target), []).append(str(entry.situation))
     for (index, target), where in sorted(reported.items()):
         names = ", ".join(data.paths[index].objectives) or "no objectives"
-        changes.append(Change("warning", index, f"bots on [{names}] can't get to \"{target}\" ({'; '.join(where)}), "
-                                                f"no path to it within {options.link_radius:.0f} m"))
+        changes.append(Change("warning", index, f"bots on [{names}] can't get to \"{target}\" ({'; '.join(where)})"))
 
 
-def _closest(data: MapData, stage: Stage, path: PathData, target: str, options: Options):
-    """((rank, distance), own node, node) of the best path to target next to path, or None: the path of the MCOM itself
-    first, then walked paths naming it, then paths of the vehicles."""
-    candidates = {index: other for index, other in data.paths.items() if index != path.index
+def _closest(data: MapData, stage: Stage, path: PathData, target: str, options: Options) -> Found | None:
+    """The link to the best path to target next to path, or None: the path of the MCOM itself first, then walked paths
+    naming it, then paths of the vehicles (see bases.closest_link)."""
+    candidates = {index for index, other in data.paths.items() if index != path.index
                   and target in other.objectives and stage.status(other) == 2 and _walkable(other)
                   and not any(_team(name) for name in other.objectives)}
-    grid = _Grid(4.0)
-    for index, other in candidates.items():
-        for node in other.nodes:
-            grid.add(index, node.point, node.pos)
-    best = None
-    for node in path.nodes:
-        for index, point, distance in grid.near(node.pos, options.link_radius):
-            if abs(data.node(index, point).pos[1] - node.pos[1]) > options.max_height:
-                continue
-            if point in [link[1] for link in node.links if link[0] == index]:
-                continue
-            other = candidates[index]
-            rank = (0 if other.objectives == [target] else 1) + (2 if other.vehicles else 0)
-            if best is None or (rank, distance) < best[0]:
-                best = ((rank, distance), (path.index, node.point), (index, point))
-    return best
+
+    def rank(other: PathData) -> int:
+        return (0 if other.objectives == [target] else 1) + (2 if other.vehicles else 0)
+
+    return closest_link(data, path, candidates, options, rank)

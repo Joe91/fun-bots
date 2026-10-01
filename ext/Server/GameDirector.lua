@@ -257,6 +257,18 @@ function GameDirector:OnEngineUpdate(p_DeltaTime)
 					l_Bot._KillYourselfTimer = 0.0
 				end
 
+				-- Not fighting: teleport it onto a path of its objective, better than waiting or dying.
+				if Config.TeleportIfStuck and l_Bot._KillYourselfTimer > Registry.GAME_DIRECTOR.TELEPORT_ON_INVALID_PATH_TIME
+					and l_Bot._ShootPlayer == nil and l_Bot.m_Player ~= nil and l_Bot.m_Player.soldier ~= nil
+					and not s_BotStates:IsStaticState(l_Bot.m_ActiveState) then
+					local s_Node = self:FindValidPathNode(l_Bot.m_Player.soldier.worldTransform.trans, l_Bot:GetObjective())
+					if s_Node ~= nil then
+						l_Bot:TeleportToPath(s_Node)
+						l_Bot._KillYourselfTimer = 0.0
+						m_Logger:Write("teleport " .. l_Bot.m_Player.name .. " from a wrong path to path " .. s_Node.PathIndex)
+					end
+				end
+
 				if l_Bot._KillYourselfTimer > Registry.GAME_DIRECTOR.KILL_ON_INVALID_PATH_TIME then
 					if l_Bot.m_Player ~= nil and l_Bot.m_Player.soldier ~= nil and not s_BotStates:IsStaticState(l_Bot.m_ActiveState) then
 						l_Bot.m_DontRevive = true
@@ -1790,6 +1802,42 @@ function GameDirector:IsBasePath(p_ObjectiveNames)
 	end
 
 	return false
+end
+
+---The node to teleport a bot to that can't leave its path: the closest node of a path of its objective alone, or, if
+---that isn't valid (none, destroyed, inactive), of any objective bots go for. Not a base, vehicle or "interact" path.
+---@param p_Position Vec3
+---@param p_Objective string|nil
+---@return Waypoint|nil
+function GameDirector:FindValidPathNode(p_Position, p_Objective)
+	local function _Valid(p_Name)
+		local s_Objective = self:_GetObjectiveObject(p_Name)
+		return s_Objective ~= nil and s_Objective.active and not s_Objective.destroyed and not s_Objective.isBase
+			and not s_Objective.subObjective and not s_Objective.isEnterVehiclePath
+	end
+
+	local s_Objective = (p_Objective ~= nil and p_Objective ~= '' and _Valid(p_Objective)) and p_Objective or nil
+	local s_ClosestNode = nil
+	local s_ClosestDistance = nil
+
+	for _, l_Nodes in pairs(m_NodeCollection:GetPaths()) do
+		local s_First = l_Nodes[1]
+		local s_Objectives = s_First and s_First.Data and s_First.Data.Objectives
+
+		if s_Objectives ~= nil and #s_Objectives == 1 and s_First.Data.Vehicles == nil
+			and ((s_Objective ~= nil and s_Objectives[1] == s_Objective) or (s_Objective == nil and _Valid(s_Objectives[1]))) then
+			for l_Index = 1, #l_Nodes do
+				local s_Distance = p_Position:Distance(l_Nodes[l_Index].Position)
+
+				if s_ClosestDistance == nil or s_Distance < s_ClosestDistance then
+					s_ClosestDistance = s_Distance
+					s_ClosestNode = l_Nodes[l_Index]
+				end
+			end
+		end
+	end
+
+	return s_ClosestNode
 end
 
 ---Whether the objective of a path of one objective is destroyed (an MCOM or the way to it): nothing to do there.

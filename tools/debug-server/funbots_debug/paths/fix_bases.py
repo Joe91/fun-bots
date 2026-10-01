@@ -22,10 +22,16 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--link-radius", type=float, default=Options.link_radius,
                         help="metres from a base-path to the way out it's linked to (default %(default)s)")
     parser.add_argument("--keep", action="store_true", help="don't remove base-paths without links, only report them")
+    parser.add_argument("--no-fallback", action="store_true",
+                        help="nothing within --link-radius: report it instead of linking the closest path")
+    parser.add_argument("--fallback-radius", type=float, default=Options.fallback_radius,
+                        help="longest link to the closest path if nothing is within --link-radius (default "
+                             "%(default)s, beyond that the bots are teleported in the game)")
     parser.add_argument("--verbose", "-v", action="store_true", help="list every change")
     args = parser.parse_args(argv)
 
-    options = Options(link_radius=args.link_radius, remove=not args.keep)
+    options = Options(link_radius=args.link_radius, remove=not args.keep, fallback=not args.no_fallback,
+                      fallback_radius=args.fallback_radius)
     total: dict[str, int] = {}
     for file in args.files:
         data = MapData.load(file)
