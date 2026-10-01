@@ -11,19 +11,21 @@ it needs a junction to an active path without a base, best the objective the pat
 
 PathSwitcher:GetNewPath also makes a bot leave a base-path onto any other walkable path if there is no such way out, but
 then it may walk anywhere. So the paths are fixed:
-  1. relabel (rush): a path out of a base ("base us 2, mcom 2") that names an MCOM of another stage is only partly
+  1. relabel (rush): an MCOM a path doesn't come near (80 m) is replaced by the one of the same stage it passes (30 m),
+     e.g. "mcom 2, mcom 3" between mcom 3 and mcom 4. The positions of the MCOMs are the ends of their "interact"
+     paths. A path out of a base ("base us 2, mcom 2") that names an MCOM of another stage is only partly
      active in the stage of its base. The MCOM is replaced by the MCOM of that stage closest to an end of the path
      (within relabel_radius), or dropped if the path already names that one.
-  2. Rush: the paths of an MCOM are linked to the other MCOM of their stage (mcoms.py).
-  3. For every path out of a base (in rush: in the stage of its base) without a way out:
+  2. For every path out of a base (in rush: in the stage of its base) without a way out:
      - relink: link it to the closest node of a path with one of its other objectives (within link_radius), else of
        any way out,
      - else it's reported.
-  4. For every base-path that is spawned on (in rush: in the stage of its base) and still has no way out:
+  3. For every base-path that is spawned on (in rush: in the stage of its base) and still has no way out:
      - relink: link it to the closest node of a path that is a way out (own or no base) within link_radius,
      - remove: a base-path without any links and nothing in reach is of no use, it's deleted (if its base has
        other paths to spawn on),
      - else it's reported (e.g. a base-path that only leads to vehicles, with no way out in reach).
+  4. Rush: the paths bots get stuck on, on the way to their MCOM, are linked to it (routes.py).
 """
 
 from __future__ import annotations
@@ -43,6 +45,8 @@ class Options:
     max_height: float = 2.5  # height difference of the two linked nodes (else another floor)
     remove: bool = True  # delete base-paths without links and without a way out in reach
     relabel_radius: float = 80.0  # end of a path out of a base to the MCOM of the stage that replaces another one
+    misplaced_radius: float = 80.0  # a path that names an MCOM comes at least this close to it
+    attach_radius: float = 30.0  # a path comes this close to the MCOM that replaces a misplaced one
 
 
 @dataclass
@@ -197,8 +201,6 @@ def fix(data: MapData, mode: str, options: Options | None = None) -> Result:
     changes: list[Change] = []
     if mode in RUSH_MODES:
         _relabel(data, mode, options, changes)
-        from .mcoms import fix as fix_mcoms  # mcoms uses this module
-        fix_mcoms(data, mode, options, changes)
     for dead in check(data, mode):
         path = data.paths.get(dead.path)
         if path is None:
@@ -228,6 +230,9 @@ def fix(data: MapData, mode: str, options: Options | None = None) -> Result:
             changes.append(Change("warning", path.index, f"{where}bots can't leave \"{path.objectives[0]}\": "
                                                          f"{dead.reason}, no way out within "
                                                          f"{options.link_radius:.0f} m"))
+    if mode in RUSH_MODES:
+        from .routes import fix as fix_routes  # routes uses this module
+        fix_routes(data, mode, options, changes)
     return Result(data, [], changes)
 
 
@@ -237,16 +242,71 @@ def _mcom_index(name: str) -> int | None:
     return _number(fields[1]) if len(fields) == 2 and fields[0] == "mcom" else None
 
 
-def _relabel(data: MapData, mode: str, options: Options, changes: list[Change]) -> None:
-    """Paths out of a rush base that name an MCOM of another stage get the closest MCOM of the stage of their base."""
-    # Position of an MCOM: the middle of the paths that carry it alone.
+def _mcom_positions(data: MapData) -> dict[str, tuple]:
+    """Where the MCOMs are: the end of the path to them ("mcom N interact"), where the soldier arms it. Else the middle
+    of the paths that carry it alone."""
+    positions: dict[str, tuple] = {}
     points: dict[str, list] = {}
     for path in data.paths.values():
-        if len(path.objectives) == 1 and _mcom_index(path.objectives[0]) is not None:
-            points.setdefault(path.objectives[0], []).extend(node.pos for node in path.nodes)
-    mcoms = {name: tuple(sum(pos[i] for pos in positions) / len(positions) for i in range(3))
-             for name, positions in points.items()}
+        objectives = path.objectives
+        if len(objectives) != 1:
+            continue
+        fields = objectives[0].lower().split(" ")
+        if len(fields) == 3 and fields[0] == "mcom" and fields[2] == "interact":
+            positions[f"mcom {fields[1]}"] = path.nodes[-1].pos
+        elif _mcom_index(objectives[0]) is not None:
+            points.setdefault(objectives[0], []).extend(node.pos for node in path.nodes)
+    for name, nodes in points.items():
+        if name not in positions:
+            positions[name] = tuple(sum(pos[i] for pos in nodes) / len(nodes) for i in range(3))
+    return positions
 
+
+def _mcom_stage(name: str, mode: str) -> int | None:
+    index = _mcom_index(name)
+    if index is None:
+        return None
+    return index if mode == "SquadRush0" else (index + 1) // 2
+
+
+def _relabel(data: MapData, mode: str, options: Options, changes: list[Change]) -> None:
+    mcoms = _mcom_positions(data)
+    _relabel_misplaced(data, mode, mcoms, options, changes)
+    _relabel_stage(data, mode, mcoms, options, changes)
+
+
+def _relabel_misplaced(data: MapData, mode: str, mcoms: dict[str, tuple], options: Options,
+                       changes: list[Change]) -> None:
+    """An MCOM a path doesn't come near (misplaced_radius) is replaced by the MCOM it passes (attach_radius), if that
+    one is of the same stage as the other MCOMs of the path. Else it's reported."""
+    for path in data.paths.values():
+        objectives = path.objectives
+        if path.vehicles or not path.nodes:
+            continue
+        for name in [name for name in objectives if name in mcoms]:
+            if min(math.dist(node.pos, mcoms[name]) for node in path.nodes) <= options.misplaced_radius:
+                continue
+            others = [other for other in objectives if other in mcoms and other != name]
+            stages_of_others = {_mcom_stage(other, mode) for other in others}
+            passed = sorted((min(math.dist(node.pos, pos) for node in path.nodes), other)
+                            for other, pos in mcoms.items() if other not in objectives)
+            distance, closest = passed[0] if passed else (math.inf, None)
+            if closest is None or distance > options.attach_radius or (
+                    stages_of_others and stages_of_others != {_mcom_stage(closest, mode)}):
+                changes.append(Change("warning", path.index, f"names \"{name}\", but doesn't come within "
+                                                             f"{options.misplaced_radius:.0f} m of it"))
+                continue
+            new = sorted([other for other in objectives if other != name] + [closest])
+            changes.append(Change("objectives", path.index, f"{', '.join(new)} (was {', '.join(objectives)}: the path "
+                                                            f"doesn't come near {name}, but passes {closest} at "
+                                                            f"{distance:.0f} m)"))
+            path.objectives = new
+            objectives = new
+
+
+def _relabel_stage(data: MapData, mode: str, mcoms: dict[str, tuple], options: Options,
+                   changes: list[Change]) -> None:
+    """Paths out of a rush base that name an MCOM of another stage get the closest MCOM of the stage of their base."""
     for path in data.paths.values():
         objectives = path.objectives
         bases = [name for name in objectives if _team(name)]

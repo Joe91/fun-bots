@@ -154,21 +154,25 @@ On a path out of a base (`base us 1, mcom 2`) they never switch onto another pat
 an active path without one, best its objective (`mcom 2`). `funbots_debug/paths/bases.py` finds the paths without such
 a junction, for every rush stage, and fixes them:
 
-1. **Relabel** (rush): a path out of a base that names an MCOM of another stage (`base us 2, mcom 2`) is only partly
-   active, bots don't take it. The MCOM becomes the one of the base's stage closest to an end of the path (80 m).
-2. **Relink** (rush) the paths of an MCOM to the other MCOM of the stage, if bots can't get there (`mcoms.py`): when
-   one is destroyed, the bots there go for the other one. Over the closest path within 20 m that names it.
-3. **Relink** a path out of a base to the closest node of the path of its objective within 20 m, else of a path to it,
+1. **Relabel** (rush): an MCOM a path doesn't come near (80 m) becomes the MCOM of the same stage it passes (30 m), e.g.
+   `mcom 2, mcom 3` between mcom 3 and 4. The MCOMs are where their `mcom N interact` paths end. A path out of a base
+   that names an MCOM of another stage (`base us 2, mcom 2`) is only partly active, bots don't take it. The MCOM becomes
+   the one of the base's stage closest to an end of the path (80 m).
+2. **Relink** a path out of a base to the closest node of the path of its objective within 20 m, else of a path to it,
    else of any way out.
-4. **Relink** a base-path to the closest node of a way out within 20 m (not through the other team's base).
-5. **Remove**: a base-path without any links and nothing in reach is deleted, if its base has other paths.
+3. **Relink** a base-path to the closest node of a way out within 20 m (not through the other team's base).
+4. **Remove**: a base-path without any links and nothing in reach is deleted, if its base has other paths.
+5. **Routes** (rush, `routes.py`): plays the path-switches through for every stage, both teams, and with none or one
+   MCOM destroyed (then the bots go for the other one), from the base-paths and the paths of the MCOMs. Paths bots get
+   to but not from there to their MCOM are linked to the closest path that names it (20 m), shortest link first.
 
 The rest is reported: mostly base-paths that only lead to vehicles, and paths out of a base split into several pieces
 that all carry the base. In the game, bots spawn on base-paths only while they can leave them, e.g. while one of their
-vehicles is there (`GameDirector:CanLeaveBasePath`). Without a regular way out, a bot leaves a base-path at any
-junction, a path out of a base at its end, and the path of a destroyed MCOM, over any other linked path but a base-path
-alone, the way to a vehicle or a beacon (`PathSwitcher:GetNewPath`); bots that stay on the path of a destroyed MCOM
-are killed after a while, like on inactive paths.
+vehicles is there (`GameDirector:CanLeaveBasePath`). If a path has no regular way out at all, a bot leaves it anyways
+over any other linked path but a base-path alone, the way to a vehicle or a beacon (`PathSwitcher:GetNewPath`): a
+base-path at any junction, a path out of a base at its ends, the path of a destroyed MCOM, and the way to a vehicle that
+isn't the bot's. Bots that stay on the path of a destroyed MCOM are killed after a while, like on
+inactive paths. Bots only take the way to a vehicle of their own team.
 ```
 python -m funbots_debug.paths.fix_bases ../../mapfiles/*.map -v         # only show what it would do
 python -m funbots_debug.paths.fix_bases ../../mapfiles/*.map --write

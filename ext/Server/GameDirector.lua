@@ -1805,8 +1805,8 @@ function GameDirector:IsDestroyedPath(p_ObjectiveNames)
 end
 
 ---Whether a bot spawned on this base-path can walk off it (PathSwitcher:GetNewPath makes it leave): a link to a
----walkable path that isn't a base-path alone or the way to a beacon. The way to a vehicle only counts while the
----vehicle is there.
+---walkable path with an active objective that isn't a base-path alone or the way to a beacon (else the bot is killed
+---there after a while). The way to a vehicle only counts while the vehicle is there.
 ---@param p_PathIndex integer
 ---@param p_TeamId TeamId|integer
 ---@return boolean
@@ -1829,12 +1829,15 @@ function GameDirector:CanLeaveBasePath(p_PathIndex, p_TeamId)
 				local s_Objectives = type(s_First) == 'table' and s_First.Data and s_First.Data.Objectives or {}
 
 				if #s_Objectives ~= 1 then
-					return true
+					if self:GetEnableStateOfPath(s_Objectives) > 0 then
+						return true
+					end
 				elseif self:IsVehicleEnterPath(s_Objectives[1]) then
 					if self:UseVehicle(p_TeamId, s_Objectives[1]) then
 						return true
 					end
-				elseif not self:IsBasePath(s_Objectives) and not self:IsBeaconPath(s_Objectives[1]) then
+				elseif not self:IsBasePath(s_Objectives) and not self:IsBeaconPath(s_Objectives[1])
+					and self:GetEnableStateOfPath(s_Objectives) > 0 then
 					return true
 				end
 			end
@@ -1881,6 +1884,11 @@ function GameDirector:UseVehicle(p_BotTeam, p_Objective)
 	local s_TempObjective = self:_GetObjectiveObject(p_Objective)
 
 	if s_TempObjective ~= nil and s_TempObjective.active and s_TempObjective.isEnterVehiclePath then
+		-- Not the vehicle of the other team.
+		if s_TempObjective.team ~= TeamId.TeamNeutral and s_TempObjective.team ~= p_BotTeam then
+			return false
+		end
+
 		if s_TempObjective.isEnterAirVehiclePath then
 			return Config.UseVehicles and Config.UseAirVehicles
 		elseif s_TempObjective.isEnterJetPath then
