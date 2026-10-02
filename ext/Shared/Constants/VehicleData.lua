@@ -347,7 +347,7 @@ VehicleData = {
 		Type = VehicleTypes.Plane,
 		Terrain = VehicleTerrains.Air,
 		Parts = { { -2, -2 } },
-		Speed = { { 900, 10000 } },
+		Speed = { { 880, 10000 } },
 		Drop = { { 0.0, 0.0 } },
 		Offset = { { Vec3(0.0, 1.534, 5.110), Vec3(0.0, 1.534, 5.110) } }
 	},
@@ -356,7 +356,7 @@ VehicleData = {
 		Type = VehicleTypes.Plane,
 		Terrain = VehicleTerrains.Air,
 		Parts = { { -2, -2 } },
-		Speed = { { 900, 10000 } },
+		Speed = { { 880, 10000 } },
 		Drop = { { 0.0, 0.0 } },
 		Offset = { { Vec3(0.0, 1.534, 5.110), Vec3(0.0, 1.534, 5.110) } }
 	},
@@ -365,7 +365,7 @@ VehicleData = {
 		Type = VehicleTypes.Plane,
 		Terrain = VehicleTerrains.Air,
 		Parts = { { -2, -2 } },
-		Speed = { { 900, 10000 } },
+		Speed = { { 880, 10000 } },
 		Drop = { { 0.0, 0.0 } },
 		Offset = { { Vec3(0.0, 0.880, 6.540), Vec3(0.0, 0.880, 6.540) } }
 	},
@@ -374,7 +374,7 @@ VehicleData = {
 		Type = VehicleTypes.Plane,
 		Terrain = VehicleTerrains.Air,
 		Parts = { { -2, -2 } },
-		Speed = { { 900, 10000 } },
+		Speed = { { 880, 10000 } },
 		Drop = { { 0.0, 0.0 } },
 		Offset = { { Vec3(0.0, 0.880, 6.540), Vec3(0.0, 0.880, 6.540) } }
 	},
@@ -383,7 +383,7 @@ VehicleData = {
 		Type = VehicleTypes.Plane,
 		Terrain = VehicleTerrains.Air,
 		Parts = { { -2, -2 } },
-		Speed = { { 900, 10000 } },
+		Speed = { { 880, 10000 } },
 		Drop = { { 0.0, 0.0 } },
 		Offset = { { Vec3(0.0, 1.031, 3.853), Vec3(0.0, 1.031, 3.853) } }
 	},
@@ -392,7 +392,7 @@ VehicleData = {
 		Type = VehicleTypes.Plane,
 		Terrain = VehicleTerrains.Air,
 		Parts = { { -2, -2 } },
-		Speed = { { 900, 10000 } },
+		Speed = { { 880, 10000 } },
 		Drop = { { 0.0, 0.0 } },
 		Offset = { { Vec3(0.0, 1.549, 8.190), Vec3(0.0, 1.549, 8.190) } }
 	},
@@ -401,7 +401,7 @@ VehicleData = {
 		Type = VehicleTypes.Plane,
 		Terrain = VehicleTerrains.Air,
 		Parts = { { -2, -2 } },
-		Speed = { { 900, 10000 } },
+		Speed = { { 880, 10000 } },
 		Drop = { { 0.0, 0.0 } },
 		Offset = { { Vec3(0.0, 1.549, 8.190), Vec3(0.0, 1.549, 8.190) } }
 	},
@@ -410,7 +410,7 @@ VehicleData = {
 		Type = VehicleTypes.Plane,
 		Terrain = VehicleTerrains.Air,
 		Parts = { { -2, -2 } },
-		Speed = { { 900, 10000 } },
+		Speed = { { 880, 10000 } },
 		Drop = { { 0.0, 0.0 } },
 		Offset = { { Vec3(-0.001, 1.025, 5.963), Vec3(-0.001, 1.025, 5.963) } }
 	},

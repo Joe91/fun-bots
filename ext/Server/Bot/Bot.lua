@@ -239,6 +239,13 @@ function Bot:__init(p_Player)
 	self._Pid_Drv_Tilt = PidController(3, 0.5, 1.0, 1.0)
 	---@type PidController
 	self._Pid_Drv_Roll = PidController(3, 0.5, 1.0, 1.0)
+	-- Jet (pitch, rudder) while attacking: deviation to the lead-point.
+	---@type PidController
+	self._Pid_Jet_Pitch = PidController(5, 4.0, 0.4, 1.0)
+	---@type PidController
+	self._Pid_Jet_Yaw = PidController(5, 4.0, 0.4, 1.0)
+	-- Measured acceleration of the jet-target (lead of turning targets), see VehicleAiming.
+	self._JetTargetAcceleration = { TargetId = nil, LastX = 0.0, LastY = 0.0, LastZ = 0.0, X = 0.0, Y = 0.0, Z = 0.0 }
 	-- Guns.
 	---@type PidController
 	self._Pid_Att_Yaw = PidController(10, 60, 0.067, 1.0)
@@ -769,6 +776,9 @@ function Bot:AbortAttack()
 		self._Pid_Drv_Yaw:Reset()
 		self._Pid_Drv_Tilt:Reset()
 		self._Pid_Drv_Roll:Reset()
+		self._Pid_Jet_Pitch:Reset()
+		self._Pid_Jet_Yaw:Reset()
+		self._JetTargetAcceleration.TargetId = nil
 	end
 
 	self.m_Input.zoomLevel = 0

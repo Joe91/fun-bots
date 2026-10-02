@@ -136,7 +136,10 @@ Registry = {
 		-- Time a jet waits after an attack.
 		JET_ABORT_ATTACK_TIME = 6.0,
 		-- Time a jet waits after an attack on another jet.
-		JET_ABORT_JET_ATTACK_TIME = 4.0,
+		JET_ABORT_JET_ATTACK_TIME = 8.0,
+		-- After an attack a jet extends (flies straight away) for that time, but not further than this (m, horizontal)
+		-- from its patrol-point above the objective. Else the jets flew out of the map.
+		JET_EXTEND_MAX_DISTANCE = 600.0,
 		-- Target height for jets.
 		JET_TARGET_HEIGHT = 350,
 		-- Seconds between target-scans of a jet that is not attacking (while attacking: BotVehicleFireModeDuration).
@@ -144,17 +147,22 @@ Registry = {
 		-- Target-selection of jets: metres added to the distance per radian the target is away from the nose.
 		-- Prefers targets in front, that can be attacked sooner. 0 = closest target only.
 		JET_TARGET_ANGLE_PENALTY = 400,
+		-- A jet keeps its target as long as the attack is promising: target within this angle (rad) from the nose and
+		-- within MAX_ATTACK_DISTANCE_JET. Checked every BotVehicleFireModeDuration, else it aborts and extends.
+		JET_ATTACK_KEEP_ANGLE = 1.57,
+		-- The lead of jets includes the acceleration of the target (turning targets). Smoothing-time (s) of the
+		-- measured acceleration, and its limit (m/s²) against spikes.
+		JET_TARGET_ACCELERATION_SMOOTHING = 0.3,
+		JET_TARGET_ACCELERATION_MAX = 100.0,
 		-- A jet fires once the shot would pass the lead-point closer than this (m).
-		JET_FIRE_HIT_RADIUS = 15.0,
+		JET_FIRE_HIT_RADIUS = 50.0,
 		-- Limits of that fire-angle (rad): always allowed below MIN, never above MAX.
-		JET_FIRE_MIN_ANGLE = 0.03,
-		JET_FIRE_MAX_ANGLE = 0.2,
-		-- Gain of the rudder while attacking. Fine corrections without rolling.
-		JET_ATTACK_YAW_GAIN = 3.0,
+		JET_FIRE_MIN_ANGLE = 0.1,
+		JET_FIRE_MAX_ANGLE = 0.3,
 		-- Collision avoidance: a jet breaks right (and the higher one climbs) if another aircraft would pass closer than
 		-- JET_AVOID_DISTANCE (m) within JET_AVOID_TIME (s). Without it, two jets attacking each other fly head-on into each other.
 		JET_AVOID_DISTANCE = 50.0,
-		JET_AVOID_TIME = 3.0,
+		JET_AVOID_TIME = 2.0,
 		-- Ground avoidance: a jet that would get lower than JET_MIN_ALTITUDE (m above the objective) within
 		-- JET_PULL_OUT_TIME (s) at its current sink-rate levels its wings and pulls up, whatever it does.
 		JET_MIN_ALTITUDE = 120.0,

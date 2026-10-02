@@ -54,6 +54,45 @@ local function _GetTimeToTravel(p_Bot, p_Speed, p_DiffX, p_DiffY, p_DiffZ, p_Mov
 	end
 end
 
+---Acceleration of the target, from the change of its velocity and smoothed (the velocity is noisy). Restarts on a
+---new target (Bot:AbortAttack clears the target-id).
+---@param p_Bot Bot
+---@param p_Velocity Vec3 velocity of the target
+---@param p_DeltaTime number
+---@return number, number, number
+local function _UpdateTargetAcceleration(p_Bot, p_Velocity, p_DeltaTime)
+	local s_Data = p_Bot._JetTargetAcceleration
+	local s_VelX, s_VelY, s_VelZ = p_Velocity.x, p_Velocity.y, p_Velocity.z
+
+	if s_Data.TargetId ~= p_Bot._ShootPlayerId or p_DeltaTime <= 0 then
+		s_Data.TargetId = p_Bot._ShootPlayerId
+		s_Data.LastX, s_Data.LastY, s_Data.LastZ = s_VelX, s_VelY, s_VelZ
+		s_Data.X, s_Data.Y, s_Data.Z = 0.0, 0.0, 0.0
+		return 0.0, 0.0, 0.0
+	end
+
+	local s_AccX = (s_VelX - s_Data.LastX) / p_DeltaTime
+	local s_AccY = (s_VelY - s_Data.LastY) / p_DeltaTime
+	local s_AccZ = (s_VelZ - s_Data.LastZ) / p_DeltaTime
+	s_Data.LastX, s_Data.LastY, s_Data.LastZ = s_VelX, s_VelY, s_VelZ
+
+	local s_Alpha = math.min(1.0, p_DeltaTime / Registry.VEHICLES.JET_TARGET_ACCELERATION_SMOOTHING)
+	local s_X = s_Data.X + (s_AccX - s_Data.X) * s_Alpha
+	local s_Y = s_Data.Y + (s_AccY - s_Data.Y) * s_Alpha
+	local s_Z = s_Data.Z + (s_AccZ - s_Data.Z) * s_Alpha
+
+	-- Limit spikes (collisions, respawns).
+	local s_Max = Registry.VEHICLES.JET_TARGET_ACCELERATION_MAX
+	local s_Magnitude = math.sqrt(s_X * s_X + s_Y * s_Y + s_Z * s_Z)
+	if s_Magnitude > s_Max then
+		local s_Scale = s_Max / s_Magnitude
+		s_X, s_Y, s_Z = s_X * s_Scale, s_Y * s_Scale, s_Z * s_Scale
+	end
+	s_Data.X, s_Data.Y, s_Data.Z = s_X, s_Y, s_Z
+
+	return s_X, s_Y, s_Z
+end
+
 ---@param p_Bot Bot
 ---@param p_AdvancedAlgorithm boolean
 ---@param p_DeltaTime number
@@ -133,6 +172,12 @@ function VehicleAiming:UpdateAimingVehicle(p_Bot, p_AdvancedAlgorithm, p_DeltaTi
 	end
 	local s_MoveX, s_MoveY, s_MoveZ = s_Velocity.x, s_Velocity.y, s_Velocity.z
 
+	-- Jets, turning targets: the lead includes their acceleration, with a straight lead the shots passed behind them.
+	local s_AccX, s_AccY, s_AccZ = 0.0, 0.0, 0.0
+	if m_Vehicles:IsVehicleType(p_Bot.m_ActiveVehicle, VehicleTypes.Plane) then
+		s_AccX, s_AccY, s_AccZ = _UpdateTargetAcceleration(p_Bot, s_Velocity, p_DeltaTime)
+	end
+
 	local s_DiffX = s_TargetX - s_BotX
 	local s_DiffY = s_TargetY - s_BotY
 	local s_DiffZ = s_TargetZ - s_BotZ
@@ -145,9 +190,10 @@ function VehicleAiming:UpdateAimingVehicle(p_Bot, p_AdvancedAlgorithm, p_DeltaTi
 
 	local s_PitchCorrection = 0.5 * s_TimeToTravel * s_TimeToTravel * s_Drop
 
-	s_MoveX = s_MoveX * s_TimeToTravel
-	s_MoveY = s_MoveY * s_TimeToTravel
-	s_MoveZ = s_MoveZ * s_TimeToTravel
+	local s_HalfTimeSq = 0.5 * s_TimeToTravel * s_TimeToTravel
+	s_MoveX = s_MoveX * s_TimeToTravel + s_AccX * s_HalfTimeSq
+	s_MoveY = s_MoveY * s_TimeToTravel + s_AccY * s_HalfTimeSq
+	s_MoveZ = s_MoveZ * s_TimeToTravel + s_AccZ * s_HalfTimeSq
 
 	-- only for jet aiming for now
 	p_Bot._AttackPosition = Vec3(s_TargetX + s_MoveX, s_TargetY + s_MoveY + s_PitchCorrection, s_TargetZ + s_MoveZ)

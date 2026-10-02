@@ -13,6 +13,33 @@ local m_VehicleWeaponHandling = require('Bot/VehicleWeaponHandling')
 function StateInVehicleJetControl:__init()
 end
 
+---An attack is promising while the target is still in an aircraft, in range and not behind the jet.
+---@param p_Bot Bot
+---@return boolean
+local function _IsAttackPromising(p_Bot)
+	local s_Target = p_Bot._ShootPlayer
+	local s_TargetVehicle = s_Target and s_Target.soldier and s_Target.controlledControllable
+	if s_TargetVehicle == nil or s_TargetVehicle:Is('ServerSoldierEntity') then
+		return false
+	end
+
+	local s_Transform = p_Bot.m_Player.controlledControllable.transform
+	local s_Trans = s_Transform.trans
+	local s_TargetTrans = s_TargetVehicle.transform.trans
+	local s_DiffX, s_DiffY, s_DiffZ = s_TargetTrans.x - s_Trans.x, s_TargetTrans.y - s_Trans.y, s_TargetTrans.z - s_Trans.z
+	local s_Distance = math.sqrt(s_DiffX * s_DiffX + s_DiffY * s_DiffY + s_DiffZ * s_DiffZ)
+	if s_Distance > Registry.VEHICLES.MAX_ATTACK_DISTANCE_JET then
+		return false
+	end
+	if s_Distance < 1.0 then
+		return true
+	end
+
+	local s_Forward = s_Transform.forward
+	local s_Cos = (s_Forward.x * s_DiffX + s_Forward.y * s_DiffY + s_Forward.z * s_DiffZ) / s_Distance
+	return s_Cos > math.cos(Registry.VEHICLES.JET_ATTACK_KEEP_ANGLE)
+end
+
 ---default update-function
 ---@param p_Bot Bot
 ---@param p_DeltaTime number
@@ -55,19 +82,29 @@ function StateInVehicleJetControl:UpdateFast(p_Bot, p_DeltaTime)
 
 	local s_IsAttacking = p_Bot._ShootPlayer ~= nil
 
-	-- assign new target after some time. Without a target scan often, to attack as soon as possible.
+	-- Without a target scan often, to attack as soon as possible. While attacking keep the target (a new one right
+	-- when the jet lined up spoiled the attack): go on while the attack is promising, else abort. A new target only
+	-- after the abort (and the extending).
 	local s_ScanInterval = s_IsAttacking and (Config.BotVehicleFireModeDuration - 0.5) or Registry.VEHICLES.JET_TARGET_SCAN_INTERVAL
 	if p_Bot._DeployTimer > s_ScanInterval and p_Bot._VehicleTakeoffTimer <= 0.0 then
-		local s_Target = m_AirTargets:GetTarget(p_Bot.m_Player, Registry.VEHICLES.MAX_ATTACK_DISTANCE_JET,
-			Registry.VEHICLES.JET_TARGET_ANGLE_PENALTY)
-		local s_TargetData = s_Target and g_PlayerData:GetData(s_Target.id)
-		if s_Target ~= nil and s_TargetData ~= nil then
-			p_Bot._ShootPlayerId = s_Target.id
-			p_Bot._ShootPlayer = PlayerManager:GetPlayerById(p_Bot._ShootPlayerId)
-			p_Bot._ShootPlayerVehicleType = s_TargetData.Vehicle
-			p_Bot._ShootModeTimer = Config.BotVehicleFireModeDuration
-		elseif s_IsAttacking then
-			p_Bot:AbortAttack()
+		if s_IsAttacking then
+			if _IsAttackPromising(p_Bot) then
+				p_Bot._ShootModeTimer = Config.BotVehicleFireModeDuration
+			else
+				p_Bot:AbortAttack()
+			end
+		else
+			local s_Target = m_AirTargets:GetTarget(p_Bot.m_Player, Registry.VEHICLES.MAX_ATTACK_DISTANCE_JET,
+				Registry.VEHICLES.JET_TARGET_ANGLE_PENALTY)
+			local s_TargetData = s_Target and g_PlayerData:GetData(s_Target.id)
+			if s_Target ~= nil and s_TargetData ~= nil then
+				p_Bot._Pid_Jet_Pitch:Reset()
+				p_Bot._Pid_Jet_Yaw:Reset()
+				p_Bot._ShootPlayerId = s_Target.id
+				p_Bot._ShootPlayer = PlayerManager:GetPlayerById(p_Bot._ShootPlayerId)
+				p_Bot._ShootPlayerVehicleType = s_TargetData.Vehicle
+				p_Bot._ShootModeTimer = Config.BotVehicleFireModeDuration
+			end
 		end
 
 		p_Bot._DeployTimer = 0.0

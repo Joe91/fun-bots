@@ -82,6 +82,8 @@ function VehicleAttacking:UpdateAttackingVehicle(p_DeltaTime, p_Bot)
 							else
 								p_Bot._VehicleWeaponSlotToUse = 1
 							end
+						elseif m_Vehicles:IsVehicleType(p_Bot.m_ActiveVehicle, VehicleTypes.Plane) then
+							p_Bot._VehicleWeaponSlotToUse = 1
 						else
 							p_Bot._VehicleWeaponSlotToUse = 1
 						end
@@ -117,12 +119,7 @@ function VehicleAttacking:UpdateAttackingVehicle(p_DeltaTime, p_Bot)
 						self:Fire(p_Bot)
 					end
 				elseif m_Vehicles:IsVehicleType(p_Bot.m_ActiveVehicle, VehicleTypes.Plane) then
-					if p_Bot._ShotTimer >= 1.6 then
-						p_Bot._ShotTimer = 0.0
-					end
-					if p_Bot._ShotTimer >= 0.3 and p_Bot._VehicleReadyToShoot then
-						self:Fire(p_Bot)
-					end
+					-- Jets fire in VehicleJetControl:UpdateYawJet, every fast update while on target. No bursts.
 				else
 					if p_Bot._ShotTimer >= (0.6 * p_Bot._FireCycleModifier) then
 						p_Bot._ShotTimer = 0.0

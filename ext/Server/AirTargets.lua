@@ -50,7 +50,8 @@ end
 ---@param p_AnglePenalty number|nil metres added to the distance per radian the target is away from the nose (prefer targets in front)
 function AirTargets:GetTarget(p_Player, p_MaxDistance, p_AnglePenalty)
 	local s_Team = p_Player.teamId
-	local s_ClosestDistance = nil
+	-- The three best targets, sorted.
+	local s_ClosestDistance, s_ClosestDistance2, s_ClosestDistance3 = nil, nil, nil
 	local s_ClosestTarget = nil
 	local s_ClosestTarget2 = nil
 	local s_ClosestTarget3 = nil
@@ -76,14 +77,15 @@ function AirTargets:GetTarget(p_Player, p_MaxDistance, p_AnglePenalty)
 			end
 
 			if s_RealDistance < p_MaxDistance then
-				if s_ClosestDistance == nil then
-					s_ClosestDistance = s_CurrentDistance
-					s_ClosestTarget = s_TargetPlayer
-				elseif s_CurrentDistance < s_ClosestDistance then
-					s_ClosestDistance = s_CurrentDistance
-					s_ClosestTarget3 = s_ClosestTarget2
-					s_ClosestTarget2 = s_ClosestTarget
-					s_ClosestTarget = s_TargetPlayer
+				if s_ClosestDistance == nil or s_CurrentDistance < s_ClosestDistance then
+					s_ClosestDistance3, s_ClosestTarget3 = s_ClosestDistance2, s_ClosestTarget2
+					s_ClosestDistance2, s_ClosestTarget2 = s_ClosestDistance, s_ClosestTarget
+					s_ClosestDistance, s_ClosestTarget = s_CurrentDistance, s_TargetPlayer
+				elseif s_ClosestDistance2 == nil or s_CurrentDistance < s_ClosestDistance2 then
+					s_ClosestDistance3, s_ClosestTarget3 = s_ClosestDistance2, s_ClosestTarget2
+					s_ClosestDistance2, s_ClosestTarget2 = s_CurrentDistance, s_TargetPlayer
+				elseif s_ClosestDistance3 == nil or s_CurrentDistance < s_ClosestDistance3 then
+					s_ClosestDistance3, s_ClosestTarget3 = s_CurrentDistance, s_TargetPlayer
 				end
 			end
 		end

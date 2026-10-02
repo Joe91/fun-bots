@@ -265,6 +265,9 @@ function Bot:ResetSpawnVars()
 	self._Pid_Drv_Height:Reset()
 	self._Pid_Drv_Tilt:Reset()
 	self._Pid_Drv_Roll:Reset()
+	self._Pid_Jet_Pitch:Reset()
+	self._Pid_Jet_Yaw:Reset()
+	self._JetTargetAcceleration.TargetId = nil
 	self._Pid_Att_Yaw:Reset()
 	self._Pid_Att_Pitch:Reset()
 

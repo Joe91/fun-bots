@@ -8,6 +8,8 @@ local m_Vehicles = require('Vehicles')
 local m_Utilities = require('__shared/Utilities')
 ---@type AirTargets
 local m_AirTargets = require('AirTargets')
+---@type VehicleAttacking
+local m_VehicleAttacking = require('Bot/VehicleAttacking')
 
 function VehicleJetControl:__init()
 	-- Nothing to do.
@@ -121,6 +123,17 @@ function VehicleJetControl:UpdateMovementJet(p_DeltaTime, p_Bot)
 
 	local s_TargetPosition = self:_GetPatrolPosition(p_Bot)
 
+	if p_Bot._VehicleTakeoffTimer > 0.0 and p_Bot._JetAbortAttackActive then
+		-- Too far from the objective: end the extending early, at full throttle the jets flew out of the map.
+		local s_Trans = p_Bot.m_Player.controlledControllable.transform.trans
+		local s_DiffX = s_TargetPosition.x - s_Trans.x
+		local s_DiffZ = s_TargetPosition.z - s_Trans.z
+		local s_MaxDistance = Registry.VEHICLES.JET_EXTEND_MAX_DISTANCE
+		if s_DiffX * s_DiffX + s_DiffZ * s_DiffZ > s_MaxDistance * s_MaxDistance then
+			p_Bot._VehicleTakeoffTimer = 0.0
+		end
+	end
+
 	if p_Bot._VehicleTakeoffTimer > 0.0 then
 		p_Bot._VehicleTakeoffTimer = p_Bot._VehicleTakeoffTimer - p_DeltaTime
 		if p_Bot._JetTakeoffActive or
@@ -138,7 +151,15 @@ function VehicleJetControl:UpdateMovementJet(p_DeltaTime, p_Bot)
 			p_Bot._TargetPoint = s_Waypoint
 			return
 		elseif p_Bot._JetAbortAttackActive then
-			-- don't move along paths with planes
+			-- Extend after an attack: straight ahead on patrol-height, away from the target. Turned back to the patrol-
+			-- point right away, the jet stayed in a turning fight close to its target and could never aim.
+			local s_Trans = p_Bot.m_Player.controlledControllable.transform.trans
+			local s_Forward = p_Bot.m_Player.controlledControllable.transform.forward:Clone()
+			s_Forward.y = 0
+			s_Forward:Normalize()
+			local s_Height = s_TargetPosition.y
+			s_TargetPosition = s_Trans + (s_Forward * 300)
+			s_TargetPosition.y = s_Height
 			local s_Waypoint = {
 				Position = s_TargetPosition,
 			}
@@ -207,10 +228,18 @@ function VehicleJetControl:UpdateYawJet(p_Bot, p_Attacking, p_DeltaTime)
 	end
 
 	-- Break away from aircraft on collision course, before anything else. No shots meanwhile.
+	-- Not while taking off: the jets parked next to the runway count as aircraft too, the jets broke right on the runway.
 	local s_Velocity = PhysicsEntity(s_Vehicle).velocity
-	local s_Evasion = self:_GetEvasionPoint(p_Bot, s_Transform, s_Velocity)
+	local s_Evasion = nil
+	if not p_Bot._JetTakeoffActive then
+		s_Evasion = self:_GetEvasionPoint(p_Bot, s_Transform, s_Velocity)
+	end
 	if s_Evasion ~= nil then
 		s_DeltaYaw, s_DeltaPitch = self:CalculateDeviationRelativeToOrientation(s_Transform, s_Evasion)
+		if p_Attacking then
+			-- The pass is over: extend (see UpdateMovementJet), then a new run with enough distance to aim.
+			p_Bot:AbortAttack()
+		end
 		p_Attacking = false
 	end
 
@@ -241,20 +270,26 @@ function VehicleJetControl:UpdateYawJet(p_Bot, p_Attacking, p_DeltaTime)
 	-- Roll
 	s_Input:SetLevel(EntryInputActionEnum.EIARoll, -3 * s_DeltaYaw) -- Roll into the turn.
 
-	-- TILT
-	s_Input:SetLevel(EntryInputActionEnum.EIAPitch, 3 * s_DeltaPitch)
-
-	-- YAW
+	-- TILT and YAW
 	-- No backwards in planes. s_DeltaYaw > 0 → target on the left → negative yaw-input (same convention as chopper / ground).
-	-- While attacking the rudder does the fine corrections, rolling is too coarse for the last few degrees.
-	local s_YawGain = p_Attacking and Registry.VEHICLES.JET_ATTACK_YAW_GAIN or 1.0
-	s_Input:SetLevel(EntryInputActionEnum.EIAYaw, math.max(-1.0, math.min(1.0, -s_YawGain * s_DeltaYaw)))
+	if p_Attacking then
+		-- The lead-point moves all the time (both jets fly fast), with P only the nose lagged behind it and swung across
+		-- it. The I-part removes the lag, the D-part damps. The rudder does the fine corrections, rolling is too coarse.
+		s_Input:SetLevel(EntryInputActionEnum.EIAPitch, p_Bot._Pid_Jet_Pitch:Update(s_DeltaPitch, p_DeltaTime))
+		s_Input:SetLevel(EntryInputActionEnum.EIAYaw, p_Bot._Pid_Jet_Yaw:Update(-s_DeltaYaw, p_DeltaTime))
+	else
+		s_Input:SetLevel(EntryInputActionEnum.EIAPitch, 3 * s_DeltaPitch)
+		s_Input:SetLevel(EntryInputActionEnum.EIAYaw, math.max(-1.0, math.min(1.0, -s_DeltaYaw)))
+	end
 
 	-- Throttle.
-	-- Target velocity == 313 km/h → 86.9444 m/s
+	-- Target velocity == 313 km/h → 86.9444 m/s. Full throttle while extending after an attack: more distance.
 	local s_Delta_Speed = 86.9444 - s_Velocity.magnitude
 	local s_Output_Throttle = p_Bot._Pid_Drv_Throttle:Update(s_Delta_Speed, p_DeltaTime)
-	if s_Output_Throttle > 0 then
+	if p_Bot._JetAbortAttackActive and not p_Attacking then
+		s_Input:SetLevel(EntryInputActionEnum.EIAThrottle, 1.0)
+		s_Input:SetLevel(EntryInputActionEnum.EIABrake, 0.0)
+	elseif s_Output_Throttle > 0 then
 		s_Input:SetLevel(EntryInputActionEnum.EIAThrottle, s_Output_Throttle)
 		s_Input:SetLevel(EntryInputActionEnum.EIABrake, 0.0)
 	else
@@ -263,12 +298,15 @@ function VehicleJetControl:UpdateYawJet(p_Bot, p_Attacking, p_DeltaTime)
 	end
 
 	-- Fire once the shot passes the lead-point close enough: wide angle when close, narrow when far away.
-	-- Shooting too early only overheats the gun.
+	-- Fired here and not in the (slower) attack-update: no bursts, the gun fires as long as the target is in the window.
 	if p_Attacking then
 		local s_Distance = math.max(p_Bot._DistanceToPlayer, 1.0)
 		local s_FireAngle = math.max(Registry.VEHICLES.JET_FIRE_MIN_ANGLE,
 			math.min(Registry.VEHICLES.JET_FIRE_MAX_ANGLE, math.atan(Registry.VEHICLES.JET_FIRE_HIT_RADIUS, s_Distance)))
 		p_Bot._VehicleReadyToShoot = (s_DeltaYaw * s_DeltaYaw + s_DeltaPitch * s_DeltaPitch) < s_FireAngle * s_FireAngle
+		if p_Bot._VehicleReadyToShoot then
+			m_VehicleAttacking:Fire(p_Bot)
+		end
 	else
 		p_Bot._VehicleReadyToShoot = false
 	end
