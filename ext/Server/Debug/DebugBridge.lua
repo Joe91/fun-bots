@@ -18,6 +18,9 @@ DebugBridge = class('DebugBridge')
 --   DebugBridge:AddTask(task)                      work spread over several updates, see MapScanner
 -- Collectors and commands run in pcall, a bug in them only produces an "error" event.
 
+---@type Utilities
+local m_Utilities = require('__shared/Utilities')
+
 local PROTOCOL_VERSION = 1
 -- Events queued until the next request. Newer ones are dropped once full (counted in "dropped").
 local MAX_QUEUED_EVENTS = 5000
@@ -185,7 +188,7 @@ function DebugBridge:Event(p_Type, p_Data)
 
 	local s_Event = p_Data or {}
 	s_Event.type = p_Type
-	s_Event.t = DebugBridge.Round(SharedUtils:GetTime(), 3)
+	s_Event.t = DebugBridge.Round(m_Utilities:GetTime(), 3)
 	self._Events[#self._Events + 1] = s_Event
 end
 
@@ -299,7 +302,7 @@ end
 
 ---@return table
 function DebugBridge:_TakeSnapshot()
-	local s_Frame = { t = DebugBridge.Round(SharedUtils:GetTime(), 3) }
+	local s_Frame = { t = DebugBridge.Round(m_Utilities:GetTime(), 3) }
 
 	for l_Index = 1, #self._Collectors do
 		local l_Collector = self._Collectors[l_Index]

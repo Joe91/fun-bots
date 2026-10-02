@@ -23,12 +23,20 @@ end
 ---@param p_AdvancedAlgorithm boolean
 ---@return number
 local function _GetTimeToTravel(p_Bot, p_Speed, p_DiffX, p_DiffY, p_DiffZ, p_MoveX, p_MoveY, p_MoveZ, p_AdvancedAlgorithm)
+	if p_Speed <= 0 then
+		return 0.0
+	end
 	if p_AdvancedAlgorithm then
 		-- Calculate how long the distance is → time to travel.
 		local A = (p_MoveX * p_MoveX + p_MoveY * p_MoveY + p_MoveZ * p_MoveZ) - p_Speed * p_Speed
 		local B = 2.0 * (p_MoveX * p_DiffX + p_MoveY * p_DiffY + p_MoveZ * p_DiffZ)
 		local C = p_DiffX * p_DiffX + p_DiffY * p_DiffY + p_DiffZ * p_DiffZ
-		local s_Determinant = math.sqrt(B * B - 4 * A * C)
+		local s_Discriminant = B * B - 4 * A * C
+		-- No solution (the projectile can't catch up): sqrt would return NaN, use the plain flight-time instead.
+		if s_Discriminant < 0 or A == 0 then
+			return p_Bot._DistanceToPlayer / p_Speed
+		end
+		local s_Determinant = math.sqrt(s_Discriminant)
 		local t1 = (-B + s_Determinant) / (2 * A)
 		local t2 = (-B - s_Determinant) / (2 * A)
 

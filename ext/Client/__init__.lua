@@ -217,7 +217,7 @@ function FunBotClient:OnUIDrawHud()
 			if a <= 0 then goto skip end
 
 			-- subtle glow pulse
-			local pulse = math.sin(SharedUtils:GetTime() * 6) * 0.15 + 0.85
+			local pulse = math.sin(SharedUtils:GetTimeNS() / 1000000000 * 6) * 0.15 + 0.85
 			local col   = colour(p, lp)
 			col.w       = a * 0.9 * pulse
 

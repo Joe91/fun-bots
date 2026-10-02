@@ -814,7 +814,7 @@ function resetStore() {
 	view.fitted = false;
 }
 
-// t is SharedUtils:GetTime() (Unix-time in s). roundStart is missing after a reload of the mod mid-round,
+// t is Utilities:GetTime() (Unix-time in s, 1 ms resolution). roundStart is missing after a reload of the mod mid-round,
 // both are missing while the mod is older than the debug-server: then the clock-time is shown instead.
 function formatDuration(seconds) {
 	seconds = Math.max(0, Math.floor(seconds));

@@ -1807,15 +1807,9 @@ function BotSpawner:_GetUnlocks(p_Bot, p_TeamId, p_SquadId)
 		return nil
 	end
 
-	local s_CurrentUnlockNames = {}
-	local s_CurrentUnlocks = {}
-
-	for l_Index = 1, #p_Bot.m_Player.selectedUnlocks do
-		local l_PlayerUnlock = p_Bot.m_Player.selectedUnlocks[l_Index]
-		s_CurrentUnlocks[#s_CurrentUnlocks + 1] = l_PlayerUnlock
-		s_CurrentUnlockNames[#s_CurrentUnlockNames + 1] = l_PlayerUnlock["partition"]["name"]
-	end
-
+	-- Only names here: every access of selectedUnlocks (and of its partition and name) allocates, reading them for the
+	-- bot and its whole squad made each spawn take several ms. The unlocks are built from the names, over the cache of
+	-- GetResourceDataContainer.
 	local s_Unlocks = {}
 	local s_SelectedPerk = ""
 	local s_PossiblePerks = {                                         -- Sorted by quality.
@@ -1869,19 +1863,30 @@ function BotSpawner:_GetUnlocks(p_Bot, p_TeamId, p_SquadId)
 		end
 	end
 
+	-- The perks the squad already has. Bots remember theirs, only real players have to be read.
+	local function _RemovePerk(p_UsedSquadPerk)
+		for l_PerkIndex = 1, #s_PossiblePerks do
+			if s_PossiblePerks[l_PerkIndex] == p_UsedSquadPerk then
+				table.remove(s_PossiblePerks, l_PerkIndex)
+				return
+			end
+		end
+	end
+
 	local s_SquadPlayers = PlayerManager:GetPlayersBySquad(p_TeamId, p_SquadId)
 	for l_Index = 1, #s_SquadPlayers do
 		local l_SquadPlayer = s_SquadPlayers[l_Index]
-		if l_SquadPlayer.id ~= p_Bot.m_Player.id then
-			for l_UnlockIndex = 1, #l_SquadPlayer.selectedUnlocks do
-				local l_PlayerUnlock = l_SquadPlayer.selectedUnlocks[l_UnlockIndex]
-				local s_UsedSquadPerk = l_PlayerUnlock["partition"]["name"]
-				for l_PerkIndex = 1, #s_PossiblePerks do
-					local l_PossiblePerk = s_PossiblePerks[l_PerkIndex]
-					if l_PossiblePerk == s_UsedSquadPerk then
-						table.remove(s_PossiblePerks, l_PerkIndex)
-						break
-					end
+		local s_SquadPlayerId = l_SquadPlayer.id
+		if s_SquadPlayerId ~= p_Bot.m_Player.id then
+			local s_SquadBot = m_BotManager:GetBotById(s_SquadPlayerId)
+			if s_SquadBot ~= nil then
+				if s_SquadBot.m_SquadPerk ~= nil then
+					_RemovePerk(s_SquadBot.m_SquadPerk)
+				end
+			else
+				local s_SelectedUnlocks = l_SquadPlayer.selectedUnlocks
+				for l_UnlockIndex = 1, #s_SelectedUnlocks do
+					_RemovePerk(s_SelectedUnlocks[l_UnlockIndex].partition.name)
 				end
 			end
 		end
@@ -1896,34 +1901,12 @@ function BotSpawner:_GetUnlocks(p_Bot, p_TeamId, p_SquadId)
 		end
 	end
 
-	-- Update Perks if needed.
-	for l_Index = 1, #s_CurrentUnlockNames do
-		local l_PerkName = s_CurrentUnlockNames[l_Index]
-		if string.find(l_PerkName, "soldiers") then
-			-- Squad perk.
-			if l_PerkName == s_SelectedPerk then
-				s_SelectedPerk = ""
-				s_Unlocks[#s_Unlocks + 1] = s_CurrentUnlocks[l_Index]
-			end
-		else
-			-- Vehicle perk.
-			for l_IndexVehiclePerk = #s_VehiclePerksToAdd, 1, -1 do
-				local l_VehiclePerkName = s_VehiclePerksToAdd[l_IndexVehiclePerk]
-				if l_PerkName == l_VehiclePerkName then
-					table.remove(s_VehiclePerksToAdd, l_IndexVehiclePerk)
-					s_Unlocks[#s_Unlocks + 1] = s_CurrentUnlocks[l_Index]
-				end
-			end
-		end
-	end
-
-	-- Add perk if not already copied.
+	p_Bot.m_SquadPerk = s_SelectedPerk ~= "" and s_SelectedPerk or nil
 	if s_SelectedPerk ~= "" then
 		s_Unlocks[#s_Unlocks + 1] = self:GetResourceDataContainer(s_SelectedPerk)
 	end
 	for l_Index = 1, #s_VehiclePerksToAdd do
-		local l_VehicelPerk = s_VehiclePerksToAdd[l_Index]
-		s_Unlocks[#s_Unlocks + 1] = self:GetResourceDataContainer(l_VehicelPerk)
+		s_Unlocks[#s_Unlocks + 1] = self:GetResourceDataContainer(s_VehiclePerksToAdd[l_Index])
 	end
 
 	return s_Unlocks

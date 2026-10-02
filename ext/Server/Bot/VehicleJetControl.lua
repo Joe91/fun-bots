@@ -6,9 +6,87 @@ VehicleJetControl = class('VehicleJetControl')
 local m_Vehicles = require('Vehicles')
 ---@type Utilities
 local m_Utilities = require('__shared/Utilities')
+---@type AirTargets
+local m_AirTargets = require('AirTargets')
 
 function VehicleJetControl:__init()
 	-- Nothing to do.
+end
+
+---Where a jet flies when it doesn't attack: above the active objective, offset by team.
+---@param p_Bot Bot
+---@return Vec3
+function VehicleJetControl:_GetPatrolPosition(p_Bot)
+	local s_TargetPosition = g_GameDirector:GetActiveTargetPointPosition(p_Bot.m_Player.teamId,
+		p_Bot.m_Player.controlledControllable and p_Bot.m_Player.controlledControllable.transform.trans):Clone()
+	if not Globals.IsAirSuperiority then
+		s_TargetPosition.y = s_TargetPosition.y + Registry.VEHICLES.JET_TARGET_HEIGHT
+	end
+	if (p_Bot.m_Player.teamId % 2) == 1 then
+		s_TargetPosition.z = s_TargetPosition.z + 100
+	else
+		s_TargetPosition.z = s_TargetPosition.z - 100
+	end
+	return s_TargetPosition
+end
+
+---Another aircraft that would pass closer than JET_AVOID_DISTANCE within JET_AVOID_TIME: the point to break to (to
+---the right, the higher one climbs, the lower one dives), else nil. Works on plain numbers, it runs often.
+---@param p_Bot Bot
+---@param p_Transform LinearTransform
+---@param p_Velocity Vec3
+---@return Vec3|nil
+function VehicleJetControl:_GetEvasionPoint(p_Bot, p_Transform, p_Velocity)
+	local s_Trans = p_Transform.trans
+	local s_X, s_Y, s_Z = s_Trans.x, s_Trans.y, s_Trans.z
+	local s_VelX, s_VelY, s_VelZ = p_Velocity.x, p_Velocity.y, p_Velocity.z
+	local s_OwnId = p_Bot.m_Player.id
+	local s_AvoidDistance = Registry.VEHICLES.JET_AVOID_DISTANCE
+	local s_AvoidTime = Registry.VEHICLES.JET_AVOID_TIME
+	local s_Threat = nil
+	local s_ThreatTime = s_AvoidTime
+
+	local s_Targets = m_AirTargets._Targets
+	for l_Index = 1, #s_Targets do
+		local l_Id = s_Targets[l_Index]
+		if l_Id ~= s_OwnId then
+			local s_Player = PlayerManager:GetPlayerById(l_Id)
+			local s_Other = s_Player and s_Player.controlledControllable
+			if s_Other ~= nil and not s_Other:Is('ServerSoldierEntity') then
+				local s_OtherTrans = s_Other.transform.trans
+				local s_RX, s_RY, s_RZ = s_OtherTrans.x - s_X, s_OtherTrans.y - s_Y, s_OtherTrans.z - s_Z
+				-- Cheap pre-check: out of reach within the avoid-time even at 300 m/s closing speed.
+				local s_Reach = s_AvoidDistance + 300 * s_AvoidTime
+				if s_RX * s_RX + s_RY * s_RY + s_RZ * s_RZ < s_Reach * s_Reach then
+					local s_OtherVel = PhysicsEntity(s_Other).velocity
+					local s_VX, s_VY, s_VZ = s_OtherVel.x - s_VelX, s_OtherVel.y - s_VelY, s_OtherVel.z - s_VelZ
+					local s_SpeedSq = s_VX * s_VX + s_VY * s_VY + s_VZ * s_VZ
+					if s_SpeedSq > 1.0 then
+						-- Time and distance of the closest approach.
+						local s_Time = -(s_RX * s_VX + s_RY * s_VY + s_RZ * s_VZ) / s_SpeedSq
+						if s_Time > 0 and s_Time < s_ThreatTime then
+							local s_MX, s_MY, s_MZ = s_RX + s_VX * s_Time, s_RY + s_VY * s_Time, s_RZ + s_VZ * s_Time
+							if s_MX * s_MX + s_MY * s_MY + s_MZ * s_MZ < s_AvoidDistance * s_AvoidDistance then
+								s_ThreatTime = s_Time
+								-- Who climbs: the higher one, on the same height the one with the higher id.
+								s_Threat = s_RY < 0 or (s_RY == 0 and s_OwnId > l_Id)
+							end
+						end
+					end
+				end
+			end
+		end
+	end
+
+	if s_Threat == nil then
+		return nil
+	end
+
+	local s_Forward = p_Transform.forward
+	local s_Left = p_Transform.left
+	local s_Vertical = s_Threat and 60 or -60
+	return Vec3(s_X + s_Forward.x * 150 - s_Left.x * 150, s_Y + s_Forward.y * 150 + s_Vertical,
+		s_Z + s_Forward.z * 150 - s_Left.z * 150)
 end
 
 ---@param p_DeltaTime number
@@ -41,18 +119,7 @@ function VehicleJetControl:UpdateMovementJet(p_DeltaTime, p_Bot)
 		end
 	end
 
-	local s_TargetPosition = g_GameDirector:GetActiveTargetPointPosition(p_Bot.m_Player.teamId,
-		p_Bot.m_Player.controlledControllable and p_Bot.m_Player.controlledControllable.transform.trans):Clone()
-	if Globals.IsAirSuperiority then
-		s_TargetPosition.y = s_TargetPosition.y + 0 -- no offset
-	else
-		s_TargetPosition.y = s_TargetPosition.y + Registry.VEHICLES.JET_TARGET_HEIGHT
-	end
-	if (p_Bot.m_Player.teamId % 2) == 1 then
-		s_TargetPosition.z = s_TargetPosition.z + 100
-	else
-		s_TargetPosition.z = s_TargetPosition.z - 100
-	end
+	local s_TargetPosition = self:_GetPatrolPosition(p_Bot)
 
 	if p_Bot._VehicleTakeoffTimer > 0.0 then
 		p_Bot._VehicleTakeoffTimer = p_Bot._VehicleTakeoffTimer - p_DeltaTime
@@ -127,16 +194,48 @@ function VehicleJetControl:UpdateYawJet(p_Bot, p_Attacking, p_DeltaTime)
 		s_DeltaYaw = s_DeltaYaw - s_AimOffsetYaw
 		s_DeltaPitch = s_DeltaPitch - s_AimOffsetPitch
 
+		-- Stay in a band around the patrol-height. Not _TargetPoint: UpdateMovementJet doesn't run while attacking, it
+		-- still held an old point (often the climb-point right above the jet), so jets climbed higher with every attack.
 		local s_Height = s_Trans.y
-		if s_Height > p_Bot._TargetPoint.Position.y + 120 then
-			p_Bot._JetTakeoffActive = false
-			p_Bot:AbortAttack()
-		elseif s_Height < p_Bot._TargetPoint.Position.y - 75 then
+		local s_PatrolHeight = self:_GetPatrolPosition(p_Bot).y
+		if s_Height > s_PatrolHeight + 120 or s_Height < s_PatrolHeight - 75 then
 			p_Bot._JetTakeoffActive = false
 			p_Bot:AbortAttack()
 		end
 	else
 		s_DeltaYaw, s_DeltaPitch = self:CalculateDeviationRelativeToOrientation(s_Transform, p_Bot._TargetPoint.Position)
+	end
+
+	-- Break away from aircraft on collision course, before anything else. No shots meanwhile.
+	local s_Velocity = PhysicsEntity(s_Vehicle).velocity
+	local s_Evasion = self:_GetEvasionPoint(p_Bot, s_Transform, s_Velocity)
+	if s_Evasion ~= nil then
+		s_DeltaYaw, s_DeltaPitch = self:CalculateDeviationRelativeToOrientation(s_Transform, s_Evasion)
+		p_Attacking = false
+	end
+
+	-- Ground avoidance, above everything else (not while taking off). Diving after ground-targets, often rolled over,
+	-- the jets pulled "up" through a split-S into the ground. Roll upright first (bank-angle: 0 level, > 0 banked
+	-- right, +-pi inverted), pull up once the jet isn't upside down any more.
+	local s_Trans = s_Transform.trans
+	local s_GroundHeight = self:_GetPatrolPosition(p_Bot).y
+	if not Globals.IsAirSuperiority then
+		s_GroundHeight = s_GroundHeight - Registry.VEHICLES.JET_TARGET_HEIGHT
+	end
+	if not p_Bot._JetTakeoffActive and s_Trans.y + math.min(s_Velocity.y, 0.0) * Registry.VEHICLES.JET_PULL_OUT_TIME
+		< s_GroundHeight + Registry.VEHICLES.JET_MIN_ALTITUDE then
+		if p_Attacking then
+			p_Bot:AbortAttack()
+		end
+		local s_Bank = math.atan(s_Transform.left.y, s_Transform.up.y)
+		s_Input:SetLevel(EntryInputActionEnum.EIARoll, math.max(-1.0, math.min(1.0, -2 * s_Bank)))
+		-- Nose up is a negative pitch-input (as 3 * deltaPitch below: a target above gives a negative deviation).
+		s_Input:SetLevel(EntryInputActionEnum.EIAPitch, math.abs(s_Bank) < 1.2 and -1.0 or 0.0)
+		s_Input:SetLevel(EntryInputActionEnum.EIAYaw, 0.0)
+		s_Input:SetLevel(EntryInputActionEnum.EIAThrottle, 1.0)
+		s_Input:SetLevel(EntryInputActionEnum.EIABrake, 0.0)
+		p_Bot._VehicleReadyToShoot = false
+		return
 	end
 
 	-- Roll
@@ -153,7 +252,7 @@ function VehicleJetControl:UpdateYawJet(p_Bot, p_Attacking, p_DeltaTime)
 
 	-- Throttle.
 	-- Target velocity == 313 km/h → 86.9444 m/s
-	local s_Delta_Speed = 86.9444 - PhysicsEntity(s_Vehicle).velocity.magnitude
+	local s_Delta_Speed = 86.9444 - s_Velocity.magnitude
 	local s_Output_Throttle = p_Bot._Pid_Drv_Throttle:Update(s_Delta_Speed, p_DeltaTime)
 	if s_Output_Throttle > 0 then
 		s_Input:SetLevel(EntryInputActionEnum.EIAThrottle, s_Output_Throttle)

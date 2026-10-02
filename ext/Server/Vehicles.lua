@@ -426,8 +426,11 @@ function Vehicles:CheckForVehicleAttack(p_VehicleType, p_Bot)
 	end
 
 	if p_VehicleType ~= VehicleTypes.MavBot then      -- MAV or EOD always with rifle.
-		if s_Gadget1 and s_Gadget1.type == WeaponTypes.Rocket and p_Bot._RocketCooldownTimer <= 0 then
-			s_AttackMode = VehicleAttackModes.AttackWithRocket -- Always use rocket if possible.
+		-- Always use rocket if possible. Not at planes: they are faster than the rocket, it can't hit them (and the
+		-- lead can't be calculated).
+		if s_Gadget1 and s_Gadget1.type == WeaponTypes.Rocket and p_Bot._RocketCooldownTimer <= 0
+			and p_VehicleType ~= VehicleTypes.Plane then
+			s_AttackMode = VehicleAttackModes.AttackWithRocket
 		elseif s_Gadget2 and s_Gadget2.type == WeaponTypes.C4 and s_Distance < 25 then
 			if not self:IsAirVehicleType(p_VehicleType) then
 				s_AttackMode = VehicleAttackModes.AttackWithC4 -- Always use C4 if possible.

@@ -171,6 +171,7 @@ function Bot:ResetVars()
 	self._FollowWayPoints = {}
 	self._SpawnDelayTimer = 0.0
 	self._KillYourselfTimer = 0.0
+	self._InvalidPathObjective = nil
 	self._RocketCooldownTimer = 0.0
 	self._SpawnProtectionTimer = 0.0
 	self._Objective = ''
@@ -207,6 +208,7 @@ function Bot:ResetSpawnVars()
 	self._DefendTimer = 0.0
 	self._SidewardsTimer = 0.0
 	self._KillYourselfTimer = 0.0
+	self._InvalidPathObjective = nil
 	self._RocketCooldownTimer = 0.0
 	self._SpawnProtectionTimer = 2.0
 	self._DeployTimer = MathUtils:GetRandomInt(1, Config.DeployCycle)

@@ -220,11 +220,20 @@ function BotManager:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 		self._ProfileSectionMem = collectgarbage("count")
 	end
 
-	self:UpdateBotsInBatches(self._Bots, s_BotCount, self._L1Counter, self._RatioL0L2, "Update", self._L2CycleTime)
+	-- The server runs fewer frames than its tickrate when it can't keep up (big maps: 30 instead of 60). The batches
+	-- and the turning count frames: scale them with the real frame-time, else all timers of the bots and their
+	-- turning run at half the speed there.
+	local s_FrameFactor = math.min(math.max(p_DeltaTime / self._CycleTimeL0, 1.0), 4.0)
+	Globals.YawPerFrame = math.rad(Config.MaximunYawPerSec) * self._CycleTimeL0 * s_FrameFactor
 
-	self:UpdateBotsInBatches(self._Bots, s_BotCount, self._L0Counter, self._RatioL0L1, "UpdateFast", self._L1CycleTime)
+	self:UpdateBotsInBatches(self._Bots, s_BotCount, self._L1Counter, self._RatioL0L2, "Update",
+		self._L2CycleTime * s_FrameFactor)
 
-	self:UpdateBotsInBatches(self._Bots, s_BotCount, self._L2Counter, self._RatioL0L3, "UpdateSlow", self._L3CycleTime)
+	self:UpdateBotsInBatches(self._Bots, s_BotCount, self._L0Counter, self._RatioL0L1, "UpdateFast",
+		self._L1CycleTime * s_FrameFactor)
+
+	self:UpdateBotsInBatches(self._Bots, s_BotCount, self._L2Counter, self._RatioL0L3, "UpdateSlow",
+		self._L3CycleTime * s_FrameFactor)
 
 	if s_Profile then
 		local s_Now = SharedUtils:GetTimeNS()
@@ -1629,7 +1638,7 @@ function BotManager:_CheckForBotBotAttack()
 	-- second over all bots, and every engine access allocates: reading everything each call fed the GC a lot.
 	-- The position is only used for the distance pre-check (the raycast uses live positions), so a slightly
 	-- older one is fine. It is stored as numbers, so no engine object is kept alive. Returns nil without soldier.
-	local s_Now = SharedUtils:GetTime()
+	local s_Now = m_Utilities:GetTime()
 	local s_MaxAge = Registry.GAME_RAYCASTING.BOT_BOT_INFO_MAX_AGE
 	local function _GetBotInfo(p_BotId)
 		local s_InfoBot = self:GetBotById(p_BotId)

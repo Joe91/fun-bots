@@ -8,6 +8,15 @@ function Utilities:__init()
 	-- Nothing to do.
 end
 
+-- SharedUtils:GetTime() only counts whole seconds. GetTimeNS() has 1 ms resolution, anchored once to the Unix-time.
+local s_EpochOffset = SharedUtils:GetTime() - SharedUtils:GetTimeNS() / 1000000000
+
+---Unix-time in s with sub-second resolution (unlike SharedUtils:GetTime()). Use it for all timings below 1 s.
+---@return number
+function Utilities:GetTime()
+	return s_EpochOffset + SharedUtils:GetTimeNS() / 1000000000
+end
+
 ---@param p_Player Player
 ---@param p_IsTarget boolean
 ---@param p_AimForHead boolean
