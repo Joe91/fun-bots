@@ -37,6 +37,10 @@ Registry = {
 		MAX_NUMBER_OF_NODES_PER_CYCLE = 1024,
 		-- experimental nametags
 		USE_EXPERIMENTAL_NAMETAGS = false,
+		-- Generational garbage-collection of Lua on the server instead of incremental. Each GC-cycle has to go through
+		-- all waypoints (50000 on big maps): with it, about half as many frames take longer than 50 ms there.
+		-- Set to false if the server gets unstable.
+		USE_GENERATIONAL_GC = true,
 	},
 	-- Version and Release related variables.
 	-- Variables related to the current build version, version and the type of version.
@@ -340,6 +344,8 @@ Registry = {
 		-- Seconds between prints of Lua memory, bot-update times, GC and table sizes. 0 = off.
 		-- Used to find what grows or stutters over long rounds.
 		ROUND_STATS_INTERVAL = 0.0,
+		-- Prints every single call of a mod-function that takes longer than this (ms), with its callers. 0 = off.
+		SPIKE_TRACE_MS = 0,
 		-- Streams the game-state to the external debug-server (tools/debug-server) and executes its commands.
 		-- Toggle ingame with "!debugbridge on|off" or RCON "funbots.debugBridge".
 		DEBUG_BRIDGE = false,

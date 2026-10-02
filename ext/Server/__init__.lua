@@ -80,6 +80,7 @@ local m_DebugSnapshots = require('Debug/DebugSnapshots')
 require('Debug/DebugCommands')
 -- Last: wraps functions of the modules above (only with Registry.DEBUG.ROUND_STATS_INTERVAL > 0).
 require('Debug/FunctionProfiler')
+require('Debug/SpikeTracer')
 ---@type PermissionManager
 PermissionManager = require('PermissionManager')
 
@@ -98,6 +99,9 @@ end
 
 ---VEXT Shared Extension:Loaded Event
 function FunBotServer:OnExtensionLoaded()
+	if Registry.COMMON.USE_GENERATIONAL_GC then
+		collectgarbage("generational")
+	end
 	-- destroy all still existing bot-players first
 	m_BotManager:DestroyAllOldBotPlayers()
 	m_SettingsManager:OnExtensionLoaded()

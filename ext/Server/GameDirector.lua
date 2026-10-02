@@ -11,6 +11,11 @@ local m_Vehicles = require("Vehicles")
 ---@type Logger
 local m_Logger = Logger("GameDirector", Debug.Server.GAMEDIRECTOR)
 
+-- Coordinates of the nodes as plain numbers, per path: { Position, x, y, z, Position, x, y, z, ... }.
+-- Reading x, y and z of a Vec3 costs ~0.4 µs each, too much for searches over all nodes of a map (50000 on big maps).
+-- A node is re-read when its Position is another object than the cached one (positions are replaced, never changed).
+local s_NodeCoords = {}
+
 local function _AccessEntity(p_Entity)
 	return p_Entity.data ~= nil
 end
@@ -118,6 +123,7 @@ end
 
 function GameDirector:OnLevelDestroy()
 	self:RegisterVars()
+	s_NodeCoords = {}
 end
 
 ---VEXT Server Server:RoundOver Event
@@ -1284,6 +1290,35 @@ function GameDirector:CheckForExecution(p_Point, p_TeamId, p_InVehicle)
 	end
 end
 
+---@param p_PathIndex integer
+---@param p_Nodes Waypoint[]
+---@param p_Index integer
+---@param p_X number
+---@param p_Y number
+---@param p_Z number
+---@return number squared distance
+local function _NodeDistanceSquared(p_PathIndex, p_Nodes, p_Index, p_X, p_Y, p_Z)
+	local s_Coords = s_NodeCoords[p_PathIndex]
+	if s_Coords == nil then
+		s_Coords = {}
+		s_NodeCoords[p_PathIndex] = s_Coords
+	end
+
+	local s_Offset = p_Index * 4 - 3
+	local s_Position = p_Nodes[p_Index].Position
+	if not rawequal(s_Coords[s_Offset], s_Position) then
+		s_Coords[s_Offset] = s_Position
+		s_Coords[s_Offset + 1] = s_Position.x
+		s_Coords[s_Offset + 2] = s_Position.y
+		s_Coords[s_Offset + 3] = s_Position.z
+	end
+
+	local s_DiffX = s_Coords[s_Offset + 1] - p_X
+	local s_DiffY = s_Coords[s_Offset + 2] - p_Y
+	local s_DiffZ = s_Coords[s_Offset + 3] - p_Z
+	return s_DiffX * s_DiffX + s_DiffY * s_DiffY + s_DiffZ * s_DiffZ
+end
+
 ---@param p_Trans Vec3
 ---@param p_VehiclePath boolean
 ---@param p_DetailedSearch boolean
@@ -1291,106 +1326,67 @@ end
 ---@param p_Increment integer|nil
 ---@return Waypoint|nil
 function GameDirector:FindClosestPath(p_Trans, p_VehiclePath, p_DetailedSearch, p_VehicleTerrain, p_Increment)
-	local s_ClosestPathNode = nil
 	local s_Paths = m_NodeCollection:GetPaths()
+
+	if s_Paths == nil then
+		return nil
+	end
 
 	p_Increment = p_Increment or Registry.GAME_DIRECTOR.NODE_SEARCH_INCREMENTS
 
-	if s_Paths ~= nil then
-		local s_ClosestDistance = nil
+	local s_X, s_Y, s_Z = p_Trans.x, p_Trans.y, p_Trans.z
+	local s_ClosestPathNode = nil
+	local s_ClosestDistance = math.huge
 
-		for _, l_Waypoints in pairs(s_Paths) do
-			if l_Waypoints[1] ~= nil then
-				local s_isVehiclePath = false
-				local s_isAirPath = false
-				local s_isWaterPath = false
-				local s_isSpawnVehiclePath = false
+	for l_PathIndex, l_Waypoints in pairs(s_Paths) do
+		local s_FirstNode = l_Waypoints[1]
+		if s_FirstNode ~= nil then
+			local s_isVehiclePath = false
+			local s_isAirPath = false
+			local s_isWaterPath = false
+			local s_isSpawnVehiclePath = false
 
-				if l_Waypoints[1].Data ~= nil then
-					if l_Waypoints[1].Data.Vehicles ~= nil then
-						s_isVehiclePath = true
+			if s_FirstNode.Data ~= nil then
+				if s_FirstNode.Data.Vehicles ~= nil then
+					s_isVehiclePath = true
 
-						for l_Index = 1, #l_Waypoints[1].Data.Vehicles do
-							local l_PathType = l_Waypoints[1].Data.Vehicles[l_Index]
-							if l_PathType:lower() == "air" then
-								s_isAirPath = true
-							end
-
-							if l_PathType:lower() == "water" then
-								s_isWaterPath = true
-							end
+					for l_Index = 1, #s_FirstNode.Data.Vehicles do
+						local l_PathType = s_FirstNode.Data.Vehicles[l_Index]:lower()
+						if l_PathType == "air" then
+							s_isAirPath = true
 						end
-					end
-					if l_Waypoints[1].Data.Objectives and l_Waypoints[1].Data.Objectives[1] then
-						local s_Objective = self:_GetObjectiveObject(l_Waypoints[1].Data.Objectives[1])
-						if s_Objective and s_Objective.isSpawnPath and s_Objective.isEnterVehiclePath then
-							s_isSpawnVehiclePath = true
+
+						if l_PathType == "water" then
+							s_isWaterPath = true
 						end
 					end
 				end
-
-				if p_VehiclePath and s_isVehiclePath then
-					if s_isVehiclePath then
-						if (p_VehicleTerrain == VehicleTerrains.Air and s_isAirPath) or
-							(p_VehicleTerrain == VehicleTerrains.Water and s_isWaterPath) or
-							(p_VehicleTerrain == VehicleTerrains.Land and not s_isWaterPath and not s_isAirPath) or
-							(p_VehicleTerrain == VehicleTerrains.Amphibious and not s_isAirPath) then
-							if p_DetailedSearch then
-								for i = 1, #l_Waypoints, p_Increment do
-									local s_NewDistance = Utilities:DistanceFast(l_Waypoints[i].Position, p_Trans)
-
-									if s_ClosestDistance == nil then
-										s_ClosestDistance = s_NewDistance
-										s_ClosestPathNode = l_Waypoints[i]
-									else
-										if s_NewDistance < s_ClosestDistance then
-											s_ClosestDistance = s_NewDistance
-											s_ClosestPathNode = l_Waypoints[i]
-										end
-									end
-								end
-							else
-								local s_NewDistance = Utilities:DistanceFast(l_Waypoints[1].Position, p_Trans)
-
-								if s_ClosestDistance == nil then
-									s_ClosestDistance = s_NewDistance
-									s_ClosestPathNode = l_Waypoints[1]
-								else
-									if s_NewDistance < s_ClosestDistance then
-										s_ClosestDistance = s_NewDistance
-										s_ClosestPathNode = l_Waypoints[1]
-									end
-								end
-							end
-						end
+				if s_FirstNode.Data.Objectives and s_FirstNode.Data.Objectives[1] then
+					local s_Objective = self:_GetObjectiveObject(s_FirstNode.Data.Objectives[1])
+					if s_Objective and s_Objective.isSpawnPath and s_Objective.isEnterVehiclePath then
+						s_isSpawnVehiclePath = true
 					end
-				elseif not p_VehiclePath and not s_isVehiclePath and not s_isSpawnVehiclePath then -- Not in vehicle. Only use infantery-paths
-					if p_DetailedSearch then
-						for i = 1, #l_Waypoints, p_Increment do
-							local s_NewDistance = Utilities:DistanceFast(l_Waypoints[i].Position, p_Trans)
+				end
+			end
 
-							if s_ClosestDistance == nil then
-								s_ClosestDistance = s_NewDistance
-								s_ClosestPathNode = l_Waypoints[i]
-							else
-								if s_NewDistance < s_ClosestDistance then
-									s_ClosestDistance = s_NewDistance
-									s_ClosestPathNode = l_Waypoints[i]
-								end
-							end
-						end
-					else
-						local s_NewDistance = Utilities:DistanceFast(l_Waypoints[1].Position, p_Trans)
+			local s_Search = false
+			if p_VehiclePath then
+				s_Search = s_isVehiclePath and ((p_VehicleTerrain == VehicleTerrains.Air and s_isAirPath) or
+					(p_VehicleTerrain == VehicleTerrains.Water and s_isWaterPath) or
+					(p_VehicleTerrain == VehicleTerrains.Land and not s_isWaterPath and not s_isAirPath) or
+					(p_VehicleTerrain == VehicleTerrains.Amphibious and not s_isAirPath))
+			else -- Not in vehicle. Only use infantery-paths
+				s_Search = not s_isVehiclePath and not s_isSpawnVehiclePath
+			end
 
-						if s_ClosestDistance == nil then
-							s_ClosestDistance = s_NewDistance
-							s_ClosestPathNode = l_Waypoints[1]
-						else
-							if s_NewDistance < s_ClosestDistance then
-								s_ClosestDistance = s_NewDistance
-								s_ClosestPathNode = l_Waypoints[1]
-							end
-						end
+			if s_Search then
+				local s_LastIndex = p_DetailedSearch and #l_Waypoints or 1
+				for i = 1, s_LastIndex, p_Increment do
+					local s_NewDistance = _NodeDistanceSquared(l_PathIndex, l_Waypoints, i, s_X, s_Y, s_Z)
+
+					if s_NewDistance < s_ClosestDistance then
+						s_ClosestDistance = s_NewDistance
+						s_ClosestPathNode = l_Waypoints[i]
 					end
 				end
 			end
@@ -1846,14 +1842,16 @@ function GameDirector:FindValidPathNode(p_Position, p_Objective)
 	local s_ClosestNode = nil
 	local s_ClosestDistance = nil
 
-	for _, l_Nodes in pairs(m_NodeCollection:GetPaths()) do
+	local s_X, s_Y, s_Z = p_Position.x, p_Position.y, p_Position.z
+
+	for l_PathIndex, l_Nodes in pairs(m_NodeCollection:GetPaths()) do
 		local s_First = l_Nodes[1]
 		local s_Objectives = s_First and s_First.Data and s_First.Data.Objectives
 
 		if s_Objectives ~= nil and #s_Objectives == 1 and s_First.Data.Vehicles == nil
 			and ((s_Objective ~= nil and s_Objectives[1] == s_Objective) or (s_Objective == nil and _Valid(s_Objectives[1]))) then
 			for l_Index = 1, #l_Nodes do
-				local s_Distance = p_Position:Distance(l_Nodes[l_Index].Position)
+				local s_Distance = _NodeDistanceSquared(l_PathIndex, l_Nodes, l_Index, s_X, s_Y, s_Z)
 
 				if s_ClosestDistance == nil or s_Distance < s_ClosestDistance then
 					s_ClosestDistance = s_Distance
