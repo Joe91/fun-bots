@@ -16,6 +16,8 @@ local m_ServerRaycasts = require('ServerRaycasts')
 local m_NodeCollection = require('NodeCollection')
 ---@type Vehicles
 local m_Vehicles = require('Vehicles')
+---@type Utilities
+local m_Utilities = require('__shared/Utilities')
 
 local _Vec = DebugBridge.Vec
 local _Round = DebugBridge.Round
@@ -35,10 +37,10 @@ local s_MoveModeNames = _Names(BotMoveModes)
 local s_KitNames = _Names(BotKits)
 -- The state-objects are created with g_BotStates, so this is built on first use.
 local s_StateNames = nil
--- SharedUtils:GetTime() at the last level-load (every round), nil after a reload of the mod until the next level.
+-- Utilities:GetTime() at the last level-load (every round), nil after a reload of the mod until the next level.
 local s_RoundStart = nil
--- SharedUtils:GetTime() when the mod was loaded: the start of the game-server, or the last reload of the mod.
-local s_ModStart = _Round(SharedUtils:GetTime(), 3)
+-- Utilities:GetTime() when the mod was loaded: the start of the game-server, or the last reload of the mod.
+local s_ModStart = _Round(m_Utilities:GetTime(), 3)
 
 ---@param p_Entity ControllableEntity
 ---@return string
@@ -273,7 +275,17 @@ function DebugSnapshots.CollectObjectives()
 		table.sort(s_Mcoms, function(p_A, p_B) return p_A.index < p_B.index end)
 	end
 
-	return { flags = s_Flags, mcoms = s_Mcoms, stage = g_GameDirector.m_RushStageCounter }
+	-- The ways to the vehicles: active while their vehicle is there (GameDirector:_SetVehicleObjectiveState).
+	local s_Vehicles = {}
+	local s_AllObjectives = g_GameDirector.m_AllObjectives
+	for l_Index = 1, #s_AllObjectives do
+		local l_Objective = s_AllObjectives[l_Index]
+		if l_Objective.isEnterVehiclePath then
+			s_Vehicles[#s_Vehicles + 1] = { name = l_Objective.name, active = l_Objective.active, team = l_Objective.team }
+		end
+	end
+
+	return { flags = s_Flags, mcoms = s_Mcoms, vehicles = s_Vehicles, stage = g_GameDirector.m_RushStageCounter }
 end
 
 -- =============================================
@@ -283,7 +295,7 @@ end
 ---@param p_LevelName string
 ---@param p_GameMode string
 function DebugSnapshots:OnLevelLoaded(p_LevelName, p_GameMode)
-	s_RoundStart = _Round(SharedUtils:GetTime(), 3)
+	s_RoundStart = _Round(m_Utilities:GetTime(), 3)
 	m_DebugBridge:Event('level_loaded', { level = p_LevelName, mode = p_GameMode })
 end
 
@@ -298,11 +310,19 @@ function DebugSnapshots:OnPlayerKilled(p_Player, p_Inflictor, p_Position, p_Weap
 		return
 	end
 
+	-- Kills with the weapons of vehicles come as weapon "Death": the vehicle of the killer tells which.
+	local s_KillerVehicle = nil
+	local s_KillerControllable = p_Inflictor and p_Inflictor.soldier ~= nil and p_Inflictor.controlledControllable
+	if s_KillerControllable and not s_KillerControllable:Is('ServerSoldierEntity') then
+		s_KillerVehicle = _VehicleName(s_KillerControllable)
+	end
+
 	m_DebugBridge:Event('kill', {
 		victim = p_Player.id,
 		victimTeam = p_Player.teamId,
 		killer = p_Inflictor and p_Inflictor.id or -1,
 		killerTeam = p_Inflictor and p_Inflictor.teamId or 0,
+		killerVehicle = s_KillerVehicle,
 		weapon = p_Weapon,
 		pos = _Vec(p_Position),
 		headshot = p_IsHeadShot,

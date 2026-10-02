@@ -392,7 +392,7 @@ function Bot:_DetectObstacle(p_Velocity, p_DeltaTime, p_PlayerPos)
 	local s_DeltaZ = s_TargetPos.z - p_PlayerPos.z
 	local s_Distance = math.sqrt(s_DeltaX * s_DeltaX + s_DeltaZ * s_DeltaZ)
 	local s_Node = self._TargetPoint.Original or self._TargetPoint
-	local s_Now = SharedUtils:GetTime()
+	local s_Now = m_Utilities:GetTime()
 
 	-- The movement (re)starts after a pause (spawn, attack, defending, action, ...): the bot might have to stand up
 	-- from prone first and has to accelerate, so no standstill-check for a moment.
@@ -1350,7 +1350,7 @@ function Bot:LookAround(p_DeltaTime)
 	self._TargetPoint = nil
 
 	-- A new look-around phase: scan around the direction the bot was facing when it stopped.
-	local s_Now = SharedUtils:GetTime()
+	local s_Now = m_Utilities:GetTime()
 
 	if s_Now - self._LookAroundLastTime > 0.5 then
 		self._LookAroundBaseYaw = self._TargetYaw

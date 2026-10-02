@@ -36,7 +36,10 @@ class CombatAnalyzer(Analyzer):
         killer_team, victim_team = event.get("killerTeam"), event.get("victimTeam")
         if killer_team:
             self._kills_by_team[f"team {killer_team}"] += 1
-        self._weapons[str(event.get("weapon"))] += 1
+        weapon = str(event.get("weapon"))
+        if weapon == "Death" and event.get("killerVehicle"):
+            weapon = str(event["killerVehicle"])  # weapons of vehicles come as "Death"
+        self._weapons[weapon] += 1
         if event.get("headshot"):
             self._headshots += 1
         if killer not in (-1, victim) and killer_team and killer_team == victim_team:

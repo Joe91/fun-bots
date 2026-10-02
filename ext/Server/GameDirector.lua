@@ -245,6 +245,10 @@ function GameDirector:OnEngineUpdate(p_DeltaTime)
 						s_CurrentPathStatus = self:GetEnableStateOfPath(s_CurrentPathFirst.Data.Objectives)
 						s_OnBasePath = (self:IsBasePath(s_CurrentPathFirst.Data.Objectives) and (#s_CurrentPathFirst.Data.Objectives == 1))
 						s_OnDestroyedPath = self:IsDestroyedPath(s_CurrentPathFirst.Data.Objectives)
+						-- Explore-paths are never active, bots take them on purpose (PathSwitcher): not a wrong path.
+						if #s_CurrentPathFirst.Data.Objectives == 1 and self:IsExplorePath(s_CurrentPathFirst.Data.Objectives[1]) then
+							s_CurrentPathStatus = 2
+						end
 					elseif s_CurrentPathFirst.Data.Vehicles and table.has(s_CurrentPathFirst.Data.Vehicles, "land") then
 						s_OnVehiclePath = true
 					end
@@ -252,9 +256,31 @@ function GameDirector:OnEngineUpdate(p_DeltaTime)
 
 				if (s_CurrentPathStatus <= 0 or s_OnBasePath or s_OnDestroyedPath) and not s_OnVehiclePath
 					and not l_Bot._FollowTargetPlayer then
-					l_Bot._KillYourselfTimer = l_Bot._KillYourselfTimer + Registry.GAME_DIRECTOR.UPDATE_OBJECTIVES_CYCLE
+					-- Off a base-path, a bot that keeps getting closer to its objective is on its way, e.g. after the
+					-- rush-stage switched off all paths around it: the time only counts while it doesn't.
+					local s_OnItsWay = false
+					local s_Soldier = l_Bot.m_Player and l_Bot.m_Player.soldier
+					if not s_OnBasePath and s_Soldier ~= nil then
+						local s_Objective = l_Bot:GetObjective()
+						local s_Distance = self:_GetDistanceFromObjective(s_Objective, s_Soldier.worldTransform.trans)
+						if s_Objective ~= l_Bot._InvalidPathObjective then
+							l_Bot._InvalidPathObjective = s_Objective
+							l_Bot._InvalidPathBestDistance = math.huge
+						end
+						if s_Distance < l_Bot._InvalidPathBestDistance - Registry.GAME_DIRECTOR.INVALID_PATH_MIN_PROGRESS then
+							l_Bot._InvalidPathBestDistance = s_Distance
+							s_OnItsWay = true
+						end
+					end
+
+					if s_OnItsWay then
+						l_Bot._KillYourselfTimer = 0.0
+					else
+						l_Bot._KillYourselfTimer = l_Bot._KillYourselfTimer + Registry.GAME_DIRECTOR.UPDATE_OBJECTIVES_CYCLE
+					end
 				else
 					l_Bot._KillYourselfTimer = 0.0
+					l_Bot._InvalidPathObjective = nil
 				end
 
 				-- Not fighting: teleport it onto a path of its objective, better than waiting or dying.

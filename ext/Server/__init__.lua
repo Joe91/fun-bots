@@ -477,6 +477,8 @@ function FunBotServer:_UpdateRoundStats(p_DeltaTime)
 		s_Beacons = s_Beacons + 1
 	end
 
+	-- Real frames in this interval: fewer than interval * tickrate when the server can't keep up.
+	local s_FrameCount = math.max(self._StatsFrames or 0, 1)
 	local s_UpdateCount = math.max(self._StatsBotUpdateCount or 0, 1)
 	local s_WallSeconds = math.max((SharedUtils:GetTimeNS() - (self._StatsWallStartNs or 0)) / 1000000000, s_StatsElapsed)
 	print(string.format("[RoundStats] Server: %.1f fps, longest frame %.1f ms, frames > 20 ms: %d (bot update > 5 ms in %d of them), tickrate %d",
@@ -524,7 +526,7 @@ function FunBotServer:_UpdateRoundStats(p_DeltaTime)
 	print("[RoundStats] Sections (ms): " .. table.concat(s_Parts, " | "))
 
 	-- Frames in this interval, to show the costs per frame. The timer has a resolution of 1 ms: only sums are exact.
-	local s_Frames = math.max(Registry.DEBUG.ROUND_STATS_INTERVAL * SharedUtils:GetTickrate(), 1)
+	local s_Frames = s_FrameCount
 
 	-- The bot calls with the highest total time.
 	local s_Calls = {}

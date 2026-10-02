@@ -168,8 +168,11 @@ function PathSwitcher:GetNewPath(p_Bot, p_BotId, p_Point, p_Objective, p_InVehic
 			or p_Point.PointIndex == #m_NodeCollection:Get(nil, p_Point.PathIndex)
 	elseif s_CurrentPathFirst.Data ~= nil and s_CurrentPathFirst.Data.Objectives ~= nil then
 		local s_Objectives = s_CurrentPathFirst.Data.Objectives
+		-- UseVehicle sends bots onto the way to a vehicle without changing their objective: they stay on it while
+		-- the vehicle can be used by their team.
 		s_LeavePath = m_GameDirector:IsDestroyedPath(s_Objectives) or (#s_Objectives == 1
-			and s_Objectives[1] ~= p_Objective and m_GameDirector:IsVehicleEnterPath(s_Objectives[1]))
+			and s_Objectives[1] ~= p_Objective and m_GameDirector:IsVehicleEnterPath(s_Objectives[1])
+			and not m_GameDirector:UseVehicle(p_TeamId, s_Objectives[1]))
 	end
 	local s_Exits = {}
 	local s_BestExitScore = -1
@@ -244,14 +247,12 @@ function PathSwitcher:GetNewPath(p_Bot, p_BotId, p_Point, p_Objective, p_InVehic
 
 		if s_PathNode.Data.Objectives ~= nil and #s_PathNode.Data.Objectives == 1 then
 			-- Check for vehicle usage.
-			if Config.UseVehicles then
-				if m_GameDirector:UseVehicle(p_TeamId, s_PathNode.Data.Objectives[1]) == true then
-					return true, s_NewPoint
-				end
-			else
-				if m_GameDirector:IsVehicleEnterPath(s_PathNode.Data.Objectives[1]) then
-					goto skip
-				end
+			if Config.UseVehicles and m_GameDirector:UseVehicle(p_TeamId, s_PathNode.Data.Objectives[1]) == true then
+				return true, s_NewPoint
+			elseif m_GameDirector:IsVehicleEnterPath(s_PathNode.Data.Objectives[1]) then
+				-- No vehicle of this team there (gone, taken, other team): a dead end. Bots took it by priority, found
+				-- nothing at its end and lost their time until they got teleported.
+				goto skip
 			end
 
 			-- Check for beacon

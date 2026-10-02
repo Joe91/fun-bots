@@ -350,7 +350,7 @@ function AimEvaluation:OnProjectileCreated(p_Transform, p_Entity, p_TypeName)
 
 	if s_Best ~= nil then
 		self._MatchedAtSpawn = self._MatchedAtSpawn + 1
-		local s_Pending = self:_Evaluate(s_Best, s_Spawn, p_TypeName, SharedUtils:GetTime())
+		local s_Pending = self:_Evaluate(s_Best, s_Spawn, p_TypeName, m_Utilities:GetTime())
 		if p_Entity ~= nil then
 			self._Pending[p_Entity.instanceId] = s_Pending
 		end
@@ -367,7 +367,7 @@ function AimEvaluation:OnProjectileCreated(p_Transform, p_Entity, p_TypeName)
 
 	-- Retry on impact, there the shooter is known.
 	if p_Entity ~= nil then
-		self._Pending[p_Entity.instanceId] = { Time = SharedUtils:GetTime(), TypeName = p_TypeName }
+		self._Pending[p_Entity.instanceId] = { Time = m_Utilities:GetTime(), TypeName = p_TypeName }
 	end
 end
 
@@ -494,7 +494,7 @@ function AimEvaluation:OnBulletCollision(p_Entity, p_Hit, p_GiverInfo)
 		-- The vehicle kept moving while the bullet flew: offsets against its current position would be wrong.
 		if s_Best ~= nil then
 			local s_Speed = PhysicsEntity(s_Best.Vehicle).velocity.magnitude
-			local s_FlightTime = s_Shot and (SharedUtils:GetTime() - s_Shot.Time) or nil
+			local s_FlightTime = s_Shot and (m_Utilities:GetTime() - s_Shot.Time) or nil
 			if (s_FlightTime and s_Speed * s_FlightTime > 1.0) or (s_FlightTime == nil and s_Speed > 1.0) then
 				self._MovingAtImpact = self._MovingAtImpact + 1
 				return
@@ -519,7 +519,7 @@ function AimEvaluation:OnBulletCollision(p_Entity, p_Hit, p_GiverInfo)
 
 	-- Ballistics: displacement = dir * speed * t + k * shooterVelocity * t - 0.5 * g * t² * up.
 	-- Solve the part perpendicular to the shot-direction for k and g (least squares), then the speed along it.
-	local s_DeltaTime = s_Shot.Time and (SharedUtils:GetTime() - s_Shot.Time) or 0.0
+	local s_DeltaTime = s_Shot.Time and (m_Utilities:GetTime() - s_Shot.Time) or 0.0
 	if s_DeltaTime > 0.05 and s_Length > 20.0 then
 		local s_FX, s_FY, s_FZ = s_Shot.DirX, s_Shot.DirY, s_Shot.DirZ
 		local function _Perp(p_X, p_Y, p_Z)
@@ -589,7 +589,7 @@ function AimEvaluation:OnEngineUpdate(p_DeltaTime)
 	self._ReportTimer = 0.0
 
 	-- Drop shots that never hit anything.
-	local s_Now = SharedUtils:GetTime()
+	local s_Now = m_Utilities:GetTime()
 	for l_Id, l_Shot in pairs(self._Pending) do
 		if s_Now - l_Shot.Time > MAX_PENDING_TIME then
 			self._Pending[l_Id] = nil

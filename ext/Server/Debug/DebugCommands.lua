@@ -21,6 +21,8 @@ DebugCommands = class('DebugCommands')
 
 ---@type DebugBridge
 local m_DebugBridge = require('Debug/DebugBridge')
+---@type Utilities
+local m_Utilities = require('__shared/Utilities')
 ---@type MapScanner
 local m_MapScanner = require('Debug/MapScanner')
 ---@type ServerRaycasts
@@ -124,7 +126,7 @@ function DebugCommands:__init()
 end
 
 function DebugCommands.Ping()
-	return { time = SharedUtils:GetTime() }
+	return { time = m_Utilities:GetTime() }
 end
 
 function DebugCommands.Channels(p_Args, p_Bridge)

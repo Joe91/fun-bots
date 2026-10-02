@@ -103,6 +103,8 @@ Registry = {
 		-- Teleport bots without valid paths (no active objective, base-path alone, destroyed MCOM) after this amount
 		-- of time onto a path of their objective, if they don't fight (and TeleportIfStuck is on).
 		TELEPORT_ON_INVALID_PATH_TIME = 20,
+		-- Off a base-path, the time above only counts while a bot doesn't get this many m closer to its objective.
+		INVALID_PATH_MIN_PROGRESS = 5.0,
 		-- Kill Bots without valid paths after this amount of time
 		KILL_ON_INVALID_PATH_TIME = 50,
 		-- Increments of nodes to search best patch with.
@@ -149,6 +151,14 @@ Registry = {
 		JET_FIRE_MAX_ANGLE = 0.2,
 		-- Gain of the rudder while attacking. Fine corrections without rolling.
 		JET_ATTACK_YAW_GAIN = 3.0,
+		-- Collision avoidance: a jet breaks right (and the higher one climbs) if another aircraft would pass closer than
+		-- JET_AVOID_DISTANCE (m) within JET_AVOID_TIME (s). Without it, two jets attacking each other fly head-on into each other.
+		JET_AVOID_DISTANCE = 50.0,
+		JET_AVOID_TIME = 3.0,
+		-- Ground avoidance: a jet that would get lower than JET_MIN_ALTITUDE (m above the objective) within
+		-- JET_PULL_OUT_TIME (s) at its current sink-rate levels its wings and pulls up, whatever it does.
+		JET_MIN_ALTITUDE = 120.0,
+		JET_PULL_OUT_TIME = 3.0,
 		-- Target height for choppers.
 		CHOPPER_TARGET_HEIGHT = 110,
 		-- Percentage of vehicle health to leave vehicle with (currently no passive events for bot-only vehicles)

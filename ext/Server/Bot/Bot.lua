@@ -82,6 +82,9 @@ function Bot:__init(p_Player)
 	-- The bot color is the soldier camo (color).
 	---@type BotColors|integer
 	self.m_Color = nil
+	-- Name of the squad-perk the bot got (BotSpawner:_GetUnlocks), so its squad doesn't have to read its unlocks.
+	---@type string|nil
+	self.m_SquadPerk = nil
 	---@type Weapon|nil
 	self.m_ActiveWeapon = nil
 	self.m_ActiveVehicle = nil
@@ -135,6 +138,10 @@ function Bot:__init(p_Player)
 	self._DefendTimer = 0.0
 	self._SidewardsTimer = 0.0
 	self._KillYourselfTimer = 0.0
+	-- Objective and closest distance to it on an invalid path (GameDirector: the time only counts without progress).
+	---@type string|nil
+	self._InvalidPathObjective = nil
+	self._InvalidPathBestDistance = math.huge
 	self._RocketCooldownTimer = 0.0
 
 	-- Shared movement vars.
