@@ -62,6 +62,12 @@ end
 
 function Bot:SetObjectiveIfPossible(p_Objective, p_ObjectiveMode)
 	if self._Objective ~= p_Objective and p_Objective ~= '' then
+		-- On the mesh: if a route leads there (NavRoutes), e.g. to the path of a vehicle.
+		if self.m_Zone ~= nil and not self.m_Zone.Vehicle and g_NavRoutes ~= nil and g_NavRoutes:Knows(p_Objective) then
+			self._Objective = p_Objective
+			self._ObjectiveMode = p_ObjectiveMode
+			return true
+		end
 		local s_Point = m_NodeCollection:Get(self._CurrentWayPoint, self._PathIndex)
 
 		if s_Point ~= nil then

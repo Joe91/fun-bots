@@ -146,7 +146,7 @@ class HubTest(unittest.TestCase):
     def test_objectives(self):
         flag = {"name": "CP_A", "pos": [1, 2, 3], "team": 1, "flag": 50.0}
         self.hub.ingest(payload([frame(1.0, objectives={"flags": [flag], "mcoms": {}, "stage": 0})]))
-        self.assertEqual(self.hub.state.objectives, {"flags": [flag], "mcoms": [], "stage": 0})
+        self.assertEqual(self.hub.state.objectives, {"flags": [flag], "mcoms": [], "vehicles": [], "stage": 0})
         self.assertNotIn("objectives", self.hub.state.extras)
         self.assertEqual(self.hub.snapshot()["objectives"]["flags"], [flag])
 
