@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import argparse
 import os
+import sys
 import threading
 import webbrowser
 from pathlib import Path
@@ -59,7 +60,11 @@ def main() -> None:
 
     if args.navzones:
         print(f"zone networks: {hub.navzones_from(args.navzones)}")
-    server = DebugServer((args.host, args.port), hub, quiet=not args.verbose)
+    try:
+        server = DebugServer((args.host, args.port), hub, quiet=not args.verbose)
+    except OSError as error:
+        sys.exit(f"cannot listen on {args.host}:{args.port}: {error.strerror or error} "
+                 f"(another debug-server running? use --port)")
     url = f"http://{'127.0.0.1' if args.host in ('0.0.0.0', '') else args.host}:{args.port}/"
     print(f"fun-bots debug-server {__version__} on {url}")
     print(f"analyzers: {', '.join(analyzer.name for analyzer in analyzers)}")

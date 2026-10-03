@@ -950,7 +950,7 @@ const handlers = {
 	command(command) {
 		store.commands.set(command.id, command);
 		const callback = commandCallbacks.get(command.id);
-		if (callback && (command.status === "ok" || command.status === "error")) {
+		if (callback && (command.status !== "queued" && command.status !== "sent")) {
 			commandCallbacks.delete(command.id);
 			callback(command);
 		}
@@ -1195,7 +1195,7 @@ function runConsole() {
 	const answer = (c) => {
 		answered = true;
 		consoleDone(sent);
-		if (c.status === "error") {
+		if (c.status !== "ok") {
 			consolePrint("error", c.error);
 			if (String(c.error).startsWith("unknown command:")) consolePrint("error", modOutdatedHint());
 			return;
@@ -1531,7 +1531,7 @@ function renderStats() {
 function renderCommands() {
 	const commands = [...store.commands.values()].sort((a, b) => b.id - a.id).slice(0, 25);
 	setHtml($("commands"), commands.map((c) => {
-		const result = c.status === "error" ? c.error : c.result !== null && c.result !== undefined ? JSON.stringify(c.result) : "";
+		const result = c.error ? c.error : c.result !== null && c.result !== undefined ? JSON.stringify(c.result) : "";
 		return `<li title="${escapeHtml(result)}"><span class="status-${c.status}">${c.status}</span><span>${escapeHtml(c.type)}</span><span class="grow muted small">${escapeHtml(result)}</span></li>`;
 	}).join("") || `<li class="muted">none yet</li>`);
 }

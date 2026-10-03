@@ -19,6 +19,8 @@ local m_DebugBridge = require('Debug/DebugBridge')
 ---@type Logger
 local m_Logger = Logger("BotSpawner", Debug.Server.BOT)
 local m_Vehicles = require('Vehicles')
+---@type NavZones
+local m_NavZones = require('NavZones')
 
 function BotSpawner:__init()
 	self:RegisterVars()
@@ -217,6 +219,8 @@ function BotSpawner:OnEngineUpdate(p_DeltaTime, p_SimulationDeltaTime)
 						local s_Transform = l_Bot.m_Player.soldier.worldTransform:Clone()
 						s_Transform.trans = s_SpawnPosition
 						l_Bot.m_Player.soldier:SetTransform(s_Transform)
+						-- The mate may be in a zone (base, capture point): then the bot starts on its network.
+						l_Bot:TryEnterZoneAt(s_SpawnPosition)
 					end
 
 					if not s_Killed then
@@ -960,6 +964,17 @@ function BotSpawner:_SelectLoadout(p_Bot)
 	self:_SetKitAndAppearance(p_Bot, s_BotKit, s_BotColor)
 end
 
+---Spawn at the spawn-points of the game (SpawnMethod.Spawn) instead of on waypoints. Also in conquest and rush with
+---SpawnOnTdm, once the level has walking networks of the bases: the bots start on them (Bot:TryEnterZoneAt).
+---@return boolean
+function BotSpawner:_UseGameSpawn()
+	if Globals.UsedSpawnMethod == SpawnMethod.Spawn then
+		return true
+	end
+	return Config.SpawnMethod == SpawnMethod.SpawnOnTdm and Registry.BOT_SPAWN.GAME_SPAWN_WITH_ZONES
+		and Registry.BOT.USE_ZONE_NETWORKS and (Globals.IsConquest or Globals.IsRush) and m_NavZones:HasBases()
+end
+
 ---@param p_Bot Bot
 function BotSpawner:_TriggerSpawn(p_Bot)
 	local s_CurrentGameMode = SharedUtils:GetCurrentGameMode()
@@ -1016,7 +1031,8 @@ function BotSpawner:_RushSpawn(p_Bot)
 
 	while s_Entity do
 		if s_Entity.data:Is('CharacterSpawnReferenceObjectData') then
-			if CharacterSpawnReferenceObjectData(s_Entity.data).team == p_Bot.m_Player.teamId then
+			-- Only the spawns of the current stage are enabled.
+			if CharacterSpawnReferenceObjectData(s_Entity.data).team == p_Bot.m_Player.teamId and SpawnEntity(s_Entity).enabled then
 				-- Skip if it is a vehicle spawn.
 				for l_Index = 1, #s_Entity.bus.entities do
 					local l_Entity = s_Entity.bus.entities[l_Index]
@@ -1343,7 +1359,7 @@ function BotSpawner:_SpawnSingleWayBot(p_Player, p_UseRandomWay, p_ActiveWayInde
 	if s_Name ~= nil or s_IsRespawn then
 		---@cast s_Name -nil
 		-- g_Profiler:Start("BotSpawner:SpawnPart2") -- about 60 ms on conquest (close to 0 on deathmatch)
-		if Globals.UsedSpawnMethod == SpawnMethod.Spawn and
+		if self:_UseGameSpawn() and
 			not (Globals.IsTdm and (self._DelayDirectSpawn > -(Registry.BOT_SPAWN.DELAY_DIRECT_SPAWN))) then -- workaround for TDM-Spawn-Behaviour
 			local s_Bot = self:GetBot(p_ExistingBot, s_Name, s_TeamId, s_SquadId)
 			if s_Bot == nil then

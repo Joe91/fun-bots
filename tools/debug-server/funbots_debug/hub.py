@@ -204,7 +204,8 @@ class Hub:
                 return
             self.mod_connected = False
             status = self._status()
-        self._publish([("status", status)])
+        lost = self.commands.lose_sent()
+        self._publish([("status", status)] + [("command", command.to_json()) for command in lost])
 
     # --- browser-side ------------------------------------------------------------------------------------------
 

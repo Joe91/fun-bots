@@ -43,6 +43,9 @@ local NODES_PER_EVENT = 250
 local AREA_MARGIN = 15.0          -- Metres around the capture-radius.
 local AREA_MCOM_RADIUS = 30.0
 local AREA_BASE_MAX_RADIUS = 45.0 -- Bases from the waypoints (rush): at most this far around the middle of their paths.
+local AREA_SPAWN_RADIUS = 40.0    -- Bases around the spawns of the game that no other area covers (rush)...
+local AREA_SPAWN_MERGE = 40.0     -- ...one for the spawns of a team this close to each other.
+local AREA_SPAWN_COVERED = 20.0   -- A spawn at least this far inside of another area is covered by it.
 local AREA_STEP = 0.5
 local AREA_LAYERS = 4
 local AREA_UP = 60.0              -- The vertical rays start this far above the objective...
@@ -1017,12 +1020,86 @@ local function _BaseAreasFromPaths(p_Margin)
 	return s_Areas
 end
 
+---Bases around the soldier-spawns of the game (also the ones of later stages in rush) that lie in no other area: bots
+---spawned by the game (SpawnMethod.Spawn) start on the network there. Spawns into vehicles are left out.
+---@param p_Areas table[] the areas so far
+---@param p_Margin number
+---@return table[]
+local function _SpawnAreas(p_Areas, p_Margin)
+	local s_Groups = {}
+	local s_Spawns = _CharacterSpawns()
+	for l_Index = 1, #s_Spawns do
+		local l_Spawn = s_Spawns[l_Index]
+		local s_Team = (l_Spawn.dataTeam == 1 or l_Spawn.dataTeam == 2) and l_Spawn.dataTeam or l_Spawn.team
+		if l_Spawn.vehicleSpawn == nil and (l_Spawn.playerType or 0) == 0 and (s_Team == 1 or s_Team == 2) then
+			local s_Position = Vec3(l_Spawn.pos[1], l_Spawn.pos[2], l_Spawn.pos[3])
+			local s_Covered = false
+			for l_Area = 1, #p_Areas do
+				local s_Delta = s_Position - p_Areas[l_Area].center
+				if math.sqrt(s_Delta.x * s_Delta.x + s_Delta.z * s_Delta.z) + AREA_SPAWN_COVERED <= p_Areas[l_Area].radius then
+					s_Covered = true
+					break
+				end
+			end
+			if not s_Covered then
+				local s_Group = nil
+				for l_Group = 1, #s_Groups do
+					local s_Delta = s_Position - s_Groups[l_Group].first
+					if s_Groups[l_Group].team == s_Team
+						and math.sqrt(s_Delta.x * s_Delta.x + s_Delta.z * s_Delta.z) <= AREA_SPAWN_MERGE then
+						s_Group = s_Groups[l_Group]
+						break
+					end
+				end
+				if s_Group == nil then
+					s_Group = { team = s_Team, first = s_Position, positions = {} }
+					s_Groups[#s_Groups + 1] = s_Group
+				end
+				s_Group.positions[#s_Group.positions + 1] = s_Position
+			end
+		end
+	end
+
+	local s_Areas = {}
+	local s_Counts = {}
+	table.sort(s_Groups, function(p_A, p_B)
+		if p_A.team ~= p_B.team then
+			return p_A.team < p_B.team
+		end
+		return p_A.first.x < p_B.first.x
+	end)
+	for l_Index = 1, #s_Groups do
+		local l_Group = s_Groups[l_Index]
+		local s_Center = Vec3(0, 0, 0)
+		for l_Position = 1, #l_Group.positions do
+			s_Center = s_Center + l_Group.positions[l_Position]
+		end
+		s_Center = s_Center * (1.0 / #l_Group.positions)
+		local s_Team = l_Group.team == 1 and 'us' or 'ru'
+		s_Counts[s_Team] = (s_Counts[s_Team] or 0) + 1
+		s_Areas[#s_Areas + 1] = {
+			name = 'spawn ' .. s_Team .. ' ' .. s_Counts[s_Team],
+			kind = 'base',
+			center = s_Center,
+			radius = AREA_SPAWN_RADIUS + p_Margin,
+		}
+	end
+	return s_Areas
+end
+
 function CensusTask:_StartAreas()
+	local s_Margin = tonumber(self.Args.areaMargin) or AREA_MARGIN
 	self.Areas = self:_DefaultAreas()
 	if self.Args.basePaths then
-		local s_Bases = _BaseAreasFromPaths(tonumber(self.Args.areaMargin) or AREA_MARGIN)
+		local s_Bases = _BaseAreasFromPaths(s_Margin)
 		for l_Index = 1, #s_Bases do
 			self.Areas[#self.Areas + 1] = s_Bases[l_Index]
+		end
+	end
+	if self.Args.spawns ~= false then
+		local s_Spawns = _SpawnAreas(self.Areas, s_Margin)
+		for l_Index = 1, #s_Spawns do
+			self.Areas[#self.Areas + 1] = s_Spawns[l_Index]
 		end
 	end
 	self.AreaSlot = 0

@@ -4,11 +4,15 @@ The mod answers with a "command_result" event (DebugBridge:Reply)."""
 from __future__ import annotations
 
 import itertools
+import json
 import threading
 import time
 from collections import OrderedDict
 from dataclasses import dataclass, field
 from typing import Any
+
+# Bigger args (whole zone networks, labels) are only sent to the mod; history and browsers get their size.
+MAX_SHOWN_ARGS = 2000
 
 
 @dataclass
@@ -16,7 +20,7 @@ class Command:
     id: int
     type: str
     args: dict
-    status: str = "queued"  # queued -> sent -> ok | error
+    status: str = "queued"  # queued -> sent -> ok | error | lost (the mod went away before answering)
     created: float = field(default_factory=time.time)
     sent: float | None = None
     done: float | None = None
@@ -26,9 +30,16 @@ class Command:
 
     def to_json(self) -> dict:
         return {
-            "id": self.id, "type": self.type, "args": self.args, "status": self.status, "created": self.created,
-            "sent": self.sent, "done": self.done, "result": self.result, "error": self.error,
+            "id": self.id, "type": self.type, "args": self._shown_args(), "status": self.status,
+            "created": self.created, "sent": self.sent, "done": self.done, "result": self.result, "error": self.error,
         }
+
+    def _shown_args(self) -> dict:
+        size = len(json.dumps(self.args, separators=(",", ":")))
+        if size <= MAX_SHOWN_ARGS:
+            return self.args
+        return {key: value for key, value in self.args.items()
+                if isinstance(value, (str, int, float, bool)) and len(str(value)) < 200} | {"_bytes": size}
 
 
 class CommandQueue:
@@ -73,6 +84,19 @@ class CommandQueue:
                 command.error = str(event.get("error"))
         command._event.set()
         return command
+
+    def lose_sent(self) -> list[Command]:
+        """The mod went away (reload, crash): the sent commands never get an answer."""
+        with self._lock:
+            lost = [command for command in self._commands.values() if command.status == "sent"]
+            now = time.time()
+            for command in lost:
+                command.status = "lost"
+                command.done = now
+                command.error = "the mod went away before answering"
+        for command in lost:
+            command._event.set()
+        return lost
 
     def wait(self, command: Command, timeout: float) -> bool:
         """Blocks until the mod answered the command. False on timeout."""

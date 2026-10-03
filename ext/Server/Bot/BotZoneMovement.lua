@@ -64,8 +64,8 @@ function Bot:_CheckForZoneEntry(p_Point)
 	return true
 end
 
--- A spawn-point of the game this far from a point of a network: the bot starts on the network.
-local ZONE_SPAWN_RANGE = 8.0
+-- A spawn-point of the game this far from a point of a network: the bot walks straight to it and starts on the network.
+local ZONE_SPAWN_RANGE = 30.0
 
 ---After a spawn at a spawn-point of the game (BotSpawner, SpawnMethod.Spawn): on the network of the zone there (a base
 ---or a capture point) the bot starts in it, and walks out over the junction that suits its objective.

@@ -40,10 +40,11 @@ class DebugServer(ThreadingHTTPServer):
     allow_reuse_address = True
 
     def __init__(self, address: tuple[str, int], hub: Hub, quiet: bool = True):
+        # Before binding: a failed bind calls server_close().
+        self._stop = threading.Event()
         super().__init__(address, Handler)
         self.hub = hub
         self.quiet = quiet
-        self._stop = threading.Event()
         self._watchdog = threading.Thread(target=self._watch, name="mod-watchdog", daemon=True)
         self._watchdog.start()
 

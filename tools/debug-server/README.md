@@ -340,6 +340,9 @@ orange.
 
 Areas are made around the capture points, the MCOMs and the HQs of the running mode (`base us`, `base ru`, 60 m). Modes
 without HQs (rush) get their bases from the waypoints: around the paths of each `base us 1`, `base ru 2`, ... objective.
+Soldier-spawns of the game (also the ones of later stages) that no area covers get one of their own (`spawn us 1`,
+`spawn ru 1`, ..., 55 m, kind `base`): in rush the attackers don't spawn where their base-paths are. Spawn-entities may
+float above the ground, the soldiers appear on the ground below.
 
 Land vehicles get a network of their own in each zone (`vehicle`): the same way, but only over wide and open ground
 (1.8 m to the next wall, slopes up to about 41°, no roof below 4 m), a point about every 10 m, attached to the paths with
@@ -360,8 +363,12 @@ debug-server lists these spots under *Findings* (analyzer `zones`). In the snaps
   armed) or disarm it (defenders, MCOM armed), at most two per team. Then its objective becomes `mcom N interact`, it
   leaves the zone at the action-node of that path (a junction of the zone) and does the action there as on the
   waypoints.
-- **Bases**: bots that spawn at the spawn-points of the game (`SpawnMethod.Spawn`) on the network of a base start in it
-  and walk out over the junction that suits their objective as soon as they have one.
+- **Bases and spawns**: bots that spawn at the spawn-points of the game (`SpawnMethod.Spawn`) start on the network
+  there (a base, a spawn, a capture point; up to 30 m away they walk straight to it) and walk out over the junction that
+  suits their objective as soon as they have one. In conquest and rush the bots use the spawn of the game on their own
+  once the level has networks of bases (`SpawnMethod` *SpawnOnTdm*, the default, and
+  `Registry.BOT_SPAWN.GAME_SPAWN_WITH_ZONES`), else they spawn on the waypoints as before. Squad-spawns on a mate in a
+  zone start on its network as well.
 - **Land vehicles** (`Registry.BOT.USE_VEHICLE_ZONE_NETWORKS`, experimental): a driver that reaches a junction of the
   vehicle-network of the capture point of its objective drives the network, stands a few seconds at each point, and
   leaves over the vehicle-junction that suits its next objective. When it doesn't get along it reverses, after three

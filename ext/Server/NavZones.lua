@@ -308,6 +308,18 @@ function NavZones:GetCount()
 	return self._Count
 end
 
+---Whether there are networks of bases (also the ones around the spawns of the game): bots spawned by the game start on
+---them (BotSpawner).
+---@return boolean
+function NavZones:HasBases()
+	for _, l_Zone in pairs(self._Zones) do
+		if l_Zone.Kind == 'base' then
+			return true
+		end
+	end
+	return false
+end
+
 ---The zone whose junction the waypoint is.
 ---@param p_Waypoint Waypoint
 ---@return { Zone: NavZone, Junction: NavZoneJunction }|nil

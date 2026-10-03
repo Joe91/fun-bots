@@ -197,3 +197,14 @@ class NavzonesTest(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class DriverTest(unittest.TestCase):
+    def test_level_matches_waits_for_the_waypoints_of_the_mode(self):
+        from funbots_debug.census.__main__ import _level_matches
+        # Same level, the game already reports the next mode, the waypoints are still the ones of the old mode.
+        meta = {"level": "Levels/MP_012/MP_012", "mode": "RushLarge0", "paths": "MP_012_ConquestSmall0"}
+        self.assertFalse(_level_matches(meta, "MP_012", "RushLarge0"))
+        meta["paths"] = "MP_012_RushLarge0"
+        self.assertTrue(_level_matches(meta, "MP_012", "RushLarge0"))
+        self.assertTrue(_level_matches({"level": "Levels/MP_001/MP_001", "mode": "RushLarge0"}, "MP_001", "RushLarge0"))

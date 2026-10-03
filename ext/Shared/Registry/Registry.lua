@@ -336,6 +336,9 @@ Registry = {
 		PROBABILITY_BASE_SPAWN = 5,
 		-- Probability of a bot spawning on their deployment base.
 		PROBABILITY_BASE_VEHICLE_SPAWN = 30,
+		-- Conquest and rush with SpawnMethod SpawnOnTdm: on levels with walking networks of the bases (NavZones.lua) the
+		-- bots spawn at the spawn-points of the game (SpawnMethod.Spawn) and walk out over the networks.
+		GAME_SPAWN_WITH_ZONES = true,
 	},
 	-- Debug
 	DEBUG = {

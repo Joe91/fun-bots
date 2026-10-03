@@ -73,8 +73,12 @@ class Server:
 
 
 def _level_matches(meta: dict, level: str, mode: str) -> bool:
+    # During a change of the mode on the same level, the game reports the new mode while the old one still runs. The
+    # waypoints of the new one are only loaded with it.
+    paths = meta.get("paths")
     return str(meta.get("level") or "").rsplit("/", 1)[-1].lower() == level.lower() and \
-        str(meta.get("mode") or "").lower() == mode.lower()
+        str(meta.get("mode") or "").lower() == mode.lower() and \
+        (paths is None or str(paths).lower() == f"{level}_{mode}".lower())
 
 
 def switch_level(server: Server, level: str, mode: str) -> None:
