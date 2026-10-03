@@ -661,37 +661,46 @@ function NodeEditor:OnRequestData(p_Player)
 	self:SendNavZones()
 end
 
----The walking networks of the zones (NavZones), one event per zone: points (position, flags), connections (with the
----corners between them) and junctions (position of the waypoint, point).
+---The walking mesh (NavZones): points (position, flags), connections (with the corners between them) and junctions
+---(position of the waypoint, point), then the zones on it (name, kind, middle).
 function NodeEditor:SendNavZones()
 	self:SendToAllPlayers('ClientNodeEditor:ClearNavZones', nil)
-	for _, l_Zone in pairs(m_NavZones:GetZones()) do
-		local s_Points = {}
-		for l_Index = 1, #l_Zone.Points do
-			local l_Point = l_Zone.Points[l_Index]
-			s_Points[l_Index] = { Position = l_Point.Position, Flags = l_Point.Flags }
-		end
-		local s_Edges = {}
-		for l_From, l_Neighbours in pairs(l_Zone.Neighbours) do
-			for l_Index = 1, #l_Neighbours do
-				local l_Neighbour = l_Neighbours[l_Index]
-				if l_Neighbour.To > l_From then
-					s_Edges[#s_Edges + 1] = { From = l_From, To = l_Neighbour.To, Corners = l_Neighbour.Corners }
-				end
+	local s_Mesh = m_NavZones:GetMesh()
+	if s_Mesh == nil then
+		return
+	end
+	local s_Points = {}
+	for l_Index = 1, #s_Mesh.Points do
+		local l_Point = s_Mesh.Points[l_Index]
+		s_Points[l_Index] = { Position = l_Point.Position, Flags = l_Point.Flags }
+	end
+	local s_Edges = {}
+	for l_From, l_Neighbours in pairs(s_Mesh.Neighbours) do
+		for l_Index = 1, #l_Neighbours do
+			local l_Neighbour = l_Neighbours[l_Index]
+			if l_Neighbour.To > l_From then
+				s_Edges[#s_Edges + 1] = { From = l_From, To = l_Neighbour.To, Corners = l_Neighbour.Corners }
 			end
 		end
-		local s_Junctions = {}
-		for l_Index = 1, #l_Zone.Junctions do
-			local l_Junction = l_Zone.Junctions[l_Index]
-			s_Junctions[l_Index] = { Position = l_Junction.Position, Point = l_Junction.Point }
-		end
+	end
+	local s_Junctions = {}
+	for l_Index = 1, #s_Mesh.Junctions do
+		local l_Junction = s_Mesh.Junctions[l_Index]
+		s_Junctions[l_Index] = { Position = l_Junction.Position, Point = l_Junction.Point }
+	end
+	self:SendToAllPlayers('ClientNodeEditor:ReceiveNavZone', {
+		Name = s_Mesh.Name,
+		Kind = s_Mesh.Kind,
+		Points = s_Points,
+		Edges = s_Edges,
+		Junctions = s_Junctions,
+	})
+	for _, l_Zone in pairs(m_NavZones:GetZones()) do
 		self:SendToAllPlayers('ClientNodeEditor:ReceiveNavZone', {
 			Name = l_Zone.Name,
 			Kind = l_Zone.Kind,
 			Center = l_Zone.Center,
-			Points = s_Points,
-			Edges = s_Edges,
-			Junctions = s_Junctions,
+			Size = #l_Zone.Inside,
 		})
 	end
 end

@@ -341,7 +341,7 @@ def command_navpaths(options) -> int:
         result.data.save(map_file)
         navzones.save(networks, zones_file)
         print(f"  written {map_file} and {zones_file} "
-              f"({sum(len(zone['attach']) for zone in networks['zones'])} junctions)")
+              f"({len(networks['attach'])} junctions)")
         for path, end in navpaths.missing_ends(result.data, networks):
             print(f"  warning: navigation path {path} has no junction at its {end}, the bots don't use it")
         if options.db:

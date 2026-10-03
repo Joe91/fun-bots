@@ -318,15 +318,17 @@ each objective can be reached from the waypoints.
 The raycasts ignore soldiers, but vehicles standing around block them (`nextHit` names what was hit). The census sees
 the level before anything is destroyed.
 
-## Zone networks
+## The mesh and its zones
 
-Inside a capture zone and around an MCOM the bots shall move freely instead of along waypoints; waypoints are only
-needed between the zones (and for vehicles, actions, jumps). `funbots_debug/census/navzones.py` makes a small walking
-network for every zone from the grids of a census: points about every 5 m (the open spots first), the walkable
-connections between them, and the junctions with the existing waypoints (where a path enters, leaves or ends in the
-zone). Only the parts of the grid the waypoints reach get points, so roofs and closed rooms stay out. Where a path walks
-from one part of the network into another one the grid doesn't connect (stairs, ladders, jumps the vertical rays don't
-see), the network gets a connection along its waypoints. Bots only walk to points they can reach.
+Inside a capture zone, around an MCOM and in a base the bots move freely instead of along waypoints; waypoints are only
+needed between these areas (and for vehicles, actions, jumps). `funbots_debug/census/navzones.py` makes one walking
+mesh for the level from the grids of a census: points about every 5 m (the open spots first), the walkable connections
+between them, and the junctions with the existing waypoints (where a path enters, leaves or ends in an area). Areas
+overlap (rush: the bases of one stage lie at the MCOMs of another), so their grids are put onto one lattice first and
+there is one mesh; the zones are labels on it (the list of their points). Only the parts of the grid the waypoints reach
+get points, so roofs and closed rooms stay out. Where a path walks from one part of the mesh into another one the grid
+doesn't connect (stairs, ladders, jumps the vertical rays don't see), the mesh gets a connection along its waypoints.
+Bots only walk to points they can reach.
 
 ```
 python -m funbots_debug.census navzones census/*.json.gz             # writes census/<level>_<mode>.navzones.json
@@ -334,9 +336,9 @@ python -m funbots_debug --navzones census/XP3_Alborz_ConquestLarge0.json.gz   # 
 ```
 
 The debug-server also makes them after every census, or on `POST /api/navzones` (`{"file": ...}`, default: the census
-of the running level). On the map (layer *Zone networks*) connections inside the zone are green, outside blue-grey,
+of the running level). On the map (layer *Mesh*) connections inside the zone are green, outside blue-grey,
 points indoors have a blue ring, points that need crouching an orange one, the junctions with the waypoints are dashed
-orange.
+orange. The zones are the areas around their points (green capture points, blue bases, orange MCOMs).
 
 Areas are made around the capture points, the MCOMs and the HQs of the running mode (`base us`, `base ru`, 60 m). Modes
 without HQs (rush) get their bases from the waypoints: around the paths of each `base us 1`, `base ru 2`, ... objective.
@@ -344,42 +346,43 @@ Soldier-spawns of the game (also the ones of later stages) that no area covers g
 `spawn ru 1`, ..., 55 m, kind `base`): in rush the attackers don't spawn where their base-paths are. Spawn-entities may
 float above the ground, the soldiers appear on the ground below.
 
-Land vehicles get a network of their own in each zone (`vehicle`): the same way, but only over wide and open ground
+Land vehicles get a mesh of their own (`vehicle`): the same way, but only over wide and open ground
 (1.8 m to the next wall, slopes up to about 41°, no roof below 4 m), a point about every 10 m, attached to the paths with
 `Vehicles: land`.
 
 **In the game** (`ext/Server/NavZones.lua`, `ext/Server/Bot/BotZoneMovement.lua`, switch
-`Registry.BOT.USE_ZONE_NETWORKS`): `POST /api/navzones/apply` (`{"save": true}`) sends the networks shown on the map to
-the mod, which saves them in the table `<level>_<mode>_navzones` of `mod.db` and loads them with the waypoints from then
-on. A bot that reaches a junction of the zone of its objective (capture point or MCOM) leaves the waypoints: it walks
-from point to point inside the zone and waits at each (longer and crouched in cover when it defends). When its
-objective changes it walks to the junction whose path leads to the new objective best (`PathSwitcher` priority, then
-distance) and goes on along that path. A bot that gets stuck between two points (4 s without progress) takes another
-way, and all bots avoid that connection until the level ends; after three of them it goes back to the waypoints. The
-debug-server lists these spots under *Findings* (analyzer `zones`). In the snapshot a bot in a zone has `zone` (and
-`zoneExit` on its way out).
+`Registry.BOT.USE_ZONE_NETWORKS`): `POST /api/navzones/apply` (`{"save": true}`) sends the mesh shown on the map to the
+mod, which saves it in the table `<level>_<mode>_navzones` of `mod.db` (one row `@mesh`) and loads it with the waypoints
+from then on. A bot that reaches a junction of the mesh leaves the waypoints and decides where to go (`_ZoneDecide`): in
+the zone of its objective it walks from point to point and waits at each (longer and crouched in cover when it defends);
+else it walks the mesh to that zone if the mesh leads there, or to the junction of the next navigation path of its
+route (`NavRoutes`); without route the path that suits the objective best (`PathSwitcher` priority, then distance). A
+bot that gets stuck between two points (4 s without progress) takes another way, and all bots avoid that connection
+until the level ends (given up three times it's removed); after three of them it goes back to the waypoints. The
+debug-server lists these spots under *Findings* (analyzer `zones`). In the snapshot a bot on the mesh has `zone` (the
+zone it walks in, `@mesh` outside of the zones) and `zoneExit` on its way out.
 
 - **MCOMs**: in the zone of an MCOM a bot asks the GameDirector every second whether it shall arm (attackers, MCOM not
   armed) or disarm it (defenders, MCOM armed), at most two per team. Then its objective becomes `mcom N interact`, it
-  leaves the zone at the action-node of that path (a junction of the zone) and does the action there as on the
+  leaves the mesh at the action-node of that path (a junction of the mesh) and does the action there as on the
   waypoints.
-- **Bases and spawns**: bots that spawn at the spawn-points of the game (`SpawnMethod.Spawn`) start on the network
-  there (a base, a spawn, a capture point; up to 30 m away they walk straight to it) and walk out over the junction that
-  suits their objective as soon as they have one. In conquest and rush the bots use the spawn of the game on their own
-  once the level has networks of bases (`SpawnMethod` *SpawnOnTdm*, the default, and
-  `Registry.BOT_SPAWN.GAME_SPAWN_WITH_ZONES`), else they spawn on the waypoints as before. Squad-spawns on a mate in a
-  zone start on its network as well.
+- **Bases and spawns**: bots that spawn at the spawn-points of the game (`SpawnMethod.Spawn`) start on the mesh there
+  (a base, a spawn, a capture point; up to 30 m away they walk straight to it) and go where their objective is as soon
+  as they have one. In conquest and rush the bots use the spawn of the game on their own once the level has bases on
+  the mesh (`SpawnMethod` *SpawnOnTdm*, the default, and
+  `Registry.BOT_SPAWN.GAME_SPAWN_WITH_ZONES`), else they spawn on the waypoints as before. Squad-spawns on a mate on
+  the mesh start on it as well.
 - **Land vehicles** (`Registry.BOT.USE_VEHICLE_ZONE_NETWORKS`, experimental): a driver that reaches a junction of the
-  vehicle-network of the capture point of its objective drives the network, stands a few seconds at each point, and
+  vehicle-mesh in the capture point of its objective drives the zone there, stands a few seconds at each point, and
   leaves over the vehicle-junction that suits its next objective. When it doesn't get along it reverses, after three
   times it takes another way.
 
-**In git** the networks are `navzones/<level>_<mode>.json` (the debug-server writes them when it applies them with
+**In git** the meshes are `navzones/<level>_<mode>.json` (the debug-server writes them when it applies them with
 `save`). The fun-bots-helper imports them into `mod.db` with the traces (`import_traces`) and exports them with
 `export_traces`.
 
 **All maps**: `python -m funbots_debug.census run --all --modes ConquestSmall0,ConquestLarge0,RushLarge0 --warmup 180
---apply` makes census and networks of every waypoint-file of these modes, one level after the other (rush only waits
+--apply` makes census and mesh of every waypoint-file of these modes, one level after the other (rush only waits
 45 s: no capture zones to measure). That takes about 7 minutes per level. For a long run let the driver start the
 game-server again after a crash (the level is tried once more):
 ```
@@ -388,14 +391,15 @@ python -m funbots_debug.census run --all --modes ConquestSmall0,ConquestLarge0,R
 ```
 
 A point is `[x, y, z, clearance, cover, flags]`: clearance is the distance to the next wall, cover the number of the 8
-directions with a wall within 1.5 m, flags 1 = in the zone, 2 = indoors, 4 = crouch. A connection is
+directions with a wall within 1.5 m, flags 1 = in a zone, 2 = indoors, 4 = crouch. A connection is
 `[a, b, length, corners]` (the corners of the way between the points, if it isn't straight). A junction is
-`[path, point, network-point, walking distance, position of the waypoint, corners]`, the corners of the way from the
-network-point to the waypoint (around the walls of the room of an MCOM, for example).
+`[path, point, mesh-point, walking distance, position of the waypoint, corners]`, the corners of the way from the
+mesh-point to the waypoint (around the walls of the room of an MCOM, for example). A zone is `{name, kind, center,
+radius, zone, inside, vehicleInside}`, `inside` the indices of its points.
 
 ### Navigation paths: cut at the zones
 
-With the networks, the waypoints only have to lead from zone to zone. `census/navpaths.py` turns the paths of a level
+With the mesh, the waypoints only have to lead from zone to zone. `census/navpaths.py` turns the paths of a level
 into such navigation paths:
 ```
 python -m funbots_debug.census navpaths MP_012_RushLarge0 -v                    # dry run: what it would do
@@ -406,7 +410,8 @@ python -m funbots_debug.census navpaths MP_012_RushLarge0 --write --db ../../mod
    and pieces back into the same zone are dropped.
 2. A piece that ends outside of the zones (the path ends, or goes on over a link) is extended over paths and links to
    the closest zone.
-3. Pieces along another navigation path between the same zones (70 % of the waypoints within 4 m) are dropped.
+3. Pieces along another navigation path between the same zones (70 % of the waypoints within 4 m) are dropped, and
+   pieces that lie on the mesh all the way (between zones that overlap or touch): the bots walk the mesh there.
 4. Zones the paths connect without crossing a third zone, but the navigation paths don't (or only over a detour of
    more than 1.5 times), get the shortest way between them, over roads (land vehicle paths) only where no path leads:
    in rush the attackers spawn at their vehicles, far from any path.
@@ -414,24 +419,24 @@ python -m funbots_debug.census navpaths MP_012_RushLarge0 --write --db ../../mod
 Paths with vehicles, actions (MCOM, vehicle, beacon), the ways to vehicles and beacons and air-paths stay as they are,
 their links to the cut paths move to the same waypoints of the navigation paths. A navigation path is walked back and
 forth; its first waypoint has `Objectives` (both zones) and `"Nav": {"From": zone at the first waypoint, "To": zone at
-the last one, "Length": metres}`. `--write` replaces `mapfiles/<map>.map` and `navzones/<map>.json`: the networks are
+the last one, "Length": metres}`. `--write` replaces `mapfiles/<map>.map` and `navzones/<map>.json`: the mesh is
 made again from the census (`census/<map>.json.gz`, same parts as before) with junctions on the new paths. `--db` also
 writes the two tables of this level into `mod.db`. Paths whose end has no junction are listed; the bots don't use them.
 
-**In the game** (`ext/Server/NavRoutes.lua`): the navigation paths form a graph of the zones. Its nodes are the ends of
-the paths (their junctions with the networks); from an end a bot walks the path to its other end, and from there across
-the zone (20 m added per zone) to any end in the same part of that network. A bot in a zone whose objective is another
-zone leaves over the first path of the cheapest route (Dijkstra), walks it without switching paths, goes into the zone
-at its end whatever its objective, crosses it on the network and leaves over the next path. On a navigation path the
-direction comes from the route as well (`NodeCollection:ObjectiveDirection`). The zones are objectives of their own
-(`NodeCollection:ParseObjectives`), their positions come from the zones (`GameDirector`). An exit a bot doesn't get to
-costs 100 m more for all bots, the bot tries another one; a connection of a network given up three times is removed
-until the level ends (and with it the goals behind it).
+**In the game** (`ext/Server/NavRoutes.lua`): the nodes of the graph are the ends of the navigation paths (their
+junctions with the mesh); from an end a bot walks the path to its other end, and from there over the mesh (10 m added)
+to any end in the same connected part of the mesh. A route ends in the part of the mesh where the target is: the points
+of the zone of the objective, or the junctions of the paths of an objective that isn't a zone (a vehicle, a beacon,
+`mcom N interact`). A bot on the mesh walks there if its part has the target, else to the junction of the first path of
+the cheapest route (Dijkstra), walks that path without switching, goes onto the mesh at its other end and decides
+again. On a navigation path the direction comes from the route as well (`NodeCollection:ObjectiveDirection`). The zones
+are objectives of their own (`NodeCollection:ParseObjectives`), their positions come from the zones (`GameDirector`).
+An exit a bot doesn't get to costs 100 m more for all bots, the bot tries another one.
 
 **On the map** the debug-server loads `navzones/<map>.json` of the running level on its own. Navigation paths are drawn
-cyan with `from → to (length)`, the zones as areas (the hull of their points in the zone: green capture points, blue
-bases, orange MCOMs). The node editor in the game draws the networks near the player as well (points, connections,
-junctions in orange, the name of the zone) and the navigation paths in cyan.
+cyan with `from → to (length)`, the zones as areas (the hull of their points: green capture points, blue bases, orange
+MCOMs). The node editor in the game draws the mesh near the player as well (points, connections, junctions in orange,
+the names of the zones) and the navigation paths in cyan.
 
 ## Towards nav meshes
 

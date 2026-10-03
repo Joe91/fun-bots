@@ -2,13 +2,18 @@
 ---@overload fun():NavZones
 NavZones = class('NavZones')
 
--- Walking networks of the zones around the objectives. Inside such a zone the bots walk freely from point to point
--- (Bot/BotZoneMovement.lua) instead of following waypoints. The networks are made by the debug-server from a census of
--- the level (tools/debug-server/funbots_debug/census/navzones.py) and saved in the table <map>_navzones of mod.db,
--- one row per zone: name, data (JSON). Format of data:
---   points  { { x, y, z, clearance, cover, flags } }  flags: 1 = in the zone, 2 = indoors, 4 = crouch
+-- The walking mesh of the level and the zones on it (capture points, MCOMs, bases, the spawns of the game). Bots walk
+-- the mesh freely from point to point (Bot/BotZoneMovement.lua) instead of following waypoints; between areas of the
+-- mesh they take the navigation paths (NavRoutes.lua). The mesh is made by the debug-server from a census of the level
+-- (tools/debug-server/funbots_debug/census/navzones.py) and saved in the table <map>_navzones of mod.db, in one row
+-- (name "@mesh", data: JSON):
+--   points  { { x, y, z, clearance, cover, flags } }  flags: 1 = in a zone, 2 = indoors, 4 = crouch
 --   edges   { { a, b, length, { corner, ... } } }     a, b count from 0, corners { x, y, z } between a and b
---   attach  { { path, point, network-point, distance, { x, y, z } } }  junctions with the waypoints
+--   attach  { { path, point, mesh-point, distance, { x, y, z }, { corner, ... } } }  junctions with the waypoints
+--   vehicle { points, edges, attach }                 the mesh of the land vehicles (wide and open ground)
+--   zones   { { name, kind, center, radius, inside = { points }, vehicleInside = { vehicle-points } } }
+-- Zones overlap (rush: the bases of one stage lie at the MCOMs of another), the mesh doesn't: a zone is a view on the
+-- mesh (the same points, connections and junctions) with its own name and points.
 
 ---@type NodeCollection
 local m_NodeCollection = require('NodeCollection')
@@ -21,7 +26,9 @@ NavZoneFlags = {
 	Crouch = 4,
 }
 
--- A junction is only used if its waypoint is still where the network was made for (the paths may have been edited).
+-- The row of the table with the mesh.
+local MESH_ROW = '@mesh'
+-- A junction is only used if its waypoint is still where the mesh was made for (the paths may have been edited).
 local JUNCTION_TOLERANCE = 1.0
 -- Points this far above or below a position are on another floor.
 local FLOOR_HEIGHT = 1.5
@@ -40,22 +47,27 @@ local REMOVE_AFTER = 3
 ---@class NavZoneJunction
 ---@field PathIndex integer
 ---@field PointIndex integer
----@field Position Vec3 where the waypoint was when the network was made
----@field Point integer the point of the network
+---@field Position Vec3 where the waypoint was when the mesh was made
+---@field Point integer the point of the mesh
 ---@field Corners Vec3[] the way from the point to the waypoint (around walls)
 ---@field Waypoint Waypoint|nil set by _LinkJunctions
 
+---A zone, or the mesh itself (Name "@mesh"): zones share the tables of the mesh, only Name, Kind, Center, Radius and
+---Inside are their own.
 ---@class NavZone
 ---@field Name string the objective
----@field Kind string capturepoint | mcom
+---@field Kind string capturepoint | mcom | base | mesh
 ---@field Center Vec3
+---@field Radius number
 ---@field Points NavZonePoint[]
 ---@field Neighbours table<integer, { To: integer, Cost: number, Corners: Vec3[], Penalty: number, Removed: boolean|nil }[]>
----@field Inside integer[] the points in the zone
+---@field Inside integer[] the points in the zone (the mesh itself: none)
+---@field InsideSet table<integer, boolean>
 ---@field Junctions NavZoneJunction[]
----@field Vehicle NavZone|nil the network of the land vehicles in the zone
+---@field Vehicle NavZone|nil the zone on the mesh of the land vehicles
 ---@field Part table<integer, integer> point -> number of its connected part (points of different parts have no way)
----@field ByWaypoint table<string, NavZoneJunction>|nil waypoint-ID -> junction, set by _LinkJunctions
+---@field ByWaypoint table<string, NavZoneJunction> waypoint-ID -> junction, set by _LinkJunctions
+---@field Mesh NavZone the mesh the zone is on
 
 function NavZones:__init()
 	self:Clear()
@@ -64,12 +76,15 @@ end
 function NavZones:Clear()
 	---@type table<string, NavZone>
 	self._Zones = {}
-	---waypoint-ID -> { Zone, Junction }
-	self._Junctions = {}
-	---waypoint-ID -> { Zone (the vehicle-network), Junction }
-	self._VehicleJunctions = {}
+	---@type NavZone|nil
+	self._Mesh = nil
+	---@type NavZone|nil
+	self._VehicleMesh = nil
+	---point -> the zones it is in
+	---@type table<integer, NavZone[]>
+	self._PointZones = {}
 	self._Count = 0
-	-- Counts up whenever the networks or their junctions change (NavRoutes builds its graph anew then).
+	-- Counts up whenever the mesh or its junctions change (NavRoutes builds its graph anew then).
 	self._Version = (self._Version or 0) + 1
 end
 
@@ -92,41 +107,42 @@ function NavZones:OnLoadFinished()
 
 	local s_Exists = SQL:Query("select name from sqlite_master where type='table' and name='" .. s_Table .. "'")
 	if s_Exists and #s_Exists > 0 then
-		local s_Rows = SQL:Query('SELECT data FROM ' .. s_Table) or {}
+		local s_Rows = SQL:Query('SELECT name, data FROM ' .. s_Table) or {}
 		for l_Index = 1, #s_Rows do
-			local s_Ok, s_Data = pcall(json.decode, s_Rows[l_Index].data)
-			if s_Ok and type(s_Data) == 'table' then
-				self:_AddZone(s_Data)
-			else
-				m_Logger:Error('invalid zone in ' .. s_Table)
+			if s_Rows[l_Index].name == MESH_ROW then
+				local s_Ok, s_Data = pcall(json.decode, s_Rows[l_Index].data)
+				if s_Ok and type(s_Data) == 'table' then
+					self:_Build(s_Data)
+				else
+					m_Logger:Error('invalid mesh in ' .. s_Table)
+				end
 			end
 		end
 	end
 	SQL:Close()
 
-	self:_LinkJunctions()
-	print('[NavZones] ' .. self._Count .. ' zone-networks for ' .. m_NodeCollection:GetMapName())
+	local s_Junctions = self:_LinkJunctions()
+	print('[NavZones] ' .. self._Count .. ' zones, ' .. (self._Mesh and #self._Mesh.Points or 0) .. ' points, '
+		.. s_Junctions .. ' junctions for ' .. m_NodeCollection:GetMapName())
 end
 
----Takes over the networks of the debug-server (DebugCommands "navzones_apply").
----@param p_Zones table[] zones as in the table
----@param p_Save boolean also save them in mod.db
+---Takes over the mesh of the debug-server (DebugCommands "navzones_apply").
+---@param p_Data table the mesh as in the table
+---@param p_Save boolean also save it in mod.db
 ---@return integer zones, integer junctions
-function NavZones:Apply(p_Zones, p_Save)
+function NavZones:Apply(p_Data, p_Save)
 	self:Clear()
-	for l_Index = 1, #p_Zones do
-		self:_AddZone(p_Zones[l_Index])
-	end
+	self:_Build(p_Data)
 	local s_Junctions = self:_LinkJunctions()
 
 	if p_Save then
-		self:_Save(p_Zones)
+		self:_Save(p_Data)
 	end
 	return self._Count, s_Junctions
 end
 
----@param p_Zones table[]
-function NavZones:_Save(p_Zones)
+---@param p_Data table
+function NavZones:_Save(p_Data)
 	local s_Table = m_NodeCollection:GetMapName() .. '_navzones'
 	if not SQL:Open() then
 		m_Logger:Error('Failed to open SQL. ' .. SQL:Error())
@@ -135,40 +151,32 @@ function NavZones:_Save(p_Zones)
 
 	SQL:Query('DROP TABLE IF EXISTS ' .. s_Table)
 	SQL:Query('CREATE TABLE ' .. s_Table .. ' (name TEXT, data TEXT)')
-	SQL:Query('BEGIN TRANSACTION')
-	for l_Index = 1, #p_Zones do
-		local l_Zone = p_Zones[l_Index]
-		local s_Name = tostring(l_Zone.name):gsub("'", "''")
-		local s_Data = json.encode(l_Zone):gsub("'", "''")
-		SQL:Query('INSERT INTO ' .. s_Table .. " (name, data) VALUES ('" .. s_Name .. "', '" .. s_Data .. "')")
-	end
-	SQL:Query('COMMIT')
+	local s_Data = json.encode(p_Data):gsub("'", "''")
+	SQL:Query('INSERT INTO ' .. s_Table .. " (name, data) VALUES ('" .. MESH_ROW .. "', '" .. s_Data .. "')")
 	SQL:Close()
 end
 
----One network (points, edges, attach) of a zone.
----@param p_Data table
----@param p_Name string
----@param p_Kind string
----@param p_Center Vec3
----@return NavZone
----Connected parts: a bot only goes where a way leads. Connections given up for good (Removed) don't connect.
----@param p_Zone NavZone
-local function _ComputeParts(p_Zone)
-	p_Zone.Part = {}
+---Connected parts: a bot only goes where a way leads. Connections given up for good (Removed) don't connect. In place:
+---the zones share the table.
+---@param p_Mesh NavZone
+local function _ComputeParts(p_Mesh)
+	local s_Part = p_Mesh.Part
+	for l_Point in pairs(s_Part) do
+		s_Part[l_Point] = nil
+	end
 	local s_PartCount = 0
-	for l_Start = 1, #p_Zone.Points do
-		if p_Zone.Part[l_Start] == nil then
+	for l_Start = 1, #p_Mesh.Points do
+		if s_Part[l_Start] == nil then
 			s_PartCount = s_PartCount + 1
-			p_Zone.Part[l_Start] = s_PartCount
+			s_Part[l_Start] = s_PartCount
 			local s_Stack = { l_Start }
 			while #s_Stack > 0 do
 				local s_Current = table.remove(s_Stack)
-				local s_Neighbours = p_Zone.Neighbours[s_Current]
+				local s_Neighbours = p_Mesh.Neighbours[s_Current]
 				for l_Index = 1, #s_Neighbours do
 					local s_Next = s_Neighbours[l_Index].To
-					if p_Zone.Part[s_Next] == nil and not s_Neighbours[l_Index].Removed then
-						p_Zone.Part[s_Next] = s_PartCount
+					if s_Part[s_Next] == nil and not s_Neighbours[l_Index].Removed then
+						s_Part[s_Next] = s_PartCount
 						s_Stack[#s_Stack + 1] = s_Next
 					end
 				end
@@ -177,33 +185,44 @@ local function _ComputeParts(p_Zone)
 	end
 end
 
-local function _ParseNetwork(p_Data, p_Name, p_Kind, p_Center)
+---@param p_Raw table|nil { x, y, z }
+---@return Vec3
+local function _Vec(p_Raw)
+	p_Raw = p_Raw or {}
+	return Vec3(tonumber(p_Raw[1]) or 0, tonumber(p_Raw[2]) or 0, tonumber(p_Raw[3]) or 0)
+end
+
+---One mesh (points, edges, attach).
+---@param p_Data table
+---@return NavZone
+local function _ParseMesh(p_Data)
 	---@type NavZone
-	local s_Zone = {
-		Name = p_Name,
-		Kind = p_Kind,
-		Center = p_Center,
+	local s_Mesh = {
+		Name = MESH_ROW,
+		Kind = 'mesh',
+		Center = Vec3(0, 0, 0),
+		Radius = math.huge,
 		Points = {},
 		Neighbours = {},
 		Inside = {},
+		InsideSet = {},
 		Junctions = {},
+		Part = {},
+		ByWaypoint = {},
 	}
+	s_Mesh.Mesh = s_Mesh
 
 	local s_Points = p_Data.points or {}
 	for l_Index = 1, #s_Points do
 		local l_Point = s_Points[l_Index]
-		local s_Flags = math.floor(tonumber(l_Point[6]) or 0)
-		s_Zone.Points[l_Index] = {
+		s_Mesh.Points[l_Index] = {
 			Index = l_Index,
 			Position = Vec3(l_Point[1], l_Point[2], l_Point[3]),
 			Clearance = tonumber(l_Point[4]) or 0,
 			Cover = math.floor(tonumber(l_Point[5]) or 0),
-			Flags = s_Flags,
+			Flags = math.floor(tonumber(l_Point[6]) or 0),
 		}
-		s_Zone.Neighbours[l_Index] = {}
-		if s_Flags & NavZoneFlags.InZone ~= 0 then
-			s_Zone.Inside[#s_Zone.Inside + 1] = l_Index
-		end
+		s_Mesh.Neighbours[l_Index] = {}
 	end
 
 	local s_Edges = p_Data.edges or {}
@@ -211,62 +230,102 @@ local function _ParseNetwork(p_Data, p_Name, p_Kind, p_Center)
 		local l_Edge = s_Edges[l_Index]
 		local s_A = math.floor(l_Edge[1]) + 1
 		local s_B = math.floor(l_Edge[2]) + 1
-		if s_Zone.Points[s_A] ~= nil and s_Zone.Points[s_B] ~= nil then
+		if s_Mesh.Points[s_A] ~= nil and s_Mesh.Points[s_B] ~= nil then
 			local s_Corners = {}
 			local s_Reversed = {}
 			local s_Raw = l_Edge[4] or {}
 			for l_Corner = 1, #s_Raw do
-				s_Corners[l_Corner] = Vec3(s_Raw[l_Corner][1], s_Raw[l_Corner][2], s_Raw[l_Corner][3])
+				s_Corners[l_Corner] = _Vec(s_Raw[l_Corner])
 			end
 			for l_Corner = #s_Corners, 1, -1 do
 				s_Reversed[#s_Reversed + 1] = s_Corners[l_Corner]
 			end
-			local s_Cost = tonumber(l_Edge[3]) or s_Zone.Points[s_A].Position:Distance(s_Zone.Points[s_B].Position)
-			table.insert(s_Zone.Neighbours[s_A], { To = s_B, Cost = s_Cost, Corners = s_Corners, Penalty = 0.0 })
-			table.insert(s_Zone.Neighbours[s_B], { To = s_A, Cost = s_Cost, Corners = s_Reversed, Penalty = 0.0 })
+			local s_Cost = tonumber(l_Edge[3]) or s_Mesh.Points[s_A].Position:Distance(s_Mesh.Points[s_B].Position)
+			table.insert(s_Mesh.Neighbours[s_A], { To = s_B, Cost = s_Cost, Corners = s_Corners, Penalty = 0.0 })
+			table.insert(s_Mesh.Neighbours[s_B], { To = s_A, Cost = s_Cost, Corners = s_Reversed, Penalty = 0.0 })
 		end
 	end
 
 	local s_Attach = p_Data.attach or {}
 	for l_Index = 1, #s_Attach do
 		local l_Entry = s_Attach[l_Index]
-		local s_Pos = l_Entry[5] or {}
 		local s_Corners = {}
 		local s_RawCorners = type(l_Entry[6]) == 'table' and l_Entry[6] or {}
 		for l_Corner = 1, #s_RawCorners do
-			s_Corners[l_Corner] = Vec3(s_RawCorners[l_Corner][1], s_RawCorners[l_Corner][2], s_RawCorners[l_Corner][3])
+			s_Corners[l_Corner] = _Vec(s_RawCorners[l_Corner])
 		end
-		s_Zone.Junctions[#s_Zone.Junctions + 1] = {
+		s_Mesh.Junctions[#s_Mesh.Junctions + 1] = {
 			PathIndex = math.floor(l_Entry[1]),
 			PointIndex = math.floor(l_Entry[2]),
 			Point = math.floor(l_Entry[3]) + 1,
-			Position = Vec3(tonumber(s_Pos[1]) or 0, tonumber(s_Pos[2]) or 0, tonumber(s_Pos[3]) or 0),
+			Position = _Vec(l_Entry[5]),
 			Corners = s_Corners,
 		}
 	end
 
-	_ComputeParts(s_Zone)
+	_ComputeParts(s_Mesh)
+	return s_Mesh
+end
+
+---A zone: a view on the mesh with its own name and points.
+---@param p_Mesh NavZone
+---@param p_Data table one zone as in the mesh
+---@param p_Inside table|nil its points, counted from 0
+---@return NavZone
+local function _ZoneOn(p_Mesh, p_Data, p_Inside)
+	---@type NavZone
+	local s_Zone = {
+		Name = tostring(p_Data.name),
+		Kind = tostring(p_Data.kind),
+		Center = _Vec(p_Data.center),
+		Radius = tonumber(p_Data.radius) or 30.0,
+		Points = p_Mesh.Points,
+		Neighbours = p_Mesh.Neighbours,
+		Inside = {},
+		InsideSet = {},
+		Junctions = p_Mesh.Junctions,
+		Part = p_Mesh.Part,
+		ByWaypoint = p_Mesh.ByWaypoint,
+		Mesh = p_Mesh,
+	}
+	for l_Index = 1, #(p_Inside or {}) do
+		local s_Point = math.floor(p_Inside[l_Index]) + 1
+		if p_Mesh.Points[s_Point] ~= nil then
+			s_Zone.Inside[#s_Zone.Inside + 1] = s_Point
+			s_Zone.InsideSet[s_Point] = true
+		end
+	end
 	return s_Zone
 end
 
----@param p_Data table one zone as in the table
-function NavZones:_AddZone(p_Data)
-	local s_Center = p_Data.center or {}
-	local s_Name = tostring(p_Data.name)
-	local s_Kind = tostring(p_Data.kind)
-	local s_CenterVec = Vec3(tonumber(s_Center[1]) or 0, tonumber(s_Center[2]) or 0, tonumber(s_Center[3]) or 0)
-	local s_Zone = _ParseNetwork(p_Data, s_Name, s_Kind, s_CenterVec)
-	-- Land vehicles have a network of their own: wide and open ground, junctions with the vehicle-paths.
+---@param p_Data table the mesh as in the table (version 2)
+function NavZones:_Build(p_Data)
+	self._Mesh = _ParseMesh(p_Data)
 	if type(p_Data.vehicle) == 'table' then
-		local s_Vehicle = _ParseNetwork(p_Data.vehicle, s_Name, s_Kind, s_CenterVec)
+		local s_Vehicle = _ParseMesh(p_Data.vehicle)
 		if #s_Vehicle.Points > 0 then
-			s_Zone.Vehicle = s_Vehicle
+			self._VehicleMesh = s_Vehicle
 		end
 	end
 
-	if #s_Zone.Points > 0 then
-		self._Zones[s_Zone.Name] = s_Zone
-		self._Count = self._Count + 1
+	local s_Zones = p_Data.zones or {}
+	for l_Index = 1, #s_Zones do
+		local l_Data = s_Zones[l_Index]
+		local s_Zone = _ZoneOn(self._Mesh, l_Data, l_Data.inside)
+		if self._VehicleMesh ~= nil then
+			s_Zone.Vehicle = _ZoneOn(self._VehicleMesh, l_Data, l_Data.vehicleInside)
+		end
+		if self._Zones[s_Zone.Name] == nil then
+			self._Zones[s_Zone.Name] = s_Zone
+			self._Count = self._Count + 1
+			for l_Point = 1, #s_Zone.Inside do
+				local s_List = self._PointZones[s_Zone.Inside[l_Point]] or {}
+				s_List[#s_List + 1] = s_Zone
+				self._PointZones[s_Zone.Inside[l_Point]] = s_List
+			end
+		else
+			m_Logger:Warning('two zones named ' .. s_Zone.Name)
+		end
 	end
 end
 
@@ -276,30 +335,34 @@ function NavZones:_LinkJunctions()
 	local s_Paths = m_NodeCollection:GetPaths()
 	local s_Count = 0
 
-	local function _Link(p_Zone, p_Lookup)
+	local function _Link(p_Mesh)
 		local s_Valid = {}
-		p_Zone.ByWaypoint = {}
-		for l_Index = 1, #p_Zone.Junctions do
-			local l_Junction = p_Zone.Junctions[l_Index]
+		for l_Index = 1, #p_Mesh.Junctions do
+			local l_Junction = p_Mesh.Junctions[l_Index]
 			local s_Waypoints = s_Paths[l_Junction.PathIndex]
 			local s_Waypoint = s_Waypoints and s_Waypoints[l_Junction.PointIndex]
-			if s_Waypoint ~= nil and p_Zone.Points[l_Junction.Point] ~= nil
+			if s_Waypoint ~= nil and p_Mesh.Points[l_Junction.Point] ~= nil
 				and s_Waypoint.Position:Distance(l_Junction.Position) <= JUNCTION_TOLERANCE then
 				l_Junction.Waypoint = s_Waypoint
 				s_Valid[#s_Valid + 1] = l_Junction
-				p_Zone.ByWaypoint[s_Waypoint.ID] = l_Junction
-				p_Lookup[s_Waypoint.ID] = { Zone = p_Zone, Junction = l_Junction }
+				p_Mesh.ByWaypoint[s_Waypoint.ID] = l_Junction
 				s_Count = s_Count + 1
 			end
 		end
-		p_Zone.Junctions = s_Valid
+		-- In place: the zones share the list.
+		for l_Index = #p_Mesh.Junctions, 1, -1 do
+			p_Mesh.Junctions[l_Index] = nil
+		end
+		for l_Index = 1, #s_Valid do
+			p_Mesh.Junctions[l_Index] = s_Valid[l_Index]
+		end
 	end
 
-	for _, l_Zone in pairs(self._Zones) do
-		_Link(l_Zone, self._Junctions)
-		if l_Zone.Vehicle ~= nil then
-			_Link(l_Zone.Vehicle, self._VehicleJunctions)
-		end
+	if self._Mesh ~= nil then
+		_Link(self._Mesh)
+	end
+	if self._VehicleMesh ~= nil then
+		_Link(self._VehicleMesh)
 	end
 	self._Version = self._Version + 1
 	return s_Count
@@ -337,17 +400,49 @@ function NavZones:HasBases()
 	return false
 end
 
----The zone whose junction the waypoint is.
+---The mesh (a zone without name and points of its own). nil without mesh.
+---@return NavZone|nil
+function NavZones:GetMesh()
+	return self._Mesh
+end
+
+---The zones the point of the mesh is in (zones overlap).
+---@param p_Point integer|nil
+---@return NavZone[]
+function NavZones:ZonesOf(p_Point)
+	return p_Point and self._PointZones[p_Point] or {}
+end
+
+---The zone to walk around in at the point: the one of the objective if the point is in it, else the first zone of the
+---point, else the mesh.
+---@param p_Point integer
+---@param p_Objective string|nil
+---@return NavZone|nil
+function NavZones:ZoneAtPoint(p_Point, p_Objective)
+	local s_Zones = self:ZonesOf(p_Point)
+	for l_Index = 1, #s_Zones do
+		if s_Zones[l_Index].Name == p_Objective then
+			return s_Zones[l_Index]
+		end
+	end
+	return s_Zones[1] or self._Mesh
+end
+
+---The junction of the mesh at the waypoint, with the zone it leads into.
 ---@param p_Waypoint Waypoint
 ---@return { Zone: NavZone, Junction: NavZoneJunction }|nil
 function NavZones:GetJunction(p_Waypoint)
-	if self._Count == 0 or p_Waypoint == nil or p_Waypoint.ID == nil then
+	if self._Mesh == nil or p_Waypoint == nil or p_Waypoint.ID == nil then
 		return nil
 	end
-	return self._Junctions[p_Waypoint.ID]
+	local s_Junction = self._Mesh.ByWaypoint[p_Waypoint.ID]
+	if s_Junction == nil then
+		return nil
+	end
+	return { Zone = self:ZoneAtPoint(s_Junction.Point, nil), Junction = s_Junction }
 end
 
----The junction of this zone at the waypoint (a waypoint can be a junction of several zones that overlap).
+---The junction of the mesh (of this zone) at the waypoint.
 ---@param p_Zone NavZone
 ---@param p_Waypoint Waypoint
 ---@return NavZoneJunction|nil
@@ -361,16 +456,6 @@ end
 ---@return table<string, NavZone>
 function NavZones:GetZones()
 	return self._Zones
-end
-
----The vehicle-network whose junction the waypoint (of a vehicle-path) is.
----@param p_Waypoint Waypoint
----@return { Zone: NavZone, Junction: NavZoneJunction }|nil
-function NavZones:GetVehicleJunction(p_Waypoint)
-	if self._Count == 0 or p_Waypoint == nil or p_Waypoint.ID == nil then
-		return nil
-	end
-	return self._VehicleJunctions[p_Waypoint.ID]
 end
 
 ---The point of the network closest to the position. Points on the same floor (FLOOR_HEIGHT) come first: a soldier
@@ -403,25 +488,22 @@ function NavZones:Closest(p_Zone, p_Position, p_Avoid)
 	return s_Best, math.sqrt(s_BestDistance)
 end
 
----The zone whose network is at the position: a point within p_Range on the same floor. Used for bots that spawn at the
----spawn-points of the game.
+---The mesh at the position: a point within p_Range on the same floor, and the zone there (ZoneAtPoint). Used for bots
+---that spawn at the spawn-points of the game.
 ---@param p_Position Vec3
 ---@param p_Range number
+---@param p_Objective string|nil
 ---@return NavZone|nil, integer|nil point
-function NavZones:ZoneAt(p_Position, p_Range)
-	local s_BestZone = nil
-	local s_BestPoint = nil
-	local s_BestDistance = p_Range
-	for _, l_Zone in pairs(self._Zones) do
-		local s_Point, s_Distance = self:Closest(l_Zone, p_Position)
-		if s_Point ~= nil and s_Distance <= s_BestDistance
-			and math.abs(l_Zone.Points[s_Point].Position.y - p_Position.y) <= FLOOR_HEIGHT then
-			s_BestZone = l_Zone
-			s_BestPoint = s_Point
-			s_BestDistance = s_Distance
-		end
+function NavZones:ZoneAt(p_Position, p_Range, p_Objective)
+	if self._Mesh == nil then
+		return nil, nil
 	end
-	return s_BestZone, s_BestPoint
+	local s_Point, s_Distance = self:Closest(self._Mesh, p_Position)
+	if s_Point == nil or s_Distance > p_Range
+		or math.abs(self._Mesh.Points[s_Point].Position.y - p_Position.y) > FLOOR_HEIGHT then
+		return nil, nil
+	end
+	return self:ZoneAtPoint(s_Point, p_Objective), s_Point
 end
 
 ---Whether every connection of the point was given up already (a dead end for the bot standing there).
@@ -459,7 +541,7 @@ function NavZones:BlockEdge(p_Zone, p_A, p_B)
 		end
 	end
 	if s_Removed then
-		_ComputeParts(p_Zone)
+		_ComputeParts(p_Zone.Mesh)
 		m_Logger:Write('zone ' .. p_Zone.Name .. ': connection ' .. p_A .. '-' .. p_B .. ' removed')
 	end
 end

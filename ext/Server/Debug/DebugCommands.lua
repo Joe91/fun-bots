@@ -18,7 +18,7 @@ DebugCommands = class('DebugCommands')
 --   census          see MapCensus:Start         everything about the level for the waypoint-tools, streamed as
 --                                               "census_*" events (funbots_debug/census)
 --   census_stop     {}                          stops a running census
---   navzones_apply  { map, zones, save }        walking networks of the zones (NavZones.lua), save: into mod.db
+--   navzones_apply  { map, mesh, save }         the walking mesh and its zones (NavZones.lua), save: into mod.db
 --   rcon            { command, args }           any RCON-command (also the vanilla ones) -> { lines }
 --   chat            { message, player }         a chat-command, as the player with that id or (no player) as
 --                                               ChatCommands.CONSOLE with all permissions -> { lines }
@@ -403,14 +403,17 @@ function DebugCommands.NavZonesApply(p_Args)
 	if p_Args.map ~= m_NodeCollection:GetMapName() then
 		error('the networks are for ' .. tostring(p_Args.map) .. ', the level is ' .. m_NodeCollection:GetMapName())
 	end
-	-- Bots in a zone walk on the old network: back to the waypoints, they enter the new one at the next junction.
+	-- Bots on the mesh walk on the old one: back to the waypoints, they go onto the new one at the next junction.
 	local s_Bots = m_BotManager:GetBots()
 	for l_Index = 1, #s_Bots do
 		if s_Bots[l_Index].m_Zone ~= nil then
 			s_Bots[l_Index]:_LeaveZone(nil)
 		end
 	end
-	local s_Zones, s_Junctions = m_NavZones:Apply(type(p_Args.zones) == 'table' and p_Args.zones or {}, p_Args.save == true)
+	if type(p_Args.mesh) ~= 'table' then
+		error('navzones_apply needs the mesh')
+	end
+	local s_Zones, s_Junctions = m_NavZones:Apply(p_Args.mesh, p_Args.save == true)
 	return { zones = s_Zones, junctions = s_Junctions, saved = p_Args.save == true }
 end
 

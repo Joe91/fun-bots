@@ -300,9 +300,6 @@ function Bot:__init(p_Player)
 	-- Free movement in the zone of the objective (BotZoneMovement), nil on the waypoints.
 	---@type BotZoneState|nil
 	self.m_Zone = nil
-	---The objective the bot is on its way to over the navigation paths, and the zones it crossed (BotZoneMovement).
-	---@type { Objective: string, Visited: table<string, boolean> }|nil
-	self._NavTrip = nil
 end
 
 -- =============================================

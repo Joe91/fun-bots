@@ -388,8 +388,7 @@ class Hub:
             raise LabelError("no zone networks: run a census or load them first")
         if not self.accept_commands:
             raise LabelError("replay-mode, no mod to send the networks to")
-        command = self.submit_command("navzones_apply", {"map": data.get("map"), "zones": data.get("zones") or [],
-                                                         "save": save})
+        command = self.submit_command("navzones_apply", {"map": data.get("map"), "mesh": data, "save": save})
         self.commands.wait(command, timeout)
         result = command.to_json()
         # Saved in the game: also into navzones/<map>.json of the repository (fun-bots-helper imports it into mod.db).
@@ -397,8 +396,7 @@ class Hub:
             folder = self.mapfiles.parent / "navzones"
             folder.mkdir(exist_ok=True)
             file = folder / f"{data['map']}.json"
-            navzones.save({"version": data.get("version"), "map": data.get("map"), "spacing": data.get("spacing"),
-                           "zones": data.get("zones") or []}, file)
+            navzones.save(data, file)
             result["file"] = str(file)
         return result
 

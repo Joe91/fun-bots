@@ -27,7 +27,7 @@ function ClientNodeEditor:__init()
 
 	self.m_ScanForNode = false
 
-	-- Walking networks of the zones (server: NavZones), name -> { Name, Kind, Center, Points, Edges, Junctions }.
+	-- The walking mesh (server: NavZones): "@mesh" -> { Points, Edges, Junctions }, zone name -> { Name, Kind, Center, Size }.
 	self.m_NavZones = {}
 
 	-- Caching values for drawing performance.
@@ -1162,8 +1162,8 @@ function ClientNodeEditor:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 	end
 end
 
----The walking networks of the zones close to the player: points (green in the zone), connections, junctions with the
----waypoints (orange) and the name of the zone. Once per drawing cycle, into the lists of the next one.
+---The walking mesh close to the player: points (green in a zone), connections, junctions with the waypoints (orange),
+---and the names of the zones. Once per drawing cycle, into the lists of the next one.
 ---@param p_PointRangeSq number
 ---@param p_LineRangeSq number
 ---@param p_TextRangeSq number
@@ -1213,7 +1213,7 @@ function ClientNodeEditor:_DrawNavZones(p_PointRangeSq, p_LineRangeSq, p_TextRan
 		end
 		if l_Zone.Center ~= nil and _DistanceSq(l_Zone.Center) <= math.max(p_TextRangeSq, p_PointRangeSq) then
 			self:DrawPosText2D(l_Zone.Center + Vec3.up * 2.0, 'Zone ' .. tostring(l_Zone.Name) .. ' (' .. tostring(l_Zone.Kind)
-				.. ', ' .. #s_Points .. ' points)', s_Colors.Text, 1.2)
+				.. ', ' .. tostring(l_Zone.Size or 0) .. ' points)', s_Colors.Text, 1.2)
 		end
 	end
 end

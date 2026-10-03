@@ -140,7 +140,7 @@ class NavzonesTest(unittest.TestCase):
         census = {"paths": "MP_001_ConquestLarge0", "areas": [_rooms_area(door)], "entities": {},
                   "nodes": {"1": _nodes_event(1, [[2.0, 0.0, 5.0], [3.0, 0.0, 5.0]]),
                             "2": _nodes_event(2, [[17.0, 0.0, 5.0], [18.0, 0.0, 5.0]])}}
-        return navzones.build(census)["zones"][0]
+        return navzones.build(census)
 
     def _connected(self, zone):
         links = {}
@@ -179,12 +179,28 @@ class NavzonesTest(unittest.TestCase):
         from funbots_debug.census import navzones
         census = {"paths": "MP_001_ConquestLarge0", "areas": [_rooms_area(False)], "entities": {},
                   "nodes": {"3": _nodes_event(3, [[float(x), 0.0, 5.0] for x in range(2, 19)])}}
-        zone = navzones.build(census)["zones"][0]
+        zone = navzones.build(census)
         self.assertTrue(self._connected(zone))
 
-
-if __name__ == "__main__":
-    unittest.main()
+    def test_overlapping_areas_one_mesh(self):
+        # Two areas over the same flat ground, shifted by 6.25 m (a quarter cell off the lattice): one mesh, both zones
+        # on it.
+        from funbots_debug.census import navzones
+        first = _rooms_area(True)
+        second = dict(_rooms_area(True), name="b", center=[16.25, 0.0, 5.0], x0=6.25)
+        census = {"paths": "MP_001_ConquestLarge0", "areas": [first, second], "entities": {},
+                  "nodes": {"1": _nodes_event(1, [[2.0, 0.0, 5.0], [3.0, 0.0, 5.0]])}}
+        data = navzones.build(census)
+        self.assertTrue(self._connected(data))
+        points = data["points"]
+        for i, p in enumerate(points):
+            for q in points[i + 1:]:
+                self.assertGreaterEqual(((p[0] - q[0]) ** 2 + (p[2] - q[2]) ** 2) ** 0.5, navzones.SPACING - 0.01)
+        zones = {zone["name"]: zone for zone in data["zones"]}
+        self.assertEqual(set(zones), {"a", "b"})
+        self.assertTrue(zones["a"]["inside"] and zones["b"]["inside"])
+        # The x of the second area is off the lattice by a quarter cell: the merged grid puts it onto it.
+        self.assertTrue(all(abs(p[0] / 0.5 - round(p[0] / 0.5)) < 1e-6 for p in points))
 
 
 class DriverTest(unittest.TestCase):
@@ -196,3 +212,7 @@ class DriverTest(unittest.TestCase):
         meta["paths"] = "MP_012_RushLarge0"
         self.assertTrue(_level_matches(meta, "MP_012", "RushLarge0"))
         self.assertTrue(_level_matches({"level": "Levels/MP_001/MP_001", "mode": "RushLarge0"}, "MP_001", "RushLarge0"))
+
+
+if __name__ == "__main__":
+    unittest.main()

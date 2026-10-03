@@ -1,7 +1,7 @@
--- Free movement inside the zone of the objective (NavZones.lua). A bot that reaches a junction of the zone of its
--- objective leaves the waypoints and walks the network of the zone: from point to point inside the zone, waiting a
--- moment at each (longer and in cover when it defends). When its objective changes it walks to the junction that suits
--- the new objective best and goes on along that path.
+-- Free movement on the mesh (NavZones.lua). A bot that reaches a junction of the mesh leaves the waypoints and walks the
+-- mesh: in the zone of its objective from point to point, waiting a moment at each (longer and in cover when it
+-- defends); else over the mesh to that zone, or to the junction of the next navigation path of its route (NavRoutes).
+-- When its objective changes it decides anew where to go.
 
 ---@type NavZones
 local m_NavZones = require('NavZones')
@@ -53,68 +53,64 @@ local ZONE_WAIT_VEHICLE = { 3.0, 8.0 } -- Seconds a vehicle stands at each point
 ---@field Reverses integer reverses on the way to the current target
 ---@field Avoid integer|nil a dead end the bot got stuck at: not the start of the next route
 
----Called when the bot reached a waypoint. At a junction of the zone of its objective, it walks the network from now on.
+---Called when the bot reached a waypoint. At a junction of the mesh it walks the mesh from now on.
 ---@param p_Point Waypoint (or an offset-point with the fields of its waypoint)
----@return boolean true if the bot is in the zone now
+---@return boolean true if the bot is on the mesh now
 function Bot:_CheckForZoneEntry(p_Point)
 	if not Registry.BOT.USE_ZONE_NETWORKS or self.m_Zone ~= nil then
 		return false
 	end
-
-	-- On a navigation path the bot goes into the zone at the end it walks to, whatever its objective: to stay there, or
-	-- to cross it on the way to the next navigation path (NavRoutes).
 	local s_Waypoint = p_Point.Original or p_Point
-	local s_Heading = m_NavRoutes:Heading(s_Waypoint.PathIndex, self._InvertPathDirection)
-	if s_Heading ~= nil then
-		local s_Junction = m_NavZones:GetJunctionIn(s_Heading.Zone, s_Waypoint)
-		if s_Junction ~= nil then
-			self:_EnterZone(s_Heading.Zone, s_Junction.Point, false, s_Junction)
-			return true
-		end
-	end
-
-	if self._Objective == '' then
+	local s_Entry = m_NavZones:GetJunction(s_Waypoint)
+	if s_Entry == nil then
 		return false
 	end
 
-	-- Into the zone of the objective (zones overlap: the junction of that zone, not just any one at the waypoint).
-	local s_Zone = m_NavZones:GetZone(self._Objective)
-	if s_Zone ~= nil and (s_Zone.Kind == 'capturepoint' or s_Zone.Kind == 'mcom') then
-		local s_Junction = m_NavZones:GetJunctionIn(s_Zone, s_Waypoint)
-		if s_Junction ~= nil then
-			self:_EnterZone(s_Zone, s_Junction.Point, false, s_Junction)
-			return true
+	local s_Path = m_NavRoutes:GetPath(s_Waypoint.PathIndex)
+	if s_Path ~= nil then
+		-- A navigation path: onto the mesh at the end the bot walks to (not where it just left the mesh).
+		local s_Count = #(m_NodeCollection:Get(nil, s_Waypoint.PathIndex) or {})
+		local s_TowardsStart = self._InvertPathDirection
+		if (s_TowardsStart and s_Waypoint.PointIndex > s_Count / 2) or (not s_TowardsStart and s_Waypoint.PointIndex <= s_Count / 2) then
+			return false
 		end
-	end
-
-	-- On another path (not a navigation path, not one of the objective, e.g. the way to arm an MCOM after its
-	-- objective changed): back onto the network at a junction, the route goes on from there (NavRoutes).
-	if m_NavRoutes:Knows(self._Objective) and m_NavRoutes:GetPath(s_Waypoint.PathIndex) == nil then
+	elseif self._Objective == '' then
+		return false
+	else
 		local s_First = m_NodeCollection:GetFirst(s_Waypoint.PathIndex)
-		local s_Data = type(s_First) == 'table' and s_First.Data or nil
-		if s_Data == nil or not table.has(s_Data.Objectives or {}, self._Objective) then
-			local s_Entry = m_NavZones:GetJunction(s_Waypoint)
-			if s_Entry ~= nil then
-				self:_EnterZone(s_Entry.Zone, s_Entry.Junction.Point, false, s_Entry.Junction)
-				return true
+		local s_Objectives = type(s_First) == 'table' and s_First.Data and s_First.Data.Objectives or {}
+		local s_Zone = m_NavZones:GetZone(self._Objective)
+		if s_Zone == nil then
+			-- The way to a vehicle, a beacon, the action-node of an MCOM: the bot walks it to its end.
+			if table.has(s_Objectives, self._Objective) or not m_NavRoutes:Knows(self._Objective) then
+				return false
+			end
+		elseif not m_NavRoutes:IsActive() then
+			-- Paths not cut at the zones: they lead from zone to zone, onto the mesh only in the zone of the objective.
+			local s_Position = s_Zone.Points[s_Entry.Junction.Point].Position
+			if not s_Zone.InsideSet[s_Entry.Junction.Point] and s_Position:Distance(s_Zone.Center) > s_Zone.Radius then
+				return false
 			end
 		end
 	end
-	return false
+
+	self:_EnterZone(m_NavZones:ZoneAtPoint(s_Entry.Junction.Point, self._Objective) or s_Entry.Zone,
+		s_Entry.Junction.Point, false, s_Entry.Junction)
+	return self.m_Zone ~= nil
 end
 
--- A spawn-point of the game this far from a point of a network: the bot walks straight to it and starts on the network.
+-- A spawn-point of the game this far from a point of the mesh: the bot walks straight to it and starts on the mesh.
 local ZONE_SPAWN_RANGE = 30.0
 
----After a spawn at a spawn-point of the game (BotSpawner, SpawnMethod.Spawn): on the network of the zone there (a base
----or a capture point) the bot starts in it, and walks out over the junction that suits its objective.
+---After a spawn at a spawn-point of the game (BotSpawner, SpawnMethod.Spawn): on the mesh there (a base, a capture
+---point) the bot starts on it, and goes where its objective is.
 ---@param p_Position Vec3
 ---@return boolean true if the bot is in a zone now
 function Bot:TryEnterZoneAt(p_Position)
 	if not Registry.BOT.USE_ZONE_NETWORKS then
 		return false
 	end
-	local s_Zone, s_Point = m_NavZones:ZoneAt(p_Position, ZONE_SPAWN_RANGE)
+	local s_Zone, s_Point = m_NavZones:ZoneAt(p_Position, ZONE_SPAWN_RANGE, self._Objective)
 	if s_Zone == nil or s_Point == nil then
 		return false
 	end
@@ -137,11 +133,12 @@ function Bot:_CheckForVehicleZoneEntry(p_Point)
 		return false
 	end
 	local s_Junction = m_NavZones:GetJunctionIn(s_Zone.Vehicle, p_Point)
-	if s_Junction == nil then
+	if s_Junction == nil or s_Zone.Vehicle.Points[s_Junction.Point] == nil
+		or s_Zone.Vehicle.Points[s_Junction.Point].Position:Distance(s_Zone.Center) > s_Zone.Radius then
 		return false
 	end
 
-	-- The vehicle-network is a zone of its own (NavZones:_AddZone).
+	-- The zone on the vehicle-mesh (NavZones:_Build).
 	self:_EnterZone(s_Zone.Vehicle, s_Junction.Point, true, s_Junction)
 	return true
 end
@@ -154,8 +151,8 @@ function Bot:_EnterZone(p_Zone, p_Point, p_Vehicle, p_Junction)
 	---@type BotZoneState
 	self.m_Zone = {
 		Zone = p_Zone,
-		-- The objective of the zone: a bot with another one leaves it (from a base: as soon as it has one).
-		Objective = p_Zone.Name,
+		-- The objective the bot decided for (_ZoneDecide); vehicles: the zone, they leave it for another objective.
+		Objective = p_Vehicle and p_Zone.Name or nil,
 		Point = p_Point,
 		Goal = nil,
 		Targets = {},
@@ -168,22 +165,21 @@ function Bot:_EnterZone(p_Zone, p_Point, p_Vehicle, p_Junction)
 		Fails = 0,
 		ExitFails = 0,
 		Exit = nil,
-		-- The MCOM is armed and disarmed at the action-node of the path "mcom N interact" (a junction of the zone).
-		SubObjective = not p_Vehicle and p_Zone.Kind == 'mcom' and g_GameDirector:_GetSubObjectiveFromObj(p_Zone.Name) or nil,
+		-- The MCOM is armed and disarmed at the action-node of the path "mcom N interact" (a junction of the mesh).
+		SubObjective = nil,
 		SubTimer = 0.0,
 		Vehicle = p_Vehicle == true,
 		Reverse = 0.0,
 		Reverses = 0,
 	}
 	self:_StopObstacleSequence()
-	self:_ZoneNewGoal()
-
-	-- The zones crossed on the way to the objective: the route doesn't lead back into them (NavRoutes).
-	if not p_Vehicle then
-		if self._NavTrip == nil or self._NavTrip.Objective ~= self._Objective then
-			self._NavTrip = { Objective = self._Objective, Visited = {} }
+	if p_Vehicle then
+		self:_ZoneNewGoal()
+	else
+		self:_ZoneDecide()
+		if self.m_Zone == nil then
+			return
 		end
-		self._NavTrip.Visited[p_Zone.Name] = true
 	end
 
 	-- From the waypoint of the junction to its point: the corners backwards, then the point itself.
@@ -200,13 +196,56 @@ function Bot:_EnterZone(p_Zone, p_Point, p_Vehicle, p_Junction)
 			table.insert(s_State.Targets, 1, s_Lead[l_Index])
 		end
 	end
-	m_Logger:Write(self.m_Player.name .. ' enters the zone of ' .. p_Zone.Name)
+	m_Logger:Write(self.m_Player.name .. ' on the mesh at ' .. p_Zone.Name)
+end
+
+---Where to go for the objective: in its zone from point to point, over the mesh to its zone, out over the junction of
+---the next navigation path of the route (NavRoutes), else the path that suits the objective best (_ZoneBestExit).
+---Without objective the bot walks around in the zone it is in (on the mesh outside of zones it waits).
+function Bot:_ZoneDecide()
+	local s_State = self.m_Zone
+	---@cast s_State -nil
+	s_State.Objective = self._Objective
+	s_State.Exit = nil
+	s_State.SubObjective = nil
+	if self._Objective == '' then
+		s_State.Zone = m_NavZones:ZoneAtPoint(s_State.Point, nil) or s_State.Zone
+		self:_ZoneNewGoal()
+		return
+	end
+
+	local s_Next = m_NavRoutes:Next(s_State.Point, self._Objective)
+	if s_Next ~= nil and s_Next.Zone ~= nil then
+		s_State.Zone = s_Next.Zone
+		-- The MCOM is armed and disarmed at the action-node of the path "mcom N interact" (a junction of the mesh).
+		if s_Next.Zone.Kind == 'mcom' then
+			s_State.SubObjective = g_GameDirector:_GetSubObjectiveFromObj(s_Next.Zone.Name)
+		end
+		if s_Next.Zone.InsideSet[s_State.Point] then
+			self:_ZoneNewGoal()
+		else
+			self:_ZoneRouteTo(s_Next.Point)
+			s_State.Wait = 0.0
+		end
+		return
+	end
+	local s_Exit = s_Next ~= nil and s_Next.Exit or self:_ZoneBestExit(self._Objective)
+	if s_Exit == nil then
+		self:_LeaveZone(nil)
+		return
+	end
+	self:_ZoneRouteToExit(s_Exit)
 end
 
 ---Walks to the next point of the zone (not the one the bot is at).
 function Bot:_ZoneNewGoal()
 	local s_State = self.m_Zone
 	---@cast s_State -nil
+	-- On the mesh outside of the zones there is nothing to walk around in.
+	if s_State.Zone.Kind == 'mesh' then
+		self:_ZoneRouteTo(nil)
+		return
+	end
 	local s_Defend = self._ObjectiveMode == BotObjectiveModes.Defend
 	local s_Goal = m_NavZones:RandomPoint(s_State.Zone, s_State.Point, s_Defend and not s_State.Vehicle)
 	self:_ZoneRouteTo(s_Goal)
@@ -259,23 +298,14 @@ function Bot:_ZoneReplan(p_NewGoal)
 	end
 end
 
----The junction that leads to the objective best: the first navigation path of the route to it (NavRoutes), else the
----path with the highest priority for it (PathSwitcher), the one closest to the objective of these.
+---Without a route over the mesh (NavRoutes): the junction whose path has the highest priority for the objective
+---(PathSwitcher), the one closest to the objective of these.
 ---@param p_Objective string
 ---@return NavZoneJunction|nil
 function Bot:_ZoneBestExit(p_Objective)
 	local s_State = self.m_Zone
 	---@cast s_State -nil
 
-	-- Over the navigation paths, if the objective is a zone of their graph.
-	if not s_State.Vehicle then
-		local s_Trip = self._NavTrip
-		local s_Exit = m_NavRoutes:NextExit(s_State.Zone, s_State.Point, p_Objective,
-			s_Trip ~= nil and s_Trip.Objective == p_Objective and s_Trip.Visited or nil)
-		if s_Exit ~= nil then
-			return s_Exit
-		end
-	end
 	local s_Best = nil
 	local s_BestPriority = -math.huge
 	local s_BestDistance = math.huge
@@ -403,17 +433,11 @@ function Bot:UpdateZoneMovement(p_DeltaTime)
 
 	self:UpdateZoneSubObjective(p_DeltaTime)
 
-	-- New objective: out over the junction that suits it best. Without objective the bot stays.
-	if self._Objective ~= s_State.Objective and s_State.Exit == nil then
-		if self._Objective == '' then
-			s_State.Objective = ''
-		else
-			local s_Exit = self:_ZoneBestExit(self._Objective)
-			if s_Exit == nil then
-				self:_LeaveZone(nil)
-				return false
-			end
-			self:_ZoneRouteToExit(s_Exit)
+	-- New objective: decide anew where to go.
+	if self._Objective ~= s_State.Objective and (s_State.Exit == nil or self._Objective ~= '') then
+		self:_ZoneDecide()
+		if self.m_Zone == nil then
+			return false
 		end
 	end
 
@@ -434,8 +458,8 @@ function Bot:UpdateZoneMovement(p_DeltaTime)
 			return false
 		end
 
-		-- In a base the bot only waits for its objective.
-		if s_State.Zone.Kind == 'base' then
+		-- In a base the bot only waits for its objective, on the mesh outside of the zones as well.
+		if s_State.Zone.Kind == 'base' or s_State.Zone.Kind == 'mesh' then
 			s_State.Waiting = true
 			self:LookAround(p_DeltaTime)
 			return true
@@ -588,10 +612,9 @@ function Bot:_ZoneGiveUpConnection(p_Position, p_Target)
 			m_NavRoutes:BlockExit(s_State.Exit)
 			s_State.ExitFails = s_State.ExitFails + 1
 			s_State.Fails = 0
-			s_State.Exit = nil
-			s_State.Objective = s_State.Zone.Name
 			self:_ZoneReplan(false)
-			return false
+			self:_ZoneDecide()
+			return self.m_Zone == nil
 		end
 		self:_LeaveZone(nil)
 		return true

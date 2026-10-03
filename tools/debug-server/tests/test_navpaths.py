@@ -12,17 +12,21 @@ from funbots_debug.census import navpaths  # noqa: E402
 from funbots_debug.paths.mapfile import NO_LOOP, MapData, Node, PathData  # noqa: E402
 
 
-def _zone(name, x0, z0, size=20.0, kind="capturepoint", margin=8.0):
-    """A network of points every 2 m over a square, in the zone, and a margin of points around it outside of it."""
-    points = []
-    half = size / 2 + margin
-    steps = int(2 * half / 2) + 1
-    for i in range(steps):
-        for j in range(steps):
-            x, z = 2 * i - half, 2 * j - half
-            inside = abs(x) <= size / 2 and abs(z) <= size / 2
-            points.append([x0 + x, 0.0, z0 + z, 2.0, 0, 1 if inside else 0])
-    return {"name": name, "kind": kind, "center": [x0, 0.0, z0], "points": points, "edges": [], "attach": []}
+def _mesh(*zones):
+    """A mesh of squares of points every 2 m, one per zone: (name, x, z). The middle 20 x 20 m are in the zone, a margin
+    of 8 m around it is on the mesh but outside."""
+    points, entries = [], []
+    for name, x0, z0 in zones:
+        inside = []
+        for i in range(19):
+            for j in range(19):
+                x, z = 2 * i - 18, 2 * j - 18
+                in_zone = abs(x) <= 10 and abs(z) <= 10
+                if in_zone:
+                    inside.append(len(points))
+                points.append([x0 + x, 0.0, z0 + z, 2.0, 0, 1 if in_zone else 0])
+        entries.append({"name": name, "kind": "capturepoint", "center": [x0, 0.0, z0], "inside": inside})
+    return {"version": 2, "points": points, "edges": [], "attach": [], "zones": entries}
 
 
 def _path(index, positions, data=None, loops=False):
@@ -42,7 +46,7 @@ def _line(x0, x1, z, step=2.0):
 class NavpathsTest(unittest.TestCase):
     def setUp(self):
         # Zones a (around x=0) and b (around x=100), c (around z=100) only over a road.
-        self.zones = {"zones": [_zone("a", 0, 0), _zone("b", 100, 0), _zone("c", 0, 100)]}
+        self.zones = _mesh(("a", 0, 0), ("b", 100, 0), ("c", 0, 100))
 
     def test_path_through_two_zones(self):
         data = MapData({1: _path(1, _line(-5, 105, 0), {"Objectives": ["a", "b"]})})
@@ -116,10 +120,16 @@ class NavpathsTest(unittest.TestCase):
         data = MapData({1: _path(1, _line(-5, 105, 0))})
         result = navpaths.build(data, self.zones)
         count = len(result.data.paths[1].nodes)
-        networks = {"zones": [{"name": "a", "attach": [[1, 1, 0, 1.0, [0, 0, 0], []]]},
-                              {"name": "b", "attach": [[1, count - 20, 0, 1.0, [0, 0, 0], []]]}]}
+        networks = {"attach": [[1, 1, 0, 1.0, [0, 0, 0], []], [1, count - 20, 0, 1.0, [0, 0, 0], []]]}
         self.assertEqual(navpaths.missing_ends(result.data, networks), [(1, "end in b")])
 
+    def test_piece_on_the_mesh_dropped(self):
+        # Zones a and d overlap in their margins: the piece between them lies on the mesh, the bots walk the mesh.
+        zones = _mesh(("a", 0, 0), ("d", 26, 0))
+        data = MapData({1: _path(1, _line(-5, 31, 0))})
+        result = navpaths.build(data, zones)
+        self.assertEqual(result.routes, [])
+        self.assertEqual(result.on_mesh, 1)
 
 if __name__ == "__main__":
     unittest.main()

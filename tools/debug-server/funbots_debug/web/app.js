@@ -56,7 +56,7 @@ const store = {
 	labelStatus: null, // {kind: "ok" | "error", text} of the last action of the path-labels panel
 	objectives: { flags: [], mcoms: [], stage: 0 }, // see DebugSnapshots.CollectObjectives
 	scans: new Map(), // scan-id -> ScanLayer
-	navzones: null, // walking networks of the zones (census/navzones.py): {map, spacing, zones: [{points, edges, attach}]}
+	navzones: null, // the walking mesh (census/navzones.py): {map, spacing, points, edges, attach, vehicle, zones: [{name, kind, center, inside}]}
 	findings: [],
 	stats: {},
 	commands: new Map(), // id -> command (see commands.py)
@@ -327,16 +327,18 @@ function pathPoint(path, point) {
 
 // Links (junctions) of the waypoints, or of the labels while there is a preview: grey the ones that stay, green the
 // new ones, red the removed ones. With a preview also the areas of the objectives the labeler used.
-// Walking networks of the zones. Point: [x, y, z, clearance, cover, flags], flags 1 = in the zone, 2 = indoors,
-// 4 = crouch. Edge: [a, b, length, corners]. Junction with the waypoints: [path, point, network-point, distance, pos].
+// The walking mesh (census/navzones.py). Point: [x, y, z, clearance, cover, flags], flags 1 = in a zone,
+// 2 = indoors, 4 = crouch. Edge: [a, b, length, corners]. Junction with the waypoints: [path, point, mesh-point, distance,
+// pos]. The zones are lists of mesh-points ("inside"), drawn as areas (the hull of their points).
 function drawNavzones() {
 	const data = store.navzones;
 	if (!data) return;
+	const points = data.points || [];
 	const radius = view.scale > 3 ? 3 : 2;
 	ctx.lineWidth = 1.2;
-	// The areas of the zones first (the hull of their points in the zone), under everything else.
+	// The areas of the zones first, under everything else.
 	for (const zone of data.zones || []) {
-		const area = hull((zone.points || []).filter((p) => p[5] & 1));
+		const area = hull((zone.inside || []).map((index) => points[index]).filter((p) => p));
 		if (area.length < 3) continue;
 		ctx.fillStyle = zone.kind === "base" ? "rgba(90, 162, 255, 0.10)" : zone.kind === "mcom" ? "rgba(245, 184, 65, 0.12)" : "rgba(80, 200, 120, 0.12)";
 		ctx.strokeStyle = zone.kind === "base" ? "rgba(90, 162, 255, 0.5)" : zone.kind === "mcom" ? "rgba(245, 184, 65, 0.55)" : "rgba(80, 200, 120, 0.55)";
@@ -347,42 +349,42 @@ function drawNavzones() {
 		ctx.fill();
 		ctx.stroke();
 	}
-	for (const zone of data.zones || []) {
-		const points = zone.points || [];
-		for (const [a, b, , corners] of zone.edges || []) {
-			const p = points[a];
-			const q = points[b];
-			if (!p || !q) continue;
-			ctx.strokeStyle = p[5] & 1 && q[5] & 1 ? "rgba(80, 200, 120, 0.75)" : "rgba(120, 160, 200, 0.5)";
+	for (const [a, b, , corners] of data.edges || []) {
+		const p = points[a];
+		const q = points[b];
+		if (!p || !q) continue;
+		ctx.strokeStyle = p[5] & 1 && q[5] & 1 ? "rgba(80, 200, 120, 0.75)" : "rgba(120, 160, 200, 0.5)";
+		ctx.beginPath();
+		ctx.moveTo(sx(p[0]), sy(p[2]));
+		for (const c of corners || []) ctx.lineTo(sx(c[0]), sy(c[2]));
+		ctx.lineTo(sx(q[0]), sy(q[2]));
+		ctx.stroke();
+	}
+	ctx.setLineDash([3, 3]);
+	ctx.strokeStyle = "rgba(245, 184, 65, 0.8)";
+	for (const [, , index, , pos] of data.attach || []) {
+		const p = points[index];
+		if (p && pos) line(pos, p);
+	}
+	ctx.setLineDash([]);
+	for (const p of points) {
+		ctx.fillStyle = p[5] & 1 ? "#50c878" : "#7890a8";
+		ctx.beginPath();
+		ctx.arc(sx(p[0]), sy(p[2]), radius, 0, Math.PI * 2);
+		ctx.fill();
+		if (p[5] & 6) {
+			ctx.strokeStyle = p[5] & 4 ? "#f5b841" : "#5aa2ff";
 			ctx.beginPath();
-			ctx.moveTo(sx(p[0]), sy(p[2]));
-			for (const c of corners || []) ctx.lineTo(sx(c[0]), sy(c[2]));
-			ctx.lineTo(sx(q[0]), sy(q[2]));
+			ctx.arc(sx(p[0]), sy(p[2]), radius + 2, 0, Math.PI * 2);
 			ctx.stroke();
 		}
-		ctx.setLineDash([3, 3]);
-		ctx.strokeStyle = "rgba(245, 184, 65, 0.8)";
-		for (const [, , index, , pos] of zone.attach || []) {
-			const p = points[index];
-			if (p && pos) line(pos, p);
-		}
-		ctx.setLineDash([]);
-		for (const p of points) {
-			ctx.fillStyle = p[5] & 1 ? "#50c878" : "#7890a8";
-			ctx.beginPath();
-			ctx.arc(sx(p[0]), sy(p[2]), radius, 0, Math.PI * 2);
-			ctx.fill();
-			if (p[5] & 6) {
-				ctx.strokeStyle = p[5] & 4 ? "#f5b841" : "#5aa2ff";
-				ctx.beginPath();
-				ctx.arc(sx(p[0]), sy(p[2]), radius + 2, 0, Math.PI * 2);
-				ctx.stroke();
-			}
-		}
-		if (view.scale > 0.4 && zone.center) {
-			ctx.fillStyle = "#50c878";
-			ctx.font = "12px system-ui, sans-serif";
-			ctx.fillText(`${zone.name}: ${points.length} points`, sx(zone.center[0]) + 8, sy(zone.center[2]) + 16);
+	}
+	if (view.scale > 0.4) {
+		ctx.font = "12px system-ui, sans-serif";
+		for (const zone of data.zones || []) {
+			if (!zone.center) continue;
+			ctx.fillStyle = zone.kind === "base" ? "#5aa2ff" : zone.kind === "mcom" ? "#f5b841" : "#50c878";
+			ctx.fillText(`${zone.name}: ${(zone.inside || []).length} points`, sx(zone.center[0]) + 8, sy(zone.center[2]) + 16);
 		}
 	}
 }
@@ -727,7 +729,7 @@ const LAYERS = [
 	{ id: "heightmap", label: "Height-map", on: true, draw: drawHeightmap },
 	{ id: "paths", label: "Waypoints", on: true, draw: drawPaths },
 	{ id: "links", label: "Links", on: true, draw: drawLinks },
-	{ id: "navzones", label: "Zone networks", on: true, draw: drawNavzones },
+	{ id: "navzones", label: "Mesh", on: true, draw: drawNavzones },
 	{ id: "objectives", label: "Objectives", on: true, draw: () => { drawFlags(); drawMcoms(); } },
 	{ id: "trails", label: "Trails", on: true, draw: drawTrails },
 	{ id: "traces", label: "Raycasts", on: true, draw: drawTraces },
@@ -1588,9 +1590,7 @@ function fit() {
 	if (!points.length) {
 		for (const path of Object.values(store.paths)) points.push(...path.points);
 	}
-	if (!points.length && store.navzones) {
-		for (const zone of store.navzones.zones || []) points.push(...(zone.points || []));
-	}
+	if (!points.length && store.navzones) points.push(...(store.navzones.points || []));
 	if (!points.length || !view.width) return;
 	const xs = points.map((p) => p[0]);
 	const zs = points.map((p) => p[2]);

@@ -1,27 +1,29 @@
-"""Small walking networks for the zones around the objectives, generated from the grids of a census.
+"""The walking mesh of a level, generated from the grids of a census, with the zones as labels on its points.
 
-Inside a capture zone or around an MCOM the bots shall move freely instead of following waypoints. For that each zone
-gets a few points (about every SPACING metres) and the straight walkable connections between them. The fine grid of the
-census (report.area_graph) is only needed to make them, the network itself is small.
+Inside a capture zone, around an MCOM, in a base the bots move freely instead of following waypoints. For that the
+level gets a mesh over the areas of its census: a few points (about every SPACING metres) and the straight walkable
+connections between them. The fine grid of the census (report.area_graph) is only needed to make it, the mesh itself is
+small. Areas overlap (rush: the bases of one stage lie at the MCOMs of the other), so all grids are put onto one lattice
+first (_Merged) and there is one mesh, the zones are lists of its points.
 
-How it is made, per area of the census:
-
-1. The walkable surfaces of the grid and their connections (report.area_graph). Only the parts the waypoints reach are
-   kept, so roofs and closed rooms don't get points.
+1. The walkable surfaces of the grids and their connections (report.area_graph), on one lattice. Only the parts the
+   waypoints reach are kept, so roofs and closed rooms don't get points.
 2. Every surface gets its distance to the next wall or edge (clearance).
 3. Points: the surfaces with the most clearance first, each at least SPACING away from the points so far.
 4. Every surface belongs to the point it is closest to, walking (a Voronoi-diagram along the surfaces). Points whose
    areas touch are connected, with the shortest way between them on the grid, straightened where a straight line is
-   walkable. So the network is connected wherever the grid is.
-5. Each point knows whether it is inside the zone, indoors, how much cover is around it and whether it needs crouching.
-6. The existing waypoints are attached where they enter, leave or end in the area: those are the junctions between the
-   paths and the network ([path, point, network-point, walking distance, position of the waypoint, corners of the way
-   from the network-point towards the waypoint]).
+   walkable. So the mesh is connected wherever the grid is.
+5. Each point knows whether it is in a zone, indoors, how much cover is around it and whether it needs crouching. Each
+   zone lists its points.
+6. The waypoints are attached where they enter, leave or end in the areas: those are the junctions between the paths
+   and the mesh ([path, point, mesh-point, walking distance, position of the waypoint, corners of the way from the
+   mesh-point towards the waypoint]).
 
-The result (navzones.json) is what the mod will need: points, connections and junctions.
+Format (version 2): {map, spacing, points, edges, attach, stats, vehicle: {points, edges, attach, stats},
+zones: [{name, kind, center, radius, zone, inside: [points], vehicleInside: [vehicle-points]}]}.
 
-Land vehicles get a network of their own in each zone ("vehicle"): the same way, with the VEHICLE profile (wide and
-open ground only, fewer points), attached to the paths with "Vehicles".
+Land vehicles get a mesh of their own ("vehicle"): the same way, with the VEHICLE profile (wide and open ground only,
+fewer points), attached to the paths with "Vehicles".
 """
 
 from __future__ import annotations
@@ -36,7 +38,7 @@ from pathlib import Path
 from ..protocol import as_list
 from .report import _Nodes, area_graph, capture_points
 
-VERSION = 1
+VERSION = 2               # 2: one mesh for the level, the zones as labels on its points.
 SPACING = 5.0             # Metres between the points.
 MIN_CLEARANCE = 0.5       # Points only where the next wall is at least this far away.
 WALL_COST = 4.0           # Ways along walls (clearance below MIN_CLEARANCE) cost this much more.
@@ -47,6 +49,7 @@ CROUCH_HEADROOM = 1.7     # Less headroom: crouching.
 COVER_RANGE = 3           # Cells in each of the 8 directions that are checked for cover.
 ATTACH_HEIGHT = 1.0       # A waypoint belongs to a surface this close below or above it.
 STEP_HEIGHT = 0.6         # Same as report.STEP_HEIGHT: what a straight line may step up or down per cell.
+MERGE_HEIGHT = 0.5        # Surfaces of the same cell from overlapping areas this close in height are the same.
 
 # Land vehicles: wide and open ground only.
 VEHICLE_CLEARANCE = 1.8   # Metres to the next wall (half the width of a tank, and some).
@@ -500,79 +503,155 @@ def _trace_edges(grid: _Area, owner: dict[Surface, int], points: list[Surface], 
     return result
 
 
-def _walked(grid: _Area, area: dict, nodes: _Nodes, paths: set[int], height: float) -> list:
-    radius = float(area.get("radius") or 0)
+class _Merged:
+    """The grids of all areas on one lattice: one mesh for the whole level, the zones are only labels on its points.
+    All areas have the same cell size, each lies on the lattice shifted by whole cells (at most a quarter of a cell
+    off). Surfaces of the same cell from several areas (where they overlap) are one if their heights match."""
+
+    def __init__(self, areas: list[dict]):
+        self.step = float(areas[0]["step"])
+        self.x0 = self.z0 = 0.0
+        self.areas = areas
+        cells: dict[tuple[int, int], list[list]] = defaultdict(list)
+        mapping: dict[tuple[int, Surface], tuple[tuple[int, int], int]] = {}
+        area_links = []
+        for index, area in enumerate(areas):
+            if abs(float(area["step"]) - self.step) > 1e-6:
+                raise ValueError(f"area {area.get('name')}: cell size {area['step']} instead of {self.step}")
+            d_row = round(float(area["z0"]) / self.step)
+            d_column = round(float(area["x0"]) / self.step)
+            surfaces, links = area_graph(area)
+            for (row, column, layer), surface in surfaces.items():
+                cell = (row + d_row, column + d_column)
+                entries = cells[cell]
+                slot = next((i for i, entry in enumerate(entries) if abs(entry[0] - surface[0]) <= MERGE_HEIGHT), None)
+                if slot is None:
+                    entries.append(list(surface))
+                    slot = len(entries) - 1
+                mapping[(index, (row, column, layer))] = (cell, slot)
+            area_links.append((index, links))
+
+        # Layers of a cell from the top down, as in the grid of one area.
+        order: dict[tuple[tuple[int, int], int], Surface] = {}
+        self.surfaces: dict[Surface, tuple] = {}
+        for cell, entries in cells.items():
+            for layer, slot in enumerate(sorted(range(len(entries)), key=lambda i: -entries[i][0])):
+                key = (cell[0], cell[1], layer)
+                order[(cell, slot)] = key
+                self.surfaces[key] = tuple(entries[slot])
+        self.links: dict[Surface, list[Surface]] = defaultdict(list)
+        for index, links in area_links:
+            for a, neighbours in links.items():
+                merged_a = order[mapping[(index, a)]]
+                for b in neighbours:
+                    merged_b = order[mapping[(index, b)]]
+                    if merged_a != merged_b and merged_b not in self.links[merged_a]:
+                        self.links[merged_a].append(merged_b)
+        self.by_cell: dict[tuple[int, int], list[Surface]] = defaultdict(list)
+        for key in self.surfaces:
+            self.by_cell[(key[0], key[1])].append(key)
+
+    def pos(self, key: Surface) -> tuple[float, float, float]:
+        row, column, _ = key
+        return column * self.step, self.surfaces[key][0], row * self.step
+
+    def cell_of(self, x: float, z: float) -> tuple[int, int]:
+        return round(z / self.step), round(x / self.step)
+
+    def surface_at(self, pos: list[float], height: float = ATTACH_HEIGHT) -> Surface | None:
+        best = None
+        for key in self.by_cell.get(self.cell_of(pos[0], pos[2]), []):
+            difference = abs(self.surfaces[key][0] - pos[1])
+            if difference <= height and (best is None or difference < best[0]):
+                best = (difference, key)
+        return best[1] if best else None
+
+    def distance(self, a: Surface, b: Surface) -> float:
+        return math.dist(self.pos(a), self.pos(b))
+
+    def covers(self, pos) -> bool:
+        return any(math.hypot(pos[0] - float(area["center"][0]), pos[2] - float(area["center"][2]))
+                   <= float(area.get("radius") or 0) for area in self.areas)
+
+
+def _walked(grid: _Merged, nodes: _Nodes, paths: set[int], height: float) -> list:
+    """The waypoints of the paths in the areas: [path, point, position, surface]."""
     walked = []
     for path in sorted(paths):
         for point, pos in enumerate(nodes.paths[path]["points"], start=1):
-            if math.hypot(pos[0] - grid.center[0], pos[2] - grid.center[2]) <= radius:
+            if grid.covers(pos):
                 walked.append((path, point, pos, grid.surface_at(pos, height)))
     return walked
 
 
-def build_zone(census: dict, area: dict, nodes: _Nodes, attach: _Nodes | None = None) -> dict:
-    """attach: other waypoints to attach the networks to than the ones of the census (the paths cut at the zones)."""
-    grid = _Area(area)
-    clearance = _clearance(grid)
-    inside, zone_source = _zone_test(census, area)
-
-    def attached(paths: set[int], height: float) -> tuple[list, _Nodes] | None:
-        return None if attach is None else (_walked(grid, area, attach, paths, height), attach)
-
-    soldier = _network(grid, clearance, set(grid.surfaces), _walked(grid, area, nodes, nodes.foot, ATTACH_HEIGHT),
-                       nodes, inside, SOLDIER, True, attached(attach.foot, ATTACH_HEIGHT) if attach else None)
-
-    # Land vehicles: wide, open, not too steep. The waypoints of vehicle-paths are the position of the vehicle, about a
-    # metre above the ground.
-    land = {path for path, entry in nodes.paths.items()
+def _land(nodes: _Nodes) -> set[int]:
+    return {path for path, entry in nodes.paths.items()
             if "land" in [str(name).lower() for name in entry.get("vehicles") or []]}
-    allowed = {key for key, (_, normal, _, headroom) in grid.surfaces.items()
-               if clearance.get(key, 0.0) >= VEHICLE_CLEARANCE and normal >= VEHICLE_NORMAL_Y
-               and (headroom < 0 or headroom >= VEHICLE_HEADROOM)}
-    land_attached = None
-    if attach is not None:
-        land_attached = attached({path for path, entry in attach.paths.items()
-                                  if "land" in [str(name).lower() for name in entry.get("vehicles") or []]}, 3.0)
-    vehicle = _network(grid, clearance, allowed, _walked(grid, area, nodes, land, 3.0), nodes, inside, VEHICLE,
-                       False, land_attached) if land else None
-
-    zone = {
-        "name": area.get("name"),
-        "kind": area.get("kind"),
-        "center": as_list(area.get("center")),
-        "radius": area.get("radius"),
-        "zone": zone_source,
-        "points": soldier["points"],
-        "edges": soldier["edges"],
-        "attach": soldier["attach"],
-        "stats": dict(soldier["stats"], surfaces=len(grid.surfaces)),
-    }
-    if vehicle is not None and vehicle["points"]:
-        zone["vehicle"] = vehicle
-    return zone
 
 
 def build(census: dict, attach: dict | None = None) -> dict:
-    """The networks of all areas of a census. attach: other waypoints to attach them to ({path: {"points", "vehicles",
-    "objectives"}}, e.g. the paths cut at the zones), the parts of the networks still come from the census."""
+    """The mesh of a level from all areas of its census, with the zones as labels on its points. attach: other
+    waypoints to attach it to ({path: {"points", "vehicles", "objectives"}}, e.g. the paths cut at the zones), the
+    parts of the mesh still come from the waypoints of the census."""
+    areas = [area for area in census.get("areas") or [] if area.get("cells")]
+    data = {"version": VERSION, "map": census.get("paths"), "spacing": SPACING, "points": [], "edges": [],
+            "attach": [], "zones": []}
+    if not areas:
+        return data
     nodes = _Nodes(census)
     attach_nodes = _Nodes({"nodes": attach}) if attach is not None else None
-    zones = [build_zone(census, area, nodes, attach_nodes) for area in census.get("areas") or []]
-    return {"version": VERSION, "map": census.get("paths"), "spacing": SPACING, "zones": zones}
+    grid = _Merged(areas)
+    clearance = _clearance(grid)
+    tests = [(area, *_zone_test(census, area)) for area in areas]
+
+    def inside_any(x: float, z: float) -> bool:
+        return any(inside(x, z) for _, inside, _ in tests)
+
+    def attached(paths: set[int], height: float) -> tuple[list, _Nodes] | None:
+        return None if attach_nodes is None else (_walked(grid, attach_nodes, paths, height), attach_nodes)
+
+    soldier = _network(grid, clearance, set(grid.surfaces), _walked(grid, nodes, nodes.foot, ATTACH_HEIGHT), nodes,
+                       inside_any, SOLDIER, True, attached(attach_nodes.foot, ATTACH_HEIGHT) if attach_nodes else None)
+    data.update(points=soldier["points"], edges=soldier["edges"], attach=soldier["attach"],
+                stats=dict(soldier["stats"], surfaces=len(grid.surfaces)))
+
+    # Land vehicles: wide, open, not too steep. The waypoints of vehicle-paths are the position of the vehicle, about a
+    # metre above the ground.
+    land = _land(nodes)
+    vehicle = None
+    if land:
+        allowed = {key for key, (_, normal, _, headroom) in grid.surfaces.items()
+                   if clearance.get(key, 0.0) >= VEHICLE_CLEARANCE and normal >= VEHICLE_NORMAL_Y
+                   and (headroom < 0 or headroom >= VEHICLE_HEADROOM)}
+        vehicle = _network(grid, clearance, allowed, _walked(grid, nodes, land, 3.0), nodes, inside_any, VEHICLE,
+                           False, attached(_land(attach_nodes), 3.0) if attach_nodes else None)
+        if vehicle["points"]:
+            data["vehicle"] = vehicle
+
+    for area, inside, source in tests:
+        zone = {"name": area.get("name"), "kind": area.get("kind"), "center": as_list(area.get("center")),
+                "radius": area.get("radius"), "zone": source,
+                "inside": [index for index, point in enumerate(data["points"]) if inside(point[0], point[2])]}
+        if "vehicle" in data:
+            zone["vehicleInside"] = [index for index, point in enumerate(data["vehicle"]["points"])
+                                     if inside(point[0], point[2])]
+        data["zones"].append(zone)
+    return data
 
 
 def summary(data: dict) -> str:
-    lines = [f"zone networks of {data.get('map')}"]
-    for zone in data["zones"]:
-        stats = zone["stats"]
-        lines.append(f"  {zone['name']} ({zone['kind']}, zone: {zone['zone']}): {stats['points']} points "
-                     f"({stats['inZone']} in the zone), {stats['edges']} connections, {stats['parts']} parts, "
-                     f"{stats['attached']} junctions with waypoints ({stats['unattached']} without surface)")
-        vehicle = (zone.get("vehicle") or {}).get("stats")
-        if vehicle:
-            lines.append(f"    vehicles: {vehicle['points']} points ({vehicle['inZone']} in the zone), "
-                         f"{vehicle['edges']} connections, {vehicle['parts']} parts, {vehicle['attached']} junctions "
-                         f"with vehicle-paths ({vehicle['unattached']} without surface)")
+    stats = data.get("stats") or {}
+    lines = [f"mesh of {data.get('map')}: {len(data.get('points') or [])} points, {len(data.get('edges') or [])} "
+             f"connections, {stats.get('parts', '?')} parts, {len(data.get('attach') or [])} junctions with waypoints "
+             f"({stats.get('unattached', '?')} without surface)"]
+    vehicle = data.get("vehicle")
+    if vehicle:
+        lines.append(f"  vehicles: {len(vehicle['points'])} points, {len(vehicle['edges'])} connections, "
+                     f"{vehicle['stats']['parts']} parts, {len(vehicle['attach'])} junctions with vehicle-paths")
+    for zone in data.get("zones") or []:
+        vehicle_inside = f", {len(zone['vehicleInside'])} for vehicles" if "vehicleInside" in zone else ""
+        lines.append(f"  {zone['name']} ({zone['kind']}, zone: {zone['zone']}): {len(zone['inside'])} points"
+                     f"{vehicle_inside}")
     return "\n".join(lines)
 
 

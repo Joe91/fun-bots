@@ -36,10 +36,11 @@ from dataclasses import dataclass, field
 from pathlib import Path
 
 from ..paths.mapfile import NO_LOOP, MapData, Node, PathData
+from ..protocol import as_list
 
-MATCH_DISTANCE = 6.0      # A waypoint belongs to the closest point of a network up to this far away...
+MATCH_DISTANCE = 6.0      # A waypoint belongs to the closest point of the mesh up to this far away...
 FLOOR_HEIGHT = 1.5        # ...on the same floor.
-IN_ZONE = 1
+MESH_DISTANCE = 4.0       # A waypoint this close to a point of the mesh (same floor) is on the mesh.
 LINK_MAX = 10.0           # Longer links are no way to walk.
 LINK_COST = 2.0           # Metres added for a link: rather stay on a path.
 LOOP_CLOSE = 30.0         # A looping path whose ends are this close is walked over from its last waypoint to its first.
@@ -74,38 +75,53 @@ class Result:
     fixed: dict[int, str] = field(default_factory=dict)  # old path -> why it was kept as it is
     dropped: dict[int, str] = field(default_factory=dict)  # old foot path -> why no navigation path came from it
     duplicates: int = 0
+    on_mesh: int = 0  # pieces dropped: all on the mesh
     old_paths: dict[int, int] = field(default_factory=dict)  # new path -> old path (the kept ones)
     moved_links: int = 0
     lost_links: int = 0
 
 
 class _Zones:
-    """The points of all networks in buckets, for "in which zone is this waypoint"."""
+    """The points of the mesh in buckets, for "in which zone is this waypoint" and "is it on the mesh"."""
 
     def __init__(self, navzones: dict, cell: float = 10.0):
         self.cell = cell
-        self.names: list[str] = []
-        self.buckets: dict[tuple[int, int], list[tuple[list[float], bool, int]]] = defaultdict(list)
-        for index, zone in enumerate(navzones.get("zones") or []):
-            self.names.append(str(zone.get("name")))
-            for point in zone.get("points") or []:
-                self.buckets[self._key(point)].append((point, bool(int(point[5]) & IN_ZONE), index))
+        zones = navzones.get("zones") or []
+        self.names: list[str] = [str(zone.get("name")) for zone in zones]
+        self.centers = [as_list(zone.get("center")) for zone in zones]
+        member: dict[int, list[int]] = defaultdict(list)
+        for index, zone in enumerate(zones):
+            for point in zone.get("inside") or []:
+                member[int(point)].append(index)
+        self.buckets: dict[tuple[int, int], list[tuple[list[float], list[int]]]] = defaultdict(list)
+        for index, point in enumerate(navzones.get("points") or []):
+            self.buckets[self._key(point)].append((point, member.get(index, [])))
 
     def _key(self, pos) -> tuple[int, int]:
         return math.floor(pos[0] / self.cell), math.floor(pos[2] / self.cell)
 
-    def zone_of(self, pos) -> int | None:
+    def _closest(self, pos, distance: float):
         x, z = self._key(pos)
         best = None
         for d_x in (-1, 0, 1):
             for d_z in (-1, 0, 1):
-                for point, inside, zone in self.buckets.get((x + d_x, z + d_z), []):
+                for point, zones in self.buckets.get((x + d_x, z + d_z), []):
                     if abs(point[1] - pos[1]) > FLOOR_HEIGHT:
                         continue
-                    distance = math.hypot(point[0] - pos[0], point[2] - pos[2])
-                    if distance <= MATCH_DISTANCE and (best is None or distance < best[0]):
-                        best = (distance, inside, zone)
-        return best[2] if best and best[1] else None
+                    horizontal = math.hypot(point[0] - pos[0], point[2] - pos[2])
+                    if horizontal <= distance and (best is None or horizontal < best[0]):
+                        best = (horizontal, zones)
+        return best
+
+    def zone_of(self, pos) -> int | None:
+        """The zone of the closest point of the mesh; where zones overlap the one whose middle is closest."""
+        best = self._closest(pos, MATCH_DISTANCE)
+        if best is None or not best[1]:
+            return None
+        return min(best[1], key=lambda zone: math.hypot(self.centers[zone][0] - pos[0], self.centers[zone][2] - pos[2]))
+
+    def on_mesh(self, pos) -> bool:
+        return self._closest(pos, MESH_DISTANCE) is not None
 
 
 def fixed_reason(path: PathData) -> str:
@@ -347,11 +363,14 @@ def build(data: MapData, navzones: dict) -> Result:
         if reasons and not any(route.source == [index] for route in candidates):
             result.dropped[index] = reasons[0]
 
-    # 3.: no two along each other between the same zones.
+    # 3.: no two along each other between the same zones, none where the mesh leads (overlapping zones).
     order = {"path": 0, "extended": 1, "crafted": 2}
     candidates.sort(key=lambda route: (order[route.origin], route.length))
     kept: list[Route] = []
     for route in candidates:
+        if all(zones.on_mesh(graph.pos[vertex]) for vertex in route.vertices):
+            result.on_mesh += 1
+            continue
         pair = {route.start, route.end}
         if any({other.start, other.end} == pair and _runs_along(graph, route, other) for other in kept):
             result.duplicates += 1
@@ -368,6 +387,8 @@ def build(data: MapData, navzones: dict) -> Result:
                                      graph.length(way)))
     crafted.sort(key=lambda route: route.length)
     for route in crafted:
+        if all(zones.on_mesh(graph.pos[vertex]) for vertex in route.vertices):
+            continue
         if _zone_distance(kept, route.start, route.end) > DETOUR * route.length:
             kept.append(route)
 
@@ -442,25 +463,23 @@ def _closest(nodes: list[tuple[tuple[float, float, float], Vertex]], pos) -> Ver
     return best[1] if best else None
 
 
+MESH_ROW = "@mesh"  # The one row of <map>_navzones in mod.db: the whole mesh (NavZones.lua).
 END_SEARCH = 15  # Same as NavRoutes.lua: an end's junction among this many waypoints from the end.
 
 
 def missing_ends(data: MapData, networks: dict) -> list[tuple[int, str]]:
-    """Navigation paths the mod can't use: no junction with the network of the zone at an end (NavRoutes.lua looks
-    among the END_SEARCH waypoints at each end). [(path, "start in <zone>" | "end in <zone>")]"""
-    junctions: dict[str, set[tuple[int, int]]] = defaultdict(set)
-    for zone in networks.get("zones") or []:
-        for entry in zone.get("attach") or []:
-            junctions[str(zone.get("name"))].add((int(entry[0]), int(entry[1])))
+    """Navigation paths the mod can't use: no junction with the mesh at an end (NavRoutes.lua looks among the
+    END_SEARCH waypoints at each end). [(path, "start in <zone>" | "end in <zone>")]"""
+    junctions = {(int(entry[0]), int(entry[1])) for entry in networks.get("attach") or []}
     result = []
     for index, path in sorted(data.paths.items()):
         nav = path.first.data.get("Nav")
         if not nav:
             continue
         count = len(path.nodes)
-        if not any((index, point) in junctions[nav["From"]] for point in range(1, min(count, END_SEARCH) + 1)):
+        if not any((index, point) in junctions for point in range(1, min(count, END_SEARCH) + 1)):
             result.append((index, f"start in {nav['From']}"))
-        if not any((index, point) in junctions[nav["To"]] for point in range(count, max(0, count - END_SEARCH), -1)):
+        if not any((index, point) in junctions for point in range(count, max(0, count - END_SEARCH), -1)):
             result.append((index, f"end in {nav['To']}"))
     return result
 
@@ -482,7 +501,7 @@ def summary(result: Result, before: MapData, verbose: bool = False) -> str:
         f"  kept as they are: {len(result.fixed)} (vehicles, actions, ways to vehicles and beacons)",
         f"  navigation paths: {len(result.routes)} (" + ", ".join(f"{count} {origin}" for origin, count
                                                               in sorted(origins.items())) + f"), "
-        f"{result.duplicates} pieces dropped along others",
+        f"{result.duplicates} pieces dropped along others, {result.on_mesh} on the mesh",
         f"  cut paths without a navigation path of their own: {len(result.dropped)}",
         f"  links of kept paths moved: {result.moved_links}, lost: {result.lost_links}",
     ]
@@ -525,8 +544,7 @@ def write_db(db: Path, name: str, data: MapData, networks: dict) -> None:
             zones = f"{name}_navzones"
             connection.execute(f"DROP TABLE IF EXISTS {zones}")
             connection.execute(f"CREATE TABLE {zones} (name TEXT, data TEXT)")
-            connection.executemany(f"INSERT INTO {zones} (name, data) VALUES (?, ?)",
-                                   [(str(zone.get("name")), json.dumps(zone, separators=(",", ":")))
-                                    for zone in networks.get("zones") or []])
+            connection.execute(f"INSERT INTO {zones} (name, data) VALUES (?, ?)",
+                               (MESH_ROW, json.dumps(networks, separators=(",", ":"))))
     finally:
         connection.close()

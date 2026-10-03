@@ -181,7 +181,6 @@ end
 function Bot:ResetSpawnVars()
 	-- Spawned (or in a vehicle): on the waypoints again.
 	self.m_Zone = nil
-	self._NavTrip = nil
 	-- Timers
 	self._SpawnDelayTimer = 0.0
 	self._WayWaitTimer = 0.0

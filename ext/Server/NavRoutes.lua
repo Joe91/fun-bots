@@ -2,15 +2,16 @@
 ---@overload fun():NavRoutes
 NavRoutes = class('NavRoutes')
 
--- Routes from zone to zone. The navigation paths (made by the debug-server, census/navpaths.py) each lead from one zone
--- to another: their first waypoint has "Nav" = { From = zone at the first waypoint, To = zone at the last one, Length }.
--- Inside the zones the bots walk the networks (NavZones.lua, Bot/BotZoneMovement.lua). So a route is: out of the zone
--- over the junction of a navigation path, along it, into the next zone at its other end, across that zone to the next
--- navigation path, and so on until the zone of the objective.
+-- Routes over the mesh (NavZones.lua) and the navigation paths. The mesh covers the areas around the objectives, the
+-- navigation paths (made by the debug-server, census/navpaths.py) lead from one area to another: their first waypoint
+-- has "Nav" = { From = zone at the first waypoint, To = zone at the last one, Length }. Where the mesh connects two
+-- places a bot walks the mesh, else it leaves the mesh over the junction of a navigation path, walks the path and goes
+-- onto the mesh again at its other end.
 --
--- The graph has the ends of the navigation paths as its nodes: an end is where a path leaves a zone (its junction with
--- the network of that zone). From an end a bot walks the path to its other end, and from there across the zone to any
--- end in the same part of that network.
+-- The graph has the ends of the navigation paths as its nodes: an end is the junction of a path with the mesh. From an
+-- end a bot walks the path to its other end, and from there over the mesh to any end in the same connected part of the
+-- mesh. A route ends in the part of the mesh where the target is: the points of the zone of the objective, or the
+-- junctions of the paths of an objective that isn't a zone (a vehicle, a beacon, the action-node of an MCOM).
 
 ---@type NodeCollection
 local m_NodeCollection = require('NodeCollection')
@@ -19,28 +20,35 @@ local m_NavZones = require('NavZones')
 ---@type Logger
 local m_Logger = Logger('NavRoutes', Debug.Server.PATH)
 
--- Metres added for each zone a route crosses (the walk on its network, waiting bots, fights).
-local ZONE_CROSSING = 20.0
--- An end of a navigation path is its junction with the network among this many waypoints from the end.
+-- Metres added for each walk over the mesh between two navigation paths (waiting bots, fights, corners).
+local MESH_CROSSING = 10.0
+-- An end of a navigation path is its junction with the mesh among this many waypoints from the end.
 local END_SEARCH = 15
--- Metres added to an exit a bot didn't get to over the network (for all bots, until the level ends).
+-- Metres added to an exit a bot didn't get to over the mesh (for all bots, until the level ends).
 local EXIT_PENALTY = 100.0
--- Metres added to a route back into a zone the bot crossed already on its way: zones overlap (rush), and from another
--- part of a network the way back can look shorter. Without this bots go back and forth between two zones.
-local REVISIT_PENALTY = 500.0
 
 ---@class NavRouteEnd
 ---@field Path NavPath
----@field Zone NavZone
 ---@field Junction NavZoneJunction
 ---@field AtStart boolean the end at the first waypoint
----@field Other NavRouteEnd|nil the end at the other side of the path
+---@field Other NavRouteEnd the end at the other side of the path
 
 ---@class NavPath
 ---@field PathIndex integer
 ---@field Length number
 ---@field Start NavRouteEnd
 ---@field Finish NavRouteEnd
+
+---@class NavTarget
+---@field Zone NavZone|nil the zone of the objective (nil: an objective with paths of its own)
+---@field Points integer[] the points of the mesh where the target is
+---@field Junctions table<integer, NavZoneJunction>|nil point -> junction of a path of the objective (not a zone)
+
+---What NavRoutes:Next returns: walk the mesh to Point (in Zone), or leave it over Exit.
+---@class NavStep
+---@field Zone NavZone|nil
+---@field Point integer|nil
+---@field Exit NavZoneJunction|nil
 
 function NavRoutes:__init()
 	self:Clear()
@@ -49,19 +57,18 @@ end
 function NavRoutes:Clear()
 	---@type table<integer, NavPath>
 	self._Paths = {}
-	---zone name -> the ends of navigation paths in it
-	---@type table<string, NavRouteEnd[]>
+	---@type NavRouteEnd[]
 	self._Ends = {}
 	self._Count = 0
 	self._Version = -1
 	---junction -> metres added (BlockExit)
 	---@type table<NavZoneJunction, number>
 	self._Penalty = {}
-	---objective -> zone of the graph it is reached from (false: none), see ZoneFor
-	self._TargetZones = {}
+	---objective -> its target (false: none), see Target
+	self._Targets = {}
 end
 
----Builds the graph anew when the networks or the waypoints changed (NavZones:GetVersion).
+---Builds the graph anew when the mesh or the waypoints changed (NavZones:GetVersion).
 function NavRoutes:_Ensure()
 	local s_Version = m_NavZones:GetVersion()
 	if s_Version == self._Version then
@@ -69,19 +76,21 @@ function NavRoutes:_Ensure()
 	end
 	self:Clear()
 	self._Version = s_Version
+	local s_Mesh = m_NavZones:GetMesh()
+	if s_Mesh == nil then
+		return
+	end
 
 	local s_Missing = 0
 	for l_PathIndex, l_Waypoints in pairs(m_NodeCollection:GetPaths() or {}) do
 		local s_First = l_Waypoints[1]
 		local s_Nav = s_First and s_First.Data and s_First.Data.Nav
 		if type(s_Nav) == 'table' and #l_Waypoints >= 2 then
-			local s_From = m_NavZones:GetZone(tostring(s_Nav.From))
-			local s_To = m_NavZones:GetZone(tostring(s_Nav.To))
-			local s_StartJunction = s_From and self:_EndJunction(s_From, l_Waypoints, 1, 1)
-			local s_FinishJunction = s_To and self:_EndJunction(s_To, l_Waypoints, #l_Waypoints, -1)
-			if s_From ~= nil and s_To ~= nil and s_StartJunction ~= nil and s_FinishJunction ~= nil then
-				local s_Start = { Zone = s_From, Junction = s_StartJunction, AtStart = true }
-				local s_Finish = { Zone = s_To, Junction = s_FinishJunction, AtStart = false, Other = s_Start }
+			local s_StartJunction = self:_EndJunction(s_Mesh, l_Waypoints, 1, 1)
+			local s_FinishJunction = self:_EndJunction(s_Mesh, l_Waypoints, #l_Waypoints, -1)
+			if s_StartJunction ~= nil and s_FinishJunction ~= nil and s_StartJunction ~= s_FinishJunction then
+				local s_Start = { Junction = s_StartJunction, AtStart = true }
+				local s_Finish = { Junction = s_FinishJunction, AtStart = false, Other = s_Start }
 				s_Start.Other = s_Finish
 				---@type NavPath
 				local s_Path = {
@@ -94,11 +103,8 @@ function NavRoutes:_Ensure()
 				s_Finish.Path = s_Path
 				self._Paths[l_PathIndex] = s_Path
 				self._Count = self._Count + 1
-				for _, l_End in ipairs({ s_Path.Start, s_Path.Finish }) do
-					local s_Ends = self._Ends[l_End.Zone.Name] or {}
-					s_Ends[#s_Ends + 1] = l_End
-					self._Ends[l_End.Zone.Name] = s_Ends
-				end
+				self._Ends[#self._Ends + 1] = s_Start
+				self._Ends[#self._Ends + 1] = s_Finish
 			else
 				s_Missing = s_Missing + 1
 			end
@@ -109,19 +115,19 @@ function NavRoutes:_Ensure()
 	end
 end
 
----The junction of the zone closest to an end of the path.
----@param p_Zone NavZone
+---The junction of the mesh closest to an end of the path.
+---@param p_Mesh NavZone
 ---@param p_Waypoints Waypoint[]
 ---@param p_From integer
 ---@param p_Step integer
 ---@return NavZoneJunction|nil
-function NavRoutes:_EndJunction(p_Zone, p_Waypoints, p_From, p_Step)
+function NavRoutes:_EndJunction(p_Mesh, p_Waypoints, p_From, p_Step)
 	for l_Offset = 0, END_SEARCH - 1 do
 		local s_Waypoint = p_Waypoints[p_From + l_Offset * p_Step]
 		if s_Waypoint == nil then
 			return nil
 		end
-		local s_Junction = m_NavZones:GetJunctionIn(p_Zone, s_Waypoint)
+		local s_Junction = m_NavZones:GetJunctionIn(p_Mesh, s_Waypoint)
 		if s_Junction ~= nil then
 			return s_Junction
 		end
@@ -147,70 +153,106 @@ function NavRoutes:GetPath(p_PathIndex)
 	return p_PathIndex and self._Paths[p_PathIndex] or nil
 end
 
----The zone of the graph a bot heads for with this objective: the zone of that name, else (a vehicle, a beacon, an
----MCOM to arm) the zone whose network has a junction with a path of the objective. There the bot leaves the network
----for that path (BotZoneMovement). nil if there is none.
+---Where the bots with this objective go on the mesh: the points of its zone, else the junctions of its paths (a
+---vehicle, a beacon, "mcom N interact"). nil if the mesh has neither.
 ---@param p_Objective string|nil
----@return string|nil
-function NavRoutes:ZoneFor(p_Objective)
+---@return NavTarget|nil
+function NavRoutes:Target(p_Objective)
 	self:_Ensure()
-	if p_Objective == nil or p_Objective == '' then
+	local s_Mesh = m_NavZones:GetMesh()
+	if p_Objective == nil or p_Objective == '' or s_Mesh == nil then
 		return nil
 	end
-	if self._Ends[p_Objective] ~= nil then
-		return p_Objective
-	end
-	local s_Known = self._TargetZones[p_Objective]
+	local s_Known = self._Targets[p_Objective]
 	if s_Known == nil then
 		s_Known = false
-		local s_BestCount = 0
-		for l_Name, l_Zone in pairs(m_NavZones:GetZones()) do
-			if self._Ends[l_Name] ~= nil then
-				local s_Count = 0
-				for l_Index = 1, #l_Zone.Junctions do
-					local s_Waypoint = l_Zone.Junctions[l_Index].Waypoint
-					local s_First = s_Waypoint and m_NodeCollection:GetFirst(s_Waypoint.PathIndex)
-					local s_Data = type(s_First) == 'table' and s_First.Data or nil
-					if s_Data ~= nil and s_Data.Nav == nil and table.has(s_Data.Objectives or {}, p_Objective) then
-						s_Count = s_Count + 1
-					end
-				end
-				-- Zones overlap: "mcom 1 interact" belongs to "mcom 1".
-				if s_Count > 0 and p_Objective:sub(1, #l_Name + 1) == l_Name .. ' ' then
-					s_Count = s_Count + 1000
-				end
-				if s_Count > s_BestCount then
-					s_BestCount = s_Count
-					s_Known = l_Name
+		local s_Zone = m_NavZones:GetZone(p_Objective)
+		if s_Zone ~= nil and #s_Zone.Inside > 0 then
+			s_Known = { Zone = s_Zone, Points = s_Zone.Inside }
+		else
+			local s_Points = {}
+			local s_Junctions = {}
+			for l_Index = 1, #s_Mesh.Junctions do
+				local l_Junction = s_Mesh.Junctions[l_Index]
+				local s_First = l_Junction.Waypoint and m_NodeCollection:GetFirst(l_Junction.Waypoint.PathIndex)
+				local s_Data = type(s_First) == 'table' and s_First.Data or nil
+				if s_Data ~= nil and s_Data.Nav == nil and table.has(s_Data.Objectives or {}, p_Objective)
+					and s_Junctions[l_Junction.Point] == nil then
+					s_Points[#s_Points + 1] = l_Junction.Point
+					s_Junctions[l_Junction.Point] = l_Junction
 				end
 			end
+			if #s_Points > 0 then
+				s_Known = { Points = s_Points, Junctions = s_Junctions }
+			end
 		end
-		self._TargetZones[p_Objective] = s_Known
+		self._Targets[p_Objective] = s_Known
 	end
 	return s_Known or nil
 end
 
----Whether bots get to the objective over the navigation paths (ZoneFor).
+---Whether bots get to the objective over the mesh and the navigation paths (Target).
 ---@param p_Objective string|nil
 ---@return boolean
 function NavRoutes:Knows(p_Objective)
-	return self:ZoneFor(p_Objective) ~= nil
+	return self:Target(p_Objective) ~= nil
 end
 
----@param p_Zone NavZone
+---The point of the target in the part of the mesh, closest to the position. nil if none is in it.
+---@param p_Target NavTarget
+---@param p_Part integer|nil
+---@param p_Position Vec3
+---@return integer|nil, number
+local function _TargetIn(p_Target, p_Part, p_Position)
+	local s_Mesh = m_NavZones:GetMesh()
+	---@cast s_Mesh -nil
+	local s_Best = nil
+	local s_BestDistance = math.huge
+	for l_Index = 1, #p_Target.Points do
+		local l_Point = p_Target.Points[l_Index]
+		if s_Mesh.Part[l_Point] == p_Part then
+			local s_Distance = p_Position:Distance(s_Mesh.Points[l_Point].Position)
+			if s_Distance < s_BestDistance then
+				s_Best = l_Point
+				s_BestDistance = s_Distance
+			end
+		end
+	end
+	return s_Best, s_BestDistance
+end
+
+---The ends of navigation paths the bot can walk to from the point over the mesh (same part), with the cost.
 ---@param p_Point integer
----@return Vec3
-local function _PointPosition(p_Zone, p_Point)
-	return p_Zone.Points[p_Point].Position
+---@param p_Start number cost so far
+---@param p_Except NavRouteEnd|nil
+---@return { End: NavRouteEnd, Cost: number }[]
+function NavRoutes:_Departures(p_Point, p_Start, p_Except)
+	local s_Mesh = m_NavZones:GetMesh()
+	---@cast s_Mesh -nil
+	local s_Result = {}
+	local s_Part = s_Mesh.Part[p_Point]
+	local s_From = s_Mesh.Points[p_Point].Position
+	for l_Index = 1, #self._Ends do
+		local l_End = self._Ends[l_Index]
+		if l_End ~= p_Except and s_Mesh.Part[l_End.Junction.Point] == s_Part then
+			s_Result[#s_Result + 1] = {
+				End = l_End,
+				Cost = p_Start + (self._Penalty[l_End.Junction] or 0.0)
+					+ s_From:Distance(s_Mesh.Points[l_End.Junction.Point].Position),
+			}
+		end
+	end
+	return s_Result
 end
 
 ---Dijkstra over the ends. p_Departures: ends the bot can leave over, with what it costs to get there. Returns the
----cost to the zone of the objective and the first end of that route.
+---cost to the target and the first end of that route.
 ---@param p_Departures { End: NavRouteEnd, Cost: number }[]
----@param p_Target string
----@param p_Visited table<string, boolean>|nil zones the bot crossed already on its way (REVISIT_PENALTY)
+---@param p_Target NavTarget
 ---@return number, NavRouteEnd|nil
-function NavRoutes:_Search(p_Departures, p_Target, p_Visited)
+function NavRoutes:_Search(p_Departures, p_Target)
+	local s_Mesh = m_NavZones:GetMesh()
+	---@cast s_Mesh -nil
 	local s_Cost = {}
 	local s_First = {}
 	local s_Done = {}
@@ -218,9 +260,11 @@ function NavRoutes:_Search(p_Departures, p_Target, p_Visited)
 	for l_Index = 1, #p_Departures do
 		local l_Departure = p_Departures[l_Index]
 		if s_Cost[l_Departure.End] == nil or l_Departure.Cost < s_Cost[l_Departure.End] then
+			if s_Cost[l_Departure.End] == nil then
+				s_Open[#s_Open + 1] = l_Departure.End
+			end
 			s_Cost[l_Departure.End] = l_Departure.Cost
 			s_First[l_Departure.End] = l_Departure.End
-			s_Open[#s_Open + 1] = l_Departure.End
 		end
 	end
 
@@ -245,33 +289,25 @@ function NavRoutes:_Search(p_Departures, p_Target, p_Visited)
 		if not s_Done[s_End] then
 			s_Done[s_End] = true
 			local s_Arrival = s_End.Other
-			---@cast s_Arrival -nil
+			local s_ArrivalPoint = s_Arrival.Junction.Point
 			local s_Total = s_Cost[s_End] + s_End.Path.Length
-			if p_Visited ~= nil and p_Visited[s_Arrival.Zone.Name] then
-				s_Total = s_Total + REVISIT_PENALTY
-			end
-			if s_Arrival.Zone.Name == p_Target then
-				if s_Total < s_Best then
-					s_Best = s_Total
+			local s_Found, s_Distance = _TargetIn(p_Target, s_Mesh.Part[s_ArrivalPoint],
+				s_Mesh.Points[s_ArrivalPoint].Position)
+			if s_Found ~= nil then
+				if s_Total + s_Distance < s_Best then
+					s_Best = s_Total + s_Distance
 					s_BestFirst = s_First[s_End]
 				end
 			else
-				local s_Part = s_Arrival.Zone.Part[s_Arrival.Junction.Point]
-				local s_From = _PointPosition(s_Arrival.Zone, s_Arrival.Junction.Point)
-				local s_Ends = self._Ends[s_Arrival.Zone.Name] or {}
-				for l_Index = 1, #s_Ends do
-					local l_Next = s_Ends[l_Index]
-					if l_Next ~= s_Arrival and not s_Done[l_Next]
-						and s_Arrival.Zone.Part[l_Next.Junction.Point] == s_Part then
-						local s_Next = s_Total + ZONE_CROSSING + (self._Penalty[l_Next.Junction] or 0.0)
-							+ s_From:Distance(_PointPosition(l_Next.Zone, l_Next.Junction.Point))
-						if s_Cost[l_Next] == nil or s_Next < s_Cost[l_Next] then
-							if s_Cost[l_Next] == nil then
-								s_Open[#s_Open + 1] = l_Next
-							end
-							s_Cost[l_Next] = s_Next
-							s_First[l_Next] = s_First[s_End]
+				local s_Next = self:_Departures(s_ArrivalPoint, s_Total + MESH_CROSSING, s_Arrival)
+				for l_Index = 1, #s_Next do
+					local l_Next = s_Next[l_Index]
+					if not s_Done[l_Next.End] and (s_Cost[l_Next.End] == nil or l_Next.Cost < s_Cost[l_Next.End]) then
+						if s_Cost[l_Next.End] == nil then
+							s_Open[#s_Open + 1] = l_Next.End
 						end
+						s_Cost[l_Next.End] = l_Next.Cost
+						s_First[l_Next.End] = s_First[s_End]
 					end
 				end
 			end
@@ -280,75 +316,65 @@ function NavRoutes:_Search(p_Departures, p_Target, p_Visited)
 	return s_Best, s_BestFirst
 end
 
----The ends of navigation paths in the zone the bot can walk to from the point (same part of the network).
----@param p_Zone NavZone
+---Where to go next from the point of the mesh, for the objective: over the mesh to a point of its zone (Zone, Point),
+---or to the junction of a path (Exit: of a navigation path, or of a path of the objective). nil if the objective has no
+---target on the mesh or no route leads there.
 ---@param p_Point integer
----@param p_Start number cost so far
----@param p_Except NavRouteEnd|nil
----@return { End: NavRouteEnd, Cost: number }[]
-function NavRoutes:_Departures(p_Zone, p_Point, p_Start, p_Except)
-	local s_Result = {}
-	local s_Part = p_Zone.Part[p_Point]
-	local s_From = _PointPosition(p_Zone, p_Point)
-	local s_Ends = self._Ends[p_Zone.Name] or {}
-	for l_Index = 1, #s_Ends do
-		local l_End = s_Ends[l_Index]
-		if l_End ~= p_Except and l_End.Zone == p_Zone and p_Zone.Part[l_End.Junction.Point] == s_Part then
-			s_Result[#s_Result + 1] = {
-				End = l_End,
-				Cost = p_Start + (self._Penalty[l_End.Junction] or 0.0)
-					+ s_From:Distance(_PointPosition(p_Zone, l_End.Junction.Point)),
-			}
-		end
-	end
-	return s_Result
-end
-
----The junction to leave the zone over, towards the objective. nil if the objective isn't a zone of the graph or no
----route leads there.
----@param p_Zone NavZone
----@param p_Point integer where the bot is in the zone
 ---@param p_Objective string
----@param p_Visited table<string, boolean>|nil zones the bot crossed already on its way there
----@return NavZoneJunction|nil
-function NavRoutes:NextExit(p_Zone, p_Point, p_Objective, p_Visited)
-	local s_Target = self:ZoneFor(p_Objective)
-	if s_Target == nil or p_Zone.Name == s_Target or p_Zone.Points[p_Point] == nil then
+---@return NavStep|nil
+function NavRoutes:Next(p_Point, p_Objective)
+	local s_Target = self:Target(p_Objective)
+	local s_Mesh = m_NavZones:GetMesh()
+	if s_Target == nil or s_Mesh == nil or s_Mesh.Points[p_Point] == nil then
 		return nil
 	end
-	local _, s_First = self:_Search(self:_Departures(p_Zone, p_Point, 0.0, nil), s_Target, p_Visited)
-	return s_First and s_First.Junction or nil
+	local s_Found = _TargetIn(s_Target, s_Mesh.Part[p_Point], s_Mesh.Points[p_Point].Position)
+	if s_Found ~= nil then
+		if s_Target.Zone ~= nil then
+			return { Zone = s_Target.Zone, Point = s_Found }
+		end
+		local s_Junctions = s_Target.Junctions
+		---@cast s_Junctions -nil
+		return { Exit = s_Junctions[s_Found] }
+	end
+	local _, s_First = self:_Search(self:_Departures(p_Point, 0.0, nil), s_Target)
+	if s_First == nil then
+		return nil
+	end
+	return { Exit = s_First.Junction }
 end
 
----What it costs from the end of a path (the bot arrives there) to the zone of the objective.
+---What it costs from the end of a path (the bot arrives there) to the target.
 ---@param p_Arrival NavRouteEnd
----@param p_Objective string
+---@param p_Target NavTarget
 ---@return number
-function NavRoutes:_FromArrival(p_Arrival, p_Objective)
-	if p_Arrival.Zone.Name == p_Objective then
-		return 0.0
+function NavRoutes:_FromArrival(p_Arrival, p_Target)
+	local s_Mesh = m_NavZones:GetMesh()
+	---@cast s_Mesh -nil
+	local s_Point = p_Arrival.Junction.Point
+	local s_Found, s_Distance = _TargetIn(p_Target, s_Mesh.Part[s_Point], s_Mesh.Points[s_Point].Position)
+	if s_Found ~= nil then
+		return s_Distance
 	end
-	local s_Cost = self:_Search(self:_Departures(p_Arrival.Zone, p_Arrival.Junction.Point, ZONE_CROSSING, p_Arrival),
-		p_Objective)
+	local s_Cost = self:_Search(self:_Departures(s_Point, MESH_CROSSING, p_Arrival), p_Target)
 	return s_Cost
 end
 
 ---On a navigation path: which way leads to the objective. 'Next' (towards the last waypoint), 'Previous' or nil if
----the path isn't a navigation path or the objective not in the graph.
+---the path isn't a navigation path or the objective has no target on the mesh.
 ---@param p_Waypoint Waypoint
 ---@param p_Objective string
 ---@return string|nil
 function NavRoutes:Direction(p_Waypoint, p_Objective)
 	local s_Path = self:GetPath(p_Waypoint and p_Waypoint.PathIndex)
-	local s_Target = self:ZoneFor(p_Objective)
+	local s_Target = self:Target(p_Objective)
 	if s_Path == nil or s_Target == nil then
 		return nil
 	end
-	p_Objective = s_Target
 	local s_Count = #(m_NodeCollection:Get(nil, s_Path.PathIndex) or {})
 	local s_Share = s_Count > 1 and (p_Waypoint.PointIndex - 1) / (s_Count - 1) or 0.0
-	local s_Forward = (1.0 - s_Share) * s_Path.Length + self:_FromArrival(s_Path.Finish, p_Objective)
-	local s_Back = s_Share * s_Path.Length + self:_FromArrival(s_Path.Start, p_Objective)
+	local s_Forward = (1.0 - s_Share) * s_Path.Length + self:_FromArrival(s_Path.Finish, s_Target)
+	local s_Back = s_Share * s_Path.Length + self:_FromArrival(s_Path.Start, s_Target)
 	if s_Forward == math.huge and s_Back == math.huge then
 		return nil
 	end
@@ -367,26 +393,10 @@ function NavRoutes:Heading(p_PathIndex, p_Inverted)
 	return p_Inverted and s_Path.Start or s_Path.Finish
 end
 
----A bot didn't get to the exit over the network: all bots take it less from now on.
+---A bot didn't get to the exit over the mesh: all bots take it less from now on.
 ---@param p_Junction NavZoneJunction
 function NavRoutes:BlockExit(p_Junction)
 	self._Penalty[p_Junction] = (self._Penalty[p_Junction] or 0.0) + EXIT_PENALTY
-end
-
----For the debug-bridge: the graph.
----@return table[]
-function NavRoutes:ToJson()
-	self:_Ensure()
-	local s_Result = {}
-	for l_PathIndex, l_Path in pairs(self._Paths) do
-		s_Result[#s_Result + 1] = {
-			path = l_PathIndex,
-			from = l_Path.Start.Zone.Name,
-			to = l_Path.Finish.Zone.Name,
-			length = l_Path.Length,
-		}
-	end
-	return s_Result
 end
 
 if g_NavRoutes == nil then

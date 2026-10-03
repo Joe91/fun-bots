@@ -10,6 +10,9 @@ import json
 
 from loguru import logger
 
+# The one row of a <map>_navzones table: the whole mesh (NavZones.lua).
+NAVMESH_ROW = "@mesh"
+
 
 def set_permission_config_files(cursor: sqlite3.Cursor) -> None:
     """Write permission_and_config files out of the database.
@@ -230,10 +233,11 @@ def set_traces_db(cursor: sqlite3.Cursor) -> None:
 
 
 def set_navzones_db(cursor: sqlite3.Cursor) -> None:
-    """Write the walking networks of the zones into the database, out of the navzones folder.
+    """Write the walking meshes into the database, out of the navzones folder.
 
-    Each navzones/<map>.json becomes the table <map>_navzones with one row per zone (name, data as JSON), the format
-    NavZones.lua reads. Made by the debug-server (tools/debug-server, census/navzones.py).
+    Each navzones/<map>.json becomes the table <map>_navzones with one row: name "@mesh", data the whole mesh as JSON
+    (points, edges, junctions, the vehicle-mesh and the zones on it), the format NavZones.lua reads. Made by the
+    debug-server (tools/debug-server, census/navzones.py).
 
     Args:
         - cursor - The object that'll interact with the database
@@ -254,17 +258,14 @@ def set_navzones_db(cursor: sqlite3.Cursor) -> None:
             data = json.load(in_file)
         cursor.execute("DROP TABLE IF EXISTS " + table_name)
         cursor.execute("CREATE TABLE " + table_name + " (name TEXT, data TEXT)")
-        cursor.executemany(
+        cursor.execute(
             "INSERT INTO " + table_name + " (name, data) VALUES (?, ?)",
-            [
-                (str(zone.get("name")), json.dumps(zone, separators=(",", ":")))
-                for zone in data.get("zones") or []
-            ],
+            (NAVMESH_ROW, json.dumps(data, separators=(",", ":"))),
         )
 
 
 def set_navzones_files(cursor: sqlite3.Cursor) -> None:
-    """Write the walking networks of the zones out of the database, into navzones/<map>.json.
+    """Write the walking meshes out of the database, into navzones/<map>.json.
 
     Args:
         - cursor - The object that'll interact with the database
@@ -280,9 +281,13 @@ def set_navzones_files(cursor: sqlite3.Cursor) -> None:
         os.makedirs(dest_folder)
 
     for (table_name,) in tables:
+        rows = cursor.execute(
+            "SELECT data FROM " + table_name + " WHERE name = ?", (NAVMESH_ROW,)
+        ).fetchall()
+        if not rows:
+            continue
         logger.info("Export " + table_name)
-        rows = cursor.execute("SELECT data FROM " + table_name + " ORDER BY name").fetchall()
         map_name = table_name[: -len("_navzones")]
-        data = {"version": 1, "map": map_name, "zones": [json.loads(row[0]) for row in rows]}
+        data = json.loads(rows[0][0])
         with open(dest_folder + "/" + map_name + ".json", "w", encoding="utf-8") as out_file:
             json.dump(data, out_file, separators=(",", ":"))
