@@ -276,6 +276,11 @@ function drawPaths() {
 	for (const [index, path] of Object.entries(store.paths)) {
 		const points = path.points;
 		if (!points.length) continue;
+		// Navigation paths (cut at the zones, census/navpaths.py) lead from zone to zone: own color, "from -> to".
+		const nav = path.data && path.data[1] && path.data[1].Nav;
+		ctx.strokeStyle = nav ? "rgba(90, 200, 230, 0.8)" : "rgba(160, 170, 190, 0.55)";
+		ctx.fillStyle = nav ? "rgba(90, 200, 230, 0.95)" : "rgba(160, 170, 190, 0.8)";
+		ctx.lineWidth = nav ? 2 : 1.5;
 		ctx.beginPath();
 		ctx.moveTo(sx(points[0][0]), sy(points[0][2]));
 		for (let i = 1; i < points.length; i++) ctx.lineTo(sx(points[i][0]), sy(points[i][2]));
@@ -287,12 +292,31 @@ function drawPaths() {
 			const preview = store.labels && store.labels.paths[index];
 			const objectives = preview ? preview.objectives : path.objectives || [];
 			const changed = preview && objectives.join() !== (path.objectives || []).join();
-			const label = objectives.length ? `${index} ${objectives.join(", ")}` : index;
+			let label = objectives.length ? `${index} ${objectives.join(", ")}` : index;
+			if (nav && !changed) label = `${index} ${nav.From} \u2192 ${nav.To} (${Math.round(nav.Length || 0)} m)`;
 			if (changed) ctx.fillStyle = theme["accent"];
 			ctx.fillText(label, sx(points[0][0]) + 4, sy(points[0][2]) - 4);
-			if (changed) ctx.fillStyle = "rgba(160, 170, 190, 0.8)";
 		}
 	}
+	ctx.lineWidth = 1.5;
+}
+
+// Convex hull of [x, y, z] points on the map plane (x, z), counter-clockwise.
+function hull(points) {
+	const sorted = [...points].sort((a, b) => a[0] - b[0] || a[2] - b[2]);
+	if (sorted.length < 3) return sorted;
+	const cross = (o, a, b) => (a[0] - o[0]) * (b[2] - o[2]) - (a[2] - o[2]) * (b[0] - o[0]);
+	const lower = [];
+	for (const p of sorted) {
+		while (lower.length >= 2 && cross(lower[lower.length - 2], lower[lower.length - 1], p) <= 0) lower.pop();
+		lower.push(p);
+	}
+	const upper = [];
+	for (const p of sorted.reverse()) {
+		while (upper.length >= 2 && cross(upper[upper.length - 2], upper[upper.length - 1], p) <= 0) upper.pop();
+		upper.push(p);
+	}
+	return lower.slice(0, -1).concat(upper.slice(0, -1));
 }
 
 // Point of a path, [x, y, z].
@@ -310,6 +334,19 @@ function drawNavzones() {
 	if (!data) return;
 	const radius = view.scale > 3 ? 3 : 2;
 	ctx.lineWidth = 1.2;
+	// The areas of the zones first (the hull of their points in the zone), under everything else.
+	for (const zone of data.zones || []) {
+		const area = hull((zone.points || []).filter((p) => p[5] & 1));
+		if (area.length < 3) continue;
+		ctx.fillStyle = zone.kind === "base" ? "rgba(90, 162, 255, 0.10)" : zone.kind === "mcom" ? "rgba(245, 184, 65, 0.12)" : "rgba(80, 200, 120, 0.12)";
+		ctx.strokeStyle = zone.kind === "base" ? "rgba(90, 162, 255, 0.5)" : zone.kind === "mcom" ? "rgba(245, 184, 65, 0.55)" : "rgba(80, 200, 120, 0.55)";
+		ctx.beginPath();
+		ctx.moveTo(sx(area[0][0]), sy(area[0][2]));
+		for (const p of area.slice(1)) ctx.lineTo(sx(p[0]), sy(p[2]));
+		ctx.closePath();
+		ctx.fill();
+		ctx.stroke();
+	}
 	for (const zone of data.zones || []) {
 		const points = zone.points || [];
 		for (const [a, b, , corners] of zone.edges || []) {

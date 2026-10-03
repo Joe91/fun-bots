@@ -349,9 +349,10 @@ def _round(pos) -> list[float]:
 
 def _network(grid: _Area, clearance: dict[Surface, float], allowed: set[Surface],
              walked: list[tuple[int, int, list[float], Surface | None]], nodes: _Nodes, inside, profile: Profile,
-             cover: bool) -> dict:
+             cover: bool, attached: tuple[list, _Nodes] | None = None) -> dict:
     """Points, connections and junctions over the allowed surfaces. walked: the waypoints in the area that choose the
-    parts that are kept and get attached ([path, point, position, surface])."""
+    parts that are kept and get attached ([path, point, position, surface]). attached: other waypoints to attach instead
+    (walked, nodes), e.g. the paths cut at the zones (navpaths.py), while the parts still come from the census."""
     components = [component for component in _components(grid, allowed) if len(component) >= MIN_COMPONENT]
     seeds = {key for _, _, _, key in walked if key is not None}
     kept = [component for component in components if component & seeds]
@@ -398,6 +399,8 @@ def _network(grid: _Area, clearance: dict[Surface, float], allowed: set[Surface]
     # Junctions with the waypoints: where a path enters, leaves or ends in the area.
     attach = []
     unattached = 0
+    if attached is not None:
+        walked, nodes = attached
     by_path: dict[int, list[tuple[int, list[float], Surface | None]]] = defaultdict(list)
     for path, point, pos, key in walked:
         by_path[path].append((point, pos, key))
@@ -507,13 +510,17 @@ def _walked(grid: _Area, area: dict, nodes: _Nodes, paths: set[int], height: flo
     return walked
 
 
-def build_zone(census: dict, area: dict, nodes: _Nodes) -> dict:
+def build_zone(census: dict, area: dict, nodes: _Nodes, attach: _Nodes | None = None) -> dict:
+    """attach: other waypoints to attach the networks to than the ones of the census (the paths cut at the zones)."""
     grid = _Area(area)
     clearance = _clearance(grid)
     inside, zone_source = _zone_test(census, area)
 
+    def attached(paths: set[int], height: float) -> tuple[list, _Nodes] | None:
+        return None if attach is None else (_walked(grid, area, attach, paths, height), attach)
+
     soldier = _network(grid, clearance, set(grid.surfaces), _walked(grid, area, nodes, nodes.foot, ATTACH_HEIGHT),
-                       nodes, inside, SOLDIER, True)
+                       nodes, inside, SOLDIER, True, attached(attach.foot, ATTACH_HEIGHT) if attach else None)
 
     # Land vehicles: wide, open, not too steep. The waypoints of vehicle-paths are the position of the vehicle, about a
     # metre above the ground.
@@ -522,8 +529,12 @@ def build_zone(census: dict, area: dict, nodes: _Nodes) -> dict:
     allowed = {key for key, (_, normal, _, headroom) in grid.surfaces.items()
                if clearance.get(key, 0.0) >= VEHICLE_CLEARANCE and normal >= VEHICLE_NORMAL_Y
                and (headroom < 0 or headroom >= VEHICLE_HEADROOM)}
+    land_attached = None
+    if attach is not None:
+        land_attached = attached({path for path, entry in attach.paths.items()
+                                  if "land" in [str(name).lower() for name in entry.get("vehicles") or []]}, 3.0)
     vehicle = _network(grid, clearance, allowed, _walked(grid, area, nodes, land, 3.0), nodes, inside, VEHICLE,
-                       False) if land else None
+                       False, land_attached) if land else None
 
     zone = {
         "name": area.get("name"),
@@ -541,10 +552,12 @@ def build_zone(census: dict, area: dict, nodes: _Nodes) -> dict:
     return zone
 
 
-def build(census: dict) -> dict:
-    """The networks of all areas of a census."""
+def build(census: dict, attach: dict | None = None) -> dict:
+    """The networks of all areas of a census. attach: other waypoints to attach them to ({path: {"points", "vehicles",
+    "objectives"}}, e.g. the paths cut at the zones), the parts of the networks still come from the census."""
     nodes = _Nodes(census)
-    zones = [build_zone(census, area, nodes) for area in census.get("areas") or []]
+    attach_nodes = _Nodes({"nodes": attach}) if attach is not None else None
+    zones = [build_zone(census, area, nodes, attach_nodes) for area in census.get("areas") or []]
     return {"version": VERSION, "map": census.get("paths"), "spacing": SPACING, "zones": zones}
 
 
@@ -568,8 +581,8 @@ def save(data: dict, file: Path) -> None:
 
 
 def load_or_build(file: Path) -> dict:
-    """A saved network (.navzones.json), or the networks of a census (.json.gz)."""
-    if file.name.endswith(".navzones.json"):
+    """Saved networks (.navzones.json, navzones/<map>.json), or the networks of a census (.json.gz)."""
+    if file.name.endswith(".json"):
         return json.loads(file.read_text(encoding="utf-8"))
     from .store import load
     return build(load(file))

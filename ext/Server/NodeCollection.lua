@@ -1706,6 +1706,14 @@ function NodeCollection:ObjectiveDirection(p_Waypoint, p_Objective, p_InVehicle)
 		return nil, nil
 	end
 
+	-- On a navigation path: the way of the route over the zones (NavRoutes, loaded after this file).
+	if not p_InVehicle and g_NavRoutes ~= nil then
+		local s_NavDirection = g_NavRoutes:Direction(p_Waypoint, p_Objective)
+		if s_NavDirection ~= nil then
+			return s_NavDirection, p_Waypoint
+		end
+	end
+
 	local s_BestDirection = nil
 	local s_BestWaypoint = nil
 
@@ -1769,6 +1777,20 @@ function NodeCollection:ParseObjectives()
 			end
 
 			self._Objectives[s_Objective][#self._Objectives[s_Objective] + 1] = l_PathIndex
+		end
+	end
+
+	-- Paths cut at the zones (navigation paths, NavRoutes) have two objectives, the zones have no paths of their own:
+	-- their objectives are known without paths (positions from the zones, GameDirector). Not the spawns of the game.
+	for l_PathIndex, _ in pairs(self._WaypointsByPathIndex) do
+		local s_PathWaypoint = self._WaypointsByPathIndex[l_PathIndex][1]
+		if s_PathWaypoint ~= nil and s_PathWaypoint.Data.Nav ~= nil and s_PathWaypoint.Data.Objectives ~= nil then
+			for l_Index = 1, #s_PathWaypoint.Data.Objectives do
+				local l_Objective = s_PathWaypoint.Data.Objectives[l_Index]
+				if self._Objectives[l_Objective] == nil and l_Objective:lower():sub(1, 6) ~= 'spawn ' then
+					self._Objectives[l_Objective] = {}
+				end
+			end
 		end
 	end
 end

@@ -27,6 +27,8 @@ local JUNCTION_TOLERANCE = 1.0
 local FLOOR_HEIGHT = 1.5
 -- Extra cost of a connection a bot got stuck on, per time (all bots avoid it then, until the level ends).
 local BLOCKED_PENALTY = 50.0
+-- Given up this many times, a connection is removed (until the level ends).
+local REMOVE_AFTER = 3
 
 ---@class NavZonePoint
 ---@field Index integer
@@ -48,11 +50,12 @@ local BLOCKED_PENALTY = 50.0
 ---@field Kind string capturepoint | mcom
 ---@field Center Vec3
 ---@field Points NavZonePoint[]
----@field Neighbours table<integer, { To: integer, Cost: number, Corners: Vec3[], Penalty: number }[]>
+---@field Neighbours table<integer, { To: integer, Cost: number, Corners: Vec3[], Penalty: number, Removed: boolean|nil }[]>
 ---@field Inside integer[] the points in the zone
 ---@field Junctions NavZoneJunction[]
 ---@field Vehicle NavZone|nil the network of the land vehicles in the zone
 ---@field Part table<integer, integer> point -> number of its connected part (points of different parts have no way)
+---@field ByWaypoint table<string, NavZoneJunction>|nil waypoint-ID -> junction, set by _LinkJunctions
 
 function NavZones:__init()
 	self:Clear()
@@ -66,6 +69,8 @@ function NavZones:Clear()
 	---waypoint-ID -> { Zone (the vehicle-network), Junction }
 	self._VehicleJunctions = {}
 	self._Count = 0
+	-- Counts up whenever the networks or their junctions change (NavRoutes builds its graph anew then).
+	self._Version = (self._Version or 0) + 1
 end
 
 -- =============================================
@@ -147,6 +152,31 @@ end
 ---@param p_Kind string
 ---@param p_Center Vec3
 ---@return NavZone
+---Connected parts: a bot only goes where a way leads. Connections given up for good (Removed) don't connect.
+---@param p_Zone NavZone
+local function _ComputeParts(p_Zone)
+	p_Zone.Part = {}
+	local s_PartCount = 0
+	for l_Start = 1, #p_Zone.Points do
+		if p_Zone.Part[l_Start] == nil then
+			s_PartCount = s_PartCount + 1
+			p_Zone.Part[l_Start] = s_PartCount
+			local s_Stack = { l_Start }
+			while #s_Stack > 0 do
+				local s_Current = table.remove(s_Stack)
+				local s_Neighbours = p_Zone.Neighbours[s_Current]
+				for l_Index = 1, #s_Neighbours do
+					local s_Next = s_Neighbours[l_Index].To
+					if p_Zone.Part[s_Next] == nil and not s_Neighbours[l_Index].Removed then
+						p_Zone.Part[s_Next] = s_PartCount
+						s_Stack[#s_Stack + 1] = s_Next
+					end
+				end
+			end
+		end
+	end
+end
+
 local function _ParseNetwork(p_Data, p_Name, p_Kind, p_Center)
 	---@type NavZone
 	local s_Zone = {
@@ -215,28 +245,7 @@ local function _ParseNetwork(p_Data, p_Name, p_Kind, p_Center)
 		}
 	end
 
-	-- Connected parts: a bot only goes where a way leads.
-	s_Zone.Part = {}
-	local s_PartCount = 0
-	for l_Start = 1, #s_Zone.Points do
-		if s_Zone.Part[l_Start] == nil then
-			s_PartCount = s_PartCount + 1
-			s_Zone.Part[l_Start] = s_PartCount
-			local s_Stack = { l_Start }
-			while #s_Stack > 0 do
-				local s_Current = table.remove(s_Stack)
-				local s_Neighbours = s_Zone.Neighbours[s_Current]
-				for l_Index = 1, #s_Neighbours do
-					local s_Next = s_Neighbours[l_Index].To
-					if s_Zone.Part[s_Next] == nil then
-						s_Zone.Part[s_Next] = s_PartCount
-						s_Stack[#s_Stack + 1] = s_Next
-					end
-				end
-			end
-		end
-	end
-
+	_ComputeParts(s_Zone)
 	return s_Zone
 end
 
@@ -269,6 +278,7 @@ function NavZones:_LinkJunctions()
 
 	local function _Link(p_Zone, p_Lookup)
 		local s_Valid = {}
+		p_Zone.ByWaypoint = {}
 		for l_Index = 1, #p_Zone.Junctions do
 			local l_Junction = p_Zone.Junctions[l_Index]
 			local s_Waypoints = s_Paths[l_Junction.PathIndex]
@@ -277,6 +287,7 @@ function NavZones:_LinkJunctions()
 				and s_Waypoint.Position:Distance(l_Junction.Position) <= JUNCTION_TOLERANCE then
 				l_Junction.Waypoint = s_Waypoint
 				s_Valid[#s_Valid + 1] = l_Junction
+				p_Zone.ByWaypoint[s_Waypoint.ID] = l_Junction
 				p_Lookup[s_Waypoint.ID] = { Zone = p_Zone, Junction = l_Junction }
 				s_Count = s_Count + 1
 			end
@@ -290,6 +301,7 @@ function NavZones:_LinkJunctions()
 			_Link(l_Zone.Vehicle, self._VehicleJunctions)
 		end
 	end
+	self._Version = self._Version + 1
 	return s_Count
 end
 
@@ -301,6 +313,11 @@ end
 ---@return NavZone|nil
 function NavZones:GetZone(p_Name)
 	return self._Zones[p_Name]
+end
+
+---@return integer changes whenever the networks or their junctions change
+function NavZones:GetVersion()
+	return self._Version
 end
 
 ---@return integer
@@ -328,6 +345,22 @@ function NavZones:GetJunction(p_Waypoint)
 		return nil
 	end
 	return self._Junctions[p_Waypoint.ID]
+end
+
+---The junction of this zone at the waypoint (a waypoint can be a junction of several zones that overlap).
+---@param p_Zone NavZone
+---@param p_Waypoint Waypoint
+---@return NavZoneJunction|nil
+function NavZones:GetJunctionIn(p_Zone, p_Waypoint)
+	if p_Zone.ByWaypoint == nil or p_Waypoint == nil or p_Waypoint.ID == nil then
+		return nil
+	end
+	return p_Zone.ByWaypoint[p_Waypoint.ID]
+end
+
+---@return table<string, NavZone>
+function NavZones:GetZones()
+	return self._Zones
 end
 
 ---The vehicle-network whose junction the waypoint (of a vehicle-path) is.
@@ -410,13 +443,24 @@ end
 ---@param p_A integer
 ---@param p_B integer
 function NavZones:BlockEdge(p_Zone, p_A, p_B)
+	local s_Removed = false
 	for _, l_Pair in ipairs({ { p_A, p_B }, { p_B, p_A } }) do
 		local s_Neighbours = p_Zone.Neighbours[l_Pair[1]] or {}
 		for l_Index = 1, #s_Neighbours do
-			if s_Neighbours[l_Index].To == l_Pair[2] then
-				s_Neighbours[l_Index].Penalty = s_Neighbours[l_Index].Penalty + BLOCKED_PENALTY
+			local l_Edge = s_Neighbours[l_Index]
+			if l_Edge.To == l_Pair[2] then
+				l_Edge.Penalty = l_Edge.Penalty + BLOCKED_PENALTY
+				-- Given up too often: no way at all, also not for goals and exits behind it (the parts change).
+				if not l_Edge.Removed and l_Edge.Penalty >= BLOCKED_PENALTY * REMOVE_AFTER then
+					l_Edge.Removed = true
+					s_Removed = true
+				end
 			end
 		end
+	end
+	if s_Removed then
+		_ComputeParts(p_Zone)
+		m_Logger:Write('zone ' .. p_Zone.Name .. ': connection ' .. p_A .. '-' .. p_B .. ' removed')
 	end
 end
 
@@ -493,7 +537,7 @@ function NavZones:Route(p_Zone, p_From, p_To)
 			for l_Index = 1, #s_Neighbours do
 				local l_Edge = s_Neighbours[l_Index]
 				local s_Cost = s_Costs[s_Current] + l_Edge.Cost + l_Edge.Penalty
-				if not s_Closed[l_Edge.To] and s_Cost < (s_Costs[l_Edge.To] or math.huge) then
+				if not l_Edge.Removed and not s_Closed[l_Edge.To] and s_Cost < (s_Costs[l_Edge.To] or math.huge) then
 					s_Costs[l_Edge.To] = s_Cost
 					s_Came[l_Edge.To] = s_Current
 					_Push({ s_Cost + s_Points[l_Edge.To].Position:Distance(s_Goal), l_Edge.To })

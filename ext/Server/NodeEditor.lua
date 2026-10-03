@@ -4,6 +4,8 @@ NodeEditor = class('NodeEditor')
 
 ---@type NodeCollection
 local m_NodeCollection = require('NodeCollection')
+---@type NavZones
+local m_NavZones = require('NavZones')
 ---@type PermissionManager
 local m_PermissionManager = require('PermissionManager')
 ---@type Logger
@@ -656,6 +658,42 @@ function NodeEditor:OnRequestData(p_Player)
 	-- To all editing players on purpose: when several trace at the same time, all need the new nodes.
 	self:SendToAllPlayers('ClientNodeEditor:ReceiveNodes', s_SerializedNodes)
 	print('[NodeEditor] Sent waypoints to client.')
+	self:SendNavZones()
+end
+
+---The walking networks of the zones (NavZones), one event per zone: points (position, flags), connections (with the
+---corners between them) and junctions (position of the waypoint, point).
+function NodeEditor:SendNavZones()
+	self:SendToAllPlayers('ClientNodeEditor:ClearNavZones', nil)
+	for _, l_Zone in pairs(m_NavZones:GetZones()) do
+		local s_Points = {}
+		for l_Index = 1, #l_Zone.Points do
+			local l_Point = l_Zone.Points[l_Index]
+			s_Points[l_Index] = { Position = l_Point.Position, Flags = l_Point.Flags }
+		end
+		local s_Edges = {}
+		for l_From, l_Neighbours in pairs(l_Zone.Neighbours) do
+			for l_Index = 1, #l_Neighbours do
+				local l_Neighbour = l_Neighbours[l_Index]
+				if l_Neighbour.To > l_From then
+					s_Edges[#s_Edges + 1] = { From = l_From, To = l_Neighbour.To, Corners = l_Neighbour.Corners }
+				end
+			end
+		end
+		local s_Junctions = {}
+		for l_Index = 1, #l_Zone.Junctions do
+			local l_Junction = l_Zone.Junctions[l_Index]
+			s_Junctions[l_Index] = { Position = l_Junction.Position, Point = l_Junction.Point }
+		end
+		self:SendToAllPlayers('ClientNodeEditor:ReceiveNavZone', {
+			Name = l_Zone.Name,
+			Kind = l_Zone.Kind,
+			Center = l_Zone.Center,
+			Points = s_Points,
+			Edges = s_Edges,
+			Junctions = s_Junctions,
+		})
+	end
 end
 
 function NodeEditor:RefreshCustomTracesOnClient()

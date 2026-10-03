@@ -182,18 +182,6 @@ class NavzonesTest(unittest.TestCase):
         zone = navzones.build(census)["zones"][0]
         self.assertTrue(self._connected(zone))
 
-    def test_cut_report(self):
-        from funbots_debug.census import cut
-        from funbots_debug.paths.mapfile import MapData
-        text = ("pathIndex;pointIndex;transX;transY;transZ;inputVar;data\n"
-                "1;1;0.0;0.0;0.0;3;{\"Objectives\":[\"a\"]}\n1;2;1.0;0.0;0.0;3;\n"
-                "2;1;0.0;0.0;0.0;3;{\"Objectives\":[\"a\",\"b\"]}\n2;2;100.0;0.0;0.0;3;\n"
-                "3;1;200.0;0.0;0.0;3;{\"Objectives\":[\"b\"]}\n3;2;201.0;0.0;0.0;3;\n"
-                "4;1;0.0;0.0;0.0;3;{\"Vehicles\":[\"land\"]}\n4;2;1.0;0.0;0.0;3;\n")
-        data = {"map": "x", "zones": [{"name": "a", "points": [[0.0, 0.0, 0.0, 1, 0, 1], [1.0, 0.0, 0.0, 1, 0, 1]]}]}
-        verdicts = {entry.path: entry.verdict for entry in cut.analyze(data, MapData.parse(text))}
-        self.assertEqual(verdicts, {1: "drop", 2: "cut", 3: "keep", 4: "fixed"})
-
 
 if __name__ == "__main__":
     unittest.main()

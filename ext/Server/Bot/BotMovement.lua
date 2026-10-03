@@ -6,6 +6,8 @@ local m_Utilities = require('__shared/Utilities')
 local m_PathSwitcher = require('PathSwitcher')
 ---@type NodeCollection
 local m_NodeCollection = require('NodeCollection')
+---@type NavRoutes
+local m_NavRoutes = require('NavRoutes')
 
 
 -- >>> SMART PATH OFFSET
@@ -661,6 +663,13 @@ function Bot:_CheckForAction(p_Point)
 end
 
 function Bot:_CheckAndDoPathSwitch(p_Point)
+	-- On a navigation path the bot walks on to the zone at its end, the route goes on from there (NavRoutes). Only for
+	-- other objectives (a vehicle, a beacon) it may switch.
+	if (self._Objective == '' or m_NavRoutes:Knows(self._Objective)) and m_NavRoutes:GetPath(self._PathIndex) ~= nil then
+		self._OnSwitch = false
+		return
+	end
+
 	-- CHECK FOR PATH-SWITCHES.
 	local s_NewWaypoint = nil
 	local s_SwitchPath = false

@@ -8,6 +8,8 @@ local m_NodeCollection = require('NodeCollection')
 local m_Utilities = require('__shared/Utilities')
 ---@type Vehicles
 local m_Vehicles = require("Vehicles")
+---@type NavZones
+local m_NavZones = require('NavZones')
 ---@type Logger
 local m_Logger = Logger("GameDirector", Debug.Server.GAMEDIRECTOR)
 
@@ -254,6 +256,12 @@ function GameDirector:OnEngineUpdate(p_DeltaTime)
 						-- Explore-paths are never active, bots take them on purpose (PathSwitcher): not a wrong path.
 						if #s_CurrentPathFirst.Data.Objectives == 1 and self:IsExplorePath(s_CurrentPathFirst.Data.Objectives[1]) then
 							s_CurrentPathStatus = 2
+						end
+						-- Navigation paths lead from zone to zone, whatever the state of their objectives (NavRoutes).
+						if s_CurrentPathFirst.Data.Nav ~= nil and g_NavRoutes ~= nil and g_NavRoutes:GetPath(l_Bot._PathIndex) ~= nil then
+							s_CurrentPathStatus = 2
+							s_OnBasePath = false
+							s_OnDestroyedPath = false
 						end
 					elseif s_CurrentPathFirst.Data.Vehicles and table.has(s_CurrentPathFirst.Data.Vehicles, "land") then
 						s_OnVehiclePath = true
@@ -2465,6 +2473,12 @@ function GameDirector:_GetDistanceFromObjective(p_Objective, p_Position)
 				end
 			end
 		end
+		-- Without a path of its own (cut at the zones): the middle of its zone.
+		local s_Zone = s_Distance == math.huge and m_NavZones:GetZone(p_Objective) or nil
+		if s_Zone ~= nil then
+			self.m_ObjectivePositions[p_Objective] = s_Zone.Center
+			s_Distance = p_Position:Distance(s_Zone.Center)
+		end
 	end
 
 	return s_Distance
@@ -2500,6 +2514,19 @@ function GameDirector:_TranslateMcom(p_Position)
 						end
 					end
 				end
+			end
+		end
+	end
+
+	-- MCOMs without paths of their own (cut at the zones): the zone around the MCOM.
+	for l_Name, _ in pairs(m_NodeCollection:GetKnownObjectives()) do
+		local s_Mcom = self:_GetObjectiveObject(l_Name)
+		local s_Zone = m_NavZones:GetZone(l_Name)
+		if s_Zone ~= nil and s_Zone.Kind == 'mcom' and s_Mcom ~= nil and s_Mcom.active and not s_Mcom.destroyed then
+			local s_Distance = p_Position:Distance(s_Zone.Center)
+			if s_ClosestDistance == nil or s_Distance < s_ClosestDistance then
+				s_ClosestDistance = s_Distance
+				s_ClosestObjective = s_Mcom.name
 			end
 		end
 	end
@@ -2548,6 +2575,19 @@ function GameDirector:_TranslateObjective(p_Position, p_Name)
 
 			s_PathsDone[l_Path] = true
 			::continue_paths_loop::
+		end
+
+		-- Without a path of its own (cut at the zones): the middle of its zone.
+		local s_Zone = m_NavZones:GetZone(l_Objective)
+		if s_Zone ~= nil and s_Zone.Kind ~= 'mcom' then
+			local s_TempObject = self:_GetObjectiveObject(l_Objective)
+			if s_TempObject == nil or s_TempObject.canBeCaptured then
+				local s_Distance = p_Position:Distance(s_Zone.Center)
+				if s_ClosestDistance == nil or s_ClosestDistance > s_Distance then
+					s_ClosestObjective = s_TempObject
+					s_ClosestDistance = s_Distance
+				end
+			end
 		end
 	end
 

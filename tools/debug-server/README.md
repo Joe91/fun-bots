@@ -386,14 +386,52 @@ game-server again after a crash (the level is tried once more):
 python -m funbots_debug.census run --all --modes ConquestSmall0,ConquestLarge0,RushLarge0 --warmup 180 --apply \
     --restart-command 'cd /home/jo/Games/vu/client && wine vu.com -gamepath "<BF3>" -serverInstancePath "$(winepath -w <instance>)" -server -dedicated -high60'
 ```
-`python -m funbots_debug.census cut ../../navzones/*.json -v` then lists which paths lie inside of zones (drop), run
-through them (cut) or have to stay (vehicles, actions): a dry run, nothing is changed.
 
 A point is `[x, y, z, clearance, cover, flags]`: clearance is the distance to the next wall, cover the number of the 8
 directions with a wall within 1.5 m, flags 1 = in the zone, 2 = indoors, 4 = crouch. A connection is
 `[a, b, length, corners]` (the corners of the way between the points, if it isn't straight). A junction is
 `[path, point, network-point, walking distance, position of the waypoint, corners]`, the corners of the way from the
 network-point to the waypoint (around the walls of the room of an MCOM, for example).
+
+### Navigation paths: cut at the zones
+
+With the networks, the waypoints only have to lead from zone to zone. `census/navpaths.py` turns the paths of a level
+into such navigation paths:
+```
+python -m funbots_debug.census navpaths MP_012_RushLarge0 -v                    # dry run: what it would do
+python -m funbots_debug.census navpaths MP_012_RushLarge0 --write --db ../../mod.db
+```
+1. Paths soldiers walk are cut where they enter a zone (capture point, MCOM, base, spawn). A piece between two zones
+   becomes a navigation path from the first waypoint in the one zone to the first one in the other. Pieces inside a zone
+   and pieces back into the same zone are dropped.
+2. A piece that ends outside of the zones (the path ends, or goes on over a link) is extended over paths and links to
+   the closest zone.
+3. Pieces along another navigation path between the same zones (70 % of the waypoints within 4 m) are dropped.
+4. Zones the paths connect without crossing a third zone, but the navigation paths don't (or only over a detour of
+   more than 1.5 times), get the shortest way between them, over roads (land vehicle paths) only where no path leads:
+   in rush the attackers spawn at their vehicles, far from any path.
+
+Paths with vehicles, actions (MCOM, vehicle, beacon), the ways to vehicles and beacons and air-paths stay as they are,
+their links to the cut paths move to the same waypoints of the navigation paths. A navigation path is walked back and
+forth; its first waypoint has `Objectives` (both zones) and `"Nav": {"From": zone at the first waypoint, "To": zone at
+the last one, "Length": metres}`. `--write` replaces `mapfiles/<map>.map` and `navzones/<map>.json`: the networks are
+made again from the census (`census/<map>.json.gz`, same parts as before) with junctions on the new paths. `--db` also
+writes the two tables of this level into `mod.db`. Paths whose end has no junction are listed; the bots don't use them.
+
+**In the game** (`ext/Server/NavRoutes.lua`): the navigation paths form a graph of the zones. Its nodes are the ends of
+the paths (their junctions with the networks); from an end a bot walks the path to its other end, and from there across
+the zone (20 m added per zone) to any end in the same part of that network. A bot in a zone whose objective is another
+zone leaves over the first path of the cheapest route (Dijkstra), walks it without switching paths, goes into the zone
+at its end whatever its objective, crosses it on the network and leaves over the next path. On a navigation path the
+direction comes from the route as well (`NodeCollection:ObjectiveDirection`). The zones are objectives of their own
+(`NodeCollection:ParseObjectives`), their positions come from the zones (`GameDirector`). An exit a bot doesn't get to
+costs 100 m more for all bots, the bot tries another one; a connection of a network given up three times is removed
+until the level ends (and with it the goals behind it).
+
+**On the map** the debug-server loads `navzones/<map>.json` of the running level on its own. Navigation paths are drawn
+cyan with `from → to (length)`, the zones as areas (the hull of their points in the zone: green capture points, blue
+bases, orange MCOMs). The node editor in the game draws the networks near the player as well (points, connections,
+junctions in orange, the name of the zone) and the navigation paths in cyan.
 
 ## Towards nav meshes
 

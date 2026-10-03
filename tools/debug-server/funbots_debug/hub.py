@@ -103,8 +103,10 @@ class Hub:
         self.census_report: Report | None = None
         # Size of the capture zones, from who is inside them (census/zones.py).
         self.zones = ZoneEstimator()
-        # Walking networks of the zones (census/navzones.py), shown on the map.
+        # Walking networks of the zones (census/navzones.py), shown on the map. Those of navzones/<level>_<mode>.json
+        # are loaded for the running level (once per level, _auto_navzones).
         self.navzones: dict | None = None
+        self._navzones_tried: str | None = None
 
     # --- mod-side ----------------------------------------------------------------------------------------------
 
@@ -175,6 +177,8 @@ class Hub:
                     "events": frame_events,
                 }))
 
+            self._auto_navzones(messages)
+
             if now - self._last_analysis > ANALYSIS_INTERVAL:
                 self._last_analysis = now
                 messages.append(("analysis", self._analysis()))
@@ -184,6 +188,22 @@ class Hub:
         self._publish(messages)
         return answer
 
+    def _auto_navzones(self, messages: list) -> None:
+        """The networks of the running level from navzones/ of the repository, if none are shown yet."""
+        name = self.state.meta.get("paths")
+        if self.navzones is not None or not name or name == self._navzones_tried or self.mapfiles is None:
+            return
+        self._navzones_tried = name
+        file = self.mapfiles.parent / "navzones" / f"{name}.json"
+        if not file.is_file():
+            return
+        try:
+            self.navzones = json.loads(file.read_text(encoding="utf-8"))
+        except (OSError, ValueError) as error:
+            print(f"navzones {file}: {error}")
+            return
+        messages.append(("navzones", self.navzones))
+
     def _reset(self, messages: list, already_reset: bool = False) -> None:
         if not already_reset:
             self.state.reset()
@@ -191,6 +211,7 @@ class Hub:
         self.census_report = None
         self.zones.reset()
         self.navzones = None
+        self._navzones_tried = None
         for analyzer in self.analyzers:
             analyzer.reset()
         if self.recorder is not None:

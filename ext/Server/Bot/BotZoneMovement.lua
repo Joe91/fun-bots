@@ -5,6 +5,8 @@
 
 ---@type NavZones
 local m_NavZones = require('NavZones')
+---@type NavRoutes
+local m_NavRoutes = require('NavRoutes')
 ---@type NodeCollection
 local m_NodeCollection = require('NodeCollection')
 ---@type PathSwitcher
@@ -14,7 +16,11 @@ local m_DebugBridge = require('Debug/DebugBridge')
 ---@type Logger
 local m_Logger = Logger('BotZoneMovement', Debug.Server.BOT)
 
-local ZONE_REACH = 0.8           -- Horizontal metres to a position that count as reached.
+local ZONE_REACH_POINT = 1.5     -- Horizontal metres to a point of the network (in the open, 5 m apart) that count as
+local ZONE_REACH_CORNER = 1.0    -- reached, and to a corner of the way between two points (around a wall).
+local ZONE_REACH_SPRINT = 1.3    -- Running, a bot reaches positions this many times as far away.
+local ZONE_TURN_DISTANCE = 3.0   -- Closer than this to the target and turned away more than ZONE_TURN_ANGLE, the bot
+local ZONE_TURN_ANGLE = 1.0      -- slows down until it faces the target: else it runs circles around it.
 local ZONE_REACH_HEIGHT = 1.5    -- Same as Registry.BOT.TARGET_HEIGHT_DISTANCE_WAYPOINT.
 local ZONE_MIN_PROGRESS = 0.3    -- Metres closer to the target that count as progress.
 local ZONE_JUMP_TIME = 1.5       -- Seconds without progress before a jump.
@@ -38,6 +44,7 @@ local ZONE_WAIT_VEHICLE = { 3.0, 8.0 } -- Seconds a vehicle stands at each point
 ---@field Stuck number
 ---@field JumpTimer number
 ---@field Fails integer
+---@field ExitFails integer exits given up (navigation paths): another one is taken
 ---@field Exit NavZoneJunction|nil
 ---@field SubObjective string|nil "mcom N interact" of an MCOM-zone
 ---@field SubTimer number
@@ -50,18 +57,50 @@ local ZONE_WAIT_VEHICLE = { 3.0, 8.0 } -- Seconds a vehicle stands at each point
 ---@param p_Point Waypoint (or an offset-point with the fields of its waypoint)
 ---@return boolean true if the bot is in the zone now
 function Bot:_CheckForZoneEntry(p_Point)
-	if not Registry.BOT.USE_ZONE_NETWORKS or self._Objective == '' or self.m_Zone ~= nil then
+	if not Registry.BOT.USE_ZONE_NETWORKS or self.m_Zone ~= nil then
 		return false
 	end
 
-	local s_Entry = m_NavZones:GetJunction(p_Point.Original or p_Point)
-	if s_Entry == nil or s_Entry.Zone.Name ~= self._Objective
-		or (s_Entry.Zone.Kind ~= 'capturepoint' and s_Entry.Zone.Kind ~= 'mcom') then
+	-- On a navigation path the bot goes into the zone at the end it walks to, whatever its objective: to stay there, or
+	-- to cross it on the way to the next navigation path (NavRoutes).
+	local s_Waypoint = p_Point.Original or p_Point
+	local s_Heading = m_NavRoutes:Heading(s_Waypoint.PathIndex, self._InvertPathDirection)
+	if s_Heading ~= nil then
+		local s_Junction = m_NavZones:GetJunctionIn(s_Heading.Zone, s_Waypoint)
+		if s_Junction ~= nil then
+			self:_EnterZone(s_Heading.Zone, s_Junction.Point, false, s_Junction)
+			return true
+		end
+	end
+
+	if self._Objective == '' then
 		return false
 	end
 
-	self:_EnterZone(s_Entry.Zone, s_Entry.Junction.Point, false, s_Entry.Junction)
-	return true
+	-- Into the zone of the objective (zones overlap: the junction of that zone, not just any one at the waypoint).
+	local s_Zone = m_NavZones:GetZone(self._Objective)
+	if s_Zone ~= nil and (s_Zone.Kind == 'capturepoint' or s_Zone.Kind == 'mcom') then
+		local s_Junction = m_NavZones:GetJunctionIn(s_Zone, s_Waypoint)
+		if s_Junction ~= nil then
+			self:_EnterZone(s_Zone, s_Junction.Point, false, s_Junction)
+			return true
+		end
+	end
+
+	-- On another path (not a navigation path, not one of the objective, e.g. the way to arm an MCOM after its
+	-- objective changed): back onto the network at a junction, the route goes on from there (NavRoutes).
+	if m_NavRoutes:Knows(self._Objective) and m_NavRoutes:GetPath(s_Waypoint.PathIndex) == nil then
+		local s_First = m_NodeCollection:GetFirst(s_Waypoint.PathIndex)
+		local s_Data = type(s_First) == 'table' and s_First.Data or nil
+		if s_Data == nil or not table.has(s_Data.Objectives or {}, self._Objective) then
+			local s_Entry = m_NavZones:GetJunction(s_Waypoint)
+			if s_Entry ~= nil then
+				self:_EnterZone(s_Entry.Zone, s_Entry.Junction.Point, false, s_Entry.Junction)
+				return true
+			end
+		end
+	end
+	return false
 end
 
 -- A spawn-point of the game this far from a point of a network: the bot walks straight to it and starts on the network.
@@ -93,12 +132,17 @@ function Bot:_CheckForVehicleZoneEntry(p_Point)
 		return false
 	end
 
-	local s_Entry = m_NavZones:GetVehicleJunction(p_Point)
-	if s_Entry == nil or s_Entry.Zone.Name ~= self._Objective or s_Entry.Zone.Kind ~= 'capturepoint' then
+	local s_Zone = m_NavZones:GetZone(self._Objective)
+	if s_Zone == nil or s_Zone.Kind ~= 'capturepoint' or s_Zone.Vehicle == nil then
+		return false
+	end
+	local s_Junction = m_NavZones:GetJunctionIn(s_Zone.Vehicle, p_Point)
+	if s_Junction == nil then
 		return false
 	end
 
-	self:_EnterZone(s_Entry.Zone, s_Entry.Junction.Point, true, s_Entry.Junction)
+	-- The vehicle-network is a zone of its own (NavZones:_AddZone).
+	self:_EnterZone(s_Zone.Vehicle, s_Junction.Point, true, s_Junction)
 	return true
 end
 
@@ -122,6 +166,7 @@ function Bot:_EnterZone(p_Zone, p_Point, p_Vehicle, p_Junction)
 		Stuck = 0.0,
 		JumpTimer = 0.0,
 		Fails = 0,
+		ExitFails = 0,
 		Exit = nil,
 		-- The MCOM is armed and disarmed at the action-node of the path "mcom N interact" (a junction of the zone).
 		SubObjective = not p_Vehicle and p_Zone.Kind == 'mcom' and g_GameDirector:_GetSubObjectiveFromObj(p_Zone.Name) or nil,
@@ -206,13 +251,21 @@ function Bot:_ZoneReplan(p_NewGoal)
 	end
 end
 
----The junction that leads to the objective best: the path with the highest priority for it (PathSwitcher), the one
----closest to the objective of these.
+---The junction that leads to the objective best: the first navigation path of the route to it (NavRoutes), else the
+---path with the highest priority for it (PathSwitcher), the one closest to the objective of these.
 ---@param p_Objective string
 ---@return NavZoneJunction|nil
 function Bot:_ZoneBestExit(p_Objective)
 	local s_State = self.m_Zone
 	---@cast s_State -nil
+
+	-- Over the navigation paths, if the objective is a zone of their graph.
+	if not s_State.Vehicle then
+		local s_Exit = m_NavRoutes:NextExit(s_State.Zone, s_State.Point, p_Objective)
+		if s_Exit ~= nil then
+			return s_Exit
+		end
+	end
 	local s_Best = nil
 	local s_BestPriority = -math.huge
 	local s_BestDistance = math.huge
@@ -281,7 +334,13 @@ function Bot:_LeaveZone(p_Junction)
 		s_Waypoint = g_GameDirector:FindClosestPath(self.m_Player.soldier.worldTransform.trans, false, true, nil)
 	end
 
-	if s_Waypoint ~= nil then
+	local s_NavPath = p_Junction ~= nil and s_Waypoint ~= nil and m_NavRoutes:GetPath(s_Waypoint.PathIndex) or nil
+	if s_NavPath ~= nil and (s_NavPath.Start.Junction == p_Junction or s_NavPath.Finish.Junction == p_Junction) then
+		-- Out over a navigation path: away from the zone, to the other end.
+		self._PathIndex = s_Waypoint.PathIndex
+		self._CurrentWayPoint = s_Waypoint.PointIndex
+		self._InvertPathDirection = s_NavPath.Finish.Junction == p_Junction
+	elseif s_Waypoint ~= nil then
 		self._PathIndex = s_Waypoint.PathIndex
 		self._CurrentWayPoint = s_Waypoint.PointIndex
 		if self._Objective ~= '' then
@@ -351,6 +410,10 @@ function Bot:UpdateZoneMovement(p_DeltaTime)
 	-- The fast update skipped a target that was passed already.
 	local s_Following = s_State.Targets[s_State.Step + 1]
 	if s_Following ~= nil and self._TargetPoint == s_Following then
+		local s_Passed = s_State.Targets[s_State.Step]
+		if s_Passed ~= nil and s_Passed.Point ~= nil then
+			s_State.Point = s_Passed.Point
+		end
 		s_State.Step = s_State.Step + 1
 	end
 
@@ -410,7 +473,25 @@ function Bot:UpdateZoneMovement(p_DeltaTime)
 	local s_DeltaZ = s_Target.Position.z - s_Position.z
 	local s_Distance = math.sqrt(s_DeltaX * s_DeltaX + s_DeltaZ * s_DeltaZ)
 
-	if s_Distance < ZONE_REACH and math.abs(s_Target.Position.y - s_Position.y) < ZONE_REACH_HEIGHT then
+	-- Close to the target but facing away: slow down while turning (a bot can only turn so fast while it runs).
+	if s_Distance < ZONE_TURN_DISTANCE and self.m_Input ~= nil
+		and self.m_ActiveSpeedValue ~= BotMoveSpeeds.SlowCrouch and self.m_ActiveSpeedValue ~= BotMoveSpeeds.NoMovement then
+		local s_Atan = math.atan(s_DeltaZ, s_DeltaX)
+		local s_Yaw = (s_Atan > math.pi / 2) and (s_Atan - math.pi / 2) or (s_Atan + 3 * math.pi / 2)
+		local s_Turn = math.abs(self.m_Input.authoritativeAimingYaw - s_Yaw) % (2 * math.pi)
+		if s_Turn > math.pi then
+			s_Turn = 2 * math.pi - s_Turn
+		end
+		if s_Turn > ZONE_TURN_ANGLE then
+			self.m_ActiveSpeedValue = BotMoveSpeeds.Slow
+		end
+	end
+
+	local s_Reach = s_Target.Point ~= nil and ZONE_REACH_POINT or ZONE_REACH_CORNER
+	if self.m_ActiveSpeedValue == BotMoveSpeeds.Sprint then
+		s_Reach = s_Reach * ZONE_REACH_SPRINT
+	end
+	if s_Distance < s_Reach and math.abs(s_Target.Position.y - s_Position.y) < ZONE_REACH_HEIGHT then
 		if s_Target.Point ~= nil then
 			s_State.Point = s_Target.Point
 		end
@@ -464,6 +545,14 @@ function Bot:_ZoneGiveUpConnection(p_Position, p_Target)
 			break
 		end
 	end
+	-- The connection is the one of the route: from its last point before the target (the bot may have passed it
+	-- without the point being counted).
+	for l_Step = s_State.Step - 1, 1, -1 do
+		if s_State.Targets[l_Step].Point ~= nil then
+			s_State.Point = s_State.Targets[l_Step].Point
+			break
+		end
+	end
 	if s_Next ~= nil and s_Next ~= s_State.Point then
 		m_NavZones:BlockEdge(s_State.Zone, s_State.Point, s_Next)
 	end
@@ -484,6 +573,16 @@ function Bot:_ZoneGiveUpConnection(p_Position, p_Target)
 	end
 
 	if s_State.Fails >= ZONE_MAX_FAILS then
+		-- On the way out: another exit, if there is one (all bots take this one less from now on).
+		if s_State.Exit ~= nil and s_State.ExitFails < ZONE_MAX_FAILS and m_NavRoutes:Knows(self._Objective) then
+			m_NavRoutes:BlockExit(s_State.Exit)
+			s_State.ExitFails = s_State.ExitFails + 1
+			s_State.Fails = 0
+			s_State.Exit = nil
+			s_State.Objective = s_State.Zone.Name
+			self:_ZoneReplan(false)
+			return false
+		end
 		self:_LeaveZone(nil)
 		return true
 	end

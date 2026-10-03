@@ -71,6 +71,8 @@ local m_AirTargets = require('AirTargets')
 local m_GameDirector = require('GameDirector')
 ---@type NavZones
 local m_NavZones = require('NavZones')
+-- Routes over the navigation paths, from zone to zone (sets g_NavRoutes, used by NodeCollection and GameDirector).
+require('NavRoutes')
 ---@type AimEvaluation
 local m_AimEvaluation = require('AimEvaluation')
 ---@type ServerRaycasts

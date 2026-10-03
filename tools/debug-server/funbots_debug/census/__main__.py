@@ -7,7 +7,8 @@
                                                                      # every waypoint-file of these modes
     python -m funbots_debug.census report census/XP3_Desert_ConquestLarge0.json.gz [--issues 40]
     python -m funbots_debug.census navzones census/*.json.gz        # walking networks of the zones (navzones.py)
-    python -m funbots_debug.census cut ../../navzones/*.json -v       # waypoints the networks make unnecessary
+    python -m funbots_debug.census navpaths MP_012_RushLarge0 [--write] [--db ../../mod.db]
+                                                                     # cut the paths at the zones (navpaths.py)
 
 The debug-server saves every census into its census-folder (--census, default tools/debug-server/census). Switching
 levels needs the RCON-connection of the debug-server. Afterwards the map-list of the game-server is loaded again
@@ -27,11 +28,13 @@ import urllib.request
 from pathlib import Path
 
 from ..paths.mapfile import MapData
-from . import cut, navzones
+from . import navpaths, navzones
 from .report import build_report
 from .store import load
 
 MAPFILES = Path(__file__).resolve().parents[4] / "mapfiles"
+NAVZONES = MAPFILES.parent / "navzones"
+CENSUS = Path(__file__).resolve().parents[2] / "census"
 # Seconds to wait for a level to load, and for the waypoints after that.
 LEVEL_TIMEOUT = 300.0
 WAYPOINT_TIMEOUT = 120.0
@@ -313,9 +316,37 @@ def command_navzones(options) -> int:
     return 0
 
 
-def command_cut(options) -> int:
-    for file in options.files:
-        print(cut.run(file, options.mapfiles, options.verbose))
+def command_navpaths(options) -> int:
+    for name in options.maps:
+        name = Path(name).name.split(".")[0]
+        map_file = options.mapfiles / f"{name}.map"
+        zones_file = options.navzones / f"{name}.json"
+        census_file = options.census / f"{name}.json.gz"
+        for file in (map_file, zones_file, census_file):
+            if not file.is_file():
+                print(f"{name}: {file} is missing", file=sys.stderr)
+                return 1
+        before = MapData.load(map_file)
+        if any("Nav" in path.first.data for path in before.paths.values()):
+            print(f"{name}: the paths are cut already (navigation paths in {map_file.name})", file=sys.stderr)
+            return 1
+        result = navpaths.build(before, json.loads(zones_file.read_text(encoding="utf-8")))
+        print(name)
+        print(navpaths.summary(result, before, options.verbose))
+        if not options.write:
+            continue
+        # The networks again, with the junctions on the new paths.
+        networks = navzones.build(load(census_file), attach=navpaths.attach_nodes(result.data))
+        networks["map"] = name
+        result.data.save(map_file)
+        navzones.save(networks, zones_file)
+        print(f"  written {map_file} and {zones_file} "
+              f"({sum(len(zone['attach']) for zone in networks['zones'])} junctions)")
+        for path, end in navpaths.missing_ends(result.data, networks):
+            print(f"  warning: navigation path {path} has no junction at its {end}, the bots don't use it")
+        if options.db:
+            navpaths.write_db(options.db, name, result.data, networks)
+            print(f"  written into {options.db}")
     return 0
 
 
@@ -353,11 +384,16 @@ def main() -> int:
     zones.add_argument("files", nargs="+", type=Path)
     zones.set_defaults(handler=command_navzones)
 
-    cuts = commands.add_parser("cut", help="which waypoints the zone networks make unnecessary (dry run)")
-    cuts.add_argument("files", nargs="+", type=Path, help="navzones/<map>.json")
-    cuts.add_argument("--mapfiles", type=Path, default=MAPFILES)
-    cuts.add_argument("-v", "--verbose", action="store_true", help="list the paths")
-    cuts.set_defaults(handler=command_cut)
+    paths = commands.add_parser("navpaths", help="cut the paths at the zones: navigation paths from zone to zone")
+    paths.add_argument("maps", nargs="+", help="<Level>_<Mode>, e.g. MP_012_RushLarge0")
+    paths.add_argument("--mapfiles", type=Path, default=MAPFILES)
+    paths.add_argument("--navzones", type=Path, default=NAVZONES, help="the networks (navzones/<map>.json)")
+    paths.add_argument("--census", type=Path, default=CENSUS, help="the censuses the networks were made from")
+    paths.add_argument("--write", action="store_true",
+                       help="write the waypoint-file and the networks (with junctions on the new paths)")
+    paths.add_argument("--db", type=Path, metavar="MOD_DB", help="with --write: also into the tables of this mod.db")
+    paths.add_argument("-v", "--verbose", action="store_true", help="list the navigation paths")
+    paths.set_defaults(handler=command_navpaths)
 
     options = parser.parse_args()
     return options.handler(options)

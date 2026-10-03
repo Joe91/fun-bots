@@ -27,6 +27,9 @@ function ClientNodeEditor:__init()
 
 	self.m_ScanForNode = false
 
+	-- Walking networks of the zones (server: NavZones), name -> { Name, Kind, Center, Points, Edges, Junctions }.
+	self.m_NavZones = {}
+
 	-- Caching values for drawing performance.
 	self.m_PlayerPos = nil
 
@@ -88,6 +91,16 @@ function ClientNodeEditor:__init()
 	-- Shared color tables, so GetColor doesn't create new ones for every node.
 	self.m_TraceColor = { Node = self.m_Colors.White, Line = self.m_Colors.White }
 	self.m_NoPathColor = { Node = self.m_Colors.Red, Line = self.m_Colors.Red }
+	self.m_NavPathColor = { Node = Vec4(0.35, 0.8, 0.9, 0.35), Line = Vec4(0.35, 0.8, 0.9, 1) }
+	-- Walking networks: points in the zone, points around it, connections, junctions with the waypoints.
+	self.m_NavZoneColors = {
+		Inside = Vec4(0.3, 0.85, 0.45, 0.6),
+		Outside = Vec4(0.45, 0.6, 0.75, 0.5),
+		Edge = Vec4(0.3, 0.85, 0.45, 1),
+		EdgeOutside = Vec4(0.45, 0.6, 0.75, 1),
+		Junction = Vec4(1, 0.72, 0.25, 1),
+		Text = Vec4(0.3, 0.85, 0.45, 1),
+	}
 
 	self.m_EventsReady = false
 end
@@ -106,6 +119,8 @@ function ClientNodeEditor:OnRegisterEvents()
 	NetEvents:Subscribe('ClientNodeEditor:ClearCustomTrace', self, self._OnClearCustomTrace)
 	NetEvents:Subscribe('ClientNodeEditor:ClearTrace', self, self._OnClearTrace)
 	NetEvents:Subscribe('ClientNodeEditor:ClearAll', self, self._OnClearAll)
+	NetEvents:Subscribe('ClientNodeEditor:ClearNavZones', self, self._OnClearNavZones)
+	NetEvents:Subscribe('ClientNodeEditor:ReceiveNavZone', self, self._OnReceiveNavZone)
 
 	NetEvents:Subscribe('UI_CommoRose_Action_Select', self, self._onSelectNode)
 	NetEvents:Subscribe('UI_CommoRose_Action_Remove', self, self._onRemoveNode)
@@ -224,6 +239,16 @@ function ClientNodeEditor:_OnReceiveNodes(p_WayPoints)
 	end
 end
 
+function ClientNodeEditor:_OnClearNavZones()
+	self.m_NavZones = {}
+end
+
+function ClientNodeEditor:_OnReceiveNavZone(p_Zone)
+	if type(p_Zone) == 'table' and p_Zone.Name ~= nil then
+		self.m_NavZones[p_Zone.Name] = p_Zone
+	end
+end
+
 function ClientNodeEditor:_OnUpdateSelection(p_Data)
 	self.m_Selections = p_Data or {}
 	self.m_SelectionSet = {}
@@ -328,6 +353,12 @@ end
 function ClientNodeEditor:GetColor(p_Node, p_IsTracePath)
 	if p_IsTracePath then
 		return self.m_TraceColor
+	end
+
+	-- Navigation paths (cut at the zones, from zone to zone) all have the same color.
+	local s_First = self.m_FirstNodeInPath[p_Node.PathIndex]
+	if s_First ~= nil and s_First.Data ~= nil and s_First.Data.Nav ~= nil then
+		return self.m_NavPathColor
 	end
 
 	if p_Node.PathIndex > 0 then
@@ -660,6 +691,7 @@ function ClientNodeEditor:_onUnload()
 	self.m_FirstNodeInPath = {}
 	self.m_PathsToSkipForCycles = {}
 	self.m_MinDistanceToPath = {}
+	self.m_NavZones = {}
 
 	self.m_NodesToDraw = {}
 	self.m_NodesToDraw_temp = {}
@@ -1086,6 +1118,7 @@ function ClientNodeEditor:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 
 		if s_LastUpdatedIndex >= s_MaxIndex then
 			m_ClientSpawnPointHelper:Update(self.m_PlayerPos, self.m_NodesToDraw_temp, self.m_LinesToDraw_temp)
+			self:_DrawNavZones(s_WaypointRangeSq, s_LineRangeSq, s_TextRangeSq)
 			self.m_LastUpdateIndex = 0
 
 			-- Paths that are completely out of range get skipped for a few cycles. The further away, the longer.
@@ -1129,6 +1162,62 @@ function ClientNodeEditor:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 	end
 end
 
+---The walking networks of the zones close to the player: points (green in the zone), connections, junctions with the
+---waypoints (orange) and the name of the zone. Once per drawing cycle, into the lists of the next one.
+---@param p_PointRangeSq number
+---@param p_LineRangeSq number
+---@param p_TextRangeSq number
+function ClientNodeEditor:_DrawNavZones(p_PointRangeSq, p_LineRangeSq, p_TextRangeSq)
+	local s_Player = self.m_PlayerPos
+	local s_Colors = self.m_NavZoneColors
+	local function _DistanceSq(p_Position)
+		local s_X, s_Y, s_Z = p_Position.x - s_Player.x, p_Position.y - s_Player.y, p_Position.z - s_Player.z
+		return s_X * s_X + s_Y * s_Y + s_Z * s_Z
+	end
+
+	for _, l_Zone in pairs(self.m_NavZones) do
+		local s_Points = l_Zone.Points or {}
+		for l_Index = 1, #s_Points do
+			local l_Point = s_Points[l_Index]
+			if _DistanceSq(l_Point.Position) <= p_PointRangeSq then
+				self:DrawSphere(l_Point.Position, 0.12, (l_Point.Flags or 0) & 1 ~= 0 and s_Colors.Inside or s_Colors.Outside,
+					false, true)
+			end
+		end
+		if p_LineRangeSq > 0 then
+			local s_Edges = l_Zone.Edges or {}
+			for l_Index = 1, #s_Edges do
+				local l_Edge = s_Edges[l_Index]
+				local s_From = s_Points[l_Edge.From]
+				local s_To = s_Points[l_Edge.To]
+				if s_From ~= nil and s_To ~= nil and (_DistanceSq(s_From.Position) <= p_LineRangeSq
+						or _DistanceSq(s_To.Position) <= p_LineRangeSq) then
+					local s_Color = ((s_From.Flags or 0) & 1 ~= 0 and (s_To.Flags or 0) & 1 ~= 0) and s_Colors.Edge
+						or s_Colors.EdgeOutside
+					local s_Last = s_From.Position
+					for l_Corner = 1, #(l_Edge.Corners or {}) do
+						self:DrawLine(s_Last, l_Edge.Corners[l_Corner], s_Color, s_Color)
+						s_Last = l_Edge.Corners[l_Corner]
+					end
+					self:DrawLine(s_Last, s_To.Position, s_Color, s_Color)
+				end
+			end
+			local s_Junctions = l_Zone.Junctions or {}
+			for l_Index = 1, #s_Junctions do
+				local l_Junction = s_Junctions[l_Index]
+				local s_Point = s_Points[l_Junction.Point]
+				if s_Point ~= nil and _DistanceSq(l_Junction.Position) <= p_LineRangeSq then
+					self:DrawLine(l_Junction.Position, s_Point.Position, s_Colors.Junction, s_Colors.Junction)
+				end
+			end
+		end
+		if l_Zone.Center ~= nil and _DistanceSq(l_Zone.Center) <= math.max(p_TextRangeSq, p_PointRangeSq) then
+			self:DrawPosText2D(l_Zone.Center + Vec3.up * 2.0, 'Zone ' .. tostring(l_Zone.Name) .. ' (' .. tostring(l_Zone.Kind)
+				.. ', ' .. #s_Points .. ' points)', s_Colors.Text, 1.2)
+		end
+	end
+end
+
 ---Debug text shown for selected nodes.
 ---@param p_Node table
 ---@return string
@@ -1153,6 +1242,11 @@ function ClientNodeEditor:_GetNodeInfoText(p_Node)
 	if s_FirstNode and s_FirstNode.Data then
 		s_Text = s_Text .. string.format('Path Objectives: %s\n', g_Utilities:dump(s_FirstNode.Data.Objectives, false))
 		s_Text = s_Text .. string.format('Vehicles: %s\n', g_Utilities:dump(s_FirstNode.Data.Vehicles, false))
+		local s_Nav = s_FirstNode.Data.Nav
+		if type(s_Nav) == 'table' then
+			s_Text = s_Text .. string.format('Navigation: %s -> %s (%d m)\n', tostring(s_Nav.From), tostring(s_Nav.To),
+				math.floor(tonumber(s_Nav.Length) or 0))
+		end
 	end
 	s_Text = s_Text .. string.format('InputVar: %d\n', p_Node.InputVar)
 	s_Text = s_Text .. string.format('SpeedMode: %s (%d)\n', s_SpeedMode, s_SpeedModeValue)

@@ -601,6 +601,10 @@ function BotSpawner:UpdateBotAmountAndTeam()
 			if Globals.NrOfTeams == 2 and i == s_PlayerTeam then
 				s_TargetTeamCount[i] = math.floor((s_TargetTeamCount[i] * Config.FactorPlayerTeamCount) + 0.5)
 			end
+
+			if Globals.IsRush and i == TeamId.Team2 then
+				s_TargetTeamCount[i] = math.floor((s_TargetTeamCount[i] * Registry.BOT_SPAWN.RUSH_DEFENDER_FACTOR) + 0.5)
+			end
 		end
 
 		for i = 1, Globals.NrOfTeams do
