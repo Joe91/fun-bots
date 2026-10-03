@@ -20,7 +20,7 @@ from funbots_debug.analyzers import create_analyzers  # noqa: E402
 from funbots_debug.analyzers.combat import CombatAnalyzer  # noqa: E402
 from funbots_debug.analyzers.stuck import StuckBotAnalyzer  # noqa: E402
 from funbots_debug.console_commands import MOD_EXT, catalog  # noqa: E402
-from funbots_debug.hub import Hub  # noqa: E402
+from funbots_debug.hub import Hub, LabelError  # noqa: E402
 from funbots_debug.protocol import as_list, yaw_to_direction  # noqa: E402
 from funbots_debug.rcon import RconClient, RconError, decode_packet, encode_packet  # noqa: E402
 from funbots_debug.recorder import Recorder, read_recording, replay  # noqa: E402
@@ -106,6 +106,15 @@ class HubTest(unittest.TestCase):
         self.assertNotIn("zones", shown)
         self.assertGreater(shown["_bytes"], 2000)
         self.assertEqual(command.args["zones"], zones)
+
+    def test_apply_only_networks_of_the_census(self):
+        self.hub.ingest(payload())
+        self.hub.set_navzones({"version": 1, "map": "MP_001_ConquestLarge0", "zones": []})  # loaded from navzones/
+        with self.assertRaises(LabelError):
+            self.hub.apply_navzones(timeout=0, census="MP_001_ConquestLarge0")
+        self.hub.set_navzones({"version": 2, "map": "MP_001_ConquestLarge0", "zones": []}, "MP_001_ConquestLarge0")
+        self.hub.apply_navzones(timeout=0, census="MP_001_ConquestLarge0")
+        self.assertEqual(self.hub.ingest(payload())["commands"][0]["args"]["mesh"]["version"], 2)
 
     def test_mod_gone_loses_sent_commands(self):
         command = self.hub.submit_command("census", {})

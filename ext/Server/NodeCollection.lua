@@ -1799,6 +1799,14 @@ function NodeCollection:GetKnownObjectives()
 	return self._Objectives
 end
 
+---An objective without paths of its own, e.g. a capture point of the engine (GameDirector:_InitObjectives).
+---@param p_Objective string
+function NodeCollection:AddKnownObjective(p_Objective)
+	if self._Objectives[p_Objective] == nil then
+		self._Objectives[p_Objective] = {}
+	end
+end
+
 -- This method avoids the use of the Vec3:Distance() method to avoid complex maths internally.
 -- It's a tradeoff for speed over accuracy, as this method produces a box instead of a sphere.
 -- @returns boolean whether given waypoint is inside the given range.

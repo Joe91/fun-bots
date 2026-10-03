@@ -177,7 +177,8 @@ def apply_navzones(server: Server, name: str) -> str:
     them into mod.db; the debug-server also writes navzones/<map>.json."""
     end = time.monotonic() + NAVZONES_TIMEOUT
     while time.monotonic() < end:
-        answer = server.request("/api/navzones/apply", {"save": True}, timeout=120.0)
+        # Only the networks of this census, not older ones of navzones/ the debug-server shows for the level.
+        answer = server.request("/api/navzones/apply", {"save": True, "census": name}, timeout=120.0)
         result = answer.get("result") or {}
         if answer.get("status") == "ok":
             return f"{result.get('zones')} zones, {result.get('junctions')} junctions, {answer.get('file') or 'no file'}"

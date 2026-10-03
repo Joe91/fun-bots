@@ -107,6 +107,8 @@ class Hub:
         # are loaded for the running level (once per level, _auto_navzones).
         self.navzones: dict | None = None
         self._navzones_tried: str | None = None
+        # The census the shown networks were built from (None: loaded from a file).
+        self.navzones_census: str | None = None
 
     # --- mod-side ----------------------------------------------------------------------------------------------
 
@@ -199,6 +201,7 @@ class Hub:
             return
         try:
             self.navzones = json.loads(file.read_text(encoding="utf-8"))
+            self.navzones_census = None
         except (OSError, ValueError) as error:
             print(f"navzones {file}: {error}")
             return
@@ -211,6 +214,7 @@ class Hub:
         self.census_report = None
         self.zones.reset()
         self.navzones = None
+        self.navzones_census = None
         self._navzones_tried = None
         for analyzer in self.analyzers:
             analyzer.reset()
@@ -372,20 +376,26 @@ class Hub:
             if file is not None:
                 navzones.save(data, file.with_name(f"{census.name}.navzones.json"))
             print(navzones.summary(data))
-            self.set_navzones(data)
+            self.set_navzones(data, census.name)
 
-    def set_navzones(self, data: dict | None) -> None:
-        """Shows walking networks on the map of all browsers."""
+    def set_navzones(self, data: dict | None, census: str | None = None) -> None:
+        """Shows walking networks on the map of all browsers. census: the one they were built from."""
         with self.lock:
             self.navzones = data
+            self.navzones_census = census
         self._publish([("navzones", data)])
 
-    def apply_navzones(self, save: bool = True, timeout: float = APPLY_TIMEOUT) -> dict:
-        """Sends the networks shown on the map to the mod (NavZones.lua), which saves them into mod.db with save."""
+    def apply_navzones(self, save: bool = True, timeout: float = APPLY_TIMEOUT, census: str | None = None) -> dict:
+        """Sends the networks shown on the map to the mod (NavZones.lua), which saves them into mod.db with save.
+        census: only the networks built from this census, not older ones loaded from navzones/ (they are built in the
+        background after the census)."""
         with self.lock:
             data = self.navzones
+            built_from = self.navzones_census
         if data is None:
             raise LabelError("no zone networks: run a census or load them first")
+        if census is not None and built_from != census:
+            raise LabelError(f"the networks of the census {census} aren't built yet")
         if not self.accept_commands:
             raise LabelError("replay-mode, no mod to send the networks to")
         command = self.submit_command("navzones_apply", {"map": data.get("map"), "mesh": data, "save": save})

@@ -112,8 +112,10 @@ class Handler(BaseHTTPRequestHandler):
             self._send_json({"cleared": self.server.hub.clear_scans(scan)})
         elif url.path == "/api/navzones/apply":
             try:
-                self._send_json(self.server.hub.apply_navzones(save=data.get("save", True) is not False
-                                                               if isinstance(data, dict) else True))
+                data = data if isinstance(data, dict) else {}
+                census = data.get("census")
+                self._send_json(self.server.hub.apply_navzones(save=data.get("save", True) is not False,
+                                                               census=census if isinstance(census, str) else None))
             except LabelError as error:
                 self._send_json({"error": str(error)}, HTTPStatus.CONFLICT)
         elif url.path == "/api/navzones":

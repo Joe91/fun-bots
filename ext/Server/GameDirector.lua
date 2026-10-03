@@ -2259,6 +2259,19 @@ function GameDirector:_InitObjectives()
 	self.m_AllObjectives = {}
 	self._McomPositions = {}
 
+	-- Every capture point of the engine is an objective, also without paths of its own ("ID_H_US_A" -> "a").
+	if Globals.IsConquest then
+		local s_Iterator = EntityManager:GetIterator('ServerCapturePointEntity')
+		local s_Entity = s_Iterator:Next()
+		while s_Entity ~= nil do
+			local s_Objective = self:_EngineObjective(CapturePointEntity(s_Entity).name)
+			if s_Objective ~= nil then
+				m_NodeCollection:AddKnownObjective(s_Objective)
+			end
+			s_Entity = s_Iterator:Next()
+		end
+	end
+
 	for l_ObjectiveName, _ in pairs(m_NodeCollection:GetKnownObjectives()) do
 		local s_Objective = {
 			name = l_ObjectiveName,
@@ -2416,11 +2429,28 @@ function GameDirector:_InitFlagTeams()
 		s_Entity = s_Iterator:Next()
 	end
 
+	-- Some levels have the capture points of several modes in one layer, with the same names (XP3_Alborz: two "C").
+	-- An owned one is of the running mode: those first, they give the objective its position and team. Else the
+	-- first one of the engine.
+	local s_Owned = {}
+	local s_Neutral = {}
+	for l_Index = 1, #self._AllCapturePoints do
+		local l_CapturePoint = self._AllCapturePoints[l_Index]
+		local s_List = l_CapturePoint.team ~= TeamId.TeamNeutral and s_Owned or s_Neutral
+		s_List[#s_List + 1] = l_CapturePoint
+	end
+	for l_Index = 1, #s_Neutral do
+		s_Owned[#s_Owned + 1] = s_Neutral[l_Index]
+	end
+	self._AllCapturePoints = s_Owned
+	local s_Done = {}
+
 	for l_Index = 1, #self._AllCapturePoints do
 		local s_CapturePoint = self._AllCapturePoints[l_Index]
 
 		local s_ObjectiveName = self:_TranslateObjective(s_CapturePoint.transform.trans:Clone(), s_CapturePoint.name)
-		if s_ObjectiveName ~= "" then
+		if s_ObjectiveName ~= "" and not s_Done[s_ObjectiveName] then
+			s_Done[s_ObjectiveName] = true
 			local s_Objective = self:_GetObjectiveObject(s_ObjectiveName)
 
 			---@diagnostic disable-next-line: need-check-nil
@@ -2650,12 +2680,33 @@ function GameDirector:_TranslateMcom(p_Position)
 	return s_ClosestObjective or self:_TranslateObjective(p_Position)
 end
 
+---The objective of a capture point from its name in the engine: "ID_H_US_A" -> "a". nil for the HQs and other names.
+---@param p_Name string|nil
+---@return string|nil
+function GameDirector:_EngineObjective(p_Name)
+	if p_Name == nil or string.sub(p_Name, -2) == 'HQ' then
+		return nil
+	end
+	local s_Letter = p_Name:match('_(%a)$')
+	return s_Letter ~= nil and s_Letter:lower() or nil
+end
+
 ---@param p_Position Vec3
 ---@param p_Name string|nil
 ---@return string|nil
 function GameDirector:_TranslateObjective(p_Position, p_Name)
 	if p_Name ~= nil and self.m_Translations[p_Name] ~= nil then
 		return self.m_Translations[p_Name]
+	end
+
+	-- The name in the engine, where it has one: the paths might be labelled wrongly.
+	local s_EngineObjective = self:_EngineObjective(p_Name)
+	local s_Object = s_EngineObjective ~= nil and self:_GetObjectiveObject(s_EngineObjective) or nil
+	if s_Object ~= nil then
+		self.m_Translations[p_Name] = s_EngineObjective
+		self.m_ObjectivePositions[s_EngineObjective] = p_Position:Clone()
+		s_Object.position = p_Position
+		return s_EngineObjective
 	end
 
 	local s_AllObjectives = m_NodeCollection:GetKnownObjectives()

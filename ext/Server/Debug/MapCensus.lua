@@ -946,6 +946,9 @@ function CensusTask:_DefaultAreas()
 		return s_Areas
 	end
 
+	-- Capture points of several modes can share a layer and their names (XP3_Alborz): one area per name, the one owned
+	-- by a team at the start (of the running mode), as GameDirector:_InitFlagTeams.
+	local s_ByName = {}
 	_Iterate('ServerCapturePointEntity', function(p_Entity)
 		local s_CapturePoint = CapturePointEntity(p_Entity)
 		local s_Hq = string.sub(s_CapturePoint.name, -2) == 'HQ'
@@ -956,12 +959,21 @@ function CensusTask:_DefaultAreas()
 		if p_Entity.data ~= nil and p_Entity.data:Is('CapturePointEntityData') then
 			s_Radius = CapturePointEntityData(p_Entity.data).captureRadius
 		end
-		s_Areas[#s_Areas + 1] = {
+		local s_Area = {
 			name = g_GameDirector.m_Translations[s_CapturePoint.name] or s_CapturePoint.name,
 			kind = s_Hq and 'hq' or 'capturepoint',
 			center = s_CapturePoint.transform.trans:Clone(),
 			radius = s_Radius + s_Margin,
 		}
+		local s_Owned = s_CapturePoint.team ~= TeamId.TeamNeutral
+		local s_Known = s_ByName[s_Area.name]
+		if s_Known == nil then
+			s_Areas[#s_Areas + 1] = s_Area
+			s_ByName[s_Area.name] = { Index = #s_Areas, Owned = s_Owned }
+		elseif s_Owned and not s_Known.Owned then
+			s_Areas[s_Known.Index] = s_Area
+			s_Known.Owned = true
+		end
 	end)
 
 	for l_Index, l_Position in pairs(g_GameDirector._McomPositions or {}) do
