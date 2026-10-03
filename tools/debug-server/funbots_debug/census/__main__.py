@@ -3,7 +3,7 @@
     python -m funbots_debug.census run --current                      # the level that runs now
     python -m funbots_debug.census run --map "MP_001 ConquestLarge0"  # switches the level over RCON first
     python -m funbots_debug.census run --maplist ../../MapList.txt    # every level of the list, one after the other
-    python -m funbots_debug.census run --all --modes ConquestSmall0,ConquestLarge0,RushLarge0 --warmup 180 --apply
+    python -m funbots_debug.census run --all --modes ConquestSmall0,ConquestLarge0,RushLarge0 --apply
                                                                      # every waypoint-file of these modes
     python -m funbots_debug.census report census/XP3_Desert_ConquestLarge0.json.gz [--issues 40]
     python -m funbots_debug.census navzones census/*.json.gz        # walking networks of the zones (navzones.py)
@@ -13,6 +13,10 @@
 The debug-server saves every census into its census-folder (--census, default tools/debug-server/census). Switching
 levels needs the RCON-connection of the debug-server. Afterwards the map-list of the game-server is loaded again
 from its MapList.txt (mapList.load).
+
+Per level: the bots measure the capture zones first (zone probe, ZoneProbe.lua: they are put around each capture
+point), then they get kicked (funbots.kickAll, the next level spawns them again) and the census runs with a larger
+raycast-budget: the server has nothing else to do.
 """
 
 from __future__ import annotations
@@ -38,8 +42,12 @@ CENSUS = Path(__file__).resolve().parents[2] / "census"
 # Seconds to wait for a level to load, and for the waypoints after that.
 LEVEL_TIMEOUT = 300.0
 WAYPOINT_TIMEOUT = 120.0
-# Modes without capture zones get this pause instead of the warmup (bots spawn, objectives are set).
-SHORT_WARMUP = 45.0
+# Seconds to wait for the objectives of a new level (the GameDirector sets them up), and for bots to probe with.
+OBJECTIVES_TIMEOUT = 60.0
+BOTS_TIMEOUT = 120.0
+PROBE_BOTS = 4
+# Seconds the zone probe may take.
+PROBE_TIMEOUT = 300.0
 # Seconds to wait for the zone networks the debug-server builds after a census.
 NAVZONES_TIMEOUT = 180.0
 # Seconds without the mod during a census: the game-server is gone.
@@ -103,6 +111,47 @@ def switch_level(server: Server, level: str, mode: str) -> None:
         if status.get("modConnected") and _level_matches(meta, level, mode):
             return
     raise RuntimeError(f"{level} {mode} didn't load within {LEVEL_TIMEOUT:.0f} s")
+
+
+def wait_objectives(server: Server) -> int:
+    """Waits until the debug-server knows the objectives of the level. Returns the number of capture points."""
+    end = time.monotonic() + OBJECTIVES_TIMEOUT
+    while True:
+        objectives = server.request("/api/state").get("objectives") or {}
+        flags = [flag for flag in objectives.get("flags") or [] if not flag.get("hq")]
+        if flags or objectives.get("mcoms") or time.monotonic() > end:
+            return len(flags)
+        time.sleep(2)
+
+
+def wait_command(server: Server, command: dict, timeout: float) -> dict:
+    """Waits for the answer of the mod to a command of the debug-server."""
+    command_id = command.get("id")
+    if command_id is None:
+        raise RuntimeError(f"command not sent: {command}")
+    end = time.monotonic() + timeout
+    while time.monotonic() < end:
+        entry = next((item for item in server.request("/api/commands") if item.get("id") == command_id), None)
+        if entry and entry.get("status") not in ("queued", "sent"):
+            return entry
+        time.sleep(1)
+    raise RuntimeError(f"no answer to {command.get('type')} within {timeout:.0f} s")
+
+
+def probe_zones(server: Server) -> str:
+    """Measures the capture zones with the bots (ZoneProbe.lua), once enough of them are alive."""
+    end = time.monotonic() + BOTS_TIMEOUT
+    while sum(1 for bot in server.request("/api/state").get("bots") or [] if bot.get("alive")) < PROBE_BOTS:
+        if time.monotonic() > end:
+            return "no bots alive"
+        time.sleep(2)
+    entry = wait_command(server, server.request("/api/command", {"type": "zone_probe", "args": {}}), PROBE_TIMEOUT)
+    if entry.get("status") != "ok":
+        return f"error: {entry.get('error')}"
+    zones = server.request("/api/census").get("zones") or []
+    active = [zone for zone in zones if zone.get("probed") and zone.get("active")]
+    inactive = [zone["name"] for zone in zones if zone.get("probed") and not zone.get("active")]
+    return f"{len(active)} zones" + (f", not active: {', '.join(inactive)}" if inactive else "")
 
 
 def run_census(server: Server, args: dict, timeout: float) -> dict:
@@ -240,14 +289,18 @@ def command_run(options) -> int:
             if not _level_matches(meta, level, mode):
                 switch_level(server, level, mode)
                 switched = True
-            warmup = options.warmup if "conquest" in mode.lower() or "domination" in mode.lower() \
-                else min(options.warmup, SHORT_WARMUP)
-            if warmup > 0:
+            flags = wait_objectives(server)
+            if options.warmup > 0:
                 # The bots play for a while, so the sizes of the capture zones get measured (zones.py).
-                print(f"  bots play for {warmup:.0f} s first")
-                time.sleep(warmup)
+                print(f"  bots play for {options.warmup:.0f} s first")
+                time.sleep(options.warmup)
+            if flags and options.probe:
+                print(f"  zone probe: {probe_zones(server)}")
+            if flags or options.warmup > 0:
                 zones = server.request("/api/census").get("zones") or []
                 print(f"  capture zones measured: {sum(1 for zone in zones if zone.get('samples'))}/{len(zones)}")
+            if not options.keep_bots:
+                server.rcon("funbots.kickAll")
             status = run_census(server, args, options.timeout)
             last = status["last"]
             print(f"  saved {last['file']}")
@@ -368,11 +421,15 @@ def main() -> int:
     run.add_argument("--restart-command", metavar="CMD",
                      help="shell-command that starts the game-server again after a crash (the level is tried again)")
     run.add_argument("--parts", help="entities,nodes,areas (default: all)")
-    run.add_argument("--budget-ms", type=float, default=6.0, help="ms of raycasts per update of the server")
+    run.add_argument("--budget-ms", type=float, default=20.0,
+                     help="ms of raycasts per update of the server (100k raycasts/s at most, from about 20 ms)")
     run.add_argument("--area-step", type=float, help="cell-size of the grids around the objectives (default 0.5)")
     run.add_argument("--timeout", type=float, default=3600.0, help="seconds per level")
     run.add_argument("--warmup", type=float, default=0.0, metavar="SECONDS",
-                     help="let the bots play this long before each census, to measure the capture zones")
+                     help="let the bots play this long before each census (the zone probe measures the capture zones)")
+    run.add_argument("--no-probe", dest="probe", action="store_false",
+                     help="don't measure the capture zones with the zone probe")
+    run.add_argument("--keep-bots", action="store_true", help="don't kick the bots before the census")
     run.set_defaults(handler=command_run)
 
     report = commands.add_parser("report", help="check saved censuses")

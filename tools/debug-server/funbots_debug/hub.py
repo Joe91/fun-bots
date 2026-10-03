@@ -142,6 +142,10 @@ class Hub:
                     # Big, and only for the census: not into the state, the analyzers and the browsers.
                     self._census_event(event, messages)
                     continue
+                if event.get("type") == "zone_probe":
+                    # The capture zones measured by the mod (ZoneProbe.lua).
+                    self.zones.apply_probe(as_list(event.get("flags")))
+                    continue
                 if self.state.apply_event(event) == "reset":
                     self._reset(messages, already_reset=True)
                 if event.get("type") == "nodes_started" and self.labels is not None:
@@ -297,6 +301,8 @@ class Hub:
                     areas.append({"name": name, "kind": "base", "pos": pos, "radius": CENSUS_BASE_RADIUS})
                 continue
             zone = zones.get((flag.get("name"), tuple(round(value) for value in pos)))
+            if zone and zone.get("probed") and not zone.get("active"):
+                continue  # Nobody inside even next to it (zone probe): a layout of another mode.
             if zone and zone["samples"]:
                 radius = zone["radius"] + CENSUS_AREA_MARGIN
             elif flag.get("name") in visited:

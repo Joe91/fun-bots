@@ -319,7 +319,11 @@ def capture_points(census: dict) -> list[dict]:
         result.append(entry)
     visited = {entry.get("name") for entry in result if entry["samples"]}
     for entry in result:
-        entry["inactive"] = not entry["samples"] and entry.get("name") in visited
+        zone = next((zone for zone in zones if zone.get("name") == entry.get("name")
+                     and math.dist(as_list(zone.get("pos")), as_list(entry.get("pos"))) < 2.0), None)
+        # Nobody inside even next to it (zone probe, ZoneProbe.lua), or only in another one of the same name.
+        probed_inactive = bool(zone and zone.get("probed") and not zone.get("active"))
+        entry["inactive"] = probed_inactive or (not entry["samples"] and entry.get("name") in visited)
     return result
 
 

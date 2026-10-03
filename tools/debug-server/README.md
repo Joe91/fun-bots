@@ -280,17 +280,22 @@ checks it (`funbots_debug/census/report.py`), prints the summary in its terminal
 *Findings*. The grids around the objectives show up on the map like scans.
 
 ```
-python -m funbots_debug.census run --current --warmup 180                  # the level that runs now
-python -m funbots_debug.census run --map "MP_001 ConquestLarge0" --warmup 180  # switches the level over RCON first
-python -m funbots_debug.census run --maplist ../../MapList.txt --warmup 180    # every level of the list
+python -m funbots_debug.census run --current                       # the level that runs now
+python -m funbots_debug.census run --map "MP_001 ConquestLarge0"   # switches the level over RCON first
+python -m funbots_debug.census run --maplist ../../MapList.txt     # every level of the list
 python -m funbots_debug.census report census/*.json.gz --issues 40
 ```
 
 The engine doesn't tell the radius of a capture point (`CaptureRadius` is 0, the level sets it in a way the server
-can't read). The debug-server measures it instead, from the players the mod reports inside each capture point
-(`census/zones.py`): at least as far as the farthest one inside. `--warmup` lets the bots play that long before the
-census. Capture points nobody ever entered while another one of the same name was entered are the layout of another
-mode (loaded as well, e.g. on XP3_Alborz) and are skipped. A census without explicit `areas` puts its grids around the
+can't read), only who is inside. So before the census the mod measures the zones with the bots (zone probe,
+`ext/Server/Debug/ZoneProbe.lua`, command `zone_probe`): one bot per direction (16 around each capture point) is put
+at a distance, and the distance where it stops being inside is searched (about 0.8 m exact). A few seconds per capture
+point; the debug-server turns the result into the shape of the zone (`census/zones.py`). A capture point nobody is
+inside of even next to it is the layout of another mode (loaded as well, e.g. a second "C" on XP3_Alborz) and is
+skipped. Then the bots get kicked (`funbots.kickAll`, the next level spawns them again: `--keep-bots` to keep them)
+and the census runs with 20 ms of raycasts per update (`--budget-ms`; about 100,000 raycasts per second is the most
+the server does, from about 20 ms on). Without the probe (`--no-probe`) the zones can still be measured from the bots
+playing (`--warmup SECONDS`): only as far as they went. A census without explicit `areas` puts its grids around the
 measured zones.
 
 Switching levels needs the RCON-connection. Afterwards the map-list is loaded again from the `MapList.txt` of the
@@ -381,12 +386,12 @@ zone it walks in, `@mesh` outside of the zones) and `zoneExit` on its way out.
 `save`). The fun-bots-helper imports them into `mod.db` with the traces (`import_traces`) and exports them with
 `export_traces`.
 
-**All maps**: `python -m funbots_debug.census run --all --modes ConquestSmall0,ConquestLarge0,RushLarge0 --warmup 180
---apply` makes census and mesh of every waypoint-file of these modes, one level after the other (rush only waits
-45 s: no capture zones to measure). That takes about 7 minutes per level. For a long run let the driver start the
-game-server again after a crash (the level is tried once more):
+**All maps**: `python -m funbots_debug.census run --all --modes ConquestSmall0,ConquestLarge0,RushLarge0 --apply`
+makes census and mesh of every waypoint-file of these modes, one level after the other. That takes about 2 to 4
+minutes per level (rush longer: more areas). For a long run let the driver start the game-server again after a crash
+(the level is tried once more):
 ```
-python -m funbots_debug.census run --all --modes ConquestSmall0,ConquestLarge0,RushLarge0 --warmup 180 --apply \
+python -m funbots_debug.census run --all --modes ConquestSmall0,ConquestLarge0,RushLarge0 --apply \
     --restart-command 'cd /home/jo/Games/vu/client && wine vu.com -gamepath "<BF3>" -serverInstancePath "$(winepath -w <instance>)" -server -dedicated -high60'
 ```
 

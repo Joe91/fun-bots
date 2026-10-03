@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import math
 import sys
 import tempfile
 import time
@@ -117,6 +118,38 @@ class CensusTest(unittest.TestCase):
         zones.on_frame(state)
         zone = zones.to_json()[0]
         self.assertEqual((zone["radius"], zone["outside"], zone["samples"]), (8.0, 12.0, 1))
+
+    def test_zone_probe(self):
+        from funbots_debug.census.report import capture_points
+        from funbots_debug.census.zones import ZoneEstimator
+        from funbots_debug.hub import Hub
+
+        # 10 m to the east half (+x), 30 m to the west half: the shape, not a circle of 30 m.
+        directions = [{"angle": index * 2 * math.pi / 16, "inside": 10.0 if index < 4 or index >= 12 else 30.0,
+                       "outside": 40.0} for index in range(16)]
+        flags = [{"name": "ID_H_US_A", "pos": [0.0, 0.0, 0.0], "active": True, "directions": directions},
+                 {"name": "ID_H_US_C", "pos": [200.0, 0.0, 0.0], "active": False, "directions": []}]
+        zones = ZoneEstimator()
+        zones.apply_probe(flags)
+        result = {zone["name"]: zone for zone in zones.to_json()}
+        self.assertEqual((result["ID_H_US_A"]["radius"], result["ID_H_US_A"]["samples"]), (30.0, 16))
+        self.assertEqual((result["ID_H_US_C"]["samples"], result["ID_H_US_C"]["active"]), (0, False))
+
+        census = {"zones": zones.to_json(), "entities": {"capturePoints": [
+            {"name": "ID_H_US_A", "pos": [0.0, 0.0, 0.0], "objective": "a"},
+            {"name": "ID_H_US_C", "pos": [200.0, 0.0, 0.0], "objective": "c"}]}}
+        points = {point["name"]: point for point in capture_points(census)}
+        self.assertFalse(points["ID_H_US_A"]["inactive"])
+        self.assertTrue(points["ID_H_US_C"]["inactive"])
+        cell = points["ID_H_US_A"]["cell"]
+        self.assertIn((math.floor(-25 / cell), 0), points["ID_H_US_A"]["zoneCells"])  # 25 m west: inside
+        self.assertNotIn((math.floor(20 / cell), 0), points["ID_H_US_A"]["zoneCells"])  # 20 m east: outside
+
+        # The census areas: the measured one, not the one nobody is inside of.
+        hub = Hub([])
+        hub.state.objectives = {"flags": [dict(flag, objective=flag["name"][-1].lower()) for flag in flags]}
+        hub.zones.apply_probe(flags)
+        self.assertEqual([(area["name"], area["radius"]) for area in hub._census_areas()], [("a", 45.0)])
 
 
 def _rooms_area(door: bool) -> dict:

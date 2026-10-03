@@ -52,7 +52,7 @@ print(len(out), "maps")
 EOF
 ```
 
-Expect about 75 maps. Each one takes about 5–15 minutes, so the whole run takes many hours. To work in batches, split
+Expect about 75 maps. Each one takes about 2–5 minutes (Rush longer), so the whole run takes a few hours. To work in batches, split
 the list (for example the Rush maps first). Each batch is its own file and its own `run` in step 3.
 
 ## 2. Start the servers
@@ -94,14 +94,15 @@ Nothing else may run on the ports. Check with `pgrep -af "vu.com|funbots_debug"`
 Run this in the background and log to a file:
 
 ```
-cd DS && python -u -m funbots_debug.census run --maplist census/all_maps.txt --warmup 180 --apply \
+cd DS && python -u -m funbots_debug.census run --maplist census/all_maps.txt --apply \
   --restart-command "$PWD/census/start_vu.sh" > census/all_maps.log 2>&1
 ```
 
 For each map, the command does the following:
 
 1. switches the level;
-2. lets the bots play to measure the capture zones (180 s; Rush uses only 45 s);
+2. measures the capture zones with the bots (zone probe, Conquest only, a few seconds per capture point), then kicks
+   the bots (the next level spawns them again);
 3. runs the census;
 4. with `--apply`, builds the mesh and saves it to `navzones/<map>.json` and into `mod.db` through the mod.
 
@@ -110,7 +111,8 @@ A crashed game server is restarted once per map. At the end, the original map li
 Check the log now and then (`tail census/all_maps.log`). Per map, the log should show these lines:
 
 - `saved ...json.gz`
-- `capture zones measured: N/M` (Conquest only)
+- `zone probe: N zones` and `capture zones measured: N/M` (Conquest only; "not active" capture points are layouts
+  of another mode)
 - `networks: X zones, Y junctions, .../navzones/<map>.json`
 
 Write down every map that shows `failed`, `error`, `no answer from the mod` or `not applied`.
@@ -182,8 +184,10 @@ Bots fight little without a real client, so judge only whether they move, not wh
 
 ## Known issues
 
-- `MP_001_ConquestLarge0`: two zones are both named "b", so there is no path "a". Process the map anyway, but mention
-  it in the report.
+- Zones of capture points are named after the engine ("ID_H_US_A" gives "a"), not after the paths. If the census
+  log or the zones show two zones with the same name, or a capture point without a zone, report it.
+- Some levels have two capture points with the same name (XP3_Alborz ConquestLarge0 has two "C"). The census uses the
+  first one the engine lists. Mention every such map in the report.
 - A map that is cut already can't be cut again. Redoing it needs the original map file from git, plus that file
   imported into `mod.db`. Don't do that yourself; report it.
 - If the debug-server answers with errors or the mod disconnects repeatedly, stop and report the last 50 lines of

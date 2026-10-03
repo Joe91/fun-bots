@@ -31,6 +31,8 @@ local m_Utilities = require('__shared/Utilities')
 local m_MapScanner = require('Debug/MapScanner')
 ---@type MapCensus
 local m_MapCensus = require('Debug/MapCensus')
+---@type ZoneProbe
+local m_ZoneProbe = require('Debug/ZoneProbe')
 ---@type NavZones
 local m_NavZones = require('NavZones')
 ---@type ServerRaycasts
@@ -131,6 +133,7 @@ function DebugCommands:__init()
 	m_DebugBridge:RegisterCommand('scan_stop', self.ScanStop)
 	m_DebugBridge:RegisterCommand('census', self.Census)
 	m_DebugBridge:RegisterCommand('census_stop', self.CensusStop)
+	m_DebugBridge:RegisterCommand('zone_probe', self.ZoneProbe)
 	m_DebugBridge:RegisterCommand('navzones_apply', self.NavZonesApply)
 	m_DebugBridge:RegisterCommand('rcon', self.Rcon)
 	m_DebugBridge:RegisterCommand('chat', self.Chat)
@@ -397,6 +400,12 @@ end
 
 function DebugCommands.CensusStop(p_Args, p_Bridge)
 	return { stopped = m_MapCensus:Stop(p_Bridge) }
+end
+
+---Measures the capture zones with the bots (ZoneProbe.lua): they are put around the capture points.
+function DebugCommands.ZoneProbe(p_Args, p_Bridge, p_Command)
+	m_ZoneProbe:Start(p_Bridge, p_Command.id)
+	return DebugBridge.ASYNC
 end
 
 function DebugCommands.NavZonesApply(p_Args)

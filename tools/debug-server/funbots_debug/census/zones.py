@@ -7,6 +7,9 @@ one outside (at about the same height). The bounds get tight the longer bots pla
 
 Zones aren't always circles (on XP3_Alborz a player was outside at 20 m of A while another one was inside at 32 m),
 so the positions are also counted on a grid of CELL metres: the cells with players inside are the shape of the zone.
+
+Faster and complete: the zone probe of the mod (ZoneProbe.lua) puts bots around each capture point and searches in
+several directions how far the zone reaches (apply_probe). A capture point nobody is inside of then is not active.
 """
 
 from __future__ import annotations
@@ -70,6 +73,37 @@ class ZoneEstimator:
                 elif abs(height) <= OUTSIDE_HEIGHT and (zone["outside"] is None or distance < zone["outside"]):
                     zone["outside"] = distance
 
+    def apply_probe(self, flags: list) -> None:
+        """The result of the zone probe: per capture point the distance inside / outside in each direction. Replaces
+        what was measured before; the shape between the directions is interpolated onto the cells."""
+        for flag in flags:
+            key = self.key(flag)
+            center = vec(flag.get("pos"))
+            if key is None or center is None:
+                continue
+            directions = sorted(((float(entry["angle"]), float(entry["inside"]), float(entry["outside"]))
+                                 for entry in as_list(flag.get("directions"))), key=lambda entry: entry[0])
+            active = bool(flag.get("active")) and bool(directions)
+            zone = {"name": flag.get("name"), "pos": list(center), "samples": 0, "inside": 0.0, "outside": None,
+                    "below": 0.0, "above": 0.0, "cells": {}, "probed": True, "active": active}
+            self.zones[key] = zone
+            if not active:
+                continue
+            zone["samples"] = sum(1 for entry in directions if entry[1] > 0)
+            zone["inside"] = max(entry[1] for entry in directions)
+            zone["outside"] = min(entry[2] for entry in directions)
+            reach = zone["inside"] + 2 * CELL
+            first = math.floor((center[0] - reach) / CELL), math.floor((center[2] - reach) / CELL)
+            last = math.floor((center[0] + reach) / CELL), math.floor((center[2] + reach) / CELL)
+            for column in range(first[0], last[0] + 1):
+                for row in range(first[1], last[1] + 1):
+                    x, z = (column + 0.5) * CELL - center[0], (row + 0.5) * CELL - center[2]
+                    distance = math.hypot(x, z)
+                    if distance > reach:
+                        continue
+                    inside = distance <= _boundary(directions, math.atan2(z, x))
+                    zone["cells"][(column, row)] = [1, 0] if inside else [0, 1]
+
     def to_json(self) -> list[dict]:
         """Per capture point: radius (at least, from the players inside), outside (the closest one outside), samples."""
         result = []
@@ -85,4 +119,21 @@ class ZoneEstimator:
                 "cell": CELL,
                 "cells": [[column, row, counts[0], counts[1]] for (column, row), counts in sorted(zone["cells"].items())],
             })
+            if zone.get("probed"):
+                result[-1]["probed"] = True
+                result[-1]["active"] = zone["active"]
         return result
+
+
+def _boundary(directions: list[tuple[float, float, float]], angle: float) -> float:
+    """How far the zone reaches at the angle: between the two probed directions around it, linear in the angle.
+    directions: (angle, inside, outside), sorted by angle."""
+    count = len(directions)
+    for index in range(count):
+        a_angle, a_inside, _ = directions[index]
+        b_angle, b_inside, _ = directions[(index + 1) % count]
+        span = (b_angle - a_angle) % (2 * math.pi) or 2 * math.pi
+        offset = (angle - a_angle) % (2 * math.pi)
+        if offset <= span:
+            return a_inside + (b_inside - a_inside) * offset / span
+    return directions[0][1]
