@@ -956,8 +956,8 @@ function FunBotServer:OnRequestClientSettings(p_Player)
 	m_ServerRaycasts:SendStateToPlayer(p_Player)
 end
 
-function FunBotServer:OnRequestEnterVehicle(p_Player, p_BotName)
-	m_BotManager:OnRequestEnterVehicle(p_Player, p_BotName)
+function FunBotServer:OnRequestEnterVehicle(p_Player, p_BotId)
+	m_BotManager:OnRequestEnterVehicle(p_Player, p_BotId)
 end
 
 function FunBotServer:OnRequestChangeSeatVehicle(p_Player, p_SeatNumber)
@@ -1015,7 +1015,8 @@ function FunBotServer:SpawnGrenade(p_Position)
 end
 
 function FunBotServer:OnTeleportTo(p_Player, p_Transform)
-	if p_Player == nil or p_Player.soldier == nil then
+	-- The transform comes from the client.
+	if p_Player == nil or p_Player.soldier == nil or type(p_Transform) ~= 'userdata' then
 		return
 	end
 

@@ -178,11 +178,10 @@ function DebugCommands.Raycast(p_Args)
 		local s_Entry = { pos = _Vec(l_Hit.position), normal = _Vec(l_Hit.normal), part = l_Hit.part }
 		if l_Hit.rigidBody ~= nil then
 			s_Entry.entity = l_Hit.rigidBody.typeInfo.name
-			local s_Physics = PhysicsEntityBase(l_Hit.rigidBody)
-			s_Entry.materialFlags = s_Physics:GetPartMaterialFlags(l_Hit.part)
-			if s_Physics.userData ~= nil then
-				s_Entry.owner = s_Physics.userData.typeInfo.name
-			end
+		end
+		-- Same source as Utilities:IsInSight. No cast of the rigidBody or its userData (crashes on some entities).
+		if l_Hit.material ~= nil and l_Hit.material:Is('MaterialContainerPair') then
+			s_Entry.materialFlags = MaterialContainerPair(l_Hit.material).flagsAndIndex
 		end
 		s_Result[#s_Result + 1] = s_Entry
 	end

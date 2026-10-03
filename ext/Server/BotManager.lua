@@ -636,6 +636,10 @@ end
 ---@param p_Player Player
 ---@param p_BotId integer
 function BotManager:OnRequestEnterVehicle(p_Player, p_BotId)
+	if type(p_BotId) ~= 'number' then
+		return
+	end
+
 	local s_Bot = self:GetBotById(p_BotId)
 
 	if s_Bot and s_Bot.m_Player.soldier then

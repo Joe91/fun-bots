@@ -59,14 +59,14 @@ function ClientBotManager:OnClientUpdateInput(p_DeltaTime)
 			---@cast s_RaycastFlags RayCastFlags
 			local s_Raycast = RaycastManager:Raycast(s_StartPosition, s_CastPosition, s_RaycastFlags)
 
-			if s_Raycast ~= nil and s_Raycast.rigidBody:Is("CharacterPhysicsEntity") then
+			if s_Raycast ~= nil and s_Raycast.rigidBody ~= nil and s_Raycast.rigidBody:Is("CharacterPhysicsEntity") then
 				-- Find a teammate at this position.
 				local s_PlayersByTeam = PlayerManager:GetPlayersByTeam(self.m_Player.teamId)
 				for l_Index = 1, #s_PlayersByTeam do
 					local l_Player = s_PlayersByTeam[l_Index]
 					if l_Player.soldier ~= nil and m_Utilities:isBot(l_Player) and
 						l_Player.soldier.worldTransform.trans:Distance(s_Raycast.position) < 2 then
-						NetEvents:SendLocal('Client:RequestEnterVehicle', l_Player.name)
+						NetEvents:SendLocal('Client:RequestEnterVehicle', l_Player.id)
 						break
 					end
 				end
@@ -117,46 +117,12 @@ function ClientBotManager:OnEngineMessage(p_Message)
 	end
 end
 
--- A collision-raycast stops at the first solid hit. All hits before it are parts the ray passed
--- through (windows, fences, ...), so only the last hit can block the sight.
----@param p_RayHits RayCastHit[]
----@param p_PassThroughFlags integer
----@param p_TargetEntity ControllableEntity|nil
----@return boolean
-local function _IsVehicleInSight(p_RayHits, p_PassThroughFlags, p_TargetEntity)
-	local s_HitCount = #p_RayHits
-	if s_HitCount == 0 then
-		return true -- Nothing in the way. The target-point can be above the hull of low vehicles.
-	end
-
-	local s_LastHit = p_RayHits[s_HitCount]
-	if s_LastHit.rigidBody == nil then
-		return false
-	end
-
-	-- The physics-entity of a vehicle has the vehicle itself as userData.
-	local s_PhysicsEntity = PhysicsEntityBase(s_LastHit.rigidBody)
-	local s_Owner = s_PhysicsEntity.userData
-	if p_TargetEntity ~= nil and s_Owner ~= nil and s_Owner.instanceId == p_TargetEntity.instanceId then
-		return true
-	end
-
-	-- right now only 5 hits possible. The ray might have stopped before the target.
-	if s_HitCount >= 5 then
-		return false
-	end
-
-	-- The ray reached the target-point and only passed see-through parts.
-	return (s_PhysicsEntity:GetPartMaterialFlags(s_LastHit.part) & p_PassThroughFlags) ~= 0
-end
-
 ---@param p_Pos1 Vec3
 ---@param p_Pos2 Vec3
 ---@param p_InObjectPos1 boolean
 ---@param p_InObjectPos2 boolean
----@param p_TargetEntity? ControllableEntity controlled entity of the target, needed to detect hits on a target-vehicle
 ---@return boolean
-function ClientBotManager:DoRaycast(p_Pos1, p_Pos2, p_InObjectPos1, p_InObjectPos2, p_TargetEntity)
+function ClientBotManager:DoRaycast(p_Pos1, p_Pos2, p_InObjectPos1, p_InObjectPos2)
 	if Registry.COMMON.USE_COLLISION_RAYCASTS then
 		local s_DeltaPos = p_Pos2 - p_Pos1
 		s_DeltaPos = s_DeltaPos:Normalize()
@@ -185,7 +151,7 @@ function ClientBotManager:DoRaycast(p_Pos1, p_Pos2, p_InObjectPos1, p_InObjectPo
 		local s_RayHits = RaycastManager:CollisionRaycast(p_Pos1, p_Pos2, 5, s_MaterialFlags, s_RaycastFlags) -- only 5 hits supported at the moment
 
 		if p_InObjectPos2 then
-			return _IsVehicleInSight(s_RayHits, s_MaterialFlags, p_TargetEntity)
+			return m_Utilities:IsInSight(s_RayHits, s_MaterialFlags, p_Pos2, true)
 		end
 
 		local s_LastHit = s_RayHits[#s_RayHits]
@@ -265,23 +231,25 @@ function ClientBotManager:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 				local s_Bot2 = PlayerManager:GetPlayerById(s_RaycastCheckEntry.Bot2)
 
 				if s_Bot1 and s_Bot2 and s_Bot1.soldier and s_Bot2.soldier then
+					-- The request is some frames old, the bots might have left their vehicles in the meantime.
+					local s_Bot1InVehicle = s_RaycastCheckEntry.Bot1InVehicle and s_Bot1.controlledControllable ~= nil
+					local s_Bot2InVehicle = s_RaycastCheckEntry.Bot2InVehicle and s_Bot2.controlledControllable ~= nil
 					local s_StartPos = nil
 					local s_EndPos = nil
-					if s_RaycastCheckEntry.Bot1InVehicle then
+					if s_Bot1InVehicle then
 						s_StartPos = s_Bot1.controlledControllable.transform.trans:Clone()
 					else
 						s_StartPos = s_Bot1.soldier.worldTransform.trans:Clone()
 					end
 					s_StartPos.y = s_StartPos.y + 1.4
 
-					if s_RaycastCheckEntry.Bot2InVehicle then
+					if s_Bot2InVehicle then
 						s_EndPos = s_Bot2.controlledControllable.transform.trans:Clone()
 					else
 						s_EndPos = s_Bot2.soldier.worldTransform.trans:Clone()
 					end
 					s_EndPos.y = s_EndPos.y + 1.4
-					if self:DoRaycast(s_StartPos, s_EndPos, s_RaycastCheckEntry.Bot1InVehicle, s_RaycastCheckEntry.Bot2InVehicle,
-							s_Bot2.controlledControllable) then
+					if self:DoRaycast(s_StartPos, s_EndPos, s_Bot1InVehicle, s_Bot2InVehicle) then
 						table.insert(s_RaycastResultsToSend, {
 							Mode = RaycastResultModes.ShootAtBot,
 							Bot1 = s_RaycastCheckEntry.Bot1,
@@ -337,12 +305,18 @@ function ClientBotManager:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 		end
 
 		-- Check for clear view.
+		local s_PlayerInVehicle = self.m_Player.inVehicle and self.m_Player.controlledControllable ~= nil
 		local s_PlayerPosition = Vec3()
-		if self.m_Player.inVehicle then
+		if s_PlayerInVehicle then
 			s_PlayerPosition = self.m_Player.controlledControllable.transform.trans:Clone()
 			s_PlayerPosition.y = s_PlayerPosition.y + 1.4
 		else
-			s_PlayerPosition = ClientUtils:GetCameraTransform().trans:Clone() -- player.soldier.worldTransform.trans:Clone() + m_Utilities:getCameraPos(player, false)
+			local s_CameraTransform = ClientUtils:GetCameraTransform()
+			if s_CameraTransform == nil then
+				self:SendRaycastResults(s_RaycastResultsToSend)
+				return
+			end
+			s_PlayerPosition = s_CameraTransform.trans:Clone() -- player.soldier.worldTransform.trans:Clone() + m_Utilities:getCameraPos(player, false)
 		end
 
 		local s_MaxVehicleDistance = math.max(Config.MaxShootDistanceVehicles, Config.MaxShootDistanceGunship)
@@ -358,8 +332,9 @@ function ClientBotManager:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 
 			-- Find direction of Bot.
 			local s_TargetPos = Vec3()
+			local s_BotInVehicle = s_Bot.inVehicle and s_Bot.controlledControllable ~= nil
 
-			if s_Bot.inVehicle then
+			if s_BotInVehicle then
 				s_TargetPos = s_Bot.controlledControllable.transform.trans:Clone()
 				s_TargetPos.y = s_TargetPos.y + 1.4
 			else
@@ -370,9 +345,8 @@ function ClientBotManager:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 
 			s_CheckCount = s_CheckCount + 1
 
-			if (not s_Bot.inVehicle and (s_Distance < s_MaxPlayerDistance)) or (s_Bot.inVehicle and (s_Distance < s_MaxVehicleDistance)) then
-				if self:DoRaycast(s_PlayerPosition, s_TargetPos, self.m_Player.inVehicle, s_Bot.inVehicle,
-						s_Bot.controlledControllable) then
+			if (not s_BotInVehicle and (s_Distance < s_MaxPlayerDistance)) or (s_BotInVehicle and (s_Distance < s_MaxVehicleDistance)) then
+				if self:DoRaycast(s_PlayerPosition, s_TargetPos, s_PlayerInVehicle, s_BotInVehicle) then
 					-- We found a valid bot in Sight (either no hit, or player-hit). Signal Server with players.
 					local s_IgnoreYaw = false
 

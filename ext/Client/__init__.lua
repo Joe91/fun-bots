@@ -69,7 +69,6 @@ function FunBotClient:RegisterEvents()
 	Events:Subscribe('Level:Loaded', self, self.OnLevelLoaded)
 	Events:Subscribe('Player:Deleted', self, self.OnPlayerDeleted)
 	Events:Subscribe('Client:UpdateInput', self, self.OnClientUpdateInput)
-	Events:Subscribe('Player:Respawn', self, self.OnPlayerRespawn)
 	Events:Subscribe('UI:DrawHud', self, self.OnUIDrawHud)
 	Events:Subscribe('Partition:Loaded', self, self.OnPartitionLoaded)
 
@@ -98,19 +97,6 @@ function FunBotClient:OnEngineMessage(p_Message)
 	m_ClientBotManager:OnEngineMessage(p_Message)
 end
 
----VEXT Client Player:Respawn Event
----@param p_Player Player
-function FunBotClient:OnPlayerRespawn(p_Player)
-	local s_LocalPlayer = PlayerManager:GetLocalPlayer()
-
-	if s_LocalPlayer ~= nil and p_Player == s_LocalPlayer then
-		local s_OldMemory = math.floor(collectgarbage("count") / 1024)
-		collectgarbage('collect')
-		m_Logger:Write("*Collecting Garbage on Level Destroy: " ..
-			math.floor(collectgarbage("count") / 1024) .. " MB | Old Memory: " .. s_OldMemory .. " MB")
-	end
-end
-
 ---VEXT Shared UpdateManager:Update Event
 ---@param p_DeltaTime number
 ---@param p_UpdatePass UpdatePass|integer
@@ -132,6 +118,12 @@ function FunBotClient:OnLevelDestroy()
 	m_ClientSpawnPointHelper:OnLevelDestroy()
 	m_FunBotUIClient:OnLevelDestroy()
 	self._ReadyToUpdate = false
+
+	-- A full collect stalls the game for a moment, so only do it while the level unloads (not on every respawn).
+	local s_OldMemory = math.floor(collectgarbage("count") / 1024)
+	collectgarbage('collect')
+	m_Logger:Write("*Collecting Garbage on Level Destroy: " ..
+		math.floor(collectgarbage("count") / 1024) .. " MB | Old Memory: " .. s_OldMemory .. " MB")
 end
 
 function FunBotClient:OnLevelLoaded()

@@ -17,6 +17,51 @@ function Utilities:GetTime()
 	return s_EpochOffset + SharedUtils:GetTimeNS() / 1000000000
 end
 
+-- The raycasts return max 5 hits at the moment.
+local MAX_RAY_HITS = 5
+-- A hit on a vehicle this close to the target-point counts as a hit on the target-vehicle.
+local VEHICLE_HIT_RADIUS = 10.0
+
+---Evaluates a collision-raycast. It stops at the first solid hit. All hits before it are parts the ray passed
+---through (windows, fences, ...), so only the last hit can block the sight.
+---Only uses the data of the hits: casting the rigidBody and reading its userData (raw engine-pointer) crashes
+---the game, if the hit entity is no physics-entity or already destroyed.
+---@param p_RayHits RayCastHit[]
+---@param p_PassThroughFlags integer MaterialFlags the ray passes through
+---@param p_TargetPos Vec3 end-point of the ray
+---@param p_TargetIsVehicle boolean the ray may end on the hull of the target-vehicle
+---@return boolean
+function Utilities:IsInSight(p_RayHits, p_PassThroughFlags, p_TargetPos, p_TargetIsVehicle)
+	local s_HitCount = #p_RayHits
+	if s_HitCount == 0 then
+		return true -- Nothing in the way. The target-point can be above the hull of low vehicles.
+	end
+
+	local s_LastHit = p_RayHits[s_HitCount]
+	local s_RigidBody = s_LastHit.rigidBody
+	if s_RigidBody == nil then
+		return false
+	end
+
+	if p_TargetIsVehicle and s_RigidBody:Is('DynamicPhysicsEntity') and
+		s_LastHit.position:Distance(p_TargetPos) < VEHICLE_HIT_RADIUS then
+		return true
+	end
+
+	-- The ray might have stopped before the target.
+	if s_HitCount >= MAX_RAY_HITS then
+		return false
+	end
+
+	-- The ray reached the target-point and only passed see-through parts.
+	local s_Material = s_LastHit.material
+	if s_Material == nil or not s_Material:Is('MaterialContainerPair') then
+		return false
+	end
+
+	return (MaterialContainerPair(s_Material).flagsAndIndex & p_PassThroughFlags) ~= 0
+end
+
 ---@param p_Player Player
 ---@param p_IsTarget boolean
 ---@param p_AimForHead boolean

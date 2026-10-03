@@ -20,7 +20,8 @@ function ClientSpawnPointHelper:OnPartitionLoaded(p_Partition)
 		if l_Instance:Is("AlternateSpawnEntityData") then
 			---@type AlternateSpawnEntityData
 			l_Instance = AlternateSpawnEntityData(l_Instance)
-			self.m_SpawnPointTable[#self.m_SpawnPointTable + 1] = l_Instance.transform
+			-- Clone it, the transform of the instance points into the memory of the partition.
+			self.m_SpawnPointTable[#self.m_SpawnPointTable + 1] = l_Instance.transform:Clone()
 		end
 	end
 end
