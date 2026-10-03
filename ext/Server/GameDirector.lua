@@ -260,8 +260,9 @@ function GameDirector:OnEngineUpdate(p_DeltaTime)
 					end
 				end
 
+				-- In the zone of its objective (BotZoneMovement) a bot is off the waypoints on purpose.
 				if (s_CurrentPathStatus <= 0 or s_OnBasePath or s_OnDestroyedPath) and not s_OnVehiclePath
-					and not l_Bot._FollowTargetPlayer then
+					and not l_Bot._FollowTargetPlayer and l_Bot.m_Zone == nil then
 					-- Off a base-path, a bot that keeps getting closer to its objective is on its way, e.g. after the
 					-- rush-stage switched off all paths around it: the time only counts while it doesn't.
 					local s_OnItsWay = false

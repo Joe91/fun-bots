@@ -219,7 +219,7 @@ answer             {"commands": [{"id": 1, "type": "scan", "args": {...}}]}
   `nodes_started`, `nodes`, `scan_started`, `scan_row`, `command_result`, and `error`. `nodes` has the positions, the
   `inputs` (inputVar) and the `data` (`[point, data]`, links as `[path, point]`) of a part of a path.
 - **Commands**: `ping`, `channels`, `interval`, `server_raycasts`, `raycast`, `bot`, `nodes`, `paths_apply`, `scan`,
-  `scan_stop`, `rcon`, and `chat`
+  `scan_stop`, `census`, `census_stop`, `rcon`, and `chat`
   (see the header of `DebugCommands.lua`). Each command is answered with a `command_result` event.
 
 While the debug-server is unreachable, the mod only sends a small hello every 3 seconds.
@@ -271,6 +271,75 @@ to convert world coordinates to screen coordinates.
 answered. `POST /api/scans/clear` with `{"scan": id}` (or `{}` for all) removes scans from the server and all browsers.
 `POST /api/paths/label` (with the switches `relabel`, `relink`, `crossings`, `vehicles`, `loops`), `/api/paths/apply`
 (`{"save": true}`) and `/api/paths/write` run the labeler.
+
+## Census of a level
+
+The census collects everything about the running level that the tools for the waypoints need, in one run
+(`ext/Server/Debug/MapCensus.lua`). The debug-server saves it as `census/<level>_<mode>.json.gz` (`--census DIR`),
+checks it (`funbots_debug/census/report.py`), prints the summary in its terminal and lists the problems under
+*Findings*. The grids around the objectives show up on the map like scans.
+
+```
+python -m funbots_debug.census run --current --warmup 180                  # the level that runs now
+python -m funbots_debug.census run --map "MP_001 ConquestLarge0" --warmup 180  # switches the level over RCON first
+python -m funbots_debug.census run --maplist ../../MapList.txt --warmup 180    # every level of the list
+python -m funbots_debug.census report census/*.json.gz --issues 40
+```
+
+The engine doesn't tell the radius of a capture point (`CaptureRadius` is 0, the level sets it in a way the server
+can't read). The debug-server measures it instead, from the players the mod reports inside each capture point
+(`census/zones.py`): at least as far as the farthest one inside. `--warmup` lets the bots play that long before the
+census. Capture points nobody ever entered while another one of the same name was entered are the layout of another
+mode (loaded as well, e.g. on XP3_Alborz) and are skipped. A census without explicit `areas` puts its grids around the
+measured zones.
+
+Switching levels needs the RCON-connection. Afterwards the map-list is loaded again from the `MapList.txt` of the
+game-server. `report` also tells whether the waypoints of the game (`mod.db`) are the ones of `mapfiles/` in git.
+
+What it collects:
+
+- **Entities**: capture points with their spawns, soldier-spawns, vehicle-spawns (blueprint, team), combat areas
+  (the points of their shapes), MCOMs, the vehicles, and how often each entity-type exists (types with `Ladder`,
+  `Mcom`, `Objective`, `Zipline` or `Door` in the name with their positions). The level links the same shapes to the
+  combat-area triggers of both teams: one per team and a big one for aircraft. Each team gets the smallest shape
+  around its HQ.
+- **Waypoints**: for every waypoint the ground below it (and its slope), water, headroom, the free space to the left
+  and right of the path, and rays at 0.4, 1.0 and 1.6 m to the next waypoint and along every link longer than 1 m.
+- **Areas**: a grid around every capture point (capture-radius + 15 m) and MCOM (30 m), 0.5 m cells with up to
+  4 layers (floors of buildings, bridges). Every walkable surface has its headroom and rays at knee and chest height
+  to the neighbour-cells, so the walkable area and its connections are known without waypoints.
+
+The report checks: paths in the air without the `Vehicles` tag `air`, waypoints floating above the ground (more than
+1.5 m is never reached), low ceilings that are walked
+upright, walls and obstacles between waypoints without a jump, blocked links, capture points without waypoints inside
+the radius, waypoints outside the combat area, spawns far from the waypoints, and how much of the walkable area around
+each objective can be reached from the waypoints.
+
+The raycasts ignore soldiers, but vehicles standing around block them (`nextHit` names what was hit). The census sees
+the level before anything is destroyed.
+
+## Zone networks
+
+Inside a capture zone and around an MCOM the bots shall move freely instead of along waypoints; waypoints are only
+needed between the zones (and for vehicles, actions, jumps). `funbots_debug/census/navzones.py` makes a small walking
+network for every zone from the grids of a census: points about every 5 m (the open spots first), the walkable
+connections between them, and the junctions with the existing waypoints (where a path enters, leaves or ends in the
+zone). Only the parts of the grid the waypoints reach get points, so roofs and closed rooms stay out.
+
+```
+python -m funbots_debug.census navzones census/*.json.gz             # writes census/<level>_<mode>.navzones.json
+python -m funbots_debug --navzones census/XP3_Alborz_ConquestLarge0.json.gz   # show them on the map, also offline
+```
+
+The debug-server also makes them after every census, or on `POST /api/navzones` (`{"file": ...}`, default: the census
+of the running level). On the map (layer *Zone networks*) connections inside the zone are green, outside blue-grey,
+points indoors have a blue ring, points that need crouching an orange one, the junctions with the waypoints are dashed
+orange.
+
+A point is `[x, y, z, clearance, cover, flags]`: clearance is the distance to the next wall, cover the number of the 8
+directions with a wall within 1.5 m, flags 1 = in the zone, 2 = indoors, 4 = crouch. A connection is
+`[a, b, length, corners]` (the corners of the way between the points, if it isn't straight). A junction is
+`[path, point, network-point, walking distance, position of the waypoint]`.
 
 ## Towards nav meshes
 

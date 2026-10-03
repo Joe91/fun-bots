@@ -729,6 +729,11 @@ function Bot:UpdateNormalMovement(p_DeltaTime)
 
 
 	if self._FollowTargetPlayer == nil then -- default movement
+		-- In the zone of the objective the bot walks the network of the zone (BotZoneMovement).
+		if self.m_Zone ~= nil and self:UpdateZoneMovement(p_DeltaTime) then
+			return
+		end
+
 		local s_ActivePointIndex, s_InvertPathDirection = self:_GetWayIndex(0)
 		self._CurrentWayPoint = s_ActivePointIndex
 		self._InvertPathDirection = s_InvertPathDirection
@@ -925,6 +930,11 @@ function Bot:UpdateNormalMovement(p_DeltaTime)
 						if s_Point.Index ~= self._LastActionId and self:_CheckForAction(s_Point) then
 							self._CurrentWayPoint = s_Point.PointIndex
 							return -- DON'T DO ANYTHING ELSE ANY MORE.
+						end
+
+						if self:_CheckForZoneEntry(s_Point) then
+							self._CurrentWayPoint = s_Point.PointIndex
+							return
 						end
 
 						self:_CheckAndDoPathSwitch(s_Point)

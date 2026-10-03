@@ -76,6 +76,8 @@ class Handler(BaseHTTPRequestHandler):
             self._send_json(self.server.hub.commands.history())
         elif url.path == "/api/console":
             self._send_json(catalog())
+        elif url.path == "/api/census":
+            self._send_json(self.server.hub.census_status())
         elif url.path.startswith("/api/"):
             self._send_json({"error": "not found"}, HTTPStatus.NOT_FOUND)
         else:
@@ -107,6 +109,26 @@ class Handler(BaseHTTPRequestHandler):
                 self._send_json({"error": "scan must be an id"}, HTTPStatus.BAD_REQUEST)
                 return
             self._send_json({"cleared": self.server.hub.clear_scans(scan)})
+        elif url.path == "/api/navzones/apply":
+            try:
+                self._send_json(self.server.hub.apply_navzones(save=data.get("save", True) is not False
+                                                               if isinstance(data, dict) else True))
+            except LabelError as error:
+                self._send_json({"error": str(error)}, HTTPStatus.CONFLICT)
+        elif url.path == "/api/navzones":
+            file = data.get("file") if isinstance(data, dict) else None
+            try:
+                self._send_json(self.server.hub.navzones_from(Path(file) if file else None))
+            except (OSError, ValueError, KeyError) as error:
+                self._send_json({"error": str(error)}, HTTPStatus.CONFLICT)
+        elif url.path in ("/api/census", "/api/census/stop"):
+            hub = self.server.hub
+            if not hub.accept_commands:
+                self._send_json({"error": "replay-mode, no mod to send commands to"}, HTTPStatus.CONFLICT)
+            elif url.path == "/api/census":
+                self._send_json(hub.start_census(data if isinstance(data, dict) else {}).to_json())
+            else:
+                self._send_json(hub.submit_command("census_stop").to_json())
         elif url.path in ("/api/paths/label", "/api/paths/apply", "/api/paths/write"):
             self._paths(url.path.rsplit("/", 1)[-1], data if isinstance(data, dict) else {})
         else:

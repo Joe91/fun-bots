@@ -6,6 +6,7 @@ require('Bot/BotAiming')
 require('Bot/BotAimError')
 require('Bot/BotAttacking')
 require('Bot/BotMovement')
+require('Bot/BotZoneMovement')
 require('Bot/BotWeaponHandling')
 
 require('Bot/BotActions')
@@ -295,6 +296,10 @@ function Bot:__init(p_Player)
 
 	self._FollowTargetPlayer = nil
 	self._FollowingTraceTimer = 0.0
+
+	-- Free movement in the zone of the objective (BotZoneMovement), nil on the waypoints.
+	---@type BotZoneState|nil
+	self.m_Zone = nil
 end
 
 -- =============================================

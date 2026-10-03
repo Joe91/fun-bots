@@ -69,6 +69,8 @@ require('Commands/RCON')
 local m_AirTargets = require('AirTargets')
 ---@type GameDirector
 local m_GameDirector = require('GameDirector')
+---@type NavZones
+local m_NavZones = require('NavZones')
 ---@type AimEvaluation
 local m_AimEvaluation = require('AimEvaluation')
 ---@type ServerRaycasts
@@ -659,6 +661,7 @@ end
 function FunBotServer:OnFinishedLoading()
 	m_NodeEditor:EndOfLoad()
 	m_GameDirector:OnLoadFinished()
+	m_NavZones:OnLoadFinished()
 end
 
 function FunBotServer:DestroyObstacles(p_LevelName, p_GameMode)
@@ -688,6 +691,7 @@ function FunBotServer:OnLevelDestroy()
 	m_NodeEditor:OnLevelDestroy()
 	m_AirTargets:OnLevelDestroy()
 	m_GameDirector:OnLevelDestroy()
+	m_NavZones:Clear()
 	m_AimEvaluation:OnLevelDestroy()
 	m_ServerRaycasts:OnLevelDestroy()
 	m_DebugBridge:OnLevelDestroy()

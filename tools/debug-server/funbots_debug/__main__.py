@@ -18,6 +18,8 @@ from .server import DebugServer
 
 # mapfiles/ of the repository this debug-server is part of (tools/debug-server/funbots_debug/__main__.py).
 MAPFILES = Path(__file__).resolve().parents[3] / "mapfiles"
+# Where the censuses of the levels are saved (tools/debug-server/census).
+CENSUS = Path(__file__).resolve().parents[1] / "census"
 
 
 def main() -> None:
@@ -40,6 +42,10 @@ def main() -> None:
     parser.add_argument("--no-rcon", action="store_true", help="no direct RCON-connection")
     parser.add_argument("--mapfiles", type=Path, metavar="DIR", default=MAPFILES,
                         help="waypoint-files the labeler writes into (default: mapfiles/ of this repository)")
+    parser.add_argument("--census", type=Path, metavar="DIR", default=CENSUS,
+                        help="folder for the censuses of the levels (default: tools/debug-server/census)")
+    parser.add_argument("--navzones", type=Path, metavar="FILE",
+                        help="show the walking networks of a census (.json.gz) or a .navzones.json on the map")
     parser.add_argument("--open", action="store_true", help="open the browser")
     parser.add_argument("--verbose", action="store_true", help="log every request")
     args = parser.parse_args()
@@ -49,8 +55,10 @@ def main() -> None:
     analyzers = create_analyzers(set(args.disable))
     recorder = Recorder(args.record) if args.record else None
     hub = Hub(analyzers, recorder=recorder, accept_commands=args.replay is None, rcon=create_rcon(args),
-              mapfiles=args.mapfiles if args.mapfiles and args.mapfiles.is_dir() else None)
+              mapfiles=args.mapfiles if args.mapfiles and args.mapfiles.is_dir() else None, census=args.census)
 
+    if args.navzones:
+        print(f"zone networks: {hub.navzones_from(args.navzones)}")
     server = DebugServer((args.host, args.port), hub, quiet=not args.verbose)
     url = f"http://{'127.0.0.1' if args.host in ('0.0.0.0', '') else args.host}:{args.port}/"
     print(f"fun-bots debug-server {__version__} on {url}")

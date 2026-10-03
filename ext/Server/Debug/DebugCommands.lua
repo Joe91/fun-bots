@@ -15,6 +15,10 @@ DebugCommands = class('DebugCommands')
 --                                               (funbots_debug/paths), see DebugCommands.PathsApply
 --   scan            see MapScanner:Start        streams the scan as "scan_row" events
 --   scan_stop       { scan }                    stops one (or all) scans
+--   census          see MapCensus:Start         everything about the level for the waypoint-tools, streamed as
+--                                               "census_*" events (funbots_debug/census)
+--   census_stop     {}                          stops a running census
+--   navzones_apply  { map, zones, save }        walking networks of the zones (NavZones.lua), save: into mod.db
 --   rcon            { command, args }           any RCON-command (also the vanilla ones) -> { lines }
 --   chat            { message, player }         a chat-command, as the player with that id or (no player) as
 --                                               ChatCommands.CONSOLE with all permissions -> { lines }
@@ -25,6 +29,10 @@ local m_DebugBridge = require('Debug/DebugBridge')
 local m_Utilities = require('__shared/Utilities')
 ---@type MapScanner
 local m_MapScanner = require('Debug/MapScanner')
+---@type MapCensus
+local m_MapCensus = require('Debug/MapCensus')
+---@type NavZones
+local m_NavZones = require('NavZones')
 ---@type ServerRaycasts
 local m_ServerRaycasts = require('ServerRaycasts')
 ---@type BotManager
@@ -121,6 +129,9 @@ function DebugCommands:__init()
 	m_DebugBridge:RegisterCommand('paths_apply', self.PathsApply)
 	m_DebugBridge:RegisterCommand('scan', self.Scan)
 	m_DebugBridge:RegisterCommand('scan_stop', self.ScanStop)
+	m_DebugBridge:RegisterCommand('census', self.Census)
+	m_DebugBridge:RegisterCommand('census_stop', self.CensusStop)
+	m_DebugBridge:RegisterCommand('navzones_apply', self.NavZonesApply)
 	m_DebugBridge:RegisterCommand('rcon', self.Rcon)
 	m_DebugBridge:RegisterCommand('chat', self.Chat)
 end
@@ -377,6 +388,23 @@ end
 
 function DebugCommands.ScanStop(p_Args, p_Bridge)
 	return { stopped = m_MapScanner:Stop(p_Bridge, tonumber(p_Args.scan)) }
+end
+
+function DebugCommands.Census(p_Args, p_Bridge, p_Command)
+	m_MapCensus:Start(p_Bridge, p_Command.id, p_Args)
+	return DebugBridge.ASYNC
+end
+
+function DebugCommands.CensusStop(p_Args, p_Bridge)
+	return { stopped = m_MapCensus:Stop(p_Bridge) }
+end
+
+function DebugCommands.NavZonesApply(p_Args)
+	if p_Args.map ~= m_NodeCollection:GetMapName() then
+		error('the networks are for ' .. tostring(p_Args.map) .. ', the level is ' .. m_NodeCollection:GetMapName())
+	end
+	local s_Zones, s_Junctions = m_NavZones:Apply(type(p_Args.zones) == 'table' and p_Args.zones or {}, p_Args.save == true)
+	return { zones = s_Zones, junctions = s_Junctions, saved = p_Args.save == true }
 end
 
 function DebugCommands.Rcon(p_Args)

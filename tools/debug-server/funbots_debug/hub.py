@@ -11,7 +11,11 @@ import time
 from pathlib import Path
 from typing import Any, Callable
 
-from .analyzers import Analyzer
+from .analyzers import Analyzer, Finding
+from .census.report import Report, build_report
+from .census import navzones
+from .census.store import Census, CensusStore
+from .census.zones import ZoneEstimator
 from .commands import Command, CommandQueue
 from .paths.labeler import (Options, anchors_from_flags, anchors_from_labels, apply_patch, label, make_patch,
                             merge_anchors, uses_objectives)
@@ -19,7 +23,7 @@ from .paths.mapfile import MapData
 from .protocol import as_list
 from .rcon import RconClient, RconError
 from .recorder import Recorder
-from .state import WorldState
+from .state import ScanGrid, WorldState
 
 # Seconds without request after which the mod counts as disconnected.
 MOD_TIMEOUT = 4.0
@@ -33,6 +37,13 @@ LABEL_OPTIONS = ("relabel", "relink", "crossings", "vehicles", "loops")
 APPLY_TIMEOUT = 30.0
 # Metres a node of a waypoint-file may be off the one in the game (the mod sends positions rounded to cm).
 WRITE_TOLERANCE = 0.05
+# The grids of a census are shown as scans with these ids (+ 100 * census + area), apart from the scans of the mod.
+CENSUS_SCAN_BASE = 100000
+# Grids around the objectives: metres around the measured capture-radius, the radius if nothing was measured yet,
+# and the radius around an MCOM.
+CENSUS_AREA_MARGIN = 15.0
+CENSUS_UNKNOWN_RADIUS = 25.0
+CENSUS_MCOM_RADIUS = 30.0
 
 
 class LabelError(Exception):
@@ -60,7 +71,7 @@ class Subscriber:
 
 class Hub:
     def __init__(self, analyzers: list[Analyzer], recorder: Recorder | None = None, accept_commands: bool = True,
-                 rcon: RconClient | None = None, mapfiles: Path | None = None):
+                 rcon: RconClient | None = None, mapfiles: Path | None = None, census: Path | None = None):
         self.lock = threading.RLock()
         self.state = WorldState()
         self.commands = CommandQueue()
@@ -84,6 +95,13 @@ class Hub:
         self.labels: dict | None = None
         # Hooks for own code: called with (payload) after every request of the mod, under the lock.
         self.on_ingest: list[Callable[[dict], None]] = []
+        # The census of the level (census/), saved into the folder. The report of the last one is shown as findings.
+        self.census = CensusStore(census)
+        self.census_report: Report | None = None
+        # Size of the capture zones, from who is inside them (census/zones.py).
+        self.zones = ZoneEstimator()
+        # Walking networks of the zones (census/navzones.py), shown on the map.
+        self.navzones: dict | None = None
 
     # --- mod-side ----------------------------------------------------------------------------------------------
 
@@ -113,6 +131,10 @@ class Hub:
             for event in events:
                 if not isinstance(event, dict):
                     continue
+                if str(event.get("type") or "").startswith("census_"):
+                    # Big, and only for the census: not into the state, the analyzers and the browsers.
+                    self._census_event(event, messages)
+                    continue
                 if self.state.apply_event(event) == "reset":
                     self._reset(messages, already_reset=True)
                 if event.get("type") == "nodes_started" and self.labels is not None:
@@ -134,6 +156,7 @@ class Hub:
             for frame in frames:
                 if self.state.apply_frame(frame):
                     self._reset(messages, already_reset=True)
+                self.zones.on_frame(self.state)
                 for analyzer in self.analyzers:
                     analyzer.on_frame(frame, self.state)
 
@@ -162,6 +185,9 @@ class Hub:
         if not already_reset:
             self.state.reset()
         self.labels = None
+        self.census_report = None
+        self.zones.reset()
+        self.navzones = None
         for analyzer in self.analyzers:
             analyzer.reset()
         if self.recorder is not None:
@@ -218,6 +244,138 @@ class Hub:
         except RconError:
             pass
         self._publish([("status", self._status())])
+
+    # --- census (census/) ----------------------------------------------------------------------------------------
+
+    def start_census(self, args: dict | None = None) -> Command:
+        """Starts a census of the running level (MapCensus.lua). It is saved when done, see census_status.
+        Without areas in args, the grids go around the capture points (measured radius) and the MCOMs."""
+        args = dict(args or {})
+        if "areas" not in args:
+            with self.lock:
+                args["areas"] = self._census_areas()
+        return self.submit_command("census", args)
+
+    def _census_areas(self) -> list[dict]:
+        objectives = self.state.objectives or {}
+        zones = {(zone["name"], tuple(round(value) for value in zone["pos"])): zone for zone in self.zones.to_json()}
+        visited = {zone["name"] for zone in zones.values() if zone["samples"]}
+        areas = []
+        for flag in as_list(objectives.get("flags")):
+            pos = as_list(flag.get("pos"))
+            if flag.get("hq") or len(pos) < 3:
+                continue
+            zone = zones.get((flag.get("name"), tuple(round(value) for value in pos)))
+            if zone and zone["samples"]:
+                radius = zone["radius"] + CENSUS_AREA_MARGIN
+            elif flag.get("name") in visited:
+                continue  # Nobody was ever inside, but in another one of this name: a layout of another mode.
+            else:
+                radius = CENSUS_UNKNOWN_RADIUS + CENSUS_AREA_MARGIN
+            areas.append({"name": flag.get("objective") or flag.get("name"), "kind": "capturepoint", "pos": pos,
+                          "radius": round(radius, 1)})
+        for mcom in as_list(objectives.get("mcoms")):
+            pos = as_list(mcom.get("pos"))
+            if len(pos) >= 3:
+                areas.append({"name": mcom.get("name"), "kind": "mcom", "pos": pos, "radius": CENSUS_MCOM_RADIUS})
+        return areas
+
+    def census_status(self) -> dict:
+        with self.lock:
+            status = self.census.status()
+            status["zones"] = self.zones.to_json()
+            report = self.census_report
+            if report is not None:
+                status["report"] = {"name": report.name, "summary": report.summary, "issues": report.counts()}
+            return status
+
+    def _census_event(self, event: dict, messages: list) -> None:
+        census = self.census.on_event(event)
+        if census is None:
+            return
+        kind = event.get("type")
+        if kind == "census_area":
+            # Shown like a scan of the mod (several layers), so the grid can be checked on the map.
+            scan = CENSUS_SCAN_BASE + 100 * census.id + int(event["area"])
+            self.state.scans[scan] = ScanGrid(scan=scan, x0=float(event["x0"]), z0=float(event["z0"]),
+                                              step=float(event["step"]), columns=int(event["columns"]),
+                                              rows=int(event["rows"]), layers=int(event.get("layers") or 1))
+            messages.append(("scan_started", {"type": "scan_started", "scan": scan, "x0": event["x0"],
+                                              "z0": event["z0"], "step": event["step"], "columns": event["columns"],
+                                              "rows": event["rows"], "layers": event.get("layers") or 1}))
+        elif kind == "census_area_row":
+            scan = CENSUS_SCAN_BASE + 100 * census.id + int(event.get("area", 0))
+            grid = self.state.scans.get(scan)
+            if grid is not None:
+                heights, normals = _cells_to_scan(as_list(event.get("cells")))
+                grid.set_row(int(event["row"]), heights, normals)
+                messages.append(("scan_row", {"type": "scan_row", "scan": scan, "row": event["row"],
+                                              "heights": heights, "normals": normals}))
+        elif kind == "census_done":
+            census.zones = self.zones.to_json()
+            # Saving and checking take a while, the mod must not wait for the answer that long.
+            threading.Thread(target=self._finish_census, args=(census,), name="census", daemon=True).start()
+        messages.append(("census", census.progress()))
+
+    def _finish_census(self, census: Census) -> None:
+        try:
+            file = self.census.save(census)
+            report = build_report(census.to_json())
+        except Exception as error:  # noqa: BLE001 - shown in the terminal, the server keeps running
+            print(f"census {census.name}: {error!r}")
+            return
+        print(f"census saved to {file}" if file else "census not saved (no folder, start with --census)")
+        print(report.text())
+        with self.lock:
+            self.census_report = report
+        self._publish([("census", census.progress())])
+        if census.areas:
+            data = navzones.build(census.to_json())
+            if file is not None:
+                navzones.save(data, file.with_name(f"{census.name}.navzones.json"))
+            print(navzones.summary(data))
+            self.set_navzones(data)
+
+    def set_navzones(self, data: dict | None) -> None:
+        """Shows walking networks on the map of all browsers."""
+        with self.lock:
+            self.navzones = data
+        self._publish([("navzones", data)])
+
+    def apply_navzones(self, save: bool = True, timeout: float = APPLY_TIMEOUT) -> dict:
+        """Sends the networks shown on the map to the mod (NavZones.lua), which saves them into mod.db with save."""
+        with self.lock:
+            data = self.navzones
+        if data is None:
+            raise LabelError("no zone networks: run a census or load them first")
+        if not self.accept_commands:
+            raise LabelError("replay-mode, no mod to send the networks to")
+        command = self.submit_command("navzones_apply", {"map": data.get("map"), "zones": data.get("zones") or [],
+                                                         "save": save})
+        self.commands.wait(command, timeout)
+        return command.to_json()
+
+    def navzones_from(self, file: Path | None = None) -> dict:
+        """Builds the networks from a census (default: the one of the running level) or loads saved ones."""
+        if file is None:
+            with self.lock:
+                meta = self.state.meta
+                name = meta.get("paths") or f"{str(meta.get('level') or '').rsplit('/', 1)[-1]}_{meta.get('mode')}"
+            if self.census.directory is None:
+                raise FileNotFoundError("no census-folder")
+            file = self.census.directory / f"{name}.json.gz"
+        data = navzones.load_or_build(file)
+        self.set_navzones(data)
+        return {"map": data.get("map"), "zones": len(data.get("zones") or [])}
+
+    def _census_findings(self) -> list[dict]:
+        report = self.census_report
+        if report is None:
+            return []
+        return [Finding(key=issue.key, message=issue.message, severity=issue.severity, time=self.state.time,
+                        pos=list(issue.pos) if issue.pos else None, analyzer="census",
+                        data={"kind": issue.kind}).to_json()
+                for issue in report.limited()]
 
     # --- labeling the paths (paths/labeler.py) ------------------------------------------------------------------
 
@@ -334,6 +492,7 @@ class Hub:
             data["analysis"] = self._analysis()
             data["commands"] = self.commands.history()[:50]
             data["labels"] = self._labels_json()
+            data["navzones"] = self.navzones
             return data
 
     # --- helpers -----------------------------------------------------------------------------------------------
@@ -358,9 +517,13 @@ class Hub:
             if analyzer_stats:
                 stats[analyzer.name] = analyzer_stats
         findings.sort(key=lambda finding: -finding["time"])
+        census = self._census_findings()
+        if census:
+            findings = census + findings
+            stats["census"] = self.census_report.counts() if self.census_report else {}
         stats["connection"] = {"requests": self.requests, "MB received": round(self.bytes_received / 1e6, 1),
                                "dropped events": self.dropped_events}
-        return {"findings": findings[:200], "stats": stats}
+        return {"findings": findings[:200 + len(census)], "stats": stats}
 
     def _publish(self, messages: list[tuple[str, Any]]) -> None:
         if not messages:
@@ -371,3 +534,17 @@ class Hub:
         for subscriber in subscribers:
             for kind, data in encoded:
                 subscriber.push(kind, data)
+
+
+def _cells_to_scan(cells: list) -> tuple[list, list]:
+    """Cells of a census-grid ([height, normal-y, edges, headroom] per layer) as heights and normals of a scan."""
+    heights, normals = [], []
+    for cell in cells:
+        values = as_list(cell)
+        if not values:
+            heights.append(False)
+            normals.append(False)
+            continue
+        heights.append(values[0::4])
+        normals.append(values[1::4])
+    return heights, normals

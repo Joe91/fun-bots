@@ -56,6 +56,7 @@ const store = {
 	labelStatus: null, // {kind: "ok" | "error", text} of the last action of the path-labels panel
 	objectives: { flags: [], mcoms: [], stage: 0 }, // see DebugSnapshots.CollectObjectives
 	scans: new Map(), // scan-id -> ScanLayer
+	navzones: null, // walking networks of the zones (census/navzones.py): {map, spacing, zones: [{points, edges, attach}]}
 	findings: [],
 	stats: {},
 	commands: new Map(), // id -> command (see commands.py)
@@ -302,6 +303,53 @@ function pathPoint(path, point) {
 
 // Links (junctions) of the waypoints, or of the labels while there is a preview: grey the ones that stay, green the
 // new ones, red the removed ones. With a preview also the areas of the objectives the labeler used.
+// Walking networks of the zones. Point: [x, y, z, clearance, cover, flags], flags 1 = in the zone, 2 = indoors,
+// 4 = crouch. Edge: [a, b, length, corners]. Junction with the waypoints: [path, point, network-point, distance, pos].
+function drawNavzones() {
+	const data = store.navzones;
+	if (!data) return;
+	const radius = view.scale > 3 ? 3 : 2;
+	ctx.lineWidth = 1.2;
+	for (const zone of data.zones || []) {
+		const points = zone.points || [];
+		for (const [a, b, , corners] of zone.edges || []) {
+			const p = points[a];
+			const q = points[b];
+			if (!p || !q) continue;
+			ctx.strokeStyle = p[5] & 1 && q[5] & 1 ? "rgba(80, 200, 120, 0.75)" : "rgba(120, 160, 200, 0.5)";
+			ctx.beginPath();
+			ctx.moveTo(sx(p[0]), sy(p[2]));
+			for (const c of corners || []) ctx.lineTo(sx(c[0]), sy(c[2]));
+			ctx.lineTo(sx(q[0]), sy(q[2]));
+			ctx.stroke();
+		}
+		ctx.setLineDash([3, 3]);
+		ctx.strokeStyle = "rgba(245, 184, 65, 0.8)";
+		for (const [, , index, , pos] of zone.attach || []) {
+			const p = points[index];
+			if (p && pos) line(pos, p);
+		}
+		ctx.setLineDash([]);
+		for (const p of points) {
+			ctx.fillStyle = p[5] & 1 ? "#50c878" : "#7890a8";
+			ctx.beginPath();
+			ctx.arc(sx(p[0]), sy(p[2]), radius, 0, Math.PI * 2);
+			ctx.fill();
+			if (p[5] & 6) {
+				ctx.strokeStyle = p[5] & 4 ? "#f5b841" : "#5aa2ff";
+				ctx.beginPath();
+				ctx.arc(sx(p[0]), sy(p[2]), radius + 2, 0, Math.PI * 2);
+				ctx.stroke();
+			}
+		}
+		if (view.scale > 0.4 && zone.center) {
+			ctx.fillStyle = "#50c878";
+			ctx.font = "12px system-ui, sans-serif";
+			ctx.fillText(`${zone.name}: ${points.length} points`, sx(zone.center[0]) + 8, sy(zone.center[2]) + 16);
+		}
+	}
+}
+
 function drawLinks() {
 	const labels = store.labels;
 	const size = view.scale > 2 ? 3 : 2;
@@ -642,6 +690,7 @@ const LAYERS = [
 	{ id: "heightmap", label: "Height-map", on: true, draw: drawHeightmap },
 	{ id: "paths", label: "Waypoints", on: true, draw: drawPaths },
 	{ id: "links", label: "Links", on: true, draw: drawLinks },
+	{ id: "navzones", label: "Zone networks", on: true, draw: drawNavzones },
 	{ id: "objectives", label: "Objectives", on: true, draw: () => { drawFlags(); drawMcoms(); } },
 	{ id: "trails", label: "Trails", on: true, draw: drawTrails },
 	{ id: "traces", label: "Raycasts", on: true, draw: drawTraces },
@@ -808,6 +857,7 @@ function resetStore() {
 	store.kills = [];
 	store.paths = {};
 	store.labels = null;
+	store.navzones = null;
 	store.scans.clear();
 	store.extras = {};
 	store.botDetails = null;
@@ -847,6 +897,7 @@ const handlers = {
 		store.traces = (data.traces || []).map((trace) => Object.assign(trace, { arrival: old }));
 		store.paths = data.paths || {};
 		store.labels = data.labels || null;
+		store.navzones = data.navzones || null;
 		for (const scan of data.scans || []) {
 			const layer = new ScanLayer(scan);
 			for (const [row, heights, normals] of scan.rowData) layer.setRow(row, heights, normals);
@@ -881,6 +932,10 @@ const handlers = {
 	},
 	paths(data) {
 		store.paths = data || {};
+	},
+	navzones(data) {
+		store.navzones = data || null;
+		if (!view.fitted) fit();
 	},
 	scan_started(event) {
 		store.scans.set(event.scan, new ScanLayer(event));
@@ -1495,6 +1550,9 @@ function fit() {
 	}
 	if (!points.length) {
 		for (const path of Object.values(store.paths)) points.push(...path.points);
+	}
+	if (!points.length && store.navzones) {
+		for (const zone of store.navzones.zones || []) points.push(...(zone.points || []));
 	}
 	if (!points.length || !view.width) return;
 	const xs = points.map((p) => p[0]);
