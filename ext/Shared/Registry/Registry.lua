@@ -102,6 +102,8 @@ Registry = {
 	},
 	GAME_DIRECTOR = {
 		UPDATE_OBJECTIVES_CYCLE = 1.5,
+		-- A bot is only sent to a vehicle this close (metres): with the navigation paths it would walk to any.
+		MAX_VEHICLE_OBJECTIVE_DISTANCE = 100.0,
 		-- Time after a MCO is considered destroyed.
 		MCOMS_CHECK_CYCLE = 26.5,
 		-- Teleport bots without valid paths (no active objective, base-path alone, destroyed MCOM) after this amount
@@ -339,6 +341,9 @@ Registry = {
 		-- Conquest and rush with SpawnMethod SpawnOnTdm: on levels with walking networks of the bases (NavZones.lua) the
 		-- bots spawn at the spawn-points of the game (SpawnMethod.Spawn) and walk out over the networks.
 		GAME_SPAWN_WITH_ZONES = true,
+		-- Rush: the defenders (always Team2) get this share of the bots of their team (balanced_teams), e.g. to test
+		-- the attack. 1.0 = as many as the attackers.
+		RUSH_DEFENDER_FACTOR = 0.3,
 	},
 	-- Debug
 	DEBUG = {

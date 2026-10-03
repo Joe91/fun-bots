@@ -25,6 +25,9 @@ local ZONE_CROSSING = 20.0
 local END_SEARCH = 15
 -- Metres added to an exit a bot didn't get to over the network (for all bots, until the level ends).
 local EXIT_PENALTY = 100.0
+-- Metres added to a route back into a zone the bot crossed already on its way: zones overlap (rush), and from another
+-- part of a network the way back can look shorter. Without this bots go back and forth between two zones.
+local REVISIT_PENALTY = 500.0
 
 ---@class NavRouteEnd
 ---@field Path NavPath
@@ -205,8 +208,9 @@ end
 ---cost to the zone of the objective and the first end of that route.
 ---@param p_Departures { End: NavRouteEnd, Cost: number }[]
 ---@param p_Target string
+---@param p_Visited table<string, boolean>|nil zones the bot crossed already on its way (REVISIT_PENALTY)
 ---@return number, NavRouteEnd|nil
-function NavRoutes:_Search(p_Departures, p_Target)
+function NavRoutes:_Search(p_Departures, p_Target, p_Visited)
 	local s_Cost = {}
 	local s_First = {}
 	local s_Done = {}
@@ -243,6 +247,9 @@ function NavRoutes:_Search(p_Departures, p_Target)
 			local s_Arrival = s_End.Other
 			---@cast s_Arrival -nil
 			local s_Total = s_Cost[s_End] + s_End.Path.Length
+			if p_Visited ~= nil and p_Visited[s_Arrival.Zone.Name] then
+				s_Total = s_Total + REVISIT_PENALTY
+			end
 			if s_Arrival.Zone.Name == p_Target then
 				if s_Total < s_Best then
 					s_Best = s_Total
@@ -302,13 +309,14 @@ end
 ---@param p_Zone NavZone
 ---@param p_Point integer where the bot is in the zone
 ---@param p_Objective string
+---@param p_Visited table<string, boolean>|nil zones the bot crossed already on its way there
 ---@return NavZoneJunction|nil
-function NavRoutes:NextExit(p_Zone, p_Point, p_Objective)
+function NavRoutes:NextExit(p_Zone, p_Point, p_Objective, p_Visited)
 	local s_Target = self:ZoneFor(p_Objective)
 	if s_Target == nil or p_Zone.Name == s_Target or p_Zone.Points[p_Point] == nil then
 		return nil
 	end
-	local _, s_First = self:_Search(self:_Departures(p_Zone, p_Point, 0.0, nil), s_Target)
+	local _, s_First = self:_Search(self:_Departures(p_Zone, p_Point, 0.0, nil), s_Target, p_Visited)
 	return s_First and s_First.Junction or nil
 end
 

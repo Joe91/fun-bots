@@ -178,6 +178,14 @@ function Bot:_EnterZone(p_Zone, p_Point, p_Vehicle, p_Junction)
 	self:_StopObstacleSequence()
 	self:_ZoneNewGoal()
 
+	-- The zones crossed on the way to the objective: the route doesn't lead back into them (NavRoutes).
+	if not p_Vehicle then
+		if self._NavTrip == nil or self._NavTrip.Objective ~= self._Objective then
+			self._NavTrip = { Objective = self._Objective, Visited = {} }
+		end
+		self._NavTrip.Visited[p_Zone.Name] = true
+	end
+
 	-- From the waypoint of the junction to its point: the corners backwards, then the point itself.
 	if p_Junction ~= nil then
 		local s_Lead = {}
@@ -261,7 +269,9 @@ function Bot:_ZoneBestExit(p_Objective)
 
 	-- Over the navigation paths, if the objective is a zone of their graph.
 	if not s_State.Vehicle then
-		local s_Exit = m_NavRoutes:NextExit(s_State.Zone, s_State.Point, p_Objective)
+		local s_Trip = self._NavTrip
+		local s_Exit = m_NavRoutes:NextExit(s_State.Zone, s_State.Point, p_Objective,
+			s_Trip ~= nil and s_Trip.Objective == p_Objective and s_Trip.Visited or nil)
 		if s_Exit ~= nil then
 			return s_Exit
 		end

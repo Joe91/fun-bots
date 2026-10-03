@@ -407,6 +407,14 @@ function GameDirector:OnEngineUpdate(p_DeltaTime)
 			local l_Objective = self.m_AllObjectives[l_Index]
 			l_Objective.assigned[l_BotTeam] = 0
 		end
+		-- Vehicles first: one bot per vehicle, also if it comes later in the list than the bot that gets a new one.
+		local l_Bots = s_BotsByTeam[l_BotTeam] or {}
+		for l_Index = 1, #l_Bots do
+			local s_Objective = self:_GetObjectiveObject(l_Bots[l_Index]:GetObjective())
+			if s_Objective ~= nil and s_Objective.isEnterVehiclePath then
+				s_Objective.assigned[l_BotTeam] = s_Objective.assigned[l_BotTeam] + 1
+			end
+		end
 	end
 
 	-- g_Profiler:End("GameDirector:Update2")
@@ -438,12 +446,15 @@ function GameDirector:OnEngineUpdate(p_DeltaTime)
 						goto continue_with_next_objective
 					end
 
-					-- Assign vehicle-objectives if possible.
+					-- Assign vehicle-objectives if possible. Only close ones: with the navigation paths (NavRoutes) a bot gets
+					-- to any vehicle, also to one at a spawn far behind the front.
 					if Config.UseVehicles and
 						l_Objective.isEnterVehiclePath and
 						l_Objective.team == l_BotTeam and
 						l_Objective.assigned[l_BotTeam] == 0 and
-						s_BotStates:IsSoldierState(l_Bot.m_ActiveState) then
+						s_BotStates:IsSoldierState(l_Bot.m_ActiveState) and
+						self:_GetDistanceFromObjective(l_Objective.name, l_Bot.m_Player.soldier.worldTransform.trans)
+						<= Registry.GAME_DIRECTOR.MAX_VEHICLE_OBJECTIVE_DISTANCE then
 						if l_Bot:SetObjectiveIfPossible(l_Objective.name, BotObjectiveModes.Attack) then
 							l_Objective.assigned[l_BotTeam] = 1
 							m_Logger:Write("assigned bot to " .. l_Objective.name)
