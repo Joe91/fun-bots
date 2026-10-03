@@ -202,8 +202,11 @@ function BotSpawner:OnEngineUpdate(p_DeltaTime, p_SimulationDeltaTime)
 					break
 				end
 
-				-- check for mate or beacon
-				local s_PathIndex, s_IndexOnPath, s_InvertDirection, s_SpawnEntity, s_SpawnPosition = g_GameDirector:GetSpawnableBeaconOrMate(l_Bot.m_Player.teamId, l_Bot.m_Player.squadId)
+				-- check for mate or beacon (not a bot that spawned for a vehicle)
+				local s_PathIndex, s_IndexOnPath, s_InvertDirection, s_SpawnEntity, s_SpawnPosition = nil, nil, nil, nil, nil
+				if g_GameDirector:GetReservedVehicle(l_Bot) == nil then
+					s_PathIndex, s_IndexOnPath, s_InvertDirection, s_SpawnEntity, s_SpawnPosition = g_GameDirector:GetSpawnableBeaconOrMate(l_Bot.m_Player.teamId, l_Bot.m_Player.squadId)
+				end
 				if s_PathIndex then
 					-- spawn at mate or beacon. Done here: the closest-path code below must not
 					-- overwrite the chosen path, and the bot must not be teleported again.
@@ -979,8 +982,33 @@ function BotSpawner:_UseGameSpawn()
 		and Registry.BOT.USE_ZONE_NETWORKS and (Globals.IsConquest or Globals.IsRush) and m_NavZones:HasBases()
 end
 
+---On a random point of the mesh in the base of the team in this stage (rush), instead of the spawn of the game: that one
+---is far behind, next to the vehicles.
 ---@param p_Bot Bot
-function BotSpawner:_TriggerSpawn(p_Bot)
+---@return boolean true if spawned
+function BotSpawner:_SpawnInBase(p_Bot)
+	local s_Base = g_GameDirector:GetActiveBase(p_Bot.m_Player.teamId)
+	local s_Zone = s_Base ~= nil and m_NavZones:GetZone(s_Base) or nil
+	if s_Zone == nil or #s_Zone.Inside == 0 then
+		return false
+	end
+	-- The most open of a few random points: not right at a wall.
+	local s_Point = nil
+	for _ = 1, 5 do
+		local l_Point = s_Zone.Inside[MathUtils:GetRandomInt(1, #s_Zone.Inside)]
+		if s_Point == nil or s_Zone.Points[l_Point].Clearance > s_Zone.Points[s_Point].Clearance then
+			s_Point = l_Point
+		end
+	end
+	local s_Transform = LinearTransform()
+	s_Transform.trans = s_Zone.Points[s_Point].Position:Clone()
+	self:_SpawnBot(p_Bot, s_Transform, true)
+	return true
+end
+
+---@param p_Bot Bot
+---@param p_Near Vec3|nil rush: the spawn closest to this position (the vehicle the bot spawns for)
+function BotSpawner:_TriggerSpawn(p_Bot, p_Near)
 	local s_CurrentGameMode = SharedUtils:GetCurrentGameMode()
 
 	if s_CurrentGameMode == nil then
@@ -998,7 +1026,7 @@ function BotSpawner:_TriggerSpawn(p_Bot)
 	elseif s_CurrentGameMode:match("Rush") then
 		-- Seems to be the same as DeathMatchSpawn.
 		-- But it has vehicles.
-		self:_RushSpawn(p_Bot)
+		self:_RushSpawn(p_Bot, p_Near)
 	elseif s_CurrentGameMode:match("Conquest") then
 		-- event + target spawn ("ID_H_US_B", "_ID_H_US_HQ", etc.)
 		self:_ConquestSpawn(p_Bot)
@@ -1027,11 +1055,14 @@ function BotSpawner:_DeathMatchSpawn(p_Bot)
 end
 
 ---@param p_Bot Bot
-function BotSpawner:_RushSpawn(p_Bot)
+---@param p_Near Vec3|nil the spawn closest to this position, else the first one
+function BotSpawner:_RushSpawn(p_Bot, p_Near)
 	local s_Event = ServerPlayerEvent("Spawn", p_Bot.m_Player, true, false, false, false, false, false,
 		p_Bot.m_Player.teamId)
 	local s_EntityIterator = EntityManager:GetIterator("ServerCharacterSpawnEntity")
 	local s_Entity = s_EntityIterator:Next()
+	local s_Best = nil
+	local s_BestDistance = math.huge
 
 	while s_Entity do
 		if s_Entity.data:Is('CharacterSpawnReferenceObjectData') then
@@ -1045,13 +1076,24 @@ function BotSpawner:_RushSpawn(p_Bot)
 					end
 				end
 
-				s_Entity:FireEvent(s_Event)
-				return
+				if p_Near == nil then
+					s_Entity:FireEvent(s_Event)
+					return
+				end
+				local s_Distance = SpawnEntity(s_Entity).transform.trans:Distance(p_Near)
+				if s_Distance < s_BestDistance then
+					s_Best = s_Entity
+					s_BestDistance = s_Distance
+				end
 			end
 		end
 
 		::skip::
 		s_Entity = s_EntityIterator:Next()
+	end
+
+	if s_Best ~= nil then
+		s_Best:FireEvent(s_Event)
 	end
 end
 
@@ -1371,8 +1413,17 @@ function BotSpawner:_SpawnSingleWayBot(p_Player, p_UseRandomWay, p_ActiveWayInde
 			end
 
 			m_BotCreator:SetAttributesToBot(s_Bot)
+			-- Rush: one bot per free vehicle spawns at the spawn of the game next to it, the others in the base of the stage.
+			local s_Vehicle = nil
+			if Globals.IsRush then
+				s_Vehicle = g_GameDirector:ReserveVehicle(s_Bot)
+				if s_Vehicle == nil and self:_SpawnInBase(s_Bot) then
+					self:_AddBotWithoutPath(s_Bot)
+					return
+				end
+			end
 			self:_SelectLoadout(s_Bot)
-			self:_TriggerSpawn(s_Bot)
+			self:_TriggerSpawn(s_Bot, s_Vehicle)
 			self:_AddBotWithoutPath(s_Bot)
 			return
 		end

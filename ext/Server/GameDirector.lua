@@ -59,6 +59,9 @@ function GameDirector:RegisterVars()
 	self.m_RushStageCounter = 0
 	self.m_RushAttackingBase = ''
 
+	-- Vehicles a bot spawns for (ReserveVehicle): objective name -> { Bot = player id, Time = seconds }.
+	self.m_VehicleReservations = {}
+
 	self.m_SpawnableStationaryAas = {}
 	-- Owning team of each stationary AA, by instanceId.
 	self.m_StationaryAaTeams = {}
@@ -151,6 +154,7 @@ end
 function GameDirector:OnRoundReset()
 	self.m_AllObjectives = {}
 	self.m_Beacons = {}
+	self.m_VehicleReservations = {}
 	self.m_UpdateTimer = 0
 end
 
@@ -416,6 +420,13 @@ function GameDirector:OnEngineUpdate(p_DeltaTime)
 			end
 		end
 	end
+	-- Reserved vehicles are taken as well, by the bot that spawns for them.
+	for l_Name, _ in pairs(self:_GetVehicleReservations()) do
+		local s_Objective = self:_GetObjectiveObject(l_Name)
+		if s_Objective ~= nil and s_Objective.team >= 1 and s_Objective.team <= Globals.NrOfTeams then
+			s_Objective.assigned[s_Objective.team] = s_Objective.assigned[s_Objective.team] + 1
+		end
+	end
 
 	-- g_Profiler:End("GameDirector:Update2")
 	-- g_Profiler:Start("GameDirector:Update3")
@@ -428,6 +439,21 @@ function GameDirector:OnEngineUpdate(p_DeltaTime)
 			if s_BotObjective == '' or s_BotObjective == nil then -- no active objective of bot
 				if l_Bot.m_Player.soldier == nil then
 					goto continue_with_next_bot
+				end
+
+				-- Spawned for a vehicle (ReserveVehicle): that one, once the bot is on the mesh.
+				local s_Reserved = self:GetReservedVehicle(l_Bot)
+				if s_Reserved ~= nil then
+					if not s_Reserved.active or s_Reserved.destroyed then
+						-- Taken by someone else meanwhile.
+						self.m_VehicleReservations[s_Reserved.name] = nil
+					else
+						if l_Bot:SetObjectiveIfPossible(s_Reserved.name, BotObjectiveModes.Attack) then
+							self.m_VehicleReservations[s_Reserved.name] = nil
+							m_Logger:Write(l_Bot.m_Player.name .. " spawned for " .. s_Reserved.name .. " and goes there")
+						end
+						goto continue_with_next_bot
+					end
 				end
 
 				-- Find the closest objective for bot.
@@ -452,7 +478,8 @@ function GameDirector:OnEngineUpdate(p_DeltaTime)
 						l_Objective.isEnterVehiclePath and
 						l_Objective.team == l_BotTeam and
 						l_Objective.assigned[l_BotTeam] == 0 and
-						s_BotStates:IsSoldierState(l_Bot.m_ActiveState) and
+						-- Also idle: just spawned, it gets its first objective before it may move.
+						(s_BotStates:IsSoldierState(l_Bot.m_ActiveState) or l_Bot.m_ActiveState == s_BotStates.States.Idle) and
 						self:_GetDistanceFromObjective(l_Objective.name, l_Bot.m_Player.soldier.worldTransform.trans)
 						<= Registry.GAME_DIRECTOR.MAX_VEHICLE_OBJECTIVE_DISTANCE then
 						if l_Bot:SetObjectiveIfPossible(l_Objective.name, BotObjectiveModes.Attack) then
@@ -577,6 +604,79 @@ function GameDirector:OnEngineUpdate(p_DeltaTime)
 		end
 	end
 	-- g_Profiler:End("GameDirector:Update3")
+end
+
+-- Seconds a vehicle stays reserved for the bot that spawns for it, until the bot is on the mesh and takes it.
+local VEHICLE_RESERVATION_TIME = 15.0
+
+---The reservations that are not timed out (ReserveVehicle).
+---@return table<string, { Bot: integer, Time: number }>
+function GameDirector:_GetVehicleReservations()
+	local s_Now = m_Utilities:GetTime()
+	for l_Name, l_Reservation in pairs(self.m_VehicleReservations) do
+		if s_Now - l_Reservation.Time > VEHICLE_RESERVATION_TIME then
+			self.m_VehicleReservations[l_Name] = nil
+		end
+	end
+	return self.m_VehicleReservations
+end
+
+---@param p_Bot Bot
+---@return table|nil the vehicle-objective reserved for the bot
+function GameDirector:GetReservedVehicle(p_Bot)
+	for l_Name, l_Reservation in pairs(self:_GetVehicleReservations()) do
+		if l_Reservation.Bot == p_Bot.m_Player.id then
+			return self:_GetObjectiveObject(l_Name)
+		end
+	end
+	return nil
+end
+
+---A free vehicle of the team (its objective is active, no bot has it or spawns for it), reserved for the bot: it spawns
+---at the spawn of the game next to it (BotSpawner) and gets it as objective once it is on the mesh (OnEngineUpdate).
+---@param p_Bot Bot
+---@return Vec3|nil the start of the way to the vehicle
+function GameDirector:ReserveVehicle(p_Bot)
+	if not Config.UseVehicles or p_Bot.m_Player == nil or g_NavRoutes == nil then
+		return nil
+	end
+	local s_TeamId = p_Bot.m_Player.teamId
+	local s_Taken = {}
+	for l_Name, _ in pairs(self:_GetVehicleReservations()) do
+		s_Taken[l_Name] = true
+	end
+	local s_Bots = g_BotManager:GetBots()
+	for l_Index = 1, #s_Bots do
+		s_Taken[s_Bots[l_Index]:GetObjective()] = true
+	end
+
+	for l_Index = 1, #self.m_AllObjectives do
+		local l_Objective = self.m_AllObjectives[l_Index]
+		-- Not the vehicles bots spawn in directly ("spawn vehicle ...").
+		if l_Objective.isEnterVehiclePath and not l_Objective.isSpawnPath and l_Objective.team == s_TeamId
+			and l_Objective.active and not l_Objective.destroyed and not s_Taken[l_Objective.name]
+			and g_NavRoutes:Knows(l_Objective.name) then
+			local s_Position = self:_GetObjectivePosition(l_Objective.name)
+			if s_Position ~= nil then
+				self.m_VehicleReservations[l_Objective.name] = { Bot = p_Bot.m_Player.id, Time = m_Utilities:GetTime() }
+				return s_Position
+			end
+		end
+	end
+	return nil
+end
+
+---The base of the team in the current stage (rush): "base us N" / "base ru N".
+---@param p_TeamId TeamId|integer
+---@return string|nil
+function GameDirector:GetActiveBase(p_TeamId)
+	for l_Index = 1, #self.m_AllObjectives do
+		local l_Objective = self.m_AllObjectives[l_Index]
+		if l_Objective.isBase and l_Objective.active and l_Objective.team == p_TeamId then
+			return l_Objective.name
+		end
+	end
+	return nil
 end
 
 -- =============================================
@@ -2460,17 +2560,24 @@ end
 ---@param p_Position Vec3
 ---@return number
 function GameDirector:_GetDistanceFromObjective(p_Objective, p_Position)
-	local s_Distance = math.huge
+	local s_Position = self:_GetObjectivePosition(p_Objective)
+	if s_Position == nil then
+		return math.huge
+	end
+	return s_Position:Distance(p_Position)
+end
 
-	if p_Objective == '' then
-		return s_Distance
+---The first node of the own path of the objective, else the middle of its zone (paths cut at the zones).
+---@param p_Objective string|nil
+---@return Vec3|nil
+function GameDirector:_GetObjectivePosition(p_Objective)
+	if p_Objective == nil or p_Objective == '' then
+		return nil
 	end
 
-	if self.m_ObjectivePositions[p_Objective] ~= nil then
-		s_Distance = self.m_ObjectivePositions[p_Objective]:Distance(p_Position)
-	else
+	if self.m_ObjectivePositions[p_Objective] == nil then
 		local s_AllObjectives = m_NodeCollection:GetKnownObjectives()
-		local s_Paths = s_AllObjectives[p_Objective]
+		local s_Paths = s_AllObjectives[p_Objective] or {}
 
 		for l_Index = 1, #s_Paths do
 			local l_Path = s_Paths[l_Index]
@@ -2479,20 +2586,17 @@ function GameDirector:_GetDistanceFromObjective(p_Objective, p_Position)
 			if s_Node ~= nil and s_Node.Data.Objectives ~= nil then
 				if #s_Node.Data.Objectives == 1 then
 					self.m_ObjectivePositions[p_Objective] = s_Node.Position
-					s_Distance = p_Position:Distance(s_Node.Position)
 					break
 				end
 			end
 		end
-		-- Without a path of its own (cut at the zones): the middle of its zone.
-		local s_Zone = s_Distance == math.huge and m_NavZones:GetZone(p_Objective) or nil
+		local s_Zone = self.m_ObjectivePositions[p_Objective] == nil and m_NavZones:GetZone(p_Objective) or nil
 		if s_Zone ~= nil then
 			self.m_ObjectivePositions[p_Objective] = s_Zone.Center
-			s_Distance = p_Position:Distance(s_Zone.Center)
 		end
 	end
 
-	return s_Distance
+	return self.m_ObjectivePositions[p_Objective]
 end
 
 ---The active MCOM ("mcom N") closest to the position: to any node of its paths, also of the path to it ("mcom N

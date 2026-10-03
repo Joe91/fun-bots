@@ -343,7 +343,7 @@ Registry = {
 		GAME_SPAWN_WITH_ZONES = true,
 		-- Rush: the defenders (always Team2) get this share of the bots of their team (balanced_teams), e.g. to test
 		-- the attack. 1.0 = as many as the attackers.
-		RUSH_DEFENDER_FACTOR = 0.3,
+		RUSH_DEFENDER_FACTOR = 0.9,
 	},
 	-- Debug
 	DEBUG = {
