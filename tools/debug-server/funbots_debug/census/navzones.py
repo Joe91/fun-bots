@@ -37,6 +37,7 @@ MIN_CLEARANCE = 0.5       # Points only where the next wall is at least this far
 WALL_COST = 4.0           # Ways along walls (clearance below MIN_CLEARANCE) cost this much more.
 MIN_COMPONENT = 20        # Walkable parts with fewer surfaces are ignored.
 MCOM_ZONE = 20.0          # Metres around an MCOM that count as its zone.
+BASE_ZONE = 40.0          # Metres around an HQ that count as the base.
 CROUCH_HEADROOM = 1.7     # Less headroom: crouching.
 COVER_RANGE = 3           # Cells in each of the 8 directions that are checked for cover.
 ATTACH_HEIGHT = 1.0       # A waypoint belongs to a surface this close below or above it.
@@ -281,6 +282,8 @@ def _zone_test(census: dict, area: dict):
     center = as_list(area.get("center"))
     if area.get("kind") == "mcom":
         return (lambda x, z: math.hypot(x - center[0], z - center[2]) <= MCOM_ZONE), f"{MCOM_ZONE:.0f} m around the MCOM"
+    if area.get("kind") == "base":
+        return (lambda x, z: math.hypot(x - center[0], z - center[2]) <= BASE_ZONE), f"{BASE_ZONE:.0f} m around the HQ"
     point = next((point for point in capture_points(census)
                   if not point["inactive"] and not point.get("hq")
                   and str(point.get("objective") or point.get("name")) == str(area.get("name"))), None)
@@ -288,11 +291,21 @@ def _zone_test(census: dict, area: dict):
         radius = float(area.get("radius") or 0)
         return (lambda x, z: math.hypot(x - center[0], z - center[2]) <= radius), "the whole area"
     if point["zoneCells"]:
+        # Where players were inside, and within the measured radius where nobody was ever seen outside: the cells
+        # with players inside lie along the waypoints, the zone goes beyond them.
         cell = point["cell"]
-        shape = {(column + d_column, row + d_row) for column, row in point["zoneCells"]
-                 for d_column in (-1, 0, 1) for d_row in (-1, 0, 1)}
-        return (lambda x, z: (math.floor(x / cell), math.floor(z / cell)) in shape), \
-            f"measured shape ({len(point['zoneCells'])} cells)"
+        radius = point["radius"]
+        inside_cells = point["zoneCells"]
+        outside_cells = point["outsideCells"] - inside_cells
+
+        def inside(x: float, z: float) -> bool:
+            key = (math.floor(x / cell), math.floor(z / cell))
+            if key in inside_cells:
+                return True
+            return math.hypot(x - center[0], z - center[2]) <= radius and key not in outside_cells
+
+        return inside, f"measured: radius {radius:.0f} m, {len(inside_cells)} cells inside, " \
+            f"{len(outside_cells)} outside"
     radius = point["radius"]
     return (lambda x, z: math.hypot(x - center[0], z - center[2]) <= radius), \
         f"radius {radius:.0f} m ({'measured' if point['samples'] else 'not measured'})"

@@ -242,6 +242,8 @@ function BotSpawner:OnEngineUpdate(p_DeltaTime, p_SimulationDeltaTime)
 				if s_Link then
 					l_Bot:SetVarsWay(nil, true, s_Link[1], s_Link[2], false)
 					table.remove(self._BotsWithoutPath, l_Index)
+					-- On the network of a zone (base, capture point) the bot starts there (BotZoneMovement).
+					l_Bot:TryEnterZoneAt(s_Position)
 
 					self:_ApplyCosumizationAfterSpawn(l_Bot)
 

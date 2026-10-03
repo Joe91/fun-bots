@@ -23,6 +23,10 @@ NavZoneFlags = {
 
 -- A junction is only used if its waypoint is still where the network was made for (the paths may have been edited).
 local JUNCTION_TOLERANCE = 1.0
+-- Points this far above or below a position are on another floor.
+local FLOOR_HEIGHT = 1.5
+-- Extra cost of a connection a bot got stuck on, per time (all bots avoid it then, until the level ends).
+local BLOCKED_PENALTY = 50.0
 
 ---@class NavZonePoint
 ---@field Index integer
@@ -43,7 +47,7 @@ local JUNCTION_TOLERANCE = 1.0
 ---@field Kind string capturepoint | mcom
 ---@field Center Vec3
 ---@field Points NavZonePoint[]
----@field Neighbours table<integer, { To: integer, Cost: number, Corners: Vec3[] }[]>
+---@field Neighbours table<integer, { To: integer, Cost: number, Corners: Vec3[], Penalty: number }[]>
 ---@field Inside integer[] the points in the zone
 ---@field Junctions NavZoneJunction[]
 
@@ -179,8 +183,8 @@ function NavZones:_AddZone(p_Data)
 				s_Reversed[#s_Reversed + 1] = s_Corners[l_Corner]
 			end
 			local s_Cost = tonumber(l_Edge[3]) or s_Zone.Points[s_A].Position:Distance(s_Zone.Points[s_B].Position)
-			table.insert(s_Zone.Neighbours[s_A], { To = s_B, Cost = s_Cost, Corners = s_Corners })
-			table.insert(s_Zone.Neighbours[s_B], { To = s_A, Cost = s_Cost, Corners = s_Reversed })
+			table.insert(s_Zone.Neighbours[s_A], { To = s_B, Cost = s_Cost, Corners = s_Corners, Penalty = 0.0 })
+			table.insert(s_Zone.Neighbours[s_B], { To = s_A, Cost = s_Cost, Corners = s_Reversed, Penalty = 0.0 })
 		end
 	end
 
@@ -251,25 +255,65 @@ function NavZones:GetJunction(p_Waypoint)
 	return self._Junctions[p_Waypoint.ID]
 end
 
----The point of the network closest to the position (height counts double: floors above each other).
+---The point of the network closest to the position. Points on the same floor (FLOOR_HEIGHT) come first: a soldier
+---can't reach the point above it.
 ---@param p_Zone NavZone
 ---@param p_Position Vec3
 ---@return integer|nil point, number distance
 function NavZones:Closest(p_Zone, p_Position)
 	local s_Best = nil
+	local s_BestOtherFloor = true
 	local s_BestDistance = math.huge
 	for l_Index = 1, #p_Zone.Points do
 		local s_Pos = p_Zone.Points[l_Index].Position
 		local s_DeltaX = s_Pos.x - p_Position.x
-		local s_DeltaY = 2 * (s_Pos.y - p_Position.y)
+		local s_DeltaY = s_Pos.y - p_Position.y
 		local s_DeltaZ = s_Pos.z - p_Position.z
-		local s_Distance = s_DeltaX * s_DeltaX + s_DeltaY * s_DeltaY + s_DeltaZ * s_DeltaZ
-		if s_Distance < s_BestDistance then
+		local s_Distance = s_DeltaX * s_DeltaX + 4 * s_DeltaY * s_DeltaY + s_DeltaZ * s_DeltaZ
+		local s_OtherFloor = math.abs(s_DeltaY) > FLOOR_HEIGHT
+		if (s_BestOtherFloor and not s_OtherFloor) or (s_OtherFloor == s_BestOtherFloor and s_Distance < s_BestDistance) then
 			s_BestDistance = s_Distance
+			s_BestOtherFloor = s_OtherFloor
 			s_Best = l_Index
 		end
 	end
 	return s_Best, math.sqrt(s_BestDistance)
+end
+
+---The zone whose network is at the position: a point within p_Range on the same floor. Used for bots that spawn at the
+---spawn-points of the game.
+---@param p_Position Vec3
+---@param p_Range number
+---@return NavZone|nil, integer|nil point
+function NavZones:ZoneAt(p_Position, p_Range)
+	local s_BestZone = nil
+	local s_BestPoint = nil
+	local s_BestDistance = p_Range
+	for _, l_Zone in pairs(self._Zones) do
+		local s_Point, s_Distance = self:Closest(l_Zone, p_Position)
+		if s_Point ~= nil and s_Distance <= s_BestDistance
+			and math.abs(l_Zone.Points[s_Point].Position.y - p_Position.y) <= FLOOR_HEIGHT then
+			s_BestZone = l_Zone
+			s_BestPoint = s_Point
+			s_BestDistance = s_Distance
+		end
+	end
+	return s_BestZone, s_BestPoint
+end
+
+---A bot got stuck between the two points: all bots avoid the connection from now on (until the level ends).
+---@param p_Zone NavZone
+---@param p_A integer
+---@param p_B integer
+function NavZones:BlockEdge(p_Zone, p_A, p_B)
+	for _, l_Pair in ipairs({ { p_A, p_B }, { p_B, p_A } }) do
+		local s_Neighbours = p_Zone.Neighbours[l_Pair[1]] or {}
+		for l_Index = 1, #s_Neighbours do
+			if s_Neighbours[l_Index].To == l_Pair[2] then
+				s_Neighbours[l_Index].Penalty = s_Neighbours[l_Index].Penalty + BLOCKED_PENALTY
+			end
+		end
+	end
 end
 
 ---Shortest way through the network (A*).
@@ -344,7 +388,7 @@ function NavZones:Route(p_Zone, p_From, p_To)
 			local s_Neighbours = p_Zone.Neighbours[s_Current]
 			for l_Index = 1, #s_Neighbours do
 				local l_Edge = s_Neighbours[l_Index]
-				local s_Cost = s_Costs[s_Current] + l_Edge.Cost
+				local s_Cost = s_Costs[s_Current] + l_Edge.Cost + l_Edge.Penalty
 				if not s_Closed[l_Edge.To] and s_Cost < (s_Costs[l_Edge.To] or math.huge) then
 					s_Costs[l_Edge.To] = s_Cost
 					s_Came[l_Edge.To] = s_Current

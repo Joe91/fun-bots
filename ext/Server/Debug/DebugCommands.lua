@@ -403,6 +403,13 @@ function DebugCommands.NavZonesApply(p_Args)
 	if p_Args.map ~= m_NodeCollection:GetMapName() then
 		error('the networks are for ' .. tostring(p_Args.map) .. ', the level is ' .. m_NodeCollection:GetMapName())
 	end
+	-- Bots in a zone walk on the old network: back to the waypoints, they enter the new one at the next junction.
+	local s_Bots = m_BotManager:GetBots()
+	for l_Index = 1, #s_Bots do
+		if s_Bots[l_Index].m_Zone ~= nil then
+			s_Bots[l_Index]:_LeaveZone(nil)
+		end
+	end
 	local s_Zones, s_Junctions = m_NavZones:Apply(type(p_Args.zones) == 'table' and p_Args.zones or {}, p_Args.save == true)
 	return { zones = s_Zones, junctions = s_Junctions, saved = p_Args.save == true }
 end

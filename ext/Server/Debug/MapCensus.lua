@@ -48,7 +48,9 @@ local AREA_UP = 60.0              -- The vertical rays start this far above the 
 local AREA_DOWN = 30.0            -- ...and end this far below it.
 local LAYER_GAP = 0.3             -- The ray continues this far below a hit to find the next layer.
 local WALKABLE_NORMAL_Y = 0.5     -- Surfaces up to 60° get edges and headroom, steeper ones are walls.
-local EDGE_HEIGHTS = { 0.6, 1.3 } -- Rays to the neighbour-cells (+x, +z), as bits: 1 +x knee, 2 +x chest, 4 +z knee, 8 +z chest.
+-- Rays to the neighbour-cells (+x, +z) and back from them, as bits: 1 +x knee, 2 +x chest, 4 +z knee, 8 +z chest, 16 to 128
+-- the same from the neighbour back. Both ways: a ray that starts inside of a rock doesn't hit it.
+local EDGE_HEIGHTS = { 0.6, 1.3 }
 
 -- Time per update for the raycasts, in ms.
 local BUDGET_MS = 6.0
@@ -1021,7 +1023,7 @@ end
 ---Vertical rays through one cell, from the top down. A cell is false (outside of the circle, or no hit) or a flat list
 ---with four numbers per layer: height, normal-y, edges, headroom.
 ---  edges     bits of the blocked rays to the neighbour-cells at EDGE_HEIGHTS: 1 +x knee, 2 +x chest, 4 +z knee,
----            8 +z chest. -1 for surfaces too steep to walk on.
+---            8 +z chest, 16 / 32 / 64 / 128 the same rays from the neighbour back. -1 for surfaces too steep to walk on.
 ---  headroom  free height above the surface, -1 = more than CEILING_MAX (or too steep to measure)
 function CensusTask:_ProbeCell(p_Area, p_X, p_Z)
 	local s_DeltaX = p_X - p_Area.center.x
@@ -1048,11 +1050,20 @@ function CensusTask:_ProbeCell(p_Area, p_X, p_Z)
 			for l_Index = 1, #EDGE_HEIGHTS do
 				local s_Height = s_Y + EDGE_HEIGHTS[l_Index]
 				local s_From = Vec3(p_X, s_Height, p_Z)
-				if self:_Ray(s_From, Vec3(p_X + s_Step, s_Height, p_Z)) ~= nil then
-					s_Edges = s_Edges | (l_Index == 1 and 1 or 2)
+				local s_ToX = Vec3(p_X + s_Step, s_Height, p_Z)
+				local s_ToZ = Vec3(p_X, s_Height, p_Z + s_Step)
+				local s_Bit = l_Index == 1 and 1 or 2
+				if self:_Ray(s_From, s_ToX) ~= nil then
+					s_Edges = s_Edges | s_Bit
 				end
-				if self:_Ray(s_From, Vec3(p_X, s_Height, p_Z + s_Step)) ~= nil then
-					s_Edges = s_Edges | (l_Index == 1 and 4 or 8)
+				if self:_Ray(s_From, s_ToZ) ~= nil then
+					s_Edges = s_Edges | (s_Bit * 4)
+				end
+				if self:_Ray(s_ToX, s_From) ~= nil then
+					s_Edges = s_Edges | (s_Bit * 16)
+				end
+				if self:_Ray(s_ToZ, s_From) ~= nil then
+					s_Edges = s_Edges | (s_Bit * 64)
 				end
 			end
 			-- The top layer has nothing above it.

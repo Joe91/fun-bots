@@ -336,6 +336,20 @@ of the running level). On the map (layer *Zone networks*) connections inside the
 points indoors have a blue ring, points that need crouching an orange one, the junctions with the waypoints are dashed
 orange.
 
+Areas are made around the capture points, the MCOMs and the HQs of the running mode (`base us`, `base ru`, 60 m).
+
+**In the game** (`ext/Server/NavZones.lua`, `ext/Server/Bot/BotZoneMovement.lua`, switch
+`Registry.BOT.USE_ZONE_NETWORKS`): `POST /api/navzones/apply` (`{"save": true}`) sends the networks shown on the map to
+the mod, which saves them in the table `<level>_<mode>_navzones` of `mod.db` and loads them with the waypoints from then
+on. A bot that reaches a junction of the zone of its objective (capture points for now) leaves the waypoints: it walks
+from point to point inside the zone and waits at each (longer and crouched in cover when it defends). When its
+objective changes it walks to the junction whose path leads to the new objective best (`PathSwitcher` priority, then
+distance) and goes on along that path. A bot that gets stuck between two points (4 s without progress) takes another
+way, and all bots avoid that connection until the level ends; after three of them it goes back to the waypoints. The
+debug-server lists these spots under *Findings* (analyzer `zones`). In the snapshot a bot in a zone has `zone` (and
+`zoneExit` on its way out). The networks of the bases are made and loaded, but not used yet: they are meant for spawning
+with the spawn-points of the game instead of on waypoints.
+
 A point is `[x, y, z, clearance, cover, flags]`: clearance is the distance to the next wall, cover the number of the 8
 directions with a wall within 1.5 m, flags 1 = in the zone, 2 = indoors, 4 = crouch. A connection is
 `[a, b, length, corners]` (the corners of the way between the points, if it isn't straight). A junction is

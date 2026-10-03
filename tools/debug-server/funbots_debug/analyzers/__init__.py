@@ -13,7 +13,7 @@ from pathlib import Path
 from .base import Analyzer, Finding, create_analyzers, register
 
 # The built-in analyzers register themselves on import.
-from . import combat, raycasts, server_health, stuck  # noqa: E402,F401
+from . import combat, raycasts, server_health, stuck, zones  # noqa: E402,F401
 
 __all__ = ["Analyzer", "Finding", "register", "create_analyzers", "load_plugins"]
 

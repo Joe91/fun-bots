@@ -9,6 +9,8 @@ local m_NavZones = require('NavZones')
 local m_NodeCollection = require('NodeCollection')
 ---@type PathSwitcher
 local m_PathSwitcher = require('PathSwitcher')
+---@type DebugBridge
+local m_DebugBridge = require('Debug/DebugBridge')
 ---@type Logger
 local m_Logger = Logger('BotZoneMovement', Debug.Server.BOT)
 
@@ -16,7 +18,7 @@ local ZONE_REACH = 0.8           -- Horizontal metres to a position that count a
 local ZONE_REACH_HEIGHT = 1.5    -- Same as Registry.BOT.TARGET_HEIGHT_DISTANCE_WAYPOINT.
 local ZONE_MIN_PROGRESS = 0.3    -- Metres closer to the target that count as progress.
 local ZONE_JUMP_TIME = 1.5       -- Seconds without progress before a jump.
-local ZONE_STUCK_TIME = 6.0      -- Seconds without progress before the bot gives up this way.
+local ZONE_STUCK_TIME = 4.0      -- Seconds without progress before the bot gives up this way.
 local ZONE_MAX_FAILS = 3         -- Ways given up before the bot leaves the zone.
 local ZONE_WAIT_ATTACK = { 1.0, 3.0 } -- Seconds at each point while capturing.
 local ZONE_WAIT_DEFEND = { 5.0, 12.0 } -- Seconds at each point while defending.
@@ -53,13 +55,33 @@ function Bot:_CheckForZoneEntry(p_Point)
 	return true
 end
 
+-- A spawn-point of the game this far from a point of a network: the bot starts on the network.
+local ZONE_SPAWN_RANGE = 8.0
+
+---After a spawn at a spawn-point of the game (BotSpawner, SpawnMethod.Spawn): on the network of the zone there (a base
+---or a capture point) the bot starts in it, and walks out over the junction that suits its objective.
+---@param p_Position Vec3
+---@return boolean true if the bot is in a zone now
+function Bot:TryEnterZoneAt(p_Position)
+	if not Registry.BOT.USE_ZONE_NETWORKS then
+		return false
+	end
+	local s_Zone, s_Point = m_NavZones:ZoneAt(p_Position, ZONE_SPAWN_RANGE)
+	if s_Zone == nil or s_Point == nil then
+		return false
+	end
+	self:_EnterZone(s_Zone, s_Point)
+	return true
+end
+
 ---@param p_Zone NavZone
 ---@param p_Point integer
 function Bot:_EnterZone(p_Zone, p_Point)
 	---@type BotZoneState
 	self.m_Zone = {
 		Zone = p_Zone,
-		Objective = self._Objective,
+		-- The objective of the zone: a bot with another one leaves it (from a base: as soon as it has one).
+		Objective = p_Zone.Name,
 		Point = p_Point,
 		Goal = nil,
 		Targets = {},
@@ -149,7 +171,7 @@ function Bot:_ZoneBestExit(p_Objective)
 			local s_Priority = m_PathSwitcher:GetPriorityOfPath(s_First, p_Objective)
 			-- A path that stays in the zone (only this objective) doesn't lead anywhere else.
 			local s_Objectives = s_First.Data and s_First.Data.Objectives or {}
-			if #s_Objectives == 1 and s_Objectives[1] == s_State.Objective then
+			if #s_Objectives == 1 and s_Objectives[1] == s_State.Zone.Name then
 				s_Priority = s_Priority - 2
 			end
 			local s_Distance = g_GameDirector:_GetDistanceFromObjective(p_Objective, s_Waypoint.Position)
@@ -249,6 +271,13 @@ function Bot:UpdateZoneMovement(p_DeltaTime)
 			return false
 		end
 
+		-- In a base the bot only waits for its objective.
+		if s_State.Zone.Kind == 'base' then
+			s_State.Waiting = true
+			self:LookAround(p_DeltaTime)
+			return true
+		end
+
 		-- At the goal: look around for a while, then the next one.
 		if s_State.Wait > 0.0 then
 			s_State.Waiting = true
@@ -320,6 +349,30 @@ function Bot:UpdateZoneMovement(p_DeltaTime)
 	if s_State.Stuck > ZONE_STUCK_TIME then
 		s_State.Fails = s_State.Fails + 1
 		m_Logger:Write(self.m_Player.name .. ' stuck in the zone of ' .. s_State.Zone.Name .. ' (' .. s_State.Fails .. ')')
+
+		-- The connection between the last point and the next one doesn't work here: all bots avoid it.
+		local s_Next = nil
+		for l_Step = s_State.Step, #s_State.Targets do
+			if s_State.Targets[l_Step].Point ~= nil then
+				s_Next = s_State.Targets[l_Step].Point
+				break
+			end
+		end
+		if s_Next ~= nil and s_Next ~= s_State.Point then
+			m_NavZones:BlockEdge(s_State.Zone, s_State.Point, s_Next)
+		end
+		if m_DebugBridge.m_Enabled then
+			-- Points counted from 0, as in the file of the networks.
+			m_DebugBridge:Event('zone_stuck', {
+				zone = s_State.Zone.Name,
+				from = s_State.Point - 1,
+				to = s_Next and s_Next - 1,
+				pos = DebugBridge.Vec(s_Position),
+				target = DebugBridge.Vec(s_Target.Position),
+				bot = self.m_Id,
+			})
+		end
+
 		if s_State.Fails >= ZONE_MAX_FAILS then
 			self:_LeaveZone(nil)
 			return false

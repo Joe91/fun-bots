@@ -42,6 +42,7 @@ VEHICLE_SPAWN_DISTANCE = 40.0
 # Grids around the objectives, see CensusTask:_ProbeCell.
 WALK_NORMAL_Y = 0.7
 WALK_HEADROOM = 1.0       # Crouching.
+LAYER_GAP = 1.3           # A lower floor needs at least this much below the one above (else: inside of a solid).
 STEP_HEIGHT = 0.6         # Height difference between neighbour-cells a soldier walks over.
 SEED_HEIGHT = 1.0         # A waypoint seeds the cell-surface this close to it.
 
@@ -310,6 +311,9 @@ def capture_points(census: dict) -> list[dict]:
         entry["cell"] = float(zone.get("cell") or 2.0) if zone else 2.0
         entry["zoneCells"] = {(int(cell[0]), int(cell[1])) for cell in as_list(zone.get("cells")) if cell[2] > 0} \
             if zone else set()
+        # Cells where players were only ever outside: not part of the zone.
+        entry["outsideCells"] = {(int(cell[0]), int(cell[1])) for cell in as_list(zone.get("cells"))
+                                 if cell[2] == 0 and cell[3] > 0} if zone else set()
         entry["radius"] = float(zone["radius"]) if zone and zone.get("radius") else \
             float(capture_point.get("radius") or 0) or UNKNOWN_RADIUS
         result.append(entry)
@@ -445,15 +449,23 @@ def area_graph(area: dict) -> tuple[dict[tuple[int, int, int], tuple[float, floa
                                     dict[tuple[int, int, int], list[tuple[int, int, int]]]]:
     """Walkable surfaces of a grid and their connections. A surface is (row, column, layer) -> (y, normal-y, edges,
     headroom). Two surfaces of neighbour-cells are connected if the height step is small and no ray between them hit
-    at chest height (or at knee height without a step)."""
+    at chest height (or at knee height without a step), in either direction (bits 16-128: the rays back, from censuses
+    that have them). A lower floor needs LAYER_GAP below the one above: the vertical rays also find the ground inside
+    of rocks and buildings, where the headroom-ray (from inside) hits nothing."""
     surfaces = {}
     for row, cells in enumerate(area.get("cells") or []):
         for column, cell in enumerate(as_list(cells)):
             values = as_list(cell)
+            above = None
             for layer in range(len(values) // 4):
                 y, normal, edges, headroom = values[layer * 4:layer * 4 + 4]
-                if normal >= WALK_NORMAL_Y and (headroom < 0 or headroom >= WALK_HEADROOM):
-                    surfaces[(row, column, layer)] = (y, normal, int(edges), headroom)
+                gap_ok = above is None or above - y >= LAYER_GAP
+                above = y
+                if normal >= WALK_NORMAL_Y and gap_ok and (headroom < 0 or headroom >= WALK_HEADROOM):
+                    edges = int(edges)
+                    # Fold the rays back into the forward bits: blocked in either direction is blocked.
+                    edges = (edges | (edges >> 4)) & 0xF
+                    surfaces[(row, column, layer)] = (y, normal, edges, headroom)
 
     by_cell: dict[tuple[int, int], list[tuple[int, tuple]]] = defaultdict(list)
     for (row, column, layer), surface in surfaces.items():

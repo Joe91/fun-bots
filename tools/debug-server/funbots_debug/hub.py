@@ -44,6 +44,9 @@ CENSUS_SCAN_BASE = 100000
 CENSUS_AREA_MARGIN = 15.0
 CENSUS_UNKNOWN_RADIUS = 25.0
 CENSUS_MCOM_RADIUS = 30.0
+# Grids around the HQs: the bases, named like their objectives on the waypoints (GameDirector: "base us", "base ru").
+CENSUS_BASE_RADIUS = 60.0
+CENSUS_BASE_NAMES = {1: "base us", 2: "base ru"}
 
 
 class LabelError(Exception):
@@ -263,7 +266,13 @@ class Hub:
         areas = []
         for flag in as_list(objectives.get("flags")):
             pos = as_list(flag.get("pos"))
-            if flag.get("hq") or len(pos) < 3:
+            if len(pos) < 3:
+                continue
+            if flag.get("hq"):
+                # The HQs of the running mode have a team, the ones of other modes (loaded as well) none.
+                name = CENSUS_BASE_NAMES.get(int(flag.get("team") or 0))
+                if name is not None:
+                    areas.append({"name": name, "kind": "base", "pos": pos, "radius": CENSUS_BASE_RADIUS})
                 continue
             zone = zones.get((flag.get("name"), tuple(round(value) for value in pos)))
             if zone and zone["samples"]:
