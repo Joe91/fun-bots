@@ -3,8 +3,11 @@
     python -m funbots_debug.census run --current                      # the level that runs now
     python -m funbots_debug.census run --map "MP_001 ConquestLarge0"  # switches the level over RCON first
     python -m funbots_debug.census run --maplist ../../MapList.txt    # every level of the list, one after the other
+    python -m funbots_debug.census run --all --modes ConquestSmall0,ConquestLarge0,RushLarge0 --warmup 180 --apply
+                                                                     # every waypoint-file of these modes
     python -m funbots_debug.census report census/XP3_Desert_ConquestLarge0.json.gz [--issues 40]
     python -m funbots_debug.census navzones census/*.json.gz        # walking networks of the zones (navzones.py)
+    python -m funbots_debug.census cut ../../navzones/*.json -v       # waypoints the networks make unnecessary
 
 The debug-server saves every census into its census-folder (--census, default tools/debug-server/census). Switching
 levels needs the RCON-connection of the debug-server. Afterwards the map-list of the game-server is loaded again
@@ -16,6 +19,7 @@ from __future__ import annotations
 import argparse
 import json
 import math
+import subprocess
 import sys
 import time
 import urllib.error
@@ -23,7 +27,7 @@ import urllib.request
 from pathlib import Path
 
 from ..paths.mapfile import MapData
-from . import navzones
+from . import cut, navzones
 from .report import build_report
 from .store import load
 
@@ -31,6 +35,12 @@ MAPFILES = Path(__file__).resolve().parents[4] / "mapfiles"
 # Seconds to wait for a level to load, and for the waypoints after that.
 LEVEL_TIMEOUT = 300.0
 WAYPOINT_TIMEOUT = 120.0
+# Modes without capture zones get this pause instead of the warmup (bots spawn, objectives are set).
+SHORT_WARMUP = 45.0
+# Seconds to wait for the zone networks the debug-server builds after a census.
+NAVZONES_TIMEOUT = 180.0
+# Seconds without the mod during a census: the game-server is gone.
+DISCONNECT_TIMEOUT = 60.0
 
 
 class Server:
@@ -52,10 +62,14 @@ class Server:
         return state.get("meta") or {}, state.get("status") or {}
 
     def rcon(self, *words: str) -> list[str]:
-        answer = self.request("/api/rcon", {"words": list(words)})
-        if "error" in answer:
-            raise RuntimeError(f"rcon {' '.join(words)}: {answer['error']}")
-        return answer.get("words") or []
+        # Once more after an error: the connection of the debug-server may still be the one to a crashed game-server.
+        for attempt in range(2):
+            answer = self.request("/api/rcon", {"words": list(words)})
+            if "error" not in answer:
+                return answer.get("words") or []
+            if attempt == 0:
+                time.sleep(2)
+        raise RuntimeError(f"rcon {' '.join(words)}: {answer['error']}")
 
 
 def _level_matches(meta: dict, level: str, mode: str) -> bool:
@@ -95,8 +109,13 @@ def run_census(server: Server, args: dict, timeout: float) -> dict:
             raise RuntimeError(f"census not started: {command}")
         # Wait for the answer of the mod.
         deadline = time.monotonic() + timeout
+        connected_at = time.monotonic()
         while time.monotonic() < deadline:
             time.sleep(2)
+            if server.meta()[1].get("modConnected"):
+                connected_at = time.monotonic()
+            elif time.monotonic() - connected_at > DISCONNECT_TIMEOUT:
+                raise RuntimeError("the mod is gone (game-server crashed?)")
             entry = next((item for item in server.request("/api/commands") if item.get("id") == command_id), None)
             status = server.request("/api/census")
             current = status.get("current") or {}
@@ -123,6 +142,46 @@ def run_census(server: Server, args: dict, timeout: float) -> dict:
     raise RuntimeError("the debug-server didn't save the census")
 
 
+def restart_server(server: Server, options) -> bool:
+    """Starts the game-server with --restart-command if the mod isn't connected (any more). True once it is."""
+    try:
+        if server.meta()[1].get("modConnected"):
+            return True
+    except OSError:
+        pass
+    print(f"  starting the game-server: {options.restart_command}")
+    subprocess.Popen(options.restart_command, shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+                     start_new_session=True)
+    end = time.monotonic() + LEVEL_TIMEOUT
+    while time.monotonic() < end:
+        time.sleep(5)
+        try:
+            if server.meta()[1].get("modConnected"):
+                time.sleep(20)  # The waypoints load after the level.
+                return True
+        except OSError:
+            continue
+    print("  the game-server didn't come back", file=sys.stderr)
+    return False
+
+
+def apply_navzones(server: Server, name: str) -> str:
+    """Waits for the zone networks of the census (built by the debug-server) and sends them to the mod, which saves
+    them into mod.db; the debug-server also writes navzones/<map>.json."""
+    end = time.monotonic() + NAVZONES_TIMEOUT
+    while time.monotonic() < end:
+        answer = server.request("/api/navzones/apply", {"save": True}, timeout=120.0)
+        result = answer.get("result") or {}
+        if answer.get("status") == "ok":
+            return f"{result.get('zones')} zones, {result.get('junctions')} junctions, {answer.get('file') or 'no file'}"
+        if answer.get("status") == "error":
+            return f"error: {answer.get('error')}"
+        if answer.get("status") in ("queued", "sent"):
+            return "no answer from the mod"
+        time.sleep(3)
+    return "not applied (no networks)"
+
+
 def _maplist(file: Path) -> list[tuple[str, str]]:
     maps = []
     for line in file.read_text(encoding="utf-8").splitlines():
@@ -137,6 +196,12 @@ def command_run(options) -> int:
     maps: list[tuple[str, str]] = []
     if options.maplist:
         maps += _maplist(options.maplist)
+    if options.all:
+        modes = [mode for mode in (options.modes or "").split(",") if mode]
+        for file in sorted(options.mapfiles.glob("*.map")):
+            level, _, mode = file.stem.rpartition("_")
+            if level and (not modes or mode in modes):
+                maps.append((level, mode))
     for entry in options.map or []:
         level, mode = entry.split()
         maps.append((level, mode))
@@ -155,17 +220,24 @@ def command_run(options) -> int:
 
     switched = False
     failed = []
-    for index, (level, mode) in enumerate(maps, start=1):
-        print(f"[{index}/{len(maps)}] {level} {mode}")
+    retry: list[tuple[str, str]] = []
+    queue = list(maps)
+    index = 0
+    while queue:
+        level, mode = queue.pop(0)
+        index += 1
+        print(f"[{index}/{len(maps) + len(retry)}] {level} {mode}")
         try:
             meta, _ = server.meta()
             if not _level_matches(meta, level, mode):
                 switch_level(server, level, mode)
                 switched = True
-            if options.warmup > 0:
+            warmup = options.warmup if "conquest" in mode.lower() or "domination" in mode.lower() \
+                else min(options.warmup, SHORT_WARMUP)
+            if warmup > 0:
                 # The bots play for a while, so the sizes of the capture zones get measured (zones.py).
-                print(f"  bots play for {options.warmup:.0f} s first")
-                time.sleep(options.warmup)
+                print(f"  bots play for {warmup:.0f} s first")
+                time.sleep(warmup)
                 zones = server.request("/api/census").get("zones") or []
                 print(f"  capture zones measured: {sum(1 for zone in zones if zone.get('samples'))}/{len(zones)}")
             status = run_census(server, args, options.timeout)
@@ -174,8 +246,16 @@ def command_run(options) -> int:
             report = status.get("report") or {}
             for kind, count in (report.get("issues") or {}).items():
                 print(f"    {kind}: {count}")
+            if options.apply:
+                print(f"  networks: {apply_navzones(server, f'{level}_{mode}')}")
         except RuntimeError as error:
             print(f"\n  {error}", file=sys.stderr)
+            # A crashed game-server: start it again and try this level once more.
+            if options.restart_command and (level, mode) not in retry and restart_server(server, options):
+                retry.append((level, mode))
+                queue.insert(0, (level, mode))
+                switched = True
+                continue
             failed.append(f"{level} {mode}")
 
     if switched:
@@ -229,6 +309,12 @@ def command_navzones(options) -> int:
     return 0
 
 
+def command_cut(options) -> int:
+    for file in options.files:
+        print(cut.run(file, options.mapfiles, options.verbose))
+    return 0
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(prog="python -m funbots_debug.census", description=__doc__,
                                      formatter_class=argparse.RawDescriptionHelpFormatter)
@@ -239,6 +325,12 @@ def main() -> int:
     run.add_argument("--current", action="store_true", help="the level that runs now (default without maps)")
     run.add_argument("--map", action="append", metavar='"LEVEL MODE"', help='e.g. "MP_001 ConquestLarge0"')
     run.add_argument("--maplist", type=Path, metavar="FILE", help="all levels of a map-list (LEVEL MODE ROUNDS)")
+    run.add_argument("--all", action="store_true", help="every waypoint-file of mapfiles/ (see --modes)")
+    run.add_argument("--modes", help="with --all: only these modes, e.g. ConquestSmall0,ConquestLarge0,RushLarge0")
+    run.add_argument("--mapfiles", type=Path, default=MAPFILES, help="waypoint-files for --all")
+    run.add_argument("--apply", action="store_true", help="send the zone networks to the mod and save them")
+    run.add_argument("--restart-command", metavar="CMD",
+                     help="shell-command that starts the game-server again after a crash (the level is tried again)")
     run.add_argument("--parts", help="entities,nodes,areas (default: all)")
     run.add_argument("--budget-ms", type=float, default=6.0, help="ms of raycasts per update of the server")
     run.add_argument("--area-step", type=float, help="cell-size of the grids around the objectives (default 0.5)")
@@ -256,6 +348,12 @@ def main() -> int:
     zones = commands.add_parser("navzones", help="walking networks of the zones of saved censuses")
     zones.add_argument("files", nargs="+", type=Path)
     zones.set_defaults(handler=command_navzones)
+
+    cuts = commands.add_parser("cut", help="which waypoints the zone networks make unnecessary (dry run)")
+    cuts.add_argument("files", nargs="+", type=Path, help="navzones/<map>.json")
+    cuts.add_argument("--mapfiles", type=Path, default=MAPFILES)
+    cuts.add_argument("-v", "--verbose", action="store_true", help="list the paths")
+    cuts.set_defaults(handler=command_cut)
 
     options = parser.parse_args()
     return options.handler(options)

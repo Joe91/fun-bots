@@ -22,6 +22,8 @@ local ZONE_STUCK_TIME = 4.0      -- Seconds without progress before the bot give
 local ZONE_MAX_FAILS = 3         -- Ways given up before the bot leaves the zone.
 local ZONE_WAIT_ATTACK = { 1.0, 3.0 } -- Seconds at each point while capturing.
 local ZONE_WAIT_DEFEND = { 5.0, 12.0 } -- Seconds at each point while defending.
+local ZONE_SUBOBJECTIVE_CYCLE = 1.0 -- Seconds between two checks whether the bot shall arm / disarm the MCOM.
+local ZONE_WAIT_VEHICLE = { 3.0, 8.0 } -- Seconds a vehicle stands at each point.
 
 ---@class BotZoneState
 ---@field Zone NavZone
@@ -37,6 +39,12 @@ local ZONE_WAIT_DEFEND = { 5.0, 12.0 } -- Seconds at each point while defending.
 ---@field JumpTimer number
 ---@field Fails integer
 ---@field Exit NavZoneJunction|nil
+---@field SubObjective string|nil "mcom N interact" of an MCOM-zone
+---@field SubTimer number
+---@field Vehicle boolean on the vehicle-network, as driver of a land vehicle
+---@field Reverse number seconds the vehicle still reverses
+---@field Reverses integer reverses on the way to the current target
+---@field Avoid integer|nil a dead end the bot got stuck at: not the start of the next route
 
 ---Called when the bot reached a waypoint. At a junction of the zone of its objective, it walks the network from now on.
 ---@param p_Point Waypoint (or an offset-point with the fields of its waypoint)
@@ -47,11 +55,12 @@ function Bot:_CheckForZoneEntry(p_Point)
 	end
 
 	local s_Entry = m_NavZones:GetJunction(p_Point.Original or p_Point)
-	if s_Entry == nil or s_Entry.Zone.Name ~= self._Objective or s_Entry.Zone.Kind ~= 'capturepoint' then
+	if s_Entry == nil or s_Entry.Zone.Name ~= self._Objective
+		or (s_Entry.Zone.Kind ~= 'capturepoint' and s_Entry.Zone.Kind ~= 'mcom') then
 		return false
 	end
 
-	self:_EnterZone(s_Entry.Zone, s_Entry.Junction.Point)
+	self:_EnterZone(s_Entry.Zone, s_Entry.Junction.Point, false, s_Entry.Junction)
 	return true
 end
 
@@ -74,9 +83,30 @@ function Bot:TryEnterZoneAt(p_Position)
 	return true
 end
 
+---Called when the driver of a land vehicle reached a waypoint of its vehicle-path. At a junction of the vehicle-network
+---of the capture point of its objective, it drives the network from now on (VehicleMovement).
+---@param p_Point Waypoint
+---@return boolean true if the vehicle is in the zone now
+function Bot:_CheckForVehicleZoneEntry(p_Point)
+	if not Registry.BOT.USE_ZONE_NETWORKS or not Registry.BOT.USE_VEHICLE_ZONE_NETWORKS or self._Objective == ''
+		or self.m_Zone ~= nil or self.m_ActiveVehicle == nil or self.m_ActiveVehicle.Terrain ~= VehicleTerrains.Land then
+		return false
+	end
+
+	local s_Entry = m_NavZones:GetVehicleJunction(p_Point)
+	if s_Entry == nil or s_Entry.Zone.Name ~= self._Objective or s_Entry.Zone.Kind ~= 'capturepoint' then
+		return false
+	end
+
+	self:_EnterZone(s_Entry.Zone, s_Entry.Junction.Point, true, s_Entry.Junction)
+	return true
+end
+
 ---@param p_Zone NavZone
 ---@param p_Point integer
-function Bot:_EnterZone(p_Zone, p_Point)
+---@param p_Vehicle? boolean the vehicle-network, as driver
+---@param p_Junction? NavZoneJunction entered here: first the way from its waypoint to the network
+function Bot:_EnterZone(p_Zone, p_Point, p_Vehicle, p_Junction)
 	---@type BotZoneState
 	self.m_Zone = {
 		Zone = p_Zone,
@@ -93,9 +123,30 @@ function Bot:_EnterZone(p_Zone, p_Point)
 		JumpTimer = 0.0,
 		Fails = 0,
 		Exit = nil,
+		-- The MCOM is armed and disarmed at the action-node of the path "mcom N interact" (a junction of the zone).
+		SubObjective = not p_Vehicle and p_Zone.Kind == 'mcom' and g_GameDirector:_GetSubObjectiveFromObj(p_Zone.Name) or nil,
+		SubTimer = 0.0,
+		Vehicle = p_Vehicle == true,
+		Reverse = 0.0,
+		Reverses = 0,
 	}
 	self:_StopObstacleSequence()
 	self:_ZoneNewGoal()
+
+	-- From the waypoint of the junction to its point: the corners backwards, then the point itself.
+	if p_Junction ~= nil then
+		local s_Lead = {}
+		for l_Index = #p_Junction.Corners, 1, -1 do
+			s_Lead[#s_Lead + 1] = { Position = p_Junction.Corners[l_Index], Flags = 0 }
+		end
+		local s_Point = p_Zone.Points[p_Point]
+		s_Lead[#s_Lead + 1] = { Position = s_Point.Position, Flags = s_Point.Flags, Point = p_Point }
+		local s_State = self.m_Zone
+		---@cast s_State -nil
+		for l_Index = #s_Lead, 1, -1 do
+			table.insert(s_State.Targets, 1, s_Lead[l_Index])
+		end
+	end
 	m_Logger:Write(self.m_Player.name .. ' enters the zone of ' .. p_Zone.Name)
 end
 
@@ -104,9 +155,9 @@ function Bot:_ZoneNewGoal()
 	local s_State = self.m_Zone
 	---@cast s_State -nil
 	local s_Defend = self._ObjectiveMode == BotObjectiveModes.Defend
-	local s_Goal = m_NavZones:RandomPoint(s_State.Zone, s_State.Point, s_Defend)
+	local s_Goal = m_NavZones:RandomPoint(s_State.Zone, s_State.Point, s_Defend and not s_State.Vehicle)
 	self:_ZoneRouteTo(s_Goal)
-	local s_Wait = s_Defend and ZONE_WAIT_DEFEND or ZONE_WAIT_ATTACK
+	local s_Wait = s_State.Vehicle and ZONE_WAIT_VEHICLE or (s_Defend and ZONE_WAIT_DEFEND or ZONE_WAIT_ATTACK)
 	s_State.Wait = MathUtils:GetRandom(s_Wait[1], s_Wait[2])
 end
 
@@ -138,10 +189,13 @@ function Bot:_ZoneReplan(p_NewGoal)
 		return
 	end
 
-	local s_Point = m_NavZones:Closest(s_State.Zone, s_Soldier.worldTransform.trans)
+	local s_Position = s_State.Vehicle and self.m_Player.controlledControllable ~= nil
+		and self.m_Player.controlledControllable.transform.trans or s_Soldier.worldTransform.trans
+	local s_Point = m_NavZones:Closest(s_State.Zone, s_Position, s_State.Avoid)
 	if s_Point ~= nil then
 		s_State.Point = s_Point
 	end
+	s_State.Avoid = nil
 
 	if s_State.Exit ~= nil then
 		self:_ZoneRouteToExit(s_State.Exit)
@@ -167,7 +221,19 @@ function Bot:_ZoneBestExit(p_Objective)
 		local l_Junction = s_State.Zone.Junctions[l_Index]
 		local s_Waypoint = l_Junction.Waypoint
 		local s_First = s_Waypoint and m_NodeCollection:GetFirst(s_Waypoint.PathIndex)
-		if s_Waypoint ~= nil and type(s_First) == 'table' and m_PathSwitcher:IsWalkable(s_Waypoint.PathIndex) then
+		-- Soldiers leave on paths they may walk, vehicles on vehicle-paths for land. Only junctions the bot can reach.
+		local s_Usable = false
+		if s_Waypoint ~= nil and type(s_First) == 'table'
+			and s_State.Zone.Part[l_Junction.Point] == s_State.Zone.Part[s_State.Point] then
+			if s_State.Vehicle then
+				s_Usable = s_First.Data ~= nil and type(s_First.Data.Vehicles) == 'table' and table.has(s_First.Data.Vehicles, 'land')
+			else
+				s_Usable = m_PathSwitcher:IsWalkable(s_Waypoint.PathIndex)
+			end
+		end
+		if s_Usable then
+			---@cast s_First Waypoint
+			---@cast s_Waypoint Waypoint
 			local s_Priority = m_PathSwitcher:GetPriorityOfPath(s_First, p_Objective)
 			-- A path that stays in the zone (only this objective) doesn't lead anywhere else.
 			local s_Objectives = s_First.Data and s_First.Data.Objectives or {}
@@ -191,7 +257,10 @@ function Bot:_ZoneRouteToExit(p_Junction)
 	---@cast s_State -nil
 	s_State.Exit = p_Junction
 	self:_ZoneRouteTo(p_Junction.Point)
-	-- At last the waypoint of the junction itself.
+	-- At last the way to the waypoint of the junction, and the waypoint itself.
+	for l_Index = 1, #p_Junction.Corners do
+		s_State.Targets[#s_State.Targets + 1] = { Position = p_Junction.Corners[l_Index], Flags = 0 }
+	end
 	s_State.Targets[#s_State.Targets + 1] = { Position = p_Junction.Waypoint.Position, Flags = 0 }
 end
 
@@ -205,7 +274,10 @@ function Bot:_LeaveZone(p_Junction)
 	self._ShootWayPoints = {}
 
 	local s_Waypoint = p_Junction and p_Junction.Waypoint
-	if s_Waypoint == nil and self.m_Player.soldier ~= nil then
+	if s_Waypoint == nil and s_State ~= nil and s_State.Vehicle and self.m_Player.controlledControllable ~= nil then
+		s_Waypoint = g_GameDirector:FindClosestPath(self.m_Player.controlledControllable.transform.trans, true, false,
+			VehicleTerrains.Land)
+	elseif s_Waypoint == nil and self.m_Player.soldier ~= nil then
 		s_Waypoint = g_GameDirector:FindClosestPath(self.m_Player.soldier.worldTransform.trans, false, true, nil)
 	end
 
@@ -213,7 +285,7 @@ function Bot:_LeaveZone(p_Junction)
 		self._PathIndex = s_Waypoint.PathIndex
 		self._CurrentWayPoint = s_Waypoint.PointIndex
 		if self._Objective ~= '' then
-			local s_Direction = m_NodeCollection:ObjectiveDirection(s_Waypoint, self._Objective, false)
+			local s_Direction = m_NodeCollection:ObjectiveDirection(s_Waypoint, self._Objective, s_State ~= nil and s_State.Vehicle)
 			if s_Direction then
 				self._InvertPathDirection = (s_Direction == 'Previous')
 			end
@@ -226,6 +298,22 @@ function Bot:_LeaveZone(p_Junction)
 	self:_ResetObstacleSequence()
 	self._LastWayDistance = 1000.0
 	m_Logger:Write(self.m_Player.name .. ' leaves the zone of ' .. (s_State and s_State.Zone.Name or '?'))
+end
+
+---MCOM: the GameDirector sends up to two bots per team to arm (attackers) or disarm (defenders) it. Their objective
+---becomes "mcom N interact", they leave the zone at the action-node of that path, and the action is done there. Also
+---called while the bot fights (StateAttacking): the MCOM gets armed while the defenders shoot at the attacker.
+---@param p_DeltaTime number
+function Bot:UpdateZoneSubObjective(p_DeltaTime)
+	local s_State = self.m_Zone
+	if s_State == nil or s_State.SubObjective == nil or s_State.Exit ~= nil or self._Objective ~= s_State.Zone.Name then
+		return
+	end
+	s_State.SubTimer = s_State.SubTimer + p_DeltaTime
+	if s_State.SubTimer >= ZONE_SUBOBJECTIVE_CYCLE then
+		s_State.SubTimer = 0.0
+		g_GameDirector:UseSubobjective(self.m_Id, self.m_Player.teamId, s_State.SubObjective)
+	end
 end
 
 ---Movement in the zone, instead of Bot:UpdateNormalMovement.
@@ -243,6 +331,8 @@ function Bot:UpdateZoneMovement(p_DeltaTime)
 		self._ShootWayPoints = {}
 		self:_ZoneReplan(false)
 	end
+
+	self:UpdateZoneSubObjective(p_DeltaTime)
 
 	-- New objective: out over the junction that suits it best. Without objective the bot stays.
 	if self._Objective ~= s_State.Objective and s_State.Exit == nil then
@@ -301,7 +391,8 @@ function Bot:UpdateZoneMovement(p_DeltaTime)
 	self._WayWaitTimer = 0.0
 	if s_Target.Flags & NavZoneFlags.Crouch ~= 0 then
 		self.m_ActiveSpeedValue = BotMoveSpeeds.SlowCrouch
-	elseif s_Target.Flags & NavZoneFlags.InZone ~= 0 then
+	elseif s_State.Exit == nil and s_Target.Flags & NavZoneFlags.InZone ~= 0 then
+		-- Walking around in the zone. On the way out (to the next objective, to arm or disarm) the bot runs.
 		self.m_ActiveSpeedValue = BotMoveSpeeds.Normal
 	else
 		self.m_ActiveSpeedValue = BotMoveSpeeds.Sprint
@@ -347,38 +438,55 @@ function Bot:UpdateZoneMovement(p_DeltaTime)
 	end
 
 	if s_State.Stuck > ZONE_STUCK_TIME then
-		s_State.Fails = s_State.Fails + 1
-		m_Logger:Write(self.m_Player.name .. ' stuck in the zone of ' .. s_State.Zone.Name .. ' (' .. s_State.Fails .. ')')
-
-		-- The connection between the last point and the next one doesn't work here: all bots avoid it.
-		local s_Next = nil
-		for l_Step = s_State.Step, #s_State.Targets do
-			if s_State.Targets[l_Step].Point ~= nil then
-				s_Next = s_State.Targets[l_Step].Point
-				break
-			end
-		end
-		if s_Next ~= nil and s_Next ~= s_State.Point then
-			m_NavZones:BlockEdge(s_State.Zone, s_State.Point, s_Next)
-		end
-		if m_DebugBridge.m_Enabled then
-			-- Points counted from 0, as in the file of the networks.
-			m_DebugBridge:Event('zone_stuck', {
-				zone = s_State.Zone.Name,
-				from = s_State.Point - 1,
-				to = s_Next and s_Next - 1,
-				pos = DebugBridge.Vec(s_Position),
-				target = DebugBridge.Vec(s_Target.Position),
-				bot = self.m_Id,
-			})
-		end
-
-		if s_State.Fails >= ZONE_MAX_FAILS then
-			self:_LeaveZone(nil)
+		if self:_ZoneGiveUpConnection(s_Position, s_Target.Position) then
 			return false
 		end
-		self:_ZoneReplan(true)
 	end
 
 	return true
+end
+
+---The bot doesn't get along to the next point: all bots avoid this connection from now on, the bot takes another
+---way. After ZONE_MAX_FAILS of them in a row it goes back to the waypoints.
+---@param p_Position Vec3
+---@param p_Target Vec3
+---@return boolean true if the bot left the zone
+function Bot:_ZoneGiveUpConnection(p_Position, p_Target)
+	local s_State = self.m_Zone
+	---@cast s_State -nil
+	s_State.Fails = s_State.Fails + 1
+	m_Logger:Write(self.m_Player.name .. ' stuck in the zone of ' .. s_State.Zone.Name .. ' (' .. s_State.Fails .. ')')
+
+	local s_Next = nil
+	for l_Step = s_State.Step, #s_State.Targets do
+		if s_State.Targets[l_Step].Point ~= nil then
+			s_Next = s_State.Targets[l_Step].Point
+			break
+		end
+	end
+	if s_Next ~= nil and s_Next ~= s_State.Point then
+		m_NavZones:BlockEdge(s_State.Zone, s_State.Point, s_Next)
+	end
+	-- All ways from the last point failed: start the next route at another point.
+	if m_NavZones:IsBlockedIn(s_State.Zone, s_State.Point) then
+		s_State.Avoid = s_State.Point
+	end
+	if m_DebugBridge.m_Enabled then
+		-- Points counted from 0, as in the file of the networks.
+		m_DebugBridge:Event('zone_stuck', {
+			zone = s_State.Vehicle and (s_State.Zone.Name .. ' (vehicles)') or s_State.Zone.Name,
+			from = s_State.Point - 1,
+			to = s_Next and s_Next - 1,
+			pos = DebugBridge.Vec(p_Position),
+			target = DebugBridge.Vec(p_Target),
+			bot = self.m_Id,
+		})
+	end
+
+	if s_State.Fails >= ZONE_MAX_FAILS then
+		self:_LeaveZone(nil)
+		return true
+	end
+	self:_ZoneReplan(true)
+	return false
 end

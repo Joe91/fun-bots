@@ -324,7 +324,9 @@ Inside a capture zone and around an MCOM the bots shall move freely instead of a
 needed between the zones (and for vehicles, actions, jumps). `funbots_debug/census/navzones.py` makes a small walking
 network for every zone from the grids of a census: points about every 5 m (the open spots first), the walkable
 connections between them, and the junctions with the existing waypoints (where a path enters, leaves or ends in the
-zone). Only the parts of the grid the waypoints reach get points, so roofs and closed rooms stay out.
+zone). Only the parts of the grid the waypoints reach get points, so roofs and closed rooms stay out. Where a path walks
+from one part of the network into another one the grid doesn't connect (stairs, ladders, jumps the vertical rays don't
+see), the network gets a connection along its waypoints. Bots only walk to points they can reach.
 
 ```
 python -m funbots_debug.census navzones census/*.json.gz             # writes census/<level>_<mode>.navzones.json
@@ -336,24 +338,55 @@ of the running level). On the map (layer *Zone networks*) connections inside the
 points indoors have a blue ring, points that need crouching an orange one, the junctions with the waypoints are dashed
 orange.
 
-Areas are made around the capture points, the MCOMs and the HQs of the running mode (`base us`, `base ru`, 60 m).
+Areas are made around the capture points, the MCOMs and the HQs of the running mode (`base us`, `base ru`, 60 m). Modes
+without HQs (rush) get their bases from the waypoints: around the paths of each `base us 1`, `base ru 2`, ... objective.
+
+Land vehicles get a network of their own in each zone (`vehicle`): the same way, but only over wide and open ground
+(1.8 m to the next wall, slopes up to about 41°, no roof below 4 m), a point about every 10 m, attached to the paths with
+`Vehicles: land`.
 
 **In the game** (`ext/Server/NavZones.lua`, `ext/Server/Bot/BotZoneMovement.lua`, switch
 `Registry.BOT.USE_ZONE_NETWORKS`): `POST /api/navzones/apply` (`{"save": true}`) sends the networks shown on the map to
 the mod, which saves them in the table `<level>_<mode>_navzones` of `mod.db` and loads them with the waypoints from then
-on. A bot that reaches a junction of the zone of its objective (capture points for now) leaves the waypoints: it walks
+on. A bot that reaches a junction of the zone of its objective (capture point or MCOM) leaves the waypoints: it walks
 from point to point inside the zone and waits at each (longer and crouched in cover when it defends). When its
 objective changes it walks to the junction whose path leads to the new objective best (`PathSwitcher` priority, then
 distance) and goes on along that path. A bot that gets stuck between two points (4 s without progress) takes another
 way, and all bots avoid that connection until the level ends; after three of them it goes back to the waypoints. The
 debug-server lists these spots under *Findings* (analyzer `zones`). In the snapshot a bot in a zone has `zone` (and
-`zoneExit` on its way out). The networks of the bases are made and loaded, but not used yet: they are meant for spawning
-with the spawn-points of the game instead of on waypoints.
+`zoneExit` on its way out).
+
+- **MCOMs**: in the zone of an MCOM a bot asks the GameDirector every second whether it shall arm (attackers, MCOM not
+  armed) or disarm it (defenders, MCOM armed), at most two per team. Then its objective becomes `mcom N interact`, it
+  leaves the zone at the action-node of that path (a junction of the zone) and does the action there as on the
+  waypoints.
+- **Bases**: bots that spawn at the spawn-points of the game (`SpawnMethod.Spawn`) on the network of a base start in it
+  and walk out over the junction that suits their objective as soon as they have one.
+- **Land vehicles** (`Registry.BOT.USE_VEHICLE_ZONE_NETWORKS`, experimental): a driver that reaches a junction of the
+  vehicle-network of the capture point of its objective drives the network, stands a few seconds at each point, and
+  leaves over the vehicle-junction that suits its next objective. When it doesn't get along it reverses, after three
+  times it takes another way.
+
+**In git** the networks are `navzones/<level>_<mode>.json` (the debug-server writes them when it applies them with
+`save`). The fun-bots-helper imports them into `mod.db` with the traces (`import_traces`) and exports them with
+`export_traces`.
+
+**All maps**: `python -m funbots_debug.census run --all --modes ConquestSmall0,ConquestLarge0,RushLarge0 --warmup 180
+--apply` makes census and networks of every waypoint-file of these modes, one level after the other (rush only waits
+45 s: no capture zones to measure). That takes about 7 minutes per level. For a long run let the driver start the
+game-server again after a crash (the level is tried once more):
+```
+python -m funbots_debug.census run --all --modes ConquestSmall0,ConquestLarge0,RushLarge0 --warmup 180 --apply \
+    --restart-command 'cd /home/jo/Games/vu/client && wine vu.com -gamepath "<BF3>" -serverInstancePath "$(winepath -w <instance>)" -server -dedicated -high60'
+```
+`python -m funbots_debug.census cut ../../navzones/*.json -v` then lists which paths lie inside of zones (drop), run
+through them (cut) or have to stay (vehicles, actions): a dry run, nothing is changed.
 
 A point is `[x, y, z, clearance, cover, flags]`: clearance is the distance to the next wall, cover the number of the 8
 directions with a wall within 1.5 m, flags 1 = in the zone, 2 = indoors, 4 = crouch. A connection is
 `[a, b, length, corners]` (the corners of the way between the points, if it isn't straight). A junction is
-`[path, point, network-point, walking distance, position of the waypoint]`.
+`[path, point, network-point, walking distance, position of the waypoint, corners]`, the corners of the way from the
+network-point to the waypoint (around the walls of the room of an MCOM, for example).
 
 ## Towards nav meshes
 

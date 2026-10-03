@@ -47,6 +47,8 @@ function StateAttacking:Update(p_Bot, p_DeltaTime)
 
 	-- default-handling
 	p_Bot:UpdateWeaponSelection(p_DeltaTime) -- TODO: maybe combine with reload now?
+	-- In an MCOM-zone: arm / disarm also when the fight started there (BotZoneMovement).
+	p_Bot:UpdateZoneSubObjective(p_DeltaTime)
 
 	-- TODO: split revive, repari, c4 and so on
 	p_Bot:UpdateAttacking(p_DeltaTime)

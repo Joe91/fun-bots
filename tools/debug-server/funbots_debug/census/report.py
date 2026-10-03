@@ -350,6 +350,17 @@ def _check_capture_points(census: dict, nodes: _Nodes, issues: list[Issue], summ
     if lines:
         summary["capture points"] = lines
 
+    # Two active capture points with the same objective: the waypoints lack the objective of one of them (the
+    # GameDirector translates a capture point to the objective of the closest path that has it alone).
+    by_objective: dict[str, list[str]] = defaultdict(list)
+    for capture_point in capture_points(census):
+        if not capture_point["inactive"] and not capture_point.get("hq") and capture_point.get("objective"):
+            by_objective[str(capture_point["objective"])].append(str(capture_point.get("name")))
+    for objective, names in by_objective.items():
+        if len(names) > 1:
+            issues.append(Issue("objective-shared", "error", f"capture points {', '.join(names)} all count as "
+                                f"objective {objective}: the waypoints lack the objectives of the others"))
+
 
 def _area(polygon: list[tuple[float, float]]) -> float:
     return 0.5 * abs(sum(ax * bz - bx * az for (ax, az), (bx, bz) in zip(polygon, polygon[1:] + polygon[:1])))

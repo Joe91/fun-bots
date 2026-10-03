@@ -15,9 +15,13 @@ How it is made, per area of the census:
    walkable. So the network is connected wherever the grid is.
 5. Each point knows whether it is inside the zone, indoors, how much cover is around it and whether it needs crouching.
 6. The existing waypoints are attached where they enter, leave or end in the area: those are the junctions between the
-   paths and the network ([path, point, network-point, walking distance, position of the waypoint]).
+   paths and the network ([path, point, network-point, walking distance, position of the waypoint, corners of the way
+   from the network-point towards the waypoint]).
 
 The result (navzones.json) is what the mod will need: points, connections and junctions.
+
+Land vehicles get a network of their own in each zone ("vehicle"): the same way, with the VEHICLE profile (wide and
+open ground only, fewer points), attached to the paths with "Vehicles".
 """
 
 from __future__ import annotations
@@ -26,6 +30,7 @@ import heapq
 import json
 import math
 from collections import defaultdict, deque
+from dataclasses import dataclass
 from pathlib import Path
 
 from ..protocol import as_list
@@ -42,6 +47,27 @@ CROUCH_HEADROOM = 1.7     # Less headroom: crouching.
 COVER_RANGE = 3           # Cells in each of the 8 directions that are checked for cover.
 ATTACH_HEIGHT = 1.0       # A waypoint belongs to a surface this close below or above it.
 STEP_HEIGHT = 0.6         # Same as report.STEP_HEIGHT: what a straight line may step up or down per cell.
+
+# Land vehicles: wide and open ground only.
+VEHICLE_CLEARANCE = 1.8   # Metres to the next wall (half the width of a tank, and some).
+VEHICLE_NORMAL_Y = 0.75   # Slopes up to about 41 degrees.
+VEHICLE_HEADROOM = 4.0    # Under a roof only with this much space.
+
+
+@dataclass(frozen=True)
+class Profile:
+    """What a network is made for."""
+
+    spacing: float          # Metres between the points.
+    point_clearance: float  # Points only where the next wall is at least this far away.
+    line_clearance: float   # Straight lines only over cells with more clearance than this (0: off the walls).
+    wall_clearance: float   # Ways over cells with less clearance cost WALL_COST times as much.
+    attach_range: float     # A waypoint is attached to a surface of the network up to this far away.
+    attach_distance: float  # Junctions more than this far (walking) from their network-point are left out.
+
+
+SOLDIER = Profile(SPACING, MIN_CLEARANCE, 0.0, MIN_CLEARANCE, 1.0, 20.0)
+VEHICLE = Profile(10.0, VEHICLE_CLEARANCE, VEHICLE_CLEARANCE, VEHICLE_CLEARANCE, 6.0, 30.0)
 
 # Flags of a point.
 IN_ZONE = 1
@@ -101,10 +127,10 @@ def _clearance(grid: _Area) -> dict[Surface, float]:
     return clearance
 
 
-def _components(grid: _Area) -> list[set[Surface]]:
+def _components(grid: _Area, allowed: set[Surface] | None = None) -> list[set[Surface]]:
     seen: set[Surface] = set()
     components = []
-    for start in grid.surfaces:
+    for start in grid.surfaces if allowed is None else allowed:
         if start in seen:
             continue
         component = {start}
@@ -112,7 +138,7 @@ def _components(grid: _Area) -> list[set[Surface]]:
         queue = deque([start])
         while queue:
             for neighbour in grid.links.get(queue.popleft(), []):
-                if neighbour not in seen:
+                if neighbour not in seen and (allowed is None or neighbour in allowed):
                     seen.add(neighbour)
                     component.add(neighbour)
                     queue.append(neighbour)
@@ -121,27 +147,28 @@ def _components(grid: _Area) -> list[set[Surface]]:
 
 
 def _place_points(grid: _Area, surfaces: set[Surface], clearance: dict[Surface, float],
-                  components: list[set[Surface]]) -> list[Surface]:
-    """The surfaces with the most clearance first, each at least SPACING from the others (height counts double, so
+                  components: list[set[Surface]], profile: Profile = SOLDIER) -> list[Surface]:
+    """The surfaces with the most clearance first, each at least the spacing from the others (height counts double, so
     floors above each other get their own points). Every part gets at least one point."""
-    candidates = sorted((key for key in surfaces if clearance.get(key, 0.0) >= MIN_CLEARANCE),
+    spacing = profile.spacing
+    candidates = sorted((key for key in surfaces if clearance.get(key, 0.0) >= profile.point_clearance),
                         key=lambda key: (-clearance[key], key))
     points: list[Surface] = []
     buckets: dict[tuple[int, int], list[tuple[float, float, float]]] = defaultdict(list)
 
     def free(pos: tuple[float, float, float]) -> bool:
-        bucket = (math.floor(pos[0] / SPACING), math.floor(pos[2] / SPACING))
+        bucket = (math.floor(pos[0] / spacing), math.floor(pos[2] / spacing))
         for d_x in (-1, 0, 1):
             for d_z in (-1, 0, 1):
                 for other in buckets.get((bucket[0] + d_x, bucket[1] + d_z), []):
-                    if math.hypot(pos[0] - other[0], pos[2] - other[2], 2 * (pos[1] - other[1])) < SPACING:
+                    if math.hypot(pos[0] - other[0], pos[2] - other[2], 2 * (pos[1] - other[1])) < spacing:
                         return False
         return True
 
     def add(key: Surface) -> None:
         pos = grid.pos(key)
         points.append(key)
-        buckets[(math.floor(pos[0] / SPACING), math.floor(pos[2] / SPACING))].append(pos)
+        buckets[(math.floor(pos[0] / spacing), math.floor(pos[2] / spacing))].append(pos)
 
     for key in candidates:
         if free(grid.pos(key)):
@@ -153,13 +180,13 @@ def _place_points(grid: _Area, surfaces: set[Surface], clearance: dict[Surface, 
     return points
 
 
-def _cost(grid: _Area, clearance: dict[Surface, float], a: Surface, b: Surface) -> float:
+def _cost(grid: _Area, clearance: dict[Surface, float], a: Surface, b: Surface, profile: Profile = SOLDIER) -> float:
     cost = grid.distance(a, b)
-    return cost * WALL_COST if clearance.get(b, 0.0) < MIN_CLEARANCE else cost
+    return cost * WALL_COST if clearance.get(b, 0.0) < profile.wall_clearance else cost
 
 
-def _regions(grid: _Area, points: list[Surface], clearance: dict[Surface, float],
-             surfaces: set[Surface]) -> tuple[dict[Surface, int], dict[Surface, float]]:
+def _regions(grid: _Area, points: list[Surface], clearance: dict[Surface, float], surfaces: set[Surface],
+             profile: Profile = SOLDIER) -> tuple[dict[Surface, int], dict[Surface, float]]:
     """Every surface belongs to the point it's closest to, walking."""
     owner: dict[Surface, int] = {}
     distance: dict[Surface, float] = {}
@@ -173,12 +200,12 @@ def _regions(grid: _Area, points: list[Surface], clearance: dict[Surface, float]
         distance[key] = cost
         for neighbour in grid.links.get(key, []):
             if neighbour in surfaces and neighbour not in owner:
-                heapq.heappush(heap, (cost + _cost(grid, clearance, key, neighbour), index, neighbour))
+                heapq.heappush(heap, (cost + _cost(grid, clearance, key, neighbour, profile), index, neighbour))
     return owner, distance
 
 
 def _grid_way(grid: _Area, clearance: dict[Surface, float], start: Surface, goal: Surface,
-              allowed: set[int], owner: dict[Surface, int]) -> list[Surface] | None:
+              allowed: set[int], owner: dict[Surface, int], profile: Profile = SOLDIER) -> list[Surface] | None:
     """Shortest way on the grid (A*), only over the surfaces of the allowed points."""
     goal_pos = grid.pos(goal)
     heap = [(math.dist(grid.pos(start), goal_pos), 0.0, start)]
@@ -196,7 +223,7 @@ def _grid_way(grid: _Area, clearance: dict[Surface, float], start: Surface, goal
         for neighbour in grid.links.get(key, []):
             if owner.get(neighbour) not in allowed:
                 continue
-            new_cost = cost + _cost(grid, clearance, key, neighbour)
+            new_cost = cost + _cost(grid, clearance, key, neighbour, profile)
             if new_cost < costs.get(neighbour, math.inf):
                 costs[neighbour] = new_cost
                 came[neighbour] = key
@@ -204,9 +231,10 @@ def _grid_way(grid: _Area, clearance: dict[Surface, float], start: Surface, goal
     return None
 
 
-def _straight(grid: _Area, clearance: dict[Surface, float], a: Surface, b: Surface) -> bool:
-    """Whether a soldier can walk the straight line from a to b: every cell on the way has a surface connected to the
-    one before, away from walls (except at both ends)."""
+def _straight(grid: _Area, clearance: dict[Surface, float], a: Surface, b: Surface, profile: Profile = SOLDIER,
+              allowed: set[Surface] | None = None) -> bool:
+    """Whether a soldier (or vehicle) can move the straight line from a to b: every cell on the way has a surface
+    connected to the one before, away from walls (except at both ends)."""
     ax, _, az = grid.pos(a)
     bx, _, bz = grid.pos(b)
     samples = max(1, math.ceil(math.hypot(bx - ax, bz - az) / (grid.step / 2)))
@@ -225,7 +253,10 @@ def _straight(grid: _Area, clearance: dict[Surface, float], a: Surface, b: Surfa
                                                       _diagonal(grid, current, key)):
                 nxt = key
                 break
-        if nxt is None or clearance.get(nxt, 0.0) <= 0.0:
+        if nxt is None or (allowed is not None and nxt not in allowed):
+            return False
+        value = clearance.get(nxt, 0.0)
+        if value <= 0.0 or value < profile.line_clearance:
             return False
         current = nxt
     return current == b
@@ -243,14 +274,15 @@ def _diagonal(grid: _Area, a: Surface, b: Surface) -> bool:
     return False
 
 
-def _simplify(grid: _Area, clearance: dict[Surface, float], way: list[Surface]) -> list[Surface]:
+def _simplify(grid: _Area, clearance: dict[Surface, float], way: list[Surface], profile: Profile = SOLDIER,
+              allowed: set[Surface] | None = None) -> list[Surface]:
     """Drops the corners of a way on the grid as long as the straight line stays walkable."""
     result = [way[0]]
     index = 0
     while index < len(way) - 1:
         reach = index + 1
         for candidate in range(len(way) - 1, index + 1, -1):
-            if _straight(grid, clearance, way[index], way[candidate]):
+            if _straight(grid, clearance, way[index], way[candidate], profile, allowed):
                 reach = candidate
                 break
         result.append(way[reach])
@@ -315,26 +347,20 @@ def _round(pos) -> list[float]:
     return [round(value, 2) for value in pos]
 
 
-def build_zone(census: dict, area: dict, nodes: _Nodes) -> dict:
-    grid = _Area(area)
-    clearance = _clearance(grid)
-    components = [component for component in _components(grid) if len(component) >= MIN_COMPONENT]
-
-    # The waypoints in the area: they choose the parts that are kept, and get attached later.
-    walked = []
-    radius = float(area.get("radius") or 0)
-    for path in sorted(nodes.foot):
-        for point, pos in enumerate(nodes.paths[path]["points"], start=1):
-            if math.hypot(pos[0] - grid.center[0], pos[2] - grid.center[2]) <= radius:
-                walked.append((path, point, pos, grid.surface_at(pos)))
+def _network(grid: _Area, clearance: dict[Surface, float], allowed: set[Surface],
+             walked: list[tuple[int, int, list[float], Surface | None]], nodes: _Nodes, inside, profile: Profile,
+             cover: bool) -> dict:
+    """Points, connections and junctions over the allowed surfaces. walked: the waypoints in the area that choose the
+    parts that are kept and get attached ([path, point, position, surface])."""
+    components = [component for component in _components(grid, allowed) if len(component) >= MIN_COMPONENT]
     seeds = {key for _, _, _, key in walked if key is not None}
     kept = [component for component in components if component & seeds]
-    if not kept and components:
+    if not kept and components and cover:
         kept = [max(components, key=len)]
     surfaces = set().union(*kept) if kept else set()
 
-    points = _place_points(grid, surfaces, clearance, kept)
-    owner, owner_distance = _regions(grid, points, clearance, surfaces)
+    points = _place_points(grid, surfaces, clearance, kept, profile)
+    owner, owner_distance = _regions(grid, points, clearance, surfaces, profile)
 
     # Connections between points whose areas touch.
     pairs = set()
@@ -345,15 +371,16 @@ def build_zone(census: dict, area: dict, nodes: _Nodes) -> dict:
                 pairs.add((min(a, b), max(a, b)))
     edges = []
     for a, b in sorted(pairs):
-        way = _grid_way(grid, clearance, points[a], points[b], {a, b}, owner)
+        way = _grid_way(grid, clearance, points[a], points[b], {a, b}, owner, profile)
         if way is None:
             continue
-        corners = _simplify(grid, clearance, way)
+        corners = _simplify(grid, clearance, way, profile, surfaces)
         positions = [grid.pos(key) for key in corners]
         length = sum(math.dist(p, q) for p, q in zip(positions, positions[1:]))
         edges.append([a, b, round(length, 1), [_round(pos) for pos in positions[1:-1]]])
+    if cover:
+        edges += _trace_edges(grid, owner, points, edges, walked, nodes)
 
-    inside, zone_source = _zone_test(census, area)
     point_entries = []
     for key in points:
         x, y, z = grid.pos(key)
@@ -366,7 +393,7 @@ def build_zone(census: dict, area: dict, nodes: _Nodes) -> dict:
         if 0 <= headroom < CROUCH_HEADROOM:
             flags |= CROUCH
         point_entries.append([round(x, 2), round(y, 2), round(z, 2), round(clearance.get(key, 0.0), 1),
-                              _cover(grid, key), flags])
+                              _cover(grid, key) if cover else 0, flags])
 
     # Junctions with the waypoints: where a path enters, leaves or ends in the area.
     attach = []
@@ -382,31 +409,136 @@ def build_zone(census: dict, area: dict, nodes: _Nodes) -> dict:
             if not ends_run:
                 continue
             if key is None or key not in owner:
+                key = _nearest_owned(grid, owner, pos, profile.attach_range)
+            if key is None:
                 unattached += 1
                 continue
-            attach.append([path, point, owner[key], round(owner_distance[key], 1), _round(pos)])
+            # The way from the network-point to the waypoint, around walls (the action-node of an MCOM in a room).
+            network = owner[key]
+            if owner_distance[key] > profile.attach_distance:
+                unattached += 1
+                continue
+            way = _grid_way(grid, clearance, points[network], key, {network}, owner, profile)
+            corners = [_round(grid.pos(corner)) for corner in _simplify(grid, clearance, way, profile, surfaces)[1:]] \
+                if way and len(way) > 1 else []
+            attach.append([path, point, network, round(owner_distance[key] + math.dist(grid.pos(key), pos), 1),
+                           _round(pos), corners])
 
-    in_zone = sum(1 for entry in point_entries if entry[5] & IN_ZONE)
     return {
-        "name": area.get("name"),
-        "kind": area.get("kind"),
-        "center": as_list(area.get("center")),
-        "radius": area.get("radius"),
-        "zone": zone_source,
         "points": point_entries,
         "edges": edges,
         "attach": attach,
         "stats": {
-            "surfaces": len(grid.surfaces),
             "kept": len(surfaces),
             "parts": len(kept),
             "points": len(points),
-            "inZone": in_zone,
+            "inZone": sum(1 for entry in point_entries if entry[5] & IN_ZONE),
             "edges": len(edges),
             "attached": len(attach),
             "unattached": unattached,
         },
     }
+
+
+def _nearest_owned(grid: _Area, owner: dict[Surface, int], pos: list[float], distance: float) -> Surface | None:
+    """The surface of the network closest to the position, up to the distance away (horizontally) and 3 m up or down."""
+    row, column = grid.cell_of(pos[0], pos[2])
+    cells = math.ceil(distance / grid.step)
+    best = None
+    for d_row in range(-cells, cells + 1):
+        for d_column in range(-cells, cells + 1):
+            for key in grid.by_cell.get((row + d_row, column + d_column), []):
+                if key not in owner:
+                    continue
+                x, y, z = grid.pos(key)
+                horizontal = math.hypot(x - pos[0], z - pos[2])
+                if horizontal <= distance and abs(y - pos[1]) <= 3.0 and (best is None or horizontal < best[0]):
+                    best = (horizontal, key)
+    return best[1] if best else None
+
+
+def _trace_edges(grid: _Area, owner: dict[Surface, int], points: list[Surface], edges: list,
+                 walked: list[tuple[int, int, list[float], Surface | None]], nodes: _Nodes) -> list:
+    """Connections along the waypoints between parts of the network that the grid doesn't connect: stairs, ladders,
+    jumps the vertical rays don't see. A path that walks from one part into another joins them, over its waypoints."""
+    parent = list(range(len(points)))
+
+    def find(index: int) -> int:
+        while parent[index] != index:
+            parent[index] = parent[parent[index]]
+            index = parent[index]
+        return index
+
+    for a, b, *_ in edges:
+        parent[find(a)] = find(b)
+
+    by_path: dict[int, dict[int, list[float]]] = defaultdict(dict)
+    owned: dict[tuple[int, int], int] = {}
+    for path, point, pos, key in walked:
+        by_path[path][point] = pos
+        key = key if key is not None and key in owner else _nearest_owned(grid, owner, pos, 1.0)
+        if key is not None:
+            owned[(path, point)] = owner[key]
+
+    result = []
+    for path, positions in by_path.items():
+        last = None  # (point, network-point)
+        for point in sorted(positions):
+            network = owned.get((path, point))
+            if network is None:
+                continue
+            if last is not None and point - last[0] <= 40 and find(last[1]) != find(network):
+                corners = [_round(positions[index]) for index in range(last[0], point + 1) if index in positions]
+                way = [points_pos for points_pos in [grid.pos(points[last[1]])] + corners + [grid.pos(points[network])]]
+                length = sum(math.dist(p, q) for p, q in zip(way, way[1:]))
+                result.append([last[1], network, round(length, 1), corners])
+                parent[find(last[1])] = find(network)
+            last = (point, network)
+    return result
+
+
+def _walked(grid: _Area, area: dict, nodes: _Nodes, paths: set[int], height: float) -> list:
+    radius = float(area.get("radius") or 0)
+    walked = []
+    for path in sorted(paths):
+        for point, pos in enumerate(nodes.paths[path]["points"], start=1):
+            if math.hypot(pos[0] - grid.center[0], pos[2] - grid.center[2]) <= radius:
+                walked.append((path, point, pos, grid.surface_at(pos, height)))
+    return walked
+
+
+def build_zone(census: dict, area: dict, nodes: _Nodes) -> dict:
+    grid = _Area(area)
+    clearance = _clearance(grid)
+    inside, zone_source = _zone_test(census, area)
+
+    soldier = _network(grid, clearance, set(grid.surfaces), _walked(grid, area, nodes, nodes.foot, ATTACH_HEIGHT),
+                       nodes, inside, SOLDIER, True)
+
+    # Land vehicles: wide, open, not too steep. The waypoints of vehicle-paths are the position of the vehicle, about a
+    # metre above the ground.
+    land = {path for path, entry in nodes.paths.items()
+            if "land" in [str(name).lower() for name in entry.get("vehicles") or []]}
+    allowed = {key for key, (_, normal, _, headroom) in grid.surfaces.items()
+               if clearance.get(key, 0.0) >= VEHICLE_CLEARANCE and normal >= VEHICLE_NORMAL_Y
+               and (headroom < 0 or headroom >= VEHICLE_HEADROOM)}
+    vehicle = _network(grid, clearance, allowed, _walked(grid, area, nodes, land, 3.0), nodes, inside, VEHICLE,
+                       False) if land else None
+
+    zone = {
+        "name": area.get("name"),
+        "kind": area.get("kind"),
+        "center": as_list(area.get("center")),
+        "radius": area.get("radius"),
+        "zone": zone_source,
+        "points": soldier["points"],
+        "edges": soldier["edges"],
+        "attach": soldier["attach"],
+        "stats": dict(soldier["stats"], surfaces=len(grid.surfaces)),
+    }
+    if vehicle is not None and vehicle["points"]:
+        zone["vehicle"] = vehicle
+    return zone
 
 
 def build(census: dict) -> dict:
@@ -423,6 +555,11 @@ def summary(data: dict) -> str:
         lines.append(f"  {zone['name']} ({zone['kind']}, zone: {zone['zone']}): {stats['points']} points "
                      f"({stats['inZone']} in the zone), {stats['edges']} connections, {stats['parts']} parts, "
                      f"{stats['attached']} junctions with waypoints ({stats['unattached']} without surface)")
+        vehicle = (zone.get("vehicle") or {}).get("stats")
+        if vehicle:
+            lines.append(f"    vehicles: {vehicle['points']} points ({vehicle['inZone']} in the zone), "
+                         f"{vehicle['edges']} connections, {vehicle['parts']} parts, {vehicle['attached']} junctions "
+                         f"with vehicle-paths ({vehicle['unattached']} without surface)")
     return "\n".join(lines)
 
 

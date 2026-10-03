@@ -253,11 +253,7 @@ class Hub:
     def start_census(self, args: dict | None = None) -> Command:
         """Starts a census of the running level (MapCensus.lua). It is saved when done, see census_status.
         Without areas in args, the grids go around the capture points (measured radius) and the MCOMs."""
-        args = dict(args or {})
-        if "areas" not in args:
-            with self.lock:
-                args["areas"] = self._census_areas()
-        return self.submit_command("census", args)
+        return self.submit_command("census", self.census_args(args))
 
     def _census_areas(self) -> list[dict]:
         objectives = self.state.objectives or {}
@@ -288,6 +284,17 @@ class Hub:
             if len(pos) >= 3:
                 areas.append({"name": mcom.get("name"), "kind": "mcom", "pos": pos, "radius": CENSUS_MCOM_RADIUS})
         return areas
+
+    def census_args(self, args: dict | None = None) -> dict:
+        """The arguments of a census: the areas around the objectives, and the bases from the waypoints in modes
+        without HQs (rush, MapCensus.lua)."""
+        args = dict(args or {})
+        with self.lock:
+            if "areas" not in args:
+                args["areas"] = self._census_areas()
+            if "basePaths" not in args:
+                args["basePaths"] = not any(area["kind"] == "base" for area in args["areas"])
+        return args
 
     def census_status(self) -> dict:
         with self.lock:
@@ -362,7 +369,16 @@ class Hub:
         command = self.submit_command("navzones_apply", {"map": data.get("map"), "zones": data.get("zones") or [],
                                                          "save": save})
         self.commands.wait(command, timeout)
-        return command.to_json()
+        result = command.to_json()
+        # Saved in the game: also into navzones/<map>.json of the repository (fun-bots-helper imports it into mod.db).
+        if save and command.status == "ok" and self.mapfiles is not None and data.get("map"):
+            folder = self.mapfiles.parent / "navzones"
+            folder.mkdir(exist_ok=True)
+            file = folder / f"{data['map']}.json"
+            navzones.save({"version": data.get("version"), "map": data.get("map"), "spacing": data.get("spacing"),
+                           "zones": data.get("zones") or []}, file)
+            result["file"] = str(file)
+        return result
 
     def navzones_from(self, file: Path | None = None) -> dict:
         """Builds the networks from a census (default: the one of the running level) or loads saved ones."""

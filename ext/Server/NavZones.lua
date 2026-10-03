@@ -40,6 +40,7 @@ local BLOCKED_PENALTY = 50.0
 ---@field PointIndex integer
 ---@field Position Vec3 where the waypoint was when the network was made
 ---@field Point integer the point of the network
+---@field Corners Vec3[] the way from the point to the waypoint (around walls)
 ---@field Waypoint Waypoint|nil set by _LinkJunctions
 
 ---@class NavZone
@@ -50,6 +51,8 @@ local BLOCKED_PENALTY = 50.0
 ---@field Neighbours table<integer, { To: integer, Cost: number, Corners: Vec3[], Penalty: number }[]>
 ---@field Inside integer[] the points in the zone
 ---@field Junctions NavZoneJunction[]
+---@field Vehicle NavZone|nil the network of the land vehicles in the zone
+---@field Part table<integer, integer> point -> number of its connected part (points of different parts have no way)
 
 function NavZones:__init()
 	self:Clear()
@@ -60,6 +63,8 @@ function NavZones:Clear()
 	self._Zones = {}
 	---waypoint-ID -> { Zone, Junction }
 	self._Junctions = {}
+	---waypoint-ID -> { Zone (the vehicle-network), Junction }
+	self._VehicleJunctions = {}
 	self._Count = 0
 end
 
@@ -136,14 +141,18 @@ function NavZones:_Save(p_Zones)
 	SQL:Close()
 end
 
----@param p_Data table one zone as in the table
-function NavZones:_AddZone(p_Data)
-	local s_Center = p_Data.center or {}
+---One network (points, edges, attach) of a zone.
+---@param p_Data table
+---@param p_Name string
+---@param p_Kind string
+---@param p_Center Vec3
+---@return NavZone
+local function _ParseNetwork(p_Data, p_Name, p_Kind, p_Center)
 	---@type NavZone
 	local s_Zone = {
-		Name = tostring(p_Data.name),
-		Kind = tostring(p_Data.kind),
-		Center = Vec3(tonumber(s_Center[1]) or 0, tonumber(s_Center[2]) or 0, tonumber(s_Center[3]) or 0),
+		Name = p_Name,
+		Kind = p_Kind,
+		Center = p_Center,
 		Points = {},
 		Neighbours = {},
 		Inside = {},
@@ -192,12 +201,58 @@ function NavZones:_AddZone(p_Data)
 	for l_Index = 1, #s_Attach do
 		local l_Entry = s_Attach[l_Index]
 		local s_Pos = l_Entry[5] or {}
+		local s_Corners = {}
+		local s_RawCorners = type(l_Entry[6]) == 'table' and l_Entry[6] or {}
+		for l_Corner = 1, #s_RawCorners do
+			s_Corners[l_Corner] = Vec3(s_RawCorners[l_Corner][1], s_RawCorners[l_Corner][2], s_RawCorners[l_Corner][3])
+		end
 		s_Zone.Junctions[#s_Zone.Junctions + 1] = {
 			PathIndex = math.floor(l_Entry[1]),
 			PointIndex = math.floor(l_Entry[2]),
 			Point = math.floor(l_Entry[3]) + 1,
 			Position = Vec3(tonumber(s_Pos[1]) or 0, tonumber(s_Pos[2]) or 0, tonumber(s_Pos[3]) or 0),
+			Corners = s_Corners,
 		}
+	end
+
+	-- Connected parts: a bot only goes where a way leads.
+	s_Zone.Part = {}
+	local s_PartCount = 0
+	for l_Start = 1, #s_Zone.Points do
+		if s_Zone.Part[l_Start] == nil then
+			s_PartCount = s_PartCount + 1
+			s_Zone.Part[l_Start] = s_PartCount
+			local s_Stack = { l_Start }
+			while #s_Stack > 0 do
+				local s_Current = table.remove(s_Stack)
+				local s_Neighbours = s_Zone.Neighbours[s_Current]
+				for l_Index = 1, #s_Neighbours do
+					local s_Next = s_Neighbours[l_Index].To
+					if s_Zone.Part[s_Next] == nil then
+						s_Zone.Part[s_Next] = s_PartCount
+						s_Stack[#s_Stack + 1] = s_Next
+					end
+				end
+			end
+		end
+	end
+
+	return s_Zone
+end
+
+---@param p_Data table one zone as in the table
+function NavZones:_AddZone(p_Data)
+	local s_Center = p_Data.center or {}
+	local s_Name = tostring(p_Data.name)
+	local s_Kind = tostring(p_Data.kind)
+	local s_CenterVec = Vec3(tonumber(s_Center[1]) or 0, tonumber(s_Center[2]) or 0, tonumber(s_Center[3]) or 0)
+	local s_Zone = _ParseNetwork(p_Data, s_Name, s_Kind, s_CenterVec)
+	-- Land vehicles have a network of their own: wide and open ground, junctions with the vehicle-paths.
+	if type(p_Data.vehicle) == 'table' then
+		local s_Vehicle = _ParseNetwork(p_Data.vehicle, s_Name, s_Kind, s_CenterVec)
+		if #s_Vehicle.Points > 0 then
+			s_Zone.Vehicle = s_Vehicle
+		end
 	end
 
 	if #s_Zone.Points > 0 then
@@ -211,21 +266,29 @@ end
 function NavZones:_LinkJunctions()
 	local s_Paths = m_NodeCollection:GetPaths()
 	local s_Count = 0
-	for _, l_Zone in pairs(self._Zones) do
+
+	local function _Link(p_Zone, p_Lookup)
 		local s_Valid = {}
-		for l_Index = 1, #l_Zone.Junctions do
-			local l_Junction = l_Zone.Junctions[l_Index]
+		for l_Index = 1, #p_Zone.Junctions do
+			local l_Junction = p_Zone.Junctions[l_Index]
 			local s_Waypoints = s_Paths[l_Junction.PathIndex]
 			local s_Waypoint = s_Waypoints and s_Waypoints[l_Junction.PointIndex]
-			if s_Waypoint ~= nil and l_Zone.Points[l_Junction.Point] ~= nil
+			if s_Waypoint ~= nil and p_Zone.Points[l_Junction.Point] ~= nil
 				and s_Waypoint.Position:Distance(l_Junction.Position) <= JUNCTION_TOLERANCE then
 				l_Junction.Waypoint = s_Waypoint
 				s_Valid[#s_Valid + 1] = l_Junction
-				self._Junctions[s_Waypoint.ID] = { Zone = l_Zone, Junction = l_Junction }
+				p_Lookup[s_Waypoint.ID] = { Zone = p_Zone, Junction = l_Junction }
 				s_Count = s_Count + 1
 			end
 		end
-		l_Zone.Junctions = s_Valid
+		p_Zone.Junctions = s_Valid
+	end
+
+	for _, l_Zone in pairs(self._Zones) do
+		_Link(l_Zone, self._Junctions)
+		if l_Zone.Vehicle ~= nil then
+			_Link(l_Zone.Vehicle, self._VehicleJunctions)
+		end
 	end
 	return s_Count
 end
@@ -255,16 +318,30 @@ function NavZones:GetJunction(p_Waypoint)
 	return self._Junctions[p_Waypoint.ID]
 end
 
+---The vehicle-network whose junction the waypoint (of a vehicle-path) is.
+---@param p_Waypoint Waypoint
+---@return { Zone: NavZone, Junction: NavZoneJunction }|nil
+function NavZones:GetVehicleJunction(p_Waypoint)
+	if self._Count == 0 or p_Waypoint == nil or p_Waypoint.ID == nil then
+		return nil
+	end
+	return self._VehicleJunctions[p_Waypoint.ID]
+end
+
 ---The point of the network closest to the position. Points on the same floor (FLOOR_HEIGHT) come first: a soldier
 ---can't reach the point above it.
 ---@param p_Zone NavZone
 ---@param p_Position Vec3
+---@param p_Avoid? integer a point not to take (a dead end the bot got stuck at)
 ---@return integer|nil point, number distance
-function NavZones:Closest(p_Zone, p_Position)
+function NavZones:Closest(p_Zone, p_Position, p_Avoid)
 	local s_Best = nil
 	local s_BestOtherFloor = true
 	local s_BestDistance = math.huge
 	for l_Index = 1, #p_Zone.Points do
+		if l_Index == p_Avoid then
+			goto continue
+		end
 		local s_Pos = p_Zone.Points[l_Index].Position
 		local s_DeltaX = s_Pos.x - p_Position.x
 		local s_DeltaY = s_Pos.y - p_Position.y
@@ -276,6 +353,7 @@ function NavZones:Closest(p_Zone, p_Position)
 			s_BestOtherFloor = s_OtherFloor
 			s_Best = l_Index
 		end
+		::continue::
 	end
 	return s_Best, math.sqrt(s_BestDistance)
 end
@@ -299,6 +377,20 @@ function NavZones:ZoneAt(p_Position, p_Range)
 		end
 	end
 	return s_BestZone, s_BestPoint
+end
+
+---Whether every connection of the point was given up already (a dead end for the bot standing there).
+---@param p_Zone NavZone
+---@param p_Point integer
+---@return boolean
+function NavZones:IsBlockedIn(p_Zone, p_Point)
+	local s_Neighbours = p_Zone.Neighbours[p_Point] or {}
+	for l_Index = 1, #s_Neighbours do
+		if s_Neighbours[l_Index].Penalty <= 0.0 then
+			return false
+		end
+	end
+	return true
 end
 
 ---A bot got stuck between the two points: all bots avoid the connection from now on (until the level ends).
@@ -426,26 +518,39 @@ function NavZones:Positions(p_Zone, p_Route)
 	return s_Result
 end
 
----A random point in the zone, other than p_Not. With p_Cover the ones with more cover are taken more often.
+---A random point in the zone that can be reached from p_From, other than p_From. With p_Cover the ones with more cover
+---are taken more often.
 ---@param p_Zone NavZone
----@param p_Not integer|nil
+---@param p_From integer|nil
 ---@param p_Cover boolean
 ---@return integer|nil
-function NavZones:RandomPoint(p_Zone, p_Not, p_Cover)
-	local s_Candidates = #p_Zone.Inside > 0 and p_Zone.Inside or nil
-	if s_Candidates == nil then
-		s_Candidates = {}
-		for l_Index = 1, #p_Zone.Points do
-			s_Candidates[l_Index] = l_Index
+function NavZones:RandomPoint(p_Zone, p_From, p_Cover)
+	local s_Part = p_From and p_Zone.Part[p_From]
+	local s_Candidates = {}
+	for l_Index = 1, #p_Zone.Inside do
+		local l_Point = p_Zone.Inside[l_Index]
+		if s_Part == nil or p_Zone.Part[l_Point] == s_Part then
+			s_Candidates[#s_Candidates + 1] = l_Point
 		end
 	end
+	if #s_Candidates == 0 then
+		for l_Index = 1, #p_Zone.Points do
+			if s_Part == nil or p_Zone.Part[l_Index] == s_Part then
+				s_Candidates[#s_Candidates + 1] = l_Index
+			end
+		end
+	end
+	if #s_Candidates == 0 then
+		return nil
+	end
+	local s_Not = p_From
 
 	local s_Best = nil
 	local s_BestScore = -1
 	-- Best of a few random tries: cover wins when defending.
 	for _ = 1, p_Cover and 6 or 1 do
 		local s_Index = s_Candidates[MathUtils:GetRandomInt(1, #s_Candidates)]
-		if s_Index ~= p_Not then
+		if s_Index ~= s_Not then
 			local s_Score = p_Cover and p_Zone.Points[s_Index].Cover or 0
 			if s_Score > s_BestScore then
 				s_BestScore = s_Score

@@ -94,7 +94,7 @@ Registry = {
 		-- Do all sight-checks (bot-bot, bot-player, player-revive) with server-side raycasts instead of sending
 		-- them to the clients. No client is needed then: bots also fight each other on an empty server.
 		-- Costs server performance. Toggle ingame with "!serverraycasts on|off" or RCON "funbots.serverRaycasts".
-		USE_SERVER_RAYCASTS = true,
+		USE_SERVER_RAYCASTS = false,
 		-- Max server-raycasts per bot-bot-check (every BOT_BOT_CHECK_INTERVAL).
 		SERVER_RAYCASTS_BOT_BOT = 6,
 		-- Max server-raycasts per real player and update for the bot-player- and revive-checks.
@@ -234,6 +234,8 @@ Registry = {
 		-- In the zone of their objective, bots walk freely on the walking network of the zone instead of the
 		-- waypoints (NavZones.lua, table <map>_navzones of mod.db, made by the debug-server).
 		USE_ZONE_NETWORKS = true,
+		-- Drivers of land vehicles also drive the vehicle-networks of the capture points (experimental).
+		USE_VEHICLE_ZONE_NETWORKS = true,
 		-- Seconds a bot tries to free a stuck ground-vehicle before they exit it and continue on foot.
 		VEHICLE_STUCK_EXIT_TIME = 30.0,
 		-- Trace delta, a bot uses when they are off a trace path to find his way back to the best path.
@@ -351,7 +353,7 @@ Registry = {
 		SPIKE_TRACE_MS = 0,
 		-- Streams the game-state to the external debug-server (tools/debug-server) and executes its commands.
 		-- Toggle ingame with "!debugbridge on|off" or RCON "funbots.debugBridge".
-		DEBUG_BRIDGE = true,
+		DEBUG_BRIDGE = false,
 		-- Address of the debug-server.
 		DEBUG_BRIDGE_URL = "http://127.0.0.1:8765",
 		-- Seconds between two snapshots sent to the debug-server.

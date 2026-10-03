@@ -174,6 +174,26 @@ class NavzonesTest(unittest.TestCase):
         self.assertEqual(zone["stats"]["parts"], 2)
         self.assertFalse(self._connected(zone))
 
+    def test_trace_joins_parts(self):
+        # No door, but path 3 walks from one room into the other (e.g. over stairs the grid doesn't see).
+        from funbots_debug.census import navzones
+        census = {"paths": "MP_001_ConquestLarge0", "areas": [_rooms_area(False)], "entities": {},
+                  "nodes": {"3": _nodes_event(3, [[float(x), 0.0, 5.0] for x in range(2, 19)])}}
+        zone = navzones.build(census)["zones"][0]
+        self.assertTrue(self._connected(zone))
+
+    def test_cut_report(self):
+        from funbots_debug.census import cut
+        from funbots_debug.paths.mapfile import MapData
+        text = ("pathIndex;pointIndex;transX;transY;transZ;inputVar;data\n"
+                "1;1;0.0;0.0;0.0;3;{\"Objectives\":[\"a\"]}\n1;2;1.0;0.0;0.0;3;\n"
+                "2;1;0.0;0.0;0.0;3;{\"Objectives\":[\"a\",\"b\"]}\n2;2;100.0;0.0;0.0;3;\n"
+                "3;1;200.0;0.0;0.0;3;{\"Objectives\":[\"b\"]}\n3;2;201.0;0.0;0.0;3;\n"
+                "4;1;0.0;0.0;0.0;3;{\"Vehicles\":[\"land\"]}\n4;2;1.0;0.0;0.0;3;\n")
+        data = {"map": "x", "zones": [{"name": "a", "points": [[0.0, 0.0, 0.0, 1, 0, 1], [1.0, 0.0, 0.0, 1, 0, 1]]}]}
+        verdicts = {entry.path: entry.verdict for entry in cut.analyze(data, MapData.parse(text))}
+        self.assertEqual(verdicts, {1: "drop", 2: "cut", 3: "keep", 4: "fixed"})
+
 
 if __name__ == "__main__":
     unittest.main()

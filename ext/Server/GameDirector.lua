@@ -1256,6 +1256,15 @@ function GameDirector:CheckForExecution(p_Point, p_TeamId, p_InVehicle)
 			return false
 		end
 
+		-- The action-node is the start of "mcom N interact": armed or not is stored at "mcom N" (OnMcomArmed).
+		if s_Objective.subObjective then
+			local s_ParentName = self:_GetObjectiveFromSubObj(s_Objective.name)
+			local s_Parent = s_ParentName and self:_GetObjectiveObject(s_ParentName)
+			if s_Parent ~= nil then
+				s_Objective = s_Parent
+			end
+		end
+
 		if s_Objective.active and not s_Objective.destroyed then
 			if p_TeamId == TeamId.Team1 and s_Objective.team == TeamId.TeamNeutral then
 				return true -- Attacking Team.
@@ -2605,9 +2614,17 @@ function GameDirector:_UseSubobjective(p_BotTeam, p_ObjectiveName)
 
 	if s_Objective ~= nil and s_Objective.subObjective then
 		if s_Objective.active and not s_Objective.destroyed then
-			if p_BotTeam == TeamId.Team1 and s_Objective.team == TeamId.TeamNeutral then
+			-- Arming and disarming change the MCOM itself ("mcom N", see OnMcomArmed), not "mcom N interact".
+			local s_State = s_Objective
+			local s_ParentName = self:_GetObjectiveFromSubObj(p_ObjectiveName)
+			local s_Parent = s_ParentName and self:_GetObjectiveObject(s_ParentName)
+			if s_Parent ~= nil then
+				s_State = s_Parent
+			end
+
+			if p_BotTeam == TeamId.Team1 and s_State.team == TeamId.TeamNeutral then
 				s_Use = true -- Attacking Team.
-			elseif p_BotTeam == TeamId.Team2 and s_Objective.isAttacked then
+			elseif p_BotTeam == TeamId.Team2 and s_State.isAttacked then
 				s_Use = true -- Defending Team.
 			end
 		end

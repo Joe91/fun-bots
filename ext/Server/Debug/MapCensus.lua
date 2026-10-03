@@ -42,6 +42,7 @@ local NODES_PER_EVENT = 250
 -- Grids around the objectives.
 local AREA_MARGIN = 15.0          -- Metres around the capture-radius.
 local AREA_MCOM_RADIUS = 30.0
+local AREA_BASE_MAX_RADIUS = 45.0 -- Bases from the waypoints (rush): at most this far around the middle of their paths.
 local AREA_STEP = 0.5
 local AREA_LAYERS = 4
 local AREA_UP = 60.0              -- The vertical rays start this far above the objective...
@@ -973,8 +974,57 @@ function CensusTask:_DefaultAreas()
 	return s_Areas
 end
 
+---Areas of the bases from the waypoints, for modes without HQs (rush): around the paths of each "base ..." objective
+---(paths with this objective alone).
+---@param p_Margin number
+---@return table
+local function _BaseAreasFromPaths(p_Margin)
+	local s_Areas = {}
+	for l_Name, l_Paths in pairs(m_NodeCollection:GetKnownObjectives()) do
+		if l_Name:lower():sub(1, 5) == 'base ' then
+			local s_Positions = {}
+			for l_Index = 1, #l_Paths do
+				local s_First = m_NodeCollection:GetFirst(l_Paths[l_Index])
+				local s_Objectives = type(s_First) == 'table' and s_First.Data and s_First.Data.Objectives or {}
+				if #s_Objectives == 1 then
+					local s_Nodes = m_NodeCollection:GetPaths()[l_Paths[l_Index]] or {}
+					for l_Node = 1, #s_Nodes do
+						s_Positions[#s_Positions + 1] = s_Nodes[l_Node].Position
+					end
+				end
+			end
+			if #s_Positions > 0 then
+				local s_Center = Vec3(0, 0, 0)
+				for l_Index = 1, #s_Positions do
+					s_Center = s_Center + s_Positions[l_Index]
+				end
+				s_Center = s_Center * (1.0 / #s_Positions)
+				local s_Radius = 0.0
+				for l_Index = 1, #s_Positions do
+					local s_Delta = s_Positions[l_Index] - s_Center
+					s_Radius = math.max(s_Radius, math.sqrt(s_Delta.x * s_Delta.x + s_Delta.z * s_Delta.z))
+				end
+				s_Areas[#s_Areas + 1] = {
+					name = l_Name,
+					kind = 'base',
+					center = s_Center,
+					radius = math.min(s_Radius, AREA_BASE_MAX_RADIUS) + p_Margin,
+				}
+			end
+		end
+	end
+	table.sort(s_Areas, function(p_A, p_B) return p_A.name < p_B.name end)
+	return s_Areas
+end
+
 function CensusTask:_StartAreas()
 	self.Areas = self:_DefaultAreas()
+	if self.Args.basePaths then
+		local s_Bases = _BaseAreasFromPaths(tonumber(self.Args.areaMargin) or AREA_MARGIN)
+		for l_Index = 1, #s_Bases do
+			self.Areas[#self.Areas + 1] = s_Bases[l_Index]
+		end
+	end
 	self.AreaSlot = 0
 	self.Area = nil
 end
