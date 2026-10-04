@@ -384,8 +384,10 @@ function NavRoutes:_Search(p_Departures, p_Target, p_Seed)
 			local s_Arrival = s_End.Other
 			local s_ArrivalPoint = s_Arrival.Junction.Point
 			local s_Total = s_Cost[s_End] + s_End.Path.Length * _Spread(p_Seed, s_End.Path.PathIndex)
+			-- The mesh weighed as in Next: else a path that ends where the bot is would look shorter than the mesh.
 			local s_Distance = s_Field[s_ArrivalPoint]
 			if s_Distance ~= nil then
+				s_Distance = s_Distance * _Spread(p_Seed, 0)
 				if s_Total + s_Distance < s_Best then
 					s_Best = s_Total + s_Distance
 					s_BestFirst = s_First[s_End]

@@ -2577,13 +2577,10 @@ function GameDirector:_SetVehicleObjectiveState(p_Position, p_Value)
 	return s_ClosestVehicleEnterObjective
 end
 
--- Metres between a vehicle and the start or end of its way that count as "the vehicle is there".
-local VEHICLE_AT_PATH = 10.0
-
----The ways to vehicles lead somewhere only while a vehicle with a free seat stands at their end (also while its driver
----waits for passengers). Switched on and off by the events as well (_SetVehicleObjectiveState), but a vehicle also
----leaves without one (driven off after the wait for passengers was aborted, taken by the enemy, abandoned): bots got
----sent to empty places, failed to enter and walked back and forth.
+---The ways to vehicles lead somewhere only while a vehicle with a free seat stands at their action-node, where the bot
+---gets in (Bot:_EnterVehicle, also while its driver waits for passengers). Switched on and off by the events as well
+---(_SetVehicleObjectiveState), but a vehicle also leaves without one (driven off after the wait for passengers was
+---aborted, taken by the enemy, abandoned): bots got sent to empty places, failed to enter and walked back and forth.
 function GameDirector:_RefreshVehicleObjectives()
 	local s_Free = {}
 	local s_Iterator = EntityManager:GetIterator('ServerVehicleEntity')
@@ -2606,12 +2603,9 @@ function GameDirector:_RefreshVehicleObjectives()
 			local s_There = false
 			local s_Paths = s_Known[l_Objective.name] or {}
 			for l_PathIndex = 1, #s_Paths do
-				local s_Waypoints = m_NodeCollection:Get(nil, s_Paths[l_PathIndex]) or {}
-				local s_First = s_Waypoints[1]
-				local s_Last = s_Waypoints[#s_Waypoints]
+				local s_Node = self:_VehicleActionNode(s_Paths[l_PathIndex])
 				for l_Free = 1, #s_Free do
-					if (s_First ~= nil and s_First.Position:Distance(s_Free[l_Free]) < VEHICLE_AT_PATH)
-						or (s_Last ~= nil and s_Last.Position:Distance(s_Free[l_Free]) < VEHICLE_AT_PATH) then
+					if s_Node ~= nil and s_Node.Position:Distance(s_Free[l_Free]) < Registry.VEHICLES.MIN_DISTANCE_VEHICLE_ENTER then
 						s_There = true
 						break
 					end
@@ -2623,6 +2617,33 @@ function GameDirector:_RefreshVehicleObjectives()
 			l_Objective.active = s_There
 		end
 	end
+
+	-- Bots on foot sent to a vehicle that is gone: something else to do (else they walk its way back and forth).
+	local s_Bots = g_BotManager:GetBots()
+	for l_Index = 1, #s_Bots do
+		local l_Bot = s_Bots[l_Index]
+		if l_Bot.m_Player.soldier ~= nil and l_Bot.m_ActiveVehicle == nil then
+			local s_Objective = self:_GetObjectiveObject(l_Bot:GetObjective())
+			if s_Objective ~= nil and s_Objective.isEnterVehiclePath and not s_Objective.isSpawnPath
+				and not s_Objective.active and self:GetReservedVehicle(l_Bot) == nil then
+				l_Bot:SetObjective('')
+			end
+		end
+	end
+end
+
+---The waypoint of the path where bots get into the vehicle: its action "vehicle", else its last one.
+---@param p_PathIndex integer
+---@return Waypoint|nil
+function GameDirector:_VehicleActionNode(p_PathIndex)
+	local s_Waypoints = m_NodeCollection:Get(nil, p_PathIndex) or {}
+	for l_Index = #s_Waypoints, 1, -1 do
+		local l_Waypoint = s_Waypoints[l_Index]
+		if l_Waypoint.Data ~= nil and l_Waypoint.Data.Action ~= nil and l_Waypoint.Data.Action.type == 'vehicle' then
+			return l_Waypoint
+		end
+	end
+	return s_Waypoints[#s_Waypoints]
 end
 
 ---@param p_Name string|nil

@@ -416,7 +416,8 @@ python -m funbots_debug.census navpaths MP_012_RushLarge0 --write --db ../../mod
 2. A piece that ends outside of the zones (the path ends, or goes on over a link) is extended over paths and links to
    the closest zone.
 3. Pieces along another navigation path between the same zones (70 % of the waypoints within 4 m) are dropped, and
-   pieces that lie on the mesh all the way (between zones that overlap or touch): the bots walk the mesh there.
+   pieces that lie on the mesh all the way (between zones that overlap or touch): the bots walk the mesh there. So are
+   pieces shorter than 10 m: where two zones touch, no junctions, the bots walked them back and forth.
 4. Zones the paths connect without crossing a third zone, but the navigation paths don't (or only over a detour of
    more than 1.5 times), get the shortest way between them, over roads (land vehicle paths) only where no path leads:
    in rush the attackers spawn at their vehicles, far from any path.
@@ -430,6 +431,8 @@ forth; its first waypoint has `Objectives` (both zones) and `"Nav": {"From": zon
 the last one, "Length": metres}`. `--write` replaces `mapfiles/<map>.map` and `navzones/<map>.json`: the mesh is
 made again from the census (`census/<map>.json.gz`, same parts as before) with junctions on the new paths. `--db` also
 writes the two tables of this level into `mod.db`. Paths whose end has no junction are listed; the bots don't use them.
+An end without a measured surface (stairs into a metro the census didn't see) is attached straight to the closest point
+of its floor within 8 m that has at least 1 m of room around it.
 
 **In the game** (`ext/Server/NavRoutes.lua`): the nodes of the graph are the ends of the navigation paths (their
 junctions with the mesh); from an end a bot walks the path to its other end, and from there over the mesh (10 m added)

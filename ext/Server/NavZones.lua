@@ -38,6 +38,8 @@ local BLOCKED_PENALTY = 50.0
 local REMOVE_AFTER = 3
 -- Metres above or below an MCOM the bots walk around it (RandomPoint).
 local MCOM_FLOOR = 3.0
+-- Parts of the mesh with fewer points get no junctions (_LinkJunctions).
+local MIN_PART = 10
 
 ---@class NavZonePoint
 ---@field Index integer
@@ -340,12 +342,20 @@ function NavZones:_LinkJunctions()
 	local s_Count = 0
 
 	local function _Link(p_Mesh)
+		-- Not onto an island of the mesh (a few points the census measured apart): no route leads on from there, the
+		-- bots went back and forth between it and their path.
+		local s_PartSize = {}
+		for l_Point = 1, #p_Mesh.Points do
+			local s_Part = p_Mesh.Part[l_Point]
+			s_PartSize[s_Part] = (s_PartSize[s_Part] or 0) + 1
+		end
 		local s_Valid = {}
 		for l_Index = 1, #p_Mesh.Junctions do
 			local l_Junction = p_Mesh.Junctions[l_Index]
 			local s_Waypoints = s_Paths[l_Junction.PathIndex]
 			local s_Waypoint = s_Waypoints and s_Waypoints[l_Junction.PointIndex]
 			if s_Waypoint ~= nil and p_Mesh.Points[l_Junction.Point] ~= nil
+				and (s_PartSize[p_Mesh.Part[l_Junction.Point]] or 0) >= MIN_PART
 				and s_Waypoint.Position:Distance(l_Junction.Position) <= JUNCTION_TOLERANCE then
 				l_Junction.Waypoint = s_Waypoint
 				s_Valid[#s_Valid + 1] = l_Junction

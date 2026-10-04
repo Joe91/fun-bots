@@ -72,8 +72,9 @@ class Profile:
     attach_fallback: float = 0.0
 
 
-SOLDIER = Profile(SPACING, MIN_CLEARANCE, 0.0, MIN_CLEARANCE, 1.0, 20.0, 6.0)
-FALLBACK_HEIGHT = 1.5     # The floor of a waypoint for attach_fallback: points this far above or below it.
+SOLDIER = Profile(SPACING, MIN_CLEARANCE, 0.0, MIN_CLEARANCE, 1.0, 20.0, 8.0)
+FALLBACK_HEIGHT = 1.5     # The floor of a waypoint for attach_fallback: points this far above or below it...
+FALLBACK_CLEARANCE = 1.0  # ...and this far from the next wall (not squeezed in a corner the bots don't get out of).
 VEHICLE = Profile(10.0, VEHICLE_CLEARANCE, VEHICLE_CLEARANCE, VEHICLE_CLEARANCE, 6.0, 30.0)
 
 # Flags of a point.
@@ -421,7 +422,7 @@ def _network(grid: _Area, clearance: dict[Surface, float], allowed: set[Surface]
             if key is None or key not in owner:
                 key = _nearest_owned(grid, owner, pos, profile.attach_range)
             if key is None:
-                fallback = _closest_point(grid, points, pos, profile.attach_fallback) \
+                fallback = _closest_point(grid, clearance, points, pos, profile.attach_fallback) \
                     if point in (1, count) and profile.attach_fallback > 0 else None
                 if fallback is None:
                     unattached += 1
@@ -456,12 +457,14 @@ def _network(grid: _Area, clearance: dict[Surface, float], allowed: set[Surface]
     }
 
 
-def _closest_point(grid: _Area, points: list[Surface], pos: list[float], distance: float) -> int | None:
-    """The point of the network closest to the position on its floor (FALLBACK_HEIGHT), up to the distance."""
+def _closest_point(grid: _Area, clearance: dict[Surface, float], points: list[Surface], pos: list[float],
+                   distance: float) -> int | None:
+    """The point of the network closest to the position on its floor (FALLBACK_HEIGHT) with room around it
+    (FALLBACK_CLEARANCE), up to the distance."""
     best = None
     for index, key in enumerate(points):
         x, y, z = grid.pos(key)
-        if abs(y - pos[1]) > FALLBACK_HEIGHT:
+        if abs(y - pos[1]) > FALLBACK_HEIGHT or clearance.get(key, 0.0) < FALLBACK_CLEARANCE:
             continue
         horizontal = math.hypot(x - pos[0], z - pos[2])
         if horizontal <= distance and (best is None or horizontal < best[0]):
