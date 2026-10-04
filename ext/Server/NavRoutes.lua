@@ -344,15 +344,20 @@ function NavRoutes:Next(p_Point, p_Objective, p_Seed)
 		return nil
 	end
 	local s_Found = _TargetIn(s_Target, s_Mesh.Part[p_Point], s_Mesh.Points[p_Point].Position)
+	local s_Cost, s_First = self:_Search(self:_Departures(p_Point, 0.0, nil), s_Target, p_Seed)
 	if s_Found ~= nil then
-		if s_Target.Zone ~= nil then
-			return { Zone = s_Target.Zone, Point = s_Found }
+		-- The mesh leads there, maybe only a long way round: a navigation path may be shorter (its cost has straight
+		-- lines over the mesh at both ends: only clearly shorter).
+		local s_Route, s_MeshCost = m_NavZones:Route(s_Mesh, p_Point, s_Found, p_Seed)
+		if s_First == nil or s_Route == nil or s_MeshCost <= s_Cost + MESH_CROSSING then
+			if s_Target.Zone ~= nil then
+				return { Zone = s_Target.Zone, Point = s_Found }
+			end
+			local s_Junctions = s_Target.Junctions
+			---@cast s_Junctions -nil
+			return { Exit = s_Junctions[s_Found] }
 		end
-		local s_Junctions = s_Target.Junctions
-		---@cast s_Junctions -nil
-		return { Exit = s_Junctions[s_Found] }
 	end
-	local _, s_First = self:_Search(self:_Departures(p_Point, 0.0, nil), s_Target, p_Seed)
 	if s_First == nil then
 		return nil
 	end

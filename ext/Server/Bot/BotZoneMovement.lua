@@ -270,7 +270,7 @@ function Bot:_ZoneRouteTo(p_Goal)
 	if p_Goal == nil then
 		return
 	end
-	local s_Route = m_NavZones:Route(s_State.Zone, s_State.Point, p_Goal)
+	local s_Route = m_NavZones:Route(s_State.Zone, s_State.Point, p_Goal, self.m_RouteSeed)
 	if s_Route ~= nil then
 		s_State.Targets = m_NavZones:Positions(s_State.Zone, s_Route)
 	end

@@ -580,14 +580,30 @@ function NavZones:BlockEdge(p_Zone, p_A, p_B)
 	end
 end
 
+-- Metres of the regions a bot avoids more or less (NavZones:Route with a seed).
+local SPREAD_REGION = 30.0
+
+---How much longer the ways in the region of the position seem to the bot (Registry.BOT.NAV_ROUTE_SPREAD): the bots
+---take different streets and corridors, not all the shortest one. The same for a life of the bot (p_Seed).
+---@param p_Seed number
+---@param p_Position Vec3
+---@return number factor 1 .. 1 + NAV_ROUTE_SPREAD
+local function _RegionSpread(p_Seed, p_Position)
+	local s_Hash = math.sin(p_Seed * 12.9898 + math.floor(p_Position.x / SPREAD_REGION) * 78.233
+		+ math.floor(p_Position.z / SPREAD_REGION) * 37.719) * 43758.5453
+	return 1.0 + Registry.BOT.NAV_ROUTE_SPREAD * (s_Hash - math.floor(s_Hash))
+end
+
 ---Shortest way through the network (A*).
 ---@param p_Zone NavZone
 ---@param p_From integer
 ---@param p_To integer
+---@param p_Seed? number the bot's: its own way among similar ones (_RegionSpread), nil: the shortest
 ---@return integer[]|nil points from p_From to p_To
-function NavZones:Route(p_Zone, p_From, p_To)
+---@return number cost of the way (with the spread)
+function NavZones:Route(p_Zone, p_From, p_To, p_Seed)
 	if p_From == p_To then
-		return { p_From }
+		return { p_From }, 0.0
 	end
 
 	local s_Points = p_Zone.Points
@@ -644,7 +660,7 @@ function NavZones:Route(p_Zone, p_From, p_To)
 			while s_Came[s_Route[1]] ~= nil do
 				table.insert(s_Route, 1, s_Came[s_Route[1]])
 			end
-			return s_Route
+			return s_Route, s_Costs[p_To]
 		end
 
 		if not s_Closed[s_Current] then
@@ -652,7 +668,11 @@ function NavZones:Route(p_Zone, p_From, p_To)
 			local s_Neighbours = p_Zone.Neighbours[s_Current]
 			for l_Index = 1, #s_Neighbours do
 				local l_Edge = s_Neighbours[l_Index]
-				local s_Cost = s_Costs[s_Current] + l_Edge.Cost + l_Edge.Penalty
+				local s_Step = l_Edge.Cost
+				if p_Seed ~= nil then
+					s_Step = s_Step * _RegionSpread(p_Seed, s_Points[l_Edge.To].Position)
+				end
+				local s_Cost = s_Costs[s_Current] + s_Step + l_Edge.Penalty
 				if not l_Edge.Removed and not s_Closed[l_Edge.To] and s_Cost < (s_Costs[l_Edge.To] or math.huge) then
 					s_Costs[l_Edge.To] = s_Cost
 					s_Came[l_Edge.To] = s_Current
@@ -662,7 +682,7 @@ function NavZones:Route(p_Zone, p_From, p_To)
 		end
 	end
 
-	return nil
+	return nil, math.huge
 end
 
 ---The positions to walk along a route: the corners of each connection and the points, without the first point.
