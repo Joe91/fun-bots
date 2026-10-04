@@ -106,20 +106,22 @@ Registry = {
 		MAX_VEHICLE_OBJECTIVE_DISTANCE = 100.0,
 		-- Time after a MCO is considered destroyed.
 		MCOMS_CHECK_CYCLE = 26.5,
-		-- Teleport bots without valid paths (no active objective, base-path alone, destroyed MCOM) after this amount
-		-- of time onto a path of their objective, if they don't fight (and TeleportIfStuck is on).
-		TELEPORT_ON_INVALID_PATH_TIME = 20,
-		-- Off a base-path, the time above only counts while a bot doesn't get this many m closer to its objective.
-		INVALID_PATH_MIN_PROGRESS = 5.0,
-		-- Kill Bots without valid paths after this amount of time
-		KILL_ON_INVALID_PATH_TIME = 50,
+		-- Off the mesh, a bot that doesn't get this many metres closer to the end of its navigation path (or to its
+		-- objective) for OFF_MESH_TELEPORT_TIME seconds is teleported onto the mesh, if it is up to
+		-- OFF_MESH_TELEPORT_RANGE metres away (and TeleportIfStuck is on), after OFF_MESH_KILL_TIME seconds killed.
+		-- Not while it fights, waits or does an action.
+		OFF_MESH_MIN_PROGRESS = 5.0,
+		OFF_MESH_TELEPORT_TIME = 20,
+		OFF_MESH_TELEPORT_RANGE = 30.0,
+		OFF_MESH_KILL_TIME = 50,
 		-- Increments of nodes to search best patch with.
 		NODE_SEARCH_INCREMENTS = 10,
 		--- Weight for attacking objectives
 		WEIGHT_ATTACK_OBJECTIVE = 4.0,
 		--- Weight for defending objectives
 		WEIGHT_DEFEND_OBJECTIVE = 1.0,
-		--- PathSwitch on same prio
+		--- Levels without a mesh: probability (%) that a bot switches to another path at a link. Vehicles: between
+		--- paths of the same priority.
 		PROBABILITY_SWITCH_SAME_PRIO = 20,
 		--- Allow bots to spawn on the last tickets in conquest.
 		DONT_SPAWN_BOTS_ON_LAST_TICKETS = true,
@@ -229,13 +231,8 @@ Registry = {
 		ROCKET_RELOAD_COOLDOWN = 13.0,
 		-- The probability to use the rifle to attack a chopper.
 		PROBABILITY_ATTACK_CHOPPER_WITH_RIFLE = 25,
-		-- If the game mode is Rush or Conquest, change direction if the bot is stuck on non-connecting paths.
-		PROBABILITY_CHANGE_DIRECTION_IF_STUCK = 50,
 		-- Hard reroutes to the closest path a stuck bot tries before it is killed.
 		MAX_STUCK_REROUTES = 2,
-		-- In the zone of their objective, bots walk freely on the walking network of the zone instead of the
-		-- waypoints (NavZones.lua, table <map>_navzones of mod.db, made by the debug-server).
-		USE_ZONE_NETWORKS = true,
 		-- Drivers of land vehicles also drive the vehicle-networks of the capture points (experimental).
 		USE_VEHICLE_ZONE_NETWORKS = true,
 		-- Share by which a navigation path may seem longer to a bot (random per bot and life): the bots spread over
@@ -293,8 +290,8 @@ Registry = {
 		-- multiples of FIRST_SHOT_TARGET_ANGLE (180° → +0.24 s, 20° → +0.12 s).
 		FIRST_SHOT_DELAY_PER_BIT = 0.04,
 		FIRST_SHOT_TARGET_ANGLE = 0.05,
+		-- Probability (%) that a bot with a beacon to place takes the way to a beacon at a link to it.
 		PROBABILITY_SWITCH_TO_BEACON_PATH = 80,
-		PROBABILITY_SWITCH_TO_EXPLORE_PATH = 60,
 		PROBABILITY_KEEP_KIT_IF_HAS_BEACON = 80,
 		-- number of nodes in every direction to scan for best way back
 		NUMBER_NODES_TO_SCAN_AFTER_ATTACK = 20,
@@ -335,25 +332,6 @@ Registry = {
 		-- Conquest: probability (%) that a spawning bot takes a free vehicle of its team: it spawns at the capture
 		-- point (or HQ) next to it and goes there. Else at the capture point closest to the front.
 		PROBABILITY_SPAWN_FOR_VEHICLE = 50,
-		-- Probability of a bot spawning in the vehicle of a bot of the same squad.
-		PROBABILITY_SQUADMATE_VEHICLE_SPAWN = 70,
-		-- Probability of a bot spawning on a random teammate
-		PROBABILITY_TEAMMATE_SPAWN = 1,
-		-- Probability of a bot spawning in a random teammate vehicle
-		PROBABILITY_TEAMMATE_VEHICLE_SPAWN = 50,
-		-- Probability of a bot spawning in the vehicle of a player of the same squad.
-		PROBABILITY_SQUADMATE_PLAYER_VEHICLE_SPAWN = 50,
-		-- Probability of a bot spawning on the closest spawn point.
-		PROBABILITY_CLOSEST_SPAWN = 40,
-		-- Probability of a bot spawning on an attacked spawn point.
-		PROBABILITY_ATTACKED_SPAWN = 60,
-		-- Probability of a bot spawning on their deployment base.
-		PROBABILITY_BASE_SPAWN = 5,
-		-- Probability of a bot spawning on their deployment base.
-		PROBABILITY_BASE_VEHICLE_SPAWN = 30,
-		-- Conquest and rush with SpawnMethod SpawnOnTdm: on levels with walking networks of the bases (NavZones.lua) the
-		-- bots spawn at the spawn-points of the game (SpawnMethod.Spawn) and walk out over the networks.
-		GAME_SPAWN_WITH_ZONES = true,
 		-- Rush: the defenders (always Team2) get this share of the bots of their team (balanced_teams), e.g. to test
 		-- the attack. 1.0 = as many as the attackers.
 		RUSH_DEFENDER_FACTOR = 1.0,

@@ -101,9 +101,6 @@ end
 ---After the waypoints of the level are loaded.
 function NavZones:OnLoadFinished()
 	self:Clear()
-	if not Registry.BOT.USE_ZONE_NETWORKS then
-		return
-	end
 
 	local s_Table = m_NodeCollection:GetMapName() .. '_navzones'
 	if not SQL:Open() then

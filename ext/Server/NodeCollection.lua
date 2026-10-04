@@ -1706,11 +1706,21 @@ function NodeCollection:ObjectiveDirection(p_Waypoint, p_Objective, p_InVehicle)
 		return nil, nil
 	end
 
-	-- On a navigation path: the way of the route over the zones (NavRoutes, loaded after this file).
-	if not p_InVehicle and g_NavRoutes ~= nil then
-		local s_NavDirection = g_NavRoutes:Direction(p_Waypoint, p_Objective)
-		if s_NavDirection ~= nil then
-			return s_NavDirection, p_Waypoint
+	if not p_InVehicle then
+		-- On a navigation path: the way of the route over the mesh (NavRoutes, loaded after this file).
+		if g_NavRoutes ~= nil then
+			local s_NavDirection = g_NavRoutes:Direction(p_Waypoint, p_Objective)
+			if s_NavDirection ~= nil then
+				return s_NavDirection, p_Waypoint
+			end
+		end
+		-- On the path of the objective (the way to a vehicle, to arm an MCOM, to place a beacon): to its action-node.
+		local s_First = self:GetFirst(p_Waypoint.PathIndex)
+		if type(s_First) == 'table' and s_First.Data.Objectives ~= nil and table.has(s_First.Data.Objectives, p_Objective) then
+			local s_ActionDirection = self:_ActionDirection(p_Waypoint)
+			if s_ActionDirection ~= nil then
+				return s_ActionDirection, p_Waypoint
+			end
 		end
 	end
 
@@ -1763,6 +1773,29 @@ function NodeCollection:ObjectiveDirection(p_Waypoint, p_Objective, p_InVehicle)
 	return s_BestDirection, s_BestWaypoint
 end
 
+---Which way the action-node of the path is (vehicle, MCOM, beacon): 'Next', 'Previous', or nil if it has none or the
+---waypoint is the action-node.
+---@param p_Waypoint Waypoint
+---@return string|nil
+function NodeCollection:_ActionDirection(p_Waypoint)
+	local s_Waypoints = self._WaypointsByPathIndex[p_Waypoint.PathIndex] or {}
+	for l_Index = 1, #s_Waypoints do
+		local l_Waypoint = s_Waypoints[l_Index]
+		if l_Waypoint.Data ~= nil and l_Waypoint.Data.Action ~= nil and l_Waypoint.Data.Action.type ~= 'exit' then
+			if l_Waypoint.PointIndex > p_Waypoint.PointIndex then
+				return 'Next'
+			elseif l_Waypoint.PointIndex < p_Waypoint.PointIndex then
+				return 'Previous'
+			end
+			return nil
+		end
+	end
+	return nil
+end
+
+---The objectives of paths of them alone ("vehicle tank1 us", "mcom 2 interact", on paths not cut at the zones also the
+---capture points and bases): objective -> its paths. The zones of the mesh and the capture points of the engine are added
+---by the GameDirector (AddKnownObjective).
 function NodeCollection:ParseObjectives()
 	self._Objectives = {}
 
@@ -1777,20 +1810,6 @@ function NodeCollection:ParseObjectives()
 			end
 
 			self._Objectives[s_Objective][#self._Objectives[s_Objective] + 1] = l_PathIndex
-		end
-	end
-
-	-- Paths cut at the zones (navigation paths, NavRoutes) have two objectives, the zones have no paths of their own:
-	-- their objectives are known without paths (positions from the zones, GameDirector). Not the spawns of the game.
-	for l_PathIndex, _ in pairs(self._WaypointsByPathIndex) do
-		local s_PathWaypoint = self._WaypointsByPathIndex[l_PathIndex][1]
-		if s_PathWaypoint ~= nil and s_PathWaypoint.Data.Nav ~= nil and s_PathWaypoint.Data.Objectives ~= nil then
-			for l_Index = 1, #s_PathWaypoint.Data.Objectives do
-				local l_Objective = s_PathWaypoint.Data.Objectives[l_Index]
-				if self._Objectives[l_Objective] == nil and l_Objective:lower():sub(1, 6) ~= 'spawn ' then
-					self._Objectives[l_Objective] = {}
-				end
-			end
 		end
 	end
 end

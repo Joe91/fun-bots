@@ -971,15 +971,14 @@ function BotSpawner:_SelectLoadout(p_Bot)
 	self:_SetKitAndAppearance(p_Bot, s_BotKit, s_BotColor)
 end
 
----Spawn at the spawn-points of the game (SpawnMethod.Spawn) instead of on waypoints. Also in conquest and rush with
----SpawnOnTdm, once the level has walking networks of the bases: the bots start on them (Bot:TryEnterZoneAt).
+---Spawn at the spawn-points of the game (SpawnMethod.Spawn) instead of on waypoints. Always in conquest and rush on a
+---level with a mesh: the bots start on it (Bot:TryEnterZoneAt), the paths have no names of objectives to spawn at.
 ---@return boolean
 function BotSpawner:_UseGameSpawn()
 	if Globals.UsedSpawnMethod == SpawnMethod.Spawn then
 		return true
 	end
-	return Config.SpawnMethod == SpawnMethod.SpawnOnTdm and Registry.BOT_SPAWN.GAME_SPAWN_WITH_ZONES
-		and Registry.BOT.USE_ZONE_NETWORKS and (Globals.IsConquest or Globals.IsRush) and m_NavZones:HasBases()
+	return (Globals.IsConquest or Globals.IsRush) and m_NavZones:HasBases()
 end
 
 ---On a random point of the mesh in the base of the team in this stage (rush), instead of the spawn of the game: that one
@@ -1809,35 +1808,9 @@ function BotSpawner:_GetSpawnPoint(p_TeamId, p_SquadId)
 		return "SpawnInGunship"
 	end
 
-	-- CONQUEST
-	-- Spawn at base, squad-mate, captured flag.
-	if Globals.IsConquest then
-		s_ActiveWayIndex, s_IndexOnPath, s_InvertDirection, s_VehicleToSpawnIn = g_GameDirector:GetSpawnPath(p_TeamId,
-			p_SquadId, false)
-
-		if s_ActiveWayIndex == 0 then
-			-- Something went wrong. Use random path.
-			m_Logger:Write("no base or capturepoint found to spawn")
-			return
-		end
-
-		s_TargetNode = m_NodeCollection:Get(s_IndexOnPath, s_ActiveWayIndex)
-		-- RUSH
-		-- Spawn at base (of zone) or squad-mate.
-	elseif Globals.IsRush then
-		s_ActiveWayIndex, s_IndexOnPath, s_InvertDirection, s_VehicleToSpawnIn = g_GameDirector:GetSpawnPath(p_TeamId,
-			p_SquadId, true)
-
-		if s_ActiveWayIndex == 0 then
-			-- Something went wrong. Use random path.
-			m_Logger:Write("no base found to spawn")
-			return
-		end
-
-		s_TargetNode = m_NodeCollection:Get(s_IndexOnPath, s_ActiveWayIndex)
-		-- TDM / GM / SCAVENGER
-		-- Spawn away from other team.
-	else
+	-- Away from the other team (deathmatch modes; levels of other modes without a mesh spawn at the game, see
+	-- _UseGameSpawn).
+	do
 		while not s_ValidPointFound and s_TrysDone < s_MaximumTrys do
 			-- Get new point.
 			s_ActiveWayIndex = MathUtils:GetRandomInt(1, m_NodeCollection:GetNrOfPaths())

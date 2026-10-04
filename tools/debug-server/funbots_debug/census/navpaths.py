@@ -16,8 +16,11 @@ have to lead from zone to zone. This turns the paths of a level into such naviga
 
 Paths with vehicles, actions (MCOM, vehicle, beacon), the way to a vehicle or a beacon and air-paths stay as they are;
 their links to the cut paths move to the same waypoints of the navigation paths (or the closest one), which link back.
-A navigation path is walked back and forth, its first waypoint has "Objectives" (both zones) and "Nav":
-{"From": zone at the first waypoint, "To": zone at the last waypoint, "Length": metres}.
+A navigation path is walked back and forth, its first waypoint has "Nav": {"From": zone at the first waypoint, "To": zone
+at the last waypoint, "Length": metres}, no "Objectives": the bots find their way over the mesh and these paths, the
+names of the zones on the waypoints aren't needed. The kept foot paths keep only the names of what they lead to
+(function_labels: "vehicle ...", "beacon", "mcom N interact"), not the zones they pass. Vehicle-paths keep all their
+"Objectives": the vehicles still find their way by them.
 
 A waypoint is in a zone if the closest point of its network (up to MATCH_DISTANCE away, same floor) lies in the zone.
 
@@ -138,6 +141,14 @@ class _Zones:
         return self._closest(pos, MESH_DISTANCE) is not None and self.covered(pos)
 
 
+FUNCTION_WORDS = ("vehicle", "beacon", "interact")  # Names of what a path leads to, not of a zone.
+
+
+def _is_function(name: str) -> bool:
+    lower = name.lower()
+    return any(word in lower for word in FUNCTION_WORDS)
+
+
 def fixed_reason(path: PathData) -> str:
     """Why a path stays as it is ("" if it's cut)."""
     if path.vehicles:
@@ -145,10 +156,20 @@ def fixed_reason(path: PathData) -> str:
     if any(node.data.get("Action") for node in path.nodes):
         return "action"
     for name in path.objectives:
-        lower = name.lower()
-        if "vehicle" in lower or "beacon" in lower or "interact" in lower:
+        if _is_function(name):
             return name
     return ""
+
+
+def function_labels(path: PathData, zones: list[str]) -> list[str]:
+    """The "Objectives" a kept foot path keeps: what it leads to ("vehicle ...", "beacon", "mcom N interact"), not the
+    zones it starts or passes in (the way from "a" to "vehicle tank1 us" is the way to the tank). Without such a name
+    only the ones that aren't zones ("explore", "sniper")."""
+    names = path.objectives
+    functions = [name for name in names if _is_function(name)]
+    if functions:
+        return functions
+    return [name for name in names if name not in zones]
 
 
 class _Graph:
@@ -422,7 +443,10 @@ def _write(result: Result, data: MapData, graph: _Graph) -> None:
         new_index[index] = len(paths) + 1
         nodes = [Node(new_index[index], node.point, node.pos, node.input, copy.deepcopy(node.data))
                  for node in data.paths[index].nodes]
-        paths[new_index[index]] = PathData(new_index[index], nodes)
+        kept = PathData(new_index[index], nodes)
+        if not kept.vehicles:
+            kept.objectives = function_labels(data.paths[index], result.zones)
+        paths[new_index[index]] = kept
         result.old_paths[new_index[index]] = index
 
     # Where the waypoints of the cut paths are now (the first navigation path that has them).
@@ -436,8 +460,7 @@ def _write(result: Result, data: MapData, graph: _Graph) -> None:
             node_data = {}
             if point == 1:
                 start, end = result.zones[route.start], result.zones[route.end]
-                node_data = {"Objectives": sorted({start, end}),
-                             "Nav": {"From": start, "To": end, "Length": round(route.length, 1)}}
+                node_data = {"Nav": {"From": start, "To": end, "Length": round(route.length, 1)}}
             nodes.append(Node(number, point, old.pos, old.input, node_data))
             moved.setdefault(vertex, (number, point))
         path = PathData(number, nodes)
@@ -478,7 +501,8 @@ def _connector(result: Result, data: MapData, graph: _Graph, paths: dict[int, Pa
     """A kept path (the way to a beacon, a vehicle) links to a waypoint that got dropped, far from any navigation path
     (on a path that ran along another one, or never came into a zone): else the bots that get onto it (spawned at the
     beacon) can't leave it. The old waypoints from there to the closest navigation path stay as a path of their own,
-    linked to it at its end. Returns where the kept path links to now."""
+    linked to it at its end, without "Objectives" (it leads nowhere of its own). Returns where the kept path links to
+    now."""
     way = _way_to(graph, start, moved)
     if way is None:
         return None
@@ -490,7 +514,6 @@ def _connector(result: Result, data: MapData, graph: _Graph, paths: dict[int, Pa
         assert old is not None
         nodes.append(Node(number, point, old.pos, old.input, {}))
         moved.setdefault(vertex, (number, point))
-    nodes[0].data["Objectives"] = list(paths[end[0]].objectives)
     path = PathData(number, nodes)
     path.loops = False
     paths[number] = path

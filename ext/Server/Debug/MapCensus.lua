@@ -993,7 +993,8 @@ function CensusTask:_DefaultAreas()
 end
 
 ---Areas of the bases from the waypoints, for modes without HQs (rush): around the paths of each "base ..." objective
----(paths with this objective alone).
+---(paths with this objective alone). Paths cut at the zones have no names of bases anymore: then the zone of the base on
+---the mesh of the level.
 ---@param p_Margin number
 ---@return table
 local function _BaseAreasFromPaths(p_Margin)
@@ -1011,7 +1012,10 @@ local function _BaseAreasFromPaths(p_Margin)
 					end
 				end
 			end
-			if #s_Positions > 0 then
+			local s_Zone = #s_Positions == 0 and g_NavZones ~= nil and g_NavZones:GetZone(l_Name) or nil
+			if s_Zone ~= nil then
+				s_Areas[#s_Areas + 1] = { name = l_Name, kind = 'base', center = s_Zone.Center:Clone(), radius = s_Zone.Radius }
+			elseif #s_Positions > 0 then
 				local s_Center = Vec3(0, 0, 0)
 				for l_Index = 1, #s_Positions do
 					s_Center = s_Center + s_Positions[l_Index]

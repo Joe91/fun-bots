@@ -49,7 +49,7 @@ class Options:
     max_height: float = 2.5  # height difference of the two linked nodes (else another floor)
     # Nothing within link_radius: link to the closest path that works anyways, up to fallback_radius. A bot may get
     # stuck on the long link and teleport (Bot stuck handling), but doesn't stay on a path it can't leave. Further
-    # away, the GameDirector teleports bots that stay on a wrong path (TELEPORT_ON_INVALID_PATH_TIME).
+    # away, the GameDirector of the waypoint navigation teleported bots that stayed on a wrong path.
     fallback: bool = True
     fallback_radius: float = 50.0
     remove: bool = True  # delete base-paths without links and without a way out in reach

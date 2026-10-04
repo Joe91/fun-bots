@@ -61,7 +61,7 @@ local ZONE_WAIT_VEHICLE = { 3.0, 8.0 } -- Seconds a vehicle stands at each point
 ---@param p_Point Waypoint (or an offset-point with the fields of its waypoint)
 ---@return boolean true if the bot is on the mesh now
 function Bot:_CheckForZoneEntry(p_Point)
-	if not Registry.BOT.USE_ZONE_NETWORKS or self.m_Zone ~= nil then
+	if self.m_Zone ~= nil then
 		return false
 	end
 	local s_Waypoint = p_Point.Original or p_Point
@@ -78,23 +78,12 @@ function Bot:_CheckForZoneEntry(p_Point)
 		if (s_TowardsStart and s_Waypoint.PointIndex > s_Count / 2) or (not s_TowardsStart and s_Waypoint.PointIndex <= s_Count / 2) then
 			return false
 		end
-	elseif self._Objective == '' then
-		return false
-	else
+	elseif self._Objective ~= '' and m_NavZones:GetZone(self._Objective) == nil then
+		-- The way to a vehicle, a beacon, the action-node of an MCOM: the bot walks it to its end.
 		local s_First = m_NodeCollection:GetFirst(s_Waypoint.PathIndex)
 		local s_Objectives = type(s_First) == 'table' and s_First.Data and s_First.Data.Objectives or {}
-		local s_Zone = m_NavZones:GetZone(self._Objective)
-		if s_Zone == nil then
-			-- The way to a vehicle, a beacon, the action-node of an MCOM: the bot walks it to its end.
-			if table.has(s_Objectives, self._Objective) or not m_NavRoutes:Knows(self._Objective) then
-				return false
-			end
-		elseif not m_NavRoutes:IsActive() then
-			-- Paths not cut at the zones: they lead from zone to zone, onto the mesh only in the zone of the objective.
-			local s_Position = s_Zone.Points[s_Entry.Junction.Point].Position
-			if not s_Zone.InsideSet[s_Entry.Junction.Point] and s_Position:Distance(s_Zone.Center) > s_Zone.Radius then
-				return false
-			end
+		if table.has(s_Objectives, self._Objective) or not m_NavRoutes:Knows(self._Objective) then
+			return false
 		end
 	end
 
@@ -111,9 +100,6 @@ local ZONE_SPAWN_RANGE = 30.0
 ---@param p_Position Vec3
 ---@return boolean true if the bot is in a zone now
 function Bot:TryEnterZoneAt(p_Position)
-	if not Registry.BOT.USE_ZONE_NETWORKS then
-		return false
-	end
 	local s_Zone, s_Point = m_NavZones:ZoneAt(p_Position, ZONE_SPAWN_RANGE, self._Objective)
 	if s_Zone == nil or s_Point == nil then
 		return false
@@ -122,12 +108,33 @@ function Bot:TryEnterZoneAt(p_Position)
 	return true
 end
 
+---A bot that doesn't get along off the mesh (GameDirector): onto the closest point of the mesh up to p_Range away, it
+---goes on from there.
+---@param p_Range number
+---@return boolean true if the bot is on the mesh now
+function Bot:TeleportToMesh(p_Range)
+	local s_Soldier = self.m_Player.soldier
+	local s_Mesh = m_NavZones:GetMesh()
+	if s_Soldier == nil or s_Mesh == nil or self.m_Zone ~= nil then
+		return false
+	end
+	local s_Point, s_Distance = m_NavZones:Closest(s_Mesh, s_Soldier.worldTransform.trans)
+	if s_Point == nil or s_Distance > p_Range then
+		return false
+	end
+	local s_Transform = s_Soldier.worldTransform:Clone()
+	s_Transform.trans = s_Mesh.Points[s_Point].Position:Clone()
+	s_Soldier:SetTransform(s_Transform)
+	self:_EnterZone(m_NavZones:ZoneAtPoint(s_Point, self._Objective) or s_Mesh, s_Point)
+	return self.m_Zone ~= nil
+end
+
 ---Called when the driver of a land vehicle reached a waypoint of its vehicle-path. At a junction of the vehicle-network
 ---of the capture point of its objective, it drives the network from now on (VehicleMovement).
 ---@param p_Point Waypoint
 ---@return boolean true if the vehicle is in the zone now
 function Bot:_CheckForVehicleZoneEntry(p_Point)
-	if not Registry.BOT.USE_ZONE_NETWORKS or not Registry.BOT.USE_VEHICLE_ZONE_NETWORKS or self._Objective == ''
+	if not Registry.BOT.USE_VEHICLE_ZONE_NETWORKS or self._Objective == ''
 		or self.m_Zone ~= nil or self.m_ActiveVehicle == nil or self.m_ActiveVehicle.Terrain ~= VehicleTerrains.Land then
 		return false
 	end
@@ -218,7 +225,8 @@ function Bot:_ZoneDecide()
 		return
 	end
 
-	local s_Next = m_NavRoutes:Next(s_State.Point, self._Objective, self.m_RouteSeed)
+	-- The routes are over the mesh of the soldiers, a vehicle leaves its network at the junction closest to the objective.
+	local s_Next = not s_State.Vehicle and m_NavRoutes:Next(s_State.Point, self._Objective, self.m_RouteSeed) or nil
 	if s_Next ~= nil and s_Next.Zone ~= nil then
 		s_State.Zone = s_Next.Zone
 		-- The MCOM is armed and disarmed at the action-node of the path "mcom N interact" (a junction of the mesh).
@@ -302,8 +310,8 @@ function Bot:_ZoneReplan(p_NewGoal)
 	end
 end
 
----Without a route over the mesh (NavRoutes): the junction whose path has the highest priority for the objective
----(PathSwitcher), the one closest to the objective of these.
+---Without a route over the mesh (NavRoutes): the junction of a navigation path whose other end is closest to the
+---objective, else of any other path the bot can take (not the dead end of another objective), the closest one.
 ---@param p_Objective string
 ---@return NavZoneJunction|nil
 function Bot:_ZoneBestExit(p_Objective)
@@ -311,7 +319,7 @@ function Bot:_ZoneBestExit(p_Objective)
 	---@cast s_State -nil
 
 	local s_Best = nil
-	local s_BestPriority = -math.huge
+	local s_BestNavigation = false
 	local s_BestDistance = math.huge
 
 	for l_Index = 1, #s_State.Zone.Junctions do
@@ -330,25 +338,24 @@ function Bot:_ZoneBestExit(p_Objective)
 		end
 		-- Dead ends of other objectives (the way to a vehicle, a beacon, the action-node of an MCOM) lead nowhere: the
 		-- bot would walk it to its end, get onto the mesh there and take it again.
-		local s_Objectives = s_Usable and s_First.Data and s_First.Data.Objectives or {}
-		if #s_Objectives == 1 and s_Objectives[1] ~= p_Objective then
-			local s_Other = g_GameDirector:_GetObjectiveObject(s_Objectives[1])
-			if s_Other ~= nil and (s_Other.isEnterVehiclePath or s_Other.isBeaconPath or s_Other.subObjective) then
-				s_Usable = false
-			end
+		local s_NavPath = s_Usable and not s_State.Vehicle and m_NavRoutes:GetPath(s_Waypoint.PathIndex) or nil
+		if s_Usable and s_NavPath == nil and not s_State.Vehicle then
+			local s_Objectives = s_First.Data and s_First.Data.Objectives or {}
+			s_Usable = #s_Objectives == 0 or table.has(s_Objectives, p_Objective)
 		end
 		if s_Usable then
-			---@cast s_First Waypoint
 			---@cast s_Waypoint Waypoint
-			local s_Priority = m_PathSwitcher:GetPriorityOfPath(s_First, p_Objective)
-			-- A path that stays in the zone (only this objective) doesn't lead anywhere else.
-			if #s_Objectives == 1 and s_Objectives[1] == s_State.Zone.Name then
-				s_Priority = s_Priority - 2
+			-- Where the path leads: the other end of a navigation path, else the junction itself.
+			local s_Position = s_Waypoint.Position
+			if s_NavPath ~= nil then
+				local s_Other = s_NavPath.Start.Junction == l_Junction and s_NavPath.Finish or s_NavPath.Start
+				s_Position = s_Other.Junction.Waypoint.Position
 			end
-			local s_Distance = g_GameDirector:_GetDistanceFromObjective(p_Objective, s_Waypoint.Position)
-			if s_Priority > s_BestPriority or (s_Priority == s_BestPriority and s_Distance < s_BestDistance) then
+			local s_Distance = g_GameDirector:_GetDistanceFromObjective(p_Objective, s_Position)
+			local s_Navigation = s_NavPath ~= nil
+			if (s_Navigation and not s_BestNavigation) or (s_Navigation == s_BestNavigation and s_Distance < s_BestDistance) then
 				s_Best = l_Junction
-				s_BestPriority = s_Priority
+				s_BestNavigation = s_Navigation
 				s_BestDistance = s_Distance
 			end
 		end

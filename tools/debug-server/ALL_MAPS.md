@@ -1,7 +1,7 @@
 # Running all maps: census, mesh and cut paths
 
-These are instructions for an agent working without supervision. For each map of the modes RushLarge0, ConquestLarge0,
-ConquestSmall0 and ConquestAssault*, you will:
+These are instructions for an agent working without supervision. For each map of the modes RushLarge0, SquadRush0,
+ConquestLarge0, ConquestSmall0, ConquestAssault* and TankSuperiority0, you will:
 
 - measure the map with the census;
 - build the walking mesh with its zones;
@@ -29,8 +29,7 @@ wrap commands that use `$(...)` in `bash -c '...'`.
    ```
 
    As of this writing, these are `MP_012_RushLarge0` and `MP_012_ConquestSmall0`.
-3. `REPO/ext/Shared/Registry/Registry.lua` must contain `DEBUG_BRIDGE = true` and `USE_ZONE_NETWORKS = true`. If
-   either is missing, stop and report.
+3. `REPO/ext/Shared/Registry/Registry.lua` must contain `DEBUG_BRIDGE = true`. If it is missing, stop and report.
 
 ## 1. Build the map list
 
@@ -42,7 +41,7 @@ import pathlib, re
 out = []
 for f in sorted(pathlib.Path("mapfiles").glob("*.map")):
     level, _, mode = f.stem.rpartition("_")
-    if not re.fullmatch(r"RushLarge0|ConquestLarge0|ConquestSmall0|ConquestAssault\w*", mode):
+    if not re.fullmatch(r"RushLarge0|SquadRush0|ConquestLarge0|ConquestSmall0|ConquestAssault\w*|TankSuperiority0", mode):
         continue
     if '"Nav"' in f.read_text(encoding="utf-8"):
         continue
@@ -52,7 +51,7 @@ print(len(out), "maps")
 EOF
 ```
 
-Expect about 75 maps. Each one takes about 2–5 minutes (Rush longer), so the whole run takes a few hours. To work in batches, split
+Expect about 93 maps. Each one takes about 2–5 minutes (Rush longer), so the whole run takes a few hours. To work in batches, split
 the list (for example the Rush maps first). Each batch is its own file and its own `run` in step 3.
 
 ## 2. Start the servers

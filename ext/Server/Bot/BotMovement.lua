@@ -6,8 +6,6 @@ local m_Utilities = require('__shared/Utilities')
 local m_PathSwitcher = require('PathSwitcher')
 ---@type NodeCollection
 local m_NodeCollection = require('NodeCollection')
----@type NavRoutes
-local m_NavRoutes = require('NavRoutes')
 ---@type DebugBridge
 local m_DebugBridge = require('Debug/DebugBridge')
 
@@ -305,51 +303,6 @@ function Bot:_ExecuteActionIfNeeded(p_Point, p_DeltaTime)
 	return false
 end
 
----@return boolean true if defending took over the movement this tick
-function Bot:_HandleDefendingIfNeeded(p_DeltaTime)
-	if self._ObjectiveMode == BotObjectiveModes.Defend and g_GameDirector:IsAtTargetObjective(self._PathIndex, self._Objective) then
-		self._DefendTimer = self._DefendTimer + p_DeltaTime
-
-		local s_TargetTime = self.m_Id % 5 + 4 -- min 2 sec on path, then 2 sec movement to side
-		if self._DefendTimer >= s_TargetTime then
-			-- look around
-			self.m_ActiveSpeedValue = BotMoveSpeeds.NoMovement
-
-			local s_DefendMode = self.m_Id % 3
-			if s_DefendMode == 0 then
-				if self.m_Player.soldier.pose ~= CharacterPoseType.CharacterPoseType_Crouch then
-					self.m_Player.soldier:SetPose(CharacterPoseType.CharacterPoseType_Crouch, true, true)
-				end
-			elseif s_DefendMode == 1 then
-				if self.m_Player.soldier.pose ~= CharacterPoseType.CharacterPoseType_Stand then
-					self.m_Player.soldier:SetPose(CharacterPoseType.CharacterPoseType_Stand, true, true)
-				end
-			else
-				if self.m_Player.soldier.pose ~= CharacterPoseType.CharacterPoseType_Prone then
-					self.m_Player.soldier:SetPose(CharacterPoseType.CharacterPoseType_Prone, true, true)
-				end
-			end
-
-			self:LookAround(p_DeltaTime)
-
-			-- don't do anything else
-			return true
-		elseif self._DefendTimer >= (s_TargetTime - 2) then
-			self.m_ActiveSpeedValue = BotMoveSpeeds.Backwards
-			local s_StrafeValue = 1.0
-			if self.m_Id % 2 == 0 then
-				s_StrafeValue = -1.0
-			end
-			self:_SetInput(EntryInputActionEnum.EIAStrafe, s_StrafeValue)
-			return true
-		end
-	else
-		self._DefendTimer = 0.0
-	end
-
-	return false
-end
-
 function Bot:_ApplyReactionAction(p_DeltaTime)
 	if self._ActiveAction == BotActionFlags.RunAway and self._ActionTimer > 0.0 then
 		self._ActionTimer = self._ActionTimer - p_DeltaTime
@@ -578,14 +531,6 @@ function Bot:_ObstacleHandling(p_Velocity, p_DistanceSquared, p_HeightDistance, 
 				if s_IncrementNodes == 0 then
 					s_IncrementNodes = -2           -- Go backwards and try again.
 				end
-
-				if (Globals.IsConquest or Globals.IsRush) then
-					if g_GameDirector:IsOnObjectivePath(self._PathIndex)
-						and m_Utilities:CheckProbability(Registry.BOT.PROBABILITY_CHANGE_DIRECTION_IF_STUCK)
-					then
-						self._InvertPathDirection = not self._InvertPathDirection
-					end
-				end
 			end
 		end
 
@@ -678,26 +623,17 @@ function Bot:_CheckForAction(p_Point)
 end
 
 function Bot:_CheckAndDoPathSwitch(p_Point)
-	-- On a navigation path the bot walks on to the zone at its end, the route goes on from there (NavRoutes). Only for
-	-- other objectives (a vehicle, a beacon) it may switch.
-	if (self._Objective == '' or m_NavRoutes:Knows(self._Objective)) and m_NavRoutes:GetPath(self._PathIndex) ~= nil then
-		self._OnSwitch = false
-		return
-	end
-
-	-- CHECK FOR PATH-SWITCHES.
-	local s_NewWaypoint = nil
-	local s_SwitchPath = false
-	s_SwitchPath, s_NewWaypoint = m_PathSwitcher:GetNewPath(self, self.m_Id, p_Point, self._Objective, false,
-		self.m_Player.teamId, nil)
+	-- CHECK FOR PATH-SWITCHES (PathSwitcher: on a navigation path only onto the way to the objective or a beacon).
+	local s_SwitchPath, s_NewWaypoint, s_Direction = m_PathSwitcher:GetNewPath(self, self.m_Id, p_Point, self._Objective,
+		false, self.m_Player.teamId, nil)
 
 	if s_SwitchPath and not self._OnSwitch and s_NewWaypoint then
-		if self._Objective ~= '' then
-			-- 'Best' direction for objective on switch.
-			local s_Direction = m_NodeCollection:ObjectiveDirection(s_NewWaypoint, self._Objective, false)
-			if s_Direction then
-				self._InvertPathDirection = (s_Direction == 'Previous')
-			end
+		if s_Direction == nil and self._Objective ~= '' then
+			-- 'Best' direction for objective on switch (the route over the mesh, the action-node of its path).
+			s_Direction = m_NodeCollection:ObjectiveDirection(s_NewWaypoint, self._Objective, false)
+		end
+		if s_Direction ~= nil then
+			self._InvertPathDirection = (s_Direction == 'Previous')
 		else
 			-- Random path direction on switch.
 			self._InvertPathDirection = MathUtils:GetRandomInt(1, 2) == 1
@@ -715,35 +651,6 @@ function Bot:_CheckAndDoPathSwitch(p_Point)
 	else
 		self._OnSwitch = false
 	end
-end
-
----Teleports the bot onto a node of another path and walks on there, heading for its objective (GameDirector, for bots
----on paths they can't leave).
----@param p_Node Waypoint
-function Bot:TeleportToPath(p_Node)
-	local s_Soldier = self.m_Player.soldier
-	if s_Soldier == nil then
-		return
-	end
-
-	local s_Transform = s_Soldier.worldTransform:Clone()
-	s_Transform.trans = p_Node.Position:Clone()
-	s_Soldier:SetTransform(s_Transform)
-
-	self._PathIndex = p_Node.PathIndex
-	self._CurrentWayPoint = p_Node.PointIndex
-	if self._Objective ~= '' then
-		local s_Direction = m_NodeCollection:ObjectiveDirection(p_Node, self._Objective, false)
-		if s_Direction then
-			self._InvertPathDirection = (s_Direction == 'Previous')
-		end
-	end
-
-	self:CenterPathOffset(4.0)
-	self._StuckTimer = 0.0
-	self._ObstacleRetryCounter = 0
-	self:_ResetObstacleSequence()
-	self._LastWayDistance = 1000.0
 end
 
 ---@param p_DeltaTime number
@@ -817,11 +724,6 @@ function Bot:UpdateNormalMovement(p_DeltaTime)
 			s_Point, s_NextPoint = self:ApplyPathOffset(s_Point, s_NextPoint, s_NextToNextPoint, p_DeltaTime)
 		end
 
-		if self:_HandleDefendingIfNeeded(p_DeltaTime) then
-			-- Standing / moving aside on purpose. A running obstacle-sequence would stay frozen otherwise.
-			self:_StopObstacleSequence()
-			return -- DON'T DO ANYTHING ELSE.
-		end
 		if self:_ExecuteActionIfNeeded(s_Point, p_DeltaTime) then
 			-- In a vehicle now: the point belongs to the foot path. Reaching it would switch to a linked foot path
 			-- or overwrite the point on the vehicle path, and the vehicle can't leave a foot path any more.
@@ -880,13 +782,15 @@ function Bot:UpdateNormalMovement(p_DeltaTime)
 			local s_DistanceFromTargetSquared = s_DifferenceX ^ 2 + s_DifferenceY ^ 2
 			local s_HeightDistance = math.abs(s_Point.Position.y - s_SoldierPos.y)
 
-			-- Hard reroute to the closest path when stuck for long (skipping nodes did not help).
-			-- (See also Bot:TeleportToPath for bots on paths they can't leave.)
-			-- Only a limited number of times: after that the stuck timer keeps running,
+			-- Hard reroute when stuck for long (skipping nodes did not help): onto the mesh close by, else to the closest
+			-- path. Only a limited number of times: after that the stuck timer keeps running,
 			-- so _ObstacleHandling kills the bot at 15 s.
 			if self._StuckTimer > 6.0 and self._StuckRerouteCount < Registry.BOT.MAX_STUCK_REROUTES then
 				if s_Soldier ~= nil then
-					local s_Node = g_GameDirector:FindClosestPath(s_SoldierPos, false, true, nil)
+					local s_Node = nil
+					if not self:TryEnterZoneAt(s_SoldierPos) then
+						s_Node = g_GameDirector:FindClosestPath(s_SoldierPos, false, true, nil)
+					end
 					if s_Node ~= nil then
 						self._PathIndex = s_Node.PathIndex
 						self._CurrentWayPoint = s_Node.PointIndex

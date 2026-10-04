@@ -139,10 +139,11 @@ function Bot:__init(p_Player)
 	self._DefendTimer = 0.0
 	self._SidewardsTimer = 0.0
 	self._KillYourselfTimer = 0.0
-	-- Objective and closest distance to it on an invalid path (GameDirector: the time only counts without progress).
-	---@type string|nil
-	self._InvalidPathObjective = nil
-	self._InvalidPathBestDistance = math.huge
+	-- Off the mesh: where the bot walks to (end of its navigation path, or objective) and how close it got to it
+	-- (GameDirector:_CheckProgressOffMesh, the time only counts without progress).
+	---@type NavRouteEnd|string|nil
+	self._OffMeshTarget = nil
+	self._OffMeshBestDistance = math.huge
 	self._RocketCooldownTimer = 0.0
 
 	-- Shared movement vars.
@@ -763,16 +764,6 @@ function Bot:UpdateVehicleMovableId()
 		end
 	end
 	self:UpdateDontAttackFlag()
-end
-
-function Bot:AtObjectivePath()
-	local s_FirstPoint = m_NodeCollection:GetFirst(self._PathIndex)
-
-	if #s_FirstPoint.Data.Objectives == 1 and s_FirstPoint.Data.Objectives[1] == self._Objective then
-		return true
-	end
-
-	return false
 end
 
 function Bot:AbortAttack()

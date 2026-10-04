@@ -82,6 +82,13 @@ raycast shows up on the map as a trace: green if the target is visible, red up t
 
 ## Labeling and linking paths
 
+On levels with a mesh (conquest, rush, squad rush, tank superiority, see below) the soldiers find their way over the
+mesh and the navigation paths: the names of the zones aren't on the paths anymore. Paths keep only names of what they
+are for: the way to a vehicle (`vehicle tank1 us`), to arm an MCOM (`mcom 2 interact`), to place a beacon (`beacon`),
+spawn-vehicles; vehicle-paths keep all their objectives, the vehicles still switch paths by them. The labeling below
+prepares the waypoints of a level before its census (the bases of rush and the MCOMs come from their paths), and is what
+the deathmatch modes and levels without a mesh use: there the bots walk the paths and switch at links at random.
+
 Bots need three things from the waypoints (`GameDirector.lua`, `PathSwitcher.lua`):
 
 - **Objectives** on the first node of each path. One objective (`a`, `base us`) makes it the path of that objective:
@@ -171,14 +178,8 @@ a junction, for every rush stage, and fixes them:
    to but not from there to their MCOM are linked to the closest path that names it (20 m), shortest link first.
 
 The rest is reported: mostly base-paths that only lead to vehicles, and paths out of a base split into several pieces
-that all carry the base. In the game, bots spawn on base-paths only while they can leave them, e.g. while one of their
-vehicles is there (`GameDirector:CanLeaveBasePath`). If a path has no regular way out at all, a bot leaves it anyways
-over any other linked path but a base-path alone, the way to a vehicle or a beacon (`PathSwitcher:GetNewPath`): a
-base-path at any junction, a path out of a base at its ends, the path of a destroyed MCOM, and the way to a vehicle that
-isn't the bot's. Bots that still stay on a path without an active objective, a base-path alone or the path of a
-destroyed MCOM are teleported onto a path of their objective after 20 s if they don't fight
-(`TELEPORT_ON_INVALID_PATH_TIME`, with `TeleportIfStuck`), else killed after 50 s. Bots only take the way to a vehicle
-of their own team.
+that all carry the base. In the game the soldiers don't spawn on base-paths anymore (spawns of the game, see the mesh
+below), and the paths of the bases are cut at their zones; this only matters for the vehicles and for the census.
 ```
 python -m funbots_debug.paths.fix_bases ../../mapfiles/*.map -v         # only show what it would do
 python -m funbots_debug.paths.fix_bases ../../mapfiles/*.map --write
@@ -355,15 +356,18 @@ Land vehicles get a mesh of their own (`vehicle`): the same way, but only over w
 (1.8 m to the next wall, slopes up to about 41°, no roof below 4 m), a point about every 10 m, attached to the paths with
 `Vehicles: land`.
 
-**In the game** (`ext/Server/NavZones.lua`, `ext/Server/Bot/BotZoneMovement.lua`, switch
-`Registry.BOT.USE_ZONE_NETWORKS`): `POST /api/navzones/apply` (`{"save": true}`) sends the mesh shown on the map to the
+**In the game** (`ext/Server/NavZones.lua`, `ext/Server/Bot/BotZoneMovement.lua`, on every level with a mesh):
+`POST /api/navzones/apply` (`{"save": true}`) sends the mesh shown on the map to the
 mod, which saves it in the table `<level>_<mode>_navzones` of `mod.db` (one row `@mesh`) and loads it with the waypoints
 from then on. A bot that reaches a junction of the mesh leaves the waypoints and decides where to go (`_ZoneDecide`): in
 the zone of its objective it walks from point to point and waits at each (longer and crouched in cover when it defends);
 else it walks the mesh to that zone if the mesh leads there, or to the junction of the next navigation path of its
-route (`NavRoutes`); without route the path that suits the objective best (`PathSwitcher` priority, then distance). A
-bot that gets stuck between two points (4 s without progress) takes another way, and all bots avoid that connection
-until the level ends (given up three times it's removed); after three of them it goes back to the waypoints. The
+route (`NavRoutes`); without route over the junction of the navigation path whose other end is closest to the
+objective. A bot that gets stuck between two points (4 s without progress) takes another way, and all bots avoid that
+connection until the level ends (given up three times it's removed); after three of them it goes back to the waypoints,
+after three such zones in a row it respawns. Off the mesh a bot that doesn't get 5 m closer to the end of its
+navigation path (or to its objective) for 20 s is put onto the mesh up to 30 m away (`TeleportIfStuck`), after 50 s
+killed (`Registry.GAME_DIRECTOR.OFF_MESH_*`), not while it fights, waits or does an action. The
 debug-server lists these spots under *Findings* (analyzer `zones`). In the snapshot a bot on the mesh has `zone` (the
 zone it walks in, `@mesh` outside of the zones) and `zoneExit` on its way out.
 
@@ -373,10 +377,9 @@ zone it walks in, `@mesh` outside of the zones) and `zoneExit` on its way out.
   waypoints.
 - **Bases and spawns**: bots that spawn at the spawn-points of the game (`SpawnMethod.Spawn`) start on the mesh there
   (a base, a spawn, a capture point; up to 30 m away they walk straight to it) and go where their objective is as soon
-  as they have one. In conquest and rush the bots use the spawn of the game on their own once the level has bases on
-  the mesh (`SpawnMethod` *SpawnOnTdm*, the default, and
-  `Registry.BOT_SPAWN.GAME_SPAWN_WITH_ZONES`), else they spawn on the waypoints as before. Squad-spawns on a mate on
-  the mesh start on it as well.
+  as they have one. In conquest and rush the bots always use the spawn of the game once the level has bases on the
+  mesh (else they spawn on random waypoints away from the enemy, as in the deathmatch modes). Squad-spawns on a mate
+  on the mesh start on it as well.
 - **Land vehicles** (`Registry.BOT.USE_VEHICLE_ZONE_NETWORKS`, experimental): a driver that reaches a junction of the
   vehicle-mesh in the capture point of its objective drives the zone there, stands a few seconds at each point, and
   leaves over the vehicle-junction that suits its next objective. When it doesn't get along it reverses, after three
@@ -387,6 +390,7 @@ zone it walks in, `@mesh` outside of the zones) and `zoneExit` on its way out.
 `export_traces`.
 
 **All maps**: `python -m funbots_debug.census run --all --modes ConquestSmall0,ConquestLarge0,RushLarge0 --apply`
+(also `ConquestAssault*`, `SquadRush0`, `TankSuperiority0`; see `ALL_MAPS.md`)
 makes census and mesh of every waypoint-file of these modes, one level after the other. That takes about 2 to 4
 minutes per level (rush longer: more areas). For a long run let the driver start the game-server again after a crash
 (the level is tried once more):
@@ -425,10 +429,10 @@ python -m funbots_debug.census navpaths MP_012_RushLarge0 --write --db ../../mod
 Paths with vehicles, actions (MCOM, vehicle, beacon), the ways to vehicles and beacons and air-paths stay as they are,
 their links to the cut paths move to the same waypoints of the navigation paths (or one within 5 m). If the linked
 waypoint was dropped far from any navigation path, the old waypoints from there to the closest navigation path stay as
-a connecting path (no `Nav`, the objectives of the navigation path it leads to): else bots that spawn at a beacon can't
-leave its path. A navigation path is walked back and
-forth; its first waypoint has `Objectives` (both zones) and `"Nav": {"From": zone at the first waypoint, "To": zone at
-the last one, "Length": metres}`. `--write` replaces `mapfiles/<map>.map` and `navzones/<map>.json`: the mesh is
+a connecting path (no `Nav`, no `Objectives`): else bots that spawn at a beacon can't leave its path. The kept foot
+paths keep only the names of what they lead to (`vehicle ...`, `beacon`, `mcom N interact`), not the zones they start
+in. A navigation path is walked back and forth; its first waypoint has only `"Nav": {"From": zone at the first
+waypoint, "To": zone at the last one, "Length": metres}`, no `Objectives`. `--write` replaces `mapfiles/<map>.map` and `navzones/<map>.json`: the mesh is
 made again from the census (`census/<map>.json.gz`, same parts as before) with junctions on the new paths. `--db` also
 writes the two tables of this level into `mod.db`. Paths whose end has no junction are listed; the bots don't use them.
 An end without a measured surface (stairs into a metro the census didn't see) is attached straight to the closest point
@@ -440,8 +444,12 @@ to any end in the same connected part of the mesh. A route ends in the part of t
 of the zone of the objective, or the junctions of the paths of an objective that isn't a zone (a vehicle, a beacon,
 `mcom N interact`). A bot on the mesh walks there if its part has the target, else to the junction of the first path of
 the cheapest route (Dijkstra), walks that path without switching, goes onto the mesh at its other end and decides
-again. On a navigation path the direction comes from the route as well (`NodeCollection:ObjectiveDirection`). The zones
-are objectives of their own (`NodeCollection:ParseObjectives`), their positions come from the zones (`GameDirector`).
+again. On a navigation path the direction comes from the route as well (`NodeCollection:ObjectiveDirection`), on the
+way to a vehicle, an MCOM or a beacon towards its action-node. Off the mesh a soldier only switches paths onto the way
+to its objective or (with a beacon to place) a beacon; on any other path that isn't a navigation path it leaves for a
+navigation path (`PathSwitcher`). The objectives are the zones, the capture points of the engine and the paths of
+vehicles, beacons and `mcom N interact` (`GameDirector:_InitObjectives`); their positions come from the zones, else the
+action-nodes of their paths.
 An exit a bot doesn't get to costs 100 m more for all bots, the bot tries another one.
 
 **On the map** the debug-server loads `navzones/<map>.json` of the running level on its own. Navigation paths are drawn

@@ -57,7 +57,8 @@ class NavpathsTest(unittest.TestCase):
         path = result.data.paths[1]
         nav = path.first.data["Nav"]
         self.assertEqual((nav["From"], nav["To"]), ("a", "b"))
-        self.assertEqual(path.objectives, ["a", "b"])
+        # The zones aren't labels of the path: the bots find their way over the mesh and "Nav".
+        self.assertEqual(path.objectives, [])
         self.assertFalse(path.loops)
         self.assertEqual(path.first.input >> 8, NO_LOOP)
         # From the first waypoint in a to the first one in b, nothing deeper in the zones.
@@ -138,7 +139,17 @@ class NavpathsTest(unittest.TestCase):
         self.assertEqual(connector.first.links, [(kept.index, 1)])
         end = connector.nodes[-1].links[0]
         self.assertIn("Nav", result.data.paths[end[0]].first.data)
-        self.assertEqual(connector.objectives, result.data.paths[end[0]].objectives)
+        self.assertEqual(connector.objectives, [])
+
+    def test_kept_foot_path_keeps_only_what_it_leads_to(self):
+        # The way from zone a to a tank: the zone isn't a label of it anymore. A vehicle-path keeps all of its labels.
+        way = _path(1, [(0, 2 * i) for i in range(20)], {"Objectives": ["a", "vehicle tank1 us"]})
+        road = _path(2, [(0, z) for z in range(0, 101, 4)], {"Objectives": ["a", "c"], "Vehicles": ["land"]})
+        other = _path(3, [(4, 4), (6, 4)], {"Objectives": ["a", "explore"]})
+        other.nodes[0].data["Action"] = {"type": "explore"}
+        result = navpaths.build(MapData({1: way, 2: road, 3: other, 4: _path(4, _line(-5, 105, 0))}), self.zones)
+        labels = sorted(path.objectives for index, path in result.data.paths.items() if index in result.old_paths)
+        self.assertEqual(labels, [["a", "c"], ["explore"], ["vehicle tank1 us"]])
 
     def test_short_piece_between_touching_zones_dropped(self):
         # Circles just around the squares: the gap between them isn't on the mesh (as where no mesh was measured). The
