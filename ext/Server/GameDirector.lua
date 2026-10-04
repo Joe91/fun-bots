@@ -2271,6 +2271,14 @@ function GameDirector:_InitObjectives()
 			s_Entity = s_Iterator:Next()
 		end
 	end
+	-- Every MCOM with a zone on the mesh as well: the paths may lead only to some of them (cut at the zones).
+	if Globals.IsRush then
+		for l_Name, l_Zone in pairs(m_NavZones:GetZones()) do
+			if l_Zone.Kind == 'mcom' then
+				m_NodeCollection:AddKnownObjective(l_Name)
+			end
+		end
+	end
 
 	for l_ObjectiveName, _ in pairs(m_NodeCollection:GetKnownObjectives()) do
 		local s_Objective = {

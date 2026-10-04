@@ -422,7 +422,10 @@ python -m funbots_debug.census navpaths MP_012_RushLarge0 --write --db ../../mod
    in rush the attackers spawn at their vehicles, far from any path.
 
 Paths with vehicles, actions (MCOM, vehicle, beacon), the ways to vehicles and beacons and air-paths stay as they are,
-their links to the cut paths move to the same waypoints of the navigation paths. A navigation path is walked back and
+their links to the cut paths move to the same waypoints of the navigation paths (or one within 5 m). If the linked
+waypoint was dropped far from any navigation path, the old waypoints from there to the closest navigation path stay as
+a connecting path (no `Nav`, the objectives of the navigation path it leads to): else bots that spawn at a beacon can't
+leave its path. A navigation path is walked back and
 forth; its first waypoint has `Objectives` (both zones) and `"Nav": {"From": zone at the first waypoint, "To": zone at
 the last one, "Length": metres}`. `--write` replaces `mapfiles/<map>.map` and `navzones/<map>.json`: the mesh is
 made again from the census (`census/<map>.json.gz`, same parts as before) with junctions on the new paths. `--db` also

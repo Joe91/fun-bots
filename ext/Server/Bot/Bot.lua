@@ -303,6 +303,8 @@ function Bot:__init(p_Player)
 	-- Free movement in the zone of the objective (BotZoneMovement), nil on the waypoints.
 	---@type BotZoneState|nil
 	self.m_Zone = nil
+	-- Times the bot left the mesh after getting stuck, without reaching a goal or an exit in between.
+	self.m_ZoneGiveUps = 0
 end
 
 -- =============================================

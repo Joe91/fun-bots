@@ -196,7 +196,10 @@ Bots fight little without a real client, so judge only whether they move, not wh
   ship and reaches the shore by vehicle. That's expected.
 - A few navigation paths per map can stay without a junction (`warning: ... the bots don't use it`): about 2 % of
   all of them. Report the maps with many.
-- A map that is cut already can't be cut again. Redoing it needs the original map file from git, plus that file
-  imported into `mod.db`. Don't do that yourself; report it.
+- A map that is cut already can't be cut again. Redoing the cut (after a change of `navpaths.py`) needs the newest
+  version of `mapfiles/<map>.map` in git without `"Nav"` written back to `mapfiles/`, then step 5 again (`--db` also
+  replaces both tables in `mod.db`). Don't do that yourself; report it.
+- Links of beacon and vehicle paths to dropped waypoints are kept over connecting paths (`over connecting paths: N` in
+  the summary). A few links stay lost where no old path leads to a navigation path.
 - If the debug-server answers with errors or the mod disconnects repeatedly, stop and report the last 50 lines of
   `census/all_maps.log` and `census/debug-server.log`.

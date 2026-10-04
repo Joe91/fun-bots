@@ -520,26 +520,58 @@ function NavZones:IsBlockedIn(p_Zone, p_Point)
 	return true
 end
 
+---Whether the two points stay connected without the connection between them (it isn't the only way between two parts
+---of the mesh).
+---@param p_Mesh NavZone
+---@param p_A integer
+---@param p_B integer
+---@return boolean
+local function _ConnectedWithout(p_Mesh, p_A, p_B)
+	local s_Seen = { [p_A] = true }
+	local s_Stack = { p_A }
+	while #s_Stack > 0 do
+		local s_Current = table.remove(s_Stack)
+		local s_Neighbours = p_Mesh.Neighbours[s_Current]
+		for l_Index = 1, #s_Neighbours do
+			local l_Edge = s_Neighbours[l_Index]
+			local s_Next = l_Edge.To
+			if not l_Edge.Removed and not s_Seen[s_Next] and not (s_Current == p_A and s_Next == p_B) then
+				if s_Next == p_B then
+					return true
+				end
+				s_Seen[s_Next] = true
+				s_Stack[#s_Stack + 1] = s_Next
+			end
+		end
+	end
+	return false
+end
+
 ---A bot got stuck between the two points: all bots avoid the connection from now on (until the level ends).
 ---@param p_Zone NavZone
 ---@param p_A integer
 ---@param p_B integer
 function NavZones:BlockEdge(p_Zone, p_A, p_B)
-	local s_Removed = false
+	local s_Remove = nil
 	for _, l_Pair in ipairs({ { p_A, p_B }, { p_B, p_A } }) do
 		local s_Neighbours = p_Zone.Neighbours[l_Pair[1]] or {}
 		for l_Index = 1, #s_Neighbours do
 			local l_Edge = s_Neighbours[l_Index]
 			if l_Edge.To == l_Pair[2] then
 				l_Edge.Penalty = l_Edge.Penalty + BLOCKED_PENALTY
-				-- Given up too often: no way at all, also not for goals and exits behind it (the parts change).
+				-- Given up too often: no way at all, also not for goals and exits behind it (the parts change). Not
+				-- the only way between two parts of the mesh: bots crowding on stairs get stuck as well, and without
+				-- it no route would lead on (it stays expensive).
 				if not l_Edge.Removed and l_Edge.Penalty >= BLOCKED_PENALTY * REMOVE_AFTER then
-					l_Edge.Removed = true
-					s_Removed = true
+					if s_Remove == nil then
+						s_Remove = _ConnectedWithout(p_Zone.Mesh, p_A, p_B)
+					end
+					l_Edge.Removed = s_Remove
 				end
 			end
 		end
 	end
+	local s_Removed = s_Remove == true
 	if s_Removed then
 		_ComputeParts(p_Zone.Mesh)
 		m_Logger:Write('zone ' .. p_Zone.Name .. ': connection ' .. p_A .. '-' .. p_B .. ' removed')

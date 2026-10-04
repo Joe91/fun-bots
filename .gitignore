@@ -170,3 +170,9 @@ pyvenv.cfg
 
 # Recordings of the debug-server
 tools/debug-server/recordings/
+# Census data and lists of the debug-server: results are in mapfiles/ and navzones/, a census can be measured again
+tools/debug-server/census/*
+!tools/debug-server/census/start_vu.sh
+
+# Local notes
+/TODO.txt

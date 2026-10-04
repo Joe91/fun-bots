@@ -662,8 +662,9 @@ end
 
 function FunBotServer:OnFinishedLoading()
 	m_NodeEditor:EndOfLoad()
-	m_GameDirector:OnLoadFinished()
+	-- The zones first: the GameDirector takes the MCOMs from them.
 	m_NavZones:OnLoadFinished()
+	m_GameDirector:OnLoadFinished()
 end
 
 function FunBotServer:DestroyObstacles(p_LevelName, p_GameMode)

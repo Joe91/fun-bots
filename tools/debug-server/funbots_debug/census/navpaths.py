@@ -80,6 +80,7 @@ class Result:
     old_paths: dict[int, int] = field(default_factory=dict)  # new path -> old path (the kept ones)
     moved_links: int = 0
     lost_links: int = 0
+    connectors: int = 0  # paths kept to connect a kept path whose links lead nowhere else
 
 
 class _Zones:
@@ -441,7 +442,7 @@ def _write(result: Result, data: MapData, graph: _Graph) -> None:
     # Links of the kept paths.
     nav_nodes = [(node.pos, (node.path, node.point)) for index, path in paths.items()
                  if index not in result.old_paths for node in path.nodes]
-    for index, path in paths.items():
+    for index, path in list(paths.items()):
         if index not in result.old_paths:
             continue
         for node in path.nodes:
@@ -454,6 +455,8 @@ def _write(result: Result, data: MapData, graph: _Graph) -> None:
                 if target is None:
                     target = _closest(nav_nodes, node.pos)
                 if target is None:
+                    target = _connector(result, data, graph, paths, moved, link)
+                if target is None:
                     result.lost_links += 1
                     continue
                 result.moved_links += 1
@@ -462,6 +465,61 @@ def _write(result: Result, data: MapData, graph: _Graph) -> None:
                 back.set_links(list(dict.fromkeys(back.links + [(node.path, node.point)])))
             node.set_links(list(dict.fromkeys(links)))
     result.data.paths = paths
+
+
+def _connector(result: Result, data: MapData, graph: _Graph, paths: dict[int, PathData], moved: dict[Vertex, Vertex],
+               start: Vertex) -> Vertex | None:
+    """A kept path (the way to a beacon, a vehicle) links to a waypoint that got dropped, far from any navigation path
+    (on a path that ran along another one, or never came into a zone): else the bots that get onto it (spawned at the
+    beacon) can't leave it. The old waypoints from there to the closest navigation path stay as a path of their own,
+    linked to it at its end. Returns where the kept path links to now."""
+    way = _way_to(graph, start, moved)
+    if way is None:
+        return None
+    end = moved[way[-1]]
+    number = len(paths) + 1
+    nodes = []
+    for point, vertex in enumerate(way[:-1], start=1):
+        old = data.node(*vertex)
+        assert old is not None
+        nodes.append(Node(number, point, old.pos, old.input, {}))
+        moved.setdefault(vertex, (number, point))
+    nodes[0].data["Objectives"] = list(paths[end[0]].objectives)
+    path = PathData(number, nodes)
+    path.loops = False
+    paths[number] = path
+    nodes[-1].set_links(list(dict.fromkeys(nodes[-1].links + [end])))
+    back = paths[end[0]].nodes[end[1] - 1]
+    back.set_links(list(dict.fromkeys(back.links + [(number, len(nodes))])))
+    result.connectors += 1
+    return (number, 1)
+
+
+def _way_to(graph: _Graph, start: Vertex, targets: dict[Vertex, Vertex]) -> list[Vertex] | None:
+    """The shortest way over the old foot paths from the waypoint to one of the targets. [start, ..., target]"""
+    if start not in graph.pos:
+        return None
+    best = {start: 0.0}
+    previous: dict[Vertex, Vertex] = {}
+    queue = [(0.0, start)]
+    while queue:
+        cost, vertex = heapq.heappop(queue)
+        if cost > best.get(vertex, math.inf) or cost > EXTEND_MAX:
+            continue
+        if vertex in targets and vertex != start:
+            way = [vertex]
+            while way[-1] in previous:
+                way.append(previous[way[-1]])
+            return list(reversed(way))
+        for neighbour, step in graph.edges[vertex]:
+            if neighbour in graph.road:
+                continue
+            total = cost + step
+            if total < best.get(neighbour, math.inf):
+                best[neighbour] = total
+                previous[neighbour] = vertex
+                heapq.heappush(queue, (total, neighbour))
+    return None
 
 
 def _closest(nodes: list[tuple[tuple[float, float, float], Vertex]], pos) -> Vertex | None:
@@ -513,7 +571,8 @@ def summary(result: Result, before: MapData, verbose: bool = False) -> str:
                                                               in sorted(origins.items())) + f"), "
         f"{result.duplicates} pieces dropped along others, {result.on_mesh} on the mesh",
         f"  cut paths without a navigation path of their own: {len(result.dropped)}",
-        f"  links of kept paths moved: {result.moved_links}, lost: {result.lost_links}",
+        f"  links of kept paths moved: {result.moved_links}, lost: {result.lost_links}, "
+        f"over connecting paths: {result.connectors}",
     ]
     degree = defaultdict(set)
     for route in result.routes:

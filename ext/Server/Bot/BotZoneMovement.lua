@@ -19,6 +19,8 @@ local m_Logger = Logger('BotZoneMovement', Debug.Server.BOT)
 local ZONE_REACH_POINT = 1.5     -- Horizontal metres to a point of the network (in the open, 5 m apart) that count as
 local ZONE_REACH_CORNER = 1.0    -- reached, and to a corner of the way between two points (around a wall).
 local ZONE_REACH_SPRINT = 1.3    -- Running, a bot reaches positions this many times as far away.
+local ZONE_NARROW = 1.5          -- To a point with less clearance (a ramp, a walkway) the bot walks: running it
+                                 -- overshoots the turn there and falls down.
 local ZONE_TURN_DISTANCE = 3.0   -- Closer than this to the target and turned away more than ZONE_TURN_ANGLE, the bot
 local ZONE_TURN_ANGLE = 1.0      -- slows down until it faces the target: else it runs circles around it.
 local ZONE_REACH_HEIGHT = 1.5    -- Same as Registry.BOT.TARGET_HEIGHT_DISTANCE_WAYPOINT.
@@ -26,6 +28,8 @@ local ZONE_MIN_PROGRESS = 0.3    -- Metres closer to the target that count as pr
 local ZONE_JUMP_TIME = 1.5       -- Seconds without progress before a jump.
 local ZONE_STUCK_TIME = 4.0      -- Seconds without progress before the bot gives up this way.
 local ZONE_MAX_FAILS = 3         -- Ways given up before the bot leaves the zone.
+local ZONE_MAX_GIVE_UPS = 3      -- Zones left like that in a row (no goal, no exit reached): the bot is stuck in a
+                                 -- place it doesn't get out of, it respawns (as on the waypoints, Bot:_ObstacleHandling).
 local ZONE_WAIT_ATTACK = { 1.0, 3.0 } -- Seconds at each point while capturing.
 local ZONE_WAIT_DEFEND = { 5.0, 12.0 } -- Seconds at each point while defending.
 local ZONE_SUBOBJECTIVE_CYCLE = 1.0 -- Seconds between two checks whether the bot shall arm / disarm the MCOM.
@@ -324,12 +328,20 @@ function Bot:_ZoneBestExit(p_Objective)
 				s_Usable = m_PathSwitcher:IsWalkable(s_Waypoint.PathIndex)
 			end
 		end
+		-- Dead ends of other objectives (the way to a vehicle, a beacon, the action-node of an MCOM) lead nowhere: the
+		-- bot would walk it to its end, get onto the mesh there and take it again.
+		local s_Objectives = s_Usable and s_First.Data and s_First.Data.Objectives or {}
+		if #s_Objectives == 1 and s_Objectives[1] ~= p_Objective then
+			local s_Other = g_GameDirector:_GetObjectiveObject(s_Objectives[1])
+			if s_Other ~= nil and (s_Other.isEnterVehiclePath or s_Other.isBeaconPath or s_Other.subObjective) then
+				s_Usable = false
+			end
+		end
 		if s_Usable then
 			---@cast s_First Waypoint
 			---@cast s_Waypoint Waypoint
 			local s_Priority = m_PathSwitcher:GetPriorityOfPath(s_First, p_Objective)
 			-- A path that stays in the zone (only this objective) doesn't lead anywhere else.
-			local s_Objectives = s_First.Data and s_First.Data.Objectives or {}
 			if #s_Objectives == 1 and s_Objectives[1] == s_State.Zone.Name then
 				s_Priority = s_Priority - 2
 			end
@@ -453,6 +465,10 @@ function Bot:UpdateZoneMovement(p_DeltaTime)
 
 	local s_Target = s_State.Targets[s_State.Step]
 	if s_Target == nil then
+		-- At the goal: the ways given up on the way there don't count anymore (not at each point: after giving a way
+		-- up the bot walks back over points it reaches and would try the same way again forever).
+		s_State.Fails = 0
+		self.m_ZoneGiveUps = 0
 		if s_State.Exit ~= nil then
 			self:_LeaveZone(s_State.Exit)
 			return false
@@ -486,9 +502,11 @@ function Bot:UpdateZoneMovement(p_DeltaTime)
 	s_State.Waiting = false
 	self._DefendTimer = 0.0
 	self._WayWaitTimer = 0.0
+	local s_TargetPoint = s_Target.Point and s_State.Zone.Points[s_Target.Point]
+	local s_Narrow = s_TargetPoint ~= nil and s_TargetPoint.Clearance < ZONE_NARROW
 	if s_Target.Flags & NavZoneFlags.Crouch ~= 0 then
 		self.m_ActiveSpeedValue = BotMoveSpeeds.SlowCrouch
-	elseif s_State.Exit == nil and s_Target.Flags & NavZoneFlags.InZone ~= 0 then
+	elseif s_Narrow or (s_State.Exit == nil and s_Target.Flags & NavZoneFlags.InZone ~= 0) then
 		-- Walking around in the zone. On the way out (to the next objective, to arm or disarm) the bot runs.
 		self.m_ActiveSpeedValue = BotMoveSpeeds.Normal
 	else
@@ -521,7 +539,7 @@ function Bot:UpdateZoneMovement(p_DeltaTime)
 		end
 	end
 
-	local s_Reach = s_Target.Point ~= nil and ZONE_REACH_POINT or ZONE_REACH_CORNER
+	local s_Reach = (s_Target.Point ~= nil and not s_Narrow) and ZONE_REACH_POINT or ZONE_REACH_CORNER
 	if self.m_ActiveSpeedValue == BotMoveSpeeds.Sprint then
 		s_Reach = s_Reach * ZONE_REACH_SPRINT
 	end
@@ -532,7 +550,6 @@ function Bot:UpdateZoneMovement(p_DeltaTime)
 		s_State.Step = s_State.Step + 1
 		s_State.Progress = math.huge
 		s_State.Stuck = 0.0
-		s_State.Fails = 0
 		self._LastWayDistance = 1000.0
 		return true
 	end
@@ -615,6 +632,13 @@ function Bot:_ZoneGiveUpConnection(p_Position, p_Target)
 			self:_ZoneReplan(false)
 			self:_ZoneDecide()
 			return self.m_Zone == nil
+		end
+		self.m_ZoneGiveUps = self.m_ZoneGiveUps + 1
+		if self.m_ZoneGiveUps >= ZONE_MAX_GIVE_UPS then
+			m_Logger:Write(self.m_Player.name .. ' stuck in the zone of ' .. s_State.Zone.Name .. '. Kill')
+			self:_LeaveZone(nil)
+			self.m_Player.soldier:Kill()
+			return true
 		end
 		self:_LeaveZone(nil)
 		return true

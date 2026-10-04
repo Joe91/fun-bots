@@ -118,6 +118,28 @@ class NavpathsTest(unittest.TestCase):
         self.assertEqual(back.links, [(1, 1)])
         self.assertEqual(result.moved_links, 1)
 
+    def test_kept_path_linked_far_away_gets_a_connector(self):
+        # The beacon at the end of path 2, which never comes into a zone: path 2 is dropped, the beacon keeps the way
+        # from there to the navigation path.
+        walk = _path(1, _line(-5, 105, 0))
+        side = _path(2, [(50, 2 + 2 * i) for i in range(20)])
+        walk.nodes[27].set_links([(2, 1)])  # x = 49
+        side.nodes[0].set_links([(1, 28)])
+        beacon = _path(3, [(52, 40), (54, 40)], {"Objectives": ["beacon"]})
+        beacon.nodes[1].data["Action"] = {"type": "beacon"}
+        beacon.nodes[0].set_links([(2, 20)])
+        side.nodes[19].set_links([(3, 1)])
+        result = navpaths.build(MapData({1: walk, 2: side, 3: beacon}), self.zones)
+        self.assertEqual((result.connectors, result.lost_links), (1, 0))
+        kept = next(path for path in result.data.paths.values() if path.objectives == ["beacon"])
+        connector = result.data.paths[kept.nodes[0].links[0][0]]
+        self.assertNotIn("Nav", connector.first.data)
+        self.assertEqual(len(connector.nodes), 20)
+        self.assertEqual(connector.first.links, [(kept.index, 1)])
+        end = connector.nodes[-1].links[0]
+        self.assertIn("Nav", result.data.paths[end[0]].first.data)
+        self.assertEqual(connector.objectives, result.data.paths[end[0]].objectives)
+
     def test_missing_ends(self):
         data = MapData({1: _path(1, _line(-5, 105, 0))})
         result = navpaths.build(data, self.zones)
