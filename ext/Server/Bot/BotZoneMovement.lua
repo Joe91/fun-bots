@@ -21,6 +21,8 @@ local ZONE_REACH_CORNER = 1.0    -- reached, and to a corner of the way between 
 local ZONE_REACH_SPRINT = 1.3    -- Running, a bot reaches positions this many times as far away.
 local ZONE_NARROW = 1.5          -- To a point with less clearance (a ramp, a walkway) the bot walks: running it
                                  -- overshoots the turn there and falls down.
+local ZONE_STEEP = 0.8           -- A target this much higher or lower (stairs, a ramp) within ZONE_STEEP_RANGE: the bot
+local ZONE_STEEP_RANGE = 6.0     -- walks as well, running it falls off the side of narrow stairs and tries again.
 local ZONE_TURN_DISTANCE = 3.0   -- Closer than this to the target and turned away more than ZONE_TURN_ANGLE, the bot
 local ZONE_TURN_ANGLE = 1.0      -- slows down until it faces the target: else it runs circles around it.
 local ZONE_REACH_HEIGHT = 1.5    -- Same as Registry.BOT.TARGET_HEIGHT_DISTANCE_WAYPOINT.
@@ -510,7 +512,12 @@ function Bot:UpdateZoneMovement(p_DeltaTime)
 	self._DefendTimer = 0.0
 	self._WayWaitTimer = 0.0
 	local s_TargetPoint = s_Target.Point and s_State.Zone.Points[s_Target.Point]
-	local s_Narrow = s_TargetPoint ~= nil and s_TargetPoint.Clearance < ZONE_NARROW
+	local s_Position = s_Soldier.worldTransform.trans
+	local s_DeltaX = s_Target.Position.x - s_Position.x
+	local s_DeltaZ = s_Target.Position.z - s_Position.z
+	local s_Distance = math.sqrt(s_DeltaX * s_DeltaX + s_DeltaZ * s_DeltaZ)
+	local s_Narrow = (s_TargetPoint ~= nil and s_TargetPoint.Clearance < ZONE_NARROW)
+		or (s_Distance < ZONE_STEEP_RANGE and math.abs(s_Target.Position.y - s_Position.y) > ZONE_STEEP)
 	if s_Target.Flags & NavZoneFlags.Crouch ~= 0 then
 		self.m_ActiveSpeedValue = BotMoveSpeeds.SlowCrouch
 	elseif s_Narrow or (s_State.Exit == nil and s_Target.Flags & NavZoneFlags.InZone ~= 0) then
@@ -527,10 +534,6 @@ function Bot:UpdateZoneMovement(p_DeltaTime)
 	self._TargetPoint = s_Target
 	self._NextTargetPoint = s_State.Targets[s_State.Step + 1]
 
-	local s_Position = s_Soldier.worldTransform.trans
-	local s_DeltaX = s_Target.Position.x - s_Position.x
-	local s_DeltaZ = s_Target.Position.z - s_Position.z
-	local s_Distance = math.sqrt(s_DeltaX * s_DeltaX + s_DeltaZ * s_DeltaZ)
 
 	-- Close to the target but facing away: slow down while turning (a bot can only turn so fast while it runs).
 	if s_Distance < ZONE_TURN_DISTANCE and self.m_Input ~= nil

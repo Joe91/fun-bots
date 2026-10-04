@@ -567,6 +567,34 @@ end
 ---@param p_Zone NavZone
 ---@param p_A integer
 ---@param p_B integer
+---How many points can be reached from p_Start without the connection p_A - p_B, counted up to p_Limit.
+---@param p_Mesh NavZone
+---@param p_Start integer
+---@param p_A integer
+---@param p_B integer
+---@param p_Limit integer
+---@return integer
+local function _SizeWithout(p_Mesh, p_Start, p_A, p_B, p_Limit)
+	local s_Seen = { [p_Start] = true }
+	local s_Count = 1
+	local s_Stack = { p_Start }
+	while #s_Stack > 0 and s_Count < p_Limit do
+		local s_Current = table.remove(s_Stack)
+		local s_Neighbours = p_Mesh.Neighbours[s_Current]
+		for l_Index = 1, #s_Neighbours do
+			local l_Edge = s_Neighbours[l_Index]
+			local s_Next = l_Edge.To
+			if not l_Edge.Removed and not s_Seen[s_Next] and not (s_Current == p_A and s_Next == p_B)
+				and not (s_Current == p_B and s_Next == p_A) then
+				s_Seen[s_Next] = true
+				s_Count = s_Count + 1
+				s_Stack[#s_Stack + 1] = s_Next
+			end
+		end
+	end
+	return s_Count
+end
+
 function NavZones:BlockEdge(p_Zone, p_A, p_B)
 	local s_Remove = nil
 	for _, l_Pair in ipairs({ { p_A, p_B }, { p_B, p_A } }) do
@@ -577,10 +605,15 @@ function NavZones:BlockEdge(p_Zone, p_A, p_B)
 				l_Edge.Penalty = l_Edge.Penalty + BLOCKED_PENALTY
 				-- Given up too often: no way at all, also not for goals and exits behind it (the parts change). Not
 				-- the only way between two parts of the mesh: bots crowding on stairs get stuck as well, and without
-				-- it no route would lead on (it stays expensive).
+				-- it no route would lead on (it stays expensive). Unless it only cuts off a few points (MIN_PART, no
+				-- junctions there either): a junction on a ramp the mesh reaches over its side, the bots fell off
+				-- and tried again for minutes.
 				if not l_Edge.Removed and l_Edge.Penalty >= BLOCKED_PENALTY * REMOVE_AFTER then
 					if s_Remove == nil then
-						s_Remove = _ConnectedWithout(p_Zone.Mesh, p_A, p_B)
+						local s_Mesh = p_Zone.Mesh
+						s_Remove = _ConnectedWithout(s_Mesh, p_A, p_B)
+							or _SizeWithout(s_Mesh, p_A, p_A, p_B, MIN_PART) < MIN_PART
+							or _SizeWithout(s_Mesh, p_B, p_A, p_B, MIN_PART) < MIN_PART
 					end
 					l_Edge.Removed = s_Remove
 				end

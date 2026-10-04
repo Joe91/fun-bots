@@ -6,6 +6,9 @@ The server can also send commands back to the mod (test raycasts, waypoint expor
 
 Only the Python standard library is needed (Python 3.9 or newer). There is nothing to install.
 
+How a new level gets supported (recording, labels, census, mesh, cut) is in `NEW_MAP.md`, the run over all levels in
+`ALL_MAPS.md`.
+
 ```
 mod (ext/Server/Debug)  ── POST /api/ingest (snapshots + events) ──▶  debug-server  ── SSE ──▶  browser
                         ◀──────────── commands (in the answer) ────                ◀── POST /api/command ──
