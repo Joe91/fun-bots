@@ -305,6 +305,8 @@ function Bot:__init(p_Player)
 	self.m_Zone = nil
 	-- Times the bot left the mesh after getting stuck, without reaching a goal or an exit in between.
 	self.m_ZoneGiveUps = 0
+	-- Its own route among similar ones, for a life (NavRoutes:Next).
+	self.m_RouteSeed = math.random() * 1000.0
 end
 
 -- =============================================

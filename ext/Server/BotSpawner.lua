@@ -1007,7 +1007,7 @@ function BotSpawner:_SpawnInBase(p_Bot)
 end
 
 ---@param p_Bot Bot
----@param p_Near Vec3|nil rush: the spawn closest to this position (the vehicle the bot spawns for)
+---@param p_Near Vec3|nil rush, conquest: the spawn closest to this position (the vehicle the bot spawns for)
 function BotSpawner:_TriggerSpawn(p_Bot, p_Near)
 	local s_CurrentGameMode = SharedUtils:GetCurrentGameMode()
 
@@ -1029,7 +1029,7 @@ function BotSpawner:_TriggerSpawn(p_Bot, p_Near)
 		self:_RushSpawn(p_Bot, p_Near)
 	elseif s_CurrentGameMode:match("Conquest") then
 		-- event + target spawn ("ID_H_US_B", "_ID_H_US_HQ", etc.)
-		self:_ConquestSpawn(p_Bot)
+		self:_ConquestSpawn(p_Bot, p_Near)
 	elseif s_CurrentGameMode:match("AirSuperiority") then
 		self:_AirSuperioritySpawn(p_Bot)
 	end
@@ -1124,10 +1124,14 @@ end
 
 ---@param p_Bot Bot
 --TODO: handle spawn-logic here as well (unify it?)
-function BotSpawner:_ConquestSpawn(p_Bot)
+---@param p_Near Vec3|nil the capture point (or HQ) closest to this position (the vehicle the bot spawns for)
+function BotSpawner:_ConquestSpawn(p_Bot, p_Near)
 	local s_Event = ServerPlayerEvent("Spawn", p_Bot.m_Player, true, false, false, false, false, false,
 		p_Bot.m_Player.teamId)
-	local s_BestSpawnPoint = self:_FindAttackedSpawnPoint(p_Bot.m_Player.teamId)
+	local s_BestSpawnPoint = p_Near and self:_FindSpawnPointNear(p_Bot.m_Player.teamId, p_Near)
+	if s_BestSpawnPoint == nil then
+		s_BestSpawnPoint = self:_FindAttackedSpawnPoint(p_Bot.m_Player.teamId)
+	end
 
 	if s_BestSpawnPoint == nil then
 		s_BestSpawnPoint = self:_FindClosestSpawnPoint(p_Bot.m_Player.teamId)
@@ -1139,6 +1143,38 @@ function BotSpawner:_ConquestSpawn(p_Bot)
 	end
 
 	s_BestSpawnPoint:FireEvent(s_Event)
+end
+
+---The spawn of the team's capture point (or HQ) closest to the position.
+---@param p_TeamId TeamId|integer
+---@param p_Position Vec3
+---@return Entity|nil @ServerCharacterSpawnEntity
+function BotSpawner:_FindSpawnPointNear(p_TeamId, p_Position)
+	local s_Best = nil
+	local s_BestDistance = math.huge
+	local s_EntityIterator = EntityManager:GetIterator("ServerCapturePointEntity")
+	local s_Entity = s_EntityIterator:Next()
+
+	while s_Entity do
+		local s_CapturePoint = CapturePointEntity(s_Entity)
+		if s_CapturePoint.team == p_TeamId and s_CapturePoint.isControlled then
+			for l_Index = 1, #s_CapturePoint.bus.entities do
+				local l_Entity = s_CapturePoint.bus.entities[l_Index]
+				if l_Entity:Is('ServerCharacterSpawnEntity') then
+					local s_Team = CharacterSpawnReferenceObjectData(l_Entity.data).team
+					local s_Distance = s_CapturePoint.transform.trans:Distance(p_Position)
+					if (s_Team == p_TeamId or s_Team == 0) and s_Distance < s_BestDistance then
+						s_Best = l_Entity
+						s_BestDistance = s_Distance
+					end
+					break
+				end
+			end
+		end
+		s_Entity = s_EntityIterator:Next()
+	end
+
+	return s_Best
 end
 
 ---@param p_TeamId TeamId|integer
@@ -1414,6 +1450,7 @@ function BotSpawner:_SpawnSingleWayBot(p_Player, p_UseRandomWay, p_ActiveWayInde
 
 			m_BotCreator:SetAttributesToBot(s_Bot)
 			-- Rush: one bot per free vehicle spawns at the spawn of the game next to it, the others in the base of the stage.
+			-- Conquest: now and then at the capture point next to a free vehicle (else at the front).
 			local s_Vehicle = nil
 			if Globals.IsRush then
 				s_Vehicle = g_GameDirector:ReserveVehicle(s_Bot)
@@ -1421,6 +1458,8 @@ function BotSpawner:_SpawnSingleWayBot(p_Player, p_UseRandomWay, p_ActiveWayInde
 					self:_AddBotWithoutPath(s_Bot)
 					return
 				end
+			elseif Globals.IsConquest and m_Utilities:CheckProbability(Registry.BOT_SPAWN.PROBABILITY_SPAWN_FOR_VEHICLE) then
+				s_Vehicle = g_GameDirector:ReserveVehicle(s_Bot)
 			end
 			self:_SelectLoadout(s_Bot)
 			self:_TriggerSpawn(s_Bot, s_Vehicle)

@@ -52,6 +52,8 @@ MOVE_LINK = 5.0           # A link of a kept path to a dropped waypoint moves to
 DETOUR = 1.5              # Zones whose navigation paths connect them only over this many times the way between them...
 ZONE_CROSSING = 20.0      # ...(each zone on the way counted with these metres) get that way as well.
 ROAD_FACTOR = 1.5         # Soldiers walk along a road (a land vehicle path) only where no path leads, so it costs more.
+MIN_LENGTH = 10.0         # Shorter navigation paths lie where two zones touch, the mesh leads there: no junctions, bots
+                          # would walk them back and forth.
 
 Vertex = tuple[int, int]  # path, point
 
@@ -77,6 +79,7 @@ class Result:
     dropped: dict[int, str] = field(default_factory=dict)  # old foot path -> why no navigation path came from it
     duplicates: int = 0
     on_mesh: int = 0  # pieces dropped: all on the mesh
+    short: int = 0  # pieces dropped: shorter than MIN_LENGTH
     old_paths: dict[int, int] = field(default_factory=dict)  # new path -> old path (the kept ones)
     moved_links: int = 0
     lost_links: int = 0
@@ -382,6 +385,9 @@ def build(data: MapData, navzones: dict) -> Result:
         if all(zones.on_mesh(graph.pos[vertex]) for vertex in route.vertices):
             result.on_mesh += 1
             continue
+        if route.length < MIN_LENGTH:
+            result.short += 1
+            continue
         pair = {route.start, route.end}
         if any({other.start, other.end} == pair and _runs_along(graph, route, other) for other in kept):
             result.duplicates += 1
@@ -398,7 +404,7 @@ def build(data: MapData, navzones: dict) -> Result:
                                      graph.length(way)))
     crafted.sort(key=lambda route: route.length)
     for route in crafted:
-        if all(zones.on_mesh(graph.pos[vertex]) for vertex in route.vertices):
+        if all(zones.on_mesh(graph.pos[vertex]) for vertex in route.vertices) or route.length < MIN_LENGTH:
             continue
         if _zone_distance(kept, route.start, route.end) > DETOUR * route.length:
             kept.append(route)
@@ -569,7 +575,8 @@ def summary(result: Result, before: MapData, verbose: bool = False) -> str:
         f"  kept as they are: {len(result.fixed)} (vehicles, actions, ways to vehicles and beacons)",
         f"  navigation paths: {len(result.routes)} (" + ", ".join(f"{count} {origin}" for origin, count
                                                               in sorted(origins.items())) + f"), "
-        f"{result.duplicates} pieces dropped along others, {result.on_mesh} on the mesh",
+        f"{result.duplicates} pieces dropped along others, {result.on_mesh} on the mesh, "
+        f"{result.short} shorter than {MIN_LENGTH:.0f} m",
         f"  cut paths without a navigation path of their own: {len(result.dropped)}",
         f"  links of kept paths moved: {result.moved_links}, lost: {result.lost_links}, "
         f"over connecting paths: {result.connectors}",

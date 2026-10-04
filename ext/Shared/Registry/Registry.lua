@@ -94,7 +94,7 @@ Registry = {
 		-- Do all sight-checks (bot-bot, bot-player, player-revive) with server-side raycasts instead of sending
 		-- them to the clients. No client is needed then: bots also fight each other on an empty server.
 		-- Costs server performance. Toggle ingame with "!serverraycasts on|off" or RCON "funbots.serverRaycasts".
-		USE_SERVER_RAYCASTS = false,
+		USE_SERVER_RAYCASTS = true,
 		-- Max server-raycasts per bot-bot-check (every BOT_BOT_CHECK_INTERVAL).
 		SERVER_RAYCASTS_BOT_BOT = 6,
 		-- Max server-raycasts per real player and update for the bot-player- and revive-checks.
@@ -238,6 +238,9 @@ Registry = {
 		USE_ZONE_NETWORKS = true,
 		-- Drivers of land vehicles also drive the vehicle-networks of the capture points (experimental).
 		USE_VEHICLE_ZONE_NETWORKS = true,
+		-- Share by which a navigation path may seem longer to a bot (random per bot and life): the bots spread over
+		-- the routes to their objective instead of all taking the shortest one. 0: all take the shortest.
+		NAV_ROUTE_SPREAD = 0.5,
 		-- Seconds a bot tries to free a stuck ground-vehicle before they exit it and continue on foot.
 		VEHICLE_STUCK_EXIT_TIME = 30.0,
 		-- Trace delta, a bot uses when they are off a trace path to find his way back to the best path.
@@ -329,6 +332,9 @@ Registry = {
 		DELAY_DIRECT_SPAWN = 6.0,
 		-- Probability of a bot spawning on a member of the same squad.
 		PROBABILITY_SQUADMATE_SPAWN = 20,
+		-- Conquest: probability (%) that a spawning bot takes a free vehicle of its team: it spawns at the capture
+		-- point (or HQ) next to it and goes there. Else at the capture point closest to the front.
+		PROBABILITY_SPAWN_FOR_VEHICLE = 50,
 		-- Probability of a bot spawning in the vehicle of a bot of the same squad.
 		PROBABILITY_SQUADMATE_VEHICLE_SPAWN = 70,
 		-- Probability of a bot spawning on a random teammate
@@ -350,7 +356,7 @@ Registry = {
 		GAME_SPAWN_WITH_ZONES = true,
 		-- Rush: the defenders (always Team2) get this share of the bots of their team (balanced_teams), e.g. to test
 		-- the attack. 1.0 = as many as the attackers.
-		RUSH_DEFENDER_FACTOR = 0.9,
+		RUSH_DEFENDER_FACTOR = 0.7,
 	},
 	-- Debug
 	DEBUG = {
@@ -368,7 +374,7 @@ Registry = {
 		SPIKE_TRACE_MS = 0,
 		-- Streams the game-state to the external debug-server (tools/debug-server) and executes its commands.
 		-- Toggle ingame with "!debugbridge on|off" or RCON "funbots.debugBridge".
-		DEBUG_BRIDGE = false,
+		DEBUG_BRIDGE = true,
 		-- Address of the debug-server.
 		DEBUG_BRIDGE_URL = "http://127.0.0.1:8765",
 		-- Seconds between two snapshots sent to the debug-server.

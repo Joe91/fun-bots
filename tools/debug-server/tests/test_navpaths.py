@@ -140,6 +140,23 @@ class NavpathsTest(unittest.TestCase):
         self.assertIn("Nav", result.data.paths[end[0]].first.data)
         self.assertEqual(connector.objectives, result.data.paths[end[0]].objectives)
 
+    def test_short_piece_between_touching_zones_dropped(self):
+        # Circles just around the squares: the gap between them isn't on the mesh (as where no mesh was measured). The
+        # piece between them is 10 m long here, dropped with a higher limit.
+        zones = _mesh(("a", 0, 0), ("b", 26, 0))
+        for zone in zones["zones"]:
+            zone["radius"] = 12.0
+        data = MapData({1: _path(1, _line(-5, 31, 0), {"Objectives": ["a", "b"]})})
+        self.assertEqual(len(navpaths.build(data, zones).routes), 1)
+        limit = navpaths.MIN_LENGTH
+        navpaths.MIN_LENGTH = 12.0
+        try:
+            result = navpaths.build(data, zones)
+        finally:
+            navpaths.MIN_LENGTH = limit
+        self.assertEqual(result.routes, [])
+        self.assertEqual(result.short, 1)
+
     def test_missing_ends(self):
         data = MapData({1: _path(1, _line(-5, 105, 0))})
         result = navpaths.build(data, self.zones)

@@ -245,12 +245,26 @@ function NavRoutes:_Departures(p_Point, p_Start, p_Except)
 	return s_Result
 end
 
+---How much longer the navigation path seems to the bot (Registry.BOT.NAV_ROUTE_SPREAD): each bot takes its own
+---route, not all of them the shortest one. The same for the path during a life of the bot (p_Seed).
+---@param p_Seed number|nil
+---@param p_PathIndex integer
+---@return number factor 1 .. 1 + NAV_ROUTE_SPREAD
+local function _Spread(p_Seed, p_PathIndex)
+	if p_Seed == nil then
+		return 1.0
+	end
+	local s_Hash = math.sin(p_Seed * 12.9898 + p_PathIndex * 78.233) * 43758.5453
+	return 1.0 + Registry.BOT.NAV_ROUTE_SPREAD * (s_Hash - math.floor(s_Hash))
+end
+
 ---Dijkstra over the ends. p_Departures: ends the bot can leave over, with what it costs to get there. Returns the
 ---cost to the target and the first end of that route.
 ---@param p_Departures { End: NavRouteEnd, Cost: number }[]
 ---@param p_Target NavTarget
+---@param p_Seed? number the bot's (_Spread), nil: the shortest route
 ---@return number, NavRouteEnd|nil
-function NavRoutes:_Search(p_Departures, p_Target)
+function NavRoutes:_Search(p_Departures, p_Target, p_Seed)
 	local s_Mesh = m_NavZones:GetMesh()
 	---@cast s_Mesh -nil
 	local s_Cost = {}
@@ -290,7 +304,7 @@ function NavRoutes:_Search(p_Departures, p_Target)
 			s_Done[s_End] = true
 			local s_Arrival = s_End.Other
 			local s_ArrivalPoint = s_Arrival.Junction.Point
-			local s_Total = s_Cost[s_End] + s_End.Path.Length
+			local s_Total = s_Cost[s_End] + s_End.Path.Length * _Spread(p_Seed, s_End.Path.PathIndex)
 			local s_Found, s_Distance = _TargetIn(p_Target, s_Mesh.Part[s_ArrivalPoint],
 				s_Mesh.Points[s_ArrivalPoint].Position)
 			if s_Found ~= nil then
@@ -321,8 +335,9 @@ end
 ---target on the mesh or no route leads there.
 ---@param p_Point integer
 ---@param p_Objective string
+---@param p_Seed? number the bot's: its own route among similar ones (_Spread)
 ---@return NavStep|nil
-function NavRoutes:Next(p_Point, p_Objective)
+function NavRoutes:Next(p_Point, p_Objective, p_Seed)
 	local s_Target = self:Target(p_Objective)
 	local s_Mesh = m_NavZones:GetMesh()
 	if s_Target == nil or s_Mesh == nil or s_Mesh.Points[p_Point] == nil then
@@ -337,7 +352,7 @@ function NavRoutes:Next(p_Point, p_Objective)
 		---@cast s_Junctions -nil
 		return { Exit = s_Junctions[s_Found] }
 	end
-	local _, s_First = self:_Search(self:_Departures(p_Point, 0.0, nil), s_Target)
+	local _, s_First = self:_Search(self:_Departures(p_Point, 0.0, nil), s_Target, p_Seed)
 	if s_First == nil then
 		return nil
 	end

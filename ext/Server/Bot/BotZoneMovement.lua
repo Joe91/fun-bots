@@ -218,7 +218,7 @@ function Bot:_ZoneDecide()
 		return
 	end
 
-	local s_Next = m_NavRoutes:Next(s_State.Point, self._Objective)
+	local s_Next = m_NavRoutes:Next(s_State.Point, self._Objective, self.m_RouteSeed)
 	if s_Next ~= nil and s_Next.Zone ~= nil then
 		s_State.Zone = s_Next.Zone
 		-- The MCOM is armed and disarmed at the action-node of the path "mcom N interact" (a junction of the mesh).

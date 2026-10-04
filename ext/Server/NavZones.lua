@@ -36,6 +36,8 @@ local FLOOR_HEIGHT = 1.5
 local BLOCKED_PENALTY = 50.0
 -- Given up this many times, a connection is removed (until the level ends).
 local REMOVE_AFTER = 3
+-- Metres above or below an MCOM the bots walk around it (RandomPoint).
+local MCOM_FLOOR = 3.0
 
 ---@class NavZonePoint
 ---@field Index integer
@@ -697,10 +699,18 @@ end
 function NavZones:RandomPoint(p_Zone, p_From, p_Cover)
 	local s_Part = p_From and p_Zone.Part[p_From]
 	local s_Candidates = {}
-	for l_Index = 1, #p_Zone.Inside do
-		local l_Point = p_Zone.Inside[l_Index]
-		if s_Part == nil or p_Zone.Part[l_Point] == s_Part then
-			s_Candidates[#s_Candidates + 1] = l_Point
+	-- An MCOM: on its floor (the zone reaches to floors far below or above, a long way round).
+	local s_Floor = p_Zone.Kind == 'mcom' and p_Zone.Center.y or nil
+	for _, l_SameFloor in ipairs(s_Floor and { true, false } or { false }) do
+		for l_Index = 1, #p_Zone.Inside do
+			local l_Point = p_Zone.Inside[l_Index]
+			if (s_Part == nil or p_Zone.Part[l_Point] == s_Part)
+				and (not l_SameFloor or math.abs(p_Zone.Points[l_Point].Position.y - s_Floor) <= MCOM_FLOOR) then
+				s_Candidates[#s_Candidates + 1] = l_Point
+			end
+		end
+		if #s_Candidates > 0 then
+			break
 		end
 	end
 	if #s_Candidates == 0 then
