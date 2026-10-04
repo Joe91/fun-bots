@@ -207,6 +207,9 @@ function Bot:__init(p_Player)
 	self._ActiveDelay = 0.0
 	self._VehicleMoveWhileShooting = false
 	self._MoveWhileShooting = false
+	-- Rush: the attacker keeps going to its MCOM while shooting (StateAttacking, Bot:UpdatePushMovement).
+	self._PushWhileShooting = false
+	self._Pushing = false
 	self._FireCycleModifier = 1.0
 
 	-- Vehicle stuff.

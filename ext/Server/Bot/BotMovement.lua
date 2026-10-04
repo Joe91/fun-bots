@@ -1267,6 +1267,70 @@ function Bot:UpdateShootMovement(p_DeltaTime)
 	end
 end
 
+---Rush: whether the attacker keeps going to its MCOM while shooting: by chance (decided now and then in StateAttacking),
+---and always close to the MCOM unless the enemy is close as well.
+---@return boolean
+function Bot:ShouldPushWhileShooting()
+	if not Globals.IsRush or self.m_Player.teamId ~= TeamId.Team1 or self.m_KnifeMode or self.m_Player.soldier == nil
+		or self._Objective:lower():sub(1, 4) ~= 'mcom' then
+		return false
+	end
+	local s_Weapon = self.m_ActiveWeapon
+	if s_Weapon == nil or s_Weapon.type == WeaponTypes.Sniper or s_Weapon.type == WeaponTypes.MissileAir or
+		s_Weapon.type == WeaponTypes.MissileLand then
+		return false
+	end
+	if self._PushWhileShooting then
+		return true
+	end
+	return self._DistanceToPlayer > Registry.BOT.RUSH_PUSH_MIN_ENEMY_DISTANCE and
+		g_GameDirector:_GetDistanceFromObjective(self._Objective, self.m_Player.soldier.worldTransform.trans) <
+		Registry.BOT.RUSH_PUSH_OBJECTIVE_DISTANCE
+end
+
+---While shooting: on along the path or the mesh (as Bot:UpdateNormalMovement), aiming at the enemy. Walks towards the
+---next target with throttle and strafe, relative to where the bot aims.
+---@param p_DeltaTime number
+function Bot:UpdatePushMovement(p_DeltaTime)
+	-- The bot stays on its way: no way back to it after the fight (only after shooting without pushing).
+	if self._Pushing then
+		self._ShootWayPoints = {}
+	end
+	-- The normal movement turns the bot to the target (looking around in a zone, obstacles): it aims at the enemy.
+	local s_Yaw = self._TargetYaw
+	local s_Pitch = self._TargetPitch
+	self:UpdateNormalMovement(p_DeltaTime)
+	self._TargetYaw = s_Yaw
+	self._TargetPitch = s_Pitch
+
+	local s_Soldier = self.m_Player.soldier
+	local s_Target = self._TargetPoint
+	self:_SetInput(EntryInputActionEnum.EIASprint, 0)
+	if s_Soldier == nil or s_Target == nil or self.m_ActiveSpeedValue == BotMoveSpeeds.NoMovement or
+		self._ActiveAction == BotActionFlags.OtherActionActive then
+		self:_SetInput(EntryInputActionEnum.EIAThrottle, 0)
+		self:_SetInput(EntryInputActionEnum.EIAStrafe, 0)
+		return
+	end
+
+	local s_Pose = CharacterPoseType.CharacterPoseType_Stand
+	if self.m_ActiveSpeedValue == BotMoveSpeeds.SlowCrouch or self.m_ActiveSpeedValue == BotMoveSpeeds.VerySlowProne then
+		s_Pose = CharacterPoseType.CharacterPoseType_Crouch
+	end
+	if s_Soldier.pose ~= s_Pose then
+		s_Soldier:SetPose(s_Pose, true, true)
+	end
+
+	-- Yaw grows clockwise (seen from above), strafe is positive to the right.
+	local s_Position = s_Soldier.worldTransform.trans
+	local s_Atan = math.atan(s_Target.Position.z - s_Position.z, s_Target.Position.x - s_Position.x)
+	local s_MoveYaw = (s_Atan > math.pi / 2) and (s_Atan - math.pi / 2) or (s_Atan + 3 * math.pi / 2)
+	local s_Delta = s_MoveYaw - self.m_Input.authoritativeAimingYaw
+	local s_Speed = Config.SpeedFactor * Config.SpeedFactorAttack
+	self:_SetInput(EntryInputActionEnum.EIAThrottle, math.cos(s_Delta) * s_Speed)
+	self:_SetInput(EntryInputActionEnum.EIAStrafe, math.sin(s_Delta) * s_Speed)
+end
+
 function Bot:UpdateSpeedOfMovement(p_InAttackMode)
 	-- Additional movement.
 	local s_Soldier = self.m_Player.soldier

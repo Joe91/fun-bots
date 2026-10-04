@@ -300,7 +300,14 @@ Registry = {
 		-- Distance to closest objective on which passengers should exit vehicles
 		PASSENGER_EXIT_DISTANCE = 50,
 		-- Probability to stop in while shooting
-		PROBABILITY_STOP_TO_SHOOT = 35
+		PROBABILITY_STOP_TO_SHOOT = 35,
+		-- Rush: probability (%) that an attacker keeps going to its MCOM while shooting, instead of fighting where they
+		-- are. Else the respawned defenders are back before the attackers reach the MCOM.
+		RUSH_PUSH_PROBABILITY = 50,
+		-- Rush: closer than this (metres) to its MCOM an attacker always keeps going while shooting, unless the enemy
+		-- is closer than RUSH_PUSH_MIN_ENEMY_DISTANCE.
+		RUSH_PUSH_OBJECTIVE_DISTANCE = 40.0,
+		RUSH_PUSH_MIN_ENEMY_DISTANCE = 10.0,
 	},
 	-- Bot team balancing (only in keep_playercount - spawn-mode)
 	BOT_TEAM_BALANCING = {

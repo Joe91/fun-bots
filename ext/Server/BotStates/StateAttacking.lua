@@ -24,10 +24,12 @@ end
 function StateAttacking:Update(p_Bot, p_DeltaTime)
 	-- transitions
 	if p_Bot.m_Player.soldier == nil then
+		p_Bot._Pushing = false
 		p_Bot:SetState(g_BotStates.States.Idle)
 		return
 	end
 	if p_Bot._ShootPlayer == nil then
+		p_Bot._Pushing = false
 		p_Bot:SetState(g_BotStates.States.Moving)
 		return
 	end
@@ -40,6 +42,7 @@ function StateAttacking:Update(p_Bot, p_DeltaTime)
 		else
 			p_Bot._MoveWhileShooting = true
 		end
+		p_Bot._PushWhileShooting = m_Utilities:CheckProbability(Registry.BOT.RUSH_PUSH_PROBABILITY)
 	end
 	-- update state-timer
 	p_Bot.m_StateTimer = p_Bot.m_StateTimer - p_DeltaTime
@@ -52,17 +55,24 @@ function StateAttacking:Update(p_Bot, p_DeltaTime)
 
 	-- TODO: split revive, repari, c4 and so on
 	p_Bot:UpdateAttacking(p_DeltaTime)
+	local s_Pushing = false
 	if p_Bot._ActiveAction == BotActionFlags.ReviveActive or
 		p_Bot._ActiveAction == BotActionFlags.EnterVehicleActive or
 		p_Bot._ActiveAction == BotActionFlags.RepairActive or
 		p_Bot._ActiveAction == BotActionFlags.C4Active then
 		p_Bot:UpdateMovementSprintToTarget(p_DeltaTime)
+	elseif p_Bot._ShootPlayer ~= nil and p_Bot:ShouldPushWhileShooting() then
+		-- Rush: on to the MCOM while shooting.
+		p_Bot:UpdatePushMovement(p_DeltaTime)
+		s_Pushing = true
 	else
 		p_Bot:UpdateShootMovement(p_DeltaTime)
 	end
+	p_Bot._Pushing = s_Pushing
 
-
-	p_Bot:UpdateSpeedOfMovement(true)
+	if not s_Pushing then
+		p_Bot:UpdateSpeedOfMovement(true)
+	end
 	p_Bot:_UpdateInputs(p_DeltaTime)
 end
 
