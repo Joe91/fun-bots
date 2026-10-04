@@ -992,13 +992,27 @@ function BotSpawner:_SpawnInBase(p_Bot)
 	if s_Zone == nil or #s_Zone.Inside == 0 then
 		return false
 	end
+	-- On the part of the mesh with most of the base: not on a roof or in a corner the mesh doesn't lead out of.
+	local s_Count = {}
+	local s_Main = nil
+	for l_Index = 1, #s_Zone.Inside do
+		local l_Part = s_Zone.Part[s_Zone.Inside[l_Index]]
+		s_Count[l_Part] = (s_Count[l_Part] or 0) + 1
+		if s_Main == nil or s_Count[l_Part] > s_Count[s_Main] then
+			s_Main = l_Part
+		end
+	end
 	-- The most open of a few random points: not right at a wall.
 	local s_Point = nil
-	for _ = 1, 5 do
+	for _ = 1, 10 do
 		local l_Point = s_Zone.Inside[MathUtils:GetRandomInt(1, #s_Zone.Inside)]
-		if s_Point == nil or s_Zone.Points[l_Point].Clearance > s_Zone.Points[s_Point].Clearance then
+		if s_Zone.Part[l_Point] == s_Main
+			and (s_Point == nil or s_Zone.Points[l_Point].Clearance > s_Zone.Points[s_Point].Clearance) then
 			s_Point = l_Point
 		end
+	end
+	if s_Point == nil then
+		return false
 	end
 	local s_Transform = LinearTransform()
 	s_Transform.trans = s_Zone.Points[s_Point].Position:Clone()

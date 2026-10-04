@@ -223,6 +223,7 @@ function GameDirector:OnEngineUpdate(p_DeltaTime)
 	if Globals.IsRush then
 		self:_UpdateTimersOfMcoms(self.m_UpdateTimer)
 	end
+	self:_RefreshVehicleObjectives()
 
 	self.m_UpdateTimer = 0
 
@@ -2574,6 +2575,54 @@ function GameDirector:_SetVehicleObjectiveState(p_Position, p_Value)
 	end
 
 	return s_ClosestVehicleEnterObjective
+end
+
+-- Metres between a vehicle and the start or end of its way that count as "the vehicle is there".
+local VEHICLE_AT_PATH = 10.0
+
+---The ways to vehicles lead somewhere only while a vehicle with a free seat stands at their end (also while its driver
+---waits for passengers). Switched on and off by the events as well (_SetVehicleObjectiveState), but a vehicle also
+---leaves without one (driven off after the wait for passengers was aborted, taken by the enemy, abandoned): bots got
+---sent to empty places, failed to enter and walked back and forth.
+function GameDirector:_RefreshVehicleObjectives()
+	local s_Free = {}
+	local s_Iterator = EntityManager:GetIterator('ServerVehicleEntity')
+	local s_Entity = s_Iterator:Next()
+	while s_Entity ~= nil do
+		local s_Vehicle = ControllableEntity(s_Entity)
+		for l_Seat = 0, s_Vehicle.entryCount - 1 do
+			if s_Vehicle:GetPlayerInEntry(l_Seat) == nil then
+				s_Free[#s_Free + 1] = s_Vehicle.transform.trans
+				break
+			end
+		end
+		s_Entity = s_Iterator:Next()
+	end
+
+	local s_Known = m_NodeCollection:GetKnownObjectives()
+	for l_Index = 1, #self.m_AllObjectives do
+		local l_Objective = self.m_AllObjectives[l_Index]
+		if l_Objective.isEnterVehiclePath and not l_Objective.isSpawnPath and not l_Objective.destroyed then
+			local s_There = false
+			local s_Paths = s_Known[l_Objective.name] or {}
+			for l_PathIndex = 1, #s_Paths do
+				local s_Waypoints = m_NodeCollection:Get(nil, s_Paths[l_PathIndex]) or {}
+				local s_First = s_Waypoints[1]
+				local s_Last = s_Waypoints[#s_Waypoints]
+				for l_Free = 1, #s_Free do
+					if (s_First ~= nil and s_First.Position:Distance(s_Free[l_Free]) < VEHICLE_AT_PATH)
+						or (s_Last ~= nil and s_Last.Position:Distance(s_Free[l_Free]) < VEHICLE_AT_PATH) then
+						s_There = true
+						break
+					end
+				end
+				if s_There then
+					break
+				end
+			end
+			l_Objective.active = s_There
+		end
+	end
 end
 
 ---@param p_Name string|nil

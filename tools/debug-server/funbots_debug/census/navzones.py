@@ -67,9 +67,13 @@ class Profile:
     wall_clearance: float   # Ways over cells with less clearance cost WALL_COST times as much.
     attach_range: float     # A waypoint is attached to a surface of the network up to this far away.
     attach_distance: float  # Junctions more than this far (walking) from their network-point are left out.
+    # Without a surface there (stairs down into a metro the census didn't measure): the end of a path is attached
+    # straight to the closest point on its floor up to this far away (0: never).
+    attach_fallback: float = 0.0
 
 
-SOLDIER = Profile(SPACING, MIN_CLEARANCE, 0.0, MIN_CLEARANCE, 1.0, 20.0)
+SOLDIER = Profile(SPACING, MIN_CLEARANCE, 0.0, MIN_CLEARANCE, 1.0, 20.0, 6.0)
+FALLBACK_HEIGHT = 1.5     # The floor of a waypoint for attach_fallback: points this far above or below it.
 VEHICLE = Profile(10.0, VEHICLE_CLEARANCE, VEHICLE_CLEARANCE, VEHICLE_CLEARANCE, 6.0, 30.0)
 
 # Flags of a point.
@@ -417,7 +421,13 @@ def _network(grid: _Area, clearance: dict[Surface, float], allowed: set[Surface]
             if key is None or key not in owner:
                 key = _nearest_owned(grid, owner, pos, profile.attach_range)
             if key is None:
-                unattached += 1
+                fallback = _closest_point(grid, points, pos, profile.attach_fallback) \
+                    if point in (1, count) and profile.attach_fallback > 0 else None
+                if fallback is None:
+                    unattached += 1
+                else:
+                    attach.append([path, point, fallback, round(math.dist(grid.pos(points[fallback]), pos), 1),
+                                   _round(pos), []])
                 continue
             # The way from the network-point to the waypoint, around walls (the action-node of an MCOM in a room).
             network = owner[key]
@@ -444,6 +454,19 @@ def _network(grid: _Area, clearance: dict[Surface, float], allowed: set[Surface]
             "unattached": unattached,
         },
     }
+
+
+def _closest_point(grid: _Area, points: list[Surface], pos: list[float], distance: float) -> int | None:
+    """The point of the network closest to the position on its floor (FALLBACK_HEIGHT), up to the distance."""
+    best = None
+    for index, key in enumerate(points):
+        x, y, z = grid.pos(key)
+        if abs(y - pos[1]) > FALLBACK_HEIGHT:
+            continue
+        horizontal = math.hypot(x - pos[0], z - pos[2])
+        if horizontal <= distance and (best is None or horizontal < best[0]):
+            best = (horizontal, index)
+    return best[1] if best else None
 
 
 def _nearest_owned(grid: _Area, owner: dict[Surface, int], pos: list[float], distance: float) -> Surface | None:

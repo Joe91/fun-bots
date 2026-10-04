@@ -88,6 +88,8 @@ function NavZones:Clear()
 	self._Count = 0
 	-- Counts up whenever the mesh or its junctions change (NavRoutes builds its graph anew then).
 	self._Version = (self._Version or 0) + 1
+	-- Counts up whenever connections are removed as well (NavRoutes measures the ways anew then).
+	self._Topology = (self._Topology or 0) + 1
 end
 
 -- =============================================
@@ -385,6 +387,11 @@ function NavZones:GetVersion()
 	return self._Version
 end
 
+---@return integer counts up when the mesh changes or a connection is removed (BlockEdge)
+function NavZones:GetTopology()
+	return self._Topology
+end
+
 ---@return integer
 function NavZones:GetCount()
 	return self._Count
@@ -575,6 +582,7 @@ function NavZones:BlockEdge(p_Zone, p_A, p_B)
 	end
 	local s_Removed = s_Remove == true
 	if s_Removed then
+		self._Topology = self._Topology + 1
 		_ComputeParts(p_Zone.Mesh)
 		m_Logger:Write('zone ' .. p_Zone.Name .. ': connection ' .. p_A .. '-' .. p_B .. ' removed')
 	end

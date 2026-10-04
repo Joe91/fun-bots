@@ -202,6 +202,23 @@ class NavzonesTest(unittest.TestCase):
                     t = (10.0 - p[0]) / (q[0] - p[0])
                     self.assertTrue(4.0 <= p[2] + t * (q[2] - p[2]) <= 6.0)
 
+    def test_path_end_without_surface_attached_to_closest_point(self):
+        # The ends of path 4 lie in a gap the census has no surfaces in (stairs down into a metro), 2.5 m from the
+        # first room: attached straight to its closest point there.
+        from funbots_debug.census import navzones
+        area = _rooms_area(False)
+        for cells in area["cells"]:
+            for column in range(20, 31):
+                cells[column] = False
+        census = {"paths": "MP_001_ConquestLarge0", "areas": [area], "entities": {},
+                  "nodes": {"1": _nodes_event(1, [[2.0, 0.0, 5.0], [3.0, 0.0, 5.0]])}}
+        zone = navzones.build(census, attach={4: {"points": [[12.5, 0.0, 5.0], [12.5, 0.0, 7.0]], "vehicles": [],
+                                                   "objectives": []}})
+        ends = {(path, point): (network, corners) for path, point, network, _, _, corners in zone["attach"]}
+        self.assertIn((4, 1), ends)
+        self.assertEqual(ends[(4, 1)][1], [])
+        self.assertLess(zone["points"][ends[(4, 1)][0]][0], 10.0)
+
     def test_wall_separates_rooms(self):
         zone = self._build(door=False)
         self.assertEqual(zone["stats"]["parts"], 2)

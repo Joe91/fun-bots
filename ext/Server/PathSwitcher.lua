@@ -160,8 +160,8 @@ function PathSwitcher:GetNewPath(p_Bot, p_BotId, p_Point, p_Objective, p_InVehic
 	p_Objective = p_Objective or ''
 
 	-- Bots always leave a path of a base alone, where they spawn, a path out of a base at its end (else they walk it
-	-- back to the base), the path of a destroyed MCOM, and the way to a vehicle that isn't their objective (of the other
-	-- team, or gone). If the path has no regular way out, over any other path (see below).
+	-- back to the base), the path of a destroyed MCOM, the way to a vehicle that isn't their objective (of the other
+	-- team, or gone) and the way to a beacon. If the path has no regular way out, over any other path (see below).
 	local s_LeavePath = false
 	if s_OnBasePath then
 		s_LeavePath = #s_CurrentPathFirst.Data.Objectives == 1 or p_Point.PointIndex == 1
@@ -173,6 +173,8 @@ function PathSwitcher:GetNewPath(p_Bot, p_BotId, p_Point, p_Objective, p_InVehic
 		s_LeavePath = m_GameDirector:IsDestroyedPath(s_Objectives) or (#s_Objectives == 1
 			and s_Objectives[1] ~= p_Objective and m_GameDirector:IsVehicleEnterPath(s_Objectives[1])
 			and not m_GameDirector:UseVehicle(p_TeamId, s_Objectives[1]))
+			-- The way to a beacon is a dead end (bots that spawned at the beacon start on it).
+			or (#s_Objectives == 1 and s_Objectives[1] ~= p_Objective and m_GameDirector:IsBeaconPath(s_Objectives[1]))
 	end
 	local s_Exits = {}
 	local s_BestExitScore = -1

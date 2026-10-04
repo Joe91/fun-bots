@@ -8,6 +8,8 @@ local m_PathSwitcher = require('PathSwitcher')
 local m_NodeCollection = require('NodeCollection')
 ---@type NavRoutes
 local m_NavRoutes = require('NavRoutes')
+---@type DebugBridge
+local m_DebugBridge = require('Debug/DebugBridge')
 
 
 -- >>> SMART PATH OFFSET
@@ -247,6 +249,14 @@ function Bot:_ExecuteActionIfNeeded(p_Point, p_DeltaTime)
 						end
 						self._LastActionId = p_Point.Index
 						return true
+					end
+					if m_DebugBridge.m_Enabled then
+						m_DebugBridge:Event('vehicle_enter_failed', {
+							bot = self.m_Id,
+							code = s_RetCode,
+							path = p_Point.PathIndex,
+							pos = DebugBridge.Vec(self.m_Player.soldier.worldTransform.trans),
+						})
 					end
 				end
 				self:_ResetActionFlag(BotActionFlags.OtherActionActive)

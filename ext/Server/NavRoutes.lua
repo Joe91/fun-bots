@@ -66,6 +66,9 @@ function NavRoutes:Clear()
 	self._Penalty = {}
 	---objective -> its target (false: none), see Target
 	self._Targets = {}
+	---target -> the metres over the mesh from each point to it (_Field)
+	---@type table<NavTarget, { Topology: integer, Cost: table<integer, number> }>
+	self._Fields = {}
 end
 
 ---Builds the graph anew when the mesh or the waypoints changed (NavZones:GetVersion).
@@ -221,6 +224,83 @@ local function _TargetIn(p_Target, p_Part, p_Position)
 	return s_Best, s_BestDistance
 end
 
+---The metres over the mesh from every point to the target (the closest of its points), nil where the mesh doesn't
+---lead there. Straight lines would make a path whose end is close to the target as the crow flies look short (across
+---a river, a floor above). Measured once per target, anew when connections were removed.
+---@param p_Target NavTarget
+---@return table<integer, number>
+function NavRoutes:_Field(p_Target)
+	local s_Topology = m_NavZones:GetTopology()
+	local s_Known = self._Fields[p_Target]
+	if s_Known ~= nil and s_Known.Topology == s_Topology then
+		return s_Known.Cost
+	end
+	local s_Mesh = m_NavZones:GetMesh()
+	---@cast s_Mesh -nil
+	local s_Cost = {}
+	-- Dijkstra from all points of the target, binary heap of { cost, point }.
+	local s_Heap = {}
+	local function _Push(p_Entry)
+		s_Heap[#s_Heap + 1] = p_Entry
+		local s_Index = #s_Heap
+		while s_Index > 1 do
+			local s_Parent = s_Index // 2
+			if s_Heap[s_Parent][1] <= s_Heap[s_Index][1] then
+				break
+			end
+			s_Heap[s_Parent], s_Heap[s_Index] = s_Heap[s_Index], s_Heap[s_Parent]
+			s_Index = s_Parent
+		end
+	end
+	local function _Pop()
+		local s_Top = s_Heap[1]
+		local s_Last = table.remove(s_Heap)
+		if #s_Heap > 0 then
+			s_Heap[1] = s_Last
+			local s_Index = 1
+			while true do
+				local s_Smallest = s_Index
+				local s_Left = 2 * s_Index
+				if s_Left <= #s_Heap and s_Heap[s_Left][1] < s_Heap[s_Smallest][1] then
+					s_Smallest = s_Left
+				end
+				if s_Left + 1 <= #s_Heap and s_Heap[s_Left + 1][1] < s_Heap[s_Smallest][1] then
+					s_Smallest = s_Left + 1
+				end
+				if s_Smallest == s_Index then
+					break
+				end
+				s_Heap[s_Smallest], s_Heap[s_Index] = s_Heap[s_Index], s_Heap[s_Smallest]
+				s_Index = s_Smallest
+			end
+		end
+		return s_Top
+	end
+
+	for l_Index = 1, #p_Target.Points do
+		local l_Point = p_Target.Points[l_Index]
+		s_Cost[l_Point] = 0.0
+		_Push({ 0.0, l_Point })
+	end
+	while #s_Heap > 0 do
+		local s_Entry = _Pop()
+		local s_Current = s_Entry[2]
+		if s_Entry[1] <= s_Cost[s_Current] then
+			local s_Neighbours = s_Mesh.Neighbours[s_Current]
+			for l_Index = 1, #s_Neighbours do
+				local l_Edge = s_Neighbours[l_Index]
+				local s_Next = s_Entry[1] + l_Edge.Cost
+				if not l_Edge.Removed and s_Next < (s_Cost[l_Edge.To] or math.huge) then
+					s_Cost[l_Edge.To] = s_Next
+					_Push({ s_Next, l_Edge.To })
+				end
+			end
+		end
+	end
+	self._Fields[p_Target] = { Topology = s_Topology, Cost = s_Cost }
+	return s_Cost
+end
+
 ---The ends of navigation paths the bot can walk to from the point over the mesh (same part), with the cost.
 ---@param p_Point integer
 ---@param p_Start number cost so far
@@ -265,8 +345,7 @@ end
 ---@param p_Seed? number the bot's (_Spread), nil: the shortest route
 ---@return number, NavRouteEnd|nil
 function NavRoutes:_Search(p_Departures, p_Target, p_Seed)
-	local s_Mesh = m_NavZones:GetMesh()
-	---@cast s_Mesh -nil
+	local s_Field = self:_Field(p_Target)
 	local s_Cost = {}
 	local s_First = {}
 	local s_Done = {}
@@ -305,9 +384,8 @@ function NavRoutes:_Search(p_Departures, p_Target, p_Seed)
 			local s_Arrival = s_End.Other
 			local s_ArrivalPoint = s_Arrival.Junction.Point
 			local s_Total = s_Cost[s_End] + s_End.Path.Length * _Spread(p_Seed, s_End.Path.PathIndex)
-			local s_Found, s_Distance = _TargetIn(p_Target, s_Mesh.Part[s_ArrivalPoint],
-				s_Mesh.Points[s_ArrivalPoint].Position)
-			if s_Found ~= nil then
+			local s_Distance = s_Field[s_ArrivalPoint]
+			if s_Distance ~= nil then
 				if s_Total + s_Distance < s_Best then
 					s_Best = s_Total + s_Distance
 					s_BestFirst = s_First[s_End]
@@ -345,11 +423,11 @@ function NavRoutes:Next(p_Point, p_Objective, p_Seed)
 	end
 	local s_Found = _TargetIn(s_Target, s_Mesh.Part[p_Point], s_Mesh.Points[p_Point].Position)
 	local s_Cost, s_First = self:_Search(self:_Departures(p_Point, 0.0, nil), s_Target, p_Seed)
-	if s_Found ~= nil then
-		-- The mesh leads there, maybe only a long way round: a navigation path may be shorter (its cost has straight
-		-- lines over the mesh at both ends: only clearly shorter).
-		local s_Route, s_MeshCost = m_NavZones:Route(s_Mesh, p_Point, s_Found, p_Seed)
-		if s_First == nil or s_Route == nil or s_MeshCost <= s_Cost + MESH_CROSSING then
+	local s_MeshCost = self:_Field(s_Target)[p_Point]
+	if s_Found ~= nil and s_MeshCost ~= nil then
+		-- The mesh leads there, maybe only a long way round: a navigation path may be shorter (only clearly: the way
+		-- to its start is a straight line). Each bot weighs the mesh its own way (_Spread), some take the path.
+		if s_First == nil or s_MeshCost * _Spread(p_Seed, 0) <= s_Cost + MESH_CROSSING then
 			if s_Target.Zone ~= nil then
 				return { Zone = s_Target.Zone, Point = s_Found }
 			end
@@ -369,11 +447,9 @@ end
 ---@param p_Target NavTarget
 ---@return number
 function NavRoutes:_FromArrival(p_Arrival, p_Target)
-	local s_Mesh = m_NavZones:GetMesh()
-	---@cast s_Mesh -nil
 	local s_Point = p_Arrival.Junction.Point
-	local s_Found, s_Distance = _TargetIn(p_Target, s_Mesh.Part[s_Point], s_Mesh.Points[s_Point].Position)
-	if s_Found ~= nil then
+	local s_Distance = self:_Field(p_Target)[s_Point]
+	if s_Distance ~= nil then
 		return s_Distance
 	end
 	local s_Cost = self:_Search(self:_Departures(s_Point, MESH_CROSSING, p_Arrival), p_Target)
