@@ -9,6 +9,7 @@
     python -m funbots_debug.census navzones census/*.json.gz        # walking networks of the zones (navzones.py)
     python -m funbots_debug.census navpaths MP_012_RushLarge0 [--write] [--db ../../mod.db]
                                                                      # cut the paths at the zones (navpaths.py)
+    python -m funbots_debug.census check MP_Subway_RushLarge0        # rays of the game over the mesh (check.py)
 
 The debug-server saves every census into its census-folder (--census, default tools/debug-server/census). Switching
 levels needs the RCON-connection of the debug-server. Afterwards the map-list of the game-server is loaded again
@@ -32,7 +33,7 @@ import urllib.request
 from pathlib import Path
 
 from ..paths.mapfile import MapData
-from . import navpaths, navzones
+from . import check, navpaths, navzones
 from .report import build_report
 from .store import load
 
@@ -276,6 +277,10 @@ def command_run(options) -> int:
         args["parts"] = options.parts.split(",")
     if options.area_step:
         args["areaStep"] = options.area_step
+    if options.area_layers:
+        args["areaLayers"] = options.area_layers
+    if options.detail_mesh:
+        args["detailMesh"] = True
 
     switched = False
     failed = []
@@ -364,12 +369,51 @@ def command_report(options) -> int:
 
 def command_navzones(options) -> int:
     for file in options.files:
-        data = navzones.build(load(file))
+        data = navzones.build(load(file), checks=check.load_checks(file))
         target = file.with_name(file.name.replace(".json.gz", ".navzones.json"))
         navzones.save(data, target)
         print(navzones.summary(data))
         print(f"  saved {target}")
     return 0
+
+
+def command_check(options) -> int:
+    """Rays of the game over the mesh of each level (check.py): switches to the level, casts them, saves
+    census/<map>.checks.json. The mesh is left as it is: cut the level again (navpaths) to leave the findings out."""
+    server = Server(options.server)
+    failed = []
+    for name in options.maps:
+        name = Path(name).name.split(".")[0]
+        level, _, mode = name.rpartition("_")
+        zones_file = options.navzones / f"{name}.json"
+        census_file = options.census / f"{name}.json.gz"
+        if not zones_file.is_file():
+            print(f"{name}: {zones_file} is missing", file=sys.stderr)
+            failed.append(name)
+            continue
+        print(name, flush=True)
+        try:
+            switch_level(server, level, mode)
+            networks = json.loads(zones_file.read_text(encoding="utf-8"))
+            rays, meaning = check.rays(networks)
+            hits: list[float] = []
+            for start in range(0, len(rays), check.CHUNK):
+                answer = server.request("/api/command?wait=120", {"type": "rays", "args": {
+                    "rays": rays[start:start + check.CHUNK], "flags": check.RAY_FLAGS}}, timeout=130.0)
+                result = answer.get("result") or {}
+                if "hits" not in result:
+                    raise RuntimeError(f"rays: {answer.get('error') or result.get('error') or answer}")
+                hits += result["hits"]
+            found = check.evaluate(networks, hits, meaning)
+            print(check.summary(networks, found))
+            merged = check.merge(check.load_checks(census_file), found)
+            target = check.checks_file(census_file)
+            target.write_text(json.dumps(merged, separators=(",", ":")), encoding="utf-8")
+            print(f"  saved {target}")
+        except (RuntimeError, OSError) as error:
+            print(f"  {name} failed: {error}", file=sys.stderr)
+            failed.append(name)
+    return 1 if failed else 0
 
 
 def command_navpaths(options) -> int:
@@ -392,7 +436,11 @@ def command_navpaths(options) -> int:
         if not options.write:
             continue
         # The networks again, with the junctions on the new paths.
-        networks = navzones.build(load(census_file), attach=navpaths.attach_nodes(result.data))
+        networks = navzones.build(load(census_file), attach=navpaths.attach_nodes(result.data),
+                                  checks=check.load_checks(census_file))
+        if networks.get("stats", {}).get("checkRemovedPoints") is not None:
+            print(f"  check: {networks['stats']['checkRemovedEdges']} connections and "
+                  f"{networks['stats']['checkRemovedPoints']} points left out")
         networks["map"] = name
         result.data.save(map_file)
         navzones.save(networks, zones_file)
@@ -426,6 +474,9 @@ def main() -> int:
     run.add_argument("--budget-ms", type=float, default=20.0,
                      help="ms of raycasts per update of the server (100k raycasts/s at most, from about 20 ms)")
     run.add_argument("--area-step", type=float, help="cell-size of the grids around the objectives (default 0.5)")
+    run.add_argument("--area-layers", type=int, help="floors per cell of the grids (default 4)")
+    run.add_argument("--detail-mesh", action="store_true",
+                     help="the rays also hit the detail-meshes of the level (walls, ceilings, floors made of them)")
     run.add_argument("--timeout", type=float, default=3600.0, help="seconds per level")
     run.add_argument("--warmup", type=float, default=0.0, metavar="SECONDS",
                      help="let the bots play this long before each census (the zone probe measures the capture zones)")
@@ -444,6 +495,13 @@ def main() -> int:
     zones = commands.add_parser("navzones", help="walking networks of the zones of saved censuses")
     zones.add_argument("files", nargs="+", type=Path)
     zones.set_defaults(handler=command_navzones)
+
+    checks = commands.add_parser("check", help="rays of the game over the mesh: walls and ceilings the census missed")
+    checks.add_argument("maps", nargs="+", help="<Level>_<Mode>, e.g. MP_Subway_RushLarge0")
+    checks.add_argument("--server", default="http://127.0.0.1:8765", help="address of the debug-server")
+    checks.add_argument("--navzones", type=Path, default=NAVZONES, help="the networks (navzones/<map>.json)")
+    checks.add_argument("--census", type=Path, default=CENSUS, help="where the checks are saved (next to the census)")
+    checks.set_defaults(handler=command_check)
 
     paths = commands.add_parser("navpaths", help="cut the paths at the zones: navigation paths from zone to zone")
     paths.add_argument("maps", nargs="+", help="<Level>_<Mode>, e.g. MP_012_RushLarge0")

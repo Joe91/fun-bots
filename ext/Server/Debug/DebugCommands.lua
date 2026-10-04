@@ -126,6 +126,7 @@ function DebugCommands:__init()
 	m_DebugBridge:RegisterCommand('interval', self.Interval)
 	m_DebugBridge:RegisterCommand('server_raycasts', self.ServerRaycasts)
 	m_DebugBridge:RegisterCommand('raycast', self.Raycast)
+	m_DebugBridge:RegisterCommand('rays', self.Rays)
 	m_DebugBridge:RegisterCommand('bot', self.Bot)
 	m_DebugBridge:RegisterCommand('nodes', self.Nodes)
 	m_DebugBridge:RegisterCommand('paths_apply', self.PathsApply)
@@ -202,6 +203,39 @@ function DebugCommands.Raycast(p_Args)
 
 	m_DebugBridge:Trace('test', s_From, s_To, #s_Hits == 0, s_Hits[1] and s_Hits[1].position)
 	return { from = _Vec(s_From), to = _Vec(s_To), hits = s_Result }
+end
+
+-- At most this many rays per command (rays).
+local MAX_RAYS = 4000
+
+---Many rays at once, e.g. to check the connections of the mesh: args.rays = { {x1, y1, z1, x2, y2, z2}, ... },
+---args.flags = names of RayCastFlags (default DontCheckCharacter, DontCheckRagdoll, DontCheckWater, as the census).
+---Returns per ray the distance to the first hit, -1 without hit.
+function DebugCommands.Rays(p_Args)
+	local s_Rays = type(p_Args.rays) == 'table' and p_Args.rays or {}
+	if #s_Rays > MAX_RAYS then
+		error('at most ' .. MAX_RAYS .. ' rays')
+	end
+	local s_Flags = 0
+	local s_Names = type(p_Args.flags) == 'table' and p_Args.flags
+		or { 'DontCheckCharacter', 'DontCheckRagdoll', 'DontCheckWater' }
+	for l_Index = 1, #s_Names do
+		local s_Flag = RayCastFlags[s_Names[l_Index]]
+		if s_Flag == nil then
+			error('unknown flag ' .. tostring(s_Names[l_Index]))
+		end
+		s_Flags = s_Flags | s_Flag
+	end
+	---@cast s_Flags RayCastFlags
+	local s_Result = {}
+	for l_Index = 1, #s_Rays do
+		local l_Ray = s_Rays[l_Index]
+		local s_From = Vec3(l_Ray[1], l_Ray[2], l_Ray[3])
+		local s_To = Vec3(l_Ray[4], l_Ray[5], l_Ray[6])
+		local s_Hit = RaycastManager:CollisionRaycast(s_From, s_To, 1, 0, s_Flags)[1]
+		s_Result[l_Index] = s_Hit ~= nil and math.floor(s_Hit.position:Distance(s_From) * 100 + 0.5) / 100 or -1
+	end
+	return { hits = s_Result }
 end
 
 function DebugCommands.Bot(p_Args)

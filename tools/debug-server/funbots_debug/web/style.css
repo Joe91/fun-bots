@@ -46,6 +46,7 @@ body {
 
 body {
 	display: flex;
+	flex-direction: column;
 	background: var(--bg);
 	color: var(--text);
 	font: 13px/1.4 system-ui, -apple-system, "Segoe UI", sans-serif;
@@ -470,4 +471,140 @@ pre {
 	#help {
 		display: none;
 	}
+}
+
+/* Tabs: Live (sidebar and map) and Maps (the levels of mapfiles/). */
+#tabs {
+	display: flex;
+	flex: none;
+	gap: 2px;
+	padding: 4px 8px 0;
+	border-bottom: 1px solid var(--border);
+	background: var(--panel);
+}
+
+#tabs .tab {
+	border-bottom: none;
+	border-radius: 6px 6px 0 0;
+	background: transparent;
+}
+
+#tabs .tab.on {
+	background: var(--bg);
+	color: var(--accent);
+}
+
+#live {
+	display: flex;
+	flex: 1;
+	min-height: 0;
+}
+
+#live[hidden],
+#maps-view[hidden] {
+	display: none;
+}
+
+#maps-view {
+	display: flex;
+	flex: 1;
+	min-height: 0;
+}
+
+.maps-main {
+	display: flex;
+	flex-direction: column;
+	flex: 1;
+	min-width: 0;
+	padding: 8px;
+	gap: 6px;
+}
+
+.maps-toolbar,
+.maps-actions {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 6px;
+}
+
+.maps-toolbar input[type="search"] {
+	width: 260px;
+}
+
+.maps-table-wrap {
+	flex: 1;
+	min-height: 0;
+	overflow: auto;
+	border: 1px solid var(--border);
+	border-radius: 6px;
+}
+
+#maps-table {
+	width: 100%;
+	border-collapse: collapse;
+}
+
+#maps-table th,
+#maps-table td {
+	padding: 3px 8px;
+	border-bottom: 1px solid var(--border);
+	text-align: left;
+	white-space: nowrap;
+}
+
+#maps-table th {
+	position: sticky;
+	top: 0;
+	background: var(--panel);
+	z-index: 1;
+}
+
+#maps-table tr:hover td {
+	background: var(--panel-2);
+}
+
+#maps-table tr.selected td {
+	background: color-mix(in srgb, var(--accent) 14%, transparent);
+}
+
+#maps-table .ok {
+	color: var(--ok);
+}
+
+#maps-table .warn {
+	color: var(--warn);
+}
+
+#maps-table .bad {
+	color: var(--error);
+}
+
+.maps-side {
+	width: 420px;
+	flex: none;
+	overflow-y: auto;
+	border-left: 1px solid var(--border);
+}
+
+.maps-side input[type="text"] {
+	width: 100%;
+}
+
+#maps-jobs li.running {
+	color: var(--accent);
+}
+
+#maps-jobs li.failed {
+	color: var(--error);
+}
+
+#maps-jobs li.done {
+	color: var(--ok);
+}
+
+#maps-log {
+	max-height: 50vh;
+	overflow: auto;
+	white-space: pre-wrap;
 }

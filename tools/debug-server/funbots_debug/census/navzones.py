@@ -36,6 +36,7 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from ..protocol import as_list
+from .check import apply as check_apply
 from .report import _Nodes, area_graph, capture_points
 
 VERSION = 2               # 2: one mesh for the level, the zones as labels on its points.
@@ -523,16 +524,34 @@ def _trace_edges(grid: _Area, owner: dict[Surface, int], points: list[Surface], 
                 corners = [_round(positions[index]) for index in range(last[0], point + 1) if index in positions]
                 way = [points_pos for points_pos in [grid.pos(points[last[1]])] + corners + [grid.pos(points[network])]]
                 length = sum(math.dist(p, q) for p, q in zip(way, way[1:]))
-                result.append([last[1], network, round(length, 1), corners])
+                # 1: along waypoints, a way a person walked (the check of the mesh leaves it alone).
+                result.append([last[1], network, round(length, 1), corners, 1])
                 parent[find(last[1])] = find(network)
             last = (point, network)
     return result
 
 
+def _blocked_pairs(surfaces: dict, links: dict) -> set[tuple[Surface, Surface]]:
+    """Neighbour surfaces of one area a soldier could step between (as area_graph looks at them) that its rays found
+    a wall between: not linked."""
+    by_cell: dict[tuple[int, int], list[Surface]] = defaultdict(list)
+    for key in surfaces:
+        by_cell[(key[0], key[1])].append(key)
+    blocked = set()
+    for key, surface in surfaces.items():
+        for d_row, d_column in ((0, 1), (1, 0)):
+            for other in by_cell.get((key[0] + d_row, key[1] + d_column), []):
+                if abs(surfaces[other][0] - surface[0]) <= STEP_HEIGHT and other not in links.get(key, []):
+                    blocked.add((key, other))
+    return blocked
+
+
 class _Merged:
     """The grids of all areas on one lattice: one mesh for the whole level, the zones are only labels on its points.
     All areas have the same cell size, each lies on the lattice shifted by whole cells (at most a quarter of a cell
-    off). Surfaces of the same cell from several areas (where they overlap) are one if their heights match."""
+    off). Surfaces of the same cell from several areas (where they overlap) are one if their heights match. Two of them
+    are connected if an area connects them and no other area found a wall between them: where areas overlap, the rays
+    of one may start inside of a solid (the inside of a wall, of a slab) and see nothing there."""
 
     def __init__(self, areas: list[dict]):
         self.step = float(areas[0]["step"])
@@ -541,12 +560,14 @@ class _Merged:
         cells: dict[tuple[int, int], list[list]] = defaultdict(list)
         mapping: dict[tuple[int, Surface], tuple[tuple[int, int], int]] = {}
         area_links = []
+        area_blocked = []
         for index, area in enumerate(areas):
             if abs(float(area["step"]) - self.step) > 1e-6:
                 raise ValueError(f"area {area.get('name')}: cell size {area['step']} instead of {self.step}")
             d_row = round(float(area["z0"]) / self.step)
             d_column = round(float(area["x0"]) / self.step)
             surfaces, links = area_graph(area)
+            area_blocked.append((index, _blocked_pairs(surfaces, links)))
             for (row, column, layer), surface in surfaces.items():
                 cell = (row + d_row, column + d_column)
                 entries = cells[cell]
@@ -565,13 +586,21 @@ class _Merged:
                 key = (cell[0], cell[1], layer)
                 order[(cell, slot)] = key
                 self.surfaces[key] = tuple(entries[slot])
+        walls = set()
+        for index, blocked in area_blocked:
+            for a, b in blocked:
+                merged_a, merged_b = order[mapping[(index, a)]], order[mapping[(index, b)]]
+                walls.add((merged_a, merged_b))
+                walls.add((merged_b, merged_a))
+        self.walls = len(walls) // 2
         self.links: dict[Surface, list[Surface]] = defaultdict(list)
         for index, links in area_links:
             for a, neighbours in links.items():
                 merged_a = order[mapping[(index, a)]]
                 for b in neighbours:
                     merged_b = order[mapping[(index, b)]]
-                    if merged_a != merged_b and merged_b not in self.links[merged_a]:
+                    if merged_a != merged_b and merged_b not in self.links[merged_a] \
+                            and (merged_a, merged_b) not in walls:
                         self.links[merged_a].append(merged_b)
         self.by_cell: dict[tuple[int, int], list[Surface]] = defaultdict(list)
         for key in self.surfaces:
@@ -615,10 +644,11 @@ def _land(nodes: _Nodes) -> set[int]:
             if "land" in [str(name).lower() for name in entry.get("vehicles") or []]}
 
 
-def build(census: dict, attach: dict | None = None) -> dict:
+def build(census: dict, attach: dict | None = None, checks: dict | None = None) -> dict:
     """The mesh of a level from all areas of its census, with the zones as labels on its points. attach: other
     waypoints to attach it to ({path: {"points", "vehicles", "objectives"}}, e.g. the paths cut at the zones), the
-    parts of the mesh still come from the waypoints of the census."""
+    parts of the mesh still come from the waypoints of the census. checks: what the rays of the game found blocked
+    (check.py, census/<map>.checks.json), left out of the mesh."""
     areas = [area for area in census.get("areas") or [] if area.get("cells")]
     data = {"version": VERSION, "map": census.get("paths"), "spacing": SPACING, "points": [], "edges": [],
             "attach": [], "zones": []}
@@ -638,6 +668,7 @@ def build(census: dict, attach: dict | None = None) -> dict:
 
     soldier = _network(grid, clearance, set(grid.surfaces), _walked(grid, nodes, nodes.foot, ATTACH_HEIGHT), nodes,
                        inside_any, SOLDIER, True, attached(attach_nodes.foot, ATTACH_HEIGHT) if attach_nodes else None)
+    soldier = check_apply(soldier, checks)
     data.update(points=soldier["points"], edges=soldier["edges"], attach=soldier["attach"],
                 stats=dict(soldier["stats"], surfaces=len(grid.surfaces)))
 

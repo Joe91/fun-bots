@@ -6,6 +6,8 @@ NodeEditor = class('NodeEditor')
 local m_NodeCollection = require('NodeCollection')
 ---@type NavZones
 local m_NavZones = require('NavZones')
+---@type Vehicles
+local m_Vehicles = require('Vehicles')
 ---@type PermissionManager
 local m_PermissionManager = require('PermissionManager')
 ---@type Logger
@@ -26,6 +28,8 @@ function NodeEditor:RegisterVars()
 	self.m_CustomTraceTimer = {}
 	self.m_CustomTraceDistance = {}
 	self.m_CustomTraceLastNodeIndex = {}
+	-- The terrain of the vehicle the player sat in while tracing (the path gets "Vehicles"), per player.
+	self.m_CustomTraceVehicle = {}
 	self.m_JumpDetected = {}
 
 	self.m_lastDrawIndexNode = {}
@@ -957,6 +961,28 @@ function NodeEditor:_getNewIndex()
 end
 
 ---@param p_Player Player
+---The "Vehicles" of a path traced in the vehicle the player sits in now, nil on foot.
+---@param p_Player Player
+---@return string[]|nil
+local function _TraceVehicles(p_Player)
+	local s_Controllable = p_Player.controlledControllable
+	if s_Controllable == nil or s_Controllable:Is('ServerSoldierEntity') then
+		return nil
+	end
+	local s_Data = m_Vehicles:GetVehicleByEntity(s_Controllable)
+	if s_Data == nil then
+		return nil
+	end
+	if s_Data.Terrain == VehicleTerrains.Air then
+		return { 'air' }
+	elseif s_Data.Terrain == VehicleTerrains.Water then
+		return { 'water' }
+	elseif s_Data.Terrain == VehicleTerrains.Amphibious then
+		return { 'land', 'water' }
+	end
+	return { 'land' }
+end
+
 function NodeEditor:StartTrace(p_Player)
 	if not p_Player.soldier then
 		return
@@ -974,6 +1000,7 @@ function NodeEditor:StartTrace(p_Player)
 	self.m_CustomTraceIndex[p_Player.onlineId] = self:_getNewIndex()
 	self.m_CustomTraceLastNodeIndex[p_Player.onlineId] = 0
 	self.m_CustomTraceDistance[p_Player.onlineId] = 0
+	self.m_CustomTraceVehicle[p_Player.onlineId] = _TraceVehicles(p_Player)
 
 	local s_PlayerPos = nil
 	if not p_Player.attachedControllable then
@@ -1007,6 +1034,10 @@ end
 ---@param p_Player Player
 function NodeEditor:EndTrace(p_Player)
 	self.m_CustomTraceTimer[p_Player.onlineId] = -1
+	-- Got into a vehicle on the way: a vehicle-path as well.
+	if self.m_CustomTraceVehicle[p_Player.onlineId] == nil then
+		self.m_CustomTraceVehicle[p_Player.onlineId] = _TraceVehicles(p_Player)
+	end
 	NetEvents:SendToLocal('UI_ClientNodeEditor_TraceData', p_Player, nil, nil, nil, false, nil)
 
 	local s_FirstWaypoint = self.m_CustomTrace[p_Player.onlineId]:GetFirst()
@@ -1110,6 +1141,14 @@ function NodeEditor:SaveTrace(p_Player, p_PathIndex)
 	end
 
 	self.m_NodeOperation = 'Custom Trace'
+
+	-- Traced in a vehicle: a path of that terrain (no need to tag it by hand).
+	local s_Vehicles = self.m_CustomTraceVehicle[p_Player.onlineId]
+	local s_TraceFirst = self.m_CustomTrace[p_Player.onlineId]:GetFirst()
+	if s_Vehicles ~= nil and s_TraceFirst ~= nil and s_TraceFirst.Data ~= nil and s_TraceFirst.Data.Vehicles == nil then
+		s_TraceFirst.Data.Vehicles = s_Vehicles
+		self:Log(p_Player, 'Traced in a vehicle: path for %s', table.concat(s_Vehicles, ', '))
+	end
 
 	local s_PathCount = m_NodeCollection:GetNrOfPaths()
 	p_PathIndex = tonumber(p_PathIndex) or self:_getNewIndex()

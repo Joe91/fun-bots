@@ -11,6 +11,10 @@
   POST /api/paths/write  {} -> {file}. Writes the labels into mapfiles/<level>_<mode>.map.
   GET  /api/commands   the last commands and their answers
   GET  /api/console    the commands the console knows (chat and RCON), see console_commands.py
+  GET  /api/maps       the levels of mapfiles/ and what is done for them, the jobs (?refresh=1: read anew), maps.py
+  POST /api/maps/run   {maps, steps, restartCommand} -> the queued jobs. steps: a list, or "missing"
+  POST /api/maps/cancel  {job} -> {cancelled}. job = null: all
+  POST /api/maps/game  {} -> starts the game-server (--game-command)
   GET  /               the web-interface (web/)
 """
 
@@ -28,6 +32,7 @@ from urllib.parse import parse_qs, urlparse
 
 from .console_commands import catalog
 from .hub import Hub, LabelError
+from .maps import MapWorkbench
 from .rcon import RconError
 
 WEB_DIR = Path(__file__).parent / "web"
@@ -45,6 +50,7 @@ class DebugServer(ThreadingHTTPServer):
         super().__init__(address, Handler)
         self.hub = hub
         self.quiet = quiet
+        self.workbench: MapWorkbench | None = None
         self._watchdog = threading.Thread(target=self._watch, name="mod-watchdog", daemon=True)
         self._watchdog.start()
 
@@ -79,6 +85,12 @@ class Handler(BaseHTTPRequestHandler):
             self._send_json(catalog())
         elif url.path == "/api/census":
             self._send_json(self.server.hub.census_status())
+        elif url.path == "/api/maps":
+            if self.server.workbench is None:
+                self._send_json({"error": "no workbench"}, HTTPStatus.SERVICE_UNAVAILABLE)
+            else:
+                refresh = parse_qs(url.query).get("refresh") == ["1"]
+                self._send_json(self.server.workbench.to_json(refresh))
         elif url.path.startswith("/api/"):
             self._send_json({"error": "not found"}, HTTPStatus.NOT_FOUND)
         else:
@@ -132,6 +144,8 @@ class Handler(BaseHTTPRequestHandler):
                 self._send_json(hub.start_census(data if isinstance(data, dict) else {}).to_json())
             else:
                 self._send_json(hub.submit_command("census_stop").to_json())
+        elif url.path in ("/api/maps/run", "/api/maps/cancel", "/api/maps/game"):
+            self._maps(url.path.rsplit("/", 1)[-1], data if isinstance(data, dict) else {})
         elif url.path in ("/api/paths/label", "/api/paths/apply", "/api/paths/write"):
             self._paths(url.path.rsplit("/", 1)[-1], data if isinstance(data, dict) else {})
         else:
@@ -153,6 +167,29 @@ class Handler(BaseHTTPRequestHandler):
         if wait:
             hub.commands.wait(command, min(float(wait[0]), 120.0))
         self._send_json(command.to_json())
+
+    def _maps(self, action: str, data: dict) -> None:
+        workbench = self.server.workbench
+        if workbench is None:
+            self._send_json({"error": "no workbench"}, HTTPStatus.SERVICE_UNAVAILABLE)
+            return
+        if action == "run":
+            maps = data.get("maps")
+            steps = data.get("steps")
+            if not isinstance(maps, list) or not (steps == "missing" or isinstance(steps, list)):
+                self._send_json({"error": "needs {maps: [...], steps: [...] | \"missing\"}"}, HTTPStatus.BAD_REQUEST)
+                return
+            restart = data.get("restartCommand")
+            self._send_json({"jobs": workbench.enqueue([str(name) for name in maps], steps,
+                                                       restart if isinstance(restart, str) else None)})
+        elif action == "cancel":
+            job = data.get("job")
+            self._send_json({"cancelled": workbench.cancel(job if isinstance(job, int) else None)})
+        else:
+            try:
+                self._send_json(workbench.start_game())
+            except OSError as error:
+                self._send_json({"error": str(error)}, HTTPStatus.CONFLICT)
 
     def _paths(self, action: str, data: dict) -> None:
         hub = self.server.hub

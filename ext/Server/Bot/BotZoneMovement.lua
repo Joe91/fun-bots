@@ -36,6 +36,17 @@ local ZONE_WAIT_ATTACK = { 1.0, 3.0 } -- Seconds at each point while capturing.
 local ZONE_WAIT_DEFEND = { 5.0, 12.0 } -- Seconds at each point while defending.
 local ZONE_SUBOBJECTIVE_CYCLE = 1.0 -- Seconds between two checks whether the bot shall arm / disarm the MCOM.
 local ZONE_WAIT_VEHICLE = { 3.0, 8.0 } -- Seconds a vehicle stands at each point.
+local ZONE_GOAL_TRIES = 4        -- Random goals tried in a zone...
+local ZONE_DETOUR_FACTOR = 2.0   -- ...one whose way is at most this many times the straight distance...
+local ZONE_DETOUR_MIN = 40.0     -- ...or this many metres. None of them: the bot waits where it is.
+local ZONE_ARM_DISTANCE = 1.3    -- Horizontal metres to the MCOM the soldier walks up to before it interacts.
+local ZONE_ARM_APPROACH = 4.0    -- Seconds at most for that, then it interacts from where it is.
+local ZONE_ARM_TIME = 8.0        -- Seconds of interacting (arming takes about 6): then the bot gives up for now.
+local ZONE_ARM_PITCH = -0.6      -- The MCOM stands on the ground.
+local ZONE_VEHICLE_REACH = 10.0  -- Registry.VEHICLES.MIN_DISTANCE_VEHICLE_ENTER: the bot gets in from this close.
+local ZONE_REJOIN_RANGE = 30.0   -- No route from the point the bot is at (a piece of the mesh cut off by given-up
+                                 -- connections): it goes on from a point of another part this close.
+local ZONE_REENTER_TIME = 5.0    -- Seconds a bot that left the mesh at a junction doesn't go onto it there again.
 
 ---@class BotZoneState
 ---@field Zone NavZone
@@ -58,6 +69,8 @@ local ZONE_WAIT_VEHICLE = { 3.0, 8.0 } -- Seconds a vehicle stands at each point
 ---@field Reverse number seconds the vehicle still reverses
 ---@field Reverses integer reverses on the way to the current target
 ---@field Avoid integer|nil a dead end the bot got stuck at: not the start of the next route
+---@field Action table|nil at the goal: get into the vehicle, arm or disarm the MCOM (GameDirector:GetActionTarget)
+---@field ActionTime number seconds of the action so far
 
 ---Called when the bot reached a waypoint. At a junction of the mesh it walks the mesh from now on.
 ---@param p_Point Waypoint (or an offset-point with the fields of its waypoint)
@@ -69,6 +82,11 @@ function Bot:_CheckForZoneEntry(p_Point)
 	local s_Waypoint = p_Point.Original or p_Point
 	local s_Entry = m_NavZones:GetJunction(s_Waypoint)
 	if s_Entry == nil then
+		return false
+	end
+	-- Just left the mesh here: on along the path (else it goes on and off the mesh at the same junction).
+	local s_Left = self.m_LeftZoneAt
+	if s_Left ~= nil and s_Left.Point == s_Entry.Junction.Point and SharedUtils:GetTime() - s_Left.Time < ZONE_REENTER_TIME then
 		return false
 	end
 
@@ -184,6 +202,8 @@ function Bot:_EnterZone(p_Zone, p_Point, p_Vehicle, p_Junction)
 		Vehicle = p_Vehicle == true,
 		Reverse = 0.0,
 		Reverses = 0,
+		Action = nil,
+		ActionTime = 0.0,
 	}
 	self:_StopObstacleSequence()
 	if p_Vehicle then
@@ -221,6 +241,8 @@ function Bot:_ZoneDecide()
 	s_State.Objective = self._Objective
 	s_State.Exit = nil
 	s_State.SubObjective = nil
+	s_State.Action = nil
+	s_State.ActionTime = 0.0
 	if self._Objective == '' then
 		s_State.Zone = m_NavZones:ZoneAtPoint(s_State.Point, nil) or s_State.Zone
 		self:_ZoneNewGoal()
@@ -229,6 +251,14 @@ function Bot:_ZoneDecide()
 
 	-- The routes are over the mesh of the soldiers, a vehicle leaves its network at the junction closest to the objective.
 	local s_Next = not s_State.Vehicle and m_NavRoutes:Next(s_State.Point, self._Objective, self.m_RouteSeed) or nil
+	if s_Next ~= nil and s_Next.Action ~= nil and s_Next.Point ~= nil then
+		-- Into the vehicle, arm the MCOM: to the point next to it, then do it there (_ZoneAction).
+		s_State.Zone = s_Next.Zone or s_State.Zone
+		s_State.Action = s_Next.Action
+		self:_ZoneRouteTo(s_Next.Point)
+		s_State.Wait = 0.0
+		return
+	end
 	if s_Next ~= nil and s_Next.Zone ~= nil then
 		s_State.Zone = s_Next.Zone
 		-- The MCOM is armed and disarmed at the action-node of the path "mcom N interact" (a junction of the mesh).
@@ -243,12 +273,56 @@ function Bot:_ZoneDecide()
 		end
 		return
 	end
+	if s_Next == nil and not s_State.Vehicle and self:_ZoneRejoin() then
+		self:_ZoneDecide()
+		return
+	end
 	local s_Exit = s_Next ~= nil and s_Next.Exit or self:_ZoneBestExit(self._Objective)
 	if s_Exit == nil then
 		self:_LeaveZone(nil)
 		return
 	end
 	self:_ZoneRouteToExit(s_Exit)
+end
+
+---No route from the point of the bot: the closest point of another part of the mesh (ZONE_REJOIN_RANGE) from which one
+---leads to the objective becomes its point. The bot walks straight there.
+---@return boolean true if the bot has another point now
+function Bot:_ZoneRejoin()
+	local s_State = self.m_Zone
+	---@cast s_State -nil
+	local s_Mesh = m_NavZones:GetMesh()
+	local s_Current = s_State.Zone.Points[s_State.Point]
+	if s_Mesh == nil or s_Current == nil then
+		return false
+	end
+	local s_Part = s_Mesh.Part[s_State.Point]
+	local s_From = s_Current.Position
+	local s_Candidates = {}
+	for l_Index = 1, #s_Mesh.Points do
+		if s_Mesh.Part[l_Index] ~= s_Part then
+			local s_Distance = s_Mesh.Points[l_Index].Position:Distance(s_From)
+			if s_Distance <= ZONE_REJOIN_RANGE then
+				s_Candidates[#s_Candidates + 1] = { l_Index, s_Distance }
+			end
+		end
+	end
+	table.sort(s_Candidates, function(p_A, p_B) return p_A[2] < p_B[2] end)
+	local s_Tried = {}
+	for l_Index = 1, #s_Candidates do
+		local l_Point = s_Candidates[l_Index][1]
+		local l_Part = s_Mesh.Part[l_Point]
+		if not s_Tried[l_Part] then
+			s_Tried[l_Part] = true
+			if m_NavRoutes:Next(l_Point, self._Objective, self.m_RouteSeed) ~= nil then
+				m_Logger:Write(self.m_Player.name .. ' no route from point ' .. s_State.Point .. ', goes on from ' .. l_Point)
+				s_State.Point = l_Point
+				s_State.Targets = { { Position = s_Mesh.Points[l_Point].Position, Flags = 0, Point = l_Point } }
+				return true
+			end
+		end
+	end
+	return false
 end
 
 ---Walks to the next point of the zone (not the one the bot is at).
@@ -261,14 +335,32 @@ function Bot:_ZoneNewGoal()
 		return
 	end
 	local s_Defend = self._ObjectiveMode == BotObjectiveModes.Defend
-	local s_Goal = m_NavZones:RandomPoint(s_State.Zone, s_State.Point, s_Defend and not s_State.Vehicle)
-	self:_ZoneRouteTo(s_Goal)
+	-- Only goals the mesh leads to directly: two points of a zone can be connected only over a long way round
+	-- (another floor, through the area behind), the bot would walk far away from its objective.
+	local s_Goal = nil
+	local s_Route = nil
+	local s_From = s_State.Zone.Points[s_State.Point]
+	for _ = 1, ZONE_GOAL_TRIES do
+		local l_Goal = m_NavZones:RandomPoint(s_State.Zone, s_State.Point, s_Defend and not s_State.Vehicle)
+		if l_Goal == nil or s_From == nil then
+			break
+		end
+		local l_Route, l_Cost = m_NavZones:Route(s_State.Zone, s_State.Point, l_Goal, self.m_RouteSeed)
+		local s_Straight = s_From.Position:Distance(s_State.Zone.Points[l_Goal].Position)
+		if l_Route ~= nil and l_Cost <= math.max(ZONE_DETOUR_MIN, ZONE_DETOUR_FACTOR * s_Straight) then
+			s_Goal = l_Goal
+			s_Route = l_Route
+			break
+		end
+	end
+	self:_ZoneRouteTo(s_Goal, s_Route)
 	local s_Wait = s_State.Vehicle and ZONE_WAIT_VEHICLE or (s_Defend and ZONE_WAIT_DEFEND or ZONE_WAIT_ATTACK)
 	s_State.Wait = MathUtils:GetRandom(s_Wait[1], s_Wait[2])
 end
 
 ---@param p_Goal integer|nil
-function Bot:_ZoneRouteTo(p_Goal)
+---@param p_Route integer[]|nil the route there, if known
+function Bot:_ZoneRouteTo(p_Goal, p_Route)
 	local s_State = self.m_Zone
 	---@cast s_State -nil
 	s_State.Goal = p_Goal
@@ -280,7 +372,7 @@ function Bot:_ZoneRouteTo(p_Goal)
 	if p_Goal == nil then
 		return
 	end
-	local s_Route = m_NavZones:Route(s_State.Zone, s_State.Point, p_Goal, self.m_RouteSeed)
+	local s_Route = p_Route or m_NavZones:Route(s_State.Zone, s_State.Point, p_Goal, self.m_RouteSeed)
 	if s_Route ~= nil then
 		s_State.Targets = m_NavZones:Positions(s_State.Zone, s_Route)
 	end
@@ -388,6 +480,7 @@ function Bot:_LeaveZone(p_Junction)
 	self._ShootWayPoints = {}
 
 	local s_Waypoint = p_Junction and p_Junction.Waypoint
+	self.m_LeftZoneAt = p_Junction ~= nil and { Point = p_Junction.Point, Time = SharedUtils:GetTime() } or nil
 	if s_Waypoint == nil and s_State ~= nil and s_State.Vehicle and self.m_Player.controlledControllable ~= nil then
 		s_Waypoint = g_GameDirector:FindClosestPath(self.m_Player.controlledControllable.transform.trans, true, false,
 			VehicleTerrains.Land)
@@ -427,6 +520,10 @@ end
 function Bot:UpdateZoneSubObjective(p_DeltaTime)
 	local s_State = self.m_Zone
 	if s_State == nil or s_State.SubObjective == nil or s_State.Exit ~= nil or self._Objective ~= s_State.Zone.Name then
+		return
+	end
+	-- Only in the zone of the MCOM: on the way there the bot would hold one of the two places for a long time.
+	if not s_State.Zone.InsideSet[s_State.Point] then
 		return
 	end
 	s_State.SubTimer = s_State.SubTimer + p_DeltaTime
@@ -481,6 +578,9 @@ function Bot:UpdateZoneMovement(p_DeltaTime)
 		if s_State.Exit ~= nil then
 			self:_LeaveZone(s_State.Exit)
 			return false
+		end
+		if s_State.Action ~= nil then
+			return self:_ZoneAction(p_DeltaTime)
 		end
 
 		-- In a base the bot only waits for its objective, on the mesh outside of the zones as well.
@@ -585,6 +685,85 @@ function Bot:UpdateZoneMovement(p_DeltaTime)
 		end
 	end
 
+	return true
+end
+
+---At the goal of its action: get into the vehicle, or walk up to the MCOM, look at it and interact (the GameDirector
+---gives the bot its MCOM back as objective once it is armed or disarmed, _ZoneDecide then ends this).
+---@param p_DeltaTime number
+---@return boolean true while the bot is in the zone
+function Bot:_ZoneAction(p_DeltaTime)
+	local s_State = self.m_Zone
+	---@cast s_State -nil
+	local s_Action = s_State.Action
+	local s_Soldier = self.m_Player.soldier
+	s_State.Waiting = false
+
+	if s_Action.Kind == 'vehicle' then
+		local s_Entity = s_Action.Entity
+		local s_Ok, s_Position = pcall(function() return s_Entity.transform.trans:Clone() end)
+		if not s_Ok or s_Position == nil then
+			self:SetObjective('')
+			return true
+		end
+		if s_Position:Distance(s_Soldier.worldTransform.trans) > ZONE_VEHICLE_REACH then
+			-- It drove off meanwhile: the way to where it is now.
+			s_State.Action = nil
+			self:_ZoneDecide()
+			return self.m_Zone ~= nil
+		end
+		local s_Code = self:_EnterVehicleEntity(s_Entity, false)
+		if s_Code == 0 then
+			m_Logger:Write(self.m_Player.name .. ' got into ' .. tostring(self._Objective))
+			self.m_Zone = nil
+			self._ShootWayPoints = {}
+			self:FindVehiclePath(s_Position)
+			return false
+		end
+		if m_DebugBridge.m_Enabled then
+			m_DebugBridge:Event('vehicle_enter_failed', {
+				bot = self.m_Id,
+				code = s_Code,
+				pos = DebugBridge.Vec(s_Soldier.worldTransform.trans),
+			})
+		end
+		self:SetObjective('')
+		return true
+	end
+
+	-- MCOM: up to it (where the soldier stood on the recorded path, else close to the MCOM), then interact.
+	s_State.ActionTime = s_State.ActionTime + p_DeltaTime
+	local s_Position = s_Soldier.worldTransform.trans
+	local s_Goal = s_Action.Stand or s_Action.Position
+	local s_DeltaX = s_Goal.x - s_Position.x
+	local s_DeltaZ = s_Goal.z - s_Position.z
+	local s_Reach = s_Action.Stand ~= nil and 0.5 or ZONE_ARM_DISTANCE
+	if math.sqrt(s_DeltaX * s_DeltaX + s_DeltaZ * s_DeltaZ) > s_Reach and s_State.ActionTime < ZONE_ARM_APPROACH then
+		self.m_ActiveSpeedValue = BotMoveSpeeds.Slow
+		self._TargetPoint = { Position = s_Goal }
+		self._NextTargetPoint = nil
+		return true
+	end
+
+	self.m_ActiveSpeedValue = BotMoveSpeeds.NoMovement
+	self._TargetPoint = nil
+	if s_Action.Yaw ~= nil then
+		self._TargetYaw = s_Action.Yaw
+	else
+		local s_Atan = math.atan(s_Action.Position.z - s_Position.z, s_Action.Position.x - s_Position.x)
+		self._TargetYaw = (s_Atan > math.pi / 2) and (s_Atan - math.pi / 2) or (s_Atan + 3 * math.pi / 2)
+	end
+	self._TargetPitch = ZONE_ARM_PITCH
+	if s_Soldier.pose ~= CharacterPoseType.CharacterPoseType_Crouch then
+		s_Soldier:SetPose(CharacterPoseType.CharacterPoseType_Crouch, true, true)
+	end
+	self:_SetInput(EntryInputActionEnum.EIAInteract, 1)
+	if s_State.ActionTime > ZONE_ARM_APPROACH + ZONE_ARM_TIME then
+		-- Doesn't work from here: the MCOM itself again, the GameDirector may send the bot anew.
+		m_Logger:Write(self.m_Player.name .. ' could not interact with ' .. tostring(self._Objective))
+		local s_Parent = g_GameDirector:_GetObjectiveFromSubObj(self._Objective)
+		self:SetObjective(s_Parent or '', self._ObjectiveMode)
+	end
 	return true
 end
 

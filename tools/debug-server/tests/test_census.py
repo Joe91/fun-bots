@@ -177,7 +177,7 @@ class NavzonesTest(unittest.TestCase):
 
     def _connected(self, zone):
         links = {}
-        for a, b, _, _ in zone["edges"]:
+        for a, b, *_ in zone["edges"]:
             links.setdefault(a, set()).add(b)
             links.setdefault(b, set()).add(a)
         seen, todo = {0}, [0]
@@ -195,7 +195,7 @@ class NavzonesTest(unittest.TestCase):
         # Both paths are attached at both ends.
         self.assertEqual(sorted((path, point) for path, point, *_ in zone["attach"]), [(1, 1), (1, 2), (2, 1), (2, 2)])
         # No connection goes through the wall: every edge crosses column 20 (x = 10 m) only at the door.
-        for a, b, _, corners in zone["edges"]:
+        for a, b, _, corners, *_ in zone["edges"]:
             line = [zone["points"][a]] + corners + [zone["points"][b]]
             for p, q in zip(line, line[1:]):
                 if (p[0] - 10.0) * (q[0] - 10.0) < 0:

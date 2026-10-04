@@ -13,7 +13,7 @@ from typing import Any, Callable
 
 from .analyzers import Analyzer, Finding
 from .census.report import Report, build_report
-from .census import navzones
+from .census import check, navzones
 from .census.store import Census, CensusStore
 from .census.zones import ZoneEstimator
 from .commands import Command, CommandQueue
@@ -378,7 +378,8 @@ class Hub:
             self.census_report = report
         self._publish([("census", census.progress())])
         if census.areas:
-            data = navzones.build(census.to_json())
+            data = navzones.build(census.to_json(),
+                                  checks=check.load_checks(file) if file is not None else None)
             if file is not None:
                 navzones.save(data, file.with_name(f"{census.name}.navzones.json"))
             print(navzones.summary(data))

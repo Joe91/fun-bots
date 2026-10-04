@@ -62,7 +62,7 @@ local EDGE_HEIGHTS = { 0.6, 1.3 }
 -- Time per update for the raycasts, in ms.
 local BUDGET_MS = 6.0
 -- Entity-types that are listed with their position, matched as part of the type-name.
-local DUMP_TYPES = { 'Ladder', 'Mcom', 'MCOM', 'Objective', 'Zipline', 'Door' }
+local DUMP_TYPES = { 'Ladder', 'Mcom', 'MCOM', 'Objective', 'Zipline', 'Door', 'Interaction' }
 local MAX_DUMP_PER_TYPE = 300
 
 ---@class CensusTask
@@ -559,6 +559,17 @@ local function _DumpEntity(p_Entity)
 		local s_Box = SpatialEntity(p_Entity).aabb
 		s_Entry.aabb = { _Vec(s_Box.min), _Vec(s_Box.max) }
 	end
+	-- The blueprint the entity belongs to (e.g. the MCOM of an interaction).
+	local s_Ok, s_Owner = pcall(function()
+		local s_Representative = p_Entity.bus ~= nil and p_Entity.bus.parentRepresentative or nil
+		if s_Representative ~= nil and s_Representative:Is('Blueprint') then
+			return Blueprint(s_Representative).name
+		end
+		return s_Representative ~= nil and s_Representative.typeInfo.name or nil
+	end)
+	if s_Ok then
+		s_Entry.owner = s_Owner
+	end
 	return s_Entry
 end
 
@@ -636,7 +647,7 @@ end
 ---@param p_Bridge DebugBridge
 ---@param p_CommandId any
 ---@param p_Args table { parts = { "entities", "nodes", "areas" }, budgetMs, areas = { { name, kind, pos, radius } },
----                     areaMargin, mcomRadius, areaStep, areaLayers, hq = false }
+---                     areaMargin, mcomRadius, areaStep, areaLayers, hq = false, detailMesh = false }
 ---@return table info about the census
 function MapCensus:Start(p_Bridge, p_CommandId, p_Args)
 	if m_NodeCollection._LoadActive then
@@ -691,7 +702,13 @@ end
 ---@return RayCastHit|nil first hit
 function CensusTask:_Ray(p_From, p_To, p_Flags)
 	self.Raycasts = self.Raycasts + 1
-	return RaycastManager:CollisionRaycast(p_From, p_To, 1, NO_MATERIAL_FLAGS, p_Flags or RAY_FLAGS)[1]
+	local s_Flags = p_Flags or RAY_FLAGS
+	-- args.detailMesh: also the detail-meshes of the level (some walls, ceilings and floors are only those).
+	if self.Args.detailMesh then
+		s_Flags = s_Flags | RayCastFlags.CheckDetailMesh
+	end
+	---@cast s_Flags RayCastFlags
+	return RaycastManager:CollisionRaycast(p_From, p_To, 1, NO_MATERIAL_FLAGS, s_Flags)[1]
 end
 
 ---@param p_Hit RayCastHit

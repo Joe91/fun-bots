@@ -12,6 +12,7 @@ from pathlib import Path
 from . import __version__
 from .analyzers import create_analyzers, load_plugins
 from .hub import Hub
+from .maps import MapWorkbench
 from .rcon import DEFAULT_PORT, RconClient, find_startup_password
 from .recorder import Recorder, replay
 from .server import DebugServer
@@ -21,6 +22,8 @@ from .server import DebugServer
 MAPFILES = Path(__file__).resolve().parents[3] / "mapfiles"
 # Where the censuses of the levels are saved (tools/debug-server/census).
 CENSUS = Path(__file__).resolve().parents[1] / "census"
+# A script that starts the game-server (see ALL_MAPS.md).
+DEFAULT_GAME_COMMAND = CENSUS / "start_vu.sh"
 
 
 def main() -> None:
@@ -47,6 +50,10 @@ def main() -> None:
                         help="folder for the censuses of the levels (default: tools/debug-server/census)")
     parser.add_argument("--navzones", type=Path, metavar="FILE",
                         help="show the walking networks of a census (.json.gz) or a .navzones.json on the map")
+    parser.add_argument("--game-command", metavar="CMD", default=str(DEFAULT_GAME_COMMAND)
+                        if DEFAULT_GAME_COMMAND.is_file() else None,
+                        help="starts the game-server: the Maps tab runs it, the census after a crash (default: "
+                             "census/start_vu.sh if it exists)")
     parser.add_argument("--open", action="store_true", help="open the browser")
     parser.add_argument("--verbose", action="store_true", help="log every request")
     args = parser.parse_args()
@@ -66,6 +73,7 @@ def main() -> None:
         sys.exit(f"cannot listen on {args.host}:{args.port}: {error.strerror or error} "
                  f"(another debug-server running? use --port)")
     url = f"http://{'127.0.0.1' if args.host in ('0.0.0.0', '') else args.host}:{args.port}/"
+    server.workbench = MapWorkbench(url.rstrip("/"), args.game_command, census=args.census)
     print(f"fun-bots debug-server {__version__} on {url}")
     print(f"analyzers: {', '.join(analyzer.name for analyzer in analyzers)}")
 

@@ -43,12 +43,23 @@ local EXIT_PENALTY = 100.0
 ---@field Zone NavZone|nil the zone of the objective (nil: an objective with paths of its own)
 ---@field Points integer[] the points of the mesh where the target is
 ---@field Junctions table<integer, NavZoneJunction>|nil point -> junction of a path of the objective (not a zone)
+---@field Action table|nil something to do there, without a path (GameDirector:GetActionTarget): get into a vehicle,
+---arm an MCOM. The points are the ones next to it.
 
----What NavRoutes:Next returns: walk the mesh to Point (in Zone), or leave it over Exit.
+-- Points of the mesh next to a vehicle (horizontal metres, Registry.VEHICLES.MIN_DISTANCE_VEHICLE_ENTER) and on its
+-- floor (the vehicle-spawn is the middle of the vehicle): the bot gets in from there. At most ACTION_POINTS of them.
+local ACTION_RANGE = 8.0
+local ACTION_FLOOR = 3.0
+local ACTION_POINTS = 4
+-- A vehicle that moved this far: its points anew.
+local ACTION_MOVED = 3.0
+
+---What NavRoutes:Next returns: walk the mesh to Point (in Zone), or leave it over Exit. With Action: do it at Point.
 ---@class NavStep
 ---@field Zone NavZone|nil
 ---@field Point integer|nil
 ---@field Exit NavZoneJunction|nil
+---@field Action table|nil
 
 function NavRoutes:__init()
 	self:Clear()
@@ -166,6 +177,10 @@ function NavRoutes:Target(p_Objective)
 	if p_Objective == nil or p_Objective == '' or s_Mesh == nil then
 		return nil
 	end
+	local s_Action = g_GameDirector ~= nil and g_GameDirector:GetActionTarget(p_Objective) or nil
+	if s_Action ~= nil then
+		return self:_ActionTarget(p_Objective, s_Action)
+	end
 	local s_Known = self._Targets[p_Objective]
 	if s_Known == nil then
 		s_Known = false
@@ -192,6 +207,50 @@ function NavRoutes:Target(p_Objective)
 		self._Targets[p_Objective] = s_Known
 	end
 	return s_Known or nil
+end
+
+---The target of an objective that is done on the mesh: the points next to the vehicle or the MCOM (in the zone of the
+---MCOM, closest to where the soldier stands). Again when the vehicle moved.
+---@param p_Objective string
+---@param p_Action table
+---@return NavTarget|nil
+function NavRoutes:_ActionTarget(p_Objective, p_Action)
+	local s_Known = self._Targets[p_Objective]
+	if s_Known and s_Known.Action ~= nil and s_Known.Action.Position:Distance(p_Action.Position) < ACTION_MOVED then
+		s_Known.Action = p_Action
+		return s_Known
+	end
+	if s_Known then
+		self._Fields[s_Known] = nil
+	end
+
+	local s_Mesh = m_NavZones:GetMesh()
+	---@cast s_Mesh -nil
+	local s_From = p_Action.Stand or p_Action.Position
+	local s_Candidates = {}
+	local s_Pool = p_Action.Zone ~= nil and p_Action.Zone.Inside or nil
+	local s_Count = s_Pool ~= nil and #s_Pool or #s_Mesh.Points
+	for l_Index = 1, s_Count do
+		local l_Point = s_Pool ~= nil and s_Pool[l_Index] or l_Index
+		local s_Position = s_Mesh.Points[l_Point].Position
+		local s_DeltaX = s_Position.x - s_From.x
+		local s_DeltaZ = s_Position.z - s_From.z
+		local s_Distance = math.sqrt(s_DeltaX * s_DeltaX + s_DeltaZ * s_DeltaZ)
+		if s_Distance <= ACTION_RANGE and math.abs(s_Position.y - s_From.y) <= ACTION_FLOOR then
+			s_Candidates[#s_Candidates + 1] = { l_Point, s_Distance }
+		end
+	end
+	table.sort(s_Candidates, function(p_A, p_B) return p_A[2] < p_B[2] end)
+	local s_Points = {}
+	for l_Index = 1, math.min(ACTION_POINTS, #s_Candidates) do
+		s_Points[#s_Points + 1] = s_Candidates[l_Index][1]
+	end
+	local s_Target = false
+	if #s_Points > 0 then
+		s_Target = { Zone = p_Action.Zone, Points = s_Points, Action = p_Action }
+	end
+	self._Targets[p_Objective] = s_Target
+	return s_Target or nil
 end
 
 ---Whether bots get to the objective over the mesh and the navigation paths (Target).
@@ -423,13 +482,19 @@ function NavRoutes:Next(p_Point, p_Objective, p_Seed)
 	if s_Target == nil or s_Mesh == nil or s_Mesh.Points[p_Point] == nil then
 		return nil
 	end
-	local s_Found = _TargetIn(s_Target, s_Mesh.Part[p_Point], s_Mesh.Points[p_Point].Position)
+	-- To a vehicle, an MCOM: the point closest to it (not to the bot, that one may be behind a wall).
+	local s_Action = s_Target.Action
+	local s_Towards = s_Action ~= nil and (s_Action.Stand or s_Action.Position) or s_Mesh.Points[p_Point].Position
+	local s_Found = _TargetIn(s_Target, s_Mesh.Part[p_Point], s_Towards)
 	local s_Cost, s_First = self:_Search(self:_Departures(p_Point, 0.0, nil), s_Target, p_Seed)
 	local s_MeshCost = self:_Field(s_Target)[p_Point]
 	if s_Found ~= nil and s_MeshCost ~= nil then
 		-- The mesh leads there, maybe only a long way round: a navigation path may be shorter (only clearly: the way
 		-- to its start is a straight line). Each bot weighs the mesh its own way (_Spread), some take the path.
 		if s_First == nil or s_MeshCost * _Spread(p_Seed, 0) <= s_Cost + MESH_CROSSING then
+			if s_Target.Action ~= nil then
+				return { Zone = s_Target.Zone or m_NavZones:ZoneAtPoint(s_Found, nil), Point = s_Found, Action = s_Target.Action }
+			end
 			if s_Target.Zone ~= nil then
 				return { Zone = s_Target.Zone, Point = s_Found }
 			end

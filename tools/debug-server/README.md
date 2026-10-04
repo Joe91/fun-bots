@@ -58,6 +58,17 @@ raycast shows up on the map as a trace: green if the target is visible, red up t
 
 ## The web UI
 
+Two tabs: **Live** (below) and **Maps**.
+
+**Maps** lists every waypoint-file of `mapfiles/` with what is done for it (census, mesh, cut, `mod.db` against the
+files, changes since the last commit, the steps still to do) and runs steps for the selected levels as jobs, one after
+the other, with their output: export from `mod.db`, label, import into `mod.db`, census, cut (again from the uncut
+version in git) and report (`funbots_debug/maps.py`, `GET /api/maps`, `POST /api/maps/run`). *Start game-server* runs
+`--game-command` (default `census/start_vu.sh`), which the census also uses after a crash. How a new level gets
+supported: `NEW_MAP.md`.
+
+The **Live** tab:
+
 - **Map**: bots (heading, trail, current target, the waypoint they walk to), players, vehicles (forward
   direction and 1-second velocity vector, altitude for aircraft), objectives (capture points with team and flag
   progress, dashed when attacked; rush MCOMs: yellow = active, red = armed, crossed = destroyed), raycast traces,
@@ -374,10 +385,18 @@ killed (`Registry.GAME_DIRECTOR.OFF_MESH_*`), not while it fights, waits or does
 debug-server lists these spots under *Findings* (analyzer `zones`). In the snapshot a bot on the mesh has `zone` (the
 zone it walks in, `@mesh` outside of the zones) and `zoneExit` on its way out.
 
-- **MCOMs**: in the zone of an MCOM a bot asks the GameDirector every second whether it shall arm (attackers, MCOM not
-  armed) or disarm it (defenders, MCOM armed), at most two per team. Then its objective becomes `mcom N interact`, it
-  leaves the mesh at the action-node of that path (a junction of the mesh) and does the action there as on the
-  waypoints.
+- **MCOMs**: inside the zone of an MCOM a bot asks the GameDirector every second whether it shall arm (attackers, MCOM
+  not armed) or disarm it (defenders, MCOM armed), at most two per team. Then its objective becomes `mcom N interact`:
+  it walks over the mesh to the point next to the MCOM, steps up to it, looks at it and interacts (`Bot:_ZoneAction`),
+  no path needed. Where the MCOM is: the interactions of the engine (`GameInteractionEntityData`, about 1 m from it,
+  `GameDirector:GetMcom`), where a recorded path `mcom N interact` exists also its action-node (where to stand) and
+  yaw. A new rush level without these paths gets its MCOMs numbered from the attackers' spawn
+  (`GameDirector:_NumberEngineMcoms`, see `NEW_MAP.md`).
+- **Vehicles**: every vehicle that stands still with a free seat is an objective (`vehicle <id>`,
+  `GameDirector:_RefreshVehicleEntities`): of the team in it, else of the closest HQ or capture point (80 m), in rush
+  of the closest base (150 m), else of both teams. A bot walks over the mesh to the point next to it and gets in. The
+  paths `vehicle ...` with their action-nodes are only used on levels without a mesh, and for the vehicles bots spawn
+  into (`spawn vehicle ...`).
 - **Bases and spawns**: bots that spawn at the spawn-points of the game (`SpawnMethod.Spawn`) start on the mesh there
   (a base, a spawn, a capture point; up to 30 m away they walk straight to it) and go where their objective is as soon
   as they have one. In conquest and rush the bots always use the spawn of the game once the level has bases on the
@@ -408,6 +427,23 @@ directions with a wall within 1.5 m, flags 1 = in a zone, 2 = indoors, 4 = crouc
 `[path, point, mesh-point, walking distance, position of the waypoint, corners]`, the corners of the way from the
 mesh-point to the waypoint (around the walls of the room of an MCOM, for example). A zone is `{name, kind, center,
 radius, zone, inside, vehicleInside}`, `inside` the indices of its points.
+
+### Checking the mesh in the game
+
+The census measures walls with short rays between its cells. A ray that starts inside of a solid (a wall, a slab, a
+rock) doesn't hit it, and its rays don't see the detail-meshes of a level. Where areas overlap, the grids are merged,
+and a wall one area measured stays a wall even if another one saw nothing there (`_Merged`). What is still missed,
+the check finds with rays of the game over the finished mesh (`census/check.py`, command `rays` of the mod):
+```
+python -m funbots_debug.census check MP_Subway_RushLarge0       # switches to the level, saves census/<map>.checks.json
+python -m funbots_debug.census navpaths MP_Subway_RushLarge0 --write --db ../../mod.db   # (re-)cut: without them
+```
+Every connection is cast along its way at 1.0 and 1.3 m in both directions (hit: blocked; at knee height only it's a
+step), every point up to 1.0 m (no room to crouch) and in 8 directions from and towards it (seen from outside only:
+inside of a solid). The mesh is built without them (`navzones.build(..., checks=...)`) and keeps only the parts a
+junction leads to. On MP_Subway (rush) that removed 343 of 4051 connections and 105 of 1899 points; a second check
+found nothing. In the Maps tab: step *Check* (check, then cut). `census run --detail-mesh` makes the census rays hit the
+detail-meshes as well, `--area-layers N` keeps more floors per cell (default 4).
 
 ### Navigation paths: cut at the zones
 

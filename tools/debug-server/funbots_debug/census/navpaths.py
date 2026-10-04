@@ -625,7 +625,8 @@ def summary(result: Result, before: MapData, verbose: bool = False) -> str:
 def write_db(db: Path, name: str, data: MapData, networks: dict) -> None:
     """The waypoints and the networks of one level into mod.db (tables <name>_table and <name>_navzones), as the
     fun-bots-helper imports them. The tables of the other levels stay untouched."""
-    connection = sqlite3.connect(db)
+    # The game-server and the debug-server read it as well: wait for them.
+    connection = sqlite3.connect(db, timeout=30.0)
     try:
         with connection:
             table = f"{name}_table"
