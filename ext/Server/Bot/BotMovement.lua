@@ -258,6 +258,11 @@ function Bot:_ExecuteActionIfNeeded(p_Point, p_DeltaTime)
 							pos = DebugBridge.Vec(self.m_Player.soldier.worldTransform.trans),
 						})
 					end
+					-- No vehicle (anymore) or no seat: something else to do, else the bot walks the way to the vehicle
+					-- back and forth (the action-node counts as done).
+					if g_GameDirector:IsVehicleEnterPath(self._Objective) then
+						self:SetObjective('')
+					end
 				end
 				self:_ResetActionFlag(BotActionFlags.OtherActionActive)
 			elseif p_Point.Data.Action.type == "beacon"

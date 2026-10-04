@@ -87,6 +87,10 @@ end
 
 function Bot:SetObjective(p_Objective, p_ObjectiveMode)
 	if self._Objective ~= p_Objective or p_ObjectiveMode ~= self._ObjectiveMode then
+		-- Sent to a vehicle (again): its action-node counts, also if the bot failed to get in there before.
+		if p_Objective ~= nil and p_Objective ~= '' and g_GameDirector:IsVehicleEnterPath(p_Objective) then
+			self._LastActionId = nil
+		end
 		self._Objective = p_Objective or ''
 		self._ObjectiveMode = p_ObjectiveMode or BotObjectiveModes.Default
 		local s_Point = m_NodeCollection:Get(self._CurrentWayPoint, self._PathIndex)
