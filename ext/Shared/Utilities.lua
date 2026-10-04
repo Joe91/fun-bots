@@ -17,6 +17,18 @@ function Utilities:GetTime()
 	return s_EpochOffset + SharedUtils:GetTimeNS() / 1000000000
 end
 
+---Whether the capture point is a base (HQ): it can't be captured (CapturableType 1). From the engine, the names don't
+---always end with "HQ" (XP1_004 conquest assault: "_US_HQ_1").
+---@param p_CapturePoint CapturePointEntity|Entity
+---@return boolean
+function Utilities:IsHq(p_CapturePoint)
+	local s_Data = p_CapturePoint.data
+	if s_Data ~= nil and s_Data:Is('CapturePointEntityData') then
+		return CapturePointEntityData(s_Data).capturableType == 1
+	end
+	return string.sub(CapturePointEntity(p_CapturePoint).name, -2) == 'HQ'
+end
+
 -- The raycasts return max 5 hits at the moment.
 local MAX_RAY_HITS = 5
 -- A hit on a vehicle this close to the target-point counts as a hit on the target-vehicle.

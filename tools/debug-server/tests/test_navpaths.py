@@ -25,7 +25,9 @@ def _mesh(*zones):
                 if in_zone:
                     inside.append(len(points))
                 points.append([x0 + x, 0.0, z0 + z, 2.0, 0, 1 if in_zone else 0])
-        entries.append({"name": name, "kind": "capturepoint", "center": [x0, 0.0, z0], "inside": inside})
+        # The circle of the area of the census around it: covers the square of points.
+        entries.append({"name": name, "kind": "capturepoint", "center": [x0, 0.0, z0], "radius": 26.0,
+                        "inside": inside})
     return {"version": 2, "points": points, "edges": [], "attach": [], "zones": entries}
 
 
@@ -122,6 +124,20 @@ class NavpathsTest(unittest.TestCase):
         count = len(result.data.paths[1].nodes)
         networks = {"attach": [[1, 1, 0, 1.0, [0, 0, 0], []], [1, count - 20, 0, 1.0, [0, 0, 0], []]]}
         self.assertEqual(navpaths.missing_ends(result.data, networks), [(1, "end in b")])
+
+    def test_end_at_the_edge_moves_inside(self):
+        # Close to a point at the edge of the mesh, but outside of the circle of the zone: no junction there, the
+        # path is cut further inside.
+        zones = _mesh(("a", 0, 0), ("b", 100, 0))
+        for zone in zones["zones"]:
+            zone["radius"] = 20.0
+        data = MapData({1: _path(1, _line(-10, 110, 0))})
+        result = navpaths.build(data, zones)
+        self.assertEqual(len(result.routes), 1)
+        path = result.data.paths[min(result.data.paths)]
+        for node in (path.nodes[0], path.nodes[-1]):
+            center = 0.0 if node.pos[0] < 50 else 100.0
+            self.assertLessEqual(abs(node.pos[0] - center), 20.0 - navpaths.COVER_MARGIN)
 
     def test_piece_on_the_mesh_dropped(self):
         # Zones a and d overlap in their margins: the piece between them lies on the mesh, the bots walk the mesh.

@@ -292,9 +292,9 @@ can't read), only who is inside. So before the census the mod measures the zones
 at a distance, and the distance where it stops being inside is searched (about 0.8 m exact). A few seconds per capture
 point; the debug-server turns the result into the shape of the zone (`census/zones.py`). A capture point nobody is
 inside of even next to it is the layout of another mode (loaded as well, e.g. a second "C" on XP3_Alborz) and is
-skipped. Then the bots get kicked (`funbots.kickAll`, the next level spawns them again: `--keep-bots` to keep them)
-and the census runs with 20 ms of raycasts per update (`--budget-ms`; about 100,000 raycasts per second is the most
-the server does, from about 20 ms on). Without the probe (`--no-probe`) the zones can still be measured from the bots
+skipped. Then the census runs with 20 ms of raycasts per update (`--budget-ms`; about 100,000 raycasts per second is
+the most the server does, from about 20 ms on). Kicking the bots before (`--kick-bots`) is only 5 % faster and crashed
+the game-server on rush maps, 1 to 2 minutes into the census (likely the vehicles they leave behind). Without the probe (`--no-probe`) the zones can still be measured from the bots
 playing (`--warmup SECONDS`): only as far as they went. A census without explicit `areas` puts its grids around the
 measured zones.
 

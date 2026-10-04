@@ -19,6 +19,8 @@ MapCensus = class('MapCensus')
 local m_DebugSnapshots = require('Debug/DebugSnapshots')
 ---@type NodeCollection
 local m_NodeCollection = require('NodeCollection')
+---@type Utilities
+local m_Utilities = require('__shared/Utilities')
 
 local _Vec = DebugBridge.Vec
 local _Round = DebugBridge.Round
@@ -46,6 +48,7 @@ local AREA_BASE_MAX_RADIUS = 45.0 -- Bases from the waypoints (rush): at most th
 local AREA_SPAWN_RADIUS = 40.0    -- Bases around the spawns of the game that no other area covers (rush)...
 local AREA_SPAWN_MERGE = 40.0     -- ...one for the spawns of a team this close to each other.
 local AREA_SPAWN_COVERED = 20.0   -- A spawn at least this far inside of another area is covered by it.
+local AREA_SPAWN_GROUND = 200.0   -- The ground below a spawn is searched this far down.
 local AREA_STEP = 0.5
 local AREA_LAYERS = 4
 local AREA_UP = 60.0              -- The vertical rays start this far above the objective...
@@ -461,7 +464,7 @@ local function _CapturePoints()
 			id = p_Entity.instanceId,
 			name = s_CapturePoint.name,
 			objective = g_GameDirector.m_Translations[s_CapturePoint.name],
-			hq = string.sub(s_CapturePoint.name, -2) == 'HQ',
+			hq = m_Utilities:IsHq(s_CapturePoint),
 			pos = _Vec(s_CapturePoint.transform.trans),
 			team = s_CapturePoint.team,
 			captureEnabled = s_CapturePoint.isCaptureEnabled,
@@ -951,7 +954,7 @@ function CensusTask:_DefaultAreas()
 	local s_ByName = {}
 	_Iterate('ServerCapturePointEntity', function(p_Entity)
 		local s_CapturePoint = CapturePointEntity(p_Entity)
-		local s_Hq = string.sub(s_CapturePoint.name, -2) == 'HQ'
+		local s_Hq = m_Utilities:IsHq(s_CapturePoint)
 		if s_Hq and not s_Args.hq then
 			return
 		end
@@ -1037,6 +1040,18 @@ end
 ---@param p_Areas table[] the areas so far
 ---@param p_Margin number
 ---@return table[]
+---The ground below the position (first hit up to AREA_SPAWN_GROUND below), else the position itself.
+---@param p_Position Vec3
+---@return Vec3
+local function _Ground(p_Position)
+	local s_Hit = RaycastManager:CollisionRaycast(p_Position + Vec3(0, 1, 0), p_Position - Vec3(0, AREA_SPAWN_GROUND, 0), 1,
+		NO_MATERIAL_FLAGS, RAY_FLAGS)[1]
+	if s_Hit == nil then
+		return p_Position
+	end
+	return s_Hit.position:Clone()
+end
+
 local function _SpawnAreas(p_Areas, p_Margin)
 	local s_Groups = {}
 	local s_Spawns = _CharacterSpawns()
@@ -1044,7 +1059,8 @@ local function _SpawnAreas(p_Areas, p_Margin)
 		local l_Spawn = s_Spawns[l_Index]
 		local s_Team = (l_Spawn.dataTeam == 1 or l_Spawn.dataTeam == 2) and l_Spawn.dataTeam or l_Spawn.team
 		if l_Spawn.vehicleSpawn == nil and (l_Spawn.playerType or 0) == 0 and (s_Team == 1 or s_Team == 2) then
-			local s_Position = Vec3(l_Spawn.pos[1], l_Spawn.pos[2], l_Spawn.pos[3])
+			-- The spawn-entity can be far above the ground (40 m on XP5_004): the grid around it must reach the ground.
+			local s_Position = _Ground(Vec3(l_Spawn.pos[1], l_Spawn.pos[2], l_Spawn.pos[3]))
 			local s_Covered = false
 			for l_Area = 1, #p_Areas do
 				local s_Delta = s_Position - p_Areas[l_Area].center
@@ -1054,11 +1070,11 @@ local function _SpawnAreas(p_Areas, p_Margin)
 				end
 			end
 			if not s_Covered then
+				-- One area for spawns close to each other, also of both teams (rush: they swap the spawns per stage).
 				local s_Group = nil
 				for l_Group = 1, #s_Groups do
 					local s_Delta = s_Position - s_Groups[l_Group].first
-					if s_Groups[l_Group].team == s_Team
-						and math.sqrt(s_Delta.x * s_Delta.x + s_Delta.z * s_Delta.z) <= AREA_SPAWN_MERGE then
+					if math.sqrt(s_Delta.x * s_Delta.x + s_Delta.z * s_Delta.z) <= AREA_SPAWN_MERGE then
 						s_Group = s_Groups[l_Group]
 						break
 					end

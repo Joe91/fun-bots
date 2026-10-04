@@ -101,8 +101,7 @@ cd DS && python -u -m funbots_debug.census run --maplist census/all_maps.txt --a
 For each map, the command does the following:
 
 1. switches the level;
-2. measures the capture zones with the bots (zone probe, Conquest only, a few seconds per capture point), then kicks
-   the bots (the next level spawns them again);
+2. measures the capture zones with the bots (zone probe, Conquest only, a few seconds per capture point);
 3. runs the census;
 4. with `--apply`, builds the mesh and saves it to `navzones/<map>.json` and into `mod.db` through the mod.
 
@@ -184,10 +183,19 @@ Bots fight little without a real client, so judge only whether they move, not wh
 
 ## Known issues
 
-- Zones of capture points are named after the engine ("ID_H_US_A" gives "a"), not after the paths. If the census
-  log or the zones show two zones with the same name, or a capture point without a zone, report it.
-- Some levels have two capture points with the same name (XP3_Alborz ConquestLarge0 has two "C"). The census uses the
-  first one the engine lists. Mention every such map in the report.
+- `COOP_006_ConquestSmall0` is a co-op level: it doesn't load as a multiplayer level. Leave it out of the list.
+- Don't kick the bots before the census (`--kick-bots`): on Rush maps the game server crashed 1–2 minutes later.
+- Zones of capture points are named after the engine ("ID_H_US_A" gives "a"), not after the paths. HQs are recognized
+  by the engine (`CapturableType` 1), also with names like "_US_HQ_1".
+- The zone probe needs at least 4 bots on foot. On maps where all bots sit in vehicles it waits up to 30 s and then
+  fails with "no bots on foot"; the census still runs, with estimated zones. Run that map again.
+- Small layouts of a level often contain the capture points and spawns of the large layout too. The probe reports
+  those capture points as "not active". Their spawns give extra "spawn ..." zones, often empty and unconnected:
+  harmless.
+- On carrier maps (MP_017, XP1_002, XP1_004) the "base us" zone isn't connected to the rest: the US starts on a
+  ship and reaches the shore by vehicle. That's expected.
+- A few navigation paths per map can stay without a junction (`warning: ... the bots don't use it`): about 2 % of
+  all of them. Report the maps with many.
 - A map that is cut already can't be cut again. Redoing it needs the original map file from git, plus that file
   imported into `mod.db`. Don't do that yourself; report it.
 - If the debug-server answers with errors or the mod disconnects repeatedly, stop and report the last 50 lines of

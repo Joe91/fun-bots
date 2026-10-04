@@ -246,7 +246,7 @@ function DebugSnapshots.CollectObjectives()
 		s_Flags[#s_Flags + 1] = {
 			name = s_CapturePoint.name,
 			objective = s_Translations[s_CapturePoint.name],
-			hq = string.sub(s_CapturePoint.name, -2) == 'HQ',
+			hq = m_Utilities:IsHq(s_CapturePoint),
 			pos = _Vec(s_CapturePoint.transform.trans),
 			team = s_CapturePoint.team,
 			attacked = s_CapturePoint.isAttacked,

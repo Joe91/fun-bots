@@ -25,6 +25,7 @@ local NEAR = 1.0          -- First test this close to the capture point: inside 
 local FAR = 100.0         -- No zone is larger.
 local STEPS = 7           -- Halvings between NEAR and FAR: about 0.8 m exact.
 local WAIT = 0.25         -- Seconds a bot stays at a position before the engine is asked whether it is inside.
+local NO_BOTS_TIMEOUT = 30.0 -- Seconds to wait for bots on foot (they may all sit in vehicles, or be dead).
 
 ---@class ZoneProbeTask
 ---@field CommandId integer
@@ -35,6 +36,7 @@ local WAIT = 0.25         -- Seconds a bot stays at a position before the engine
 ---@field BatchSize integer directions of the current batch
 ---@field Probes table[] { Bot, Direction, Distance, Position } of the current step
 ---@field Since number when the bots were put to the positions of the step
+---@field NoBotsSince number|nil since when there are no bots on foot
 local ZoneProbeTask = {}
 ZoneProbeTask.__index = ZoneProbeTask
 
@@ -49,7 +51,7 @@ local function _Flags()
 	local s_Entity = s_Iterator:Next()
 	while s_Entity ~= nil do
 		local s_CapturePoint = CapturePointEntity(s_Entity)
-		if string.sub(s_CapturePoint.name, -2) ~= 'HQ' then
+		if not m_Utilities:IsHq(s_CapturePoint) then
 			local s_Directions = {}
 			for l_Index = 1, DIRECTIONS do
 				s_Directions[l_Index] = { Angle = (l_Index - 1) * 2 * math.pi / DIRECTIONS, Inside = 0.0, Outside = FAR }
@@ -91,9 +93,6 @@ function ZoneProbe:Start(p_Bridge, p_CommandId)
 	end, 'stopped')
 
 	local s_Flags = _Flags()
-	if #_ProbeBots() == 0 and #s_Flags > 0 then
-		error('no bots alive to measure the capture zones with')
-	end
 	local s_Task = setmetatable({
 		CommandId = p_CommandId,
 		Flags = s_Flags,
@@ -207,8 +206,13 @@ end
 function ZoneProbeTask:Update(p_Bridge)
 	if self.Flag <= #self.Flags then
 		if #self.Probes == 0 then
-			if not self:_StartStep() then
-				error('no bots alive to measure the capture zones with')
+			if self:_StartStep() then
+				self.NoBotsSince = nil
+			else
+				self.NoBotsSince = self.NoBotsSince or m_Utilities:GetTime()
+				if m_Utilities:GetTime() - self.NoBotsSince > NO_BOTS_TIMEOUT then
+					error('no bots on foot to measure the capture zones with')
+				end
 			end
 			return false
 		end

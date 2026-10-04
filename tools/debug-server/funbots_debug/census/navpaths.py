@@ -41,6 +41,7 @@ from ..protocol import as_list
 MATCH_DISTANCE = 6.0      # A waypoint belongs to the closest point of the mesh up to this far away...
 FLOOR_HEIGHT = 1.5        # ...on the same floor.
 MESH_DISTANCE = 4.0       # A waypoint this close to a point of the mesh (same floor) is on the mesh.
+COVER_MARGIN = 0.5        # Metres inside of the circle of a zone a waypoint must be to count as on the mesh.
 LINK_MAX = 10.0           # Longer links are no way to walk.
 LINK_COST = 2.0           # Metres added for a link: rather stay on a path.
 LOOP_CLOSE = 30.0         # A looping path whose ends are this close is walked over from its last waypoint to its first.
@@ -89,6 +90,8 @@ class _Zones:
         zones = navzones.get("zones") or []
         self.names: list[str] = [str(zone.get("name")) for zone in zones]
         self.centers = [as_list(zone.get("center")) for zone in zones]
+        # Without a radius (made by hand) the whole zone counts.
+        self.radii = [float(zone["radius"]) if zone.get("radius") else math.inf for zone in zones]
         member: dict[int, list[int]] = defaultdict(list)
         for index, zone in enumerate(zones):
             for point in zone.get("inside") or []:
@@ -114,14 +117,21 @@ class _Zones:
         return best
 
     def zone_of(self, pos) -> int | None:
-        """The zone of the closest point of the mesh; where zones overlap the one whose middle is closest."""
+        """The zone of the closest point of the mesh; where zones overlap the one whose middle is closest. Only inside of
+        the circle of a zone: else the mesh can't be attached there (covered)."""
         best = self._closest(pos, MATCH_DISTANCE)
-        if best is None or not best[1]:
+        if best is None or not best[1] or not self.covered(pos):
             return None
         return min(best[1], key=lambda zone: math.hypot(self.centers[zone][0] - pos[0], self.centers[zone][2] - pos[2]))
 
+    def covered(self, pos) -> bool:
+        """Inside of the circle of a zone (the area of the census around it): only there the mesh gets attached to the
+        waypoints (navzones.py), close to a point at the edge isn't enough."""
+        return any(math.hypot(center[0] - pos[0], center[2] - pos[2]) <= radius - COVER_MARGIN
+                   for center, radius in zip(self.centers, self.radii))
+
     def on_mesh(self, pos) -> bool:
-        return self._closest(pos, MESH_DISTANCE) is not None
+        return self._closest(pos, MESH_DISTANCE) is not None and self.covered(pos)
 
 
 def fixed_reason(path: PathData) -> str:

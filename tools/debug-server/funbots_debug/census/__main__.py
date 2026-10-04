@@ -15,8 +15,8 @@ levels needs the RCON-connection of the debug-server. Afterwards the map-list of
 from its MapList.txt (mapList.load).
 
 Per level: the bots measure the capture zones first (zone probe, ZoneProbe.lua: they are put around each capture
-point), then they get kicked (funbots.kickAll, the next level spawns them again) and the census runs with a larger
-raycast-budget: the server has nothing else to do.
+point), then the census runs with a larger raycast-budget (20 ms per update). Kicking the bots first (--kick-bots) is
+only 5 % faster, and crashed the game-server on rush maps (the vehicles they leave behind?).
 """
 
 from __future__ import annotations
@@ -139,11 +139,13 @@ def wait_command(server: Server, command: dict, timeout: float) -> dict:
 
 
 def probe_zones(server: Server) -> str:
-    """Measures the capture zones with the bots (ZoneProbe.lua), once enough of them are alive."""
+    """Measures the capture zones with the bots (ZoneProbe.lua), once enough of them are alive and on foot (the mod can
+    only put soldiers somewhere, not vehicles)."""
     end = time.monotonic() + BOTS_TIMEOUT
-    while sum(1 for bot in server.request("/api/state").get("bots") or [] if bot.get("alive")) < PROBE_BOTS:
+    while sum(1 for bot in server.request("/api/state").get("bots") or []
+              if bot.get("alive") and not bot.get("vehicle")) < PROBE_BOTS:
         if time.monotonic() > end:
-            return "no bots alive"
+            return "no bots on foot"
         time.sleep(2)
     entry = wait_command(server, server.request("/api/command", {"type": "zone_probe", "args": {}}), PROBE_TIMEOUT)
     if entry.get("status") != "ok":
@@ -299,7 +301,7 @@ def command_run(options) -> int:
             if flags or options.warmup > 0:
                 zones = server.request("/api/census").get("zones") or []
                 print(f"  capture zones measured: {sum(1 for zone in zones if zone.get('samples'))}/{len(zones)}")
-            if not options.keep_bots:
+            if options.kick_bots:
                 server.rcon("funbots.kickAll")
             status = run_census(server, args, options.timeout)
             last = status["last"]
@@ -429,7 +431,8 @@ def main() -> int:
                      help="let the bots play this long before each census (the zone probe measures the capture zones)")
     run.add_argument("--no-probe", dest="probe", action="store_false",
                      help="don't measure the capture zones with the zone probe")
-    run.add_argument("--keep-bots", action="store_true", help="don't kick the bots before the census")
+    run.add_argument("--kick-bots", action="store_true",
+                     help="kick the bots before the census (5 %% faster, but the game-server crashed on rush maps)")
     run.set_defaults(handler=command_run)
 
     report = commands.add_parser("report", help="check saved censuses")

@@ -2420,7 +2420,7 @@ function GameDirector:_InitFlagTeams()
 	while s_Entity ~= nil do
 		s_Entity = CapturePointEntity(s_Entity)
 
-		if string.sub(s_Entity.name, -2) ~= "HQ" then
+		if not m_Utilities:IsHq(s_Entity) then
 			self._AllCapturePoints[#self._AllCapturePoints + 1] = s_Entity
 		else
 			self._AllBases[#self._AllBases + 1] = s_Entity
