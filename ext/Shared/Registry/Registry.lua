@@ -94,7 +94,7 @@ Registry = {
 		-- Do all sight-checks (bot-bot, bot-player, player-revive) with server-side raycasts instead of sending
 		-- them to the clients. No client is needed then: bots also fight each other on an empty server.
 		-- Costs server performance. Toggle ingame with "!serverraycasts on|off" or RCON "funbots.serverRaycasts".
-		USE_SERVER_RAYCASTS = true,
+		USE_SERVER_RAYCASTS = false,
 		-- Max server-raycasts per bot-bot-check (every BOT_BOT_CHECK_INTERVAL).
 		SERVER_RAYCASTS_BOT_BOT = 6,
 		-- Max server-raycasts per real player and update for the bot-player- and revive-checks.
