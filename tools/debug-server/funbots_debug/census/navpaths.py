@@ -57,6 +57,8 @@ ZONE_CROSSING = 20.0      # ...(each zone on the way counted with these metres) 
 ROAD_FACTOR = 1.5         # Soldiers walk along a road (a land vehicle path) only where no path leads, so it costs more.
 MIN_LENGTH = 10.0         # Shorter navigation paths lie where two zones touch, the mesh leads there: no junctions, bots
                           # would walk them back and forth.
+DETOUR_FACTOR = 3.0       # A piece longer than this many times the distance of its ends (plus DETOUR_EXTRA) goes far out
+DETOUR_EXTRA = 60.0       # and back (where no mesh is to cut it): dropped if its zones are connected otherwise.
 
 Vertex = tuple[int, int]  # path, point
 
@@ -87,6 +89,7 @@ class Result:
     moved_links: int = 0
     lost_links: int = 0
     connectors: int = 0  # paths kept to connect a kept path whose links lead nowhere else
+    detours: int = 0  # pieces dropped: far out and back, their zones are connected otherwise
 
 
 class _Zones:
@@ -332,6 +335,25 @@ def _route(graph: _Graph, before: Vertex | None, run: list[Vertex], after: Verte
     return Route(start, end, full, origin, [source], graph.length(full))
 
 
+def _zone_parts(navzones: dict, count: int) -> list[set[int]]:
+    """Per zone the parts of the mesh (connected pieces) its points lie in."""
+    points = navzones.get("points") or []
+    parent = list(range(len(points)))
+
+    def find(index: int) -> int:
+        while parent[index] != index:
+            parent[index] = parent[parent[index]]
+            index = parent[index]
+        return index
+
+    for edge in navzones.get("edges") or []:
+        parent[find(int(edge[0]))] = find(int(edge[1]))
+    result = [set() for _ in range(count)]
+    for index, zone in enumerate((navzones.get("zones") or [])[:count]):
+        result[index] = {find(int(point)) for point in zone.get("inside") or [] if int(point) < len(points)}
+    return result
+
+
 def _zone_distance(routes: list[Route], start: int, end: int) -> float:
     """Metres from zone to zone over the navigation paths (ZONE_CROSSING for each zone on the way)."""
     edges: dict[int, list[tuple[int, float]]] = defaultdict(list)
@@ -414,6 +436,18 @@ def build(data: MapData, navzones: dict) -> Result:
             result.duplicates += 1
             continue
         kept.append(route)
+
+    # 3b.: pieces that go far out and back (where no mesh cuts them, e.g. around a base the mesh doesn't reach), between
+    # zones the mesh or the other navigation paths connect anyway.
+    parts = _zone_parts(navzones, len(zones.names))
+    for route in list(kept):
+        straight = math.dist(graph.pos[route.vertices[0]], graph.pos[route.vertices[-1]])
+        if route.length <= DETOUR_FACTOR * straight + DETOUR_EXTRA:
+            continue
+        others = [other for other in kept if other is not route]
+        if parts[route.start] & parts[route.end] or _zone_distance(others, route.start, route.end) < math.inf:
+            kept.remove(route)
+            result.detours += 1
 
     # 4.: neighbouring zones the navigation paths don't connect, or only over a long detour. The shortest ways first,
     # each one can make the next ones unnecessary.
@@ -599,7 +633,7 @@ def summary(result: Result, before: MapData, verbose: bool = False) -> str:
         f"  navigation paths: {len(result.routes)} (" + ", ".join(f"{count} {origin}" for origin, count
                                                               in sorted(origins.items())) + f"), "
         f"{result.duplicates} pieces dropped along others, {result.on_mesh} on the mesh, "
-        f"{result.short} shorter than {MIN_LENGTH:.0f} m",
+        f"{result.short} shorter than {MIN_LENGTH:.0f} m, {result.detours} far out and back",
         f"  cut paths without a navigation path of their own: {len(result.dropped)}",
         f"  links of kept paths moved: {result.moved_links}, lost: {result.lost_links}, "
         f"over connecting paths: {result.connectors}",

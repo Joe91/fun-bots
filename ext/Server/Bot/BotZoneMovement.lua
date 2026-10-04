@@ -47,6 +47,11 @@ local ZONE_VEHICLE_REACH = 10.0  -- Registry.VEHICLES.MIN_DISTANCE_VEHICLE_ENTER
 local ZONE_REJOIN_RANGE = 30.0   -- No route from the point the bot is at (a piece of the mesh cut off by given-up
                                  -- connections): it goes on from a point of another part this close.
 local ZONE_REENTER_TIME = 5.0    -- Seconds a bot that left the mesh at a junction doesn't go onto it there again.
+local ZONE_FALL = 1.5            -- Metres below the way to the target (and ZONE_FALL_BELOW below both ends of it): the
+local ZONE_FALL_BELOW = 1.0      -- bot fell off, the way is given up.
+local ZONE_FALL_PAUSE = 3.0      -- Seconds after a fall before the next one counts (landing, getting up).
+local ZONE_RESNAP = 8.0          -- Metres from its point a bot may be when it decides anew: else the closest point...
+local ZONE_RESNAP_AFTER = 5.0    -- ...not in the first seconds on the mesh (on the way from the junction).
 
 ---@class BotZoneState
 ---@field Zone NavZone
@@ -71,6 +76,8 @@ local ZONE_REENTER_TIME = 5.0    -- Seconds a bot that left the mesh at a juncti
 ---@field Avoid integer|nil a dead end the bot got stuck at: not the start of the next route
 ---@field Action table|nil at the goal: get into the vehicle, arm or disarm the MCOM (GameDirector:GetActionTarget)
 ---@field ActionTime number seconds of the action so far
+---@field Entered number time the bot came onto the mesh
+---@field FallTime number time of the last fall off a way
 
 ---Called when the bot reached a waypoint. At a junction of the mesh it walks the mesh from now on.
 ---@param p_Point Waypoint (or an offset-point with the fields of its waypoint)
@@ -204,6 +211,9 @@ function Bot:_EnterZone(p_Zone, p_Point, p_Vehicle, p_Junction)
 		Reverses = 0,
 		Action = nil,
 		ActionTime = 0.0,
+		-- Just entered: on the way from the junction to its point, which may be farther than ZONE_RESNAP.
+		Entered = SharedUtils:GetTime(),
+		FallTime = 0.0,
 	}
 	self:_StopObstacleSequence()
 	if p_Vehicle then
@@ -238,6 +248,7 @@ end
 function Bot:_ZoneDecide()
 	local s_State = self.m_Zone
 	---@cast s_State -nil
+	self:_ZoneResnap()
 	s_State.Objective = self._Objective
 	s_State.Exit = nil
 	s_State.SubObjective = nil
@@ -325,10 +336,31 @@ function Bot:_ZoneRejoin()
 	return false
 end
 
+---The point of the bot is where it last reached one. It may be far away by now (it fought, pushed forward while
+---shooting, walked up to an MCOM): a route from there leads somewhere else, back to where it came from. Then the point
+---closest to where it stands.
+function Bot:_ZoneResnap()
+	local s_State = self.m_Zone
+	local s_Soldier = self.m_Player.soldier
+	if s_State == nil or s_Soldier == nil or s_State.Vehicle or SharedUtils:GetTime() - s_State.Entered < ZONE_RESNAP_AFTER then
+		return
+	end
+	local s_Current = s_State.Zone.Points[s_State.Point]
+	local s_Position = s_Soldier.worldTransform.trans
+	if s_Current ~= nil and s_Current.Position:Distance(s_Position) <= ZONE_RESNAP then
+		return
+	end
+	local s_Point = m_NavZones:Closest(s_State.Zone, s_Position, s_State.Avoid)
+	if s_Point ~= nil then
+		s_State.Point = s_Point
+	end
+end
+
 ---Walks to the next point of the zone (not the one the bot is at).
 function Bot:_ZoneNewGoal()
 	local s_State = self.m_Zone
 	---@cast s_State -nil
+	self:_ZoneResnap()
 	-- On the mesh outside of the zones there is nothing to walk around in.
 	if s_State.Zone.Kind == 'mesh' then
 		self:_ZoneRouteTo(nil)
@@ -662,6 +694,31 @@ function Bot:UpdateZoneMovement(p_DeltaTime)
 		s_State.Stuck = 0.0
 		self._LastWayDistance = 1000.0
 		return true
+	end
+
+	-- Fallen off (a narrow ramp, stairs without a railing): far below the way from the last target to this one. The bot
+	-- walks round and tries again, always with some progress: count it as a way given up at once.
+	local s_From = s_State.Targets[s_State.Step - 1]
+	local s_FromPosition = s_From ~= nil and s_From.Position
+		or (s_State.Zone.Points[s_State.Point] and s_State.Zone.Points[s_State.Point].Position)
+	if s_FromPosition ~= nil and s_State.FallTime + ZONE_FALL_PAUSE < SharedUtils:GetTime() then
+		local s_LengthX = s_Target.Position.x - s_FromPosition.x
+		local s_LengthZ = s_Target.Position.z - s_FromPosition.z
+		local s_Length = math.sqrt(s_LengthX * s_LengthX + s_LengthZ * s_LengthZ)
+		local s_Share = 0.0
+		if s_Length > 0.1 then
+			s_Share = math.max(0.0, math.min(1.0, 1.0 - s_Distance / s_Length))
+		end
+		local s_Expected = s_FromPosition.y + (s_Target.Position.y - s_FromPosition.y) * s_Share
+		if s_Position.y < s_Expected - ZONE_FALL
+			and s_Position.y < math.min(s_FromPosition.y, s_Target.Position.y) - ZONE_FALL_BELOW then
+			s_State.FallTime = SharedUtils:GetTime()
+			m_Logger:Write(self.m_Player.name .. ' fell off the way in the zone of ' .. s_State.Zone.Name)
+			if self:_ZoneGiveUpConnection(s_Position, s_Target.Position) then
+				return false
+			end
+			return true
+		end
 	end
 
 	-- Stuck: jump now and then, give the way up after a while, the zone after a few ways.

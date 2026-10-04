@@ -7,8 +7,10 @@ detail-meshes):
 
 - every connection, along its way (the corners), at 1.0 and 1.3 m above the ground, in both directions: blocked if
   both heights hit on the same stretch in the same direction (a wall; only one of them: a railing, the edge of a
-  ceiling over stairs, a kerb). Not the connections along waypoints (navzones._trace_edges): a person walked them, the
-  census just doesn't see them (stairs, ladders, jumps);
+  ceiling over stairs, a kerb). And the ground along it, every GROUND_STEP: a step up or down of more than LEDGE
+  between two samples (a ledge a soldier can't climb), or no ground (a hole), blocks it as well. Not the connections
+  along waypoints (navzones._trace_edges): a person walked them, the census just doesn't see them (stairs, ladders,
+  jumps);
 - every point: up to 1.0 m above it (no room even to crouch: a ceiling, the inside of a slab), and in 8 directions at
   1.0 m: from the point outwards and from outside back to the point. Hit from outside but not from inside in at least
   INSIDE_DIRECTIONS directions: the point is inside of a solid.
@@ -32,6 +34,10 @@ SIDE = 1.5                 # Metres of the side rays of a point.
 SIDE_HEIGHT = 1.0
 INSIDE_DIRECTIONS = 3
 MATCH = 0.3                # A point of the check this close to a point of a new mesh is the same one.
+GROUND_STEP = 0.5          # Metres between the ground-rays along a connection...
+GROUND_ABOVE = 1.6         # ...from this far above the straight line...
+GROUND_BELOW = 2.5         # ...to this far below it.
+LEDGE = 0.8                # More up or down between two of them: a ledge.
 CHUNK = 3000               # Rays per command.
 VERSION = 1
 
@@ -70,6 +76,12 @@ def rays(networks: dict) -> tuple[list[list[float]], list[tuple]]:
                 end = [q[0], q[1] + height, q[2]]
                 result += [start + end, end + start]
                 meaning += [("edge", index, segment, height_index, 0), ("edge", index, segment, height_index, 1)]
+            samples = max(1, math.ceil(math.hypot(q[0] - p[0], q[2] - p[2]) / GROUND_STEP))
+            for sample in range(samples + 1):
+                t = sample / samples
+                x, y, z = p[0] + (q[0] - p[0]) * t, p[1] + (q[1] - p[1]) * t, p[2] + (q[2] - p[2]) * t
+                result.append([x, y + GROUND_ABOVE, z, x, y - GROUND_BELOW, z])
+                meaning.append(("ground", index, segment, sample, y + GROUND_ABOVE))
     for index, point in enumerate(points):
         x, y, z = point[:3]
         result.append([x, y + 0.2, z, x, y + HEADROOM, z])
@@ -88,20 +100,29 @@ def evaluate(networks: dict, hits: list[float], meaning: list[tuple]) -> dict:
     points = networks.get("points") or []
     edges = networks.get("edges") or []
     edge_hits: dict[tuple[int, int, int], set[int]] = {}
+    grounds: dict[tuple[int, int], dict[int, float | None]] = {}
     low = set()
     out_hit: dict[tuple[int, int], bool] = {}
     back_hit: dict[tuple[int, int], bool] = {}
-    for hit, what in zip(hits, meaning):
-        hit = hit is not None and hit >= 0
+    for raw, what in zip(hits, meaning):
+        hit = raw is not None and raw >= 0
         if what[0] == "edge" and hit:
             edge_hits.setdefault((what[1], what[2], what[4]), set()).add(what[3])
+        elif what[0] == "ground":
+            grounds.setdefault((what[1], what[2]), {})[what[3]] = what[4] - raw if hit else None
         elif what[0] == "up" and hit:
             low.add(what[1])
         elif what[0] == "out":
             out_hit[(what[1], what[2])] = hit
         elif what[0] == "back":
             back_hit[(what[1], what[2])] = hit
-    blocked = {key[0] for key, heights in edge_hits.items() if len(heights) == len(HEIGHTS)}
+    ledges = set()
+    for (index, _), profile in grounds.items():
+        heights = [profile[sample] for sample in sorted(profile)]
+        if any(height is None for height in heights) or \
+                any(abs(b - a) > LEDGE for a, b in zip(heights, heights[1:])):
+            ledges.add(index)
+    blocked = {key[0] for key, heights in edge_hits.items() if len(heights) == len(HEIGHTS)} | ledges
     inside = {index for index in range(len(points))
               if sum(1 for direction in range(8) if back_hit.get((index, direction)) and not out_hit.get((index, direction)))
               >= INSIDE_DIRECTIONS}

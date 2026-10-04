@@ -256,6 +256,31 @@ function DebugCommands.Bot(p_Args)
 		s_Fields.pos = _Vec(s_Soldier.worldTransform.trans)
 		s_Fields.maxHealth = _Round(s_Soldier.maxHealth, 1)
 	end
+
+	-- On the mesh (BotZoneMovement): where it is, where it goes. Points counted from 0, as in the file of the mesh.
+	local s_Zone = s_Bot.m_Zone
+	if s_Zone ~= nil then
+		local s_Targets = {}
+		for l_Index = 1, #s_Zone.Targets do
+			local l_Target = s_Zone.Targets[l_Index]
+			s_Targets[l_Index] = { pos = _Vec(l_Target.Position), point = l_Target.Point and l_Target.Point - 1 }
+		end
+		s_Fields.zoneState = {
+			zone = s_Zone.Zone.Name,
+			objective = s_Zone.Objective,
+			point = s_Zone.Point and s_Zone.Point - 1,
+			goal = s_Zone.Goal and s_Zone.Goal - 1,
+			step = s_Zone.Step,
+			targets = s_Targets,
+			fails = s_Zone.Fails,
+			exitFails = s_Zone.ExitFails,
+			exit = s_Zone.Exit and { point = s_Zone.Exit.Point - 1, path = s_Zone.Exit.Waypoint and s_Zone.Exit.Waypoint.PathIndex,
+				waypoint = s_Zone.Exit.Waypoint and s_Zone.Exit.Waypoint.PointIndex } or nil,
+			action = s_Zone.Action and s_Zone.Action.Kind,
+			stuck = _Round(s_Zone.Stuck, 1),
+			waiting = s_Zone.Waiting,
+		}
+	end
 	return s_Fields
 end
 

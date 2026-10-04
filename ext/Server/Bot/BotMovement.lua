@@ -664,6 +664,10 @@ function Bot:UpdateNormalMovement(p_DeltaTime)
 		if self.m_Zone ~= nil and self:UpdateZoneMovement(p_DeltaTime) then
 			return
 		end
+		-- Killed there (stuck for good).
+		if self.m_Player.soldier == nil then
+			return
+		end
 
 		local s_ActivePointIndex, s_InvertPathDirection = self:_GetWayIndex(0)
 		self._CurrentWayPoint = s_ActivePointIndex

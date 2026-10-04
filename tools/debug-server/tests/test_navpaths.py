@@ -168,6 +168,15 @@ class NavpathsTest(unittest.TestCase):
         self.assertEqual(result.routes, [])
         self.assertEqual(result.short, 1)
 
+    def test_far_out_and_back_dropped(self):
+        # Path 2 leaves a, goes 200 m away and comes back to b: a and b are connected by path 1 already.
+        out = [(10, -20 - 4 * i) for i in range(50)]
+        detour = _path(2, [(5, 0)] + out + list(reversed([(90, z) for _, z in out])) + [(95, 0)])
+        data = MapData({1: _path(1, _line(-5, 105, 0)), 2: detour})
+        result = navpaths.build(data, self.zones)
+        self.assertEqual(result.detours, 1)
+        self.assertEqual(len(result.routes), 1)
+
     def test_missing_ends(self):
         data = MapData({1: _path(1, _line(-5, 105, 0))})
         result = navpaths.build(data, self.zones)

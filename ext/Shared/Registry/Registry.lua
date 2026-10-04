@@ -334,7 +334,7 @@ Registry = {
 		PROBABILITY_SPAWN_FOR_VEHICLE = 50,
 		-- Rush: the defenders (always Team2) get this share of the bots of their team (balanced_teams), e.g. to test
 		-- the attack. 1.0 = as many as the attackers.
-		RUSH_DEFENDER_FACTOR = 0.7,
+		RUSH_DEFENDER_FACTOR = 1.0,
 	},
 	-- Debug
 	DEBUG = {
@@ -352,7 +352,7 @@ Registry = {
 		SPIKE_TRACE_MS = 0,
 		-- Streams the game-state to the external debug-server (tools/debug-server) and executes its commands.
 		-- Toggle ingame with "!debugbridge on|off" or RCON "funbots.debugBridge".
-		DEBUG_BRIDGE = true,
+		DEBUG_BRIDGE = false,
 		-- Address of the debug-server.
 		DEBUG_BRIDGE_URL = "http://127.0.0.1:8765",
 		-- Seconds between two snapshots sent to the debug-server.

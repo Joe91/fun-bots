@@ -39,11 +39,23 @@ class CheckTest(unittest.TestCase):
             # Point 3: seen from outside in every direction, nothing from inside. Connection 0 blocked.
             hit = (what[0] == "back" and what[1] == 3) or (what[0] == "edge" and what[1] == 0 and what[4] == 0) \
                 or (what[0] == "edge" and what[1] == 1 and what[3] == 0)
-            hits.append(0.5 if hit else -1)
+            if what[0] == "ground":
+                hits.append(check.GROUND_ABOVE)  # flat ground below the connections
+            else:
+                hits.append(0.5 if hit else -1)
         found = check.evaluate(network, hits, meaning)
         self.assertEqual(found["insidePoints"], [[15.0, 0.0, 0.0]])
         self.assertEqual(found["blockedEdges"], [[0.0, 0.0, 0.0, 5.0, 0.0, 0.0]])
         self.assertEqual(len(rays), len(meaning))
+
+    def test_ledge_blocks_a_connection(self):
+        network = _network()
+        rays, meaning = check.rays(network)
+        # Connection 2: the ground drops 1.5 m in its middle.
+        hits = [(check.GROUND_ABOVE + (1.5 if what[1] == 2 and what[3] > 5 else 0.0)) if what[0] == "ground" else -1
+                for what in meaning]
+        found = check.evaluate(network, hits, meaning)
+        self.assertEqual(found["blockedEdges"], [[10.0, 0.0, 0.0, 15.0, 0.0, 0.0]])
 
     def test_connection_along_waypoints_stays(self):
         network = _network()
