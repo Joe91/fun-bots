@@ -46,6 +46,8 @@ WALL_COST = 4.0           # Ways along walls (clearance below MIN_CLEARANCE) cos
 MIN_COMPONENT = 20        # Walkable parts with fewer surfaces are ignored.
 MCOM_ZONE = 20.0          # Metres around an MCOM that count as its zone.
 BASE_ZONE = 40.0          # Metres around an HQ that count as the base.
+SPAWN_ZONE = 25.0         # Metres around the spawns of a spawn area that count as its zone.
+SPAWN_HEIGHT = 1.0        # A spawn (on the ground) is on the surface this close above or below it.
 CROUCH_HEADROOM = 1.7     # Less headroom: crouching.
 COVER_RANGE = 3           # Cells in each of the 8 directions that are checked for cover.
 ATTACH_HEIGHT = 1.0       # A waypoint belongs to a surface this close below or above it.
@@ -323,6 +325,10 @@ def _zone_test(census: dict, area: dict):
     center = as_list(area.get("center"))
     if area.get("kind") == "mcom":
         return (lambda x, z: math.hypot(x - center[0], z - center[2]) <= MCOM_ZONE), f"{MCOM_ZONE:.0f} m around the MCOM"
+    spawns = [as_list(pos) for pos in as_list(area.get("spawns"))]
+    if spawns:
+        return (lambda x, z: any(math.hypot(x - pos[0], z - pos[2]) <= SPAWN_ZONE for pos in spawns)), \
+            f"{SPAWN_ZONE:.0f} m around {len(spawns)} spawns"
     if area.get("kind") == "base":
         return (lambda x, z: math.hypot(x - center[0], z - center[2]) <= BASE_ZONE), f"{BASE_ZONE:.0f} m around the HQ"
     point = next((point for point in capture_points(census)
@@ -358,12 +364,17 @@ def _round(pos) -> list[float]:
 
 def _network(grid: _Area, clearance: dict[Surface, float], allowed: set[Surface],
              walked: list[tuple[int, int, list[float], Surface | None]], nodes: _Nodes, inside, profile: Profile,
-             cover: bool, attached: tuple[list, _Nodes] | None = None) -> dict:
+             cover: bool, attached: tuple[list, _Nodes] | None = None, spawns: list | None = None) -> dict:
     """Points, connections and junctions over the allowed surfaces. walked: the waypoints in the area that choose the
     parts that are kept and get attached ([path, point, position, surface]). attached: other waypoints to attach instead
-    (walked, nodes), e.g. the paths cut at the zones (navpaths.py), while the parts still come from the census."""
+    (walked, nodes), e.g. the paths cut at the zones (navpaths.py), while the parts still come from the census.
+    spawns: where the game spawns soldiers (on the ground), they keep their parts as well."""
     components = [component for component in _components(grid, allowed) if len(component) >= MIN_COMPONENT]
     seeds = {key for _, _, _, key in walked if key is not None}
+    for pos in spawns or []:
+        key = grid.surface_at(pos, SPAWN_HEIGHT)
+        if key is not None:
+            seeds.add(key)
     kept = [component for component in components if component & seeds]
     if not kept and components and cover:
         kept = [max(components, key=len)]
@@ -520,7 +531,10 @@ def _trace_edges(grid: _Area, owner: dict[Surface, int], points: list[Surface], 
             network = owned.get((path, point))
             if network is None:
                 continue
-            if last is not None and point - last[0] <= 40 and find(last[1]) != find(network):
+            # Only along waypoints that all lie in the areas: where the path leaves them in between, the corners
+            # would skip that stretch (a straight line across), the navigation paths lead there.
+            if last is not None and point - last[0] <= 40 and find(last[1]) != find(network) \
+                    and all(index in positions for index in range(last[0], point + 1)):
                 corners = [_round(positions[index]) for index in range(last[0], point + 1) if index in positions]
                 way = [points_pos for points_pos in [grid.pos(points[last[1]])] + corners + [grid.pos(points[network])]]
                 length = sum(math.dist(p, q) for p, q in zip(way, way[1:]))
@@ -644,6 +658,15 @@ def _land(nodes: _Nodes) -> set[int]:
             if "land" in [str(name).lower() for name in entry.get("vehicles") or []]}
 
 
+def spawn_positions(census: dict) -> list[list[float]]:
+    """Where the game spawns soldiers in the mode of the census, on the ground: the alternate spawns of the mode and the
+    spawns of the spawn areas (MapCensus.lua). Censuses before them have none."""
+    positions = [as_list(spawn.get("ground")) for spawn in as_list((census.get("entities") or {}).get("alternateSpawns"))]
+    for area in census.get("areas") or []:
+        positions += [as_list(pos) for pos in as_list(area.get("spawns"))]
+    return [pos for pos in positions if len(pos) >= 3]
+
+
 def build(census: dict, attach: dict | None = None, checks: dict | None = None) -> dict:
     """The mesh of a level from all areas of its census, with the zones as labels on its points. attach: other
     waypoints to attach it to ({path: {"points", "vehicles", "objectives"}}, e.g. the paths cut at the zones), the
@@ -658,7 +681,8 @@ def build(census: dict, attach: dict | None = None, checks: dict | None = None) 
     attach_nodes = _Nodes({"nodes": attach}) if attach is not None else None
     grid = _Merged(areas)
     clearance = _clearance(grid)
-    tests = [(area, *_zone_test(census, area)) for area in areas]
+    # Areas of kind "spawn" (around the spawns of capture points and HQs) only add to the mesh, they are no zones.
+    tests = [(area, *_zone_test(census, area)) for area in areas if area.get("kind") != "spawn"]
 
     def inside_any(x: float, z: float) -> bool:
         return any(inside(x, z) for _, inside, _ in tests)
@@ -667,8 +691,9 @@ def build(census: dict, attach: dict | None = None, checks: dict | None = None) 
         return None if attach_nodes is None else (_walked(grid, attach_nodes, paths, height), attach_nodes)
 
     soldier = _network(grid, clearance, set(grid.surfaces), _walked(grid, nodes, nodes.foot, ATTACH_HEIGHT), nodes,
-                       inside_any, SOLDIER, True, attached(attach_nodes.foot, ATTACH_HEIGHT) if attach_nodes else None)
-    soldier = check_apply(soldier, checks)
+                       inside_any, SOLDIER, True, attached(attach_nodes.foot, ATTACH_HEIGHT) if attach_nodes else None,
+                       spawns=spawn_positions(census))
+    soldier = check_apply(soldier, checks, spawn_positions(census))
     data.update(points=soldier["points"], edges=soldier["edges"], attach=soldier["attach"],
                 stats=dict(soldier["stats"], surfaces=len(grid.surfaces)))
 

@@ -17,12 +17,15 @@ navigation paths between them. What they do there comes from the game, not from 
 
 - **MCOMs**: the mod knows where they are (the interactions of the engine). A bot in the zone of an MCOM walks over the
   mesh to it, looks at it and arms or disarms it (`BotZoneMovement`, `Bot:_ZoneAction`).
-- **Vehicles**: every vehicle standing still with a free seat is an objective of its own (`vehicle <id>`, team of the
-  closest HQ, capture point or base). A bot walks over the mesh to it and gets in.
-- **Spawns**: the bots spawn at the spawns of the game and start on the mesh there.
+- **Vehicles**: the team comes from the vehicle-spawn of the engine. Vehicles in a base of their team are spawned into
+  directly; every other vehicle standing still with a free seat is an objective of its own (`vehicle <id>`), a bot
+  walks over the mesh to it and gets in.
+- **Spawns**: the bots spawn at the spawns of the game and start on the mesh there. The census reads the spawns of the
+  mode from the engine (also the alternate spawns of the capture points) and measures the area around them; in rush
+  they are the bases of the stages.
 
-So no labels, actions or "ways to" paths are needed for these. Paths named `vehicle ...` still matter where bots spawn
-right into a vehicle (`spawn vehicle ...`), and vehicle-paths keep their objectives: vehicles find their way by them.
+So no labels, actions or "ways to" paths are needed for these, also no `base ...` or `spawn vehicle ...` paths.
+Vehicle-paths keep their objectives: vehicles find their way by them.
 
 ## The steps
 
@@ -65,7 +68,7 @@ Without recorded paths to the MCOMs (`mcom N interact`) the mod numbers the MCOM
 pair (squad rush: the one) closest to the spawn of the attackers, each next stage the closest to the one before. That
 was right on 24 of 26 levels with known numbers; check the numbers of a new level on the map (zones `mcom N`) after its
 census. The bases of the stages come from the spawns of the game (`spawn us N`, `spawn ru N`); paths named `base us N`
-are not needed.
+are not used.
 
 ## Still manual
 

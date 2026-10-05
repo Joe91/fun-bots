@@ -223,7 +223,7 @@ function BotSpawner:OnEngineUpdate(p_DeltaTime, p_SimulationDeltaTime)
 						s_Transform.trans = s_SpawnPosition
 						l_Bot.m_Player.soldier:SetTransform(s_Transform)
 						-- The mate may be in a zone (base, capture point): then the bot starts on its network.
-						l_Bot:TryEnterZoneAt(s_SpawnPosition)
+						l_Bot:TryEnterZoneAt(s_SpawnPosition, true)
 					end
 
 					if not s_Killed then
@@ -250,7 +250,7 @@ function BotSpawner:OnEngineUpdate(p_DeltaTime, p_SimulationDeltaTime)
 					l_Bot:SetVarsWay(nil, true, s_Link[1], s_Link[2], false)
 					table.remove(self._BotsWithoutPath, l_Index)
 					-- On the network of a zone (base, capture point) the bot starts there (BotZoneMovement).
-					l_Bot:TryEnterZoneAt(s_Position)
+					l_Bot:TryEnterZoneAt(s_Position, true)
 
 					self:_ApplyCosumizationAfterSpawn(l_Bot)
 
@@ -978,45 +978,7 @@ function BotSpawner:_UseGameSpawn()
 	if Globals.UsedSpawnMethod == SpawnMethod.Spawn then
 		return true
 	end
-	return (Globals.IsConquest or Globals.IsRush) and m_NavZones:HasBases()
-end
-
----On a random point of the mesh in the base of the team in this stage (rush), instead of the spawn of the game: that one
----is far behind, next to the vehicles.
----@param p_Bot Bot
----@return boolean true if spawned
-function BotSpawner:_SpawnInBase(p_Bot)
-	local s_Base = g_GameDirector:GetActiveBase(p_Bot.m_Player.teamId)
-	local s_Zone = s_Base ~= nil and m_NavZones:GetZone(s_Base) or nil
-	if s_Zone == nil or #s_Zone.Inside == 0 then
-		return false
-	end
-	-- On the part of the mesh with most of the base: not on a roof or in a corner the mesh doesn't lead out of.
-	local s_Count = {}
-	local s_Main = nil
-	for l_Index = 1, #s_Zone.Inside do
-		local l_Part = s_Zone.Part[s_Zone.Inside[l_Index]]
-		s_Count[l_Part] = (s_Count[l_Part] or 0) + 1
-		if s_Main == nil or s_Count[l_Part] > s_Count[s_Main] then
-			s_Main = l_Part
-		end
-	end
-	-- The most open of a few random points: not right at a wall.
-	local s_Point = nil
-	for _ = 1, 10 do
-		local l_Point = s_Zone.Inside[MathUtils:GetRandomInt(1, #s_Zone.Inside)]
-		if s_Zone.Part[l_Point] == s_Main
-			and (s_Point == nil or s_Zone.Points[l_Point].Clearance > s_Zone.Points[s_Point].Clearance) then
-			s_Point = l_Point
-		end
-	end
-	if s_Point == nil then
-		return false
-	end
-	local s_Transform = LinearTransform()
-	s_Transform.trans = s_Zone.Points[s_Point].Position:Clone()
-	self:_SpawnBot(p_Bot, s_Transform, true)
-	return true
+	return (Globals.IsConquest or Globals.IsRush) and m_NavZones:GetMesh() ~= nil
 end
 
 ---@param p_Bot Bot
@@ -1462,15 +1424,12 @@ function BotSpawner:_SpawnSingleWayBot(p_Player, p_UseRandomWay, p_ActiveWayInde
 			end
 
 			m_BotCreator:SetAttributesToBot(s_Bot)
-			-- Rush: one bot per free vehicle spawns at the spawn of the game next to it, the others in the base of the stage.
-			-- Conquest: now and then at the capture point next to a free vehicle (else at the front).
+			-- Rush: one bot per free vehicle spawns at the spawn of the game next to it, the others where the game spawns
+			-- them (the alternate spawns of the stage). Conquest: now and then at the capture point next to a free vehicle
+			-- (else at the front).
 			local s_Vehicle = nil
 			if Globals.IsRush then
 				s_Vehicle = g_GameDirector:ReserveVehicle(s_Bot)
-				if s_Vehicle == nil and self:_SpawnInBase(s_Bot) then
-					self:_AddBotWithoutPath(s_Bot)
-					return
-				end
 			elseif Globals.IsConquest and m_Utilities:CheckProbability(Registry.BOT_SPAWN.PROBABILITY_SPAWN_FOR_VEHICLE) then
 				s_Vehicle = g_GameDirector:ReserveVehicle(s_Bot)
 			end

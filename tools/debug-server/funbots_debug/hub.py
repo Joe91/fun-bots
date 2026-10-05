@@ -318,14 +318,12 @@ class Hub:
         return areas
 
     def census_args(self, args: dict | None = None) -> dict:
-        """The arguments of a census: the areas around the objectives, and the bases from the waypoints in modes
-        without HQs (rush, MapCensus.lua)."""
+        """The arguments of a census: the areas around the objectives. The bases without HQs (rush) come from the
+        spawns of the game (MapCensus.lua, _SpawnAreas), not from waypoints."""
         args = dict(args or {})
         with self.lock:
             if "areas" not in args:
                 args["areas"] = self._census_areas()
-            if "basePaths" not in args:
-                args["basePaths"] = not any(area["kind"] == "base" for area in args["areas"])
         return args
 
     def census_status(self) -> dict:

@@ -20,12 +20,18 @@ local s_TopMem = 0
 -- Time of the top-level calls in the current frame, by name.
 local s_FrameCalls = {}
 local s_FrameModMs = 0
+-- Hang detection: the names of the wrapped calls running now and when the top-level one started. A wrapped call more
+-- than HANG_SECONDS after that errors out with them (an endless loop that calls any method of the mod).
+local HANG_SECONDS = 10
+local s_Stack = {}
+local s_TopStart = 0
 
 ---@param p_Name string
 ---@param p_Function function
 ---@return function
 local function _Wrap(p_Name, p_Function)
 	local function _Done(p_Start, ...)
+		s_Stack[s_Depth] = nil
 		s_Depth = s_Depth - 1
 		local s_Ms = (SharedUtils:GetTimeNS() - p_Start) / 1000000
 		if s_Ms >= Registry.DEBUG.SPIKE_TRACE_MS then
@@ -50,10 +56,18 @@ local function _Wrap(p_Name, p_Function)
 	end
 
 	return function(...)
+		local s_Now = SharedUtils:GetTimeNS()
 		if s_Depth == 0 then
 			s_TopMem = collectgarbage("count")
+			s_TopStart = s_Now
+		elseif s_Now - s_TopStart > HANG_SECONDS * 1e9 then
+			s_TopStart = s_Now
+			local s_Message = '[SpikeTracer] HANG in ' .. table.concat(s_Stack, ' > ', 1, s_Depth) .. ' > ' .. p_Name
+			print(s_Message)
+			error(s_Message)
 		end
 		s_Depth = s_Depth + 1
+		s_Stack[s_Depth] = p_Name
 		return _Done(SharedUtils:GetTimeNS(), p_Function(...))
 	end
 end
@@ -93,6 +107,7 @@ function SpikeTracer:__init()
 	local s_LastFrame = nil
 	Events:Subscribe('Engine:Update', function()
 		s_Depth = 0
+		s_Stack = {}
 		s_Pending = {}
 		local s_Now = SharedUtils:GetTimeNS()
 		if s_LastFrame ~= nil then

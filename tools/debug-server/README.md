@@ -360,11 +360,15 @@ of the running level). On the map (layer *Mesh*) connections inside the zone are
 points indoors have a blue ring, points that need crouching an orange one, the junctions with the waypoints are dashed
 orange. The zones are the areas around their points (green capture points, blue bases, orange MCOMs).
 
-Areas are made around the capture points, the MCOMs and the HQs of the running mode (`base us`, `base ru`, 60 m). Modes
-without HQs (rush) get their bases from the waypoints: around the paths of each `base us 1`, `base ru 2`, ... objective.
-Soldier-spawns of the game (also the ones of later stages) that no area covers get one of their own (`spawn us 1`,
-`spawn ru 1`, ..., 55 m, kind `base`): in rush the attackers don't spawn where their base-paths are. Spawn-entities may
-float above the ground, the soldiers appear on the ground below.
+Areas are made around the capture points, the MCOMs and the HQs of the running mode (`base us`, `base ru`, 60 m). The
+spawns come from the engine only, never from waypoints: the alternate spawns (`AlternateSpawnEntityData`) of the layers of
+the running mode (`SpawnPoints.lua`, collected while the level loads them: after a reload of the mod within a level the
+level has to be loaded again), and the ones the layer of the mode links from the common layers of the level. A capture
+point spawns its team there, up to 70 m from the flag. Without any, the soldier-spawn-entities are used. Spawns no
+other area covers get an area of their own, 40 m around each spawn of a group (`spawn us 1`, `spawn 1` for both teams).
+They only add to the mesh (kind `spawn`): no zone the navigation paths are cut at, the spawns of one rush stage are
+spread over 250 m. The mesh keeps every part a spawn lies on, as the parts with waypoints. The debug-command `spawns`
+lists them. Spawn-entities may float above the ground, the soldiers appear on the ground below.
 
 Land vehicles get a mesh of their own (`vehicle`): the same way, but only over wide and open ground
 (1.8 m to the next wall, slopes up to about 41°, no roof below 4 m), a point about every 10 m, attached to the paths with
@@ -392,16 +396,24 @@ zone it walks in, `@mesh` outside of the zones) and `zoneExit` on its way out.
   `GameDirector:GetMcom`), where a recorded path `mcom N interact` exists also its action-node (where to stand) and
   yaw. A new rush level without these paths gets its MCOMs numbered from the attackers' spawn
   (`GameDirector:_NumberEngineMcoms`, see `NEW_MAP.md`).
-- **Vehicles**: every vehicle that stands still with a free seat is an objective (`vehicle <id>`,
-  `GameDirector:_RefreshVehicleEntities`): of the team in it, else of the closest HQ or capture point (80 m), in rush
-  of the closest base (150 m), else of both teams. A bot walks over the mesh to the point next to it and gets in. The
-  paths `vehicle ...` with their action-nodes are only used on levels without a mesh, and for the vehicles bots spawn
-  into (`spawn vehicle ...`).
+- **Vehicles**: the team of a vehicle is the one of the vehicle-spawn of the engine it spawned at
+  (`GameDirector:_VehicleSpawnTeam`). A vehicle in a base of its team (an HQ within 120 m, in rush a spawn of the team
+  within 60 m) is spawned into directly, like jets: bots that spawn at the game spawns get into it at once
+  (`m_SpawnableVehicles`). Every other
+  vehicle that stands still with a free seat is an objective (`vehicle <id>`, `GameDirector:_RefreshVehicleEntities`):
+  a bot walks over the mesh to it and gets in as soon as it is next to it (5.5 m from the middle, 10 m if it doesn't
+  get closer). No labels or paths `vehicle ...` / `spawn vehicle ...` are used on levels with a mesh.
+- **Rush spawns**: the bots spawn where the game spawns its players (the alternate spawns of the stage); one bot per
+  free vehicle at the spawn next to it (`GameDirector:ReserveVehicle`).
 - **Bases and spawns**: bots that spawn at the spawn-points of the game (`SpawnMethod.Spawn`) start on the mesh there
   (a base, a spawn, a capture point; up to 30 m away they walk straight to it) and go where their objective is as soon
-  as they have one. In conquest and rush the bots always use the spawn of the game once the level has bases on the
-  mesh (else they spawn on random waypoints away from the enemy, as in the deathmatch modes). Squad-spawns on a mate
-  on the mesh start on it as well.
+  as they have one. In conquest and rush the bots always use the spawn of the game once the level has a mesh
+  (else they spawn on random waypoints away from the enemy, as in the deathmatch modes). Squad-spawns on a mate
+  on the mesh start on it as well. A bot only starts at a point it can walk to straight (rays at knee and chest height,
+  `NavZones:ZoneAtVisible`); with none in sight within 30 m it is put onto the closest point at once.
+- **Smoothing** (`Registry.BOT.ZONE_SMOOTHING`): on the way from point to point a bot turns towards the next point
+  before it gets there, within the room around both points (their clearance, at most 2.5 m), not at corners around
+  walls, on narrow ways, steps or where it crouches (`Bot:_ZoneSmooth`).
 - **Land vehicles** (`Registry.BOT.USE_VEHICLE_ZONE_NETWORKS`, experimental): a driver that reaches a junction of the
   vehicle-mesh in the capture point of its objective drives the zone there, stands a few seconds at each point, and
   leaves over the vehicle-junction that suits its next objective. When it doesn't get along it reverses, after three

@@ -70,6 +70,8 @@ class Census:
     def add_area(self, event: dict) -> dict:
         area = {key: event.get(key) for key in ("name", "kind", "center", "radius", "x0", "z0", "step", "columns",
                                                  "rows", "layers")}
+        if event.get("spawns"):
+            area["spawns"] = as_list(event.get("spawns"))  # spawn areas: where the soldiers appear, on the ground
         area["cells"] = [None] * int(event.get("rows") or 0)
         self.areas[int(event["area"])] = area
         return area

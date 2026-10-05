@@ -21,6 +21,8 @@ local m_DebugSnapshots = require('Debug/DebugSnapshots')
 local m_NodeCollection = require('NodeCollection')
 ---@type Utilities
 local m_Utilities = require('__shared/Utilities')
+---@type SpawnPoints
+local m_SpawnPoints = require('SpawnPoints')
 
 local _Vec = DebugBridge.Vec
 local _Round = DebugBridge.Round
@@ -44,9 +46,8 @@ local NODES_PER_EVENT = 250
 -- Grids around the objectives.
 local AREA_MARGIN = 15.0          -- Metres around the capture-radius.
 local AREA_MCOM_RADIUS = 30.0
-local AREA_BASE_MAX_RADIUS = 45.0 -- Bases from the waypoints (rush): at most this far around the middle of their paths.
-local AREA_SPAWN_RADIUS = 40.0    -- Bases around the spawns of the game that no other area covers (rush)...
-local AREA_SPAWN_MERGE = 40.0     -- ...one for the spawns of a team this close to each other.
+local AREA_SPAWN_RADIUS = 25.0    -- Bases around the spawns of the game that no other area covers (+ margin)...
+local AREA_SPAWN_MERGE = 40.0     -- ...one for spawns this close to each other.
 local AREA_SPAWN_COVERED = 20.0   -- A spawn at least this far inside of another area is covered by it.
 local AREA_SPAWN_GROUND = 200.0   -- The ground below a spawn is searched this far down.
 local AREA_STEP = 0.5
@@ -184,6 +185,18 @@ local function _Fields(p_Container)
 end
 
 
+---The ground below the position (first hit up to AREA_SPAWN_GROUND below), else the position itself.
+---@param p_Position Vec3
+---@return Vec3
+local function _Ground(p_Position)
+	local s_Hit = RaycastManager:CollisionRaycast(p_Position + Vec3(0, 1, 0), p_Position - Vec3(0, AREA_SPAWN_GROUND, 0), 1,
+		NO_MATERIAL_FLAGS, RAY_FLAGS)[1]
+	if s_Hit == nil then
+		return p_Position
+	end
+	return s_Hit.position:Clone()
+end
+
 local function _CharacterSpawns()
 	local s_Result = {}
 	_Iterate('ServerCharacterSpawnEntity', function(p_Entity)
@@ -217,6 +230,97 @@ local function _CharacterSpawns()
 		s_Result[#s_Result + 1] = s_Entry
 	end)
 	return s_Result
+end
+
+---Where the soldiers of the running mode really spawn: the alternate spawns (AlternateSpawnEntityData) of the layers of
+---the mode (SpawnPoints.lua) and the ones the level links to the layer of the mode (the ReferenceObjectData above the
+---spawn-entities; spawns of the common layers of the level). A capture point spawns its team there, up to 70 m from the
+---flag, not at its spawn-entity.
+---@return table[] { pos, ground, team }
+local function _AlternateSpawns()
+	local s_Result = {}
+	local s_SeenPositions = {}
+	local s_SeenRepresentatives = {}
+
+	---@param p_Position Vec3
+	---@param p_Team integer|nil
+	---@param p_Source string
+	local function _AddAt(p_Position, p_Team, p_Source)
+		local s_Key = string.format('%.1f %.1f %.1f', p_Position.x, p_Position.y, p_Position.z)
+		if not s_SeenPositions[s_Key] then
+			s_SeenPositions[s_Key] = true
+			s_Result[#s_Result + 1] = {
+				pos = _Vec(p_Position),
+				ground = _Vec(_Ground(p_Position)),
+				team = p_Team,
+				source = p_Source,
+			}
+		end
+	end
+
+	---@param p_Spawn DataContainer
+	local function _Add(p_Spawn)
+		local s_Data = AlternateSpawnEntityData(p_Spawn)
+		local s_Ok, s_Team = pcall(function() return s_Data.team end)
+		_AddAt(s_Data.transform.trans, s_Ok and s_Team or nil, 'link')
+	end
+
+	---@param p_Representative DataContainer
+	local function _Collect(p_Representative)
+		local s_Instances = p_Representative.partition.instances
+		for l_Index = 1, #s_Instances do
+			local l_Instance = s_Instances[l_Index]
+			if l_Instance:Is('DataBusData') then
+				local s_Links = DataBusData(l_Instance).linkConnections
+				for l_LinkIndex = 1, #s_Links do
+					local l_Link = s_Links[l_LinkIndex]
+					local s_Other = nil
+					if l_Link.source ~= nil and l_Link.source:Eq(p_Representative) then
+						s_Other = l_Link.target
+					elseif l_Link.target ~= nil and l_Link.target:Eq(p_Representative) then
+						s_Other = l_Link.source
+					end
+					if s_Other ~= nil and s_Other:Is('AlternateSpawnEntityData') then
+						_Add(s_Other)
+					end
+				end
+			end
+		end
+	end
+
+	local s_Layers = m_SpawnPoints:GetAll()
+	if #s_Layers == 0 then
+		print('[MapCensus] no alternate spawns of the layers: the mod was reloaded within the level, load it again')
+	end
+	for l_Index = 1, #s_Layers do
+		_AddAt(s_Layers[l_Index].Position, s_Layers[l_Index].Team, s_Layers[l_Index].Partition)
+	end
+	_Iterate('ServerCharacterSpawnEntity', function(p_Entity)
+		local s_Bus = p_Entity.bus
+		local s_Depth = 0
+		while s_Bus ~= nil and s_Depth < 6 do
+			local s_Representative = s_Bus.parentRepresentative
+			if s_Representative ~= nil and s_Representative.partition ~= nil then
+				local s_Key = tostring(s_Representative.instanceGuid)
+				if not s_SeenRepresentatives[s_Key] then
+					s_SeenRepresentatives[s_Key] = true
+					_Collect(s_Representative)
+				end
+			end
+			s_Bus = s_Bus.parent
+			s_Depth = s_Depth + 1
+		end
+	end)
+	return s_Result
+end
+
+---The spawns of the game (for the debug-command "spawns").
+---@return table
+function MapCensus:EngineSpawns()
+	return {
+		spawns = _CharacterSpawns(),
+		alternateSpawns = _AlternateSpawns(),
+	}
 end
 
 local function _VehicleSpawns()
@@ -628,6 +732,7 @@ local function _CollectEntities()
 		},
 		capturePoints = _Try('capturePoints', _CapturePoints),
 		spawns = _Try('spawns', _CharacterSpawns),
+		alternateSpawns = _Try('alternateSpawns', _AlternateSpawns),
 		vehicleSpawns = _Try('vehicleSpawns', _VehicleSpawns),
 		combatAreas = _Try('combatAreas', _CombatAreas),
 		areaTriggers = _Try('areaTriggers', _AreaTriggers),
@@ -1009,114 +1114,78 @@ function CensusTask:_DefaultAreas()
 	return s_Areas
 end
 
----Areas of the bases from the waypoints, for modes without HQs (rush): around the paths of each "base ..." objective
----(paths with this objective alone). Paths cut at the zones have no names of bases anymore: then the zone of the base on
----the mesh of the level.
----@param p_Margin number
----@return table
-local function _BaseAreasFromPaths(p_Margin)
-	local s_Areas = {}
-	for l_Name, l_Paths in pairs(m_NodeCollection:GetKnownObjectives()) do
-		if l_Name:lower():sub(1, 5) == 'base ' then
-			local s_Positions = {}
-			for l_Index = 1, #l_Paths do
-				local s_First = m_NodeCollection:GetFirst(l_Paths[l_Index])
-				local s_Objectives = type(s_First) == 'table' and s_First.Data and s_First.Data.Objectives or {}
-				if #s_Objectives == 1 then
-					local s_Nodes = m_NodeCollection:GetPaths()[l_Paths[l_Index]] or {}
-					for l_Node = 1, #s_Nodes do
-						s_Positions[#s_Positions + 1] = s_Nodes[l_Node].Position
-					end
-				end
-			end
-			local s_Zone = #s_Positions == 0 and g_NavZones ~= nil and g_NavZones:GetZone(l_Name) or nil
-			if s_Zone ~= nil then
-				s_Areas[#s_Areas + 1] = { name = l_Name, kind = 'base', center = s_Zone.Center:Clone(), radius = s_Zone.Radius }
-			elseif #s_Positions > 0 then
-				local s_Center = Vec3(0, 0, 0)
-				for l_Index = 1, #s_Positions do
-					s_Center = s_Center + s_Positions[l_Index]
-				end
-				s_Center = s_Center * (1.0 / #s_Positions)
-				local s_Radius = 0.0
-				for l_Index = 1, #s_Positions do
-					local s_Delta = s_Positions[l_Index] - s_Center
-					s_Radius = math.max(s_Radius, math.sqrt(s_Delta.x * s_Delta.x + s_Delta.z * s_Delta.z))
-				end
-				s_Areas[#s_Areas + 1] = {
-					name = l_Name,
-					kind = 'base',
-					center = s_Center,
-					radius = math.min(s_Radius, AREA_BASE_MAX_RADIUS) + p_Margin,
-				}
-			end
-		end
-	end
-	table.sort(s_Areas, function(p_A, p_B) return p_A.name < p_B.name end)
-	return s_Areas
-end
-
----Bases around the soldier-spawns of the game (also the ones of later stages in rush) that lie in no other area: bots
----spawned by the game (SpawnMethod.Spawn) start on the network there. Spawns into vehicles are left out.
+---Areas around the spawns of the game that lie in no other area: bots spawned by the game (SpawnMethod.Spawn) start on
+---the mesh there. Only the engine decides where they are, no waypoints: the alternate spawns of the running mode, else
+---(none found) the soldier-spawn-entities. In rush they are zones (kind "base"): the navigation paths lead from them to
+---the MCOMs. Elsewhere they only add to the mesh (kind "spawn"): no zone the paths between the flags would be cut at.
+---Spawns into vehicles are left out.
 ---@param p_Areas table[] the areas so far
 ---@param p_Margin number
 ---@return table[]
----The ground below the position (first hit up to AREA_SPAWN_GROUND below), else the position itself.
----@param p_Position Vec3
----@return Vec3
-local function _Ground(p_Position)
-	local s_Hit = RaycastManager:CollisionRaycast(p_Position + Vec3(0, 1, 0), p_Position - Vec3(0, AREA_SPAWN_GROUND, 0), 1,
-		NO_MATERIAL_FLAGS, RAY_FLAGS)[1]
-	if s_Hit == nil then
-		return p_Position
-	end
-	return s_Hit.position:Clone()
-end
-
 local function _SpawnAreas(p_Areas, p_Margin)
+	-- { position (on the ground), team (0: whoever holds the capture point) }
+	local s_Positions = {}
+	local s_Alternates = _AlternateSpawns()
+	for l_Index = 1, #s_Alternates do
+		local l_Spawn = s_Alternates[l_Index]
+		s_Positions[#s_Positions + 1] = { Vec3(l_Spawn.ground[1], l_Spawn.ground[2], l_Spawn.ground[3]), l_Spawn.team or 0 }
+	end
+	if #s_Positions == 0 then
+		local s_Spawns = _CharacterSpawns()
+		for l_Index = 1, #s_Spawns do
+			local l_Spawn = s_Spawns[l_Index]
+			local s_Team = (l_Spawn.dataTeam == 1 or l_Spawn.dataTeam == 2) and l_Spawn.dataTeam or l_Spawn.team
+			if l_Spawn.vehicleSpawn == nil and (l_Spawn.playerType or 0) == 0 and (s_Team == 1 or s_Team == 2) then
+				-- The spawn-entity can be far above the ground (40 m on XP5_004): the grid around it must reach the ground.
+				s_Positions[#s_Positions + 1] = { _Ground(Vec3(l_Spawn.pos[1], l_Spawn.pos[2], l_Spawn.pos[3])), s_Team }
+			end
+		end
+	end
+
 	local s_Groups = {}
-	local s_Spawns = _CharacterSpawns()
-	for l_Index = 1, #s_Spawns do
-		local l_Spawn = s_Spawns[l_Index]
-		local s_Team = (l_Spawn.dataTeam == 1 or l_Spawn.dataTeam == 2) and l_Spawn.dataTeam or l_Spawn.team
-		if l_Spawn.vehicleSpawn == nil and (l_Spawn.playerType or 0) == 0 and (s_Team == 1 or s_Team == 2) then
-			-- The spawn-entity can be far above the ground (40 m on XP5_004): the grid around it must reach the ground.
-			local s_Position = _Ground(Vec3(l_Spawn.pos[1], l_Spawn.pos[2], l_Spawn.pos[3]))
-			local s_Covered = false
-			for l_Area = 1, #p_Areas do
-				local s_Delta = s_Position - p_Areas[l_Area].center
-				if math.sqrt(s_Delta.x * s_Delta.x + s_Delta.z * s_Delta.z) + AREA_SPAWN_COVERED <= p_Areas[l_Area].radius then
-					s_Covered = true
+	for l_Index = 1, #s_Positions do
+		local s_Position, s_Team = s_Positions[l_Index][1], s_Positions[l_Index][2]
+		local s_Covered = false
+		for l_Area = 1, #p_Areas do
+			local s_Delta = s_Position - p_Areas[l_Area].center
+			if math.sqrt(s_Delta.x * s_Delta.x + s_Delta.z * s_Delta.z) + AREA_SPAWN_COVERED <= p_Areas[l_Area].radius then
+				s_Covered = true
+				break
+			end
+		end
+		if not s_Covered then
+			-- One area for spawns close to each other, also of both teams.
+			local s_Group = nil
+			for l_Group = 1, #s_Groups do
+				local s_Delta = s_Position - s_Groups[l_Group].first
+				if math.sqrt(s_Delta.x * s_Delta.x + s_Delta.z * s_Delta.z) <= AREA_SPAWN_MERGE then
+					s_Group = s_Groups[l_Group]
 					break
 				end
 			end
-			if not s_Covered then
-				-- One area for spawns close to each other, also of both teams (rush: they swap the spawns per stage).
-				local s_Group = nil
-				for l_Group = 1, #s_Groups do
-					local s_Delta = s_Position - s_Groups[l_Group].first
-					if math.sqrt(s_Delta.x * s_Delta.x + s_Delta.z * s_Delta.z) <= AREA_SPAWN_MERGE then
-						s_Group = s_Groups[l_Group]
-						break
-					end
-				end
-				if s_Group == nil then
-					s_Group = { team = s_Team, first = s_Position, positions = {} }
-					s_Groups[#s_Groups + 1] = s_Group
-				end
-				s_Group.positions[#s_Group.positions + 1] = s_Position
+			if s_Group == nil then
+				s_Group = { teams = {}, first = s_Position, positions = {} }
+				s_Groups[#s_Groups + 1] = s_Group
 			end
+			s_Group.positions[#s_Group.positions + 1] = s_Position
+			s_Group.teams[s_Team] = true
 		end
 	end
 
-	local s_Areas = {}
-	local s_Counts = {}
+	for l_Index = 1, #s_Groups do
+		local l_Group = s_Groups[l_Index]
+		l_Group.team = (l_Group.teams[1] and not l_Group.teams[2] and not l_Group.teams[0]) and 'us '
+			or ((l_Group.teams[2] and not l_Group.teams[1] and not l_Group.teams[0]) and 'ru ' or '')
+	end
 	table.sort(s_Groups, function(p_A, p_B)
 		if p_A.team ~= p_B.team then
-			return p_A.team < p_B.team
+			return p_A.team > p_B.team
 		end
 		return p_A.first.x < p_B.first.x
 	end)
+
+	local s_Areas = {}
+	local s_Counts = {}
 	for l_Index = 1, #s_Groups do
 		local l_Group = s_Groups[l_Index]
 		local s_Center = Vec3(0, 0, 0)
@@ -1124,13 +1193,23 @@ local function _SpawnAreas(p_Areas, p_Margin)
 			s_Center = s_Center + l_Group.positions[l_Position]
 		end
 		s_Center = s_Center * (1.0 / #l_Group.positions)
-		local s_Team = l_Group.team == 1 and 'us' or 'ru'
-		s_Counts[s_Team] = (s_Counts[s_Team] or 0) + 1
+		-- AREA_SPAWN_RADIUS around every spawn of the group.
+		local s_Radius = 0.0
+		local s_Ground = {}
+		for l_Position = 1, #l_Group.positions do
+			local s_Delta = l_Group.positions[l_Position] - s_Center
+			s_Radius = math.max(s_Radius, math.sqrt(s_Delta.x * s_Delta.x + s_Delta.z * s_Delta.z))
+			s_Ground[l_Position] = _Vec(l_Group.positions[l_Position])
+		end
+		s_Counts[l_Group.team] = (s_Counts[l_Group.team] or 0) + 1
 		s_Areas[#s_Areas + 1] = {
-			name = 'spawn ' .. s_Team .. ' ' .. s_Counts[s_Team],
-			kind = 'base',
+			name = 'spawn ' .. l_Group.team .. s_Counts[l_Group.team],
+			-- Rush: zones (kind "base"), the ends of the navigation paths from the spawns to the MCOMs (no capture points or
+			-- HQs to end at). Elsewhere only the mesh: zones there would cut the paths between the flags into pieces.
+			kind = Globals.IsRush and 'base' or 'spawn',
 			center = s_Center,
-			radius = AREA_SPAWN_RADIUS + p_Margin,
+			radius = s_Radius + AREA_SPAWN_RADIUS + p_Margin,
+			spawns = s_Ground,
 		}
 	end
 	return s_Areas
@@ -1139,12 +1218,6 @@ end
 function CensusTask:_StartAreas()
 	local s_Margin = tonumber(self.Args.areaMargin) or AREA_MARGIN
 	self.Areas = self:_DefaultAreas()
-	if self.Args.basePaths then
-		local s_Bases = _BaseAreasFromPaths(s_Margin)
-		for l_Index = 1, #s_Bases do
-			self.Areas[#self.Areas + 1] = s_Bases[l_Index]
-		end
-	end
 	if self.Args.spawns ~= false then
 		local s_Spawns = _SpawnAreas(self.Areas, s_Margin)
 		for l_Index = 1, #s_Spawns do
@@ -1192,6 +1265,8 @@ function CensusTask:_NextArea(p_Bridge)
 		columns = s_Cells,
 		rows = s_Cells,
 		layers = s_Area.layers,
+		-- Spawn areas: where the soldiers appear (on the ground), the mesh grows from there as from the waypoints.
+		spawns = s_Area.spawns,
 	})
 	return true
 end

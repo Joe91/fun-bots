@@ -404,18 +404,6 @@ function NavZones:GetCount()
 	return self._Count
 end
 
----Whether there are networks of bases (also the ones around the spawns of the game): bots spawned by the game start on
----them (BotSpawner).
----@return boolean
-function NavZones:HasBases()
-	for _, l_Zone in pairs(self._Zones) do
-		if l_Zone.Kind == 'base' then
-			return true
-		end
-	end
-	return false
-end
-
 ---The mesh (a zone without name and points of its own). nil without mesh.
 ---@return NavZone|nil
 function NavZones:GetMesh()
@@ -504,22 +492,57 @@ function NavZones:Closest(p_Zone, p_Position, p_Avoid)
 	return s_Best, math.sqrt(s_BestDistance)
 end
 
----The mesh at the position: a point within p_Range on the same floor, and the zone there (ZoneAtPoint). Used for bots
----that spawn at the spawn-points of the game.
+-- A spawn of the game can lie outside of the mesh (the alternate spawns of a capture point, 70 m from the flag): the
+-- closest points may be behind a wall. ZoneAtVisible casts rays to the closest ones, at most this many, at these heights.
+local VISIBLE_CANDIDATES = 8
+local VISIBLE_HEIGHTS = { 0.5, 1.2 }
+
+---The mesh at the position: a point within p_Range on the same floor the soldier can walk to straight (no wall between,
+---rays at knee and chest height), and the zone there (ZoneAtPoint). Used for bots that spawn at the spawn-points of the
+---game. nil, nil if there is no such point; the closest point on the floor then as third value.
 ---@param p_Position Vec3
 ---@param p_Range number
 ---@param p_Objective string|nil
----@return NavZone|nil, integer|nil point
-function NavZones:ZoneAt(p_Position, p_Range, p_Objective)
+---@return NavZone|nil, integer|nil, integer|nil
+function NavZones:ZoneAtVisible(p_Position, p_Range, p_Objective)
 	if self._Mesh == nil then
-		return nil, nil
+		return nil, nil, nil
 	end
-	local s_Point, s_Distance = self:Closest(self._Mesh, p_Position)
-	if s_Point == nil or s_Distance > p_Range
-		or math.abs(self._Mesh.Points[s_Point].Position.y - p_Position.y) > FLOOR_HEIGHT then
-		return nil, nil
+	local s_Points = self._Mesh.Points
+	local s_Candidates = {}
+	for l_Index = 1, #s_Points do
+		local s_Pos = s_Points[l_Index].Position
+		local s_DeltaX = s_Pos.x - p_Position.x
+		local s_DeltaZ = s_Pos.z - p_Position.z
+		local s_Distance = s_DeltaX * s_DeltaX + s_DeltaZ * s_DeltaZ
+		if s_Distance <= p_Range * p_Range and math.abs(s_Pos.y - p_Position.y) <= FLOOR_HEIGHT then
+			s_Candidates[#s_Candidates + 1] = { l_Index, s_Distance }
+		end
 	end
-	return self:ZoneAtPoint(s_Point, p_Objective), s_Point
+	if #s_Candidates == 0 then
+		return nil, nil, nil
+	end
+	table.sort(s_Candidates, function(p_A, p_B) return p_A[2] < p_B[2] end)
+	local s_Flags = RayCastFlags.DontCheckCharacter | RayCastFlags.DontCheckRagdoll | RayCastFlags.DontCheckWater
+	---@cast s_Flags RayCastFlags
+	---@type MaterialFlags|integer
+	local s_NoMaterialFlags = 0
+	for l_Index = 1, math.min(VISIBLE_CANDIDATES, #s_Candidates) do
+		local l_Point = s_Candidates[l_Index][1]
+		local s_Target = s_Points[l_Point].Position
+		local s_Clear = true
+		for _, l_Height in ipairs(VISIBLE_HEIGHTS) do
+			local s_Up = Vec3(0, l_Height, 0)
+			if RaycastManager:CollisionRaycast(p_Position + s_Up, s_Target + s_Up, 1, s_NoMaterialFlags, s_Flags)[1] ~= nil then
+				s_Clear = false
+				break
+			end
+		end
+		if s_Clear then
+			return self:ZoneAtPoint(l_Point, p_Objective), l_Point, s_Candidates[1][1]
+		end
+	end
+	return nil, nil, s_Candidates[1][1]
 end
 
 ---Whether every connection of the point was given up already (a dead end for the bot standing there).

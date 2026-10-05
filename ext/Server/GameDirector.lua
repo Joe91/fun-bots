@@ -10,6 +10,8 @@ local m_Utilities = require('__shared/Utilities')
 local m_Vehicles = require("Vehicles")
 ---@type NavZones
 local m_NavZones = require('NavZones')
+---@type SpawnPoints
+local m_SpawnPoints = require('SpawnPoints')
 ---@type Logger
 local m_Logger = Logger("GameDirector", Debug.Server.GAMEDIRECTOR)
 
@@ -44,6 +46,11 @@ local function _PruneInvalidEntities(p_List)
 	return p_List
 end
 
+-- Levels with a mesh: a vehicle is in a base (spawned into directly) if an HQ of its team is this close, without HQs
+-- (rush) a spawn of the game of its team.
+local VEHICLE_HQ_RANGE = 120.0
+local VEHICLE_SPAWN_POINT_RANGE = 60.0
+
 function GameDirector:__init()
 	self:RegisterVars()
 end
@@ -69,6 +76,8 @@ function GameDirector:RegisterVars()
 	self.m_SpawnableStationaryAas = {}
 	-- Owning team of each stationary AA, by instanceId.
 	self.m_StationaryAaTeams = {}
+	-- Levels with a mesh: team of the vehicle-spawn of the engine each vehicle spawned at, by instanceId.
+	self.m_VehicleSpawnTeams = {}
 	self.m_SpawnableVehicles = {}
 	self.m_MobileRespawnVehicles = {}
 	self.m_AvailableVehicles = {}
@@ -591,19 +600,6 @@ function GameDirector:ReserveVehicle(p_Bot)
 	return nil
 end
 
----The base of the team in the current stage (rush): "base us N" / "base ru N".
----@param p_TeamId TeamId|integer
----@return string|nil
-function GameDirector:GetActiveBase(p_TeamId)
-	for l_Index = 1, #self.m_AllObjectives do
-		local l_Objective = self.m_AllObjectives[l_Index]
-		if l_Objective.isBase and l_Objective.active and l_Objective.team == p_TeamId then
-			return l_Objective.name
-		end
-	end
-	return nil
-end
-
 ---Off the mesh a soldier walks a navigation path to its end, or the way to its objective (a vehicle, an MCOM to arm). If
 ---it doesn't get closer to where it walks to for a while, it is stuck there (walks a dead end back and forth, can't get
 ---past something): onto the mesh close by, later it respawns. Not while it fights, waits or does an action.
@@ -798,7 +794,8 @@ function GameDirector:_GetStationaryAaTeam(p_Entity, p_VehicleData)
 	-- Rush: the team of the entity is not reliable there (e.g. final base on Operation Firestorm).
 	-- Use the team of the closest base instead (defenders as fallback).
 	if Globals.IsRush then
-		return self:_GetTeamOfClosestBasePath(p_Entity.transform.trans) or TeamId.Team2
+		return self:_VehicleSpawnTeam(p_Entity.transform.trans)
+			or self:_GetTeamOfClosestBasePath(p_Entity.transform.trans) or TeamId.Team2
 	end
 
 	local s_Team = p_Entity.defaultTeamId
@@ -931,6 +928,13 @@ function GameDirector:OnVehicleSpawnDone(p_Entity)
 
 	-- spawn directly into jets
 	if m_Vehicles:IsVehicleType(s_VehicleData, VehicleTypes.Plane) then
+		-- The team of the vehicle-spawn of the engine, else of the closest base or capture point.
+		local s_SpawnTeam = self:_VehicleSpawnTeam(p_Entity.transform.trans)
+		if s_SpawnTeam ~= nil then
+			m_Logger:Write("Jet spawned: " .. s_VehicleData.Name .. ", team of its spawn: " .. tostring(s_SpawnTeam))
+			self:AddEntityToVehicleCollection(self.m_SpawnableVehicles, s_SpawnTeam, p_Entity)
+			return
+		end
 		-- find closest base or caputre-point --> team of jet
 		if self._AllBases then
 			local s_ClosestDistance = nil
@@ -975,7 +979,26 @@ function GameDirector:OnVehicleSpawnDone(p_Entity)
 	end
 
 	-- now check the other vehicles
-	local s_Objective = self:_SetVehicleObjectiveState(p_Entity.transform.trans:Clone(), true)
+	local s_Objective = nil
+	if m_NavZones:GetMesh() ~= nil then
+		-- Levels with a mesh: no paths or labels. The engine tells the team (the vehicle-spawn it stands at); in a base
+		-- (an HQ, a spawn area of the game) the bots spawn right into it, elsewhere they walk to it over the mesh (vehicle
+		-- objectives, _RefreshVehicleEntities).
+		local s_Position = p_Entity.transform.trans
+		local s_Team = self:_VehicleSpawnTeam(s_Position)
+		self.m_VehicleSpawnTeams[p_Entity.instanceId] = s_Team
+		if s_Team ~= nil and not m_Vehicles:IsVehicleType(s_VehicleData, VehicleTypes.StationaryAA)
+			and not m_Vehicles:IsVehicleType(s_VehicleData, VehicleTypes.MavBot)
+			and not m_Vehicles:IsGunship(s_VehicleData) then
+			local s_InBase = self:_IsInBase(s_Position, s_Team)
+			m_Logger:Write("Vehicle spawned: " .. s_VehicleData.Name .. ", team " .. tostring(s_Team) .. ", in base: "
+				.. tostring(s_InBase))
+			self:AddEntityToVehicleCollection(s_InBase and self.m_SpawnableVehicles or self.m_AvailableVehicles,
+				s_Team, p_Entity)
+		end
+	else
+		s_Objective = self:_SetVehicleObjectiveState(p_Entity.transform.trans:Clone(), true)
+	end
 	if s_Objective ~= nil then
 		-- don't make this dependant of the nodes
 		if s_Objective.isSpawnPath then
@@ -983,7 +1006,7 @@ function GameDirector:OnVehicleSpawnDone(p_Entity)
 		else
 			self:AddEntityToVehicleCollection(self.m_AvailableVehicles, s_Objective.team, p_Entity)
 		end
-	else
+	elseif m_NavZones:GetMesh() == nil then
 		if Config.EnableParadrop and self.m_Gunship ~= nil and m_Vehicles:IsVehicleType(self.m_Gunship.Data, VehicleTypes.UnarmedGunship) then
 			if p_Entity.transform.trans.y > self.m_Gunship.Entity.transform.trans.y then
 				m_Logger:Write("Add spawnable vehicle at gunship: " .. s_VehicleData.Name)
@@ -2208,6 +2231,61 @@ local function _VehicleTeam(p_Entity)
 	return nil
 end
 
+-- A vehicle stands this close to the vehicle-spawn of the engine it spawned at.
+local VEHICLE_SPAWN_RANGE = 10.0
+
+---The team of the vehicle-spawn of the engine at the position (where a vehicle spawned): the team of its data, else
+---of the entity. Also right for rush, where the vehicles of a stage spawn without a team. nil if there is none.
+---@param p_Position Vec3
+---@return TeamId|integer|nil
+function GameDirector:_VehicleSpawnTeam(p_Position)
+	local s_Best = nil
+	local s_BestDistance = VEHICLE_SPAWN_RANGE
+	local s_Iterator = EntityManager:GetIterator('ServerVehicleSpawnEntity')
+	local s_Entity = s_Iterator:Next()
+	while s_Entity ~= nil do
+		local s_Spawn = SpawnEntity(s_Entity)
+		local s_Distance = s_Spawn.transform.trans:Distance(p_Position)
+		if s_Distance < s_BestDistance then
+			local s_Team = nil
+			if s_Entity.data ~= nil and s_Entity.data:Is('VehicleSpawnReferenceObjectData') then
+				s_Team = VehicleSpawnReferenceObjectData(s_Entity.data).team
+			end
+			if s_Team ~= TeamId.Team1 and s_Team ~= TeamId.Team2 then
+				s_Team = s_Spawn.teamId
+			end
+			if s_Team == TeamId.Team1 or s_Team == TeamId.Team2 then
+				s_Best = s_Team
+				s_BestDistance = s_Distance
+			end
+		end
+		s_Entity = s_Iterator:Next()
+	end
+	return s_Best
+end
+
+---Whether the position is in a base of the team: an HQ of the team within VEHICLE_HQ_RANGE, without HQs (rush) a spawn
+---of the team within VEHICLE_SPAWN_POINT_RANGE (SpawnPoints).
+---@param p_Position Vec3
+---@param p_Team TeamId|integer
+---@return boolean
+function GameDirector:_IsInBase(p_Position, p_Team)
+	local s_Bases = self._AllBases or {}
+	for l_Index = 1, #s_Bases do
+		local l_Hq = s_Bases[l_Index]
+		local s_Ok, s_Distance = pcall(function() return l_Hq.transform.trans:Distance(p_Position) end)
+		if s_Ok and s_Distance <= VEHICLE_HQ_RANGE and l_Hq.team == p_Team then
+			return true
+		end
+	end
+	if #s_Bases > 0 then
+		return false
+	end
+	-- Rush: a spawn of the team in the layers of the mode close by (the bases of the stages).
+	local _, s_Distance = m_SpawnPoints:Closest(p_Position, p_Team)
+	return s_Distance <= VEHICLE_SPAWN_POINT_RANGE
+end
+
 -- An empty vehicle belongs to the owner of the HQ or capture point this close (conquest), of the base this close (rush).
 local VEHICLE_OWNER_RANGE = 80.0
 local VEHICLE_BASE_RANGE = 150.0
@@ -2284,7 +2362,8 @@ function GameDirector:_RefreshVehicleEntities()
 			end
 			s_Objective.entity = s_Vehicle
 			s_Objective.position = s_Vehicle.transform.trans:Clone()
-			s_Objective.team = _VehicleTeam(s_Vehicle) or self:_VehicleOwner(s_Objective.position)
+			s_Objective.team = _VehicleTeam(s_Vehicle) or self.m_VehicleSpawnTeams[s_Vehicle.instanceId]
+				or self:_VehicleOwner(s_Objective.position)
 			local s_Free = false
 			for l_Seat = 0, s_Vehicle.entryCount - 1 do
 				if s_Vehicle:GetPlayerInEntry(l_Seat) == nil then

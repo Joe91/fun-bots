@@ -44,6 +44,10 @@ local ZONE_ARM_APPROACH = 4.0    -- Seconds at most for that, then it interacts 
 local ZONE_ARM_TIME = 8.0        -- Seconds of interacting (arming takes about 6): then the bot gives up for now.
 local ZONE_ARM_PITCH = -0.6      -- The MCOM stands on the ground.
 local ZONE_VEHICLE_REACH = 10.0  -- Registry.VEHICLES.MIN_DISTANCE_VEHICLE_ENTER: the bot gets in from this close.
+local ZONE_VEHICLE_NEAR = 5.5    -- Horizontal metres to the middle of the vehicle (a tank is about 8 m long): on the way
+local ZONE_VEHICLE_FLOOR = 3.0   -- to the point next to it the bot gets in from here. The point can be under the hull.
+local ZONE_OFF_POINT = 3.0       -- Horizontal metres from its point: a new route first leads back to it.
+local ZONE_SMOOTH_ROOM = 2.5     -- Smoothing: metres before a point the bot turns towards the next one (at most).
 local ZONE_REJOIN_RANGE = 30.0   -- No route from the point the bot is at (a piece of the mesh cut off by given-up
                                  -- connections): it goes on from a point of another part this close.
 local ZONE_REENTER_TIME = 5.0    -- Seconds a bot that left the mesh at a junction doesn't go onto it there again.
@@ -76,7 +80,7 @@ local ZONE_RESNAP_AFTER = 5.0    -- ...not in the first seconds on the mesh (on 
 ---@field Avoid integer|nil a dead end the bot got stuck at: not the start of the next route
 ---@field Action table|nil at the goal: get into the vehicle, arm or disarm the MCOM (GameDirector:GetActionTarget)
 ---@field ActionTime number seconds of the action so far
----@field Entered number time the bot came onto the mesh
+---@field Entered number time the bot came onto the mesh (or onto another part of it, _ZoneRejoin)
 ---@field FallTime number time of the last fall off a way
 
 ---Called when the bot reached a waypoint. At a junction of the mesh it walks the mesh from now on.
@@ -124,11 +128,18 @@ local ZONE_SPAWN_RANGE = 30.0
 
 ---After a spawn at a spawn-point of the game (BotSpawner, SpawnMethod.Spawn): on the mesh there (a base, a capture
 ---point) the bot starts on it, and goes where its objective is.
+---Only a point the bot can walk to straight (NavZones:ZoneAtVisible). Just spawned and none in sight (the spawn is in
+---a corner the mesh doesn't reach): onto the closest point at once, nobody sees it there yet.
 ---@param p_Position Vec3
+---@param p_Spawned boolean|nil
 ---@return boolean true if the bot is in a zone now
-function Bot:TryEnterZoneAt(p_Position)
-	local s_Zone, s_Point = m_NavZones:ZoneAt(p_Position, ZONE_SPAWN_RANGE, self._Objective)
+function Bot:TryEnterZoneAt(p_Position, p_Spawned)
+	local s_Zone, s_Point, s_Closest = m_NavZones:ZoneAtVisible(p_Position, ZONE_SPAWN_RANGE, self._Objective)
 	if s_Zone == nil or s_Point == nil then
+		if p_Spawned and s_Closest ~= nil and self.m_Player.soldier ~= nil then
+			m_Logger:Write(self.m_Player.name .. ' spawned out of sight of the mesh, put onto point ' .. s_Closest)
+			return self:TeleportToMesh(ZONE_SPAWN_RANGE)
+		end
 		return false
 	end
 	self:_EnterZone(s_Zone, s_Point)
@@ -245,7 +256,8 @@ end
 ---Where to go for the objective: in its zone from point to point, over the mesh to its zone, out over the junction of
 ---the next navigation path of the route (NavRoutes), else the path that suits the objective best (_ZoneBestExit).
 ---Without objective the bot walks around in the zone it is in (on the mesh outside of zones it waits).
-function Bot:_ZoneDecide()
+---@param p_Rejoined boolean|nil the point was just moved to another part of the mesh (_ZoneRejoin): no second time
+function Bot:_ZoneDecide(p_Rejoined)
 	local s_State = self.m_Zone
 	---@cast s_State -nil
 	self:_ZoneResnap()
@@ -284,8 +296,8 @@ function Bot:_ZoneDecide()
 		end
 		return
 	end
-	if s_Next == nil and not s_State.Vehicle and self:_ZoneRejoin() then
-		self:_ZoneDecide()
+	if s_Next == nil and not s_State.Vehicle and not p_Rejoined and self:_ZoneRejoin() then
+		self:_ZoneDecide(true)
 		return
 	end
 	local s_Exit = s_Next ~= nil and s_Next.Exit or self:_ZoneBestExit(self._Objective)
@@ -328,6 +340,8 @@ function Bot:_ZoneRejoin()
 			if m_NavRoutes:Next(l_Point, self._Objective, self.m_RouteSeed) ~= nil then
 				m_Logger:Write(self.m_Player.name .. ' no route from point ' .. s_State.Point .. ', goes on from ' .. l_Point)
 				s_State.Point = l_Point
+				-- On the way there: not snapped back to the closest point (_ZoneResnap), that one has no route.
+				s_State.Entered = SharedUtils:GetTime()
 				s_State.Targets = { { Position = s_Mesh.Points[l_Point].Position, Flags = 0, Point = l_Point } }
 				return true
 			end
@@ -401,12 +415,22 @@ function Bot:_ZoneRouteTo(p_Goal, p_Route)
 	s_State.Waiting = false
 	s_State.Progress = math.huge
 	s_State.Stuck = 0.0
-	if p_Goal == nil then
-		return
+	if p_Goal ~= nil then
+		local s_Route = p_Route or m_NavZones:Route(s_State.Zone, s_State.Point, p_Goal, self.m_RouteSeed)
+		if s_Route ~= nil then
+			s_State.Targets = m_NavZones:Positions(s_State.Zone, s_Route)
+		end
 	end
-	local s_Route = p_Route or m_NavZones:Route(s_State.Zone, s_State.Point, p_Goal, self.m_RouteSeed)
-	if s_Route ~= nil then
-		s_State.Targets = m_NavZones:Positions(s_State.Zone, s_Route)
+	-- The route starts at the point of the bot: if it isn't there (spawned up to ZONE_SPAWN_RANGE away, halfway to the
+	-- next point), first to it. Straight to the second point the way can lead through a wall.
+	local s_Soldier = self.m_Player.soldier
+	local s_Start = s_State.Zone.Points[s_State.Point]
+	if not s_State.Vehicle and s_Soldier ~= nil and s_Start ~= nil then
+		local s_DeltaX = s_Start.Position.x - s_Soldier.worldTransform.trans.x
+		local s_DeltaZ = s_Start.Position.z - s_Soldier.worldTransform.trans.z
+		if s_DeltaX * s_DeltaX + s_DeltaZ * s_DeltaZ > ZONE_OFF_POINT * ZONE_OFF_POINT then
+			table.insert(s_State.Targets, 1, { Position = s_Start.Position, Flags = s_Start.Flags, Point = s_State.Point })
+		end
 	end
 end
 
@@ -639,6 +663,21 @@ function Bot:UpdateZoneMovement(p_DeltaTime)
 		return true
 	end
 
+	-- On the way to a vehicle: in as soon as the bot is next to it, or doesn't get closer from where it gets in.
+	if s_State.Action ~= nil and s_State.Action.Kind == 'vehicle' then
+		local s_Ok, s_VehiclePosition = pcall(function() return s_State.Action.Entity.transform.trans end)
+		if s_Ok and s_VehiclePosition ~= nil then
+			local s_Here = s_Soldier.worldTransform.trans
+			local s_DeltaX = s_VehiclePosition.x - s_Here.x
+			local s_DeltaZ = s_VehiclePosition.z - s_Here.z
+			local s_Near = math.sqrt(s_DeltaX * s_DeltaX + s_DeltaZ * s_DeltaZ)
+			if math.abs(s_VehiclePosition.y - s_Here.y) <= ZONE_VEHICLE_FLOOR
+				and (s_Near <= ZONE_VEHICLE_NEAR or (s_Near <= ZONE_VEHICLE_REACH and s_State.Stuck > ZONE_JUMP_TIME)) then
+				return self:_ZoneAction(p_DeltaTime)
+			end
+		end
+	end
+
 	-- Walking.
 	s_State.Waiting = false
 	self._DefendTimer = 0.0
@@ -685,6 +724,7 @@ function Bot:UpdateZoneMovement(p_DeltaTime)
 	if self.m_ActiveSpeedValue == BotMoveSpeeds.Sprint then
 		s_Reach = s_Reach * ZONE_REACH_SPRINT
 	end
+	s_Reach = self:_ZoneSmooth(s_State, s_Target, s_TargetPoint, s_Distance, s_Reach, s_Narrow)
 	if s_Distance < s_Reach and math.abs(s_Target.Position.y - s_Position.y) < ZONE_REACH_HEIGHT then
 		if s_Target.Point ~= nil then
 			s_State.Point = s_Target.Point
@@ -743,6 +783,46 @@ function Bot:UpdateZoneMovement(p_DeltaTime)
 	end
 
 	return true
+end
+
+---Smoothing (Registry.BOT.ZONE_SMOOTHING): from a point of the mesh on to the next one, the bot turns before it gets
+---there instead of walking to it and turning on the spot. Within ZONE_SMOOTH_ROOM of the point it already steers to a
+---spot on the way to the next one (further along the closer it gets), and it counts the point as reached as soon as it
+---is within ZONE_SMOOTH_ROOM of it. Both only as far as there is room around this and the next point (their clearance),
+---not at corners around walls, narrow ways, steps and where the bot has to crouch.
+---@param p_State BotZoneState
+---@param p_Target { Position: Vec3, Flags: integer, Point: integer|nil }
+---@param p_TargetPoint NavZonePoint|nil
+---@param p_Distance number horizontal metres to the target
+---@param p_Reach number
+---@param p_Narrow boolean
+---@return number the distance at which the target counts as reached
+function Bot:_ZoneSmooth(p_State, p_Target, p_TargetPoint, p_Distance, p_Reach, p_Narrow)
+	local s_Next = p_State.Targets[p_State.Step + 1]
+	if not Registry.BOT.ZONE_SMOOTHING or p_Narrow or p_TargetPoint == nil or s_Next == nil or s_Next.Point == nil
+		or p_Target.Flags & NavZoneFlags.Crouch ~= 0 or s_Next.Flags & NavZoneFlags.Crouch ~= 0
+		or math.abs(s_Next.Position.y - p_Target.Position.y) > ZONE_STEEP then
+		return p_Reach
+	end
+	local s_NextPoint = p_State.Zone.Points[s_Next.Point]
+	local s_Room = math.min(ZONE_SMOOTH_ROOM, p_TargetPoint.Clearance, s_NextPoint and s_NextPoint.Clearance or 0.0)
+	if s_Room <= p_Reach then
+		return p_Reach
+	end
+	if p_Distance < 2.0 * s_Room then
+		local s_DeltaX = s_Next.Position.x - p_Target.Position.x
+		local s_DeltaZ = s_Next.Position.z - p_Target.Position.z
+		local s_Length = math.sqrt(s_DeltaX * s_DeltaX + s_DeltaZ * s_DeltaZ)
+		if s_Length > 0.1 then
+			-- From 0 (2 * room away) to the room (at the point) along the way to the next point.
+			local s_Along = math.min(s_Length, s_Room * (2.0 - p_Distance / s_Room)) / s_Length
+			self._TargetPoint = {
+				Position = Vec3(p_Target.Position.x + s_DeltaX * s_Along, p_Target.Position.y,
+					p_Target.Position.z + s_DeltaZ * s_Along),
+			}
+		end
+	end
+	return s_Room
 end
 
 ---At the goal of its action: get into the vehicle, or walk up to the MCOM, look at it and interact (the GameDirector
@@ -853,8 +933,9 @@ function Bot:_ZoneGiveUpConnection(p_Position, p_Target)
 	if s_Next ~= nil and s_Next ~= s_State.Point then
 		m_NavZones:BlockEdge(s_State.Zone, s_State.Point, s_Next)
 	end
-	-- All ways from the last point failed: start the next route at another point.
-	if m_NavZones:IsBlockedIn(s_State.Zone, s_State.Point) then
+	-- All ways from the last point failed, or the bot didn't get back to it (_ZoneRouteTo, from ZONE_OFF_POINT away):
+	-- start the next route at another point.
+	if s_Next == s_State.Point or m_NavZones:IsBlockedIn(s_State.Zone, s_State.Point) then
 		s_State.Avoid = s_State.Point
 	end
 	if m_DebugBridge.m_Enabled then

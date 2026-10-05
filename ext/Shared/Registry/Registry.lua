@@ -235,6 +235,9 @@ Registry = {
 		MAX_STUCK_REROUTES = 2,
 		-- Drivers of land vehicles also drive the vehicle-networks of the capture points (experimental).
 		USE_VEHICLE_ZONE_NETWORKS = true,
+		-- On the mesh: turn towards the next point before reaching one, as far as there is room around it (smoother
+		-- ways instead of walking from point to point and turning there).
+		ZONE_SMOOTHING = true,
 		-- Share by which a navigation path may seem longer to a bot (random per bot and life): the bots spread over
 		-- the routes to their objective instead of all taking the shortest one. 0: all take the shortest.
 		NAV_ROUTE_SPREAD = 0.5,

@@ -18,6 +18,7 @@ DebugCommands = class('DebugCommands')
 --   census          see MapCensus:Start         everything about the level for the waypoint-tools, streamed as
 --                                               "census_*" events (funbots_debug/census)
 --   census_stop     {}                          stops a running census
+--   spawns          {}                          -> the spawn-entities and the alternate spawns of the running mode
 --   navzones_apply  { map, mesh, save }         the walking mesh and its zones (NavZones.lua), save: into mod.db
 --   rcon            { command, args }           any RCON-command (also the vanilla ones) -> { lines }
 --   chat            { message, player }         a chat-command, as the player with that id or (no player) as
@@ -134,6 +135,7 @@ function DebugCommands:__init()
 	m_DebugBridge:RegisterCommand('scan_stop', self.ScanStop)
 	m_DebugBridge:RegisterCommand('census', self.Census)
 	m_DebugBridge:RegisterCommand('census_stop', self.CensusStop)
+	m_DebugBridge:RegisterCommand('spawns', self.Spawns)
 	m_DebugBridge:RegisterCommand('zone_probe', self.ZoneProbe)
 	m_DebugBridge:RegisterCommand('navzones_apply', self.NavZonesApply)
 	m_DebugBridge:RegisterCommand('rcon', self.Rcon)
@@ -459,6 +461,10 @@ end
 
 function DebugCommands.CensusStop(p_Args, p_Bridge)
 	return { stopped = m_MapCensus:Stop(p_Bridge) }
+end
+
+function DebugCommands.Spawns()
+	return m_MapCensus:EngineSpawns()
 end
 
 ---Measures the capture zones with the bots (ZoneProbe.lua): they are put around the capture points.

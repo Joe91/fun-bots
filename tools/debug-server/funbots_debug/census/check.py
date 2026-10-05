@@ -34,6 +34,8 @@ SIDE = 1.5                 # Metres of the side rays of a point.
 SIDE_HEIGHT = 1.0
 INSIDE_DIRECTIONS = 3
 MATCH = 0.3                # A point of the check this close to a point of a new mesh is the same one.
+SPAWN_REACH = 15.0        # A spawn keeps the part of the mesh with a point this close (horizontal metres)...
+SPAWN_FLOOR = 2.0         # ...on its floor.
 GROUND_STEP = 0.5          # Metres between the ground-rays along a connection...
 GROUND_ABOVE = 1.6         # ...from this far above the straight line...
 GROUND_BELOW = 2.5         # ...to this far below it.
@@ -179,9 +181,10 @@ class _Positions:
         return False
 
 
-def apply(network: dict, checks: dict | None) -> dict:
+def apply(network: dict, checks: dict | None, spawns: list | None = None) -> dict:
     """The network (points, edges, attach of navzones._network) without the blocked connections and the bad points,
-    and without the parts of the mesh no junction leads to anymore. Indices are counted anew."""
+    and without the parts of the mesh no junction or spawn of the game (spawns: positions on the ground) leads to
+    anymore. Indices are counted anew."""
     if not checks or not network.get("points"):
         return network
     points = network["points"]
@@ -212,6 +215,17 @@ def apply(network: dict, checks: dict | None) -> dict:
         neighbours.setdefault(int(edge[1]), []).append(int(edge[0]))
     reached = set()
     todo = [int(entry[2]) for entry in attach]
+    # The point closest to each spawn (on its floor, SPAWN_REACH): the soldiers start there.
+    for spawn in spawns or []:
+        best = None
+        for index, point in enumerate(points):
+            if index in removed or abs(point[1] - spawn[1]) > SPAWN_FLOOR:
+                continue
+            distance = math.hypot(point[0] - spawn[0], point[2] - spawn[2])
+            if distance <= SPAWN_REACH and (best is None or distance < best[0]):
+                best = (distance, index)
+        if best is not None:
+            todo.append(best[1])
     while todo:
         index = todo.pop()
         if index in reached:
