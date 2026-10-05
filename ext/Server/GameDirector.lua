@@ -1820,9 +1820,9 @@ function GameDirector:_InitObjectives()
 		m_NodeCollection:AddKnownObjective(l_Objective)
 	end
 	-- Every zone of the mesh (capture points, MCOMs, bases): the paths are cut at them and have no names of zones. Not
-	-- the spawns of the game, the bots only start there.
-	for l_Name, _ in pairs(m_NavZones:GetZones()) do
-		if l_Name:lower():sub(1, 6) ~= 'spawn ' then
+	-- the spawns of the game (the bots only start there) and not the hubs (where paths meet).
+	for l_Name, l_Zone in pairs(m_NavZones:GetZones()) do
+		if l_Name:lower():sub(1, 6) ~= 'spawn ' and l_Zone.Kind ~= 'hub' then
 			m_NodeCollection:AddKnownObjective(l_Name)
 		end
 	end

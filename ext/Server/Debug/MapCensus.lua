@@ -46,9 +46,12 @@ local NODES_PER_EVENT = 250
 -- Grids around the objectives.
 local AREA_MARGIN = 15.0          -- Metres around the capture-radius.
 local AREA_MCOM_RADIUS = 30.0
-local AREA_SPAWN_RADIUS = 25.0    -- Bases around the spawns of the game that no other area covers (+ margin)...
-local AREA_SPAWN_MERGE = 40.0     -- ...one for spawns this close to each other.
-local AREA_SPAWN_COVERED = 20.0   -- A spawn at least this far inside of another area is covered by it.
+local AREA_SPAWN_MARGIN = 2.0     -- Areas around the spawns of the game that no other area covers: this far around the
+local AREA_SPAWN_MERGE = 40.0     -- outer spawns of a group, one group for spawns this close to each other.
+local AREA_SPAWN_COVERED = 2.0    -- A spawn at least this far inside of another area is covered by it.
+local AREA_HUB_MARGIN = 8.0       -- Hubs (ends of foot paths outside of the zones): this far around the outer ends of a
+local AREA_HUB_MERGE = 30.0       -- group, one group for ends this close to each other...
+local AREA_HUB_COVERED = 5.0      -- ...an end at least this far inside of another area (not a spawn area) is covered.
 local AREA_SPAWN_GROUND = 200.0   -- The ground below a spawn is searched this far down.
 local AREA_STEP = 0.5
 local AREA_LAYERS = 4
@@ -1120,9 +1123,8 @@ end
 ---the MCOMs. Elsewhere they only add to the mesh (kind "spawn"): no zone the paths between the flags would be cut at.
 ---Spawns into vehicles are left out.
 ---@param p_Areas table[] the areas so far
----@param p_Margin number
 ---@return table[]
-local function _SpawnAreas(p_Areas, p_Margin)
+local function _SpawnAreas(p_Areas)
 	-- { position (on the ground), team (0: whoever holds the capture point) }
 	local s_Positions = {}
 	local s_Alternates = _AlternateSpawns()
@@ -1193,7 +1195,8 @@ local function _SpawnAreas(p_Areas, p_Margin)
 			s_Center = s_Center + l_Group.positions[l_Position]
 		end
 		s_Center = s_Center * (1.0 / #l_Group.positions)
-		-- AREA_SPAWN_RADIUS around every spawn of the group.
+		-- All spawns of the group and AREA_SPAWN_MARGIN around the outer ones (no AREA_MARGIN): only where they are and
+		-- the ground between them, the mesh connects them to the rest.
 		local s_Radius = 0.0
 		local s_Ground = {}
 		for l_Position = 1, #l_Group.positions do
@@ -1208,20 +1211,117 @@ local function _SpawnAreas(p_Areas, p_Margin)
 			-- HQs to end at). Elsewhere only the mesh: zones there would cut the paths between the flags into pieces.
 			kind = Globals.IsRush and 'base' or 'spawn',
 			center = s_Center,
-			radius = s_Radius + AREA_SPAWN_RADIUS + p_Margin,
+			radius = s_Radius + AREA_SPAWN_MARGIN,
 			spawns = s_Ground,
 		}
 	end
 	return s_Areas
 end
 
+-- Words in the names of paths that lead to something to do (not cut, no hub at their ends).
+local HUB_FUNCTION_WORDS = { 'vehicle', 'beacon', 'interact' }
+
+---Whether the path is one the cut turns into navigation paths: walked on foot, no actions, not the way to a vehicle,
+---a beacon or an MCOM to arm.
+---@param p_Waypoints Waypoint[]
+---@return boolean
+local function _IsFootPath(p_Waypoints)
+	local s_Data = p_Waypoints[1] and p_Waypoints[1].Data or {}
+	if s_Data.Vehicles ~= nil or s_Data.Nav ~= nil then
+		return false
+	end
+	for _, l_Name in ipairs(s_Data.Objectives or {}) do
+		for _, l_Word in ipairs(HUB_FUNCTION_WORDS) do
+			if tostring(l_Name):lower():find(l_Word, 1, true) then
+				return false
+			end
+		end
+	end
+	for l_Index = 1, #p_Waypoints do
+		if p_Waypoints[l_Index].Data ~= nil and p_Waypoints[l_Index].Data.Action ~= nil then
+			return false
+		end
+	end
+	return true
+end
+
+---Hubs: where foot paths end outside of every zone, several of them meet over links (the old bases of the waypoints).
+---An area around each group of such ends (AREA_HUB_MARGIN around the outer ones), kind "hub": a zone the navigation
+---paths end at, no objective. Without it the cut drops these paths (their ends lie nowhere), and with them the other
+---routes. Areas of kind "spawn" (mesh only) don't count as covering an end.
+---@param p_Areas table[] the areas so far
+---@return table[]
+local function _HubAreas(p_Areas)
+	local s_Groups = {}
+	for _, l_Waypoints in pairs(m_NodeCollection:GetPaths() or {}) do
+		if #l_Waypoints >= 2 and _IsFootPath(l_Waypoints) then
+			for _, l_End in ipairs({ l_Waypoints[1], l_Waypoints[#l_Waypoints] }) do
+				local s_Position = l_End.Position
+				local s_Covered = false
+				for l_Area = 1, #p_Areas do
+					local l_Other = p_Areas[l_Area]
+					local s_Delta = s_Position - l_Other.center
+					if l_Other.kind ~= 'spawn'
+						and math.sqrt(s_Delta.x * s_Delta.x + s_Delta.z * s_Delta.z) + AREA_HUB_COVERED <= l_Other.radius then
+						s_Covered = true
+						break
+					end
+				end
+				if not s_Covered then
+					local s_Group = nil
+					for l_Group = 1, #s_Groups do
+						local s_Delta = s_Position - s_Groups[l_Group].first
+						if math.sqrt(s_Delta.x * s_Delta.x + s_Delta.z * s_Delta.z) <= AREA_HUB_MERGE then
+							s_Group = s_Groups[l_Group]
+							break
+						end
+					end
+					if s_Group == nil then
+						s_Group = { first = s_Position, positions = {} }
+						s_Groups[#s_Groups + 1] = s_Group
+					end
+					s_Group.positions[#s_Group.positions + 1] = s_Position
+				end
+			end
+		end
+	end
+	table.sort(s_Groups, function(p_A, p_B) return p_A.first.x < p_B.first.x end)
+
+	local s_Areas = {}
+	for l_Index = 1, #s_Groups do
+		local l_Group = s_Groups[l_Index]
+		local s_Center = Vec3(0, 0, 0)
+		for l_Position = 1, #l_Group.positions do
+			s_Center = s_Center + l_Group.positions[l_Position]
+		end
+		s_Center = s_Center * (1.0 / #l_Group.positions)
+		local s_Radius = 0.0
+		for l_Position = 1, #l_Group.positions do
+			local s_Delta = l_Group.positions[l_Position] - s_Center
+			s_Radius = math.max(s_Radius, math.sqrt(s_Delta.x * s_Delta.x + s_Delta.z * s_Delta.z))
+		end
+		s_Areas[#s_Areas + 1] = {
+			name = 'hub ' .. l_Index,
+			kind = 'hub',
+			center = s_Center,
+			radius = s_Radius + AREA_HUB_MARGIN,
+		}
+	end
+	return s_Areas
+end
+
 function CensusTask:_StartAreas()
-	local s_Margin = tonumber(self.Args.areaMargin) or AREA_MARGIN
 	self.Areas = self:_DefaultAreas()
 	if self.Args.spawns ~= false then
-		local s_Spawns = _SpawnAreas(self.Areas, s_Margin)
+		local s_Spawns = _SpawnAreas(self.Areas)
 		for l_Index = 1, #s_Spawns do
 			self.Areas[#self.Areas + 1] = s_Spawns[l_Index]
+		end
+	end
+	if self.Args.hubs ~= false then
+		local s_Hubs = _HubAreas(self.Areas)
+		for l_Index = 1, #s_Hubs do
+			self.Areas[#self.Areas + 1] = s_Hubs[l_Index]
 		end
 	end
 	self.AreaSlot = 0

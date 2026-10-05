@@ -240,7 +240,7 @@ Registry = {
 		ZONE_SMOOTHING = true,
 		-- Share by which a navigation path may seem longer to a bot (random per bot and life): the bots spread over
 		-- the routes to their objective instead of all taking the shortest one. 0: all take the shortest.
-		NAV_ROUTE_SPREAD = 0.5,
+		NAV_ROUTE_SPREAD = 0.25,
 		-- Seconds a bot tries to free a stuck ground-vehicle before they exit it and continue on foot.
 		VEHICLE_STUCK_EXIT_TIME = 30.0,
 		-- Trace delta, a bot uses when they are off a trace path to find his way back to the best path.

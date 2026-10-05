@@ -418,7 +418,7 @@ function NavZones:ZonesOf(p_Point)
 end
 
 ---The zone to walk around in at the point: the one of the objective if the point is in it, else the first zone of the
----point, else the mesh.
+---point (not a hub: only where paths meet, nothing to walk around in), else the mesh.
 ---@param p_Point integer
 ---@param p_Objective string|nil
 ---@return NavZone|nil
@@ -429,7 +429,12 @@ function NavZones:ZoneAtPoint(p_Point, p_Objective)
 			return s_Zones[l_Index]
 		end
 	end
-	return s_Zones[1] or self._Mesh
+	for l_Index = 1, #s_Zones do
+		if s_Zones[l_Index].Kind ~= 'hub' then
+			return s_Zones[l_Index]
+		end
+	end
+	return self._Mesh
 end
 
 ---The junction of the mesh at the waypoint, with the zone it leads into.

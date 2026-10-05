@@ -365,10 +365,16 @@ spawns come from the engine only, never from waypoints: the alternate spawns (`A
 the running mode (`SpawnPoints.lua`, collected while the level loads them: after a reload of the mod within a level the
 level has to be loaded again), and the ones the layer of the mode links from the common layers of the level. A capture
 point spawns its team there, up to 70 m from the flag. Without any, the soldier-spawn-entities are used. Spawns no
-other area covers get an area of their own, 40 m around each spawn of a group (`spawn us 1`, `spawn 1` for both teams).
-They only add to the mesh (kind `spawn`): no zone the navigation paths are cut at, the spawns of one rush stage are
-spread over 250 m. The mesh keeps every part a spawn lies on, as the parts with waypoints. The debug-command `spawns`
+other area covers get an area of their own: all spawns of a group (40 m apart at most) and 2 m around the outer ones
+(`spawn us 1`, `spawn 1` for both teams). In rush they are zones (kind `base`): the navigation paths lead from them to
+the MCOMs. Elsewhere they only add to the mesh (kind `spawn`): no zone the paths between the flags are cut at. The mesh keeps every part a spawn lies on, as the parts with waypoints. The debug-command `spawns`
 lists them. Spawn-entities may float above the ground, the soldiers appear on the ground below.
+
+Hubs: where foot paths end outside of every zone (not counting the spawn areas of kind `spawn`), several paths usually
+meet over links, e.g. the old bases of the waypoints. Ends up to 30 m apart get one area, 8 m around the outer ones
+(`hub 1`, kind `hub`): a zone the navigation paths end at, no objective (`GameDirector`), on the mesh the bots only pass
+through it. Without them the cut drops every path whose end lies nowhere, and with it the other routes (on Operation
+Firestorm rush 68 of the foot paths of 3.0).
 
 Land vehicles get a mesh of their own (`vehicle`): the same way, but only over wide and open ground
 (1.8 m to the next wall, slopes up to about 41°, no roof below 4 m), a point about every 10 m, attached to the paths with
