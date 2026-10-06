@@ -519,7 +519,7 @@ def command_navpaths(options) -> int:
             dropped = navpaths.prune_unattached(result, networks)
             if not dropped:
                 break
-            print(f"  {dropped} more foot paths without junctions dropped")
+            print(f"  {dropped} more foot paths dropped (without junctions, or short where the mesh leads)")
             networks = navzones.build(census, attach=navpaths.attach_nodes(result.data), checks=checks)
         if networks.get("stats", {}).get("checkRemovedPoints") is not None:
             print(f"  check: {networks['stats']['checkRemovedEdges']} connections and "

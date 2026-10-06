@@ -532,7 +532,10 @@ python -m funbots_debug.census navpaths MP_012_RushLarge0 --write --db ../../mod
 4. Foot paths that lead nowhere are dropped, again until there is none: fewer than two ways out (a waypoint on the
    mesh, a link to a path that is left; a vehicle path always counts). A stub that touches the mesh once, a branch off
    a single link, a path without any connection: a bot on it would walk to its end and back. After the mesh is made
-   with the junctions, once more with the junctions it really has (a waypoint on the mesh can get none).
+   with the junctions, once more with the junctions it really has (a waypoint on the mesh can get none), and without
+   foot paths under 50 m whose first and last junction the mesh connects about as well (1.5 times as long plus 20 m):
+   bits at the edge of an area. The short ones that are left join parts of the mesh nothing else joins (stairs, a
+   door the census didn't see).
 
 Vehicle paths stay as they are, with their names (the vehicles find their way by them), their links to dropped foot
 waypoints are dropped. The soldiers walk the roads as well (land vehicle paths, not amphibious ones): the mesh gets

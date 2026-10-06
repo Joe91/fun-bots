@@ -8,10 +8,10 @@ other, each as the same command a person would type:
     import   mapfiles/<map>.map (and navzones/<map>.json) -> mod.db
     census   measure the level and make its mesh (python -m funbots_debug.census run --map ... --apply), needs the
              game-server and RCON
-    cut      navigation paths (python -m funbots_debug.census navpaths <map> --write --db mod.db); a level that is cut
-             already is cut again from the newest version in git without navigation paths
+    cut      the paths trimmed at the mesh (python -m funbots_debug.census navpaths <map> --write --db mod.db); a
+             level that is trimmed already is trimmed again from the newest version in git without "Nav"
     check    rays of the game over the mesh (python -m funbots_debug.census check <map>, switches the level), then
-             the cut again: walls and ceilings the census missed are left out of the mesh
+             the trim again: walls and ceilings the census missed are left out of the mesh
     report   the checks of the census
 
     GET  /api/maps            the levels and their state, the jobs

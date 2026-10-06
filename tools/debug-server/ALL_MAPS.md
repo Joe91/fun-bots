@@ -1,11 +1,12 @@
-# Running all maps: census, mesh and cut paths
+# Running all maps: census, mesh and trimmed paths
 
 These are instructions for an agent working without supervision. For each map of the modes RushLarge0, SquadRush0,
 ConquestLarge0, ConquestSmall0, ConquestAssault* and TankSuperiority0, you will:
 
-- measure the map with the census;
-- build the walking mesh with its zones;
-- cut the waypoint paths into navigation paths between the zones;
+- start from the released waypoint-file of the map (git `master`: the paths as recorded, with links);
+- measure the map with the census (the objectives and the spawns of the game);
+- check the mesh with rays of the game;
+- trim the waypoint paths at the mesh (the ways between its areas, without names or dead ends);
 - write the results into `mapfiles/`, `navzones/` and `mod.db`.
 
 Follow the steps exactly. **Do not change any code.** Do not commit. If something isn't covered here, stop and report.
@@ -21,30 +22,35 @@ wrap commands that use `$(...)` in `bash -c '...'`.
 ## 0. Check before starting
 
 1. `git -C REPO status --short mapfiles navzones`: note what is already modified. Don't touch those files.
-2. Find the maps that are cut already. Never process them again: `navpaths` would refuse them, but a census plus
-   `--apply` would overwrite their good mesh.
-
-   ```
-   grep -l '"Nav"' REPO/mapfiles/*.map
-   ```
-
-   As of this writing, these are `MP_012_RushLarge0` and `MP_012_ConquestSmall0`.
+2. Maps that are trimmed already have `"Nav"` in their file (`grep -l '"Nav"' REPO/mapfiles/*.map`). They are done
+   anew from `master` like all others (step 1 restores them); write down which ones they were.
 3. `REPO/ext/Shared/Registry/Registry.lua` must contain `DEBUG_BRIDGE = true`. If it is missing, stop and report.
 
-## 1. Build the map list
+## 1. Build the map list and restore the released paths
 
-This excludes the maps that are cut already:
+The census measures the level with the paths that are in `mod.db`, and the trim works on them: both need the paths as
+recorded (git `master`), not trimmed ones. This writes them into `mapfiles/` and `mod.db` (the mesh of the map is
+dropped from `mod.db`, the census makes it anew) and builds the list:
 
 ```
 cd REPO && python3 - <<'EOF'
-import pathlib, re
+import pathlib, re, sqlite3, subprocess, sys
+sys.path.insert(0, "tools/debug-server")
+from funbots_debug.maps import import_map
+from funbots_debug.paths.mapfile import MapData
 out = []
 for f in sorted(pathlib.Path("mapfiles").glob("*.map")):
     level, _, mode = f.stem.rpartition("_")
     if not re.fullmatch(r"RushLarge0|SquadRush0|ConquestLarge0|ConquestSmall0|ConquestAssault\w*|TankSuperiority0", mode):
         continue
-    if '"Nav"' in f.read_text(encoding="utf-8"):
+    text = subprocess.run(["git", "show", f"master:mapfiles/{f.name}"], capture_output=True, text=True).stdout
+    if not text or '"Nav"' in text:
+        print("no released paths:", f.stem)
         continue
+    f.write_text(text, encoding="utf-8")
+    import_map(pathlib.Path("mod.db"), f.stem, MapData.load(f), None)
+    with sqlite3.connect("mod.db") as connection:
+        connection.execute(f"DROP TABLE IF EXISTS {f.stem}_navzones")
     out.append(f"{level} {mode} 1")
 pathlib.Path("tools/debug-server/census/all_maps.txt").write_text("\n".join(out) + "\n")
 print(len(out), "maps")
@@ -126,17 +132,13 @@ cd DS && python -m funbots_debug.census report census/<Level>_<Mode>.json.gz
 The last line must say `waypoint-file: same as <map>.map`. If it says `differs`, the waypoints in the game don't match
 the file. Skip that map in step 5 and report it.
 
-## 5. Cut the paths
+## 5. Check the mesh and trim the paths
 
-Run this one map at a time. Run it first without `--write`, to see the summary:
-
-```
-cd DS && python -m funbots_debug.census navpaths <Level>_<Mode> -v
-```
-
-If the summary looks sane (there are navigation paths, and not every path was dropped), write the result:
+Run this one map at a time. The check switches to the level (a fresh round, the bots killed) and casts rays of the game
+over the mesh, then the trim writes the result:
 
 ```
+cd DS && python -u -m funbots_debug.census check <Level>_<Mode>
 cd DS && python -m funbots_debug.census navpaths <Level>_<Mode> --write --db ../../mod.db
 ```
 
@@ -144,11 +146,11 @@ This rewrites `mapfiles/<map>.map` and `navzones/<map>.json`, and updates both t
 
 Write down the following for each map:
 
-- the number of paths and of navigation paths;
-- the number of junctions;
-- every `warning: navigation path N has no junction ...`.
+- `N paths (...) -> M paths (...)` and the number of junctions;
+- `foot paths dropped that lead nowhere` (and `more foot paths without junctions dropped`, if shown).
 
-A few warnings are acceptable. Many warnings, or `is missing` / `cut already`, are not: skip the map and report it.
+`is missing` or `cut already` means step 1 didn't restore the map: skip it and report it. A map where almost every
+path was dropped (`M` close to the number of vehicle paths) needs a look: report it.
 
 ## 6. Spot test (optional, about 5 minutes per map)
 
@@ -176,7 +178,8 @@ Bots fight little without a real client, so judge only whether they move, not wh
 1. Stop both servers: `pkill -f funbots_debug`, then kill the `vu.com` processes listed by `pgrep -af vu.com`.
 2. Restore the map list. If the census was interrupted, send this RCON command while the server still runs:
    `["mapList.load"]`.
-3. Report a table with one line per map: census ok, junctions, navigation paths, warnings, spot-tested yes/no.
+3. Report a table with one line per map: census ok, paths after the trim, junctions, dropped dead ends, spot-tested
+   yes/no.
    Separately, list the failed and skipped maps with the reason for each.
 4. Don't commit. The user tests and commits.
 
@@ -196,12 +199,10 @@ Bots fight little without a real client, so judge only whether they move, not wh
   harmless.
 - On carrier maps (MP_017, XP1_002, XP1_004) the "base us" zone isn't connected to the rest: the US starts on a
   ship and reaches the shore by vehicle. That's expected.
-- A few navigation paths per map can stay without a junction (`warning: ... the bots don't use it`): about 2 % of
-  all of them. Report the maps with many.
-- A map that is cut already can't be cut again. Redoing the cut (after a change of `navpaths.py`) needs the newest
-  version of `mapfiles/<map>.map` in git without `"Nav"` written back to `mapfiles/`, then step 5 again (`--db` also
-  replaces both tables in `mod.db`). Don't do that yourself; report it.
-- Links of beacon and vehicle paths to dropped waypoints are kept over connecting paths (`over connecting paths: N` in
-  the summary). A few links stay lost where no old path leads to a navigation path.
+- A map that is trimmed already can't be trimmed again. Redoing it (after a change of `navpaths.py`) needs the
+  released file written back (step 1 for that map) while its census stays: then only `navpaths ... --write --db`.
+  After a new census always run the check again: old checks don't match a new mesh.
+- Foot paths lose their names, the ways to vehicles, beacons and MCOMs are dropped: the bots do that on the mesh.
+  Vehicle paths stay as they are; the land ones (not amphibious) are walked by the soldiers as well.
 - If the debug-server answers with errors or the mod disconnects repeatedly, stop and report the last 50 lines of
   `census/all_maps.log` and `census/debug-server.log`.

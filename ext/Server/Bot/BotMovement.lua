@@ -1012,7 +1012,14 @@ function Bot:UpdateNormalMovement(p_DeltaTime)
 						end
 
 						if self:_CheckForZoneEntry(s_Point) then
-							self._CurrentWayPoint = s_Point.PointIndex
+							-- On the mesh now; or switched over a link (the waypoint of the other path is set then).
+							if self.m_Zone ~= nil then
+								self._CurrentWayPoint = s_Point.PointIndex
+							else
+								self._ObstacleRetryCounter = 0
+								self:_ResetObstacleSequence()
+								self._LastWayDistance = 1000.0
+							end
 							return
 						end
 

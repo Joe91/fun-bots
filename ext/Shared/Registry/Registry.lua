@@ -337,7 +337,7 @@ Registry = {
 		PROBABILITY_SPAWN_FOR_VEHICLE = 50,
 		-- Rush: the defenders (always Team2) get this share of the bots of their team (balanced_teams), e.g. to test
 		-- the attack. 1.0 = as many as the attackers.
-		RUSH_DEFENDER_FACTOR = 0.7,
+		RUSH_DEFENDER_FACTOR = 0.3,
 	},
 	-- Debug
 	DEBUG = {

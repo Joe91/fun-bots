@@ -15,6 +15,8 @@ paths of a level (as they were recorded, with links) for that:
 4. Foot paths that lead nowhere are dropped, again until there is none: fewer than two ways out (a waypoint on the mesh,
    a link to a path that is left). A stub that touches the mesh once, a branch off a single link, a path without any
    connection: a bot on it would walk to its end and back.
+5. Once the mesh is made with the junctions (prune_unattached): again with the junctions it really has, and without
+   short foot paths (under SHORTCUT_LENGTH) whose ends the mesh connects about as well.
 
 Vehicle paths stay as they are, with their names: the vehicles still find their way by them, and the soldiers walk the
 roads (land vehicle paths) too where they lead to the target (the mesh gets junctions with them). Their links to dropped
@@ -28,6 +30,7 @@ floor) and it lies inside of the circle of an area of the census.
 
 from __future__ import annotations
 
+import heapq
 import json
 import math
 import sqlite3
@@ -43,6 +46,9 @@ COVER_MARGIN = 0.5        # ...if it lies at least this far inside of the circle
 MIN_PART = 10             # Same as NavZones.lua: parts of the mesh with fewer points get no junctions.
 LOOP_CLOSE = 30.0         # A looping path whose ends are this close is walked over from its last waypoint to its first.
 MIN_LENGTH = 10.0         # Shorter pieces between two waypoints on the same part of the mesh: the mesh leads there.
+SHORTCUT_LENGTH = 50.0    # A shorter foot path whose ends the mesh connects with a way at most SHORTCUT_DETOUR times as
+SHORTCUT_DETOUR = 1.5     # long (plus SHORTCUT_SLACK metres) is dropped once the mesh is made: a bit at the edge of an
+SHORTCUT_SLACK = 20.0     # area that only irritates. Stairs the mesh doesn't see stay (it leads far around or not).
 FUNCTION_WORDS = ("vehicle", "beacon", "interact")  # Names of the ways to something to do.
 
 MESH_ROW = "@mesh"  # The one row of <map>_navzones in mod.db: the whole mesh (NavZones.lua).
@@ -62,6 +68,7 @@ class Result:
     links: int = 0  # links kept (each direction counted)
     lost_links: int = 0  # links to dropped waypoints
     dead_ends: int = 0  # foot paths dropped that lead nowhere (fewer than two ways out)
+    shortcuts: int = 0  # short foot paths dropped whose ends the mesh connects
     dropped: dict[int, str] = field(default_factory=dict)  # old path -> why it's gone
 
 
@@ -244,25 +251,65 @@ def trim(data: MapData, navzones: dict) -> Result:
     return result
 
 
+def _mesh_distance(networks: dict, start: int, goal: int, limit: float) -> float:
+    """Metres over the mesh from point to point (inf beyond limit or where it doesn't lead)."""
+    points = networks.get("points") or []
+    neighbours: dict[int, list[tuple[int, float]]] = networks.setdefault("_neighbours", {})
+    if not neighbours:
+        for edge in networks.get("edges") or []:
+            a, b = int(edge[0]), int(edge[1])
+            length = float(edge[2]) if edge[2] is not None else math.dist(points[a][:3], points[b][:3])
+            neighbours.setdefault(a, []).append((b, length))
+            neighbours.setdefault(b, []).append((a, length))
+    best = {start: 0.0}
+    queue = [(0.0, start)]
+    while queue:
+        cost, point = heapq.heappop(queue)
+        if point == goal:
+            return cost
+        if cost > best.get(point, math.inf) or cost > limit:
+            continue
+        for other, length in neighbours.get(point, []):
+            if cost + length < best.get(other, math.inf):
+                best[other] = cost + length
+                heapq.heappush(queue, (cost + length, other))
+    return math.inf
+
+
 def prune_unattached(result: Result, networks: dict) -> int:
     """Again with the junctions the mesh really has (navzones.build can leave a waypoint on the mesh without one: too far
-    from its point, a point the checks removed). Returns how many paths were dropped: then the mesh has to be made again
-    (the paths are numbered anew)."""
+    from its point, a point the checks removed), and without short foot paths (SHORTCUT_LENGTH) whose first and last
+    junction the mesh connects about as well (SHORTCUT_DETOUR): bits at the edge of an area, they only irritate. Returns
+    how many paths were dropped: then the mesh has to be made again (the paths are numbered anew)."""
     ends: dict[int, set[int]] = {index: set() for index, path in result.data.paths.items() if not path.vehicles}
+    junctions: dict[int, list[tuple[int, int]]] = defaultdict(list)
     for entry in networks.get("attach") or []:
         if int(entry[0]) in ends:
             ends[int(entry[0])].add(int(entry[1]))
+            junctions[int(entry[0])].append((int(entry[1]), int(entry[2])))
+    shortcuts = set()
+    for index, entries in junctions.items():
+        path = result.data.paths[index]
+        length = _length([node.pos for node in path.nodes])
+        if length >= SHORTCUT_LENGTH or len(entries) < 2:
+            continue
+        first, last = min(entries)[1], max(entries)[1]
+        limit = SHORTCUT_DETOUR * length + SHORTCUT_SLACK
+        if first == last or _mesh_distance(networks, first, last, limit) <= limit:
+            shortcuts.add(index)
+    result.shortcuts += len(shortcuts)
     before = result.dead_ends
-    result.data.paths = _prune(result.data.paths, ends, result)
-    return result.dead_ends - before
+    result.data.paths = _prune(result.data.paths, ends, result, shortcuts)
+    return result.dead_ends - before + len(shortcuts)
 
 
-def _prune(paths: dict[int, PathData], ends: dict[int, set[int]], result: Result) -> dict[int, PathData]:
+def _prune(paths: dict[int, PathData], ends: dict[int, set[int]], result: Result,
+           drop: set[int] = frozenset()) -> dict[int, PathData]:
     """Without the foot paths that lead nowhere: fewer than two ways out, again and again (the next one may lead nowhere
     now). A way out is a waypoint on the mesh (a junction) or a link to a path that is left (a vehicle path always is).
     So no stub that only touches the mesh once, no branch off a single link, no path without any connection: a bot on
     it would walk to its end and back. The paths are numbered anew, their links with them."""
-    alive = set(paths)
+    alive = set(paths) - set(drop)
     changed = True
     while changed:
         changed = False
