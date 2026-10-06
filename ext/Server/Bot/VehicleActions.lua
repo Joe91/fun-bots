@@ -21,6 +21,8 @@ function Bot:_DoExitVehicle()
 			self._LastWayDistance = 1000.0
 		end
 		self._KillYourselfTimer = 0.0
+		-- Onto the mesh where it lands (UpdateNormalMovement): the closest waypoint from the air can be far off.
+		self._MeshAfterExit = true
 		-- The stuck-handling of the vehicle must not continue on foot.
 		self._StuckTimer = 0.0
 		self._StuckRerouteCount = 0

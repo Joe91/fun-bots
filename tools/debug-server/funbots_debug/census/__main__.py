@@ -84,6 +84,58 @@ class Server:
         raise RuntimeError(f"rcon {' '.join(words)}: {answer['error']}")
 
 
+# Quiet bots for the census and the check: the level is measured as it is at the start of a round. Bots that fight
+# destroy walls (tanks, rockets), an MCOM that goes off destroys what is around it. So the bots don't fight and don't
+# take vehicles while the level loads and the zone probe runs, then they are killed (funbots.killAll: no respawn until
+# the next level).
+QUIET_SETTINGS = (("BotsAttackBots", "false"), ("UseVehicles", "false"))
+# Seconds to wait for the first bots of a level (the spawn-mode of the config only applies once they spawned).
+QUIET_SPAWN_TIMEOUT = 60.0
+
+
+def _config_value(server: Server, name: str) -> str | None:
+    """A setting of the mod (funbots.config.<name> answers "value of var <name> is <value>")."""
+    words = server.rcon(f"funbots.config.{name}")
+    text = words[-1] if words else ""
+    return text.rsplit(" is ", 1)[-1] if " is " in text else None
+
+
+def quiet_bots(server: Server) -> dict[str, str]:
+    """Bots that neither fight nor take vehicles (until restore_bots or a reload of the mod). Returns the settings
+    before."""
+    old = {}
+    for name, value in QUIET_SETTINGS:
+        before = _config_value(server, name)
+        if before is not None:
+            old[name] = before
+        server.rcon(f"funbots.config.{name}", value)
+    return old
+
+
+def restore_bots(server: Server, old: dict[str, str]) -> None:
+    for name, value in old.items():
+        server.rcon(f"funbots.config.{name}", value)
+
+
+def _bots_alive(server: Server) -> int:
+    return sum(1 for bot in server.request("/api/state").get("bots") or [] if bot.get("alive"))
+
+
+def kill_bots(server: Server) -> None:
+    """Kills all bots, they don't respawn until the next level. Waits for the first ones of the level: their spawn
+    sets the spawn-mode of the config again, bots killed before would spawn."""
+    end = time.monotonic() + QUIET_SPAWN_TIMEOUT
+    while not _bots_alive(server) and time.monotonic() < end:
+        time.sleep(2)
+    time.sleep(2)
+    for _ in range(5):
+        server.rcon("funbots.killAll")
+        time.sleep(3)
+        if not _bots_alive(server):
+            return
+    print("  some bots are still alive", file=sys.stderr)
+
+
 def _level_matches(meta: dict, level: str, mode: str) -> bool:
     # During a change of the mode on the same level, the game reports the new mode while the old one still runs. The
     # waypoints of the new one are only loaded with it.
@@ -93,11 +145,13 @@ def _level_matches(meta: dict, level: str, mode: str) -> bool:
         (paths is None or str(paths).lower() == f"{level}_{mode}".lower())
 
 
-def switch_level(server: Server, level: str, mode: str) -> None:
+def switch_level(server: Server, level: str, mode: str, fresh: bool = False) -> None:
+    """Loads the level. fresh: also if it runs already (a new round: nothing destroyed yet)."""
     meta, _ = server.meta()
-    if _level_matches(meta, level, mode):
+    round_start = meta.get("roundStart")
+    if _level_matches(meta, level, mode) and not fresh:
         return
-    print(f"  switching to {level} {mode}")
+    print(f"  {'loading' if _level_matches(meta, level, mode) else 'switching to'} {level} {mode}")
     server.rcon("mapList.clear")
     server.rcon("mapList.add", level, mode, "1")
     server.rcon("mapList.setNextMapIndex", "0")
@@ -109,7 +163,9 @@ def switch_level(server: Server, level: str, mode: str) -> None:
             meta, status = server.meta()
         except OSError:
             continue
-        if status.get("modConnected") and _level_matches(meta, level, mode):
+        # The round started after the command (roundStart is set at every level-load).
+        if status.get("modConnected") and _level_matches(meta, level, mode) \
+                and meta.get("roundStart") is not None and meta.get("roundStart") != round_start:
             return
     raise RuntimeError(f"{level} {mode} didn't load within {LEVEL_TIMEOUT:.0f} s")
 
@@ -287,14 +343,19 @@ def command_run(options) -> int:
     retry: list[tuple[str, str]] = []
     queue = list(maps)
     index = 0
+    quiet = options.quiet and options.warmup <= 0
+    settings = quiet_bots(server) if quiet else {}
     while queue:
         level, mode = queue.pop(0)
         index += 1
         print(f"[{index}/{len(maps) + len(retry)}] {level} {mode}")
         try:
             meta, _ = server.meta()
-            if not _level_matches(meta, level, mode):
-                switch_level(server, level, mode)
+            if quiet or not _level_matches(meta, level, mode):
+                # Quiet: always a new round, the level as it is at the start (nothing destroyed yet).
+                if quiet and (level, mode) in retry:
+                    quiet_bots(server)  # The game-server was started again: the settings are the ones of the config.
+                switch_level(server, level, mode, fresh=quiet)
                 switched = True
             flags = wait_objectives(server)
             if options.warmup > 0:
@@ -308,6 +369,8 @@ def command_run(options) -> int:
                 print(f"  capture zones measured: {sum(1 for zone in zones if zone.get('samples'))}/{len(zones)}")
             if options.kick_bots:
                 server.rcon("funbots.kickAll")
+            elif quiet:
+                kill_bots(server)
             status = run_census(server, args, options.timeout)
             last = status["last"]
             print(f"  saved {last['file']}")
@@ -329,6 +392,9 @@ def command_run(options) -> int:
     if switched:
         server.rcon("mapList.load")
         print("map-list loaded again from the MapList.txt of the game-server")
+    if quiet:
+        restore_bots(server, settings)
+        print("the bots fight and take vehicles again, they spawn again with the next level")
     if failed:
         print(f"failed: {', '.join(failed)}", file=sys.stderr)
     return 1 if failed else 0
@@ -382,6 +448,7 @@ def command_check(options) -> int:
     census/<map>.checks.json. The mesh is left as it is: cut the level again (navpaths) to leave the findings out."""
     server = Server(options.server)
     failed = []
+    settings = quiet_bots(server) if options.quiet else {}
     for name in options.maps:
         name = Path(name).name.split(".")[0]
         level, _, mode = name.rpartition("_")
@@ -393,7 +460,9 @@ def command_check(options) -> int:
             continue
         print(name, flush=True)
         try:
-            switch_level(server, level, mode)
+            switch_level(server, level, mode, fresh=options.quiet)
+            if options.quiet:
+                kill_bots(server)
             networks = json.loads(zones_file.read_text(encoding="utf-8"))
             rays, meaning = check.rays(networks)
             hits: list[float] = []
@@ -413,6 +482,11 @@ def command_check(options) -> int:
         except (RuntimeError, OSError) as error:
             print(f"  {name} failed: {error}", file=sys.stderr)
             failed.append(name)
+    # switch_level leaves only the level in the map-list.
+    server.rcon("mapList.load")
+    if options.quiet:
+        restore_bots(server, settings)
+        print("the bots fight and take vehicles again, they spawn again with the next level")
     return 1 if failed else 0
 
 
@@ -486,6 +560,9 @@ def main() -> int:
                      help="don't measure the capture zones with the zone probe")
     run.add_argument("--kick-bots", action="store_true",
                      help="kick the bots before the census (5 %% faster, but the game-server crashed on rush maps)")
+    run.add_argument("--no-quiet", dest="quiet", action="store_false",
+                     help="let the bots fight and take vehicles during the census (default: they don't, and are killed "
+                          "after the zone probe, on a new round of the level: nothing is destroyed yet)")
     run.set_defaults(handler=command_run)
 
     report = commands.add_parser("report", help="check saved censuses")
@@ -503,6 +580,8 @@ def main() -> int:
     checks.add_argument("--server", default="http://127.0.0.1:8765", help="address of the debug-server")
     checks.add_argument("--navzones", type=Path, default=NAVZONES, help="the networks (navzones/<map>.json)")
     checks.add_argument("--census", type=Path, default=CENSUS, help="where the checks are saved (next to the census)")
+    checks.add_argument("--no-quiet", dest="quiet", action="store_false",
+                        help="check the level as it runs (default: a new round, the bots killed at once)")
     checks.set_defaults(handler=command_check)
 
     paths = commands.add_parser("navpaths", help="cut the paths at the zones: navigation paths from zone to zone")

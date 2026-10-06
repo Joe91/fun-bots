@@ -143,6 +143,8 @@ function Bot:__init(p_Player)
 	-- (GameDirector:_CheckProgressOffMesh, the time only counts without progress).
 	---@type NavRouteEnd|string|nil
 	self._OffMeshTarget = nil
+	---@type NavRouteEnd|nil the end of the navigation path it walks to (GameDirector:_CheckProgressOffMesh)
+	self._OffMeshEnd = nil
 	self._OffMeshBestDistance = math.huge
 	self._RocketCooldownTimer = 0.0
 
@@ -211,6 +213,12 @@ function Bot:__init(p_Player)
 	-- Rush: the attacker keeps going to its MCOM while shooting (StateAttacking, Bot:UpdatePushMovement).
 	self._PushWhileShooting = false
 	self._Pushing = false
+	-- Shooting at a wall in the way (Bot:_TryBreach): { Position, Time, Fire }, and how often for which target.
+	self._Breach = nil
+	self._BreachKey = nil
+	self._BreachCount = 0
+	-- Out of a vehicle: onto the mesh once on the ground (VehicleActions, UpdateNormalMovement).
+	self._MeshAfterExit = false
 	self._FireCycleModifier = 1.0
 
 	-- Vehicle stuff.

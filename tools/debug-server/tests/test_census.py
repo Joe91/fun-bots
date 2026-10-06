@@ -263,6 +263,34 @@ class DriverTest(unittest.TestCase):
         self.assertTrue(_level_matches(meta, "MP_012", "RushLarge0"))
         self.assertTrue(_level_matches({"level": "Levels/MP_001/MP_001", "mode": "RushLarge0"}, "MP_001", "RushLarge0"))
 
+    def test_quiet_bots_keeps_the_settings_before(self):
+        from funbots_debug.census import __main__ as driver
+
+        class FakeServer:
+            def __init__(self):
+                self.config = {"BotsAttackBots": "true", "UseVehicles": "true"}
+
+            def rcon(self, *words):
+                name = words[0].rsplit(".", 1)[-1]
+                if len(words) > 1:
+                    self.config[name] = words[1]
+                    return ["OK"]
+                return ["OK", f"value of var {name} is {self.config[name]}"]
+
+        server = FakeServer()
+        before = driver.quiet_bots(server)
+        self.assertEqual(server.config, {"BotsAttackBots": "false", "UseVehicles": "false"})
+        driver.restore_bots(server, before)
+        self.assertEqual(server.config, {"BotsAttackBots": "true", "UseVehicles": "true"})
+
+
+class SpawnPositionsTest(unittest.TestCase):
+    def test_prefab_spawns_at_the_origin_are_left_out(self):
+        from funbots_debug.census.navzones import spawn_positions
+        census = {"entities": {"alternateSpawns": [{"ground": [0.03, -0.09, 0.0]}, {"ground": [-251.0, 91.0, -855.0]}]},
+                  "areas": [{"spawns": [[0.0, 0.0, 0.0], [12.0, 5.0, -3.0]]}]}
+        self.assertEqual(spawn_positions(census), [[-251.0, 91.0, -855.0], [12.0, 5.0, -3.0]])
+
 
 if __name__ == "__main__":
     unittest.main()

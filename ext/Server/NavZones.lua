@@ -540,13 +540,17 @@ function NavZones:ZoneAtVisible(p_Position, p_Range, p_Objective)
 		return nil, nil, nil
 	end
 	local s_Points = self._Mesh.Points
+	local s_Part = self._Mesh.Part
+	local s_PartSize = self._Mesh.PartSize
 	local s_Candidates = {}
 	for l_Index = 1, #s_Points do
 		local s_Pos = s_Points[l_Index].Position
 		local s_DeltaX = s_Pos.x - p_Position.x
 		local s_DeltaZ = s_Pos.z - p_Position.z
 		local s_Distance = s_DeltaX * s_DeltaX + s_DeltaZ * s_DeltaZ
-		if s_Distance <= p_Range * p_Range and math.abs(s_Pos.y - p_Position.y) <= FLOOR_HEIGHT then
+		-- Not on an island of the mesh (a nook next to a spawn the checks cut off): no way leads on from there.
+		if s_Distance <= p_Range * p_Range and math.abs(s_Pos.y - p_Position.y) <= FLOOR_HEIGHT
+			and (s_PartSize[s_Part[l_Index]] or 0) >= MIN_PART then
 			s_Candidates[#s_Candidates + 1] = { l_Index, s_Distance }
 		end
 	end

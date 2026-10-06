@@ -8,7 +8,7 @@ DebugCommands = class('DebugCommands')
 --   channels        { <channel> = bool, ... }   switch parts of the snapshot / the traces on and off
 --   interval        { seconds }                 time between two snapshots
 --   server_raycasts { enabled }                 Registry.GAME_RAYCASTING.USE_SERVER_RAYCASTS at runtime
---   raycast         { from, to, detailed, maxHits }   -> all hits of one raycast
+--   raycast         { from, to, detailed, maxHits }   -> all hits of one raycast (entity, material flags and names)
 --   bot             { id }                      -> all plain fields of a bot (Bot.lua)
 --   nodes           {}                          streams all waypoints as "nodes" events
 --   paths_apply     { paths, save }             objectives, loop and links from the labeler of the debug-server
@@ -19,6 +19,7 @@ DebugCommands = class('DebugCommands')
 --                                               "census_*" events (funbots_debug/census)
 --   census_stop     {}                          stops a running census
 --   spawns          {}                          -> the spawn-entities and the alternate spawns of the running mode
+--   entities        { type, pos, radius }       -> the entities of the type (near pos): { id, data, pos }
 --   navzones_apply  { map, mesh, save }         the walking mesh and its zones (NavZones.lua), save: into mod.db
 --   rcon            { command, args }           any RCON-command (also the vanilla ones) -> { lines }
 --   chat            { message, player }         a chat-command, as the player with that id or (no player) as
@@ -136,6 +137,7 @@ function DebugCommands:__init()
 	m_DebugBridge:RegisterCommand('census', self.Census)
 	m_DebugBridge:RegisterCommand('census_stop', self.CensusStop)
 	m_DebugBridge:RegisterCommand('spawns', self.Spawns)
+	m_DebugBridge:RegisterCommand('entities', self.Entities)
 	m_DebugBridge:RegisterCommand('zone_probe', self.ZoneProbe)
 	m_DebugBridge:RegisterCommand('navzones_apply', self.NavZonesApply)
 	m_DebugBridge:RegisterCommand('rcon', self.Rcon)
@@ -169,6 +171,12 @@ function DebugCommands.ServerRaycasts(p_Args)
 	return { enabled = m_ServerRaycasts:IsEnabled() }
 end
 
+-- The flags of a material the test-raycast names (MaterialFlags).
+local MATERIAL_FLAG_NAMES = {
+	'MfPenetrable', 'MfClientDestructible', 'MfBashable', 'MfSeeThrough', 'MfNoCollisionResponse',
+	'MfNoCollisionResponseCombined',
+}
+
 ---A test-raycast, e.g. to find out which materials block the sight.
 function DebugCommands.Raycast(p_Args)
 	local s_From = _ToVec3(p_Args.from, 'from')
@@ -199,6 +207,16 @@ function DebugCommands.Raycast(p_Args)
 		-- Same source as Utilities:IsInSight. No cast of the rigidBody or its userData (crashes on some entities).
 		if l_Hit.material ~= nil and l_Hit.material:Is('MaterialContainerPair') then
 			s_Entry.materialFlags = MaterialContainerPair(l_Hit.material).flagsAndIndex
+			-- The names of the flags that are set (the lower bits are the index of the material). The enum can't be
+			-- iterated: by name.
+			local s_Names = {}
+			for _, l_Name in ipairs(MATERIAL_FLAG_NAMES) do
+				local s_Value = MaterialFlags[l_Name]
+				if type(s_Value) == 'number' and s_Value > 0 and (s_Entry.materialFlags & s_Value) == s_Value then
+					s_Names[#s_Names + 1] = l_Name
+				end
+			end
+			s_Entry.materialNames = s_Names
 		end
 		s_Result[#s_Result + 1] = s_Entry
 	end
@@ -465,6 +483,36 @@ end
 
 function DebugCommands.Spawns()
 	return m_MapCensus:EngineSpawns()
+end
+
+-- At most this many entities per answer (entities).
+local MAX_ENTITIES = 200
+
+---The entities of a type (args.type, e.g. "ServerInteractionEntity"), optionally only within args.radius of args.pos:
+---{ id, data (type of its data), pos, enabled (spawn-entities) }.
+function DebugCommands.Entities(p_Args)
+	local s_Type = tostring(p_Args.type or '')
+	local s_Near = p_Args.pos ~= nil and _ToVec3(p_Args.pos, 'pos') or nil
+	local s_Radius = tonumber(p_Args.radius) or math.huge
+	local s_Result = {}
+	local s_Iterator = EntityManager:GetIterator(s_Type)
+	local s_Entity = s_Iterator:Next()
+	while s_Entity ~= nil and #s_Result < MAX_ENTITIES do
+		local s_Ok, s_Position = pcall(function() return s_Entity.computedWorldTransform.trans:Clone() end)
+		if not s_Ok or s_Position == nil then
+			s_Ok, s_Position = pcall(function() return SpatialEntity(s_Entity).transform.trans:Clone() end)
+			s_Position = s_Ok and s_Position or nil
+		end
+		if s_Near == nil or (s_Position ~= nil and s_Position:Distance(s_Near) <= s_Radius) then
+			s_Result[#s_Result + 1] = {
+				id = s_Entity.instanceId,
+				data = s_Entity.data ~= nil and s_Entity.data.typeInfo.name or nil,
+				pos = s_Position ~= nil and _Vec(s_Position) or nil,
+			}
+		end
+		s_Entity = s_Iterator:Next()
+	end
+	return { type = s_Type, entities = s_Result }
 end
 
 ---Measures the capture zones with the bots (ZoneProbe.lua): they are put around the capture points.

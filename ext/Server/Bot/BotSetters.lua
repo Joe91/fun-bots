@@ -230,6 +230,10 @@ function Bot:ResetSpawnVars()
 
 	self._ObstacleRetryCounter = 0
 	self._StuckRerouteCount = 0
+	self._Breach = nil
+	self._BreachKey = nil
+	self._BreachCount = 0
+	self._MeshAfterExit = false
 	self._LowSpeedTimer = 0.0
 	self._NoProgressTimer = 0.0
 	self._ProgressNode = nil

@@ -32,6 +32,19 @@ local OBSTACLE_START_GRACE = 1.2       -- Seconds without standstill-check when 
 local OBSTACLE_NO_PROGRESS_TIME = 5.0  -- Seconds without getting closer to the target before the obstacle-sequence starts.
 local OBSTACLE_MIN_PROGRESS = 0.5      -- Meters the bot has to get closer to count as progress.
 local OBSTACLE_RESOLVED_PROGRESS = 1.0 -- Meters closer to the target than at the start of the sequence: obstacle overcome.
+local OBSTACLE_TELEPORT_RANGE = 10.0   -- Meters to the target at most for a teleport onto it.
+local ZONE_SKIP_RANGE = 2.0            -- On the mesh a target counts as passed only this close (UpdateTargetMovement).
+
+-- Breaching: a wall of the level right in front of a bot that doesn't get along, on the way to its target (boards over
+-- the doors of a train, a wooden fence: the paths were recorded after they were shot away, the census saw them whole).
+-- The bot shoots at it before it tries anything else. Only materials bullets go through (MfPenetrable: wood, thin
+-- walls, glass): not concrete or rock, nothing happens there.
+local BREACH_RANGE = 3.0          -- Metres towards the target that are checked.
+local BREACH_HEIGHTS = { 0.9, 1.5 } -- Heights of the rays: both blocked, a wall (not a step).
+local BREACH_TIME = 2.5           -- Seconds of shooting at it.
+local BREACH_MAX = 2              -- Breaches on the way to one target.
+local BREACH_AIM = 0.15           -- Radians off the wall at most: then it fires.
+local BREACH_EYE = 1.5            -- Metres above the feet the bot shoots from.
 
 ---@param p_Node Waypoint
 ---@param p_Step integer
@@ -417,6 +430,95 @@ function Bot:_ResetObstacleSequence()
 	self:_ResetActionFlag(BotActionFlags.MeleeActive)
 end
 
+---Starts a breach if something that can be shot away blocks the way towards the target, right in front of the bot.
+---At most BREACH_MAX times per target (p_Key: the waypoint, the step on the mesh).
+---@param p_Target Vec3
+---@param p_Key any
+---@return boolean true if the bot breaches now
+function Bot:_TryBreach(p_Target, p_Key)
+	local s_Soldier = self.m_Player.soldier
+	-- Not while it fights (pushing on to the MCOM while shooting).
+	if s_Soldier == nil or self.m_KnifeMode or self.m_Primary == nil or self._ShootPlayer ~= nil then
+		return false
+	end
+	if self._BreachKey ~= p_Key then
+		self._BreachKey = p_Key
+		self._BreachCount = 0
+	end
+	if self._BreachCount >= BREACH_MAX then
+		return false
+	end
+	local s_From = s_Soldier.worldTransform.trans
+	local s_DeltaX = p_Target.x - s_From.x
+	local s_DeltaZ = p_Target.z - s_From.z
+	local s_Length = math.sqrt(s_DeltaX * s_DeltaX + s_DeltaZ * s_DeltaZ)
+	if s_Length < 0.5 then
+		return false
+	end
+	local s_Range = math.min(BREACH_RANGE, s_Length)
+	local s_Flags = RayCastFlags.DontCheckCharacter | RayCastFlags.DontCheckRagdoll | RayCastFlags.DontCheckWater
+	---@cast s_Flags RayCastFlags
+	---@type MaterialFlags|integer
+	local s_NoMaterialFlags = 0
+	local s_Aim = nil
+	for _, l_Height in ipairs(BREACH_HEIGHTS) do
+		local s_Start = Vec3(s_From.x, s_From.y + l_Height, s_From.z)
+		local s_End = Vec3(s_From.x + s_DeltaX / s_Length * s_Range, s_From.y + l_Height,
+			s_From.z + s_DeltaZ / s_Length * s_Range)
+		local s_Hit = RaycastManager:CollisionRaycast(s_Start, s_End, 1, s_NoMaterialFlags, s_Flags)[1]
+		if s_Hit == nil or s_Hit.material == nil or not s_Hit.material:Is('MaterialContainerPair')
+			or (MaterialContainerPair(s_Hit.material).flagsAndIndex & MaterialFlags.MfPenetrable) == 0 then
+			return false
+		end
+		s_Aim = s_Aim or s_Hit.position:Clone()
+	end
+	self._BreachCount = self._BreachCount + 1
+	self._Breach = { Position = s_Aim, Time = BREACH_TIME, Fire = false }
+	m_Logger:Write(self.m_Player.name .. ' breaches at ' .. tostring(s_Aim))
+	if m_DebugBridge.m_Enabled then
+		m_DebugBridge:Event('breach', { bot = self.m_Id, pos = DebugBridge.Vec(s_Aim) })
+	end
+	return true
+end
+
+---While breaching the bot stands, turns to the wall and shoots at it (the trigger pulled and released: also the
+---weapons that fire single shots).
+---@param p_DeltaTime number
+---@return boolean true while it breaches (it does nothing else)
+function Bot:_UpdateBreach(p_DeltaTime)
+	local s_Breach = self._Breach
+	local s_Soldier = self.m_Player.soldier
+	if s_Breach == nil or self._ShootPlayer ~= nil then
+		return false
+	end
+	s_Breach.Time = s_Breach.Time - p_DeltaTime
+	if s_Breach.Time <= 0.0 or s_Soldier == nil then
+		self._Breach = nil
+		self:_ResetObstacleSequence()
+		return false
+	end
+	self.m_ActiveSpeedValue = BotMoveSpeeds.NoMovement
+	self._TargetPoint = { Position = s_Breach.Position }
+	self._NextTargetPoint = nil
+	self._WeaponToUse = BotWeapons.Primary
+	local s_From = s_Soldier.worldTransform.trans
+	local s_DeltaX = s_Breach.Position.x - s_From.x
+	local s_DeltaZ = s_Breach.Position.z - s_From.z
+	self._TargetPitch = math.atan(s_Breach.Position.y - (s_From.y + BREACH_EYE),
+		math.max(0.3, math.sqrt(s_DeltaX * s_DeltaX + s_DeltaZ * s_DeltaZ)))
+	local s_Atan = math.atan(s_DeltaZ, s_DeltaX)
+	local s_Yaw = (s_Atan > math.pi / 2) and (s_Atan - math.pi / 2) or (s_Atan + 3 * math.pi / 2)
+	local s_Off = math.abs(self.m_Input.authoritativeAimingYaw - s_Yaw) % (2 * math.pi)
+	if s_Off > math.pi then
+		s_Off = 2 * math.pi - s_Off
+	end
+	if s_Off < BREACH_AIM then
+		s_Breach.Fire = not s_Breach.Fire
+		self:_SetInput(EntryInputActionEnum.EIAFire, s_Breach.Fire and 1 or 0)
+	end
+	return true
+end
+
 function Bot:_ObstacleHandling(p_Velocity, p_DistanceSquared, p_HeightDistance, p_DeltaTime, p_PlayerPos)
 	local s_SetTargetReached = false
 	local s_IncrementNodes = 0
@@ -439,6 +541,11 @@ function Bot:_ObstacleHandling(p_Velocity, p_DistanceSquared, p_HeightDistance, 
 
 	-- handling on standstill
 	if self._ObstacleSequenceTimer ~= 0 or self:_DetectObstacle(p_Velocity, p_DeltaTime, p_PlayerPos) then
+		-- A wall that can be shot away: that first.
+		if self._ObstacleSequenceTimer == 0
+			and self:_TryBreach(self._TargetPoint.Position, self._TargetPoint.Original or self._TargetPoint) then
+			return { s_SetTargetReached, s_IncrementNodes }
+		end
 		-- Try to get around obstacle.
 		self.m_ActiveSpeedValue = BotMoveSpeeds.Normal                  -- Always try to stand.
 		if p_HeightDistance > 1.5 then                                  -- no change to get there, so skip the obstacle-stuff
@@ -515,7 +622,10 @@ function Bot:_ObstacleHandling(p_Velocity, p_DistanceSquared, p_HeightDistance, 
 			self:_ResetObstacleSequence()
 			s_SetTargetReached = true
 
-			if Config.TeleportIfStuck and m_Utilities:CheckProbability(Registry.BOT.PROBABILITY_TELEPORT_IF_STUCK) then
+			-- Only onto a waypoint close by: else the bot was sent straight to a path far away and would cross water or
+			-- walls in one go.
+			if Config.TeleportIfStuck and m_Utilities:CheckProbability(Registry.BOT.PROBABILITY_TELEPORT_IF_STUCK)
+				and (self._TargetPoint.Original or self._TargetPoint).Position:Distance(p_PlayerPos) <= OBSTACLE_TELEPORT_RANGE then
 				-- Teleport onto the path itself, the offset-point might be inside a wall.
 				local s_TargetPosition = (self._TargetPoint.Original or self._TargetPoint).Position
 				local s_NextPosition = self._NextTargetPoint and (self._NextTargetPoint.Original or self._NextTargetPoint).Position
@@ -660,6 +770,10 @@ function Bot:UpdateNormalMovement(p_DeltaTime)
 
 
 	if self._FollowTargetPlayer == nil then -- default movement
+		-- Shooting a wall in its way away (on the paths and on the mesh).
+		if self:_UpdateBreach(p_DeltaTime) then
+			return
+		end
 		-- In the zone of the objective the bot walks the network of the zone (BotZoneMovement).
 		if self.m_Zone ~= nil and self:UpdateZoneMovement(p_DeltaTime) then
 			return
@@ -779,6 +893,14 @@ function Bot:UpdateNormalMovement(p_DeltaTime)
 			local s_VelocityFalling = s_Velocity.y
 			if s_VelocityFalling < -25.0 then
 				self:_SetInput(EntryInputActionEnum.EIAToggleParachute, 1)
+			end
+
+			-- Out of a vehicle (bailed out, a passenger at the objective): onto the mesh once on the ground.
+			if self._MeshAfterExit and math.abs(s_VelocityFalling) < 1.0 then
+				self._MeshAfterExit = false
+				if self:TryEnterZoneAt(s_SoldierPos) then
+					return
+				end
 			end
 
 			local s_DifferenceY = s_Point.Position.z - s_SoldierPos.z
@@ -1190,12 +1312,17 @@ function Bot:UpdateShootMovement(p_DeltaTime)
 	end
 end
 
----Rush: whether the attacker keeps going to its MCOM while shooting: by chance (decided now and then in StateAttacking),
----and always close to the MCOM unless the enemy is close as well.
+---Rush: whether the bot keeps going to its MCOM while shooting: by chance (decided now and then in StateAttacking),
+---and always close to the MCOM unless the enemy is close as well. Attackers to arm it, defenders only while it is armed
+---(to disarm it, else they fight where they are).
 ---@return boolean
 function Bot:ShouldPushWhileShooting()
-	if not Globals.IsRush or self.m_Player.teamId ~= TeamId.Team1 or self.m_KnifeMode or self.m_Player.soldier == nil
+	if not Globals.IsRush or self.m_KnifeMode or self.m_Player.soldier == nil
 		or self._Objective:lower():sub(1, 4) ~= 'mcom' then
+		return false
+	end
+	if self.m_Player.teamId ~= TeamId.Team1 and (self.m_Player.teamId ~= TeamId.Team2
+		or not g_GameDirector:IsMcomArmed(g_GameDirector:_GetObjectiveFromSubObj(self._Objective) or self._Objective)) then
 		return false
 	end
 	local s_Weapon = self.m_ActiveWeapon
@@ -1323,7 +1450,10 @@ function Bot:UpdateTargetMovement()
 
 			-- Skip the node, if it was passed: the distance grows and the bot is already beyond the node, seen in the
 			-- direction of the next node. The distance alone also grows while turning or strafing far from the node.
-			if not s_Skip and s_Distance > (self._LastWayDistance + 0.001) and self._ObstacleSequenceTimer == 0 then
+			-- On the mesh only close to the target: the points and corners lie far apart, the next one can be beside
+			-- the target (around a wall), "beyond" it is then everything on the side the bot comes from.
+			if not s_Skip and s_Distance > (self._LastWayDistance + 0.001) and self._ObstacleSequenceTimer == 0
+				and (self.m_Zone == nil or s_Distance < ZONE_SKIP_RANGE) then
 				local s_TargetPos = self._TargetPoint.Position
 				local s_NextPos = s_NextTargetPoint.Position
 				s_Skip = (s_SoldierPos.x - s_TargetPos.x) * (s_NextPos.x - s_TargetPos.x) +

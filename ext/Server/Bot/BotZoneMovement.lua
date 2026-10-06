@@ -28,6 +28,8 @@ local ZONE_TURN_ANGLE = 1.0      -- slows down until it faces the target: else i
 local ZONE_REACH_HEIGHT = 1.5    -- Same as Registry.BOT.TARGET_HEIGHT_DISTANCE_WAYPOINT.
 local ZONE_MIN_PROGRESS = 0.3    -- Metres closer to the target that count as progress.
 local ZONE_JUMP_TIME = 1.5       -- Seconds without progress before a jump.
+local ZONE_SIDESTEP_TIME = 1.0   -- Seconds without progress, more than ZONE_SIDESTEP_OFFSET metres beside the way to
+local ZONE_SIDESTEP_OFFSET = 0.3 -- the target: the bot steps back onto it sideways.
 local ZONE_JUMP_RANGE = 1.5      -- Horizontal metres before a corner where the way was recorded with a jump: jump.
 local ZONE_STUCK_TIME = 4.0      -- Seconds without progress before the bot gives up this way.
 local ZONE_MAX_FAILS = 3         -- Ways given up before the bot leaves the zone.
@@ -64,6 +66,8 @@ local BORDER_GIVE_UP = 10.0      -- Not back inside this many seconds after it l
 local BORDER_BACK = 15.0         -- It walks back to a point it passed at least this far behind it (the point it reached
                                  -- last can be outside already)...
 local TRAIL_POINTS = 6           -- ...of the last points it reached.
+local ZONE_ENTER_RANGE = 6.0     -- Horizontal metres (and ZONE_ENTER_HEIGHT up or down) to the waypoint of a junction
+local ZONE_ENTER_HEIGHT = 3.0    -- the bot goes onto the mesh from.
 
 ---@class BotZoneState
 ---@field Zone NavZone
@@ -102,6 +106,18 @@ function Bot:_CheckForZoneEntry(p_Point)
 	local s_Waypoint = p_Point.Original or p_Point
 	local s_Entry = m_NavZones:GetJunction(s_Waypoint)
 	if s_Entry == nil then
+		return false
+	end
+	-- Only if the bot is there: the obstacle-handling counts a waypoint as reached when it skips it, from far away.
+	local s_Soldier = self.m_Player.soldier
+	if s_Soldier == nil then
+		return false
+	end
+	local s_Here = s_Soldier.worldTransform.trans
+	local s_DeltaX = s_Waypoint.Position.x - s_Here.x
+	local s_DeltaZ = s_Waypoint.Position.z - s_Here.z
+	if s_DeltaX * s_DeltaX + s_DeltaZ * s_DeltaZ > ZONE_ENTER_RANGE * ZONE_ENTER_RANGE
+		or math.abs(s_Waypoint.Position.y - s_Here.y) > ZONE_ENTER_HEIGHT then
 		return false
 	end
 	-- Just left the mesh here: on along the path (else it goes on and off the mesh at the same junction).
@@ -262,6 +278,20 @@ function Bot:_EnterZone(p_Zone, p_Point, p_Vehicle, p_Junction)
 	m_Logger:Write(self.m_Player.name .. ' on the mesh at ' .. p_Zone.Name)
 end
 
+---Whether the bot gets to the objective: on the mesh a route leads there from its point (NavRoutes:Next: not from a
+---ship to a boat at the shore), off the mesh the objective has a target on the mesh at all.
+---@param p_Objective string
+---@return boolean
+function Bot:CanReach(p_Objective)
+	local s_State = self.m_Zone
+	if s_State == nil or s_State.Vehicle then
+		return m_NavRoutes:Knows(p_Objective)
+	end
+	-- As _ZoneDecide: from its point, else from a point of another part close by (_ZoneRejoin).
+	return m_NavRoutes:Next(s_State.Point, p_Objective, self.m_RouteSeed, self.m_Player.teamId) ~= nil
+		or self:_ZoneRejoinPoint(p_Objective) ~= nil
+end
+
 ---Where to go for the objective: in its zone from point to point, over the mesh to its zone, out over the junction of
 ---the next navigation path of the route (NavRoutes), else the path that suits the objective best (_ZoneBestExit).
 ---Without objective the bot walks around in the zone it is in (on the mesh outside of zones it waits).
@@ -282,7 +312,8 @@ function Bot:_ZoneDecide(p_Rejoined)
 	end
 
 	-- The routes are over the mesh of the soldiers, a vehicle leaves its network at the junction closest to the objective.
-	local s_Next = not s_State.Vehicle and m_NavRoutes:Next(s_State.Point, self._Objective, self.m_RouteSeed) or nil
+	local s_Next = not s_State.Vehicle
+		and m_NavRoutes:Next(s_State.Point, self._Objective, self.m_RouteSeed, self.m_Player.teamId) or nil
 	if s_Next ~= nil and s_Next.Action ~= nil and s_Next.Point ~= nil then
 		-- Into the vehicle, arm the MCOM: to the point next to it, then do it there (_ZoneAction).
 		s_State.Zone = s_Next.Zone or s_State.Zone
@@ -311,10 +342,40 @@ function Bot:_ZoneDecide(p_Rejoined)
 	end
 	local s_Exit = s_Next ~= nil and s_Next.Exit or self:_ZoneBestExit(self._Objective)
 	if s_Exit == nil then
+		if self:_ZoneNoWay() then
+			return
+		end
 		self:_LeaveZone(nil)
 		return
 	end
 	self:_ZoneRouteToExit(s_Exit)
+end
+
+-- No way on from the mesh: a path this close is taken (as before the mesh), else the bot waits on the mesh.
+local ZONE_LEAVE_RANGE = 30.0
+
+---Neither the mesh nor a navigation path leads to the objective from here (the ship of the attackers, the boats are
+---their way). Off the mesh onto a path close by, else the bot stays and drops the objective: the GameDirector gives it
+---one it gets to (a boat next to it) as soon as there is one. Not onto a path far away: the bot would walk (swim) there
+---straight.
+---@return boolean true if the bot waits on the mesh
+function Bot:_ZoneNoWay()
+	local s_State = self.m_Zone
+	local s_Soldier = self.m_Player.soldier
+	if s_State == nil or s_State.Vehicle or s_Soldier == nil then
+		return false
+	end
+	local s_Position = s_Soldier.worldTransform.trans
+	local s_Path = g_GameDirector:FindClosestPath(s_Position, false, true, nil)
+	if s_Path ~= nil and s_Path.Position:Distance(s_Position) <= ZONE_LEAVE_RANGE then
+		return false
+	end
+	m_Logger:Write(self.m_Player.name .. ' no way to ' .. tostring(self._Objective) .. ', waits')
+	self:SetObjective('')
+	s_State.Objective = ''
+	s_State.Zone = m_NavZones:ZoneAtPoint(s_State.Point, nil) or s_State.Zone
+	self:_ZoneNewGoal()
+	return true
 end
 
 ---No route from the point of the bot: the closest point of another part of the mesh (ZONE_REJOIN_RANGE) from which one
@@ -324,9 +385,28 @@ function Bot:_ZoneRejoin()
 	local s_State = self.m_Zone
 	---@cast s_State -nil
 	local s_Mesh = m_NavZones:GetMesh()
-	local s_Current = s_State.Zone.Points[s_State.Point]
-	if s_Mesh == nil or s_Current == nil then
+	local l_Point = self:_ZoneRejoinPoint(self._Objective)
+	if s_Mesh == nil or l_Point == nil then
 		return false
+	end
+	m_Logger:Write(self.m_Player.name .. ' no route from point ' .. s_State.Point .. ', goes on from ' .. l_Point)
+	s_State.Point = l_Point
+	-- On the way there: not snapped back to the closest point (_ZoneResnap), that one has no route.
+	s_State.Entered = SharedUtils:GetTime()
+	s_State.Targets = { { Position = s_Mesh.Points[l_Point].Position, Flags = 0, Point = l_Point } }
+	return true
+end
+
+---The closest point of another part of the mesh (ZONE_REJOIN_RANGE, at least ZONE_REJOIN_MIN_PART points) from which
+---a route leads to the objective (_ZoneRejoin). nil if there is none.
+---@param p_Objective string
+---@return integer|nil
+function Bot:_ZoneRejoinPoint(p_Objective)
+	local s_State = self.m_Zone
+	local s_Mesh = m_NavZones:GetMesh()
+	local s_Current = s_State ~= nil and s_State.Zone.Points[s_State.Point] or nil
+	if s_State == nil or s_Mesh == nil or s_Current == nil then
+		return nil
 	end
 	local s_Part = s_Mesh.Part[s_State.Point]
 	local s_From = s_Current.Position
@@ -347,17 +427,12 @@ function Bot:_ZoneRejoin()
 		local l_Part = s_Mesh.Part[l_Point]
 		if not s_Tried[l_Part] then
 			s_Tried[l_Part] = true
-			if m_NavRoutes:Next(l_Point, self._Objective, self.m_RouteSeed) ~= nil then
-				m_Logger:Write(self.m_Player.name .. ' no route from point ' .. s_State.Point .. ', goes on from ' .. l_Point)
-				s_State.Point = l_Point
-				-- On the way there: not snapped back to the closest point (_ZoneResnap), that one has no route.
-				s_State.Entered = SharedUtils:GetTime()
-				s_State.Targets = { { Position = s_Mesh.Points[l_Point].Position, Flags = 0, Point = l_Point } }
-				return true
+			if m_NavRoutes:Next(l_Point, p_Objective, self.m_RouteSeed, self.m_Player.teamId) ~= nil then
+				return l_Point
 			end
 		end
 	end
-	return false
+	return nil
 end
 
 ---The point of the bot is where it last reached one. It may be far away by now (it fought, pushed forward while
@@ -380,6 +455,16 @@ function Bot:_ZoneResnap()
 	end
 end
 
+---Whether the bot holds the zone: waits longer at each point, at the ones with cover crouched. Defending its capture
+---point, or in rush a defender at its MCOM (the GameDirector sends the defenders to the MCOMs to attack: they aren't of
+---their team).
+---@param p_State BotZoneState
+---@return boolean
+function Bot:_ZoneDefends(p_State)
+	return self._ObjectiveMode == BotObjectiveModes.Defend
+		or (Globals.IsRush and self.m_Player.teamId == TeamId.Team2 and p_State.Zone.Kind == 'mcom' and not p_State.Vehicle)
+end
+
 ---Walks to the next point of the zone (not the one the bot is at).
 function Bot:_ZoneNewGoal()
 	local s_State = self.m_Zone
@@ -390,7 +475,7 @@ function Bot:_ZoneNewGoal()
 		self:_ZoneRouteTo(nil)
 		return
 	end
-	local s_Defend = self._ObjectiveMode == BotObjectiveModes.Defend
+	local s_Defend = self:_ZoneDefends(s_State)
 	-- Only goals the mesh leads to directly: two points of a zone can be connected only over a long way round
 	-- (another floor, through the area behind), the bot would walk far away from its objective.
 	local s_Goal = nil
@@ -759,7 +844,7 @@ function Bot:UpdateZoneMovement(p_DeltaTime)
 			s_State.Waiting = true
 			s_State.Wait = s_State.Wait - p_DeltaTime
 			local s_Point = s_State.Goal and s_State.Zone.Points[s_State.Goal]
-			if self._ObjectiveMode == BotObjectiveModes.Defend and s_Point ~= nil and s_Point.Cover >= 3
+			if self:_ZoneDefends(s_State) and s_Point ~= nil and s_Point.Cover >= 3
 				and s_Soldier.pose ~= CharacterPoseType.CharacterPoseType_Crouch then
 				s_Soldier:SetPose(CharacterPoseType.CharacterPoseType_Crouch, true, true)
 			end
@@ -882,6 +967,29 @@ function Bot:UpdateZoneMovement(p_DeltaTime)
 		s_State.Stuck = 0.0
 	else
 		s_State.Stuck = s_State.Stuck + p_DeltaTime
+	end
+
+	-- A wall in the way that can be shot away (Bot:_TryBreach): that first, then on.
+	if s_State.Stuck > ZONE_JUMP_TIME and self:_TryBreach(s_Target.Position, s_Target) then
+		s_State.Stuck = 0.0
+		s_State.Progress = math.huge
+		return true
+	end
+
+	-- Off the line of the way (pushed aside, cut a corner): back onto it sideways, the way itself is free. Else a pillar
+	-- beside the line holds the bot.
+	if s_State.Stuck > ZONE_SIDESTEP_TIME and s_FromPosition ~= nil then
+		local s_LineX = s_Target.Position.x - s_FromPosition.x
+		local s_LineZ = s_Target.Position.z - s_FromPosition.z
+		local s_LineLength = math.sqrt(s_LineX * s_LineX + s_LineZ * s_LineZ)
+		if s_LineLength > 0.5 then
+			-- Right of the way (looking along it) is (-z, x): positive offset = right of it, strafe left.
+			local s_Offset = ((s_Position.x - s_FromPosition.x) * -s_LineZ + (s_Position.z - s_FromPosition.z) * s_LineX)
+				/ s_LineLength
+			if math.abs(s_Offset) > ZONE_SIDESTEP_OFFSET then
+				self:_SetInput(EntryInputActionEnum.EIAStrafe, s_Offset > 0 and -1.0 or 1.0)
+			end
+		end
 	end
 
 	s_State.JumpTimer = s_State.JumpTimer + p_DeltaTime

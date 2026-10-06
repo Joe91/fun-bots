@@ -62,6 +62,7 @@ local AREA_UP = 60.0              -- The vertical rays start this far above the 
 local AREA_DOWN = 30.0            -- ...and end this far below it.
 local LAYER_GAP = 0.3             -- The ray continues this far below a hit to find the next layer.
 local WALKABLE_NORMAL_Y = 0.5     -- Surfaces up to 60° get edges and headroom, steeper ones are walls.
+local WADE_DEPTH = 1.3            -- Ground under more water than this isn't walked on (the soldier swims, report.py).
 -- Rays to the neighbour-cells (+x, +z) and back from them, as bits: 1 +x knee, 2 +x chest, 4 +z knee, 8 +z chest, 16 to 128
 -- the same from the neighbour back. Both ways: a ray that starts inside of a rock doesn't hit it.
 local EDGE_HEIGHTS = { 0.6, 1.3 }
@@ -252,6 +253,10 @@ local function _AlternateSpawns()
 	---@param p_Team integer|nil
 	---@param p_Source string
 	local function _AddAt(p_Position, p_Team, p_Source)
+		-- The spawns of prefabs (the vehicles on MP_018) have their position in the prefab: about the origin of the level.
+		if math.abs(p_Position.x) < 1.0 and math.abs(p_Position.y) < 1.0 and math.abs(p_Position.z) < 1.0 then
+			return
+		end
 		local s_Key = string.format('%.1f %.1f %.1f', p_Position.x, p_Position.y, p_Position.z)
 		if not s_SeenPositions[s_Key] then
 			s_SeenPositions[s_Key] = true
@@ -1567,7 +1572,11 @@ function CensusTask:_ProbeCell(p_Area, p_X, p_Z)
 		local s_NormalY = s_Hit.normal.y
 		local s_Edges = -1
 		local s_Headroom = -1
-		if s_NormalY >= WALKABLE_NORMAL_Y then
+		-- Deep under water (the seabed off a shore): not walkable, as a surface too steep.
+		local s_Water = s_NormalY >= WALKABLE_NORMAL_Y
+			and self:_Ray(Vec3(p_X, s_Top, p_Z), Vec3(p_X, s_Y - 0.05, p_Z), RAY_FLAGS_WATER) or nil
+		local s_Deep = s_Water ~= nil and s_Water.position.y > s_Y + WADE_DEPTH
+		if s_NormalY >= WALKABLE_NORMAL_Y and not s_Deep then
 			s_Edges = 0
 			for l_Index = 1, #EDGE_HEIGHTS do
 				local s_Height = s_Y + EDGE_HEIGHTS[l_Index]

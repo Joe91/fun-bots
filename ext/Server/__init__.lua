@@ -92,6 +92,8 @@ PermissionManager = require('PermissionManager')
 function FunBotServer:__init()
 	-- Used to calculate the respawn delay.
 	self.m_PlayerKilledDelay = 0
+	-- Players outside of the combat area (CombatArea events): player id -> true.
+	self.m_OutsideCombatArea = {}
 	Events:Subscribe('Engine:Init', self, self.OnEngineInit)
 	Events:Subscribe('Extension:Loaded', self, self.OnExtensionLoaded)
 end
@@ -587,16 +589,24 @@ function FunBotServer:OnScoringStatEvent(p_Player, p_ObjectPlayer, p_StatEvent, 
 	if p_StatEvent == StatEvent.StatEvent_CrateDisarmed then
 		m_GameDirector:OnMcomDisarmed(p_Player)
 	end
-	--[[ If p_StatEvent == StatEvent.StatEvent_CrateDestroyed then.
-		-- Not reliably usable, since place can be anywhere at this moment.
-	end ]]
+	-- The player who armed it, anywhere by now: the GameDirector knows which MCOM that was.
+	if p_StatEvent == StatEvent.StatEvent_CrateDestroyed then
+		m_GameDirector:OnMcomDestroyedBy(p_Player)
+	end
 end
 
 function FunBotServer:OnCombatAreaDeserting(p_Entity, p_Player)
+	-- Outside of the combat area: a death in a damage area now is the border, no hazard of the mesh (OnPlayerKilled).
+	if p_Player ~= nil then
+		self.m_OutsideCombatArea[p_Player.id] = true
+	end
 	m_GameDirector:OnCombatArea(p_Player, true)
 end
 
 function FunBotServer:OnCombatAreaReturning(p_Entity, p_Player)
+	if p_Player ~= nil then
+		self.m_OutsideCombatArea[p_Player.id] = nil
+	end
 	m_GameDirector:OnCombatArea(p_Player, false)
 end
 
@@ -689,6 +699,7 @@ end
 
 ---VEXT Shared Level:Destroy Event
 function FunBotServer:OnLevelDestroy()
+	self.m_OutsideCombatArea = {}
 	m_BotManager:OnLevelDestroy()
 	m_BotSpawner:OnLevelDestroy()
 	m_NodeEditor:OnLevelDestroy()
@@ -763,9 +774,11 @@ function FunBotServer:OnPlayerKilled(p_Player, p_Inflictor, p_Position, p_Weapon
 	m_NodeEditor:OnPlayerKilled(p_Player)
 	m_AirTargets:OnPlayerKilled(p_Player)
 	m_DebugSnapshots:OnPlayerKilled(p_Player, p_Inflictor, p_Position, p_Weapon, p_IsRoadKill, p_IsHeadShot)
-	if p_Weapon == 'DamageArea' then
+	-- Killed for leaving the combat area (rush: the defenders in the area of the stage that fell) is no hazard.
+	if p_Weapon == 'DamageArea' and not self.m_OutsideCombatArea[p_Player.id] then
 		m_NavZones:OnDamageAreaDeath(p_Position)
 	end
+	self.m_OutsideCombatArea[p_Player.id] = nil
 end
 
 ---VEXT Server Player:Chat Event

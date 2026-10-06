@@ -761,7 +761,8 @@ def spawn_positions(census: dict) -> list[list[float]]:
     positions = [as_list(spawn.get("ground")) for spawn in as_list((census.get("entities") or {}).get("alternateSpawns"))]
     for area in census.get("areas") or []:
         positions += [as_list(pos) for pos in as_list(area.get("spawns"))]
-    return [pos for pos in positions if len(pos) >= 3]
+    # The spawns of prefabs (the vehicles of MP_018) have their position in the prefab, about the origin of the level.
+    return [pos for pos in positions if len(pos) >= 3 and max(abs(float(value)) for value in pos[:3]) >= 1.0]
 
 
 def build(census: dict, attach: dict | None = None, checks: dict | None = None) -> dict:

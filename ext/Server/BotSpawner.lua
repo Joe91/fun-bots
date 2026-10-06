@@ -205,7 +205,10 @@ function BotSpawner:OnEngineUpdate(p_DeltaTime, p_SimulationDeltaTime)
 				-- check for mate or beacon (not a bot that spawned for a vehicle)
 				local s_PathIndex, s_IndexOnPath, s_InvertDirection, s_SpawnEntity, s_SpawnPosition = nil, nil, nil, nil, nil
 				if g_GameDirector:GetReservedVehicle(l_Bot) == nil then
-					s_PathIndex, s_IndexOnPath, s_InvertDirection, s_SpawnEntity, s_SpawnPosition = g_GameDirector:GetSpawnableBeaconOrMate(l_Bot.m_Player.teamId, l_Bot.m_Player.squadId)
+					-- Spawned where no way leads on (the ship of the attackers): on a mate away from there, if any.
+					local s_Here = l_Bot.m_Player.soldier.worldTransform.trans:Clone()
+					local s_Stranded = g_GameDirector:IsStranded(s_Here, l_Bot.m_Player.teamId) and s_Here or nil
+					s_PathIndex, s_IndexOnPath, s_InvertDirection, s_SpawnEntity, s_SpawnPosition = g_GameDirector:GetSpawnableBeaconOrMate(l_Bot.m_Player.teamId, l_Bot.m_Player.squadId, s_Stranded)
 				end
 				if s_PathIndex then
 					-- spawn at mate or beacon. Done here: the closest-path code below must not

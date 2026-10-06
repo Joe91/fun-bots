@@ -183,7 +183,10 @@ Bots fight little without a real client, so judge only whether they move, not wh
 ## Known issues
 
 - `COOP_006_ConquestSmall0` is a co-op level: it doesn't load as a multiplayer level. Leave it out of the list.
-- Don't kick the bots before the census (`--kick-bots`): on Rush maps the game server crashed 1–2 minutes later.
+- Don't kick the bots before the census (`--kick-bots`): on Rush maps the game server crashed 1–2 minutes later. The
+  census kills them instead (quiet, the default): each level is loaded anew, the bots don't fight or take vehicles
+  until the zone probe is done and are dead during the census, so nothing of the level is destroyed when it's measured.
+  The bots spawn again with the next level.
 - Zones of capture points are named after the engine ("ID_H_US_A" gives "a"), not after the paths. HQs are recognized
   by the engine (`CapturableType` 1), also with names like "_US_HQ_1".
 - The zone probe needs at least 4 bots on foot. On maps where all bots sit in vehicles it waits up to 30 s and then

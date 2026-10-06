@@ -313,6 +313,13 @@ the game-server on rush maps, 1 to 2 minutes into the census (likely the vehicle
 playing (`--warmup SECONDS`): only as far as they went. A census without explicit `areas` puts its grids around the
 measured zones.
 
+The census measures the level as it is at the start of a round (quiet, the default): before it switches the level
+(also if it runs already: a new round) it sets `BotsAttackBots` and `UseVehicles` of the mod to false over RCON, and
+after the zone probe it kills all bots (`funbots.killAll`: they don't respawn until the next level). Bots that fight
+destroy walls (tanks, rockets) and an MCOM that goes off destroys what is around it: the census would see the ways
+through them, which are walls again in the next round. Afterwards the settings are restored, the bots spawn again with
+the next level. The check (below) does the same. `--no-quiet` measures the level as it runs.
+
 Switching levels needs the RCON-connection. Afterwards the map-list is loaded again from the `MapList.txt` of the
 game-server. `report` also tells whether the waypoints of the game (`mod.db`) are the ones of `mapfiles/` in git.
 
@@ -327,7 +334,8 @@ What it collects:
   and right of the path, and rays at 0.4, 1.0 and 1.6 m to the next waypoint and along every link longer than 1 m.
 - **Areas**: a grid around every capture point (capture-radius + 15 m) and MCOM (30 m), 0.5 m cells with up to
   4 layers (floors of buildings, bridges). Every walkable surface has its headroom and rays at knee and chest height
-  to the neighbour-cells, so the walkable area and its connections are known without waypoints.
+  to the neighbour-cells, so the walkable area and its connections are known without waypoints. Ground under more than
+  1.3 m of water isn't walkable (the soldiers swim there: the seabed off the shore of MP_018 was a mesh).
 
 The report checks: paths in the air without the `Vehicles` tag `air`, waypoints floating above the ground (more than
 1.5 m is never reached), low ceilings that are walked
@@ -336,7 +344,8 @@ the radius, waypoints outside the combat area, spawns far from the waypoints, an
 each objective can be reached from the waypoints.
 
 The raycasts ignore soldiers, but vehicles standing around block them (`nextHit` names what was hit). The census sees
-the level before anything is destroyed.
+the level before anything is destroyed (quiet, above): walls that can be shot away (the boards over the doors of the
+train with MCOM 7 on MP_Subway) are walls, the bots shoot them away in the game (*Breaching* below).
 
 ## The mesh and its zones
 
@@ -406,7 +415,10 @@ zone it walks in, `@mesh` outside of the zones) and `zoneExit` on its way out.
   doesn't reach) it walks the recorded way to it instead (the paths named `mcom N interact`). Where the MCOM is: the interactions of the engine (`GameInteractionEntityData`, about 1 m from it,
   `GameDirector:GetMcom`), where a recorded path `mcom N interact` exists also its action-node (where to stand) and
   yaw. A new rush level without these paths gets its MCOMs numbered from the attackers' spawn
-  (`GameDirector:_NumberEngineMcoms`, see `NEW_MAP.md`).
+  (`GameDirector:_NumberEngineMcoms`, see `NEW_MAP.md`). The defenders hold the zone of their MCOM: they wait longer at
+  each point, crouched where there is cover (`Bot:_ZoneDefends`). While fighting, an attacker keeps going to its MCOM
+  now and then and always close to it (`Bot:ShouldPushWhileShooting`, `RUSH_PUSH_*`), a defender the same while its
+  MCOM is armed (to disarm it).
 - **Vehicles**: the team of a vehicle is the one of the vehicle-spawn of the engine it spawned at
   (`GameDirector:_VehicleSpawnTeam`). A vehicle in a base of its team (an HQ within 120 m, in rush a spawn of the team
   within 60 m) is spawned into directly, like jets: bots that spawn at the game spawns get into it at once
@@ -417,7 +429,14 @@ zone it walks in, `@mesh` outside of the zones) and `zoneExit` on its way out.
   `MaxBotsPerVehicle`, air vehicles and jets only if allowed). No labels or paths `vehicle ...` / `spawn vehicle ...`
   are used on levels with a mesh (the cut drops them).
 - **Rush spawns**: the bots spawn where the game spawns its players (the alternate spawns of the stage); one bot per
-  free vehicle at the spawn next to it (`GameDirector:ReserveVehicle`).
+  free vehicle at the spawn next to it (`GameDirector:ReserveVehicle`, only vehicles up to 100 m from a spawn of the
+  team that is on).
+- **Stranded**: a spawn from which neither the mesh nor a navigation path leads to any objective (the ship of the
+  attackers in stage 1 of MP_018: the boats are their way) spawns the bot on a squad-mate (or its beacon, its vehicle)
+  more than 60 m away whenever there is one (`GameDirector:IsStranded`). Else the bot waits there: the GameDirector only
+  gives a bot on the mesh objectives it gets to (`Bot:CanReach`), a vehicle next to it as soon as there is one. A bot
+  on the mesh without a way to its objective only goes onto a path within 30 m (`Bot:_ZoneNoWay`), not straight to one
+  far away.
 - **Rush border**: the area of the next stage opens a while after the last one fell, the objectives are the new MCOMs at
   once. A bot that leaves the combat area (`CombatArea:PlayerDeserting`) walks back over the points it passed (to one at
   least 15 m behind it, the last one can be outside already), stops as soon as it is inside again
@@ -435,7 +454,16 @@ zone it walks in, `@mesh` outside of the zones) and `zoneExit` on its way out.
   `NavZones:ZoneAtVisible`); with none in sight within 30 m it is put onto the closest point at once.
 - **Hazards**: the census sees the ground, not that it kills (the rails in the metro of MP_Subway). When a second player
   dies in a damage area (weapon `DamageArea`) within 3 m of an earlier death, the points of the mesh within 2.5 m are
-  left out until the level ends (`NavZones:OnDamageAreaDeath`). Single deaths (the border of the combat area) don't count.
+  left out until the level ends (`NavZones:OnDamageAreaDeath`). Deaths outside of the combat area (`CombatArea` events:
+  the border, the defenders left in the area of a stage that fell) don't count.
+- **Breaching**: a bot that doesn't get along (on the mesh or on a path) with a wall of a material bullets go through
+  (`MfPenetrable`: wood, boards, glass) right in front of it, towards its target, stands, turns to it and shoots at it for
+  2.5 s, then goes on (at most twice per target; `Bot:_TryBreach`). On MP_Subway the boards over the doors of the train
+  with MCOM 7 need that. Concrete and rock have no such flag, nothing happens there.
+- **Stuck on the mesh**: beside the line of the connection (pushed aside, a corner cut) the bot steps back onto it
+  sideways, the census found the line free (a pillar next to it held the bots). A bot that leaves a vehicle (bails out
+  of a helicopter) goes onto the mesh where it lands. It only goes onto the mesh at a junction it is next to (6 m), and
+  the obstacle-handling of the paths only teleports a bot onto a waypoint up to 10 m away.
 - **Smoothing** (`Registry.BOT.ZONE_SMOOTHING`): on the way from point to point a bot turns towards the next point
   before it gets there, within the room around both points (their clearance, at most 2.5 m), not at corners around
   walls, on narrow ways, steps or where it crouches (`Bot:_ZoneSmooth`).
@@ -545,6 +573,11 @@ navigation path (`PathSwitcher`). The objectives are the zones, the capture poin
 vehicles, beacons and `mcom N interact` (`GameDirector:_InitObjectives`); their positions come from the zones, else the
 action-nodes of their paths.
 An exit a bot doesn't get to costs 100 m more for all bots, the bot tries another one.
+
+The bots spread over the ways: each one weighs the way over each navigation path (the walk to it and the path) by a
+factor of its own (1 to 1 + `NAV_ROUTE_SPREAD`, per life), and each bot of its team on a navigation path or on the
+mesh on its way to one adds 15 m to that path (`NavRoutes:_Crowd`): the next ones take the other staircase, the next
+street. On the mesh the regions of 30 m weigh differently for each bot as well (`NavZones:Route`).
 
 **On the map** the debug-server loads `navzones/<map>.json` of the running level on its own. Navigation paths are drawn
 cyan with `from → to (length)`, the zones as areas (the hull of their points: green capture points, blue bases, orange

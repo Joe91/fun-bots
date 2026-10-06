@@ -60,6 +60,12 @@ local ACTION_MIN_PART = 10
 -- Points whose ways to the ends of the navigation paths are kept (_EndCosts), at most this many (then anew).
 local END_COST_CACHE = 1500
 
+-- Metres a navigation path seems longer for each bot of the team on it or on the way to it (_Crowd): the bots spread
+-- over the ways to their objective (the other staircase, the next street) instead of all taking the shortest one.
+local CROWD_COST = 15.0
+-- Seconds the counts of the bots per path are kept.
+local CROWD_TIME = 1.0
+
 ---Binary heap of { cost, point }.
 ---@param p_Heap table
 ---@param p_Entry table
@@ -139,6 +145,8 @@ function NavRoutes:Clear()
 	self._EndCostCache = {}
 	self._EndCostCount = 0
 	self._EndCostTopology = -1
+	---team -> { Time, Count = path -> bots of the team on it or on the way to it } (_Crowd)
+	self._Crowds = {}
 end
 
 ---Builds the graph anew when the mesh or the waypoints changed (NavZones:GetVersion).
@@ -443,24 +451,6 @@ function NavRoutes:_EndCosts(p_Point)
 	return s_Result
 end
 
----The ends of navigation paths the bot can walk to from the point over the mesh, with the cost.
----@param p_Point integer
----@param p_Start number cost so far
----@param p_Except NavRouteEnd|nil
----@return { End: NavRouteEnd, Cost: number }[]
-function NavRoutes:_Departures(p_Point, p_Start, p_Except)
-	local s_Result = {}
-	for l_End, l_Cost in pairs(self:_EndCosts(p_Point)) do
-		if l_End ~= p_Except then
-			s_Result[#s_Result + 1] = {
-				End = l_End,
-				Cost = p_Start + (self._Penalty[l_End.Junction] or 0.0) + l_Cost,
-			}
-		end
-	end
-	return s_Result
-end
-
 ---How much longer the navigation path seems to the bot (Registry.BOT.NAV_ROUTE_SPREAD): each bot takes its own
 ---route, not all of them the shortest one. The same for the path during a life of the bot (p_Seed).
 ---@param p_Seed number|nil
@@ -474,14 +464,67 @@ local function _Spread(p_Seed, p_PathIndex)
 	return 1.0 + Registry.BOT.NAV_ROUTE_SPREAD * (s_Hash - math.floor(s_Hash))
 end
 
+---The ends of navigation paths the bot can walk to from the point over the mesh, with the cost. The way there seems
+---as much longer to the bot as the path (_Spread): the whole way over that path, not only the path, else a path whose
+---start is closer always wins.
+---@param p_Point integer
+---@param p_Start number cost so far
+---@param p_Except NavRouteEnd|nil
+---@param p_Seed? number
+---@return { End: NavRouteEnd, Cost: number }[]
+function NavRoutes:_Departures(p_Point, p_Start, p_Except, p_Seed)
+	local s_Result = {}
+	for l_End, l_Cost in pairs(self:_EndCosts(p_Point)) do
+		if l_End ~= p_Except then
+			s_Result[#s_Result + 1] = {
+				End = l_End,
+				Cost = p_Start + (self._Penalty[l_End.Junction] or 0.0) + l_Cost * _Spread(p_Seed, l_End.Path.PathIndex),
+			}
+		end
+	end
+	return s_Result
+end
+
+---How many bots of the team walk each navigation path or are on the way to it (on the mesh to its junction).
+---@param p_Team TeamId|integer
+---@return table<integer, integer> path -> bots
+function NavRoutes:_Crowd(p_Team)
+	local s_Now = SharedUtils:GetTime()
+	local s_Known = self._Crowds[p_Team]
+	if s_Known ~= nil and s_Now - s_Known.Time < CROWD_TIME then
+		return s_Known.Count
+	end
+	local s_Count = {}
+	local s_Bots = g_BotManager ~= nil and g_BotManager:GetBots() or {}
+	for l_Index = 1, #s_Bots do
+		local l_Bot = s_Bots[l_Index]
+		if l_Bot.m_Player ~= nil and l_Bot.m_Player.teamId == p_Team and l_Bot.m_Player.soldier ~= nil then
+			local s_State = l_Bot.m_Zone
+			local s_Path = nil
+			if s_State == nil then
+				s_Path = l_Bot._PathIndex
+			elseif s_State.Exit ~= nil and s_State.Exit.Waypoint ~= nil then
+				s_Path = s_State.Exit.Waypoint.PathIndex
+			end
+			if s_Path ~= nil and self._Paths[s_Path] ~= nil then
+				s_Count[s_Path] = (s_Count[s_Path] or 0) + 1
+			end
+		end
+	end
+	self._Crowds[p_Team] = { Time = s_Now, Count = s_Count }
+	return s_Count
+end
+
 ---Dijkstra over the ends. p_Departures: ends the bot can leave over, with what it costs to get there. Returns the
 ---cost to the target and the first end of that route.
 ---@param p_Departures { End: NavRouteEnd, Cost: number }[]
 ---@param p_Target NavTarget
 ---@param p_Seed? number the bot's (_Spread), nil: the shortest route
+---@param p_Team? TeamId|integer the bot's: the paths its team crowds seem longer (_Crowd)
 ---@return number, NavRouteEnd|nil
-function NavRoutes:_Search(p_Departures, p_Target, p_Seed)
+function NavRoutes:_Search(p_Departures, p_Target, p_Seed, p_Team)
 	local s_Field = self:_Field(p_Target)
+	local s_Crowd = p_Team ~= nil and self:_Crowd(p_Team) or {}
 	local s_Cost = {}
 	local s_First = {}
 	local s_Done = {}
@@ -520,6 +563,7 @@ function NavRoutes:_Search(p_Departures, p_Target, p_Seed)
 			local s_Arrival = s_End.Other
 			local s_ArrivalPoint = s_Arrival.Junction.Point
 			local s_Total = s_Cost[s_End] + s_End.Path.Length * _Spread(p_Seed, s_End.Path.PathIndex)
+				+ (s_Crowd[s_End.Path.PathIndex] or 0) * CROWD_COST
 			-- The mesh weighed as in Next: else a path that ends where the bot is would look shorter than the mesh.
 			local s_Distance = s_Field[s_ArrivalPoint]
 			if s_Distance ~= nil then
@@ -529,7 +573,7 @@ function NavRoutes:_Search(p_Departures, p_Target, p_Seed)
 					s_BestFirst = s_First[s_End]
 				end
 			else
-				local s_Next = self:_Departures(s_ArrivalPoint, s_Total + MESH_CROSSING, s_Arrival)
+				local s_Next = self:_Departures(s_ArrivalPoint, s_Total + MESH_CROSSING, s_Arrival, p_Seed)
 				for l_Index = 1, #s_Next do
 					local l_Next = s_Next[l_Index]
 					if not s_Done[l_Next.End] and (s_Cost[l_Next.End] == nil or l_Next.Cost < s_Cost[l_Next.End]) then
@@ -552,8 +596,9 @@ end
 ---@param p_Point integer
 ---@param p_Objective string
 ---@param p_Seed? number the bot's: its own route among similar ones (_Spread)
+---@param p_Team? TeamId|integer the bot's: away from the paths its team crowds (_Crowd)
 ---@return NavStep|nil
-function NavRoutes:Next(p_Point, p_Objective, p_Seed)
+function NavRoutes:Next(p_Point, p_Objective, p_Seed, p_Team)
 	local s_Target = self:Target(p_Objective)
 	local s_Mesh = m_NavZones:GetMesh()
 	if s_Target == nil or s_Mesh == nil or s_Mesh.Points[p_Point] == nil then
@@ -563,7 +608,7 @@ function NavRoutes:Next(p_Point, p_Objective, p_Seed)
 	local s_Action = s_Target.Action
 	local s_Towards = s_Action ~= nil and (s_Action.Stand or s_Action.Position) or s_Mesh.Points[p_Point].Position
 	local s_Found = _TargetIn(s_Target, s_Mesh.Part[p_Point], s_Towards)
-	local s_Cost, s_First = self:_Search(self:_Departures(p_Point, 0.0, nil), s_Target, p_Seed)
+	local s_Cost, s_First = self:_Search(self:_Departures(p_Point, 0.0, nil, p_Seed), s_Target, p_Seed, p_Team)
 	local s_MeshCost = self:_Field(s_Target)[p_Point]
 	if s_Found ~= nil and s_MeshCost ~= nil then
 		-- The mesh leads there, maybe only a long way round: a navigation path may be shorter (only clearly: the way
