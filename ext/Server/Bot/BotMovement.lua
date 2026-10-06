@@ -1549,7 +1549,22 @@ function Bot:UpdateYaw()
 	local s_Input = self.m_Input
 	---@cast s_Input -nil
 	local s_CurrentYaw = s_Input.authoritativeAimingYaw
+	if s_CurrentYaw ~= s_CurrentYaw then
+		s_CurrentYaw = 0.0
+	end
 	local s_TargetYaw = self._TargetYaw
+	-- An aim that can't be solved (NaN, infinite: a target at the bot's own position, a projectile that can't reach it)
+	-- made the bot spin around its axis without end: every comparison with NaN fails. Keep looking where it looks.
+	if s_TargetYaw ~= s_TargetYaw or s_TargetYaw == math.huge or s_TargetYaw == -math.huge then
+		s_TargetYaw = s_CurrentYaw
+		self._TargetYaw = s_CurrentYaw
+	elseif s_TargetYaw >= 2 * math.pi or s_TargetYaw < 0.0 then
+		s_TargetYaw = s_TargetYaw % (2 * math.pi)
+	end
+	local s_TargetPitchRaw = self._TargetPitch
+	if s_TargetPitchRaw ~= s_TargetPitchRaw or s_TargetPitchRaw == math.huge or s_TargetPitchRaw == -math.huge then
+		self._TargetPitch = 0.0
+	end
 	local s_DeltaYaw = s_CurrentYaw - s_TargetYaw
 
 	if s_DeltaYaw > math.pi then

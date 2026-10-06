@@ -558,8 +558,10 @@ link to another path, or on along its path in one of the two directions, not str
 Between the nodes it keeps its direction (`NavRoutes:Direction`, also for `NodeCollection:ObjectiveDirection`). Where
 the routes don't know the objective the old path-switching goes on (`PathSwitcher`). An exit a bot doesn't get to costs
 100 m more for all bots, the bot tries another one. So does a stretch of a path a bot got stuck on (no progress off the
-mesh until it is teleported, `NavRoutes:BlockStretch`, event `path_stuck`): the levels have issues no tool finds (a door
-that is closed now, a fence, a gap the recording jumped), the bots learn them during the round.
+mesh until it is teleported, `NavRoutes:BlockStretch`, event `path_stuck`), and a junction where a bot came onto the
+mesh but didn't get from its waypoint to its point (`NavRoutes:BlockEntry`, a pillar or a corner the census measured
+too open): the levels have issues no tool finds (a door that is closed now, a fence, a gap the recording jumped), the
+bots learn them during the round.
 
 The bots spread over the ways: each one weighs each path by a factor of its own (1 to 1 + `NAV_ROUTE_SPREAD`, per
 life; for the way to the junction and the first stretch only, the rest is what the field says: a stub that leads back

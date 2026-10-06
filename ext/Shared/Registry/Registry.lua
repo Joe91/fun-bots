@@ -114,6 +114,15 @@ Registry = {
 		OFF_MESH_TELEPORT_TIME = 20,
 		OFF_MESH_TELEPORT_RANGE = 30.0,
 		OFF_MESH_KILL_TIME = 50,
+		-- The last resort: a bot on foot that doesn't get OBJECTIVE_PROGRESS_MIN metres closer to its objective for
+		-- OBJECTIVE_PROGRESS_TIME seconds respawns (not within OBJECTIVE_PROGRESS_NEAR metres of it, not while it fights).
+		OBJECTIVE_PROGRESS_MIN = 5.0,
+		OBJECTIVE_PROGRESS_TIME = 90,
+		OBJECTIVE_PROGRESS_NEAR = 30.0,
+		-- A ground vehicle whose driver doesn't get VEHICLE_PROGRESS_MIN metres away for VEHICLE_PROGRESS_TIME seconds
+		-- (not waiting for passengers, not at its objective): all bots get out.
+		VEHICLE_PROGRESS_MIN = 5.0,
+		VEHICLE_PROGRESS_TIME = 30,
 		-- Increments of nodes to search best patch with.
 		NODE_SEARCH_INCREMENTS = 10,
 		--- Weight for attacking objectives

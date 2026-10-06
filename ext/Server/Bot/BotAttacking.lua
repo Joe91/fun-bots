@@ -293,6 +293,9 @@ local function _DefaultAttackingAction(p_DeltaTime, p_Bot)
 					p_Bot._RocketCooldownTimer = Registry.BOT.ROCKET_RELOAD_COOLDOWN
 					p_Bot._WeaponToUse = BotWeapons.Primary
 				end
+			elseif s_AttackMode == VehicleAttackModes.AttackWithC4 and p_Bot._ChaseCooldown > SharedUtils:GetTime() then
+				-- Ran after the vehicle too long with C4 (StateAttacking): the primary weapon for a while.
+				p_Bot._WeaponToUse = BotWeapons.Primary
 			elseif s_AttackMode == VehicleAttackModes.AttackWithC4 then -- C4
 				p_Bot._WeaponToUse = BotWeapons.Gadget2
 				p_Bot._ActiveAction = BotActionFlags.C4Active

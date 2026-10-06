@@ -262,6 +262,8 @@ function GameDirector:OnEngineUpdate(p_DeltaTime)
 			s_BotsByTeam[l_Bot.m_Player.teamId][#s_BotsByTeam[l_Bot.m_Player.teamId] + 1] = l_Bot
 			l_Bot:UpdateBorder()
 			self:_CheckProgressOffMesh(l_Bot)
+			self:_CheckObjectiveProgress(l_Bot)
+			self:_CheckVehicleProgress(l_Bot)
 		end
 	end
 
@@ -768,6 +770,111 @@ function GameDirector:_CheckProgressOffMesh(p_Bot)
 		s_Soldier:Kill()
 		p_Bot._KillYourselfTimer = 0.0
 		m_Logger:Write("kill " .. p_Bot.m_Player.name .. ", it got stuck off the mesh")
+	end
+end
+
+---The last resort for anything the mesh, the paths and the other checks don't catch (a way that leads out of the
+---combat area again and again, a loop, an area the bot can't leave): a bot on foot that doesn't get
+---OBJECTIVE_PROGRESS_MIN metres closer to its objective for OBJECTIVE_PROGRESS_TIME seconds respawns. Not close to the
+---objective (it holds it, walks around in its zone), not while it fights, waits, sits in a vehicle or does an action.
+---@param p_Bot Bot
+function GameDirector:_CheckObjectiveProgress(p_Bot)
+	local s_Soldier = p_Bot.m_Player.soldier
+	local s_Objective = p_Bot:GetObjective()
+	local s_Registry = Registry.GAME_DIRECTOR
+	if s_Soldier == nil or s_Objective == nil or s_Objective == ''
+		or g_BotStates:IsInVehicleState(p_Bot.m_ActiveState) or g_BotStates:IsStaticState(p_Bot.m_ActiveState)
+		or p_Bot._ActiveAction == BotActionFlags.OtherActionActive or p_Bot._FollowTargetPlayer ~= nil then
+		p_Bot._ProgressObjective = nil
+		return
+	end
+	local s_Distance = self:_GetDistanceFromObjective(s_Objective, s_Soldier.worldTransform.trans)
+	if s_Distance == math.huge or s_Distance < s_Registry.OBJECTIVE_PROGRESS_NEAR then
+		p_Bot._ProgressObjective = nil
+		return
+	end
+	-- In the zone of its objective (a big capture point: it holds it at the edge).
+	local s_Parent = s_Objective:find('interact', 1, true) and self:_GetObjectiveFromSubObj(s_Objective) or nil
+	local s_Zone = m_NavZones:GetZone(s_Parent or s_Objective)
+	if s_Zone ~= nil and p_Bot.m_Zone ~= nil and s_Zone.InsideSet[p_Bot.m_Zone.Point] then
+		p_Bot._ProgressObjective = nil
+		return
+	end
+	if p_Bot._ProgressObjective ~= s_Objective or s_Distance < p_Bot._ProgressBest - s_Registry.OBJECTIVE_PROGRESS_MIN then
+		p_Bot._ProgressObjective = s_Objective
+		p_Bot._ProgressBest = s_Distance
+		p_Bot._ProgressTime = 0.0
+		return
+	end
+	if p_Bot._ShootPlayer ~= nil or p_Bot._WayWaitTimer > 0.0 then
+		return
+	end
+	p_Bot._ProgressTime = p_Bot._ProgressTime + s_Registry.UPDATE_OBJECTIVES_CYCLE
+	if p_Bot._ProgressTime < s_Registry.OBJECTIVE_PROGRESS_TIME then
+		return
+	end
+	p_Bot._ProgressObjective = nil
+	-- The way it was on costs more for all bots (off the mesh: the stretch of its path).
+	if p_Bot.m_Zone == nil and g_NavRoutes ~= nil then
+		g_NavRoutes:BlockStretch(p_Bot._PathIndex, p_Bot._CurrentWayPoint)
+	end
+	m_Logger:Write("respawn " .. p_Bot.m_Player.name .. ", no progress towards " .. s_Objective)
+	if m_DebugBridge.m_Enabled then
+		local s_Here = s_Soldier.worldTransform.trans
+		m_DebugBridge:Event('no_progress', { bot = p_Bot.m_Player.name, objective = s_Objective,
+			pos = { s_Here.x, s_Here.y, s_Here.z }, zone = p_Bot.m_Zone ~= nil and p_Bot.m_Zone.Zone.Name or nil })
+	end
+	p_Bot._RespawnAway = s_Soldier.worldTransform.trans:Clone()
+	p_Bot.m_DontRevive = true
+	s_Soldier:Kill()
+end
+
+---A ground vehicle whose driver doesn't get VEHICLE_PROGRESS_MIN metres away from where it was for
+---VEHICLE_PROGRESS_TIME seconds is stuck (in terrain, on a rock, flipped, against a wall the obstacle handling doesn't
+---get past): all bots in it get out and go on foot. Not while the driver waits for passengers, nor close to its
+---objective (it holds the capture point).
+---@param p_Bot Bot
+function GameDirector:_CheckVehicleProgress(p_Bot)
+	local s_Vehicle = p_Bot.m_Player.controlledControllable
+	local s_Registry = Registry.GAME_DIRECTOR
+	if s_Vehicle == nil or p_Bot.m_Player.soldier == nil or p_Bot.m_Player.controlledEntryId ~= 0
+		or not g_BotStates:IsInVehicleState(p_Bot.m_ActiveState) or p_Bot.m_ActiveVehicle == nil
+		or m_Vehicles:IsAirVehicle(p_Bot.m_ActiveVehicle)
+		or m_Vehicles:IsVehicleType(p_Bot.m_ActiveVehicle, VehicleTypes.StationaryAA)
+		or m_Vehicles:IsVehicleType(p_Bot.m_ActiveVehicle, VehicleTypes.Gadgets)
+		or p_Bot._VehicleWaitTimer > 0.0 then
+		p_Bot._VehicleAnchor = nil
+		return
+	end
+	local s_Position = s_Vehicle.transform.trans
+	local s_Objective = p_Bot:GetObjective()
+	if s_Objective ~= nil and s_Objective ~= ''
+		and self:_GetDistanceFromObjective(s_Objective, s_Position) < s_Registry.OBJECTIVE_PROGRESS_NEAR then
+		p_Bot._VehicleAnchor = nil
+		return
+	end
+	if p_Bot._VehicleAnchor == nil or p_Bot._VehicleAnchor:Distance(s_Position) > s_Registry.VEHICLE_PROGRESS_MIN then
+		p_Bot._VehicleAnchor = s_Position:Clone()
+		p_Bot._VehicleStuckTime = 0.0
+		return
+	end
+	p_Bot._VehicleStuckTime = p_Bot._VehicleStuckTime + s_Registry.UPDATE_OBJECTIVES_CYCLE
+	if p_Bot._VehicleStuckTime < s_Registry.VEHICLE_PROGRESS_TIME then
+		return
+	end
+	p_Bot._VehicleAnchor = nil
+	m_Logger:Write("vehicle of " .. p_Bot.m_Player.name .. " stuck, everybody out")
+	if m_DebugBridge.m_Enabled then
+		m_DebugBridge:Event('vehicle_stuck', { bot = p_Bot.m_Player.name, pos = { s_Position.x, s_Position.y, s_Position.z } })
+	end
+	local s_Id = s_Vehicle.instanceId
+	local s_Bots = g_BotManager:GetBots()
+	for l_Index = 1, #s_Bots do
+		local l_Bot = s_Bots[l_Index]
+		local s_Other = l_Bot.m_Player ~= nil and l_Bot.m_Player.controlledControllable or nil
+		if s_Other ~= nil and s_Other.instanceId == s_Id and l_Bot.m_Player.soldier ~= nil then
+			l_Bot:ExitVehicle()
+		end
 	end
 end
 

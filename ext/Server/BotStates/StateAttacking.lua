@@ -4,6 +4,11 @@ StateAttacking = class('StateAttacking')
 
 local m_Utilities = require('__shared/Utilities')
 
+-- Seconds a bot runs after the target of an action (C4, repair, revive, into a vehicle) at most: a moving target (a
+-- vehicle driving on) made it run around it without end. Then C4 isn't used for CHASE_COOLDOWN seconds.
+local CHASE_MAX = 12.0
+local CHASE_COOLDOWN = 20.0
+
 
 -- this class handles the following things:
 -- - moving along paths
@@ -52,6 +57,23 @@ function StateAttacking:Update(p_Bot, p_DeltaTime)
 	p_Bot:UpdateWeaponSelection(p_DeltaTime) -- TODO: maybe combine with reload now?
 	-- In an MCOM-zone: arm / disarm also when the fight started there (BotZoneMovement).
 	p_Bot:UpdateZoneSubObjective(p_DeltaTime)
+
+	local s_Action = p_Bot._ActiveAction
+	if s_Action == BotActionFlags.ReviveActive or s_Action == BotActionFlags.EnterVehicleActive or
+		s_Action == BotActionFlags.RepairActive or s_Action == BotActionFlags.C4Active then
+		p_Bot._ChaseTime = p_Bot._ChaseTime + p_DeltaTime
+		if p_Bot._ChaseTime > CHASE_MAX then
+			p_Bot._ChaseTime = 0.0
+			p_Bot._ChaseCooldown = SharedUtils:GetTime() + CHASE_COOLDOWN
+			p_Bot:_ResetActionFlag(s_Action)
+			p_Bot._WeaponToUse = BotWeapons.Primary
+			p_Bot._TargetPitch = 0.0
+			p_Bot:AbortAttack()
+			return
+		end
+	else
+		p_Bot._ChaseTime = 0.0
+	end
 
 	-- TODO: split revive, repari, c4 and so on
 	p_Bot:UpdateAttacking(p_DeltaTime)

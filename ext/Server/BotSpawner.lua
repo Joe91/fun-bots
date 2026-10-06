@@ -208,6 +208,13 @@ function BotSpawner:OnEngineUpdate(p_DeltaTime, p_SimulationDeltaTime)
 					-- Spawned where no way leads on (the ship of the attackers): on a mate away from there, if any.
 					local s_Here = l_Bot.m_Player.soldier.worldTransform.trans:Clone()
 					local s_Stranded = g_GameDirector:IsStranded(s_Here, l_Bot.m_Player.teamId) and s_Here or nil
+					-- Respawned because it got nowhere (GameDirector:_CheckObjectiveProgress) and spawned close to that spot
+					-- again (a rush base behind a border that stays closed): on a mate away from there as well.
+					local s_Away = l_Bot._RespawnAway
+					l_Bot._RespawnAway = nil
+					if s_Stranded == nil and s_Away ~= nil and s_Here:Distance(s_Away) < 100.0 then
+						s_Stranded = s_Away
+					end
 					s_PathIndex, s_IndexOnPath, s_InvertDirection, s_SpawnEntity, s_SpawnPosition = g_GameDirector:GetSpawnableBeaconOrMate(l_Bot.m_Player.teamId, l_Bot.m_Player.squadId, s_Stranded)
 				end
 				if s_PathIndex then

@@ -15,8 +15,11 @@ paths of a level (as they were recorded, with links) for that:
 4. Foot paths that lead nowhere are dropped, again until there is none: fewer than two ways out (a waypoint on the mesh,
    a link to a path that is left). A stub that touches the mesh once, a branch off a single link, a path without any
    connection: a bot on it would walk to its end and back.
-5. Once the mesh is made with the junctions (prune_unattached): again with the junctions it really has, and without
-   short foot paths (under SHORTCUT_LENGTH) whose ends the mesh connects about as well.
+5. Once the mesh is made with the junctions: a loose end (no junction, no link) is attached to the closest usable point
+   of the mesh up to navzones.LOOSE_RANGE away, else the path is cut back to its outermost junction or link (cut_loose).
+   Then again without the paths that lead nowhere, with the junctions the mesh really has, and without short foot
+   paths (under SHORTCUT_LENGTH) whose ends the mesh connects about as well (prune_unattached). Junctions and links
+   within PLACE_DISTANCE along a path are one way out.
 
 Vehicle paths stay as they are, with their names: the vehicles still find their way by them, and the soldiers walk the
 roads (land vehicle paths) too where they lead to the target (the mesh gets junctions with them). Their links to dropped
@@ -49,6 +52,7 @@ MIN_LENGTH = 10.0         # Shorter pieces between two waypoints on the same par
 SHORTCUT_LENGTH = 50.0    # A shorter foot path whose ends the mesh connects with a way at most SHORTCUT_DETOUR times as
 SHORTCUT_DETOUR = 1.5     # long (plus SHORTCUT_SLACK metres) is dropped once the mesh is made: a bit at the edge of an
 SHORTCUT_SLACK = 20.0     # area that only irritates. Stairs the mesh doesn't see stay (it leads far around or not).
+PLACE_DISTANCE = 10.0     # Junctions and links of a path this close along it are one way out (_places).
 FUNCTION_WORDS = ("vehicle", "beacon", "interact")  # Names of the ways to something to do.
 
 MESH_ROW = "@mesh"  # The one row of <map>_navzones in mod.db: the whole mesh (NavZones.lua).
@@ -69,6 +73,7 @@ class Result:
     lost_links: int = 0  # links to dropped waypoints
     dead_ends: int = 0  # foot paths dropped that lead nowhere (fewer than two ways out)
     shortcuts: int = 0  # short foot paths dropped whose ends the mesh connects
+    cut_ends: int = 0  # foot paths cut back to their outermost junction or link (a loose end)
     dropped: dict[int, str] = field(default_factory=dict)  # old path -> why it's gone
 
 
@@ -134,6 +139,14 @@ def _is_function(path: PathData) -> bool:
     if any(node.data.get("Action") for node in path.nodes):
         return True
     return any(word in name.lower() for name in path.objectives for word in FUNCTION_WORDS)
+
+
+LOOSE_RANGE = 15.0  # Same as navzones.LOOSE_RANGE: an end this close to the mesh gets a junction there.
+
+
+def _near_ends(mesh: Mesh, nodes: list[Node]) -> set[int]:
+    """The ends of a path close enough to the mesh to get a junction there (navzones._attach_loose)."""
+    return {point for point in {1, len(nodes)} if mesh.point_of(nodes[point - 1].pos, LOOSE_RANGE) is not None}
 
 
 def _length(positions: list) -> float:
@@ -203,7 +216,7 @@ def trim(data: MapData, navzones: dict) -> Result:
         on = [mesh.on_mesh(node.pos) for node in path.nodes]
         if not any(on):
             number = add(path.nodes, [(index, node.point) for node in path.nodes], path.loops, False)
-            ends[number] = set()
+            ends[number] = _near_ends(mesh, path.nodes)
             result.kept += 1
             continue
         if all(on):
@@ -222,7 +235,8 @@ def trim(data: MapData, navzones: dict) -> Result:
                     result.short += 1
                     continue
             number = add([path.nodes[point - 1] for point in points], [(index, point) for point in points], False, False)
-            ends[number] = {new for new, point in enumerate(points, start=1) if on[point - 1]}
+            ends[number] = {new for new, point in enumerate(points, start=1) if on[point - 1]} \
+                | _near_ends(mesh, [path.nodes[point - 1] for point in points])
             result.pieces += 1
             made += 1
         if not made:
@@ -303,6 +317,81 @@ def prune_unattached(result: Result, networks: dict) -> int:
     return result.dead_ends - before + len(shortcuts)
 
 
+def _places(path: PathData, points: set[int]) -> int:
+    """How many places the waypoints connect: the ones within PLACE_DISTANCE along the path are one (two junctions
+    next to each other are one way out)."""
+    count = 0
+    start = None
+    walked = 0.0
+    for index, node in enumerate(path.nodes, start=1):
+        if index > 1:
+            walked += math.dist(path.nodes[index - 2].pos, node.pos)
+        if index in points and (start is None or walked - start > PLACE_DISTANCE):
+            count += 1
+            start = walked
+    return count
+
+
+def loose_ends(data: MapData) -> list[list]:
+    """The ends of the foot paths without a link: the mesh attaches them where it has no junction for them
+    (navzones.build(..., loose=...), up to navzones.LOOSE_RANGE away). [path, point, position]"""
+    result = []
+    for index, path in data.paths.items():
+        if path.vehicles:
+            continue
+        for node in {path.nodes[0].point: path.nodes[0], path.nodes[-1].point: path.nodes[-1]}.values():
+            if not node.links:
+                result.append([index, node.point, list(node.pos)])
+    return result
+
+
+def cut_loose(result: Result, networks: dict) -> int:
+    """Foot paths whose end still has neither a junction nor a link: cut back to the outermost waypoints that have one
+    (a bot would walk the rest to its end and back). Returns how many were cut: then the mesh has to be made again."""
+    junctions: dict[int, set[int]] = defaultdict(set)
+    for entry in networks.get("attach") or []:
+        junctions[int(entry[0])].add(int(entry[1]))
+    cuts: dict[int, tuple[int, int]] = {}
+    for index, path in result.data.paths.items():
+        if path.vehicles:
+            continue
+        connected = junctions[index] | {node.point for node in path.nodes if node.links}
+        count = len(path.nodes)
+        if not connected or (1 in connected and count in connected):
+            continue
+        cuts[index] = (min(connected), max(connected))
+    if not cuts:
+        return 0
+    # Waypoint numbers of the cut paths anew, the links to them with them.
+    moved: dict[tuple[int, int], tuple[int, int]] = {}
+    for index, (first, last) in cuts.items():
+        for point in range(first, last + 1):
+            moved[(index, point)] = (index, point - first + 1)
+    paths: dict[int, PathData] = {}
+    for index, path in result.data.paths.items():
+        first, last = cuts.get(index, (1, len(path.nodes)))
+        nodes = []
+        for node in path.nodes[first - 1:last]:
+            data = {key: value for key, value in node.data.items() if key != "Nav"}
+            fresh = Node(index, node.point - first + 1, node.pos, node.input, data)
+            links = []
+            for link in node.links:
+                if link[0] in cuts:
+                    link = moved.get(link)
+                if link is not None:
+                    links.append(link)
+            fresh.set_links(links)
+            nodes.append(fresh)
+        cut = PathData(index, nodes)
+        cut.loops = path.loops if index not in cuts else False
+        if "Nav" in path.first.data:
+            nodes[0].data["Nav"] = {"Length": round(_length([node.pos for node in nodes]), 1)}
+        paths[index] = cut
+    result.data.paths = paths
+    result.cut_ends += len(cuts)
+    return len(cuts)
+
+
 def _prune(paths: dict[int, PathData], ends: dict[int, set[int]], result: Result,
            drop: set[int] = frozenset()) -> dict[int, PathData]:
     """Without the foot paths that lead nowhere: fewer than two ways out, again and again (the next one may lead nowhere
@@ -316,9 +405,9 @@ def _prune(paths: dict[int, PathData], ends: dict[int, set[int]], result: Result
         for number in sorted(alive):
             if number not in ends:
                 continue  # A vehicle path.
-            exits = len(ends[number])
-            exits += len({target for node in paths[number].nodes for target, _ in node.links if target in alive})
-            if exits < 2:
+            linked = {node.point for node in paths[number].nodes
+                      if any(target in alive for target, _ in node.links)}
+            if _places(paths[number], ends[number] | linked) < 2:
                 alive.discard(number)
                 result.dead_ends += 1
                 changed = True

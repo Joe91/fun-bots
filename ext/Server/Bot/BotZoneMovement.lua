@@ -272,6 +272,8 @@ function Bot:_EnterZone(p_Zone, p_Point, p_Vehicle, p_Junction)
 		ActionTime = 0.0,
 		-- Just entered: on the way from the junction to its point, which may be farther than ZONE_RESNAP.
 		Entered = SharedUtils:GetTime(),
+		-- The junction it came onto the mesh at (from a path).
+		EntryJunction = p_Junction,
 		FallTime = 0.0,
 	}
 	self:_StopObstacleSequence()
@@ -1178,6 +1180,13 @@ function Bot:_ZoneGiveUpConnection(p_Position, p_Target)
 	-- start the next route at another point.
 	if s_Next == s_State.Point or m_NavZones:IsBlockedIn(s_State.Zone, s_State.Point) then
 		s_State.Avoid = s_State.Point
+	end
+	-- Off a path onto the mesh, and the point of that junction can't be reached from its waypoint (a pillar, a corner
+	-- the census measured too open): all bots come onto the mesh elsewhere from now on.
+	local s_Entry = s_State.EntryJunction
+	if s_Entry ~= nil and s_Next == s_State.Point and s_State.Point == s_Entry.Point and not s_State.Vehicle then
+		m_NavRoutes:BlockEntry(s_Entry)
+		s_State.EntryJunction = nil
 	end
 	if m_DebugBridge.m_Enabled then
 		-- Points counted from 0, as in the file of the networks.

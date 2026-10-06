@@ -512,15 +512,23 @@ def command_navpaths(options) -> int:
         print(navpaths.summary(result, before, options.verbose))
         if not options.write:
             continue
-        # The mesh again, with the junctions on the trimmed paths; without the paths that got no junction where the trim
-        # expected one and lead nowhere then (the mesh again after that).
-        networks = navzones.build(census, attach=navpaths.attach_nodes(result.data), checks=checks)
-        for _ in range(5):
+        # The mesh again, with the junctions on the trimmed paths (loose ends attached up to navzones.LOOSE_RANGE away).
+        # Then the paths cut back where an end is still loose, without the paths that lead nowhere or that the mesh makes
+        # useless (navpaths.cut_loose, prune_unattached), and the mesh again, until nothing changes.
+        for _ in range(8):
+            networks = navzones.build(census, attach=navpaths.attach_nodes(result.data), checks=checks,
+                                      loose=navpaths.loose_ends(result.data))
+            cut = navpaths.cut_loose(result, networks)
+            if cut:
+                print(f"  {cut} foot paths cut back to their last junction or link (a loose end)")
+                continue
             dropped = navpaths.prune_unattached(result, networks)
             if not dropped:
                 break
             print(f"  {dropped} more foot paths dropped (without junctions, or short where the mesh leads)")
-            networks = navzones.build(census, attach=navpaths.attach_nodes(result.data), checks=checks)
+        else:
+            networks = navzones.build(census, attach=navpaths.attach_nodes(result.data), checks=checks,
+                                      loose=navpaths.loose_ends(result.data))
         if networks.get("stats", {}).get("checkRemovedPoints") is not None:
             print(f"  check: {networks['stats']['checkRemovedEdges']} connections and "
                   f"{networks['stats']['checkRemovedPoints']} points left out")

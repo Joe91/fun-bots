@@ -811,7 +811,48 @@ def spawn_positions(census: dict) -> list[list[float]]:
     return [pos for pos in positions if len(pos) >= 3 and max(abs(float(value)) for value in pos[:3]) >= 1.0]
 
 
-def build(census: dict, attach: dict | None = None, checks: dict | None = None) -> dict:
+LOOSE_RANGE = 15.0        # A loose end of a trimmed path (no junction, no link) is attached to the closest point of a
+LOOSE_FLOOR = 3.0         # usable part up to this far (horizontally) and this far above or below, also outside the areas.
+
+
+def _attach_loose(network: dict, loose: list) -> dict:
+    """Junctions for loose ends of the trimmed paths ([path, point, position]): straight to the closest point of a part
+    with at least MIN_PART points (navpaths.py asks for them; a wrong junction is better than a dead end)."""
+    points = network.get("points") or []
+    parent = list(range(len(points)))
+
+    def find(index: int) -> int:
+        while parent[index] != index:
+            parent[index] = parent[parent[index]]
+            index = parent[index]
+        return index
+
+    for edge in network.get("edges") or []:
+        parent[find(int(edge[0]))] = find(int(edge[1]))
+    sizes: dict[int, int] = defaultdict(int)
+    for index in range(len(points)):
+        sizes[find(index)] += 1
+    attach = list(network.get("attach") or [])
+    known = {(int(entry[0]), int(entry[1])) for entry in attach}
+    for path, point, pos in loose:
+        if (int(path), int(point)) in known:
+            continue
+        best = None
+        for index, entry in enumerate(points):
+            if abs(entry[1] - pos[1]) > LOOSE_FLOOR or sizes[find(index)] < MIN_PART:
+                continue
+            horizontal = math.hypot(entry[0] - pos[0], entry[2] - pos[2])
+            if horizontal <= LOOSE_RANGE and (best is None or horizontal < best[0]):
+                best = (horizontal, index)
+        if best is not None:
+            distance = math.dist(points[best[1]][:3], pos)
+            attach.append([int(path), int(point), best[1], round(distance, 1), _round(pos), []])
+    result = dict(network)
+    result["attach"] = attach
+    return result
+
+
+def build(census: dict, attach: dict | None = None, checks: dict | None = None, loose: list | None = None) -> dict:
     """The mesh of a level from all areas of its census, with the zones as labels on its points. attach: other
     waypoints to attach it to ({path: {"points", "vehicles", "objectives"}}, e.g. the paths cut at the zones), the
     parts of the mesh still come from the waypoints of the census. checks: what the rays of the game found blocked
@@ -847,6 +888,8 @@ def build(census: dict, attach: dict | None = None, checks: dict | None = None) 
     nav_paths = {int(path) for path, entry in (attach or {}).items() if entry.get("nav")}
     if nav_paths:
         soldier = _drop_dead_parts(soldier, nav_paths)
+    if loose:
+        soldier = _attach_loose(soldier, loose)
     data.update(points=soldier["points"], edges=soldier["edges"], attach=soldier["attach"],
                 stats=dict(soldier["stats"], surfaces=len(grid.surfaces)))
 

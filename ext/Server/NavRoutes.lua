@@ -62,6 +62,7 @@ local FIELD_REFRESH = 5.0
 local ACTION_RANGE = 8.0
 -- An MCOM: only points in sight of it (_InSight), up to this far.
 local ACTION_RANGE_MCOM = 12.0
+local ACTION_RANGE_MCOM_FAR = 25.0
 local ACTION_FLOOR = 3.0
 local ACTION_POINTS = 4
 -- A vehicle that moved this far: its points anew.
@@ -160,6 +161,9 @@ function NavRoutes:Clear()
 	---junction -> metres added (BlockExit)
 	---@type table<NavZoneJunction, number>
 	self._Penalty = {}
+	---junction -> metres added for coming onto the mesh there (BlockEntry)
+	---@type table<NavZoneJunction, number>
+	self._EntryPenalty = {}
 	self._PenaltyVersion = 0
 	---objective -> its target (false: none), see Target
 	self._Targets = {}
@@ -467,17 +471,23 @@ function NavRoutes:_ActionTarget(p_Objective, p_Action)
 	local s_Candidates = {}
 	local s_Pool = p_Action.Zone ~= nil and p_Action.Zone.Inside or nil
 	local s_Count = s_Pool ~= nil and #s_Pool or #s_Mesh.Points
-	for l_Index = 1, s_Count do
-		local l_Point = s_Pool ~= nil and s_Pool[l_Index] or l_Index
-		local s_Position = s_Mesh.Points[l_Point].Position
-		local s_DeltaX = s_Position.x - s_From.x
-		local s_DeltaZ = s_Position.z - s_From.z
-		local s_Distance = math.sqrt(s_DeltaX * s_DeltaX + s_DeltaZ * s_DeltaZ)
-		-- Not on an island of the mesh (a point in a room the bots can't get into over the mesh).
-		if s_Distance <= (p_Action.Kind == 'mcom' and ACTION_RANGE_MCOM or ACTION_RANGE)
-			and math.abs(s_Position.y - s_From.y) <= ACTION_FLOOR
-			and (s_Mesh.PartSize[s_Mesh.Part[l_Point]] or 0) >= ACTION_MIN_PART then
-			s_Candidates[#s_Candidates + 1] = { l_Point, s_Distance }
+	-- An MCOM in a room the mesh doesn't reach into (behind walls): the points up to ACTION_RANGE_MCOM_FAR then.
+	local s_Ranges = p_Action.Kind == 'mcom' and { ACTION_RANGE_MCOM, ACTION_RANGE_MCOM_FAR } or { ACTION_RANGE }
+	for _, l_Range in ipairs(s_Ranges) do
+		for l_Index = 1, s_Count do
+			local l_Point = s_Pool ~= nil and s_Pool[l_Index] or l_Index
+			local s_Position = s_Mesh.Points[l_Point].Position
+			local s_DeltaX = s_Position.x - s_From.x
+			local s_DeltaZ = s_Position.z - s_From.z
+			local s_Distance = math.sqrt(s_DeltaX * s_DeltaX + s_DeltaZ * s_DeltaZ)
+			-- Not on an island of the mesh (a point in a room the bots can't get into over the mesh).
+			if s_Distance <= l_Range and math.abs(s_Position.y - s_From.y) <= ACTION_FLOOR
+				and (s_Mesh.PartSize[s_Mesh.Part[l_Point]] or 0) >= ACTION_MIN_PART then
+				s_Candidates[#s_Candidates + 1] = { l_Point, s_Distance }
+			end
+		end
+		if #s_Candidates > 0 then
+			break
 		end
 	end
 	table.sort(s_Candidates, function(p_A, p_B) return p_A[2] < p_B[2] end)
@@ -491,6 +501,13 @@ function NavRoutes:_ActionTarget(p_Objective, p_Action)
 		-- room it stands in, the bot ran against the wall).
 		if p_Action.Kind ~= 'mcom' or _InSight(s_Mesh.Points[l_Point].Position, s_From) then
 			s_Points[#s_Points + 1] = l_Point
+		end
+	end
+	-- None in sight (an MCOM behind wooden walls, Subway MCOM 7): the closest ones anyway. A wrong way is better than none,
+	-- the bots shoot what can be shot away on the way (Bot:_TryBreach).
+	if #s_Points == 0 then
+		for l_Index = 1, math.min(ACTION_POINTS, #s_Candidates) do
+			s_Points[#s_Points + 1] = s_Candidates[l_Index][1]
 		end
 	end
 	local s_Target = false
@@ -615,11 +632,12 @@ function NavRoutes:_Field(p_Target)
 						_Push(s_Heap, { s_Next, l_Edge.To })
 					end
 				end
-				-- From the waypoint of a junction onto the mesh here.
+				-- From the waypoint of a junction onto the mesh here (entries bots didn't get onto the mesh at cost more).
 				local s_Junctions = self._JunctionNodes[s_Id]
 				for l_Index = 1, #(s_Junctions or {}) do
 					local l_Node = s_Junctions[l_Index]
-					_ToNode(l_Node, s_Cost + self._Nodes[l_Node].JunctionCost)
+					local s_Entry = self._Nodes[l_Node]
+					_ToNode(l_Node, s_Cost + s_Entry.JunctionCost + (self._EntryPenalty[s_Entry.Junction] or 0.0))
 				end
 			end
 		else
@@ -834,7 +852,7 @@ function NavRoutes:Step(p_Waypoint, p_Objective, p_Seed, p_Came, p_NoEnter)
 	local s_Junction = s_Entry.Junction
 	if s_Junction ~= nil and s_Junction.Point ~= p_NoEnter then
 		local s_Rest = s_Field.Mesh[s_Junction.Point]
-		if s_Rest ~= nil and s_Entry.JunctionCost + s_Rest <= s_BestCost then
+		if s_Rest ~= nil and s_Entry.JunctionCost + (self._EntryPenalty[s_Junction] or 0.0) + s_Rest <= s_BestCost then
 			return { Node = s_Node, Enter = s_Junction }
 		end
 	end
@@ -952,6 +970,15 @@ function NavRoutes:BlockStretch(p_PathIndex, p_PointIndex)
 		m_Logger:Write('stretch of path ' .. p_PathIndex .. ' at ' .. p_PointIndex .. ' blocked')
 	end
 	return s_Found
+end
+
+---A bot that came onto the mesh at the junction didn't get from its waypoint to its point: all bots come onto the mesh
+---elsewhere from now on, where there is another way.
+---@param p_Junction NavZoneJunction
+function NavRoutes:BlockEntry(p_Junction)
+	self._EntryPenalty[p_Junction] = (self._EntryPenalty[p_Junction] or 0.0) + EXIT_PENALTY
+	self._PenaltyVersion = self._PenaltyVersion + 1
+	m_Logger:Write('entry at point ' .. p_Junction.Point .. ' blocked')
 end
 
 ---A bot didn't get to the exit over the mesh: all bots take it less from now on.

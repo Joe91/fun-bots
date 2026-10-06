@@ -239,6 +239,9 @@ function Bot:ResetSpawnVars()
 	self._MeshRetryTimer = 0.0
 	-- The node of the paths the bot decided at last (NavRoutes:Step): it doesn't go straight back there.
 	self._NavCame = nil
+	self._ChaseTime = 0.0
+	self._ProgressObjective = nil
+	self._VehicleAnchor = nil
 	self._LowSpeedTimer = 0.0
 	self._NoProgressTimer = 0.0
 	self._ProgressNode = nil

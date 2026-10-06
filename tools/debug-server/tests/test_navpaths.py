@@ -174,5 +174,22 @@ class TrimTest(unittest.TestCase):
         self.assertEqual([entries[index]["nav"] for index in (1, 2, 3)], [True, False, False])
 
 
+    def test_loose_end_cut_back(self):
+        # Out of a and back in at x=-1 (two junctions next to each other), then on to x=50 into nothing.
+        walk = _path(1, [(-1, 0), (1, 0)] + _line(4, 50, 30))
+        walk.nodes[0].data["Nav"] = {"Length": 1.0}
+        data = MapData({1: walk})
+        result = navpaths.Result(data)
+        networks = {"attach": [[1, 1, 0, 1.0, [-1, 0, 0], []], [1, 2, 0, 1.0, [1, 0, 0], []]]}
+        # Every end without a link: the mesh attaches the ones it has no junction for.
+        self.assertEqual([entry[1] for entry in navpaths.loose_ends(data)], [1, len(walk.nodes)])
+        self.assertEqual(navpaths.cut_loose(result, networks), 1)
+        self.assertEqual(len(result.data.paths[1].nodes), 2)
+        self.assertIn("Nav", result.data.paths[1].first.data)
+        # Both junctions are one place: no way on, the path is dropped.
+        self.assertEqual(navpaths.prune_unattached(result, networks), 1)
+        self.assertEqual(result.data.paths, {})
+
+
 if __name__ == "__main__":
     unittest.main()
