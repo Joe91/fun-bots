@@ -8,6 +8,7 @@ local m_PathSwitcher = require('PathSwitcher')
 local m_NodeCollection = require('NodeCollection')
 ---@type DebugBridge
 local m_DebugBridge = require('Debug/DebugBridge')
+local m_NavRoutes = require('NavRoutes')
 
 
 -- >>> SMART PATH OFFSET
@@ -34,6 +35,8 @@ local OBSTACLE_MIN_PROGRESS = 0.5      -- Meters the bot has to get closer to co
 local OBSTACLE_RESOLVED_PROGRESS = 1.0 -- Meters closer to the target than at the start of the sequence: obstacle overcome.
 local OBSTACLE_TELEPORT_RANGE = 10.0   -- Meters to the target at most for a teleport onto it.
 local ZONE_SKIP_RANGE = 2.0            -- On the mesh a target counts as passed only this close (UpdateTargetMovement).
+local MESH_RETRY_TIME = 2.0            -- Seconds between tries onto the mesh in sight, off it and off a navigation path.
+local MESH_LEFT_TIME = 15.0            -- Not within this many seconds after the bot left the mesh (on purpose).
 
 -- Breaching: a wall of the level right in front of a bot that doesn't get along, on the way to its target (boards over
 -- the doors of a train, a wooden fence: the paths were recorded after they were shot away, the census saw them whole).
@@ -428,6 +431,17 @@ function Bot:_ResetObstacleSequence()
 	self._NoProgressTimer = 0.0
 	self._ProgressNode = nil
 	self:_ResetActionFlag(BotActionFlags.MeleeActive)
+end
+
+---The path the bot walks is the way to its objective (a vehicle, a beacon): it stays on it.
+---@return boolean
+function Bot:_PathLeadsToObjective()
+	if self._Objective == '' then
+		return false
+	end
+	local s_First = m_NodeCollection:GetFirst(self._PathIndex)
+	local s_Objectives = type(s_First) == 'table' and s_First.Data and s_First.Data.Objectives or {}
+	return table.has(s_Objectives, self._Objective)
 end
 
 ---Starts a breach if something that can be shot away blocks the way towards the target, right in front of the bot.
@@ -899,6 +913,17 @@ function Bot:UpdateNormalMovement(p_DeltaTime)
 			if self._MeshAfterExit and math.abs(s_VelocityFalling) < 1.0 then
 				self._MeshAfterExit = false
 				if self:TryEnterZoneAt(s_SoldierPos) then
+					return
+				end
+			end
+			-- Off the mesh on a path that isn't a way between zones (the closest one after a vehicle was destroyed, a
+			-- bail-out): onto the mesh as soon as it is in sight, else the bot walks that path to wherever it leads.
+			self._MeshRetryTimer = self._MeshRetryTimer + p_DeltaTime
+			if self._MeshRetryTimer >= MESH_RETRY_TIME then
+				self._MeshRetryTimer = 0.0
+				if self.m_Zone == nil and math.abs(s_VelocityFalling) < 1.0 and m_NavRoutes:GetPath(self._PathIndex) == nil
+					and SharedUtils:GetTime() - (self.m_LeftMeshTime or -math.huge) > MESH_LEFT_TIME
+					and not self:_PathLeadsToObjective() and self:TryEnterZoneAt(s_SoldierPos) then
 					return
 				end
 			end

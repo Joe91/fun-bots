@@ -50,6 +50,8 @@ local EXIT_PENALTY = 100.0
 -- Points of the mesh next to a vehicle (horizontal metres, Registry.VEHICLES.MIN_DISTANCE_VEHICLE_ENTER) and on its
 -- floor (the vehicle-spawn is the middle of the vehicle): the bot gets in from there. At most ACTION_POINTS of them.
 local ACTION_RANGE = 8.0
+-- An MCOM: only points in sight of it (_InSight), up to this far.
+local ACTION_RANGE_MCOM = 12.0
 local ACTION_FLOOR = 3.0
 local ACTION_POINTS = 4
 -- A vehicle that moved this far: its points anew.
@@ -286,6 +288,31 @@ function NavRoutes:Target(p_Objective)
 	return s_Known or nil
 end
 
+-- Rays from a point next to an MCOM to where the soldier stands to arm it: at these heights above both. A hit this close
+-- to the spot is the MCOM itself.
+local SIGHT_HEIGHTS = { 0.6, 1.2 }
+local SIGHT_TOLERANCE = 0.8
+
+---Whether the way from the point straight to the spot is free (rays at knee and chest height).
+---@param p_From Vec3
+---@param p_To Vec3
+---@return boolean
+local function _InSight(p_From, p_To)
+	local s_Flags = RayCastFlags.DontCheckCharacter | RayCastFlags.DontCheckRagdoll | RayCastFlags.DontCheckWater
+	---@cast s_Flags RayCastFlags
+	---@type MaterialFlags|integer
+	local s_NoMaterialFlags = 0
+	for _, l_Height in ipairs(SIGHT_HEIGHTS) do
+		local s_To = Vec3(p_To.x, p_To.y + l_Height, p_To.z)
+		local s_Hit = RaycastManager:CollisionRaycast(Vec3(p_From.x, p_From.y + l_Height, p_From.z), s_To, 1,
+			s_NoMaterialFlags, s_Flags)[1]
+		if s_Hit ~= nil and s_Hit.position:Distance(s_To) > SIGHT_TOLERANCE then
+			return false
+		end
+	end
+	return true
+end
+
 ---The target of an objective that is done on the mesh: the points next to the vehicle or the MCOM (in the zone of the
 ---MCOM, closest to where the soldier stands). Again when the vehicle moved.
 ---@param p_Objective string
@@ -316,15 +343,24 @@ function NavRoutes:_ActionTarget(p_Objective, p_Action)
 		local s_DeltaZ = s_Position.z - s_From.z
 		local s_Distance = math.sqrt(s_DeltaX * s_DeltaX + s_DeltaZ * s_DeltaZ)
 		-- Not on an island of the mesh (a point in a room the bots can't get into over the mesh).
-		if s_Distance <= ACTION_RANGE and math.abs(s_Position.y - s_From.y) <= ACTION_FLOOR
+		if s_Distance <= (p_Action.Kind == 'mcom' and ACTION_RANGE_MCOM or ACTION_RANGE)
+			and math.abs(s_Position.y - s_From.y) <= ACTION_FLOOR
 			and (s_Mesh.PartSize[s_Mesh.Part[l_Point]] or 0) >= ACTION_MIN_PART then
 			s_Candidates[#s_Candidates + 1] = { l_Point, s_Distance }
 		end
 	end
 	table.sort(s_Candidates, function(p_A, p_B) return p_A[2] < p_B[2] end)
 	local s_Points = {}
-	for l_Index = 1, math.min(ACTION_POINTS, #s_Candidates) do
-		s_Points[#s_Points + 1] = s_Candidates[l_Index][1]
+	for l_Index = 1, #s_Candidates do
+		if #s_Points >= ACTION_POINTS then
+			break
+		end
+		local l_Point = s_Candidates[l_Index][1]
+		-- An MCOM: only points the soldier walks up to it from straight (the closest one can be behind the wall of the
+		-- room it stands in, the bot ran against the wall).
+		if p_Action.Kind ~= 'mcom' or _InSight(s_Mesh.Points[l_Point].Position, s_From) then
+			s_Points[#s_Points + 1] = l_Point
+		end
 	end
 	local s_Target = false
 	if #s_Points > 0 then

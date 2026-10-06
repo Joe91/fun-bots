@@ -65,6 +65,18 @@ class CheckTest(unittest.TestCase):
         result = check.apply(network, {"blockedEdges": [[5.0, 0.0, 0.0, 10.0, 0.0, 0.0]]})
         self.assertEqual(len(result["points"]), 4)
 
+    def test_blocked_junction_is_dropped(self):
+        network = _network()
+        # A second junction from point 3 to a waypoint behind a wall.
+        network["attach"].append([2, 1, 3, 3.0, [15.0, 0.0, 3.0], []])
+        rays, meaning = check.rays(network)
+        hits = [check.GROUND_ABOVE if what[0] == "ground" else (0.5 if what[0] == "junction" and what[1] == 1 else -1)
+                for what in meaning]
+        found = check.evaluate(network, hits, meaning)
+        self.assertEqual(found["blockedJunctions"], [[15.0, 0.0, 0.0, 15.0, 0.0, 3.0]])
+        result = check.apply(network, found)
+        self.assertEqual([entry[0] for entry in result["attach"]], [1])
+
 
 if __name__ == "__main__":
     unittest.main()

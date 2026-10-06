@@ -198,6 +198,7 @@ function Bot:ResetSpawnVars()
 	self._SpawnDelayTimer = 0.0
 	self._WayWaitTimer = 0.0
 	self._VehicleWaitTimer = 0.0
+	self._VehicleWaited = 0.0
 	self._VehicleLookAroundTimer = 0.0
 	self._LookAroundYawOffset = 0.0
 	self._LookAroundYawGoal = 0.0
@@ -234,6 +235,7 @@ function Bot:ResetSpawnVars()
 	self._BreachKey = nil
 	self._BreachCount = 0
 	self._MeshAfterExit = false
+	self._MeshRetryTimer = 0.0
 	self._LowSpeedTimer = 0.0
 	self._NoProgressTimer = 0.0
 	self._ProgressNode = nil

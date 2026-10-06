@@ -590,13 +590,21 @@ def _trace_edges(grid: _Area, owner: dict[Surface, int], points: list[Surface], 
 MIN_PART = 10             # Same as NavZones.lua: parts of the mesh with fewer points get no junctions in the game.
 REATTACH_DISTANCE = 6.0   # A junction on such a part is moved to the closest point of a bigger one this close (same as
 REATTACH_FLOOR = 1.5      # navpaths.MATCH_DISTANCE) on its floor: the cut counted the waypoint as there.
+REATTACH_MATCH = 0.3      # Same as check.MATCH: a blocked junction of the checks is at this point and waypoint.
 
 
-def _reattach(network: dict) -> dict:
+def _reattach(network: dict, checks: dict | None = None) -> dict:
     """Junctions on islands of the mesh (fewer than MIN_PART points, left over where the checks of the game removed
     connections, a point that only owns the cells under the waypoint) onto the closest point of a part the bots can use:
-    the cut (navpaths.py) took the waypoint to be there, and the game drops junctions on islands."""
+    the cut (navpaths.py) took the waypoint to be there, and the game drops junctions on islands. Not onto a point the
+    checks found the way from blocked (blockedJunctions: behind the side of an escalator)."""
     points = network.get("points") or []
+    blocked = [entry for entry in (checks or {}).get("blockedJunctions") or []]
+
+    def is_blocked(point: list, pos: list) -> bool:
+        return any(math.dist(entry[:3], point[:3]) <= REATTACH_MATCH and math.dist(entry[3:], pos[:3]) <= REATTACH_MATCH
+                   for entry in blocked)
+
     parent = list(range(len(points)))
 
     def find(index: int) -> int:
@@ -617,7 +625,7 @@ def _reattach(network: dict) -> dict:
         pos = entry[4]
         best = None
         for index, point in enumerate(points):
-            if abs(point[1] - pos[1]) > REATTACH_FLOOR or sizes[find(index)] < MIN_PART:
+            if abs(point[1] - pos[1]) > REATTACH_FLOOR or sizes[find(index)] < MIN_PART or is_blocked(point, pos):
                 continue
             horizontal = math.hypot(point[0] - pos[0], point[2] - pos[2])
             if horizontal <= REATTACH_DISTANCE and (best is None or horizontal < best[0]):
@@ -630,6 +638,37 @@ def _reattach(network: dict) -> dict:
     if moved:
         network["stats"] = dict(network.get("stats") or {}, reattached=moved)
     return network
+
+
+def _drop_dead_parts(network: dict, nav_paths: set[int]) -> dict:
+    """Without the parts of the mesh that have no point in a zone and no junction of a navigation path: no way leads
+    out of them (a strip beside a tunnel the stub of a beacon path attaches to), a bot that gets there stays. Their
+    junctions go as well. Only for cut paths (nav_paths: the navigation paths)."""
+    points = network.get("points") or []
+    parent = list(range(len(points)))
+
+    def find(index: int) -> int:
+        while parent[index] != index:
+            parent[index] = parent[parent[index]]
+            index = parent[index]
+        return index
+
+    for edge in network.get("edges") or []:
+        parent[find(int(edge[0]))] = find(int(edge[1]))
+    alive = {find(index) for index, point in enumerate(points) if int(point[5]) & IN_ZONE}
+    alive |= {find(int(entry[2])) for entry in network.get("attach") or [] if int(entry[0]) in nav_paths}
+    kept = [index for index in range(len(points)) if find(index) in alive]
+    if len(kept) == len(points):
+        return network
+    new_index = {old: new for new, old in enumerate(kept)}
+    result = dict(network)
+    result["points"] = [points[index] for index in kept]
+    result["edges"] = [[new_index[int(edge[0])], new_index[int(edge[1])]] + list(edge[2:])
+                       for edge in network.get("edges") or [] if int(edge[0]) in new_index]
+    result["attach"] = [[entry[0], entry[1], new_index[int(entry[2])]] + list(entry[3:])
+                        for entry in network.get("attach") or [] if int(entry[2]) in new_index]
+    result["stats"] = dict(network.get("stats") or {}, deadPartPoints=len(points) - len(kept))
+    return result
 
 
 def _blocked_pairs(surfaces: dict, links: dict) -> set[tuple[Surface, Surface]]:
@@ -792,7 +831,10 @@ def build(census: dict, attach: dict | None = None, checks: dict | None = None) 
     soldier = _network(grid, clearance, set(grid.surfaces), _walked(grid, nodes, nodes.foot, ATTACH_HEIGHT), nodes,
                        inside_any, SOLDIER, True, attached(attach_nodes.foot, ATTACH_HEIGHT) if attach_nodes else None,
                        spawns=spawn_positions(census))
-    soldier = _reattach(check_apply(soldier, checks, spawn_positions(census)))
+    soldier = _reattach(check_apply(soldier, checks, spawn_positions(census)), checks)
+    nav_paths = {int(path) for path, entry in (attach or {}).items() if entry.get("nav")}
+    if nav_paths:
+        soldier = _drop_dead_parts(soldier, nav_paths)
     data.update(points=soldier["points"], edges=soldier["edges"], attach=soldier["attach"],
                 stats=dict(soldier["stats"], surfaces=len(grid.surfaces)))
 

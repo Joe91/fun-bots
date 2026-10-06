@@ -284,6 +284,20 @@ class DriverTest(unittest.TestCase):
         self.assertEqual(server.config, {"BotsAttackBots": "true", "UseVehicles": "true"})
 
 
+class DeadPartsTest(unittest.TestCase):
+    def test_part_without_zone_or_navigation_path_is_dropped(self):
+        from funbots_debug.census.navzones import IN_ZONE, _drop_dead_parts
+        # Part 0-1: a zone. Part 2-3: the end of navigation path 5. Part 4-5: only the junction of a beacon path 7.
+        points = [[0, 0, 0, 1, 0, IN_ZONE], [5, 0, 0, 1, 0, 0], [50, 0, 0, 1, 0, 0], [55, 0, 0, 1, 0, 0],
+                  [90, 0, 0, 1, 0, 0], [95, 0, 0, 1, 0, 0]]
+        network = {"points": points, "edges": [[0, 1, 5.0, []], [2, 3, 5.0, []], [4, 5, 5.0, []]],
+                   "attach": [[5, 1, 2, 1.0, [50, 0, 1], []], [7, 1, 5, 1.0, [95, 0, 1], []]], "stats": {}}
+        result = _drop_dead_parts(network, {5})
+        self.assertEqual([point[0] for point in result["points"]], [0, 5, 50, 55])
+        self.assertEqual([entry[0] for entry in result["attach"]], [5])
+        self.assertEqual(result["edges"], [[0, 1, 5.0, []], [2, 3, 5.0, []]])
+
+
 class SpawnPositionsTest(unittest.TestCase):
     def test_prefab_spawns_at_the_origin_are_left_out(self):
         from funbots_debug.census.navzones import spawn_positions

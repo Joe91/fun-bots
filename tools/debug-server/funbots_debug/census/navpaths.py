@@ -103,6 +103,7 @@ class Result:
     mesh_ways: int = 0  # dropped: the mesh leads from zone to zone about as far
     dead_ends: int = 0  # dropped: an end in a part of the mesh without anything to do and no other path
     entries: int = 0  # ways into vehicles dropped (the bots find the vehicles over the mesh)
+    gates: int = 0  # kept through steps the census found blocked: the only way (a door, a gate of a later rush stage)
 
 
 MESH_ONLY = ("spawn", "way")  # Areas that are only mesh (navzones.MESH_ONLY): the paths are cut there, no objective.
@@ -337,6 +338,7 @@ class _Graph:
         self.data = data
         self.pos: dict[Vertex, tuple[float, float, float]] = {}
         self.zone: dict[Vertex, int | None] = {}
+        self.place_part = zones.place_part
         self.edges: dict[Vertex, list[tuple[Vertex, float]]] = defaultdict(list)
         self.road: set[Vertex] = set()
         walked = set(foot) | set(roads)
@@ -451,12 +453,17 @@ def _pieces(graph: _Graph, path: PathData) -> list[tuple[Vertex | None, list[Ver
     run: list[Vertex] = []
     before: Vertex | None = None
     for vertex in vertices:
-        if graph.zone[vertex] is None:
+        zone = graph.zone[vertex]
+        if zone is None:
             run.append(vertex)
             continue
         if run:
             pieces.append((before, run, vertex))
             run = []
+        elif before is not None and graph.place_part[graph.zone[before]] != graph.place_part[zone]:
+            # Straight from one part of the mesh into another (stairs or an escalator the census didn't walk): the
+            # only way between them.
+            pieces.append((before, [], vertex))
         before = vertex
     if run:
         pieces.append((before, run, None))
@@ -465,6 +472,9 @@ def _pieces(graph: _Graph, path: PathData) -> list[tuple[Vertex | None, list[Ver
 
 def _route(graph: _Graph, before: Vertex | None, run: list[Vertex], after: Vertex | None, source: int) -> Route | str:
     """The navigation path from a piece, extended at open ends. A reason if there is none."""
+    if not run:
+        return Route(graph.zone[before], graph.zone[after], [before, after], "path", [source],
+                     graph.length([before, after]))
     vertices = list(run)
     origin = "path"
     blocked = set(run)
@@ -550,7 +560,38 @@ def _vehicle_entry(path: PathData) -> bool:
 
 
 def build(data: MapData, navzones: dict, blocked: set[Vertex] | None = None) -> Result:
-    """blocked: the waypoints whose way to the next one the census found blocked at every height (census_blocked)."""
+    """blocked: the waypoints whose way to the next one the census found blocked at every height (census_blocked). The
+    paths avoid them where the places stay connected otherwise; where such a step is the only way between them (a gate
+    that opens with a later rush stage: the census sees the round at its start, a wall that can be shot away), the way
+    through it stays."""
+    result, graph, zones = _plan(data, navzones, blocked)
+    if blocked:
+        open_result, _, _ = _plan(data, navzones, None)
+        parent = list(range(len(zones.names)))
+
+        def find(index: int) -> int:
+            while parent[index] != index:
+                parent[index] = parent[parent[index]]
+                index = parent[index]
+            return index
+
+        by_part: dict = {}
+        for index, part in enumerate(zones.place_part):
+            if part is not None:
+                parent[find(index)] = find(by_part.setdefault(part, index))
+        for route in result.routes:
+            parent[find(route.start)] = find(route.end)
+        for route in sorted(open_result.routes, key=lambda route: route.length):
+            if find(route.start) != find(route.end) and any(vertex in blocked for vertex in route.vertices):
+                result.routes.append(route)
+                result.gates += 1
+                parent[find(route.start)] = find(route.end)
+    _write(result, data, graph, zones)
+    return result
+
+
+def _plan(data: MapData, navzones: dict, blocked: set[Vertex] | None) -> tuple[Result, "_Graph", _Zones]:
+    """The navigation paths (steps 0 to 6), not written yet."""
     zones = _Zones(navzones)
     mesh = _Mesh(navzones, zones)
     fixed = {index: fixed_reason(path) for index, path in data.paths.items() if fixed_reason(path)}
@@ -625,7 +666,8 @@ def build(data: MapData, navzones: dict, blocked: set[Vertex] | None = None) -> 
                                      graph.length(way)))
     crafted.sort(key=lambda route: route.length)
     for route in crafted:
-        if all(zones.on_mesh(graph.pos[vertex]) for vertex in route.vertices) or route.length < MIN_LENGTH:
+        if zones.place_part[route.start] == zones.place_part[route.end] and (
+                all(zones.on_mesh(graph.pos[vertex]) for vertex in route.vertices) or route.length < MIN_LENGTH):
             continue
         if mesh.distance(route.start, route.end) <= DETOUR * route.length:
             continue
@@ -670,8 +712,7 @@ def build(data: MapData, navzones: dict, blocked: set[Vertex] | None = None) -> 
                 break
 
     result.routes = kept
-    _write(result, data, graph, zones)
-    return result
+    return result, graph, zones
 
 
 def _write(result: Result, data: MapData, graph: _Graph, zones: _Zones | None = None) -> None:
@@ -849,7 +890,8 @@ def missing_ends(data: MapData, networks: dict) -> list[tuple[int, str]]:
 def attach_nodes(data: MapData) -> dict[int, dict]:
     """The waypoints as the networks need them to attach (navzones.build(census, attach=...))."""
     return {index: {"points": [list(node.pos) for node in path.nodes], "vehicles": path.vehicles,
-                    "objectives": path.objectives} for index, path in data.paths.items()}
+                    "objectives": path.objectives, "nav": bool(path.first.data.get("Nav"))}
+            for index, path in data.paths.items()}
 
 
 def summary(result: Result, before: MapData, verbose: bool = False) -> str:
@@ -867,6 +909,7 @@ def summary(result: Result, before: MapData, verbose: bool = False) -> str:
         f"{result.short} shorter than {MIN_LENGTH:.0f} m, {result.detours} far out and back, "
         f"{result.mesh_ways} where the mesh leads, {result.dead_ends} dead ends",
         f"  ways into vehicles dropped: {result.entries}",
+        f"  through steps the census found blocked, the only way (a gate of a later stage): {result.gates}",
         f"  cut paths without a navigation path of their own: {len(result.dropped) - result.entries}",
         f"  links of kept paths moved: {result.moved_links}, lost: {result.lost_links}, "
         f"over connecting paths: {result.connectors}",
@@ -877,7 +920,7 @@ def summary(result: Result, before: MapData, verbose: bool = False) -> str:
         degree[route.end].add(route.start)
     for index, name in enumerate(result.zones):
         neighbours = sorted(result.zones[other] for other in degree.get(index, set()))
-        if not neighbours and name.startswith("way "):
+        if not neighbours and name.startswith(("way ", "corridor ")):
             continue
         warn = "  <- no navigation path" if not neighbours and not name.startswith("hub ") else ""
         lines.append(f"  {name}: {', '.join(neighbours) or '-'}{warn}")

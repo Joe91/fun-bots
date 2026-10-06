@@ -341,6 +341,7 @@ function Bot:_EnterVehicleEntity(p_Entity, p_PlayerIsDriver)
 					g_GameDirector:_SetVehicleObjectiveState(p_Entity.transform.trans:Clone(), false)
 				else
 					self._VehicleWaitTimer = Config.VehicleWaitForPassengersTime
+					self._VehicleWaited = 0.0
 					self._BrakeTimer = 0.0
 				end
 			else

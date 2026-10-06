@@ -55,12 +55,24 @@ function VehicleMovement:_DetectObstacle(p_Bot, p_Vehicle, p_Distance, p_DeltaTi
 	return false
 end
 
+-- The driver waits for passengers on their way to the vehicle (GameDirector:PassengersComing) at most this many seconds
+-- in all, checking again every VEHICLE_WAIT_STEP.
+local VEHICLE_WAIT_MAX = 25.0
+local VEHICLE_WAIT_STEP = 1.0
+
 ---@param p_DeltaTime number
 ---@param p_Bot Bot
 function VehicleMovement:UpdateNormalMovementVehicle(p_DeltaTime, p_Bot)
 	if p_Bot._VehicleWaitTimer > 0.0 then
 		p_Bot._VehicleWaitTimer = p_Bot._VehicleWaitTimer - p_DeltaTime
+		p_Bot._VehicleWaited = p_Bot._VehicleWaited + p_DeltaTime
+		-- Teammates on their way to get in (passengers sent to the vehicle): a while longer.
+		if p_Bot._VehicleWaitTimer <= 0.0 and p_Bot._VehicleWaited < VEHICLE_WAIT_MAX
+			and g_GameDirector:PassengersComing(p_Bot.m_Player.controlledControllable, p_Bot.m_Player.teamId) then
+			p_Bot._VehicleWaitTimer = VEHICLE_WAIT_STEP
+		end
 		if p_Bot._VehicleWaitTimer <= 0.0 then
+			p_Bot._VehicleWaited = 0.0
 			g_GameDirector:_SetVehicleObjectiveState(p_Bot.m_Player.controlledControllable.transform.trans:Clone(), false)
 		else
 			return

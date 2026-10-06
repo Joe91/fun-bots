@@ -56,6 +56,10 @@ local AREA_HUB_MARGIN = 8.0       -- Hubs (ends of foot paths outside of the zon
 local AREA_HUB_MERGE = 30.0       -- group, one group for ends this close to each other...
 local AREA_HUB_COVERED = 5.0      -- ...an end at least this far inside of another area is covered.
 local AREA_SPAWN_GROUND = 200.0   -- The ground below a spawn is searched this far down.
+local AREA_CORRIDOR_RADIUS = 5.0  -- Corridors along the foot paths outside of the other areas: discs of this radius...
+local AREA_CORRIDOR_STEP = 6.0    -- ...this far apart along the path...
+local AREA_CORRIDOR_DISCS = 8     -- ...at most this many per area (a long path gets several)...
+local AREA_CORRIDOR_HEIGHT = 12.0 -- ...the vertical rays from this far above the highest waypoint to below the lowest.
 local AREA_STEP = 0.5
 local AREA_LAYERS = 4
 local AREA_UP = 60.0              -- The vertical rays start this far above the objective...
@@ -1470,6 +1474,96 @@ local function _HubAreas(p_Areas)
 	return s_Areas
 end
 
+---Corridors: the ground along the foot paths between the other areas (kind "way", mesh only), so the mesh connects the
+---zones itself where it can be walked, not only the paths between them (the cut keeps those only where the mesh doesn't
+---lead: stairs and ladders the vertical rays don't see). Discs of AREA_CORRIDOR_RADIUS every AREA_CORRIDOR_STEP along
+---each path, where no area covers the path yet (also not a corridor of another path along the same way).
+---@param p_Areas table[] the areas so far
+---@return table[]
+local function _CorridorAreas(p_Areas)
+	local s_Result = {}
+	local s_Discs = {} -- all corridor discs so far: { x, z }
+
+	local function _Free(p_Position)
+		for l_Area = 1, #p_Areas do
+			if _Covers(p_Areas[l_Area], p_Position, AREA_CORRIDOR_RADIUS) then
+				return false
+			end
+		end
+		for l_Index = 1, #s_Discs do
+			local l_Disc = s_Discs[l_Index]
+			local s_DeltaX = l_Disc[1] - p_Position.x
+			local s_DeltaZ = l_Disc[2] - p_Position.z
+			if s_DeltaX * s_DeltaX + s_DeltaZ * s_DeltaZ < AREA_CORRIDOR_STEP * AREA_CORRIDOR_STEP * 0.5 then
+				return false
+			end
+		end
+		return true
+	end
+
+	local s_Chunk = nil
+	local function _Close()
+		if s_Chunk ~= nil and #s_Chunk.discs > 0 then
+			s_Result[#s_Result + 1] = {
+				name = 'corridor ' .. (#s_Result + 1),
+				kind = 'way',
+				center = Vec3((s_Chunk.minX + s_Chunk.maxX) / 2, (s_Chunk.minY + s_Chunk.maxY) / 2,
+					(s_Chunk.minZ + s_Chunk.maxZ) / 2),
+				radius = math.sqrt((s_Chunk.maxX - s_Chunk.minX) ^ 2 + (s_Chunk.maxZ - s_Chunk.minZ) ^ 2) / 2,
+				discs = s_Chunk.discs,
+				top = s_Chunk.maxY + AREA_CORRIDOR_HEIGHT,
+				bottom = s_Chunk.minY - AREA_CORRIDOR_HEIGHT,
+			}
+		end
+		s_Chunk = nil
+	end
+
+	local function _Add(p_Position)
+		if s_Chunk == nil or #s_Chunk.discs >= AREA_CORRIDOR_DISCS then
+			_Close()
+			s_Chunk = { discs = {}, minX = math.huge, maxX = -math.huge, minY = math.huge, maxY = -math.huge,
+				minZ = math.huge, maxZ = -math.huge }
+		end
+		s_Chunk.discs[#s_Chunk.discs + 1] = { _Round(p_Position.x), _Round(p_Position.z), AREA_CORRIDOR_RADIUS }
+		s_Discs[#s_Discs + 1] = { p_Position.x, p_Position.z }
+		s_Chunk.minX = math.min(s_Chunk.minX, p_Position.x - AREA_CORRIDOR_RADIUS)
+		s_Chunk.maxX = math.max(s_Chunk.maxX, p_Position.x + AREA_CORRIDOR_RADIUS)
+		s_Chunk.minZ = math.min(s_Chunk.minZ, p_Position.z - AREA_CORRIDOR_RADIUS)
+		s_Chunk.maxZ = math.max(s_Chunk.maxZ, p_Position.z + AREA_CORRIDOR_RADIUS)
+		s_Chunk.minY = math.min(s_Chunk.minY, p_Position.y)
+		s_Chunk.maxY = math.max(s_Chunk.maxY, p_Position.y)
+	end
+
+	local s_PathIndices = {}
+	for l_PathIndex, l_Waypoints in pairs(m_NodeCollection:GetPaths() or {}) do
+		if #l_Waypoints >= 2 and _IsFootPath(l_Waypoints) then
+			s_PathIndices[#s_PathIndices + 1] = l_PathIndex
+		end
+	end
+	table.sort(s_PathIndices)
+	local s_Paths = m_NodeCollection:GetPaths()
+	for _, l_PathIndex in ipairs(s_PathIndices) do
+		local s_Waypoints = s_Paths[l_PathIndex]
+		local s_Walked = AREA_CORRIDOR_STEP
+		for l_Index = 1, #s_Waypoints do
+			local s_Position = s_Waypoints[l_Index].Position
+			if l_Index > 1 then
+				s_Walked = s_Walked + s_Position:Distance(s_Waypoints[l_Index - 1].Position)
+			end
+			if s_Walked >= AREA_CORRIDOR_STEP then
+				s_Walked = 0.0
+				if _Free(s_Position) then
+					_Add(s_Position)
+				else
+					_Close()
+				end
+			end
+		end
+		_Close()
+	end
+	return s_Result
+end
+
 function CensusTask:_StartAreas()
 	self.Areas = self:_DefaultAreas()
 	if self.Args.spawns ~= false then
@@ -1482,6 +1576,12 @@ function CensusTask:_StartAreas()
 		local s_Hubs = _HubAreas(self.Areas)
 		for l_Index = 1, #s_Hubs do
 			self.Areas[#self.Areas + 1] = s_Hubs[l_Index]
+		end
+	end
+	if self.Args.corridors ~= false then
+		local s_Corridors = _CorridorAreas(self.Areas)
+		for l_Index = 1, #s_Corridors do
+			self.Areas[#self.Areas + 1] = s_Corridors[l_Index]
 		end
 	end
 	self.AreaSlot = 0

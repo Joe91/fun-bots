@@ -197,6 +197,23 @@ function Vehicles:HasFreeBotSeat(p_Entity, p_VehicleData)
 	return false
 end
 
+---How many seats a bot may still take (HasFreeBotSeat): the driver and its passengers walk to the vehicle together.
+---@param p_Entity ControllableEntity
+---@param p_VehicleData VehicleDataInner
+---@return integer
+function Vehicles:FreeBotSeats(p_Entity, p_VehicleData)
+	if not self:HasFreeBotSeat(p_Entity, p_VehicleData) then
+		return 0
+	end
+	local s_Free = 0
+	for l_Seat = 0, self:GetBotSeatCount(p_Entity, p_VehicleData, false) - 1 do
+		if p_Entity:GetPlayerInEntry(l_Seat) == nil then
+			s_Free = s_Free + 1
+		end
+	end
+	return s_Free
+end
+
 ---@param p_Entity ControllableEntity
 function Vehicles:IsEmpty(p_Entity)
 	return self:GetNrOfFreeSeats(p_Entity, true) == p_Entity.entryCount

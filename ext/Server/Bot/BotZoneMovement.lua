@@ -632,6 +632,7 @@ function Bot:_LeaveZone(p_Junction)
 
 	local s_Waypoint = p_Junction and p_Junction.Waypoint
 	self.m_LeftZoneAt = p_Junction ~= nil and { Point = p_Junction.Point, Time = SharedUtils:GetTime() } or nil
+	self.m_LeftMeshTime = SharedUtils:GetTime()
 	if s_Waypoint == nil and s_State ~= nil and s_State.Vehicle and self.m_Player.controlledControllable ~= nil then
 		s_Waypoint = g_GameDirector:FindClosestPath(self.m_Player.controlledControllable.transform.trans, true, false,
 			VehicleTerrains.Land)

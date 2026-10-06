@@ -384,6 +384,12 @@ waypoints, also from a rush spawn 460 m behind the MCOMs. The mesh keeps every p
 waypoints. The debug-command `spawns` lists them. Spawn-entities may float above the ground, the soldiers appear on the
 ground below. The navigation paths are cut at all of these areas (`areas` of the mesh-file: the ones that are only mesh).
 
+Corridors: the ground along the recorded foot paths between all of these areas is measured as well (`corridor N`,
+kind `way`, only mesh): discs of 5 m every 6 m along each path where no area covers it yet, at most 8 per area. So the
+mesh itself connects the zones wherever the ground can be walked, not only the paths between them (a hub of MP_018 was
+an island the paths alone led to); the cut keeps a path only where the mesh doesn't lead (stairs, ladders, jumps the
+vertical rays don't see). The census argument `corridors: false` leaves them out.
+
 Hubs: where foot paths end outside of every area, several paths usually meet over links, e.g. the old bases of the
 waypoints. Ends up to 30 m apart get one area, 8 m around the outer ones (`hub 1`, kind `hub`): a zone the navigation
 paths end at, no objective (`GameDirector`), on the mesh the bots only pass through it. Without them the cut drops every
@@ -451,7 +457,8 @@ zone it walks in, `@mesh` outside of the zones) and `zoneExit` on its way out.
   farther back; `BotSpawner:_FindClosestSpawnPoint`), at the HQ only without capture points, or for a vehicle outside of
   the bases (`PROBABILITY_SPAWN_FOR_VEHICLE`, at the spawn closest to it). Squad-spawns on a mate
   on the mesh start on it as well. A bot only starts at a point it can walk to straight (rays at knee and chest height,
-  `NavZones:ZoneAtVisible`); with none in sight within 30 m it is put onto the closest point at once.
+  `NavZones:ZoneAtVisible`), not on an island of the mesh (a nook next to the spawn the checks cut off, fewer than 10
+  points: no way leads on); with none in sight within 30 m it is put onto the closest point at once.
 - **Hazards**: the census sees the ground, not that it kills (the rails in the metro of MP_Subway). When a second player
   dies in a damage area (weapon `DamageArea`) within 3 m of an earlier death, the points of the mesh within 2.5 m are
   left out until the level ends (`NavZones:OnDamageAreaDeath`). Deaths outside of the combat area (`CombatArea` events:
@@ -509,7 +516,9 @@ python -m funbots_debug.census navpaths MP_Subway_RushLarge0 --write --db ../../
 ```
 Every connection is cast along its way at 1.0 and 1.3 m in both directions (hit: blocked; at knee height only it's a
 step), every point up to 1.0 m (no room to crouch) and in 8 directions from and towards it (seen from outside only:
-inside of a solid). The mesh is built without them (`navzones.build(..., checks=...)`) and keeps only the parts a
+inside of a solid), and every junction from its point over its corners to the waypoint (both heights, a wall the grid
+missed between them: the side of an escalator on MP_Subway). The mesh is built without them (blocked junctions are not
+moved onto that point either) (`navzones.build(..., checks=...)`) and keeps only the parts a
 junction leads to. On MP_Subway (rush) that removed 343 of 4051 connections and 105 of 1899 points; a second check
 found nothing. In the Maps tab: step *Check* (check, then cut). `census run --detail-mesh` makes the census rays hit the
 detail-meshes as well, `--area-layers N` keeps more floors per cell (default 4).

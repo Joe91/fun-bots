@@ -350,7 +350,7 @@ function GameDirector:OnEngineUpdate(p_DeltaTime)
 			local l_Objective = self.m_AllObjectives[l_Index]
 			l_Objective.assigned[l_BotTeam] = 0
 		end
-		-- Vehicles first: one bot per vehicle, also if it comes later in the list than the bot that gets a new one.
+		-- Vehicles first: one bot per free seat, also if it comes later in the list than the bot that gets a new one.
 		local l_Bots = s_BotsByTeam[l_BotTeam] or {}
 		for l_Index = 1, #l_Bots do
 			local s_Objective = self:_GetObjectiveObject(l_Bots[l_Index]:GetObjective())
@@ -418,7 +418,7 @@ function GameDirector:OnEngineUpdate(p_DeltaTime)
 					if Config.UseVehicles and
 						l_Objective.isEnterVehiclePath and
 						(l_Objective.team == l_BotTeam or (l_Objective.isVehicleEntity and l_Objective.team == TeamId.TeamNeutral)) and
-						l_Objective.assigned[l_BotTeam] == 0 and
+						l_Objective.assigned[l_BotTeam] < (l_Objective.seats or 1) and
 						-- Also idle: just spawned, it gets its first objective before it may move.
 						(s_BotStates:IsSoldierState(l_Bot.m_ActiveState) or l_Bot.m_ActiveState == s_BotStates.States.Idle) and
 						self:_GetDistanceFromObjective(l_Objective.name, l_Bot.m_Player.soldier.worldTransform.trans)
@@ -426,7 +426,7 @@ function GameDirector:OnEngineUpdate(p_DeltaTime)
 						-- A way leads there (last: the route costs most).
 						(m_NavZones:GetMesh() == nil or l_Bot:CanReach(l_Objective.name)) then
 						if l_Bot:SetObjectiveIfPossible(l_Objective.name, BotObjectiveModes.Attack) then
-							l_Objective.assigned[l_BotTeam] = 1
+							l_Objective.assigned[l_BotTeam] = l_Objective.assigned[l_BotTeam] + 1
 							m_Logger:Write("assigned bot to " .. l_Objective.name)
 							goto continue_with_next_bot
 						end
@@ -634,6 +634,31 @@ function GameDirector:ReserveVehicle(p_Bot)
 		end
 	end
 	return nil
+end
+
+-- Passengers this far from the vehicle (on the mesh to it) are waited for.
+local PASSENGER_WAIT_RANGE = 80.0
+
+---Whether bots of the team are on foot on their way to get into the vehicle (its objective "vehicle <id>").
+---@param p_Entity ControllableEntity|nil
+---@param p_TeamId TeamId|integer
+---@return boolean
+function GameDirector:PassengersComing(p_Entity, p_TeamId)
+	if p_Entity == nil then
+		return false
+	end
+	local s_Name = 'vehicle ' .. tostring(p_Entity.instanceId)
+	local s_Position = p_Entity.transform.trans
+	local s_Bots = g_BotManager:GetBots()
+	for l_Index = 1, #s_Bots do
+		local l_Bot = s_Bots[l_Index]
+		local s_Soldier = l_Bot.m_Player.soldier
+		if l_Bot.m_Player.teamId == p_TeamId and l_Bot:GetObjective() == s_Name and s_Soldier ~= nil
+			and l_Bot.m_ActiveVehicle == nil and s_Soldier.worldTransform.trans:Distance(s_Position) <= PASSENGER_WAIT_RANGE then
+			return true
+		end
+	end
+	return false
 end
 
 ---Where the team can spawn now (ReserveVehicle): in rush the soldier-spawns of the team that are on (the stage), else
@@ -884,10 +909,32 @@ end
 -- Vehicle Events.
 -- =============================================
 
+-- Rush: a vehicle is spawned into directly only this close to a spawn of the team that is on (the stage).
+local VEHICLE_STAGE_RANGE = 120.0
+
 function GameDirector:GetSpawnableVehicle(p_TeamId)
 	local spawnableVehiclesForTeamID = {}
 	if self.m_SpawnableVehicles[p_TeamId] then
 		spawnableVehiclesForTeamID = _PruneInvalidEntities(self.m_SpawnableVehicles[p_TeamId])
+	end
+	-- Rush: the vehicles at the bases of the other stages can't be entered (the bot was killed to spawn again, over and
+	-- over): only the ones of the stage.
+	if Globals.IsRush and #spawnableVehiclesForTeamID > 0 then
+		local s_Spawns = self:_TeamSpawnPositions(p_TeamId)
+		local s_Stage = {}
+		for l_Index = 1, #spawnableVehiclesForTeamID do
+			local l_Vehicle = spawnableVehiclesForTeamID[l_Index]
+			local s_Ok, s_Position = pcall(function() return l_Vehicle.transform.trans end)
+			if s_Ok and s_Position ~= nil then
+				for l_Spawn = 1, #s_Spawns do
+					if s_Spawns[l_Spawn]:Distance(s_Position) <= VEHICLE_STAGE_RANGE then
+						s_Stage[#s_Stage + 1] = l_Vehicle
+						break
+					end
+				end
+			end
+		end
+		spawnableVehiclesForTeamID = s_Stage
 	end
 	return spawnableVehiclesForTeamID
 end
@@ -1584,6 +1631,9 @@ function GameDirector:FindClosestPath(p_Trans, p_VehiclePath, p_DetailedSearch, 
 	local s_X, s_Y, s_Z = p_Trans.x, p_Trans.y, p_Trans.z
 	local s_ClosestPathNode = nil
 	local s_ClosestDistance = math.huge
+	-- With a mesh the actions (arming an MCOM) are done from the mesh: their paths lead nowhere for a soldier off it
+	-- (the loop around a destroyed MCOM behind a wall).
+	local s_SkipActions = not p_VehiclePath and m_NavZones:GetMesh() ~= nil
 
 	for l_PathIndex, l_Waypoints in pairs(s_Paths) do
 		local s_FirstNode = l_Waypoints[1]
@@ -1615,6 +1665,8 @@ function GameDirector:FindClosestPath(p_Trans, p_VehiclePath, p_DetailedSearch, 
 					end
 				end
 			end
+			local s_Action = s_SkipActions and s_FirstNode.Data ~= nil and s_FirstNode.Data.Action ~= nil
+				and s_FirstNode.Data.Action.type ~= 'exit'
 
 			local s_Search = false
 			if p_VehiclePath then
@@ -1623,7 +1675,7 @@ function GameDirector:FindClosestPath(p_Trans, p_VehiclePath, p_DetailedSearch, 
 					(p_VehicleTerrain == VehicleTerrains.Land and not s_isWaterPath and not s_isAirPath) or
 					(p_VehicleTerrain == VehicleTerrains.Amphibious and not s_isAirPath))
 			else -- Not in vehicle. Only use infantery-paths
-				s_Search = not s_isVehiclePath and not s_isSpawnVehiclePath
+				s_Search = not s_isVehiclePath and not s_isSpawnVehiclePath and not s_Action
 			end
 
 			if s_Search then
@@ -2583,8 +2635,10 @@ function GameDirector:_RefreshVehicleEntities()
 			s_Objective.position = s_Vehicle.transform.trans:Clone()
 			s_Objective.team = _VehicleTeam(s_Vehicle) or self.m_VehicleSpawnTeams[s_Vehicle.instanceId]
 				or self:_VehicleOwner(s_Objective.position)
-			-- Only seats a bot may take (Bot:_EnterVehicleEntity): else the bots walk to it and don't get in.
-			s_Objective.active = m_Vehicles:HasFreeBotSeat(s_Vehicle, s_Data)
+			-- Only seats a bot may take (Bot:_EnterVehicleEntity): else the bots walk to it and don't get in. As many bots
+			-- as seats: driver and passengers (the driver waits for them, Config.VehicleWaitForPassengersTime).
+			s_Objective.seats = m_Vehicles:FreeBotSeats(s_Vehicle, s_Data)
+			s_Objective.active = s_Objective.seats > 0
 				and PhysicsEntity(s_Vehicle).velocity.magnitude < VEHICLE_PARKED_SPEED
 		end
 		s_Entity = s_Iterator:Next()

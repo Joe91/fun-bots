@@ -112,6 +112,8 @@ function Bot:__init(p_Player)
 	self._SpawnDelayTimer = 0.0
 	self._WayWaitTimer = 0.0
 	self._VehicleWaitTimer = 0.0
+	-- Seconds the driver waited for passengers so far (VehicleMovement).
+	self._VehicleWaited = 0.0
 	self._VehicleLookAroundTimer = 0.0
 	self._LookAroundYawOffset = 0.0
 	self._LookAroundYawGoal = 0.0
@@ -219,6 +221,7 @@ function Bot:__init(p_Player)
 	self._BreachCount = 0
 	-- Out of a vehicle: onto the mesh once on the ground (VehicleActions, UpdateNormalMovement).
 	self._MeshAfterExit = false
+	self._MeshRetryTimer = 0.0
 	self._FireCycleModifier = 1.0
 
 	-- Vehicle stuff.
