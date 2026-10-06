@@ -135,6 +135,8 @@ function DebugSnapshots.CollectBots()
 				s_Entry.zone = l_Bot.m_Zone.Zone.Name
 				s_Entry.zoneExit = l_Bot.m_Zone.Exit ~= nil
 			end
+			-- Rush: left the combat area, waits at the border (Bot:OnCombatAreaLeft).
+			s_Entry.border = l_Bot.m_Border ~= nil or nil
 
 			local s_TargetPoint = l_Bot._TargetPoint
 			if type(s_TargetPoint) == 'table' and s_TargetPoint.Position ~= nil then

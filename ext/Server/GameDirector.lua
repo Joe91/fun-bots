@@ -254,6 +254,7 @@ function GameDirector:OnEngineUpdate(p_DeltaTime)
 			end
 
 			s_BotsByTeam[l_Bot.m_Player.teamId][#s_BotsByTeam[l_Bot.m_Player.teamId] + 1] = l_Bot
+			l_Bot:UpdateBorder()
 			self:_CheckProgressOffMesh(l_Bot)
 		end
 	end
@@ -586,9 +587,14 @@ function GameDirector:ReserveVehicle(p_Bot)
 	for l_Index = 1, #self.m_AllObjectives do
 		local l_Objective = self.m_AllObjectives[l_Index]
 		-- Not the vehicles bots spawn in directly ("spawn vehicle ...").
+		-- Not the vehicles in a base either: every bot that spawns gets into those directly (BotSpawner), the one that
+		-- spawned for it in the base would find it taken.
 		if l_Objective.isEnterVehiclePath and not l_Objective.isSpawnPath
 			and (l_Objective.team == s_TeamId or (l_Objective.isVehicleEntity and l_Objective.team == TeamId.TeamNeutral))
 			and l_Objective.active and not l_Objective.destroyed and not s_Taken[l_Objective.name]
+			and (l_Objective.entity == nil or _IsEntityValid(l_Objective.entity))
+			and not (l_Objective.entity ~= nil and self.m_SpawnableVehicles[s_TeamId] ~= nil
+				and self:IsEntityInVehicleCollection(self.m_SpawnableVehicles, s_TeamId, l_Objective.entity))
 			and g_NavRoutes:Knows(l_Objective.name) then
 			local s_Position = self:_GetObjectivePosition(l_Objective.name)
 			if s_Position ~= nil then
@@ -607,6 +613,7 @@ end
 function GameDirector:_CheckProgressOffMesh(p_Bot)
 	local s_Soldier = p_Bot.m_Player.soldier
 	if s_Soldier == nil or p_Bot.m_Zone ~= nil or m_NavZones:GetMesh() == nil or g_NavRoutes == nil
+		or p_Bot.m_Border ~= nil -- Waits at the border of the combat area.
 		or g_BotStates:IsInVehicleState(p_Bot.m_ActiveState) or g_BotStates:IsStaticState(p_Bot.m_ActiveState)
 		or p_Bot._FollowTargetPlayer ~= nil or p_Bot._ActiveAction == BotActionFlags.OtherActionActive then
 		p_Bot._KillYourselfTimer = 0.0
@@ -661,12 +668,22 @@ end
 -- RUSH Events.
 -- =============================================
 
-function GameDirector:ToggleDirectionCombatZone(p_Entity, p_Player)
-	if m_Utilities:isBot(p_Player) and p_Player.teamId == TeamId.Team1 then -- Attacking team.
-		local s_Bot = g_BotManager:GetBotById(p_Player.id)
-		if s_Bot then
-			s_Bot._InvertPathDirection = not s_Bot._InvertPathDirection
-		end
+---Rush: a bot left the combat area (p_Left) or came back into it. The area of the next stage opens only a while after
+---the last one fell, the bots already go there: they turn back and wait at the border (Bot:OnCombatAreaLeft).
+---@param p_Player Player
+---@param p_Left boolean
+function GameDirector:OnCombatArea(p_Player, p_Left)
+	if not Globals.IsRush or not m_Utilities:isBot(p_Player) then
+		return
+	end
+	local s_Bot = g_BotManager:GetBotById(p_Player.id)
+	if s_Bot == nil then
+		return
+	end
+	if p_Left then
+		s_Bot:OnCombatAreaLeft()
+	else
+		s_Bot:OnCombatAreaReturned()
 	end
 end
 
@@ -1923,8 +1940,10 @@ function GameDirector:_InitObjectives()
 		for l_PathIndex, _ in pairs(m_NodeCollection:GetPaths()) do
 			local s_PathWaypoint = m_NodeCollection:GetFirst(l_PathIndex)
 
-			-- Only insert objectives that are objectives (on at least one path alone).
-			if type(s_PathWaypoint) == "table" and s_PathWaypoint.Data.Objectives ~= nil and #s_PathWaypoint.Data.Objectives == 1 then
+			-- Only insert objectives that are objectives (on at least one path alone). Only the path with the action to arm
+			-- it (the cut keeps paths named like it that only lead there, NavRoutes:Target).
+			if type(s_PathWaypoint) == "table" and s_PathWaypoint.Data.Objectives ~= nil and #s_PathWaypoint.Data.Objectives == 1
+				and self:_HasMcomAction(l_PathIndex) then
 				local s_ObjectiveName = s_PathWaypoint.Data.Objectives[1]
 
 				if string.find(s_ObjectiveName:lower(), "interact") ~= nil and string.find(s_ObjectiveName:lower(), "mcom") ~= nil then
@@ -1955,6 +1974,20 @@ function GameDirector:_InitObjectives()
 
 	self:_InitFlagTeams()
 	self:_UpdateValidObjectives()
+end
+
+---Whether a waypoint of the path is the action to arm an MCOM.
+---@param p_PathIndex integer
+---@return boolean
+function GameDirector:_HasMcomAction(p_PathIndex)
+	local s_Waypoints = m_NodeCollection:Get(nil, p_PathIndex) or {}
+	for l_Index = 1, #s_Waypoints do
+		local l_Action = s_Waypoints[l_Index].Data and s_Waypoints[l_Index].Data.Action
+		if type(l_Action) == 'table' and l_Action.type == 'mcom' then
+			return true
+		end
+	end
+	return false
 end
 
 ---Builds the objectives anew after their paths changed during the round (e.g. by the debug-server). Keeps the rush
@@ -2364,14 +2397,9 @@ function GameDirector:_RefreshVehicleEntities()
 			s_Objective.position = s_Vehicle.transform.trans:Clone()
 			s_Objective.team = _VehicleTeam(s_Vehicle) or self.m_VehicleSpawnTeams[s_Vehicle.instanceId]
 				or self:_VehicleOwner(s_Objective.position)
-			local s_Free = false
-			for l_Seat = 0, s_Vehicle.entryCount - 1 do
-				if s_Vehicle:GetPlayerInEntry(l_Seat) == nil then
-					s_Free = true
-					break
-				end
-			end
-			s_Objective.active = s_Free and PhysicsEntity(s_Vehicle).velocity.magnitude < VEHICLE_PARKED_SPEED
+			-- Only seats a bot may take (Bot:_EnterVehicleEntity): else the bots walk to it and don't get in.
+			s_Objective.active = m_Vehicles:HasFreeBotSeat(s_Vehicle, s_Data)
+				and PhysicsEntity(s_Vehicle).velocity.magnitude < VEHICLE_PARKED_SPEED
 		end
 		s_Entity = s_Iterator:Next()
 	end

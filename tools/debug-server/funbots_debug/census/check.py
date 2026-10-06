@@ -8,9 +8,9 @@ detail-meshes):
 - every connection, along its way (the corners), at 1.0 and 1.3 m above the ground, in both directions: blocked if
   both heights hit on the same stretch in the same direction (a wall; only one of them: a railing, the edge of a
   ceiling over stairs, a kerb). And the ground along it, every GROUND_STEP: a step up or down of more than LEDGE
-  between two samples (a ledge a soldier can't climb), or no ground (a hole), blocks it as well. Not the connections
-  along waypoints (navzones._trace_edges): a person walked them, the census just doesn't see them (stairs, ladders,
-  jumps);
+  between two samples (a ledge a soldier can't climb), or no ground (a hole), blocks it as well. Of the connections
+  along waypoints (navzones._trace_edges) only the straight pieces from the points to the first and from the last
+  waypoint: a person walked the rest, the census just doesn't see it (stairs, jumps);
 - every point: up to 1.0 m above it (no room even to crouch: a ceiling, the inside of a slab), and in 8 directions at
   1.0 m: from the point outwards and from outside back to the point. Hit from outside but not from inside in at least
   INSIDE_DIRECTIONS directions: the point is inside of a solid.
@@ -69,6 +69,17 @@ def rays(networks: dict) -> tuple[list[list[float]], list[tuple]]:
     result, meaning = [], []
     for index, edge in enumerate(networks.get("edges") or []):
         if _along_waypoints(edge):
+            # Along waypoints a person walked: only the pieces from the points of the mesh to the first and from the
+            # last waypoint (straight lines nobody walked, through the wall of a train next to its door).
+            corners = [list(corner) for corner in (edge[3] if len(edge) > 3 and edge[3] else [])]
+            if corners:
+                a, b = points[int(edge[0])], points[int(edge[1])]
+                for segment, (p, q) in enumerate(((a[:3], corners[0]), (corners[-1], b[:3]))):
+                    for height_index, height in enumerate(HEIGHTS):
+                        start = [p[0], p[1] + height, p[2]]
+                        end = [q[0], q[1] + height, q[2]]
+                        result += [start + end, end + start]
+                        meaning += [("trace", index, segment, height_index, 0), ("trace", index, segment, height_index, 1)]
             continue
         a, b = points[int(edge[0])], points[int(edge[1])]
         way = [a[:3]] + [list(corner) for corner in (edge[3] if len(edge) > 3 and edge[3] else [])] + [b[:3]]
@@ -102,6 +113,7 @@ def evaluate(networks: dict, hits: list[float], meaning: list[tuple]) -> dict:
     points = networks.get("points") or []
     edges = networks.get("edges") or []
     edge_hits: dict[tuple[int, int, int], set[int]] = {}
+    trace_hits: dict[tuple[int, int, int], set[int]] = {}
     grounds: dict[tuple[int, int], dict[int, float | None]] = {}
     low = set()
     out_hit: dict[tuple[int, int], bool] = {}
@@ -110,6 +122,8 @@ def evaluate(networks: dict, hits: list[float], meaning: list[tuple]) -> dict:
         hit = raw is not None and raw >= 0
         if what[0] == "edge" and hit:
             edge_hits.setdefault((what[1], what[2], what[4]), set()).add(what[3])
+        elif what[0] == "trace" and hit:
+            trace_hits.setdefault((what[1], what[2], what[4]), set()).add(what[3])
         elif what[0] == "ground":
             grounds.setdefault((what[1], what[2]), {})[what[3]] = what[4] - raw if hit else None
         elif what[0] == "up" and hit:
@@ -125,6 +139,7 @@ def evaluate(networks: dict, hits: list[float], meaning: list[tuple]) -> dict:
                 any(abs(b - a) > LEDGE for a, b in zip(heights, heights[1:])):
             ledges.add(index)
     blocked = {key[0] for key, heights in edge_hits.items() if len(heights) == len(HEIGHTS)} | ledges
+    blocked_traces = {key[0] for key, heights in trace_hits.items() if len(heights) == len(HEIGHTS)}
     inside = {index for index in range(len(points))
               if sum(1 for direction in range(8) if back_hit.get((index, direction)) and not out_hit.get((index, direction)))
               >= INSIDE_DIRECTIONS}
@@ -135,6 +150,8 @@ def evaluate(networks: dict, hits: list[float], meaning: list[tuple]) -> dict:
     return {
         "version": VERSION,
         "blockedEdges": [position(int(edges[index][0])) + position(int(edges[index][1])) for index in sorted(blocked)],
+        "blockedTraces": [position(int(edges[index][0])) + position(int(edges[index][1]))
+                          for index in sorted(blocked_traces)],
         "lowPoints": [position(index) for index in sorted(low)],
         "insidePoints": [position(index) for index in sorted(inside)],
     }
@@ -145,14 +162,15 @@ def merge(old: dict | None, new: dict) -> dict:
     if not old:
         return new
     merged = dict(new)
-    for key in ("blockedEdges", "lowPoints", "insidePoints"):
+    for key in ("blockedEdges", "blockedTraces", "lowPoints", "insidePoints"):
         seen = {tuple(entry) for entry in old.get(key) or []}
         merged[key] = list(old.get(key) or []) + [entry for entry in new.get(key) or [] if tuple(entry) not in seen]
     return merged
 
 
 def summary(networks: dict, checks: dict) -> str:
-    return (f"  check: {len(checks['blockedEdges'])} of {len(networks.get('edges') or [])} connections blocked, "
+    return (f"  check: {len(checks['blockedEdges'])} of {len(networks.get('edges') or [])} connections blocked "
+            f"({len(checks.get('blockedTraces') or [])} along waypoints), "
             f"{len(checks['lowPoints'])} points without room, {len(checks['insidePoints'])} inside of a solid "
             f"(of {len(networks.get('points') or [])})")
 
@@ -204,8 +222,15 @@ def apply(network: dict, checks: dict | None, spawns: list | None = None) -> dic
                 return True
         return False
 
+    traces = [tuple(entry) for entry in checks.get("blockedTraces") or []]
+
+    def trace_blocked(a: list[float], b: list[float]) -> bool:
+        return any((math.dist(entry[:3], a[:3]) <= MATCH and math.dist(entry[3:], b[:3]) <= MATCH)
+                   or (math.dist(entry[:3], b[:3]) <= MATCH and math.dist(entry[3:], a[:3]) <= MATCH) for entry in traces)
+
     edges = [edge for edge in network["edges"] if int(edge[0]) not in removed and int(edge[1]) not in removed
-             and (_along_waypoints(edge) or not is_blocked(points[int(edge[0])], points[int(edge[1])]))]
+             and (not is_blocked(points[int(edge[0])], points[int(edge[1])]) if not _along_waypoints(edge)
+                  else not trace_blocked(points[int(edge[0])], points[int(edge[1])]))]
     attach = [entry for entry in network["attach"] if int(entry[2]) not in removed]
 
     # Only the parts a junction leads to.

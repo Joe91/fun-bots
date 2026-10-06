@@ -8,7 +8,8 @@ NavZones = class('NavZones')
 -- (tools/debug-server/funbots_debug/census/navzones.py) and saved in the table <map>_navzones of mod.db, in one row
 -- (name "@mesh", data: JSON):
 --   points  { { x, y, z, clearance, cover, flags } }  flags: 1 = in a zone, 2 = indoors, 4 = crouch
---   edges   { { a, b, length, { corner, ... } } }     a, b count from 0, corners { x, y, z } between a and b
+--   edges   { { a, b, length, { corner, ... }, along, { jump, ... } } }  a, b count from 0, corners { x, y, z } between
+--           a and b; along waypoints (1): jumps are the corners (from 0) where the soldier who recorded them jumped
 --   attach  { { path, point, mesh-point, distance, { x, y, z }, { corner, ... } } }  junctions with the waypoints
 --   vehicle { points, edges, attach }                 the mesh of the land vehicles (wide and open ground)
 --   zones   { { name, kind, center, radius, inside = { points }, vehicleInside = { vehicle-points } } }
@@ -24,6 +25,8 @@ NavZoneFlags = {
 	InZone = 1,
 	Indoor = 2,
 	Crouch = 4,
+	-- A corner of a connection along waypoints where the soldier who recorded them jumped (Bot:UpdateZoneMovement).
+	Jump = 8,
 }
 
 -- The row of the table with the mesh.
@@ -64,12 +67,13 @@ local MIN_PART = 10
 ---@field Center Vec3
 ---@field Radius number
 ---@field Points NavZonePoint[]
----@field Neighbours table<integer, { To: integer, Cost: number, Corners: Vec3[], Penalty: number, Removed: boolean|nil }[]>
+---@field Neighbours table<integer, { To: integer, Cost: number, Corners: Vec3[], Jumps: table<integer, boolean>|nil, Penalty: number, Removed: boolean|nil }[]>
 ---@field Inside integer[] the points in the zone (the mesh itself: none)
 ---@field InsideSet table<integer, boolean>
 ---@field Junctions NavZoneJunction[]
 ---@field Vehicle NavZone|nil the zone on the mesh of the land vehicles
 ---@field Part table<integer, integer> point -> number of its connected part (points of different parts have no way)
+---@field PartSize table<integer, integer> part -> its points
 ---@field ByWaypoint table<string, NavZoneJunction> waypoint-ID -> junction, set by _LinkJunctions
 ---@field Mesh NavZone the mesh the zone is on
 
@@ -88,6 +92,8 @@ function NavZones:Clear()
 	---@type table<integer, NavZone[]>
 	self._PointZones = {}
 	self._Count = 0
+	-- Where players died in a damage area (electrified rails, fire): { Vec3 } (OnDamageAreaDeath).
+	self._HazardDeaths = {}
 	-- Counts up whenever the mesh or its junctions change (NavRoutes builds its graph anew then).
 	self._Version = (self._Version or 0) + 1
 	-- Counts up whenever connections are removed as well (NavRoutes measures the ways anew then).
@@ -167,6 +173,10 @@ local function _ComputeParts(p_Mesh)
 	for l_Point in pairs(s_Part) do
 		s_Part[l_Point] = nil
 	end
+	local s_Sizes = p_Mesh.PartSize
+	for l_Part in pairs(s_Sizes) do
+		s_Sizes[l_Part] = nil
+	end
 	local s_PartCount = 0
 	for l_Start = 1, #p_Mesh.Points do
 		if s_Part[l_Start] == nil then
@@ -185,6 +195,9 @@ local function _ComputeParts(p_Mesh)
 				end
 			end
 		end
+	end
+	for l_Point = 1, #p_Mesh.Points do
+		s_Sizes[s_Part[l_Point]] = (s_Sizes[s_Part[l_Point]] or 0) + 1
 	end
 end
 
@@ -211,6 +224,7 @@ local function _ParseMesh(p_Data)
 		InsideSet = {},
 		Junctions = {},
 		Part = {},
+		PartSize = {},
 		ByWaypoint = {},
 	}
 	s_Mesh.Mesh = s_Mesh
@@ -243,9 +257,22 @@ local function _ParseMesh(p_Data)
 			for l_Corner = #s_Corners, 1, -1 do
 				s_Reversed[#s_Reversed + 1] = s_Corners[l_Corner]
 			end
+			-- Corners to jump at, as indices of the corners in each direction.
+			local s_Jumps = nil
+			local s_JumpsReversed = nil
+			if type(l_Edge[6]) == 'table' and #l_Edge[6] > 0 then
+				s_Jumps = {}
+				s_JumpsReversed = {}
+				for l_Jump = 1, #l_Edge[6] do
+					local s_Corner = math.floor(l_Edge[6][l_Jump]) + 1
+					s_Jumps[s_Corner] = true
+					s_JumpsReversed[#s_Corners - s_Corner + 1] = true
+				end
+			end
 			local s_Cost = tonumber(l_Edge[3]) or s_Mesh.Points[s_A].Position:Distance(s_Mesh.Points[s_B].Position)
-			table.insert(s_Mesh.Neighbours[s_A], { To = s_B, Cost = s_Cost, Corners = s_Corners, Penalty = 0.0 })
-			table.insert(s_Mesh.Neighbours[s_B], { To = s_A, Cost = s_Cost, Corners = s_Reversed, Penalty = 0.0 })
+			table.insert(s_Mesh.Neighbours[s_A], { To = s_B, Cost = s_Cost, Corners = s_Corners, Jumps = s_Jumps, Penalty = 0.0 })
+			table.insert(s_Mesh.Neighbours[s_B],
+				{ To = s_A, Cost = s_Cost, Corners = s_Reversed, Jumps = s_JumpsReversed, Penalty = 0.0 })
 		end
 	end
 
@@ -288,6 +315,7 @@ local function _ZoneOn(p_Mesh, p_Data, p_Inside)
 		InsideSet = {},
 		Junctions = p_Mesh.Junctions,
 		Part = p_Mesh.Part,
+		PartSize = p_Mesh.PartSize,
 		ByWaypoint = p_Mesh.ByWaypoint,
 		Mesh = p_Mesh,
 	}
@@ -341,11 +369,7 @@ function NavZones:_LinkJunctions()
 	local function _Link(p_Mesh)
 		-- Not onto an island of the mesh (a few points the census measured apart): no route leads on from there, the
 		-- bots went back and forth between it and their path.
-		local s_PartSize = {}
-		for l_Point = 1, #p_Mesh.Points do
-			local s_Part = p_Mesh.Part[l_Point]
-			s_PartSize[s_Part] = (s_PartSize[s_Part] or 0) + 1
-		end
+		local s_PartSize = p_Mesh.PartSize
 		local s_Valid = {}
 		for l_Index = 1, #p_Mesh.Junctions do
 			local l_Junction = p_Mesh.Junctions[l_Index]
@@ -468,7 +492,8 @@ function NavZones:GetZones()
 end
 
 ---The point of the network closest to the position. Points on the same floor (FLOOR_HEIGHT) come first: a soldier
----can't reach the point above it.
+---can't reach the point above it. Not on an island of the mesh (fewer than MIN_PART points, e.g. a point behind a wall
+---the checks of the game cut off): the bot can't get there, no route leads on from there.
 ---@param p_Zone NavZone
 ---@param p_Position Vec3
 ---@param p_Avoid? integer a point not to take (a dead end the bot got stuck at)
@@ -477,8 +502,9 @@ function NavZones:Closest(p_Zone, p_Position, p_Avoid)
 	local s_Best = nil
 	local s_BestOtherFloor = true
 	local s_BestDistance = math.huge
+	local s_PartSize = p_Zone.PartSize
 	for l_Index = 1, #p_Zone.Points do
-		if l_Index == p_Avoid then
+		if l_Index == p_Avoid or (s_PartSize ~= nil and (s_PartSize[p_Zone.Part[l_Index]] or 0) < MIN_PART) then
 			goto continue
 		end
 		local s_Pos = p_Zone.Points[l_Index].Position
@@ -656,6 +682,57 @@ function NavZones:BlockEdge(p_Zone, p_A, p_B)
 	end
 end
 
+-- A second death in a damage area this close to an earlier one: a hazard on the mesh (the rails in a metro), not the
+-- border of the combat area (those deaths are spread out). The points this close to it are left out until the level ends.
+local HAZARD_DEATHS_RANGE = 3.0
+local HAZARD_POINT_RANGE = 2.5
+
+---A player died in a damage area (weapon "DamageArea"): at the second death at the same place the mesh there is left
+---out (its connections are removed): the census sees the ground, not that it kills.
+---@param p_Position Vec3
+function NavZones:OnDamageAreaDeath(p_Position)
+	local s_Mesh = self._Mesh
+	if s_Mesh == nil or p_Position == nil then
+		return
+	end
+	local s_Repeated = false
+	for l_Index = 1, #self._HazardDeaths do
+		if self._HazardDeaths[l_Index]:Distance(p_Position) <= HAZARD_DEATHS_RANGE then
+			s_Repeated = true
+			break
+		end
+	end
+	self._HazardDeaths[#self._HazardDeaths + 1] = p_Position:Clone()
+	if not s_Repeated then
+		return
+	end
+	local s_Removed = 0
+	for l_Point = 1, #s_Mesh.Points do
+		local s_Position = s_Mesh.Points[l_Point].Position
+		local s_DeltaX = s_Position.x - p_Position.x
+		local s_DeltaZ = s_Position.z - p_Position.z
+		if s_DeltaX * s_DeltaX + s_DeltaZ * s_DeltaZ <= HAZARD_POINT_RANGE * HAZARD_POINT_RANGE
+			and math.abs(s_Position.y - p_Position.y) <= FLOOR_HEIGHT then
+			for _, l_Edge in ipairs(s_Mesh.Neighbours[l_Point]) do
+				if not l_Edge.Removed then
+					l_Edge.Removed = true
+					s_Removed = s_Removed + 1
+					for _, l_Back in ipairs(s_Mesh.Neighbours[l_Edge.To]) do
+						if l_Back.To == l_Point then
+							l_Back.Removed = true
+						end
+					end
+				end
+			end
+		end
+	end
+	if s_Removed > 0 then
+		self._Topology = self._Topology + 1
+		_ComputeParts(s_Mesh)
+		m_Logger:Write('hazard at ' .. tostring(p_Position) .. ': ' .. s_Removed .. ' connections removed')
+	end
+end
+
 -- Metres of the regions a bot avoids more or less (NavZones:Route with a seed).
 local SPREAD_REGION = 30.0
 
@@ -774,8 +851,12 @@ function NavZones:Positions(p_Zone, p_Route)
 		for l_Edge = 1, #s_Neighbours do
 			if s_Neighbours[l_Edge].To == s_To then
 				local s_Corners = s_Neighbours[l_Edge].Corners
+				local s_Jumps = s_Neighbours[l_Edge].Jumps
 				for l_Corner = 1, #s_Corners do
-					s_Result[#s_Result + 1] = { Position = s_Corners[l_Corner], Flags = 0 }
+					s_Result[#s_Result + 1] = {
+						Position = s_Corners[l_Corner],
+						Flags = (s_Jumps ~= nil and s_Jumps[l_Corner]) and NavZoneFlags.Jump or 0,
+					}
 				end
 				break
 			end

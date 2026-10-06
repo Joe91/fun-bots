@@ -1103,12 +1103,15 @@ end
 function BotSpawner:_ConquestSpawn(p_Bot, p_Near)
 	local s_Event = ServerPlayerEvent("Spawn", p_Bot.m_Player, true, false, false, false, false, false,
 		p_Bot.m_Player.teamId)
+	local s_Reason = 'vehicle'
 	local s_BestSpawnPoint = p_Near and self:_FindSpawnPointNear(p_Bot.m_Player.teamId, p_Near)
 	if s_BestSpawnPoint == nil then
+		s_Reason = 'attacked'
 		s_BestSpawnPoint = self:_FindAttackedSpawnPoint(p_Bot.m_Player.teamId)
 	end
 
 	if s_BestSpawnPoint == nil then
+		s_Reason = 'front'
 		s_BestSpawnPoint = self:_FindClosestSpawnPoint(p_Bot.m_Player.teamId)
 	end
 
@@ -1117,7 +1120,60 @@ function BotSpawner:_ConquestSpawn(p_Bot, p_Near)
 		return
 	end
 
+	if m_DebugBridge.m_Enabled then
+		local s_Data = CharacterSpawnReferenceObjectData(s_BestSpawnPoint.data)
+		m_DebugBridge:Event('spawn_choice', {
+			bot = p_Bot.m_Id,
+			team = p_Bot.m_Player.teamId,
+			reason = s_Reason,
+			spawnTeam = s_Data.team,
+			pos = DebugBridge.Vec(SpawnEntity(s_BestSpawnPoint).transform.trans),
+		})
+	end
 	s_BestSpawnPoint:FireEvent(s_Event)
+end
+
+---The spawn-entity of the capture point (or HQ) for the team: the one of the team on its bus, else the one without a
+---team. The data-team of the spawn-entities doesn't tell HQ from flag (the HQ of MP_012 has one without a team, its
+---flags one per team): that is Utilities:IsHq.
+---@param p_CapturePoint CapturePointEntity
+---@param p_TeamId TeamId|integer
+---@return Entity|nil @ServerCharacterSpawnEntity
+local function _SpawnOf(p_CapturePoint, p_TeamId)
+	local s_Neutral = nil
+	for l_Index = 1, #p_CapturePoint.bus.entities do
+		local l_Entity = p_CapturePoint.bus.entities[l_Index]
+		if l_Entity:Is('ServerCharacterSpawnEntity') then
+			local s_Team = CharacterSpawnReferenceObjectData(l_Entity.data).team
+			if s_Team == p_TeamId then
+				return l_Entity
+			elseif s_Team == 0 and s_Neutral == nil then
+				s_Neutral = l_Entity
+			end
+		end
+	end
+	return s_Neutral
+end
+
+---The capture points and HQs of the level: { Entity, Spawn (of the team), Hq, Own (held by the team) }.
+---@param p_TeamId TeamId|integer
+---@return table[]
+local function _CapturePoints(p_TeamId)
+	local s_Result = {}
+	local s_EntityIterator = EntityManager:GetIterator("ServerCapturePointEntity")
+	local s_Entity = s_EntityIterator:Next()
+	while s_Entity do
+		local s_CapturePoint = CapturePointEntity(s_Entity)
+		s_Result[#s_Result + 1] = {
+			Entity = s_CapturePoint,
+			Spawn = _SpawnOf(s_CapturePoint, p_TeamId),
+			Hq = m_Utilities:IsHq(s_CapturePoint),
+			Own = s_CapturePoint.team == p_TeamId and s_CapturePoint.isControlled,
+			Position = s_CapturePoint.transform.trans:Clone(),
+		}
+		s_Entity = s_EntityIterator:Next()
+	end
+	return s_Result
 end
 
 ---The spawn of the team's capture point (or HQ) closest to the position.
@@ -1127,162 +1183,85 @@ end
 function BotSpawner:_FindSpawnPointNear(p_TeamId, p_Position)
 	local s_Best = nil
 	local s_BestDistance = math.huge
-	local s_EntityIterator = EntityManager:GetIterator("ServerCapturePointEntity")
-	local s_Entity = s_EntityIterator:Next()
-
-	while s_Entity do
-		local s_CapturePoint = CapturePointEntity(s_Entity)
-		if s_CapturePoint.team == p_TeamId and s_CapturePoint.isControlled then
-			for l_Index = 1, #s_CapturePoint.bus.entities do
-				local l_Entity = s_CapturePoint.bus.entities[l_Index]
-				if l_Entity:Is('ServerCharacterSpawnEntity') then
-					local s_Team = CharacterSpawnReferenceObjectData(l_Entity.data).team
-					local s_Distance = s_CapturePoint.transform.trans:Distance(p_Position)
-					if (s_Team == p_TeamId or s_Team == 0) and s_Distance < s_BestDistance then
-						s_Best = l_Entity
-						s_BestDistance = s_Distance
-					end
-					break
-				end
-			end
+	for _, l_Point in ipairs(_CapturePoints(p_TeamId)) do
+		local s_Distance = l_Point.Position:Distance(p_Position)
+		if l_Point.Own and l_Point.Spawn ~= nil and s_Distance < s_BestDistance then
+			s_Best = l_Point.Spawn
+			s_BestDistance = s_Distance
 		end
-		s_Entity = s_EntityIterator:Next()
 	end
-
 	return s_Best
 end
 
+---The capture point of the team the enemy takes right now (the one closest to being lost), not the HQ.
 ---@param p_TeamId TeamId|integer
 ---@return Entity|nil @ServerCharacterSpawnEntity
 function BotSpawner:_FindAttackedSpawnPoint(p_TeamId)
-	---@type Entity|nil
-	local s_BestSpawnPoint = nil
+	local s_Best = nil
 	local s_LowestFlagLocation = 100.0
-	local s_EntityIterator = EntityManager:GetIterator("ServerCapturePointEntity")
-	local s_Entity = s_EntityIterator:Next()
-
-	while s_Entity do
-		s_Entity = CapturePointEntity(s_Entity)
-
-		if s_Entity.team ~= p_TeamId then
-			goto endOfLoop
+	for _, l_Point in ipairs(_CapturePoints(p_TeamId)) do
+		if l_Point.Own and not l_Point.Hq and l_Point.Spawn ~= nil and l_Point.Entity.flagLocation < s_LowestFlagLocation then
+			s_Best = l_Point.Spawn
+			s_LowestFlagLocation = l_Point.Entity.flagLocation
 		end
-
-		for l_Index = 1, #s_Entity.bus.entities do
-			local l_Entity = s_Entity.bus.entities[l_Index]
-			if l_Entity:Is('ServerCharacterSpawnEntity') then
-				if CharacterSpawnReferenceObjectData(l_Entity.data).team == p_TeamId
-					or CharacterSpawnReferenceObjectData(l_Entity.data).team == 0 then
-					if s_Entity.flagLocation < 100.0 and s_Entity.isControlled then
-						if s_BestSpawnPoint == nil then
-							s_BestSpawnPoint = l_Entity
-							s_LowestFlagLocation = s_Entity.flagLocation
-						elseif s_Entity.flagLocation < s_LowestFlagLocation then
-							s_BestSpawnPoint = l_Entity
-							s_LowestFlagLocation = s_Entity.flagLocation
-						end
-					end
-
-					goto endOfLoop
-				end
-			end
-		end
-
-		::endOfLoop::
-		s_Entity = s_EntityIterator:Next()
 	end
-
-	return s_BestSpawnPoint
+	return s_Best
 end
 
+-- Capture points of the team at most this many metres farther from the front than the closest one are spawned at as
+-- well (at random): not all bots at the same flag.
+local SPAWN_FRONT_SPREAD = 60.0
+
+---The spawn of a capture point of the team at the front: the one closest to a capture point the team doesn't hold (else
+---to the HQ of the enemy), now and then one a bit farther back. The HQ only if the team holds no capture point: the bots
+---are needed at the flags, not far behind them (vehicles in the HQ get their bots from _FindSpawnPointNear).
 ---@param p_TeamId TeamId|integer
 ---@return Entity|nil @ServerCharacterSpawnEntity
 function BotSpawner:_FindClosestSpawnPoint(p_TeamId)
-	---@type Entity|nil
-	local s_BestSpawnPoint = nil
-	local s_ClosestDistance = 0
-	-- Enemy and Neutralized CapturePoints.
-	local s_TargetLocation = self:_FindTargetLocation(p_TeamId)
-	local s_EntityIterator = EntityManager:GetIterator("ServerCapturePointEntity")
-	local s_Entity = s_EntityIterator:Next()
-
-	while s_Entity do
-		s_Entity = CapturePointEntity(s_Entity)
-
-		if s_Entity.team ~= p_TeamId then
-			goto endOfLoop
-		end
-
-		for l_Index = 1, #s_Entity.bus.entities do
-			local l_Entity = s_Entity.bus.entities[l_Index]
-			if l_Entity:Is('ServerCharacterSpawnEntity') then
-				if CharacterSpawnReferenceObjectData(l_Entity.data).team == p_TeamId
-					or CharacterSpawnReferenceObjectData(l_Entity.data).team == 0 then
-					if s_Entity.isControlled then
-						if s_BestSpawnPoint == nil then
-							s_BestSpawnPoint = l_Entity
-
-							-- For the case that the enemies have no place to spawn.
-							if s_TargetLocation == nil then
-								return s_BestSpawnPoint
-							end
-
-							s_ClosestDistance = s_TargetLocation:Distance(s_Entity.transform.trans)
-						elseif s_TargetLocation and s_ClosestDistance > s_TargetLocation:Distance(s_Entity.transform.trans) then
-							s_BestSpawnPoint = l_Entity
-							s_ClosestDistance = s_TargetLocation:Distance(s_Entity.transform.trans)
-						end
-					end
-
-					goto endOfLoop
-				end
+	local s_Own = {}
+	local s_Hq = nil
+	local s_Targets = {}
+	local s_EnemyHqs = {}
+	for _, l_Point in ipairs(_CapturePoints(p_TeamId)) do
+		if l_Point.Own and l_Point.Spawn ~= nil then
+			if l_Point.Hq then
+				s_Hq = l_Point.Spawn
+			else
+				s_Own[#s_Own + 1] = l_Point
 			end
+		elseif not l_Point.Own and not l_Point.Hq then
+			s_Targets[#s_Targets + 1] = l_Point.Position
+		elseif l_Point.Hq and l_Point.Entity.team ~= p_TeamId then
+			s_EnemyHqs[#s_EnemyHqs + 1] = l_Point.Position
 		end
-
-		::endOfLoop::
-		s_Entity = s_EntityIterator:Next()
 	end
 
-	return s_BestSpawnPoint
-end
-
----@param p_TeamId TeamId|integer
----@return Vec3|nil
-function BotSpawner:_FindTargetLocation(p_TeamId)
-	---@type Vec3|nil
-	local s_TargetLocation = nil
-	---@type Vec3|nil
-	local s_EnemyBaseLocation = nil
-	local s_EntityIterator = EntityManager:GetIterator("ServerCapturePointEntity")
-	local s_Entity = s_EntityIterator:Next()
-
-	while s_Entity do
-		s_Entity = CapturePointEntity(s_Entity)
-
-		if s_Entity.team == p_TeamId then
-			goto endOfLoop
-		end
-
-		for l_Index = 1, #s_Entity.bus.entities do
-			local l_Entity = s_Entity.bus.entities[l_Index]
-			if l_Entity:Is('ServerCharacterSpawnEntity') then
-				-- Capturable flags have a spawn without a fixed team. A fixed team means it is a base.
-				if CharacterSpawnReferenceObjectData(l_Entity.data).team == 0 then
-					s_TargetLocation = s_Entity.transform.trans:Clone()
-				else
-					s_EnemyBaseLocation = s_Entity.transform.trans:Clone()
-				end
-
-				goto endOfLoop
-			end
-		end
-
-		::endOfLoop::
-		s_Entity = s_EntityIterator:Next()
+	if #s_Own == 0 then
+		return s_Hq
+	end
+	if #s_Targets == 0 then
+		s_Targets = s_EnemyHqs
+	end
+	if #s_Targets == 0 then
+		return s_Own[MathUtils:GetRandomInt(1, #s_Own)].Spawn
 	end
 
-	-- Return enemy base location (or nil) if all capture points were captured by bot team already.
-	return s_TargetLocation or s_EnemyBaseLocation
+	local s_Best = math.huge
+	for l_Index = 1, #s_Own do
+		local l_Own = s_Own[l_Index]
+		l_Own.Front = math.huge
+		for l_Target = 1, #s_Targets do
+			l_Own.Front = math.min(l_Own.Front, l_Own.Position:Distance(s_Targets[l_Target]))
+		end
+		s_Best = math.min(s_Best, l_Own.Front)
+	end
+	local s_Candidates = {}
+	for l_Index = 1, #s_Own do
+		if s_Own[l_Index].Front <= s_Best + SPAWN_FRONT_SPREAD then
+			s_Candidates[#s_Candidates + 1] = s_Own[l_Index].Spawn
+		end
+	end
+	return s_Candidates[MathUtils:GetRandomInt(1, #s_Candidates)]
 end
 
 ---Check to avoid the iteration through entities without need. If there are already 2 planes alive per team, don't even check.

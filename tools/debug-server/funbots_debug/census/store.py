@@ -72,6 +72,8 @@ class Census:
                                                  "rows", "layers")}
         if event.get("spawns"):
             area["spawns"] = as_list(event.get("spawns"))  # spawn areas: where the soldiers appear, on the ground
+        if event.get("discs"):
+            area["discs"] = as_list(event.get("discs"))  # ways: [x, z, radius] along the way, only they are measured
         area["cells"] = [None] * int(event.get("rows") or 0)
         self.areas[int(event["area"])] = area
         return area

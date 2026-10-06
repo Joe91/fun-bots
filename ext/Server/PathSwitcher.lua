@@ -263,8 +263,10 @@ function PathSwitcher:_GetNewFootPath(p_Bot, p_Point, p_Objective)
 		local l_Candidate = s_Candidates[l_Index]
 		if m_NavRoutes:GetPath(l_Candidate.PathIndex) ~= nil then
 			s_Navigation[#s_Navigation + 1] = l_Candidate
-		elseif #_Labels(l_Candidate.PathIndex) == 0 then
-			-- A connecting path (leads to a navigation path), not the way to another vehicle or beacon.
+		elseif #_Labels(l_Candidate.PathIndex) == 0
+			or (not _HasAction(l_Candidate.PathIndex) and table.has(_Labels(p_Point.PathIndex), _Labels(l_Candidate.PathIndex)[1])) then
+			-- A connecting path (leads to a navigation path, or onto the mesh), not the way to another vehicle or beacon.
+			-- Also the way back from where an MCOM is armed (named like that path, without the action).
 			s_Others[#s_Others + 1] = l_Candidate
 		end
 	end

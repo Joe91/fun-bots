@@ -365,16 +365,20 @@ spawns come from the engine only, never from waypoints: the alternate spawns (`A
 the running mode (`SpawnPoints.lua`, collected while the level loads them: after a reload of the mod within a level the
 level has to be loaded again), and the ones the layer of the mode links from the common layers of the level. A capture
 point spawns its team there, up to 70 m from the flag. Without any, the soldier-spawn-entities are used. Spawns no
-other area covers get an area of their own: all spawns of a group (40 m apart at most) and 2 m around the outer ones
-(`spawn us 1`, `spawn 1` for both teams). In rush they are zones (kind `base`): the navigation paths lead from them to
-the MCOMs. Elsewhere they only add to the mesh (kind `spawn`): no zone the paths between the flags are cut at. The mesh keeps every part a spawn lies on, as the parts with waypoints. The debug-command `spawns`
-lists them. Spawn-entities may float above the ground, the soldiers appear on the ground below.
+other area covers get an area of their own: all spawns of a group (40 m apart at most) and 8 m around the outer ones
+(`spawn us 1`, `spawn 1` for both teams). In rush they are zones (kind `base`), elsewhere only mesh (kind `spawn`, no
+objective). Each group also gets the way to its target (kind `way`, `way spawn us 7 mcom 1`, only mesh): discs of 12 m
+every 8 m along the straight line from the group to the area of its target, 10 m into it. The target of a spawn is in
+rush the MCOMs of its stage (the stage is in the name of its layer: `layer0_base1`, `layer19_base_2_attacker_spawns`),
+else the closest objective (capture point, base, MCOM). So the mesh leads from every spawn to its target without
+waypoints, also from a rush spawn 460 m behind the MCOMs. The mesh keeps every part a spawn lies on, as the parts with
+waypoints. The debug-command `spawns` lists them. Spawn-entities may float above the ground, the soldiers appear on the
+ground below. The navigation paths are cut at all of these areas (`areas` of the mesh-file: the ones that are only mesh).
 
-Hubs: where foot paths end outside of every zone (not counting the spawn areas of kind `spawn`), several paths usually
-meet over links, e.g. the old bases of the waypoints. Ends up to 30 m apart get one area, 8 m around the outer ones
-(`hub 1`, kind `hub`): a zone the navigation paths end at, no objective (`GameDirector`), on the mesh the bots only pass
-through it. Without them the cut drops every path whose end lies nowhere, and with it the other routes (on Operation
-Firestorm rush 68 of the foot paths of 3.0).
+Hubs: where foot paths end outside of every area, several paths usually meet over links, e.g. the old bases of the
+waypoints. Ends up to 30 m apart get one area, 8 m around the outer ones (`hub 1`, kind `hub`): a zone the navigation
+paths end at, no objective (`GameDirector`), on the mesh the bots only pass through it. Without them the cut drops every
+path whose end lies nowhere, and with it the other routes. The cut drops the paths to a hub that lead nowhere else.
 
 Land vehicles get a mesh of their own (`vehicle`): the same way, but only over wide and open ground
 (1.8 m to the next wall, slopes up to about 41°, no roof below 4 m), a point about every 10 m, attached to the paths with
@@ -397,8 +401,9 @@ zone it walks in, `@mesh` outside of the zones) and `zoneExit` on its way out.
 
 - **MCOMs**: inside the zone of an MCOM a bot asks the GameDirector every second whether it shall arm (attackers, MCOM
   not armed) or disarm it (defenders, MCOM armed), at most two per team. Then its objective becomes `mcom N interact`:
-  it walks over the mesh to the point next to the MCOM, steps up to it, looks at it and interacts (`Bot:_ZoneAction`),
-  no path needed. Where the MCOM is: the interactions of the engine (`GameInteractionEntityData`, about 1 m from it,
+  it walks over the mesh to the point next to the MCOM (up to 8 m, on a part of the mesh with at least 10 points),
+  steps up to it, looks at it and interacts (`Bot:_ZoneAction`), no path needed. Without such a point (a room the mesh
+  doesn't reach) it walks the recorded way to it instead (the paths named `mcom N interact`). Where the MCOM is: the interactions of the engine (`GameInteractionEntityData`, about 1 m from it,
   `GameDirector:GetMcom`), where a recorded path `mcom N interact` exists also its action-node (where to stand) and
   yaw. A new rush level without these paths gets its MCOMs numbered from the attackers' spawn
   (`GameDirector:_NumberEngineMcoms`, see `NEW_MAP.md`).
@@ -408,15 +413,29 @@ zone it walks in, `@mesh` outside of the zones) and `zoneExit` on its way out.
   (`m_SpawnableVehicles`). Every other
   vehicle that stands still with a free seat is an objective (`vehicle <id>`, `GameDirector:_RefreshVehicleEntities`):
   a bot walks over the mesh to it and gets in as soon as it is next to it (5.5 m from the middle, 10 m if it doesn't
-  get closer). No labels or paths `vehicle ...` / `spawn vehicle ...` are used on levels with a mesh.
+  get closer). Only while a seat a bot may take is free (`Vehicles:HasFreeBotSeat`: seats kept for players, at most
+  `MaxBotsPerVehicle`, air vehicles and jets only if allowed). No labels or paths `vehicle ...` / `spawn vehicle ...`
+  are used on levels with a mesh (the cut drops them).
 - **Rush spawns**: the bots spawn where the game spawns its players (the alternate spawns of the stage); one bot per
   free vehicle at the spawn next to it (`GameDirector:ReserveVehicle`).
+- **Rush border**: the area of the next stage opens a while after the last one fell, the objectives are the new MCOMs at
+  once. A bot that leaves the combat area (`CombatArea:PlayerDeserting`) walks back over the points it passed (to one at
+  least 15 m behind it, the last one can be outside already), stops as soon as it is inside again
+  (`CombatArea:PlayerReturning`) and waits there 6 s, then tries again (off the mesh it turns around on its path). Not
+  back inside within 10 s: it was outside already (the area got smaller), it goes on (`Bot:OnCombatAreaLeft`,
+  `Bot:UpdateBorder`).
 - **Bases and spawns**: bots that spawn at the spawn-points of the game (`SpawnMethod.Spawn`) start on the mesh there
   (a base, a spawn, a capture point; up to 30 m away they walk straight to it) and go where their objective is as soon
   as they have one. In conquest and rush the bots always use the spawn of the game once the level has a mesh
-  (else they spawn on random waypoints away from the enemy, as in the deathmatch modes). Squad-spawns on a mate
+  (else they spawn on random waypoints away from the enemy, as in the deathmatch modes). In conquest they spawn at a
+  capture point of their team at the front (closest to one the team doesn't hold, at random among the ones up to 60 m
+  farther back; `BotSpawner:_FindClosestSpawnPoint`), at the HQ only without capture points, or for a vehicle outside of
+  the bases (`PROBABILITY_SPAWN_FOR_VEHICLE`, at the spawn closest to it). Squad-spawns on a mate
   on the mesh start on it as well. A bot only starts at a point it can walk to straight (rays at knee and chest height,
   `NavZones:ZoneAtVisible`); with none in sight within 30 m it is put onto the closest point at once.
+- **Hazards**: the census sees the ground, not that it kills (the rails in the metro of MP_Subway). When a second player
+  dies in a damage area (weapon `DamageArea`) within 3 m of an earlier death, the points of the mesh within 2.5 m are
+  left out until the level ends (`NavZones:OnDamageAreaDeath`). Single deaths (the border of the combat area) don't count.
 - **Smoothing** (`Registry.BOT.ZONE_SMOOTHING`): on the way from point to point a bot turns towards the next point
   before it gets there, within the room around both points (their clearance, at most 2.5 m), not at corners around
   walls, on narrow ways, steps or where it crouches (`Bot:_ZoneSmooth`).
@@ -441,7 +460,11 @@ python -m funbots_debug.census run --all --modes ConquestSmall0,ConquestLarge0,R
 
 A point is `[x, y, z, clearance, cover, flags]`: clearance is the distance to the next wall, cover the number of the 8
 directions with a wall within 1.5 m, flags 1 = in a zone, 2 = indoors, 4 = crouch. A connection is
-`[a, b, length, corners]` (the corners of the way between the points, if it isn't straight). A junction is
+`[a, b, length, corners]` (the corners of the way between the points, if it isn't straight); along waypoints
+`[a, b, length, corners, 1, jumps]`: the corners where the soldier who recorded the waypoints jumped (their extra-mode),
+the bots jump there as well. Waypoints up or down a ladder give no connection (the bots can't climb on the mesh, the
+cut keeps the path there). A junction on an island of the mesh (fewer than 10 points, the game drops it) is moved to
+the closest point of a bigger part up to 6 m away on its floor. A junction is
 `[path, point, mesh-point, walking distance, position of the waypoint, corners]`, the corners of the way from the
 mesh-point to the waypoint (around the walls of the room of an MCOM, for example). A zone is `{name, kind, center,
 radius, zone, inside, vehicleInside}`, `inside` the indices of its points.
@@ -471,33 +494,47 @@ into such navigation paths:
 python -m funbots_debug.census navpaths MP_012_RushLarge0 -v                    # dry run: what it would do
 python -m funbots_debug.census navpaths MP_012_RushLarge0 --write --db ../../mod.db
 ```
-1. Paths soldiers walk are cut where they enter a zone (capture point, MCOM, base, spawn). A piece between two zones
-   becomes a navigation path from the first waypoint in the one zone to the first one in the other. Pieces inside a zone
-   and pieces back into the same zone are dropped.
-2. A piece that ends outside of the zones (the path ends, or goes on over a link) is extended over paths and links to
-   the closest zone.
+1. Paths soldiers walk are cut where they enter a zone (capture point, MCOM, base, spawn, hub) or an area that is only
+   mesh (spawn, way). A piece between two of them becomes a navigation path from the first waypoint in the one to the
+   first one in the other. Pieces inside and pieces back into the same one are dropped.
+2. A piece that ends outside of them (the path ends, or goes on over a link) is extended over paths and links to the
+   closest one.
 3. Pieces along another navigation path between the same zones (70 % of the waypoints within 4 m) are dropped, and
-   pieces that lie on the mesh all the way (between zones that overlap or touch): the bots walk the mesh there. So are
-   pieces shorter than 10 m: where two zones touch, no junctions, the bots walked them back and forth.
-4. Zones the paths connect without crossing a third zone, but the navigation paths don't (or only over a detour of
-   more than 1.5 times), get the shortest way between them, over roads (land vehicle paths) only where no path leads:
-   in rush the attackers spawn at their vehicles, far from any path.
+   pieces that lie on the mesh all the way, where the mesh connects them (all on one part of it): the bots walk the
+   mesh there. So are pieces shorter than 10 m whose ends the mesh connects: where two zones touch, no junctions, the
+   bots walked them back and forth.
+4. Zones the paths connect without crossing a third zone, but neither the navigation paths nor the mesh do (or only over
+   a detour of more than 1.5 times), get the shortest way between them, over roads (land vehicle paths) only where no
+   path leads.
+5. Paths without a function are dropped: between zones the mesh connects about as far (at most 1.3 times plus 20 m;
+   the ways from the spawns to their targets, zones that touch), and dead ends: an end on a part of the mesh with
+   nothing to do (no objective, spawn, beacon or MCOM to arm) and no other path there, again until there is none.
 
-Paths with vehicles, actions (MCOM, vehicle, beacon), the ways to vehicles and beacons and air-paths stay as they are,
-their links to the cut paths move to the same waypoints of the navigation paths (or one within 5 m). If the linked
-waypoint was dropped far from any navigation path, the old waypoints from there to the closest navigation path stay as
-a connecting path (no `Nav`, no `Objectives`): else bots that spawn at a beacon can't leave its path. The kept foot
-paths keep only the names of what they lead to (`vehicle ...`, `beacon`, `mcom N interact`), not the zones they start
-in. A navigation path is walked back and forth; its first waypoint has only `"Nav": {"From": zone at the first
-waypoint, "To": zone at the last one, "Length": metres}`, no `Objectives`. `--write` replaces `mapfiles/<map>.map` and `navzones/<map>.json`: the mesh is
-made again from the census (`census/<map>.json.gz`, same parts as before) with junctions on the new paths. `--db` also
-writes the two tables of this level into `mod.db`. Paths whose end has no junction are listed; the bots don't use them.
-An end without a measured surface (stairs into a metro the census didn't see) is attached straight to the closest point
-of its floor within 8 m that has at least 1 m of room around it.
+The places the paths are cut at are the zones and areas on each connected part of the mesh: a zone whose mesh is in
+two pieces (the street and the metro below it, the census didn't see the escalators) is two places (`mcom 3`,
+`mcom 3 (2)`), a path between them is a navigation path, not a piece inside of the zone. Parts with fewer than 10
+points are no place (the game drops their junctions). Where the census found the way from a waypoint to the next one
+blocked at every height (a door that is closed now, `next` of the census), the cut doesn't walk the paths there either.
+
+The ways into vehicles (`vehicle ...`, `spawn vehicle ...`) are dropped: the bots find the vehicles over the mesh. Paths
+with vehicles, actions (MCOM, beacon) and air-paths stay as they are, their links to the cut paths move to the same
+waypoints of the navigation paths (or one within 5 m). If the linked waypoint was dropped far from any navigation path
+and the kept path is a foot path that doesn't reach a part of the mesh the bots can use, the old waypoints from there to
+the closest navigation path, or to such a part, stay as a connecting path (no `Nav`; named `mcom N interact` if it leads
+to the place to arm the MCOM, else no `Objectives`): else bots that spawn at a beacon can't leave its path, and the bots
+can't get to an MCOM in a room the mesh doesn't reach (they walk the recorded way then, `NavRoutes:Target`). The
+kept foot paths keep only the names of what they lead to (`beacon`, `mcom N interact`), not the zones they start in. A
+navigation path is walked back and forth; its first waypoint has only `"Nav": {"From": zone at the first waypoint,
+"To": zone at the last one, "Length": metres}`, no `Objectives`. The cut decides on the mesh as it will be: made from
+the census with the checks of the game (below). `--write` replaces `mapfiles/<map>.map` and `navzones/<map>.json`: the
+mesh is made again from the census (`census/<map>.json.gz`, same parts as before) with junctions on the new paths.
+`--db` also writes the two tables of this level into `mod.db`. Paths whose end has no junction are listed; the bots
+don't use them. An end without a measured surface (stairs into a metro the census didn't see) is attached straight to
+the closest point of its floor within 8 m that has at least 1 m of room around it.
 
 **In the game** (`ext/Server/NavRoutes.lua`): the nodes of the graph are the ends of the navigation paths (their
-junctions with the mesh); from an end a bot walks the path to its other end, and from there over the mesh (10 m added)
-to any end in the same connected part of the mesh. A route ends in the part of the mesh where the target is: the points
+junctions with the mesh); from an end a bot walks the path to its other end, and from there over the mesh (the way
+over it, 10 m added) to any end in the same connected part of the mesh. A route ends in the part of the mesh where the target is: the points
 of the zone of the objective, or the junctions of the paths of an objective that isn't a zone (a vehicle, a beacon,
 `mcom N interact`). A bot on the mesh walks there if its part has the target, else to the junction of the first path of
 the cheapest route (Dijkstra), walks that path without switching, goes onto the mesh at its other end and decides

@@ -45,6 +45,7 @@ local EXIT_PENALTY = 100.0
 ---@field Junctions table<integer, NavZoneJunction>|nil point -> junction of a path of the objective (not a zone)
 ---@field Action table|nil something to do there, without a path (GameDirector:GetActionTarget): get into a vehicle,
 ---arm an MCOM. The points are the ones next to it.
+---@field Topology integer|nil NavZones:GetTopology when the points next to the action were chosen
 
 -- Points of the mesh next to a vehicle (horizontal metres, Registry.VEHICLES.MIN_DISTANCE_VEHICLE_ENTER) and on its
 -- floor (the vehicle-spawn is the middle of the vehicle): the bot gets in from there. At most ACTION_POINTS of them.
@@ -53,6 +54,54 @@ local ACTION_FLOOR = 3.0
 local ACTION_POINTS = 4
 -- A vehicle that moved this far: its points anew.
 local ACTION_MOVED = 3.0
+-- Same as NavZones.lua MIN_PART: points on smaller parts of the mesh are no target (islands, no way leads there).
+local ACTION_MIN_PART = 10
+
+-- Points whose ways to the ends of the navigation paths are kept (_EndCosts), at most this many (then anew).
+local END_COST_CACHE = 1500
+
+---Binary heap of { cost, point }.
+---@param p_Heap table
+---@param p_Entry table
+local function _Push(p_Heap, p_Entry)
+	p_Heap[#p_Heap + 1] = p_Entry
+	local s_Index = #p_Heap
+	while s_Index > 1 do
+		local s_Parent = s_Index // 2
+		if p_Heap[s_Parent][1] <= p_Heap[s_Index][1] then
+			break
+		end
+		p_Heap[s_Parent], p_Heap[s_Index] = p_Heap[s_Index], p_Heap[s_Parent]
+		s_Index = s_Parent
+	end
+end
+
+---@param p_Heap table
+---@return table
+local function _Pop(p_Heap)
+	local s_Top = p_Heap[1]
+	local s_Last = table.remove(p_Heap)
+	if #p_Heap > 0 then
+		p_Heap[1] = s_Last
+		local s_Index = 1
+		while true do
+			local s_Smallest = s_Index
+			local s_Left = 2 * s_Index
+			if s_Left <= #p_Heap and p_Heap[s_Left][1] < p_Heap[s_Smallest][1] then
+				s_Smallest = s_Left
+			end
+			if s_Left + 1 <= #p_Heap and p_Heap[s_Left + 1][1] < p_Heap[s_Smallest][1] then
+				s_Smallest = s_Left + 1
+			end
+			if s_Smallest == s_Index then
+				break
+			end
+			p_Heap[s_Smallest], p_Heap[s_Index] = p_Heap[s_Index], p_Heap[s_Smallest]
+			s_Index = s_Smallest
+		end
+	end
+	return s_Top
+end
 
 ---What NavRoutes:Next returns: walk the mesh to Point (in Zone), or leave it over Exit. With Action: do it at Point.
 ---@class NavStep
@@ -77,9 +126,19 @@ function NavRoutes:Clear()
 	self._Penalty = {}
 	---objective -> its target (false: none), see Target
 	self._Targets = {}
+	---objective -> its target next to a vehicle or an MCOM (false: none on the mesh), see _ActionTarget
+	self._ActionTargets = {}
 	---target -> the metres over the mesh from each point to it (_Field)
 	---@type table<NavTarget, { Topology: integer, Cost: table<integer, number> }>
 	self._Fields = {}
+	---point of the mesh -> the ends at it
+	---@type table<integer, NavRouteEnd[]>
+	self._EndsAt = {}
+	---point -> the metres over the mesh to the ends in its part (_EndCosts)
+	---@type table<integer, table<NavRouteEnd, number>>
+	self._EndCostCache = {}
+	self._EndCostCount = 0
+	self._EndCostTopology = -1
 end
 
 ---Builds the graph anew when the mesh or the waypoints changed (NavZones:GetVersion).
@@ -119,6 +178,11 @@ function NavRoutes:_Ensure()
 				self._Count = self._Count + 1
 				self._Ends[#self._Ends + 1] = s_Start
 				self._Ends[#self._Ends + 1] = s_Finish
+				for _, l_End in ipairs({ s_Start, s_Finish }) do
+					local s_List = self._EndsAt[l_End.Junction.Point] or {}
+					s_List[#s_List + 1] = l_End
+					self._EndsAt[l_End.Junction.Point] = s_List
+				end
 			else
 				s_Missing = s_Missing + 1
 			end
@@ -153,11 +217,11 @@ end
 -- Queries
 -- =============================================
 
----Whether the level has navigation paths.
+---Whether the bots find their way over the mesh (and the navigation paths, if the level still needs any: where the
+---mesh connects everything the cut leaves none).
 ---@return boolean
 function NavRoutes:IsActive()
-	self:_Ensure()
-	return self._Count > 0
+	return m_NavZones:GetMesh() ~= nil
 end
 
 ---@param p_PathIndex integer|nil
@@ -179,7 +243,12 @@ function NavRoutes:Target(p_Objective)
 	end
 	local s_Action = g_GameDirector ~= nil and g_GameDirector:GetActionTarget(p_Objective) or nil
 	if s_Action ~= nil then
-		return self:_ActionTarget(p_Objective, s_Action)
+		local s_ActionTarget = self:_ActionTarget(p_Objective, s_Action)
+		if s_ActionTarget ~= nil then
+			return s_ActionTarget
+		end
+		-- The mesh doesn't reach the spot (an MCOM in a room the census didn't measure well): over the paths of the
+		-- objective, the recorded way to arm it (the cut keeps a path from the mesh to it).
 	end
 	local s_Known = self._Targets[p_Objective]
 	if s_Known == nil then
@@ -215,8 +284,10 @@ end
 ---@param p_Action table
 ---@return NavTarget|nil
 function NavRoutes:_ActionTarget(p_Objective, p_Action)
-	local s_Known = self._Targets[p_Objective]
-	if s_Known and s_Known.Action ~= nil and s_Known.Action.Position:Distance(p_Action.Position) < ACTION_MOVED then
+	local s_Known = self._ActionTargets[p_Objective]
+	-- Anew when connections were removed as well: a point next to it can be cut off now.
+	if s_Known and s_Known.Action ~= nil and s_Known.Topology == m_NavZones:GetTopology()
+		and s_Known.Action.Position:Distance(p_Action.Position) < ACTION_MOVED then
 		s_Known.Action = p_Action
 		return s_Known
 	end
@@ -236,7 +307,9 @@ function NavRoutes:_ActionTarget(p_Objective, p_Action)
 		local s_DeltaX = s_Position.x - s_From.x
 		local s_DeltaZ = s_Position.z - s_From.z
 		local s_Distance = math.sqrt(s_DeltaX * s_DeltaX + s_DeltaZ * s_DeltaZ)
-		if s_Distance <= ACTION_RANGE and math.abs(s_Position.y - s_From.y) <= ACTION_FLOOR then
+		-- Not on an island of the mesh (a point in a room the bots can't get into over the mesh).
+		if s_Distance <= ACTION_RANGE and math.abs(s_Position.y - s_From.y) <= ACTION_FLOOR
+			and (s_Mesh.PartSize[s_Mesh.Part[l_Point]] or 0) >= ACTION_MIN_PART then
 			s_Candidates[#s_Candidates + 1] = { l_Point, s_Distance }
 		end
 	end
@@ -247,9 +320,9 @@ function NavRoutes:_ActionTarget(p_Objective, p_Action)
 	end
 	local s_Target = false
 	if #s_Points > 0 then
-		s_Target = { Zone = p_Action.Zone, Points = s_Points, Action = p_Action }
+		s_Target = { Zone = p_Action.Zone, Points = s_Points, Action = p_Action, Topology = m_NavZones:GetTopology() }
 	end
-	self._Targets[p_Objective] = s_Target
+	self._ActionTargets[p_Objective] = s_Target
 	return s_Target or nil
 end
 
@@ -297,52 +370,15 @@ function NavRoutes:_Field(p_Target)
 	local s_Mesh = m_NavZones:GetMesh()
 	---@cast s_Mesh -nil
 	local s_Cost = {}
-	-- Dijkstra from all points of the target, binary heap of { cost, point }.
+	-- Dijkstra from all points of the target.
 	local s_Heap = {}
-	local function _Push(p_Entry)
-		s_Heap[#s_Heap + 1] = p_Entry
-		local s_Index = #s_Heap
-		while s_Index > 1 do
-			local s_Parent = s_Index // 2
-			if s_Heap[s_Parent][1] <= s_Heap[s_Index][1] then
-				break
-			end
-			s_Heap[s_Parent], s_Heap[s_Index] = s_Heap[s_Index], s_Heap[s_Parent]
-			s_Index = s_Parent
-		end
-	end
-	local function _Pop()
-		local s_Top = s_Heap[1]
-		local s_Last = table.remove(s_Heap)
-		if #s_Heap > 0 then
-			s_Heap[1] = s_Last
-			local s_Index = 1
-			while true do
-				local s_Smallest = s_Index
-				local s_Left = 2 * s_Index
-				if s_Left <= #s_Heap and s_Heap[s_Left][1] < s_Heap[s_Smallest][1] then
-					s_Smallest = s_Left
-				end
-				if s_Left + 1 <= #s_Heap and s_Heap[s_Left + 1][1] < s_Heap[s_Smallest][1] then
-					s_Smallest = s_Left + 1
-				end
-				if s_Smallest == s_Index then
-					break
-				end
-				s_Heap[s_Smallest], s_Heap[s_Index] = s_Heap[s_Index], s_Heap[s_Smallest]
-				s_Index = s_Smallest
-			end
-		end
-		return s_Top
-	end
-
 	for l_Index = 1, #p_Target.Points do
 		local l_Point = p_Target.Points[l_Index]
 		s_Cost[l_Point] = 0.0
-		_Push({ 0.0, l_Point })
+		_Push(s_Heap, { 0.0, l_Point })
 	end
 	while #s_Heap > 0 do
-		local s_Entry = _Pop()
+		local s_Entry = _Pop(s_Heap)
 		local s_Current = s_Entry[2]
 		if s_Entry[1] <= s_Cost[s_Current] then
 			local s_Neighbours = s_Mesh.Neighbours[s_Current]
@@ -351,7 +387,7 @@ function NavRoutes:_Field(p_Target)
 				local s_Next = s_Entry[1] + l_Edge.Cost
 				if not l_Edge.Removed and s_Next < (s_Cost[l_Edge.To] or math.huge) then
 					s_Cost[l_Edge.To] = s_Next
-					_Push({ s_Next, l_Edge.To })
+					_Push(s_Heap, { s_Next, l_Edge.To })
 				end
 			end
 		end
@@ -360,24 +396,65 @@ function NavRoutes:_Field(p_Target)
 	return s_Cost
 end
 
----The ends of navigation paths the bot can walk to from the point over the mesh (same part), with the cost.
+---The metres over the mesh from the point to the ends of the navigation paths in its part, the way the bots walk
+---there (given-up connections cost more, removed ones don't lead on). A straight line would make the junction of a
+---path behind a wall, across a river, on another floor look close. Kept per point until connections are removed.
+---@param p_Point integer
+---@return table<NavRouteEnd, number>
+function NavRoutes:_EndCosts(p_Point)
+	local s_Topology = m_NavZones:GetTopology()
+	if self._EndCostTopology ~= s_Topology or self._EndCostCount >= END_COST_CACHE then
+		self._EndCostCache = {}
+		self._EndCostCount = 0
+		self._EndCostTopology = s_Topology
+	end
+	local s_Known = self._EndCostCache[p_Point]
+	if s_Known ~= nil then
+		return s_Known
+	end
+	local s_Mesh = m_NavZones:GetMesh()
+	---@cast s_Mesh -nil
+	local s_Result = {}
+	local s_Cost = { [p_Point] = 0.0 }
+	local s_Heap = { { 0.0, p_Point } }
+	while #s_Heap > 0 do
+		local s_Entry = _Pop(s_Heap)
+		local s_Current = s_Entry[2]
+		if s_Entry[1] <= s_Cost[s_Current] then
+			local s_Ends = self._EndsAt[s_Current]
+			if s_Ends ~= nil then
+				for l_Index = 1, #s_Ends do
+					s_Result[s_Ends[l_Index]] = s_Entry[1]
+				end
+			end
+			local s_Neighbours = s_Mesh.Neighbours[s_Current]
+			for l_Index = 1, #s_Neighbours do
+				local l_Edge = s_Neighbours[l_Index]
+				local s_Next = s_Entry[1] + l_Edge.Cost + l_Edge.Penalty
+				if not l_Edge.Removed and s_Next < (s_Cost[l_Edge.To] or math.huge) then
+					s_Cost[l_Edge.To] = s_Next
+					_Push(s_Heap, { s_Next, l_Edge.To })
+				end
+			end
+		end
+	end
+	self._EndCostCache[p_Point] = s_Result
+	self._EndCostCount = self._EndCostCount + 1
+	return s_Result
+end
+
+---The ends of navigation paths the bot can walk to from the point over the mesh, with the cost.
 ---@param p_Point integer
 ---@param p_Start number cost so far
 ---@param p_Except NavRouteEnd|nil
 ---@return { End: NavRouteEnd, Cost: number }[]
 function NavRoutes:_Departures(p_Point, p_Start, p_Except)
-	local s_Mesh = m_NavZones:GetMesh()
-	---@cast s_Mesh -nil
 	local s_Result = {}
-	local s_Part = s_Mesh.Part[p_Point]
-	local s_From = s_Mesh.Points[p_Point].Position
-	for l_Index = 1, #self._Ends do
-		local l_End = self._Ends[l_Index]
-		if l_End ~= p_Except and s_Mesh.Part[l_End.Junction.Point] == s_Part then
+	for l_End, l_Cost in pairs(self:_EndCosts(p_Point)) do
+		if l_End ~= p_Except then
 			s_Result[#s_Result + 1] = {
 				End = l_End,
-				Cost = p_Start + (self._Penalty[l_End.Junction] or 0.0)
-					+ s_From:Distance(s_Mesh.Points[l_End.Junction.Point].Position),
+				Cost = p_Start + (self._Penalty[l_End.Junction] or 0.0) + l_Cost,
 			}
 		end
 	end

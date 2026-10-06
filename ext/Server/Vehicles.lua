@@ -142,6 +142,61 @@ function Vehicles:GetNrOfFreeSeats(p_Entity, p_PlayerIsDriver)
 	return s_NrOfFreeSeats
 end
 
+---The seats bots may take (0 .. count - 1): one is kept free for a player if there are enough, at most
+---Config.MaxBotsPerVehicle (one more if a player drives).
+---@param p_Entity ControllableEntity
+---@param p_VehicleData VehicleDataInner
+---@param p_PlayerIsDriver boolean
+---@return integer
+function Vehicles:GetBotSeatCount(p_Entity, p_VehicleData, p_PlayerIsDriver)
+	local s_MaxEntries = p_Entity.entryCount
+	if p_VehicleData.Type == VehicleTypes.Gunship then
+		s_MaxEntries = 2
+	end
+	if p_VehicleData.Type == VehicleTypes.MobileArtillery then
+		s_MaxEntries = 1
+	end
+	if p_VehicleData.Type == VehicleTypes.UnarmedGunship then
+		s_MaxEntries = 0
+	end
+
+	if not p_PlayerIsDriver then
+		-- Leave a place for a player if more than two seats are available.
+		if s_MaxEntries > 2 and Config.KeepVehicleSeatForPlayer then
+			s_MaxEntries = s_MaxEntries - 1
+		end
+		-- Limit the bots per vehicle, if no player is the driver.
+		if s_MaxEntries > Config.MaxBotsPerVehicle then
+			s_MaxEntries = Config.MaxBotsPerVehicle
+		end
+	else
+		-- Allow one more bot, if driver is player.
+		if s_MaxEntries > (Config.MaxBotsPerVehicle + 1) then
+			s_MaxEntries = Config.MaxBotsPerVehicle + 1
+		end
+	end
+	return s_MaxEntries
+end
+
+---Whether a bot may get into the vehicle (Bot:_EnterVehicleEntity): allowed by the config, a seat for bots is free.
+---@param p_Entity ControllableEntity
+---@param p_VehicleData VehicleDataInner
+---@return boolean
+function Vehicles:HasFreeBotSeat(p_Entity, p_VehicleData)
+	if not Config.UseAirVehicles and self:IsAirVehicle(p_VehicleData) then
+		return false
+	end
+	if not Config.UseJets and self:IsVehicleType(p_VehicleData, VehicleTypes.Plane) then
+		return false
+	end
+	for l_Seat = 0, self:GetBotSeatCount(p_Entity, p_VehicleData, false) - 1 do
+		if p_Entity:GetPlayerInEntry(l_Seat) == nil then
+			return true
+		end
+	end
+	return false
+end
+
 ---@param p_Entity ControllableEntity
 function Vehicles:IsEmpty(p_Entity)
 	return self:GetNrOfFreeSeats(p_Entity, true) == p_Entity.entryCount

@@ -593,11 +593,11 @@ function FunBotServer:OnScoringStatEvent(p_Player, p_ObjectPlayer, p_StatEvent, 
 end
 
 function FunBotServer:OnCombatAreaDeserting(p_Entity, p_Player)
-	m_GameDirector:ToggleDirectionCombatZone(p_Entity, p_Player)
+	m_GameDirector:OnCombatArea(p_Player, true)
 end
 
 function FunBotServer:OnCombatAreaReturning(p_Entity, p_Player)
-	m_GameDirector:ToggleDirectionCombatZone(p_Entity, p_Player)
+	m_GameDirector:OnCombatArea(p_Player, false)
 end
 
 function FunBotServer:OnLifeCounterBaseDestoyed(p_LifeCounterEntity, p_FinalBase)
@@ -763,6 +763,9 @@ function FunBotServer:OnPlayerKilled(p_Player, p_Inflictor, p_Position, p_Weapon
 	m_NodeEditor:OnPlayerKilled(p_Player)
 	m_AirTargets:OnPlayerKilled(p_Player)
 	m_DebugSnapshots:OnPlayerKilled(p_Player, p_Inflictor, p_Position, p_Weapon, p_IsRoadKill, p_IsHeadShot)
+	if p_Weapon == 'DamageArea' then
+		m_NavZones:OnDamageAreaDeath(p_Position)
+	end
 end
 
 ---VEXT Server Player:Chat Event

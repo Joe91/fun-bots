@@ -308,6 +308,9 @@ function Bot:__init(p_Player)
 	self.m_ZoneGiveUps = 0
 	-- Its own route among similar ones, for a life (NavRoutes:Next).
 	self.m_RouteSeed = math.random() * 1000.0
+	-- Rush: left the combat area (the next stage isn't open yet), waits at the border (Bot:OnCombatAreaLeft).
+	---@type { Left: number, Returned: number|nil, Inverted: boolean }|nil
+	self.m_Border = nil
 end
 
 -- =============================================

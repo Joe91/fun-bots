@@ -311,35 +311,7 @@ function Bot:_EnterVehicleEntity(p_Entity, p_PlayerIsDriver)
 		return -3 -- Not allowed to use.
 	end
 
-	-- Keep one seat free, if enough available.
-	local s_MaxEntries = p_Entity.entryCount
-	if s_VehicleData.Type == VehicleTypes.Gunship then
-		s_MaxEntries = 2
-	end
-	if s_VehicleData.Type == VehicleTypes.MobileArtillery then
-		s_MaxEntries = 1
-	end
-	-- The idea is to avoid the bots from seating in the 3rd slot of the tanks to be more useful somwhere else.
-	if s_VehicleData.Type == VehicleTypes.UnarmedGunship then
-		s_MaxEntries = 0
-	end
-
-	--Now the bots may fully occupy a vehicle ( attack choppers, scout choppers, and some other transport vehicles.)
-	if not p_PlayerIsDriver then
-		-- Leave a place for a player if more than two seats are available.
-		if s_MaxEntries > 2 and Config.KeepVehicleSeatForPlayer then
-			s_MaxEntries = s_MaxEntries - 1
-		end
-		-- Limit the bots per vehicle, if no player is the driver.
-		if s_MaxEntries > Config.MaxBotsPerVehicle then
-			s_MaxEntries = Config.MaxBotsPerVehicle
-		end
-	else
-		-- Allow one more bot, if driver is player.
-		if s_MaxEntries > (Config.MaxBotsPerVehicle + 1) then
-			s_MaxEntries = Config.MaxBotsPerVehicle + 1
-		end
-	end
+	local s_MaxEntries = m_Vehicles:GetBotSeatCount(p_Entity, s_VehicleData, p_PlayerIsDriver)
 
 	for l_IndexOfSeat = 0, s_MaxEntries - 1 do
 		local s_SeatIndex = l_IndexOfSeat

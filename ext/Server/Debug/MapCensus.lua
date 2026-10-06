@@ -9,7 +9,7 @@ MapCensus = class('MapCensus')
 --   census_entities  { census, data }  capture points, spawns, vehicle spawns, combat areas, mcoms, entity types
 --   census_nodes     { census, path, first, last, loops, points, inputs, ground, normal, water, ceiling, left, right,
 --                      next, nextHit, links, actions, objectives, vehicles }  one part of a path, see CensusTask:_ProbeNode
---   census_area      { census, area, name, kind, center, radius, x0, z0, step, columns, rows, layers }
+--   census_area      { census, area, name, kind, center, radius, x0, z0, step, columns, rows, layers, spawns, discs }
 --   census_area_row  { census, area, row, cells }  see CensusTask:_ProbeCell
 --   census_done      { census, raycasts, seconds, nodes, cells }
 -- All raycasts ignore soldiers, every other material (also glass and fences) ends them. Vehicles standing around
@@ -46,12 +46,15 @@ local NODES_PER_EVENT = 250
 -- Grids around the objectives.
 local AREA_MARGIN = 15.0          -- Metres around the capture-radius.
 local AREA_MCOM_RADIUS = 30.0
-local AREA_SPAWN_MARGIN = 2.0     -- Areas around the spawns of the game that no other area covers: this far around the
+local AREA_SPAWN_MARGIN = 8.0     -- Areas around the spawns of the game that no other area covers: this far around the
 local AREA_SPAWN_MERGE = 40.0     -- outer spawns of a group, one group for spawns this close to each other.
 local AREA_SPAWN_COVERED = 2.0    -- A spawn at least this far inside of another area is covered by it.
+local AREA_WAY_RADIUS = 12.0      -- The way from a group of spawns to its target: discs of this radius...
+local AREA_WAY_STEP = 8.0         -- ...this far apart along the straight line...
+local AREA_WAY_INTO = 10.0        -- ...up to this far into the area of the target.
 local AREA_HUB_MARGIN = 8.0       -- Hubs (ends of foot paths outside of the zones): this far around the outer ends of a
 local AREA_HUB_MERGE = 30.0       -- group, one group for ends this close to each other...
-local AREA_HUB_COVERED = 5.0      -- ...an end at least this far inside of another area (not a spawn area) is covered.
+local AREA_HUB_COVERED = 5.0      -- ...an end at least this far inside of another area is covered.
 local AREA_SPAWN_GROUND = 200.0   -- The ground below a spawn is searched this far down.
 local AREA_STEP = 0.5
 local AREA_LAYERS = 4
@@ -1117,20 +1120,131 @@ function CensusTask:_DefaultAreas()
 	return s_Areas
 end
 
----Areas around the spawns of the game that lie in no other area: bots spawned by the game (SpawnMethod.Spawn) start on
----the mesh there. Only the engine decides where they are, no waypoints: the alternate spawns of the running mode, else
----(none found) the soldier-spawn-entities. In rush they are zones (kind "base"): the navigation paths lead from them to
----the MCOMs. Elsewhere they only add to the mesh (kind "spawn"): no zone the paths between the flags would be cut at.
----Spawns into vehicles are left out.
+---Whether the area covers the position (horizontally), at least p_Margin inside: its circle, or its discs (ways).
+---@param p_Area table
+---@param p_Position Vec3
+---@param p_Margin number
+---@return boolean
+local function _Covers(p_Area, p_Position, p_Margin)
+	if p_Area.discs ~= nil then
+		for l_Index = 1, #p_Area.discs do
+			local l_Disc = p_Area.discs[l_Index]
+			local s_DeltaX = p_Position.x - l_Disc[1]
+			local s_DeltaZ = p_Position.z - l_Disc[2]
+			if math.sqrt(s_DeltaX * s_DeltaX + s_DeltaZ * s_DeltaZ) + p_Margin <= l_Disc[3] then
+				return true
+			end
+		end
+		return false
+	end
+	local s_Delta = p_Position - p_Area.center
+	return math.sqrt(s_Delta.x * s_Delta.x + s_Delta.z * s_Delta.z) + p_Margin <= p_Area.radius
+end
+
+---@param p_A Vec3
+---@param p_B Vec3
+---@return number
+local function _Horizontal(p_A, p_B)
+	local s_DeltaX = p_A.x - p_B.x
+	local s_DeltaZ = p_A.z - p_B.z
+	return math.sqrt(s_DeltaX * s_DeltaX + s_DeltaZ * s_DeltaZ)
+end
+
+---The areas a spawn leads to: in rush the MCOMs of its stage (the stage is in the name of its layer), else the
+---objective closest to it (capture point, base, MCOM).
+---@param p_Areas table[]
+---@param p_Position Vec3
+---@param p_Stage integer|nil
+---@return table[]
+local function _SpawnTargets(p_Areas, p_Position, p_Stage)
+	local s_Result = {}
+	if Globals.IsRush and p_Stage ~= nil then
+		local s_Names = Globals.IsSquadRush and { 'mcom ' .. p_Stage }
+			or { 'mcom ' .. (2 * p_Stage - 1), 'mcom ' .. (2 * p_Stage) }
+		for l_Index = 1, #p_Areas do
+			if table.has(s_Names, p_Areas[l_Index].name) then
+				s_Result[#s_Result + 1] = p_Areas[l_Index]
+			end
+		end
+		if #s_Result > 0 then
+			return s_Result
+		end
+	end
+	local s_Best = nil
+	local s_BestDistance = math.huge
+	for l_Index = 1, #p_Areas do
+		local l_Area = p_Areas[l_Index]
+		if l_Area.kind == 'capturepoint' or l_Area.kind == 'base' or l_Area.kind == 'mcom' or l_Area.kind == 'hq' then
+			local s_Distance = _Horizontal(p_Position, l_Area.center)
+			if s_Distance < s_BestDistance then
+				s_Best = l_Area
+				s_BestDistance = s_Distance
+			end
+		end
+	end
+	return s_Best ~= nil and { s_Best } or {}
+end
+
+---The way from a group of spawns to the area of its target: discs of AREA_WAY_RADIUS along the straight line, up to
+---AREA_WAY_INTO into the area. The mesh gets measured there as well, so the bots walk it from the spawn to their
+---target, no waypoints needed. nil if the group reaches into the area already.
+---@param p_Name string
+---@param p_From Vec3 middle of the group
+---@param p_Reach number radius of the group
+---@param p_Target table the area
+---@return table|nil
+local function _WayArea(p_Name, p_From, p_Reach, p_Target)
+	local s_To = p_Target.center
+	local s_Distance = _Horizontal(p_From, s_To)
+	if s_Distance + AREA_WAY_INTO <= p_Reach + p_Target.radius or s_Distance < 1.0 then
+		return nil
+	end
+	local s_Length = s_Distance - p_Target.radius + AREA_WAY_INTO
+	local s_Count = math.max(1, math.ceil(s_Length / AREA_WAY_STEP))
+	local s_Discs = {}
+	local s_MinX, s_MaxX, s_MinZ, s_MaxZ = math.huge, -math.huge, math.huge, -math.huge
+	for l_Index = 0, s_Count do
+		local s_Share = math.min(s_Length, l_Index * AREA_WAY_STEP) / s_Distance
+		local s_X = p_From.x + (s_To.x - p_From.x) * s_Share
+		local s_Z = p_From.z + (s_To.z - p_From.z) * s_Share
+		s_Discs[#s_Discs + 1] = { _Round(s_X), _Round(s_Z), AREA_WAY_RADIUS }
+		s_MinX = math.min(s_MinX, s_X - AREA_WAY_RADIUS)
+		s_MaxX = math.max(s_MaxX, s_X + AREA_WAY_RADIUS)
+		s_MinZ = math.min(s_MinZ, s_Z - AREA_WAY_RADIUS)
+		s_MaxZ = math.max(s_MaxZ, s_Z + AREA_WAY_RADIUS)
+	end
+	local s_Center = Vec3((s_MinX + s_MaxX) / 2, (p_From.y + s_To.y) / 2, (s_MinZ + s_MaxZ) / 2)
+	return {
+		name = 'way ' .. p_Name .. ' ' .. p_Target.name,
+		kind = 'way',
+		center = s_Center,
+		radius = math.sqrt((s_MaxX - s_MinX) ^ 2 + (s_MaxZ - s_MinZ) ^ 2) / 2,
+		discs = s_Discs,
+		-- The vertical rays from above the higher end down to below the lower one: the ground between can be far
+		-- below the middle (a valley).
+		top = math.max(p_From.y, s_To.y) + AREA_UP,
+		bottom = math.min(p_From.y, s_To.y) - AREA_DOWN,
+	}
+end
+
+---Areas around the spawns of the game: bots spawned by the game (SpawnMethod.Spawn) start on the mesh there. Only the
+---engine decides where they are, no waypoints: the alternate spawns of the running mode, else (none found) the
+---soldier-spawn-entities. In rush they are zones (kind "base"): the navigation paths lead from them to the MCOMs.
+---Elsewhere they only add to the mesh (kind "spawn"). Spawns another area covers get none of their own. Spawns into
+---vehicles are left out.
+---Each group of spawns also gets the way to its target (_WayArea, kind "way"): the mesh leads from the spawn to the
+---MCOMs of its stage, to the capture point it belongs to.
 ---@param p_Areas table[] the areas so far
 ---@return table[]
 local function _SpawnAreas(p_Areas)
-	-- { position (on the ground), team (0: whoever holds the capture point) }
+	-- { position (on the ground), team (0: whoever holds the capture point), rush stage }
 	local s_Positions = {}
 	local s_Alternates = _AlternateSpawns()
 	for l_Index = 1, #s_Alternates do
 		local l_Spawn = s_Alternates[l_Index]
-		s_Positions[#s_Positions + 1] = { Vec3(l_Spawn.ground[1], l_Spawn.ground[2], l_Spawn.ground[3]), l_Spawn.team or 0 }
+		local s_Stage = tonumber(tostring(l_Spawn.source or ''):lower():match('base_?(%d+)'))
+		s_Positions[#s_Positions + 1] = { Vec3(l_Spawn.ground[1], l_Spawn.ground[2], l_Spawn.ground[3]), l_Spawn.team or 0,
+			s_Stage }
 	end
 	if #s_Positions == 0 then
 		local s_Spawns = _CharacterSpawns()
@@ -1144,33 +1258,38 @@ local function _SpawnAreas(p_Areas)
 		end
 	end
 
+	-- One group for spawns close to each other, also of both teams.
 	local s_Groups = {}
 	for l_Index = 1, #s_Positions do
-		local s_Position, s_Team = s_Positions[l_Index][1], s_Positions[l_Index][2]
+		local s_Position, s_Team, s_Stage = s_Positions[l_Index][1], s_Positions[l_Index][2], s_Positions[l_Index][3]
 		local s_Covered = false
 		for l_Area = 1, #p_Areas do
-			local s_Delta = s_Position - p_Areas[l_Area].center
-			if math.sqrt(s_Delta.x * s_Delta.x + s_Delta.z * s_Delta.z) + AREA_SPAWN_COVERED <= p_Areas[l_Area].radius then
+			if _Covers(p_Areas[l_Area], s_Position, AREA_SPAWN_COVERED) then
 				s_Covered = true
 				break
 			end
 		end
+		local s_Group = nil
+		for l_Group = 1, #s_Groups do
+			if _Horizontal(s_Position, s_Groups[l_Group].first) <= AREA_SPAWN_MERGE then
+				s_Group = s_Groups[l_Group]
+				break
+			end
+		end
+		if s_Group == nil then
+			s_Group = { teams = {}, first = s_Position, positions = {}, uncovered = {}, targets = {} }
+			s_Groups[#s_Groups + 1] = s_Group
+		end
+		s_Group.positions[#s_Group.positions + 1] = s_Position
 		if not s_Covered then
-			-- One area for spawns close to each other, also of both teams.
-			local s_Group = nil
-			for l_Group = 1, #s_Groups do
-				local s_Delta = s_Position - s_Groups[l_Group].first
-				if math.sqrt(s_Delta.x * s_Delta.x + s_Delta.z * s_Delta.z) <= AREA_SPAWN_MERGE then
-					s_Group = s_Groups[l_Group]
-					break
-				end
-			end
-			if s_Group == nil then
-				s_Group = { teams = {}, first = s_Position, positions = {} }
-				s_Groups[#s_Groups + 1] = s_Group
-			end
-			s_Group.positions[#s_Group.positions + 1] = s_Position
+			s_Group.uncovered[#s_Group.uncovered + 1] = s_Position
 			s_Group.teams[s_Team] = true
+		end
+		local s_Targets = _SpawnTargets(p_Areas, s_Position, s_Stage)
+		for l_Target = 1, #s_Targets do
+			if not table.has(s_Group.targets, s_Targets[l_Target]) then
+				s_Group.targets[#s_Group.targets + 1] = s_Targets[l_Target]
+			end
 		end
 	end
 
@@ -1186,34 +1305,73 @@ local function _SpawnAreas(p_Areas)
 		return p_A.first.x < p_B.first.x
 	end)
 
+	---@param p_Positions Vec3[]
+	---@return Vec3, number middle and radius
+	local function _Circle(p_Positions)
+		local s_Center = Vec3(0, 0, 0)
+		for l_Position = 1, #p_Positions do
+			s_Center = s_Center + p_Positions[l_Position]
+		end
+		s_Center = s_Center * (1.0 / #p_Positions)
+		local s_Radius = 0.0
+		for l_Position = 1, #p_Positions do
+			s_Radius = math.max(s_Radius, _Horizontal(p_Positions[l_Position], s_Center))
+		end
+		return s_Center, s_Radius
+	end
+
 	local s_Areas = {}
+	local s_Ways = {}
 	local s_Counts = {}
+	local s_WayCount = 0
 	for l_Index = 1, #s_Groups do
 		local l_Group = s_Groups[l_Index]
-		local s_Center = Vec3(0, 0, 0)
-		for l_Position = 1, #l_Group.positions do
-			s_Center = s_Center + l_Group.positions[l_Position]
+		local s_Name = nil
+		if #l_Group.uncovered > 0 then
+			-- The spawns no other area covers and AREA_SPAWN_MARGIN around the outer ones: only where they are and the
+			-- ground between them, the way connects them to their target.
+			local s_Center, s_Radius = _Circle(l_Group.uncovered)
+			local s_Ground = {}
+			for l_Position = 1, #l_Group.uncovered do
+				s_Ground[l_Position] = _Vec(l_Group.uncovered[l_Position])
+			end
+			s_Counts[l_Group.team] = (s_Counts[l_Group.team] or 0) + 1
+			s_Name = 'spawn ' .. l_Group.team .. s_Counts[l_Group.team]
+			s_Areas[#s_Areas + 1] = {
+				name = s_Name,
+				-- Rush: zones (kind "base"), the ends of the navigation paths from the spawns to the MCOMs (no capture points
+				-- or HQs to end at). Elsewhere only the mesh (the paths are cut there, but it's no objective).
+				kind = Globals.IsRush and 'base' or 'spawn',
+				center = s_Center,
+				radius = s_Radius + AREA_SPAWN_MARGIN,
+				spawns = s_Ground,
+			}
 		end
-		s_Center = s_Center * (1.0 / #l_Group.positions)
-		-- All spawns of the group and AREA_SPAWN_MARGIN around the outer ones (no AREA_MARGIN): only where they are and
-		-- the ground between them, the mesh connects them to the rest.
-		local s_Radius = 0.0
-		local s_Ground = {}
+		-- The ways from the spawns of the area of the group, and from the ones other areas cover (those may not lead
+		-- to the target either, e.g. the MCOM of another stage).
+		local s_Covered = {}
 		for l_Position = 1, #l_Group.positions do
-			local s_Delta = l_Group.positions[l_Position] - s_Center
-			s_Radius = math.max(s_Radius, math.sqrt(s_Delta.x * s_Delta.x + s_Delta.z * s_Delta.z))
-			s_Ground[l_Position] = _Vec(l_Group.positions[l_Position])
+			if not table.has(l_Group.uncovered, l_Group.positions[l_Position]) then
+				s_Covered[#s_Covered + 1] = l_Group.positions[l_Position]
+			end
 		end
-		s_Counts[l_Group.team] = (s_Counts[l_Group.team] or 0) + 1
-		s_Areas[#s_Areas + 1] = {
-			name = 'spawn ' .. l_Group.team .. s_Counts[l_Group.team],
-			-- Rush: zones (kind "base"), the ends of the navigation paths from the spawns to the MCOMs (no capture points or
-			-- HQs to end at). Elsewhere only the mesh: zones there would cut the paths between the flags into pieces.
-			kind = Globals.IsRush and 'base' or 'spawn',
-			center = s_Center,
-			radius = s_Radius + AREA_SPAWN_MARGIN,
-			spawns = s_Ground,
-		}
+		for _, l_Positions in ipairs({ l_Group.uncovered, s_Covered }) do
+			if #l_Positions > 0 then
+				local s_From, s_Reach = _Circle(l_Positions)
+				s_Reach = s_Reach + AREA_SPAWN_MARGIN
+				local s_WayName = l_Positions == l_Group.uncovered and s_Name or nil
+				for l_Target = 1, #l_Group.targets do
+					s_WayCount = s_WayCount + 1
+					local s_Way = _WayArea(s_WayName or ('spawns ' .. s_WayCount), s_From, s_Reach, l_Group.targets[l_Target])
+					if s_Way ~= nil then
+						s_Ways[#s_Ways + 1] = s_Way
+					end
+				end
+			end
+		end
+	end
+	for l_Index = 1, #s_Ways do
+		s_Areas[#s_Areas + 1] = s_Ways[l_Index]
 	end
 	return s_Areas
 end
@@ -1248,7 +1406,7 @@ end
 ---Hubs: where foot paths end outside of every zone, several of them meet over links (the old bases of the waypoints).
 ---An area around each group of such ends (AREA_HUB_MARGIN around the outer ones), kind "hub": a zone the navigation
 ---paths end at, no objective. Without it the cut drops these paths (their ends lie nowhere), and with them the other
----routes. Areas of kind "spawn" (mesh only) don't count as covering an end.
+---routes. The cut drops the ones that lead nowhere else (a dead end).
 ---@param p_Areas table[] the areas so far
 ---@return table[]
 local function _HubAreas(p_Areas)
@@ -1259,10 +1417,7 @@ local function _HubAreas(p_Areas)
 				local s_Position = l_End.Position
 				local s_Covered = false
 				for l_Area = 1, #p_Areas do
-					local l_Other = p_Areas[l_Area]
-					local s_Delta = s_Position - l_Other.center
-					if l_Other.kind ~= 'spawn'
-						and math.sqrt(s_Delta.x * s_Delta.x + s_Delta.z * s_Delta.z) + AREA_HUB_COVERED <= l_Other.radius then
+					if _Covers(p_Areas[l_Area], s_Position, AREA_HUB_COVERED) then
 						s_Covered = true
 						break
 					end
@@ -1338,15 +1493,31 @@ function CensusTask:_NextArea(p_Bridge)
 	end
 
 	local s_Step = math.max(0.25, tonumber(self.Args.areaStep) or AREA_STEP)
-	local s_Cells = math.floor(2 * s_Area.radius / s_Step) + 1
 	s_Area.step = s_Step
 	s_Area.layers = math.max(1, math.floor(tonumber(self.Args.areaLayers) or AREA_LAYERS))
-	s_Area.x0 = s_Area.center.x - s_Area.radius
-	s_Area.z0 = s_Area.center.z - s_Area.radius
-	s_Area.columns = s_Cells
-	s_Area.rows = s_Cells
-	s_Area.top = s_Area.center.y + (tonumber(self.Args.areaUp) or AREA_UP)
-	s_Area.bottom = s_Area.center.y - (tonumber(self.Args.areaDown) or AREA_DOWN)
+	if s_Area.discs ~= nil then
+		-- A way: the box around its discs, only the cells in a disc are measured (_ProbeCell).
+		local s_MinX, s_MaxX, s_MinZ, s_MaxZ = math.huge, -math.huge, math.huge, -math.huge
+		for l_Index = 1, #s_Area.discs do
+			local l_Disc = s_Area.discs[l_Index]
+			s_MinX = math.min(s_MinX, l_Disc[1] - l_Disc[3])
+			s_MaxX = math.max(s_MaxX, l_Disc[1] + l_Disc[3])
+			s_MinZ = math.min(s_MinZ, l_Disc[2] - l_Disc[3])
+			s_MaxZ = math.max(s_MaxZ, l_Disc[2] + l_Disc[3])
+		end
+		s_Area.x0 = s_MinX
+		s_Area.z0 = s_MinZ
+		s_Area.columns = math.floor((s_MaxX - s_MinX) / s_Step) + 1
+		s_Area.rows = math.floor((s_MaxZ - s_MinZ) / s_Step) + 1
+	else
+		local s_Cells = math.floor(2 * s_Area.radius / s_Step) + 1
+		s_Area.x0 = s_Area.center.x - s_Area.radius
+		s_Area.z0 = s_Area.center.z - s_Area.radius
+		s_Area.columns = s_Cells
+		s_Area.rows = s_Cells
+	end
+	s_Area.top = s_Area.top or (s_Area.center.y + (tonumber(self.Args.areaUp) or AREA_UP))
+	s_Area.bottom = s_Area.bottom or (s_Area.center.y - (tonumber(self.Args.areaDown) or AREA_DOWN))
 	s_Area.row = 0
 	s_Area.column = 0
 	s_Area.cells = {}
@@ -1362,11 +1533,13 @@ function CensusTask:_NextArea(p_Bridge)
 		x0 = _Round(s_Area.x0),
 		z0 = _Round(s_Area.z0),
 		step = s_Step,
-		columns = s_Cells,
-		rows = s_Cells,
+		columns = s_Area.columns,
+		rows = s_Area.rows,
 		layers = s_Area.layers,
 		-- Spawn areas: where the soldiers appear (on the ground), the mesh grows from there as from the waypoints.
 		spawns = s_Area.spawns,
+		-- Ways: { x, z, radius } along the way, the cells in them are measured.
+		discs = s_Area.discs,
 	})
 	return true
 end
@@ -1377,9 +1550,7 @@ end
 ---            8 +z chest, 16 / 32 / 64 / 128 the same rays from the neighbour back. -1 for surfaces too steep to walk on.
 ---  headroom  free height above the surface, -1 = more than CEILING_MAX (or too steep to measure)
 function CensusTask:_ProbeCell(p_Area, p_X, p_Z)
-	local s_DeltaX = p_X - p_Area.center.x
-	local s_DeltaZ = p_Z - p_Area.center.z
-	if s_DeltaX * s_DeltaX + s_DeltaZ * s_DeltaZ > p_Area.radius * p_Area.radius then
+	if not _Covers(p_Area, Vec3(p_X, 0, p_Z), 0.0) then
 		return false
 	end
 

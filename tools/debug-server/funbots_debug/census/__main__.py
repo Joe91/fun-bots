@@ -422,7 +422,7 @@ def command_navpaths(options) -> int:
         map_file = options.mapfiles / f"{name}.map"
         zones_file = options.navzones / f"{name}.json"
         census_file = options.census / f"{name}.json.gz"
-        for file in (map_file, zones_file, census_file):
+        for file in (map_file, census_file):
             if not file.is_file():
                 print(f"{name}: {file} is missing", file=sys.stderr)
                 return 1
@@ -430,14 +430,16 @@ def command_navpaths(options) -> int:
         if any("Nav" in path.first.data for path in before.paths.values()):
             print(f"{name}: the paths are cut already (navigation paths in {map_file.name})", file=sys.stderr)
             return 1
-        result = navpaths.build(before, json.loads(zones_file.read_text(encoding="utf-8")))
+        # The mesh as it will be (with the checks of the game): the cut drops paths where it leads.
+        census = load(census_file)
+        checks = check.load_checks(census_file)
+        result = navpaths.build(before, navzones.build(census, checks=checks), navpaths.census_blocked(census))
         print(name)
         print(navpaths.summary(result, before, options.verbose))
         if not options.write:
             continue
         # The networks again, with the junctions on the new paths.
-        networks = navzones.build(load(census_file), attach=navpaths.attach_nodes(result.data),
-                                  checks=check.load_checks(census_file))
+        networks = navzones.build(census, attach=navpaths.attach_nodes(result.data), checks=checks)
         if networks.get("stats", {}).get("checkRemovedPoints") is not None:
             print(f"  check: {networks['stats']['checkRemovedEdges']} connections and "
                   f"{networks['stats']['checkRemovedPoints']} points left out")

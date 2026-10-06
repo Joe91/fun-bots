@@ -20,7 +20,10 @@ first (_Merged) and there is one mesh, the zones are lists of its points.
    mesh-point towards the waypoint]).
 
 Format (version 2): {map, spacing, points, edges, attach, stats, vehicle: {points, edges, attach, stats},
-zones: [{name, kind, center, radius, zone, inside: [points], vehicleInside: [vehicle-points]}]}.
+zones: [{name, kind, center, radius, zone, inside: [points], vehicleInside: [vehicle-points]}],
+areas: [{name, kind, center, radius, discs, inside: [points]}]}. The areas are the parts of the mesh that are no zone
+(spawns of kind "spawn", the ways from the spawns to their targets of kind "way"): only the cut (navpaths.py) uses
+them.
 
 Land vehicles get a mesh of their own ("vehicle"): the same way, with the VEHICLE profile (wide and open ground only,
 fewer points), attached to the paths with "Vehicles".
@@ -53,6 +56,7 @@ COVER_RANGE = 3           # Cells in each of the 8 directions that are checked f
 ATTACH_HEIGHT = 1.0       # A waypoint belongs to a surface this close below or above it.
 STEP_HEIGHT = 0.6         # Same as report.STEP_HEIGHT: what a straight line may step up or down per cell.
 MERGE_HEIGHT = 0.5        # Surfaces of the same cell from overlapping areas this close in height are the same.
+MESH_ONLY = ("spawn", "way")  # Kinds of areas that are no zones, only mesh (spawns, the ways from them to the targets).
 
 # Land vehicles: wide and open ground only.
 VEHICLE_CLEARANCE = 1.8   # Metres to the next wall (half the width of a tank, and some).
@@ -501,10 +505,43 @@ def _nearest_owned(grid: _Area, owner: dict[Surface, int], pos: list[float], dis
     return best[1] if best else None
 
 
+LADDER_RISE = 1.5          # Waypoints that go up or down this much within LADDER_RUN horizontally: a ladder. The bots
+LADDER_RUN = 0.5           # can't climb it on the mesh, the path stays (navpaths.py).
+
+
+def _blocked(nodes: _Nodes, path: int, point: int) -> bool:
+    """Whether the census found the way from the waypoint to the next one blocked at every height (a door that is
+    closed, a wall that wasn't there when the path was recorded)."""
+    following = nodes.paths[path].get("next") or []
+    if not 0 < point <= len(following):
+        return False
+    values = as_list(following[point - 1])
+    return bool(values) and all(value is not False and value is not None for value in values)
+
+
+def _jumps(nodes: _Nodes, path: int, point: int) -> bool:
+    """Whether the waypoint is a jump (extra-mode 1 of its inputVar, NodeCollection.lua)."""
+    inputs = nodes.paths[path].get("inputs") or []
+    return 0 < point <= len(inputs) and (int(inputs[point - 1] or 0) >> 4) & 0xF == 1
+
+
+def _ladder(positions: list) -> bool:
+    """Whether the waypoints go up or down a ladder somewhere."""
+    for index, start in enumerate(positions):
+        for end in positions[index + 1:]:
+            if math.hypot(end[0] - start[0], end[2] - start[2]) > LADDER_RUN:
+                break
+            if abs(end[1] - start[1]) >= LADDER_RISE:
+                return True
+    return False
+
+
 def _trace_edges(grid: _Area, owner: dict[Surface, int], points: list[Surface], edges: list,
                  walked: list[tuple[int, int, list[float], Surface | None]], nodes: _Nodes) -> list:
-    """Connections along the waypoints between parts of the network that the grid doesn't connect: stairs, ladders,
-    jumps the vertical rays don't see. A path that walks from one part into another joins them, over its waypoints."""
+    """Connections along the waypoints between parts of the network that the grid doesn't connect: stairs, jumps the
+    vertical rays don't see. A path that walks from one part into another joins them, over its waypoints. Not up a
+    ladder (_ladder): the bots can't climb it on the mesh, the cut keeps the path there. Not where the census found the
+    way between two of its waypoints blocked (_blocked)."""
     parent = list(range(len(points)))
 
     def find(index: int) -> int:
@@ -534,15 +571,65 @@ def _trace_edges(grid: _Area, owner: dict[Surface, int], points: list[Surface], 
             # Only along waypoints that all lie in the areas: where the path leaves them in between, the corners
             # would skip that stretch (a straight line across), the navigation paths lead there.
             if last is not None and point - last[0] <= 40 and find(last[1]) != find(network) \
-                    and all(index in positions for index in range(last[0], point + 1)):
+                    and all(index in positions for index in range(last[0], point + 1)) \
+                    and not _ladder([positions[index] for index in range(last[0], point + 1)]) \
+                    and not any(_blocked(nodes, path, index) for index in range(last[0], point)):
                 corners = [_round(positions[index]) for index in range(last[0], point + 1) if index in positions]
                 way = [points_pos for points_pos in [grid.pos(points[last[1]])] + corners + [grid.pos(points[network])]]
                 length = sum(math.dist(p, q) for p, q in zip(way, way[1:]))
-                # 1: along waypoints, a way a person walked (the check of the mesh leaves it alone).
-                result.append([last[1], network, round(length, 1), corners, 1])
+                # 1: along waypoints, a way a person walked (the check of the mesh leaves it alone). Then the corners
+                # (counted from 0) where the person jumped (the extra-mode of the waypoint): the bots jump there too.
+                jumps = [number for number, index in enumerate(range(last[0], point + 1))
+                         if _jumps(nodes, path, index)]
+                result.append([last[1], network, round(length, 1), corners, 1] + ([jumps] if jumps else []))
                 parent[find(last[1])] = find(network)
             last = (point, network)
     return result
+
+
+MIN_PART = 10             # Same as NavZones.lua: parts of the mesh with fewer points get no junctions in the game.
+REATTACH_DISTANCE = 6.0   # A junction on such a part is moved to the closest point of a bigger one this close (same as
+REATTACH_FLOOR = 1.5      # navpaths.MATCH_DISTANCE) on its floor: the cut counted the waypoint as there.
+
+
+def _reattach(network: dict) -> dict:
+    """Junctions on islands of the mesh (fewer than MIN_PART points, left over where the checks of the game removed
+    connections, a point that only owns the cells under the waypoint) onto the closest point of a part the bots can use:
+    the cut (navpaths.py) took the waypoint to be there, and the game drops junctions on islands."""
+    points = network.get("points") or []
+    parent = list(range(len(points)))
+
+    def find(index: int) -> int:
+        while parent[index] != index:
+            parent[index] = parent[parent[index]]
+            index = parent[index]
+        return index
+
+    for edge in network.get("edges") or []:
+        parent[find(int(edge[0]))] = find(int(edge[1]))
+    sizes: dict[int, int] = defaultdict(int)
+    for index in range(len(points)):
+        sizes[find(index)] += 1
+    moved = 0
+    for entry in network.get("attach") or []:
+        if sizes[find(int(entry[2]))] >= MIN_PART:
+            continue
+        pos = entry[4]
+        best = None
+        for index, point in enumerate(points):
+            if abs(point[1] - pos[1]) > REATTACH_FLOOR or sizes[find(index)] < MIN_PART:
+                continue
+            horizontal = math.hypot(point[0] - pos[0], point[2] - pos[2])
+            if horizontal <= REATTACH_DISTANCE and (best is None or horizontal < best[0]):
+                best = (horizontal, index)
+        if best is not None:
+            entry[2] = best[1]
+            entry[3] = round(math.dist(points[best[1]][:3], pos), 1)
+            entry[5] = []
+            moved += 1
+    if moved:
+        network["stats"] = dict(network.get("stats") or {}, reattached=moved)
+    return network
 
 
 def _blocked_pairs(surfaces: dict, links: dict) -> set[tuple[Surface, Surface]]:
@@ -639,8 +726,18 @@ class _Merged:
         return math.dist(self.pos(a), self.pos(b))
 
     def covers(self, pos) -> bool:
-        return any(math.hypot(pos[0] - float(area["center"][0]), pos[2] - float(area["center"][2]))
-                   <= float(area.get("radius") or 0) for area in self.areas)
+        return any(area_covers(area, pos) for area in self.areas)
+
+
+def area_covers(area: dict, pos, margin: float = 0.0) -> bool:
+    """Whether the area of the census covers the position (horizontally), at least margin inside: its circle, or the
+    discs of a way."""
+    discs = area.get("discs")
+    if discs:
+        return any(math.hypot(pos[0] - float(disc[0]), pos[2] - float(disc[1])) + margin <= float(disc[2])
+                   for disc in discs)
+    center = as_list(area.get("center"))
+    return math.hypot(pos[0] - float(center[0]), pos[2] - float(center[2])) + margin <= float(area.get("radius") or 0)
 
 
 def _walked(grid: _Merged, nodes: _Nodes, paths: set[int], height: float) -> list:
@@ -674,15 +771,16 @@ def build(census: dict, attach: dict | None = None, checks: dict | None = None) 
     (check.py, census/<map>.checks.json), left out of the mesh."""
     areas = [area for area in census.get("areas") or [] if area.get("cells")]
     data = {"version": VERSION, "map": census.get("paths"), "spacing": SPACING, "points": [], "edges": [],
-            "attach": [], "zones": []}
+            "attach": [], "zones": [], "areas": []}
     if not areas:
         return data
     nodes = _Nodes(census)
     attach_nodes = _Nodes({"nodes": attach}) if attach is not None else None
     grid = _Merged(areas)
     clearance = _clearance(grid)
-    # Areas of kind "spawn" (around the spawns of capture points and HQs) only add to the mesh, they are no zones.
-    tests = [(area, *_zone_test(census, area)) for area in areas if area.get("kind") != "spawn"]
+    # Areas of kind "spawn" (around the spawns of capture points and HQs) and "way" (from the spawns to their target)
+    # only add to the mesh, they are no zones.
+    tests = [(area, *_zone_test(census, area)) for area in areas if area.get("kind") not in MESH_ONLY]
 
     def inside_any(x: float, z: float) -> bool:
         return any(inside(x, z) for _, inside, _ in tests)
@@ -693,7 +791,7 @@ def build(census: dict, attach: dict | None = None, checks: dict | None = None) 
     soldier = _network(grid, clearance, set(grid.surfaces), _walked(grid, nodes, nodes.foot, ATTACH_HEIGHT), nodes,
                        inside_any, SOLDIER, True, attached(attach_nodes.foot, ATTACH_HEIGHT) if attach_nodes else None,
                        spawns=spawn_positions(census))
-    soldier = check_apply(soldier, checks, spawn_positions(census))
+    soldier = _reattach(check_apply(soldier, checks, spawn_positions(census)))
     data.update(points=soldier["points"], edges=soldier["edges"], attach=soldier["attach"],
                 stats=dict(soldier["stats"], surfaces=len(grid.surfaces)))
 
@@ -718,6 +816,16 @@ def build(census: dict, attach: dict | None = None, checks: dict | None = None) 
             zone["vehicleInside"] = [index for index, point in enumerate(data["vehicle"]["points"])
                                      if inside(point[0], point[2])]
         data["zones"].append(zone)
+    # The areas that are only mesh, with their points: the paths are cut there as well (navpaths.py), the mod doesn't
+    # load them.
+    for area in areas:
+        if area.get("kind") in MESH_ONLY:
+            entry = {"name": area.get("name"), "kind": area.get("kind"), "center": as_list(area.get("center")),
+                     "radius": area.get("radius"),
+                     "inside": [index for index, point in enumerate(data["points"]) if area_covers(area, point)]}
+            if area.get("discs"):
+                entry["discs"] = area["discs"]
+            data["areas"].append(entry)
     return data
 
 
@@ -734,6 +842,8 @@ def summary(data: dict) -> str:
         vehicle_inside = f", {len(zone['vehicleInside'])} for vehicles" if "vehicleInside" in zone else ""
         lines.append(f"  {zone['name']} ({zone['kind']}, zone: {zone['zone']}): {len(zone['inside'])} points"
                      f"{vehicle_inside}")
+    for area in data.get("areas") or []:
+        lines.append(f"  {area['name']} ({area['kind']}, mesh only): {len(area['inside'])} points")
     return "\n".join(lines)
 
 

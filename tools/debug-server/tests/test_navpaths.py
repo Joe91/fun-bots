@@ -15,9 +15,10 @@ from funbots_debug.paths.mapfile import NO_LOOP, MapData, Node, PathData  # noqa
 def _mesh(*zones):
     """A mesh of squares of points every 2 m, one per zone: (name, x, z). The middle 20 x 20 m are in the zone, a margin
     of 8 m around it is on the mesh but outside."""
-    points, entries = [], []
+    points, edges, entries = [], [], []
     for name, x0, z0 in zones:
         inside = []
+        first = len(points)
         for i in range(19):
             for j in range(19):
                 x, z = 2 * i - 18, 2 * j - 18
@@ -25,10 +26,22 @@ def _mesh(*zones):
                 if in_zone:
                     inside.append(len(points))
                 points.append([x0 + x, 0.0, z0 + z, 2.0, 0, 1 if in_zone else 0])
+                # Connected to the neighbours: one part of the mesh per square.
+                if i > 0:
+                    edges.append([len(points) - 1, len(points) - 1 - 19, 2.0, []])
+                if j > 0:
+                    edges.append([len(points) - 1, len(points) - 2, 2.0, []])
+        assert len(points) - first == 19 * 19
         # The circle of the area of the census around it: covers the square of points.
         entries.append({"name": name, "kind": "capturepoint", "center": [x0, 0.0, z0], "radius": 26.0,
                         "inside": inside})
-    return {"version": 2, "points": points, "edges": [], "attach": [], "zones": entries}
+    # Overlapping squares are one lattice in the real mesh (navzones._Merged): the same position is connected.
+    by_position = {}
+    for index, point in enumerate(points):
+        other = by_position.setdefault((point[0], point[2]), index)
+        if other != index:
+            edges.append([index, other, 0.0, []])
+    return {"version": 2, "points": points, "edges": edges, "attach": [], "zones": entries}
 
 
 def _path(index, positions, data=None, loops=False):
@@ -105,14 +118,14 @@ class NavpathsTest(unittest.TestCase):
         self.assertEqual(result.fixed[2], "vehicles")
 
     def test_kept_paths_and_their_links(self):
-        vehicle = _path(1, [(50, 4), (50, 8)], {"Objectives": ["vehicle tank us"]})
-        vehicle.nodes[0].data["Action"] = {"type": "vehicle"}
-        vehicle.nodes[0].set_links([(2, 28)])
+        beacon = _path(1, [(50, 4), (50, 8)], {"Objectives": ["beacon"]})
+        beacon.nodes[0].data["Action"] = {"type": "beacon"}
+        beacon.nodes[0].set_links([(2, 28)])
         walk = _path(2, _line(-5, 105, 0))
         walk.nodes[27].set_links([(1, 1)])
-        result = navpaths.build(MapData({1: vehicle, 2: walk}), self.zones)
+        result = navpaths.build(MapData({1: beacon, 2: walk}), self.zones)
         kept = result.data.paths[1]
-        self.assertEqual(kept.objectives, ["vehicle tank us"])
+        self.assertEqual(kept.objectives, ["beacon"])
         target = kept.nodes[0].links[0]
         self.assertIn("Nav", result.data.paths[target[0]].first.data)
         back = result.data.paths[target[0]].nodes[target[1] - 1]
@@ -149,7 +162,21 @@ class NavpathsTest(unittest.TestCase):
         other.nodes[0].data["Action"] = {"type": "explore"}
         result = navpaths.build(MapData({1: way, 2: road, 3: other, 4: _path(4, _line(-5, 105, 0))}), self.zones)
         labels = sorted(path.objectives for index, path in result.data.paths.items() if index in result.old_paths)
-        self.assertEqual(labels, [["a", "c"], ["explore"], ["vehicle tank1 us"]])
+        # The way to the tank has no function with a mesh: the bots find the vehicles themselves.
+        self.assertEqual(labels, [["a", "c"], ["explore"]])
+        self.assertIn("no function", result.dropped[1])
+
+    def test_vehicle_entry_dropped(self):
+        entry = _path(1, [(50, 4), (50, 8)], {"Objectives": ["vehicle tank us"]})
+        entry.nodes[0].data["Action"] = {"type": "vehicle"}
+        entry.nodes[0].set_links([(2, 28)])
+        walk = _path(2, _line(-5, 105, 0))
+        walk.nodes[27].set_links([(1, 1)])
+        result = navpaths.build(MapData({1: entry, 2: walk}), self.zones)
+        self.assertEqual(result.entries, 1)
+        self.assertNotIn(1, result.old_paths.values())
+        # The link to it is gone from the navigation path.
+        self.assertTrue(all((1, 1) not in node.links for path in result.data.paths.values() for node in path.nodes))
 
     def test_short_piece_between_touching_zones_dropped(self):
         # Circles just around the squares: the gap between them isn't on the mesh (as where no mesh was measured). The
@@ -158,7 +185,9 @@ class NavpathsTest(unittest.TestCase):
         for zone in zones["zones"]:
             zone["radius"] = 12.0
         data = MapData({1: _path(1, _line(-5, 31, 0), {"Objectives": ["a", "b"]})})
-        self.assertEqual(len(navpaths.build(data, zones).routes), 1)
+        # Not shorter than the limit, but the mesh leads from a to b about as far: no function either.
+        result = navpaths.build(data, zones)
+        self.assertEqual((len(result.routes), result.short, result.mesh_ways), (0, 0, 1))
         limit = navpaths.MIN_LENGTH
         navpaths.MIN_LENGTH = 12.0
         try:
@@ -205,6 +234,44 @@ class NavpathsTest(unittest.TestCase):
         result = navpaths.build(data, zones)
         self.assertEqual(result.routes, [])
         self.assertEqual(result.on_mesh, 1)
+
+    def test_zone_in_two_parts(self):
+        # Zone a's mesh is two pieces (the census didn't see the stairs between them): the path from the one into the
+        # other is the way between them, not a piece inside of the zone.
+        zones = _mesh(("a", 0, 0))
+        zones["edges"] = [edge for edge in zones["edges"]
+                          if (zones["points"][edge[0]][0] < 0) == (zones["points"][edge[1]][0] < 0)]
+        path = _path(1, _line(-8, 8, 0))
+        for node in path.nodes:
+            if -3 < node.pos[0] < 3:
+                node.pos = (node.pos[0], 3.0, node.pos[2])  # Up the stairs, where the mesh has no points.
+        result = navpaths.build(MapData({1: path}), zones)
+        self.assertEqual(len(result.routes), 1)
+        route = result.routes[0]
+        self.assertEqual({result.zones[route.start], result.zones[route.end]}, {"a", "a (2)"})
+
+    def test_blocked_step_not_walked(self):
+        # The census found the way from waypoint 28 of path 1 to the next blocked (a closed door): the cut doesn't
+        # extend over it, the open end of path 2 goes the other way.
+        path1 = _path(1, _line(-5, 105, 0))
+        path2 = _path(2, [(50, 2)] + _line(50, 105, 8)[1:])
+        path2.nodes[0].set_links([(1, 28)])
+        path1.nodes[27].set_links([(2, 1)])
+        data = MapData({1: path1, 2: path2})
+        open_way = navpaths.build(data, self.zones)
+        blocked = navpaths.build(data, self.zones, {(1, 27), (1, 28)})
+        self.assertNotEqual(sorted(route.length for route in open_way.routes),
+                            sorted(route.length for route in blocked.routes))
+
+    def test_dead_end_dropped(self):
+        # A path from zone a to a hub nothing else leads to (an old base of the waypoints): no function.
+        zones = _mesh(("a", 0, 0), ("h", 100, 0))
+        zones["zones"][1]["kind"] = "hub"
+        data = MapData({1: _path(1, _line(-5, 105, 0))})
+        result = navpaths.build(data, zones)
+        self.assertEqual(result.routes, [])
+        self.assertEqual(result.dead_ends, 1)
+
 
 if __name__ == "__main__":
     unittest.main()

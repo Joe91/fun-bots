@@ -11,8 +11,16 @@ have to lead from zone to zone. This turns the paths of a level into such naviga
 3. Pieces that run along another navigation path between the same zones (DUPLICATE_SHARE of their waypoints within
    DUPLICATE_DISTANCE) are dropped: the pieces of whole paths are kept first, then the extended ones, the shorter first.
 4. Zones the paths connect without crossing another zone, but no navigation path does (or only over a detour of more
-   than DETOUR times as long), get the shortest way between them over paths and links, and roads (land vehicle paths, ROAD_FACTOR times as long) where no path leads (in rush the
-   attackers spawn at their vehicles, the way out is the road).
+   than DETOUR times as long), get the shortest way between them over paths and links, and roads (land vehicle paths,
+   ROAD_FACTOR times as long) where no path leads (in rush the attackers spawn at their vehicles, the way out is the
+   road). Not where the mesh leads from the one to the other.
+5. Paths without a function are dropped: between zones the mesh connects about as far (MESH_DETOUR, e.g. the way from
+   the spawns to their target, navzones "way"), and dead ends: an end in a part of the mesh with nothing to do there
+   (no objective, spawn, beacon or MCOM to arm) and no other path, again until there is none. The ways into vehicles
+   ("vehicle ...", "spawn vehicle ...") too: the bots find the vehicles over the mesh.
+
+The zones are the ones of the mesh and its areas that are only mesh (spawns, the ways from them to their targets): the
+paths are cut at both. A piece counts as on the mesh only where the mesh connects it, all in one part.
 
 Paths with vehicles, actions (MCOM, vehicle, beacon), the way to a vehicle or a beacon and air-paths stay as they are;
 their links to the cut paths move to the same waypoints of the navigation paths (or the closest one), which link back.
@@ -59,6 +67,8 @@ MIN_LENGTH = 10.0         # Shorter navigation paths lie where two zones touch, 
                           # would walk them back and forth.
 DETOUR_FACTOR = 3.0       # A piece longer than this many times the distance of its ends (plus DETOUR_EXTRA) goes far out
 DETOUR_EXTRA = 60.0       # and back (where no mesh is to cut it): dropped if its zones are connected otherwise.
+MESH_DETOUR = 1.3         # A navigation path between zones the mesh connects with a way at most this many times as
+MESH_SLACK = 20.0         # long (plus these metres) has no function: the bots walk the mesh.
 
 Vertex = tuple[int, int]  # path, point
 
@@ -90,58 +100,201 @@ class Result:
     lost_links: int = 0
     connectors: int = 0  # paths kept to connect a kept path whose links lead nowhere else
     detours: int = 0  # pieces dropped: far out and back, their zones are connected otherwise
+    mesh_ways: int = 0  # dropped: the mesh leads from zone to zone about as far
+    dead_ends: int = 0  # dropped: an end in a part of the mesh without anything to do and no other path
+    entries: int = 0  # ways into vehicles dropped (the bots find the vehicles over the mesh)
+
+
+MESH_ONLY = ("spawn", "way")  # Areas that are only mesh (navzones.MESH_ONLY): the paths are cut there, no objective.
+
+
+MIN_PART = 10  # Same as NavZones.lua: parts of the mesh with fewer points get no junctions, no place to cut at.
 
 
 class _Zones:
-    """The points of the mesh in buckets, for "in which zone is this waypoint" and "is it on the mesh"."""
+    """The places the paths are cut at: each zone and each area that is only mesh (spawns, the ways from them to their
+    targets), on each connected part of the mesh it has points on. A zone whose mesh is in two pieces (the street and
+    the metro below, the census didn't see the stairs between) is two places: a path from the one to the other is the
+    way between them, not a piece inside of the zone. With the points of the mesh in buckets, for "in which place is
+    this waypoint" and "is it on the mesh"."""
 
     def __init__(self, navzones: dict, cell: float = 10.0):
         self.cell = cell
-        zones = navzones.get("zones") or []
-        self.names: list[str] = [str(zone.get("name")) for zone in zones]
-        self.centers = [as_list(zone.get("center")) for zone in zones]
-        # Without a radius (made by hand) the whole zone counts.
-        self.radii = [float(zone["radius"]) if zone.get("radius") else math.inf for zone in zones]
-        member: dict[int, list[int]] = defaultdict(list)
-        for index, zone in enumerate(zones):
+        raw = list(navzones.get("zones") or []) + list(navzones.get("areas") or [])
+        self.points = navzones.get("points") or []
+        parent = list(range(len(self.points)))
+
+        def find(index: int) -> int:
+            while parent[index] != index:
+                parent[index] = parent[parent[index]]
+                index = parent[index]
+            return index
+
+        for edge in navzones.get("edges") or []:
+            parent[find(int(edge[0]))] = find(int(edge[1]))
+        self.part = [find(index) for index in range(len(self.points))]
+        sizes: dict[int, int] = defaultdict(int)
+        for part in self.part:
+            sizes[part] += 1
+        self.sizes = sizes
+
+        # One place per zone and part (the parts the bots can use, MIN_PART), the biggest part first.
+        self.names: list[str] = []
+        self.kinds: list[str] = []
+        self.centers: list = []
+        self.place_part: list[int] = []
+        self.inside: list[list[int]] = []
+        # Where the zone covers: discs [x, z, radius], without a radius (made by hand) everywhere.
+        self.shapes: list[list[list[float]]] = []
+        for zone in raw:
+            if zone.get("discs"):
+                shape = [[float(disc[0]), float(disc[1]), float(disc[2])] for disc in zone["discs"]]
+            else:
+                center = as_list(zone.get("center"))
+                radius = float(zone["radius"]) if zone.get("radius") else math.inf
+                shape = [[float(center[0]), float(center[2]), radius]]
+            self.shapes.append(shape)
+            by_part: dict[int, list[int]] = defaultdict(list)
             for point in zone.get("inside") or []:
-                member[int(point)].append(index)
-        self.buckets: dict[tuple[int, int], list[tuple[list[float], list[int]]]] = defaultdict(list)
-        for index, point in enumerate(navzones.get("points") or []):
-            self.buckets[self._key(point)].append((point, member.get(index, [])))
+                point = int(point)
+                if point < len(self.points) and sizes[self.part[point]] >= MIN_PART:
+                    by_part[self.part[point]].append(point)
+            for number, (part, points) in enumerate(sorted(by_part.items(), key=lambda item: -len(item[1]))):
+                name = str(zone.get("name"))
+                self.names.append(name if number == 0 else f"{name} ({number + 1})")
+                self.kinds.append(str(zone.get("kind")))
+                self.centers.append(as_list(zone.get("center")))
+                self.place_part.append(part)
+                self.inside.append(points)
+        member: dict[int, list[int]] = defaultdict(list)
+        for place, points in enumerate(self.inside):
+            for point in points:
+                member[point].append(place)
+        self.buckets: dict[tuple[int, int], list[tuple[list[float], list[int], int]]] = defaultdict(list)
+        for index, point in enumerate(self.points):
+            self.buckets[self._key(point)].append((point, member.get(index, []), index))
 
     def _key(self, pos) -> tuple[int, int]:
         return math.floor(pos[0] / self.cell), math.floor(pos[2] / self.cell)
 
     def _closest(self, pos, distance: float):
+        """(horizontal metres, places, index) of the closest point of the mesh on the floor of the position."""
         x, z = self._key(pos)
         best = None
         for d_x in (-1, 0, 1):
             for d_z in (-1, 0, 1):
-                for point, zones in self.buckets.get((x + d_x, z + d_z), []):
+                for point, places, index in self.buckets.get((x + d_x, z + d_z), []):
                     if abs(point[1] - pos[1]) > FLOOR_HEIGHT:
                         continue
                     horizontal = math.hypot(point[0] - pos[0], point[2] - pos[2])
                     if horizontal <= distance and (best is None or horizontal < best[0]):
-                        best = (horizontal, zones)
+                        best = (horizontal, places, index)
         return best
 
     def zone_of(self, pos) -> int | None:
-        """The zone of the closest point of the mesh; where zones overlap the one whose middle is closest. Only inside of
-        the circle of a zone: else the mesh can't be attached there (covered)."""
+        """The place of the closest point of the mesh; where zones overlap a real zone before an area that is only
+        mesh, then the one whose middle is closest. Only inside of the circle of a zone: else the mesh can't be attached
+        there (covered)."""
         best = self._closest(pos, MATCH_DISTANCE)
         if best is None or not best[1] or not self.covered(pos):
             return None
-        return min(best[1], key=lambda zone: math.hypot(self.centers[zone][0] - pos[0], self.centers[zone][2] - pos[2]))
+        return min(best[1], key=lambda place: (self.kinds[place] in MESH_ONLY,
+                                               math.hypot(self.centers[place][0] - pos[0],
+                                                          self.centers[place][2] - pos[2])))
 
     def covered(self, pos) -> bool:
         """Inside of the circle of a zone (the area of the census around it): only there the mesh gets attached to the
         waypoints (navzones.py), close to a point at the edge isn't enough."""
-        return any(math.hypot(center[0] - pos[0], center[2] - pos[2]) <= radius - COVER_MARGIN
-                   for center, radius in zip(self.centers, self.radii))
+        return any(math.hypot(disc[0] - pos[0], disc[1] - pos[2]) <= disc[2] - COVER_MARGIN
+                   for shape in self.shapes for disc in shape)
 
     def on_mesh(self, pos) -> bool:
         return self._closest(pos, MESH_DISTANCE) is not None and self.covered(pos)
+
+    def point_of(self, pos, distance: float = MATCH_DISTANCE) -> int | None:
+        """The closest point of the mesh on the floor of the position."""
+        best = self._closest(pos, distance)
+        return best[2] if best else None
+
+    def on_usable_mesh(self, pos) -> bool:
+        """On the mesh where the bots can use it: close to a point of a part with MIN_PART points (the game drops the
+        junctions on smaller ones)."""
+        point = self.point_of(pos, MESH_DISTANCE)
+        return point is not None and self.sizes[self.part[point]] >= MIN_PART and self.covered(pos)
+
+
+class _Mesh:
+    """The connections of the mesh: its connected parts and the ways over it between the places (_Zones)."""
+
+    def __init__(self, navzones: dict, zones: _Zones):
+        points = navzones.get("points") or []
+        self.zones = zones
+        self.part = zones.part
+        self.inside = zones.inside
+        self.neighbours: dict[int, list[tuple[int, float]]] = defaultdict(list)
+        for edge in navzones.get("edges") or []:
+            a, b = int(edge[0]), int(edge[1])
+            length = float(edge[2]) if len(edge) > 2 and edge[2] is not None else math.dist(points[a][:3], points[b][:3])
+            self.neighbours[a].append((b, length))
+            self.neighbours[b].append((a, length))
+        self._fields: dict[int, dict[int, float]] = {}
+        self._same: dict[int, list[int]] | None = None
+
+    def part_at(self, pos) -> int | None:
+        point = self.zones.point_of(pos)
+        return None if point is None else self.part[point]
+
+    def field(self, zone: int) -> dict[int, float]:
+        """Metres over the mesh from the points of the place to every point the mesh leads to."""
+        known = self._fields.get(zone)
+        if known is not None:
+            return known
+        cost: dict[int, float] = {}
+        queue = []
+        for point in self.inside[zone]:
+            cost[int(point)] = 0.0
+            queue.append((0.0, int(point)))
+        heapq.heapify(queue)
+        while queue:
+            current, point = heapq.heappop(queue)
+            if current > cost.get(point, math.inf):
+                continue
+            for other, length in self.neighbours[point]:
+                total = current + length
+                if total < cost.get(other, math.inf):
+                    cost[other] = total
+                    heapq.heappush(queue, (total, other))
+        self._fields[zone] = cost
+        return cost
+
+    def distance(self, start: int, end: int) -> float:
+        """Metres over the mesh from place to place (their closest points), inf if it doesn't lead there."""
+        if self.zones.place_part[start] != self.zones.place_part[end]:
+            return math.inf
+        field = self.field(start)
+        return min((field.get(int(point), math.inf) for point in self.inside[end]), default=math.inf)
+
+    def same_part(self) -> dict[int, list[int]]:
+        """Place -> the other places on its part of the mesh."""
+        if self._same is None:
+            by_part: dict[int, list[int]] = defaultdict(list)
+            for place, part in enumerate(self.zones.place_part):
+                by_part[part].append(place)
+            self._same = {place: [other for other in by_part[part] if other != place]
+                          for place, part in enumerate(self.zones.place_part)}
+        return self._same
+
+    def connects(self, positions) -> bool:
+        """Whether the mesh connects the positions: all on it, all in one part."""
+        parts = set()
+        for pos in positions:
+            point = self.zones.point_of(pos, MESH_DISTANCE)
+            if point is None:
+                return False
+            parts.add(self.part[point])
+            if len(parts) > 1:
+                return False
+        return True
 
 
 FUNCTION_WORDS = ("vehicle", "beacon", "interact")  # Names of what a path leads to, not of a zone.
@@ -179,7 +332,8 @@ class _Graph:
     """The waypoints of the paths that get cut, connected along the paths and over links. Roads (land vehicle paths)
     are in it as well, as more expensive ways: only for the shortest ways between zones (step 4)."""
 
-    def __init__(self, data: MapData, foot: list[int], zones: _Zones, roads: list[int] = ()):
+    def __init__(self, data: MapData, foot: list[int], zones: _Zones, roads: list[int] = (),
+                 blocked: set[Vertex] | None = None):
         self.data = data
         self.pos: dict[Vertex, tuple[float, float, float]] = {}
         self.zone: dict[Vertex, int | None] = {}
@@ -196,7 +350,10 @@ class _Graph:
                 if index in roads:
                     self.road.add(vertex)
             for a, b in zip(nodes, nodes[1:]):
-                self._connect((index, a.point), (index, b.point), factor * math.dist(a.pos, b.pos))
+                # Not where the census found the way to the next waypoint blocked at every height (a door that is
+                # closed now, a wall that wasn't there when the path was recorded).
+                if blocked is None or (index, a.point) not in blocked:
+                    self._connect((index, a.point), (index, b.point), factor * math.dist(a.pos, b.pos))
             path = data.paths[index]
             if len(nodes) > 2 and path.loops and path.gap <= LOOP_CLOSE:
                 self._connect((index, nodes[-1].point), (index, nodes[0].point), factor * path.gap)
@@ -335,31 +492,17 @@ def _route(graph: _Graph, before: Vertex | None, run: list[Vertex], after: Verte
     return Route(start, end, full, origin, [source], graph.length(full))
 
 
-def _zone_parts(navzones: dict, count: int) -> list[set[int]]:
-    """Per zone the parts of the mesh (connected pieces) its points lie in."""
-    points = navzones.get("points") or []
-    parent = list(range(len(points)))
-
-    def find(index: int) -> int:
-        while parent[index] != index:
-            parent[index] = parent[parent[index]]
-            index = parent[index]
-        return index
-
-    for edge in navzones.get("edges") or []:
-        parent[find(int(edge[0]))] = find(int(edge[1]))
-    result = [set() for _ in range(count)]
-    for index, zone in enumerate((navzones.get("zones") or [])[:count]):
-        result[index] = {find(int(point)) for point in zone.get("inside") or [] if int(point) < len(points)}
-    return result
-
-
-def _zone_distance(routes: list[Route], start: int, end: int) -> float:
-    """Metres from zone to zone over the navigation paths (ZONE_CROSSING for each zone on the way)."""
+def _zone_distance(routes: list[Route], start: int, end: int, mesh: "_Mesh | None" = None) -> float:
+    """Metres from zone to zone over the navigation paths (ZONE_CROSSING for each zone on the way), and over the mesh
+    between zones on the same part of it."""
     edges: dict[int, list[tuple[int, float]]] = defaultdict(list)
     for route in routes:
         edges[route.start].append((route.end, route.length))
         edges[route.end].append((route.start, route.length))
+    if mesh is not None:
+        for zone, others in mesh.same_part().items():
+            for other in others:
+                edges[zone].append((other, mesh.distance(zone, other)))
     best = {start: 0.0}
     queue = [(0.0, start)]
     while queue:
@@ -393,14 +536,35 @@ def _runs_along(graph: _Graph, route: Route, other: Route) -> bool:
     return close >= DUPLICATE_SHARE * len(route.vertices)
 
 
-def build(data: MapData, navzones: dict) -> Result:
+def _vehicle_entry(path: PathData) -> bool:
+    """A foot path to get into a vehicle ("vehicle tank1 us", "spawn vehicle chopper1 ru"): on a level with a mesh the bots
+    find the vehicles themselves (GameDirector), the path has no function."""
+    if path.vehicles:
+        return False
+    names = [name.lower() for name in path.objectives]
+    if any("vehicle" in name for name in names):
+        return True
+    actions = [node.data.get("Action") for node in path.nodes if node.data.get("Action")]
+    return bool(actions) and not names and all(isinstance(action, dict) and str(action.get("type")).lower() == "vehicle"
+                                                for action in actions)
+
+
+def build(data: MapData, navzones: dict, blocked: set[Vertex] | None = None) -> Result:
+    """blocked: the waypoints whose way to the next one the census found blocked at every height (census_blocked)."""
     zones = _Zones(navzones)
+    mesh = _Mesh(navzones, zones)
     fixed = {index: fixed_reason(path) for index, path in data.paths.items() if fixed_reason(path)}
+    # 0.: the ways into vehicles: the bots find them over the mesh.
+    entries = {index for index in fixed if _vehicle_entry(data.paths[index])}
     foot = [index for index in sorted(data.paths) if index not in fixed]
     roads = [index for index in sorted(fixed) if fixed[index] == "vehicles"
              and set(data.paths[index].vehicles) <= {"land"}]
-    graph = _Graph(data, foot, zones, roads)
-    result = Result(MapData(info=copy.deepcopy(data.info)), [], zones.names, fixed)
+    graph = _Graph(data, foot, zones, roads, blocked)
+    result = Result(MapData(info=copy.deepcopy(data.info)), [], zones.names,
+                    {index: reason for index, reason in fixed.items() if index not in entries})
+    for index in entries:
+        result.dropped[index] = f"{fixed[index]}: no function with a mesh (the bots find the vehicles)"
+    result.entries = len(entries)
 
     # 1. and 2.: the pieces of the paths, extended where they end outside.
     candidates: list[Route] = []
@@ -420,15 +584,17 @@ def build(data: MapData, navzones: dict) -> Result:
         if reasons and not any(route.source == [index] for route in candidates):
             result.dropped[index] = reasons[0]
 
-    # 3.: no two along each other between the same zones, none where the mesh leads (overlapping zones).
+    # 3.: no two along each other between the same zones, none where the mesh leads (overlapping zones, the mesh
+    # connects them there) and no short ones where the mesh connects their ends.
     order = {"path": 0, "extended": 1, "crafted": 2}
     candidates.sort(key=lambda route: (order[route.origin], route.length))
     kept: list[Route] = []
     for route in candidates:
-        if all(zones.on_mesh(graph.pos[vertex]) for vertex in route.vertices):
+        positions = [graph.pos[vertex] for vertex in route.vertices]
+        if all(zones.on_mesh(pos) for pos in positions) and mesh.connects(positions):
             result.on_mesh += 1
             continue
-        if route.length < MIN_LENGTH:
+        if route.length < MIN_LENGTH and mesh.connects([positions[0], positions[-1]]):
             result.short += 1
             continue
         pair = {route.start, route.end}
@@ -439,18 +605,18 @@ def build(data: MapData, navzones: dict) -> Result:
 
     # 3b.: pieces that go far out and back (where no mesh cuts them, e.g. around a base the mesh doesn't reach), between
     # zones the mesh or the other navigation paths connect anyway.
-    parts = _zone_parts(navzones, len(zones.names))
     for route in list(kept):
         straight = math.dist(graph.pos[route.vertices[0]], graph.pos[route.vertices[-1]])
         if route.length <= DETOUR_FACTOR * straight + DETOUR_EXTRA:
             continue
         others = [other for other in kept if other is not route]
-        if parts[route.start] & parts[route.end] or _zone_distance(others, route.start, route.end) < math.inf:
+        if zones.place_part[route.start] == zones.place_part[route.end] \
+                or _zone_distance(others, route.start, route.end, mesh) < math.inf:
             kept.remove(route)
             result.detours += 1
 
     # 4.: neighbouring zones the navigation paths don't connect, or only over a long detour. The shortest ways first,
-    # each one can make the next ones unnecessary.
+    # each one can make the next ones unnecessary. Not where the mesh leads.
     crafted = []
     for zone in range(len(zones.names)):
         for other, way in graph.from_zone(zone).items():
@@ -461,15 +627,54 @@ def build(data: MapData, navzones: dict) -> Result:
     for route in crafted:
         if all(zones.on_mesh(graph.pos[vertex]) for vertex in route.vertices) or route.length < MIN_LENGTH:
             continue
-        if _zone_distance(kept, route.start, route.end) > DETOUR * route.length:
+        if mesh.distance(route.start, route.end) <= DETOUR * route.length:
+            continue
+        if _zone_distance(kept, route.start, route.end, mesh) > DETOUR * route.length:
             kept.append(route)
 
+    # 5.: no function: the mesh leads from the one zone to the other about as far (the ways from the spawns to their
+    # targets, zones that touch). The longest first: a shorter one may be the only way left.
+    for route in sorted(kept, key=lambda route: -route.length):
+        if mesh.distance(route.start, route.end) <= MESH_DETOUR * route.length + MESH_SLACK:
+            kept.remove(route)
+            result.mesh_ways += 1
+
+    # 6.: dead ends: a path whose end lies in a part of the mesh without anything to do there (no objective, no spawn,
+    # no beacon or MCOM to arm) and no other path. Again and again: the next one may be a dead end now.
+    function_parts = set()
+    for index, kind in enumerate(zones.kinds):
+        if kind not in ("hub", "way"):
+            function_parts.add(zones.place_part[index])
+    for index in result.fixed:
+        if not data.paths[index].vehicles:
+            for node in data.paths[index].nodes:
+                part = mesh.part_at(node.pos)
+                if part is not None:
+                    function_parts.add(part)
+
+    def end_parts(route: Route) -> tuple:
+        return (mesh.part_at(graph.pos[route.vertices[0]]), mesh.part_at(graph.pos[route.vertices[-1]]))
+
+    changed = True
+    while changed:
+        changed = False
+        ends: dict = defaultdict(int)
+        for route in kept:
+            for part in end_parts(route):
+                ends[part] += 1
+        for route in list(kept):
+            if any(part is None or (part not in function_parts and ends[part] <= 1) for part in end_parts(route)):
+                kept.remove(route)
+                result.dead_ends += 1
+                changed = True
+                break
+
     result.routes = kept
-    _write(result, data, graph)
+    _write(result, data, graph, zones)
     return result
 
 
-def _write(result: Result, data: MapData, graph: _Graph) -> None:
+def _write(result: Result, data: MapData, graph: _Graph, zones: _Zones | None = None) -> None:
     """The new waypoints: the kept paths first (their links moved), then the navigation paths."""
     paths: dict[int, PathData] = {}
     new_index: dict[int, int] = {}
@@ -502,23 +707,29 @@ def _write(result: Result, data: MapData, graph: _Graph) -> None:
         assert path.first.input >> 8 == NO_LOOP
         paths[number] = path
 
-    # Links of the kept paths.
+    # Links of the kept paths. Only foot paths that don't reach the mesh (the way to a beacon) get connecting paths: the
+    # bots get onto the mesh at the junctions of the others, and vehicles can't use foot paths.
     nav_nodes = [(node.pos, (node.path, node.point)) for index, path in paths.items()
                  if index not in result.old_paths for node in path.nodes]
     for index, path in list(paths.items()):
         if index not in result.old_paths:
             continue
+        connect = not path.vehicles and not (zones is not None and any(zones.on_usable_mesh(node.pos)
+                                                                        for node in path.nodes))
         for node in path.nodes:
             links = []
             for link in node.links:
                 if link[0] in new_index:
                     links.append((new_index[link[0]], link[1]))
                     continue
+                if link[0] in data.paths and fixed_reason(data.paths[link[0]]):
+                    continue  # A kept path that got dropped (the way into a vehicle).
                 target = moved.get(link)
                 if target is None:
                     target = _closest(nav_nodes, node.pos)
-                if target is None:
-                    target = _connector(result, data, graph, paths, moved, link)
+                if target is None and connect:
+                    target = _connector(result, data, graph, paths, moved, link, zones,
+                                        [name for name in path.objectives if "interact" in name.lower()])
                 if target is None:
                     result.lost_links += 1
                     continue
@@ -531,35 +742,43 @@ def _write(result: Result, data: MapData, graph: _Graph) -> None:
 
 
 def _connector(result: Result, data: MapData, graph: _Graph, paths: dict[int, PathData], moved: dict[Vertex, Vertex],
-               start: Vertex) -> Vertex | None:
-    """A kept path (the way to a beacon, a vehicle) links to a waypoint that got dropped, far from any navigation path
-    (on a path that ran along another one, or never came into a zone): else the bots that get onto it (spawned at the
-    beacon) can't leave it. The old waypoints from there to the closest navigation path stay as a path of their own,
-    linked to it at its end, without "Objectives" (it leads nowhere of its own). Returns where the kept path links to
+               start: Vertex, zones: _Zones | None = None, labels: list[str] | None = None) -> Vertex | None:
+    """A kept foot path (the way to a beacon, to arm an MCOM) that doesn't reach the mesh links to a waypoint that got
+    dropped: else the bots that get onto it (spawned at the beacon) can't leave it, and the ones that shall arm the MCOM
+    (in a room the mesh doesn't reach, behind a door the census didn't see) can't get onto it. The old waypoints from
+    there to the closest navigation path, or to the mesh where the bots can use it, stay as a path of their own: linked
+    to the navigation path at its end, or with a junction of the mesh there. Its "Objectives" are labels (the way to
+    arm the MCOM: "mcom N interact", the bots walk it from the mesh), else none. Returns where the kept path links to
     now."""
-    way = _way_to(graph, start, moved)
+    def reached(vertex: Vertex) -> bool:
+        return vertex in moved or (zones is not None and zones.on_usable_mesh(graph.pos[vertex]))
+
+    way = _way_to(graph, start, reached)
     if way is None:
         return None
-    end = moved[way[-1]]
+    end = moved.get(way[-1])
     number = len(paths) + 1
     nodes = []
-    for point, vertex in enumerate(way[:-1], start=1):
+    for point, vertex in enumerate(way if end is None else way[:-1], start=1):
         old = data.node(*vertex)
         assert old is not None
         nodes.append(Node(number, point, old.pos, old.input, {}))
         moved.setdefault(vertex, (number, point))
     path = PathData(number, nodes)
     path.loops = False
+    if labels:
+        path.objectives = labels
     paths[number] = path
-    nodes[-1].set_links(list(dict.fromkeys(nodes[-1].links + [end])))
-    back = paths[end[0]].nodes[end[1] - 1]
-    back.set_links(list(dict.fromkeys(back.links + [(number, len(nodes))])))
+    if end is not None:
+        nodes[-1].set_links(list(dict.fromkeys(nodes[-1].links + [end])))
+        back = paths[end[0]].nodes[end[1] - 1]
+        back.set_links(list(dict.fromkeys(back.links + [(number, len(nodes))])))
     result.connectors += 1
     return (number, 1)
 
 
-def _way_to(graph: _Graph, start: Vertex, targets: dict[Vertex, Vertex]) -> list[Vertex] | None:
-    """The shortest way over the old foot paths from the waypoint to one of the targets. [start, ..., target]"""
+def _way_to(graph: _Graph, start: Vertex, reached) -> list[Vertex] | None:
+    """The shortest way over the old foot paths from the waypoint to one that is reached(vertex). [start, ..., target]"""
     if start not in graph.pos:
         return None
     best = {start: 0.0}
@@ -569,7 +788,7 @@ def _way_to(graph: _Graph, start: Vertex, targets: dict[Vertex, Vertex]) -> list
         cost, vertex = heapq.heappop(queue)
         if cost > best.get(vertex, math.inf) or cost > EXTEND_MAX:
             continue
-        if vertex in targets and vertex != start:
+        if vertex != start and reached(vertex):
             way = [vertex]
             while way[-1] in previous:
                 way.append(previous[way[-1]])
@@ -596,6 +815,18 @@ def _closest(nodes: list[tuple[tuple[float, float, float], Vertex]], pos) -> Ver
 
 MESH_ROW = "@mesh"  # The one row of <map>_navzones in mod.db: the whole mesh (NavZones.lua).
 END_SEARCH = 15  # Same as NavRoutes.lua: an end's junction among this many waypoints from the end.
+
+
+def census_blocked(census: dict) -> set[Vertex]:
+    """The waypoints whose way to the next one the census found blocked at every height (rays at 0.4, 1.0 and 1.6 m):
+    a door that is closed, a wall that wasn't there when the path was recorded. [(path, point)]"""
+    result = set()
+    for path, entry in (census.get("nodes") or {}).items():
+        for index, fractions in enumerate(entry.get("next") or [], start=1):
+            values = as_list(fractions)
+            if values and all(value is not False and value is not None for value in values):
+                result.add((int(path), index))
+    return result
 
 
 def missing_ends(data: MapData, networks: dict) -> list[tuple[int, str]]:
@@ -633,8 +864,10 @@ def summary(result: Result, before: MapData, verbose: bool = False) -> str:
         f"  navigation paths: {len(result.routes)} (" + ", ".join(f"{count} {origin}" for origin, count
                                                               in sorted(origins.items())) + f"), "
         f"{result.duplicates} pieces dropped along others, {result.on_mesh} on the mesh, "
-        f"{result.short} shorter than {MIN_LENGTH:.0f} m, {result.detours} far out and back",
-        f"  cut paths without a navigation path of their own: {len(result.dropped)}",
+        f"{result.short} shorter than {MIN_LENGTH:.0f} m, {result.detours} far out and back, "
+        f"{result.mesh_ways} where the mesh leads, {result.dead_ends} dead ends",
+        f"  ways into vehicles dropped: {result.entries}",
+        f"  cut paths without a navigation path of their own: {len(result.dropped) - result.entries}",
         f"  links of kept paths moved: {result.moved_links}, lost: {result.lost_links}, "
         f"over connecting paths: {result.connectors}",
     ]
@@ -644,7 +877,9 @@ def summary(result: Result, before: MapData, verbose: bool = False) -> str:
         degree[route.end].add(route.start)
     for index, name in enumerate(result.zones):
         neighbours = sorted(result.zones[other] for other in degree.get(index, set()))
-        warn = "  <- no navigation path" if not neighbours else ""
+        if not neighbours and name.startswith("way "):
+            continue
+        warn = "  <- no navigation path" if not neighbours and not name.startswith("hub ") else ""
         lines.append(f"  {name}: {', '.join(neighbours) or '-'}{warn}")
     if verbose:
         for number, route in enumerate(result.routes, start=1):

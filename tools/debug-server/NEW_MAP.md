@@ -21,8 +21,9 @@ navigation paths between them. What they do there comes from the game, not from 
   directly; every other vehicle standing still with a free seat is an objective of its own (`vehicle <id>`), a bot
   walks over the mesh to it and gets in.
 - **Spawns**: the bots spawn at the spawns of the game and start on the mesh there. The census reads the spawns of the
-  mode from the engine (also the alternate spawns of the capture points) and measures the area around them; in rush
-  they are the bases of the stages.
+  mode from the engine (also the alternate spawns of the capture points) and measures the area around them and the way
+  from them to their target (the capture point they belong to, in rush the MCOMs of their stage); in rush they are the
+  bases of the stages. No paths from the spawns are needed, the cut drops the ones the mesh makes useless.
 
 So no labels, actions or "ways to" paths are needed for these, also no `base ...` or `spawn vehicle ...` paths.
 Vehicle-paths keep their objectives: vehicles find their way by them.
@@ -33,7 +34,9 @@ Vehicle-paths keep their objectives: vehicles find their way by them.
 
 - **Paths on foot** that connect the areas: from each base and capture point (or MCOM) to its neighbours, a few
   alternatives where the level has them. Inside the areas nothing is needed, the mesh covers them; a path only has to
-  reach into an area, the cut trims it at its edge.
+  reach into an area, the cut trims it at its edge. Where the mesh leads from one area to the next (they touch, or the
+  way from a spawn covers it) the cut drops the path; it keeps the ones the mesh can't replace (stairs and escalators
+  the census doesn't see, long ways around).
 - **Vehicle-paths**: drive them. A path traced while sitting in a vehicle gets its `Vehicles` tag (land, water, air)
   on its own.
 - Optional: ways to a spot for a beacon (action *beacon*, label `beacon`).

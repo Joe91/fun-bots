@@ -28,6 +28,7 @@ local ZONE_TURN_ANGLE = 1.0      -- slows down until it faces the target: else i
 local ZONE_REACH_HEIGHT = 1.5    -- Same as Registry.BOT.TARGET_HEIGHT_DISTANCE_WAYPOINT.
 local ZONE_MIN_PROGRESS = 0.3    -- Metres closer to the target that count as progress.
 local ZONE_JUMP_TIME = 1.5       -- Seconds without progress before a jump.
+local ZONE_JUMP_RANGE = 1.5      -- Horizontal metres before a corner where the way was recorded with a jump: jump.
 local ZONE_STUCK_TIME = 4.0      -- Seconds without progress before the bot gives up this way.
 local ZONE_MAX_FAILS = 3         -- Ways given up before the bot leaves the zone.
 local ZONE_MAX_GIVE_UPS = 3      -- Zones left like that in a row (no goal, no exit reached): the bot is stuck in a
@@ -49,13 +50,20 @@ local ZONE_VEHICLE_FLOOR = 3.0   -- to the point next to it the bot gets in from
 local ZONE_OFF_POINT = 3.0       -- Horizontal metres from its point: a new route first leads back to it.
 local ZONE_SMOOTH_ROOM = 2.5     -- Smoothing: metres before a point the bot turns towards the next one (at most).
 local ZONE_REJOIN_RANGE = 30.0   -- No route from the point the bot is at (a piece of the mesh cut off by given-up
-                                 -- connections): it goes on from a point of another part this close.
+                                 -- connections): it goes on from a point of another part this close...
+local ZONE_REJOIN_MIN_PART = 10  -- ...with this many points at least (NavZones MIN_PART).
 local ZONE_REENTER_TIME = 5.0    -- Seconds a bot that left the mesh at a junction doesn't go onto it there again.
 local ZONE_FALL = 1.5            -- Metres below the way to the target (and ZONE_FALL_BELOW below both ends of it): the
 local ZONE_FALL_BELOW = 1.0      -- bot fell off, the way is given up.
 local ZONE_FALL_PAUSE = 3.0      -- Seconds after a fall before the next one counts (landing, getting up).
 local ZONE_RESNAP = 8.0          -- Metres from its point a bot may be when it decides anew: else the closest point...
 local ZONE_RESNAP_AFTER = 5.0    -- ...not in the first seconds on the mesh (on the way from the junction).
+local BORDER_WAIT = 6.0          -- Rush: seconds a bot waits at the border of the combat area before it tries again.
+local BORDER_GIVE_UP = 10.0      -- Not back inside this many seconds after it left: it was outside already (the area got
+                                 -- smaller when a stage fell), it goes on to its objective.
+local BORDER_BACK = 15.0         -- It walks back to a point it passed at least this far behind it (the point it reached
+                                 -- last can be outside already)...
+local TRAIL_POINTS = 6           -- ...of the last points it reached.
 
 ---@class BotZoneState
 ---@field Zone NavZone
@@ -82,6 +90,7 @@ local ZONE_RESNAP_AFTER = 5.0    -- ...not in the first seconds on the mesh (on 
 ---@field ActionTime number seconds of the action so far
 ---@field Entered number time the bot came onto the mesh (or onto another part of it, _ZoneRejoin)
 ---@field FallTime number time of the last fall off a way
+---@field Trail integer[]|nil the last points it reached (Bot:_ZoneTrail)
 
 ---Called when the bot reached a waypoint. At a junction of the mesh it walks the mesh from now on.
 ---@param p_Point Waypoint (or an offset-point with the fields of its waypoint)
@@ -323,7 +332,8 @@ function Bot:_ZoneRejoin()
 	local s_From = s_Current.Position
 	local s_Candidates = {}
 	for l_Index = 1, #s_Mesh.Points do
-		if s_Mesh.Part[l_Index] ~= s_Part then
+		-- Not onto an island of the mesh (a point behind a wall the checks cut off).
+		if s_Mesh.Part[l_Index] ~= s_Part and (s_Mesh.PartSize[s_Mesh.Part[l_Index]] or 0) >= ZONE_REJOIN_MIN_PART then
 			local s_Distance = s_Mesh.Points[l_Index].Position:Distance(s_From)
 			if s_Distance <= ZONE_REJOIN_RANGE then
 				s_Candidates[#s_Candidates + 1] = { l_Index, s_Distance }
@@ -589,6 +599,102 @@ function Bot:UpdateZoneSubObjective(p_DeltaTime)
 	end
 end
 
+---Rush: the bot left the combat area (GameDirector:OnCombatArea). The area of the next stage opens a while after the
+---stage before fell, but the objectives are the new MCOMs at once. On the mesh the bot walks back to the point it
+---reached last (inside) and waits there, off the mesh it turns around on its path. Then it tries again.
+function Bot:OnCombatAreaLeft()
+	if self.m_Player.soldier == nil then
+		return
+	end
+	local s_Border = { Left = SharedUtils:GetTime(), Returned = nil, Inverted = false }
+	self.m_Border = s_Border
+	local s_State = self.m_Zone
+	if s_State ~= nil and not s_State.Vehicle then
+		s_State.Exit = nil
+		s_State.Action = nil
+		s_State.SubObjective = nil
+		-- Back to a point it passed a bit behind it (inside), the oldest one it knows if none is that far. It stops as soon
+		-- as it is inside again (OnCombatAreaReturned).
+		local s_Here = self.m_Player.soldier.worldTransform.trans
+		local s_Back = s_State.Point
+		local s_Trail = s_State.Trail or {}
+		for l_Index = #s_Trail, 1, -1 do
+			s_Back = s_Trail[l_Index]
+			local s_Point = s_State.Zone.Points[s_Back]
+			if s_Point ~= nil and s_Point.Position:Distance(s_Here) >= BORDER_BACK then
+				break
+			end
+		end
+		self:_ZoneRouteTo(s_Back)
+		local s_Point = s_State.Zone.Points[s_Back]
+		if s_Point ~= nil and #s_State.Targets == 0 then
+			s_State.Targets = { { Position = s_Point.Position, Flags = s_Point.Flags, Point = s_Back } }
+		end
+	else
+		self._InvertPathDirection = not self._InvertPathDirection
+		s_Border.Inverted = true
+	end
+end
+
+---Rush: back in the combat area: waits there (UpdateBorder), off the mesh it turns around again.
+function Bot:OnCombatAreaReturned()
+	local s_Border = self.m_Border
+	if s_Border == nil then
+		return
+	end
+	s_Border.Returned = SharedUtils:GetTime()
+	local s_State = self.m_Zone
+	if s_State ~= nil and not s_State.Vehicle then
+		-- Inside again: it waits right here.
+		s_State.Targets = {}
+		s_State.Step = 1
+	elseif s_Border.Inverted and s_State == nil then
+		self._InvertPathDirection = not self._InvertPathDirection
+		s_Border.Inverted = false
+	end
+end
+
+---Remembers the point the bot reached (the last TRAIL_POINTS), the way back from the border of the combat area.
+---@param p_State BotZoneState
+function Bot:_ZoneTrail(p_State)
+	local s_Trail = p_State.Trail
+	if s_Trail == nil then
+		s_Trail = {}
+		p_State.Trail = s_Trail
+	end
+	if s_Trail[#s_Trail] ~= p_State.Point then
+		s_Trail[#s_Trail + 1] = p_State.Point
+		if #s_Trail > TRAIL_POINTS then
+			table.remove(s_Trail, 1)
+		end
+	end
+end
+
+---Rush: the end of the wait at the border (GameDirector, about every second).
+function Bot:UpdateBorder()
+	local s_Border = self.m_Border
+	if s_Border == nil then
+		return
+	end
+	local s_Now = SharedUtils:GetTime()
+	if self.m_Player.soldier == nil then
+		self.m_Border = nil
+	elseif s_Border.Returned == nil and s_Now - s_Border.Left > BORDER_GIVE_UP then
+		-- Never came back: it was outside already. On to the objective.
+		self.m_Border = nil
+		if s_Border.Inverted and self.m_Zone == nil then
+			self._InvertPathDirection = not self._InvertPathDirection
+		end
+	elseif s_Border.Returned ~= nil and s_Now - s_Border.Returned > BORDER_WAIT then
+		self.m_Border = nil
+	else
+		return
+	end
+	if self.m_Zone ~= nil and not self.m_Zone.Vehicle then
+		self:_ZoneDecide()
+	end
+end
+
 ---Movement in the zone, instead of Bot:UpdateNormalMovement.
 ---@param p_DeltaTime number
 ---@return boolean true while the bot is in the zone
@@ -607,8 +713,8 @@ function Bot:UpdateZoneMovement(p_DeltaTime)
 
 	self:UpdateZoneSubObjective(p_DeltaTime)
 
-	-- New objective: decide anew where to go.
-	if self._Objective ~= s_State.Objective and (s_State.Exit == nil or self._Objective ~= '') then
+	-- New objective: decide anew where to go (not while it waits at the border of the combat area, UpdateBorder).
+	if self._Objective ~= s_State.Objective and (s_State.Exit == nil or self._Objective ~= '') and self.m_Border == nil then
 		self:_ZoneDecide()
 		if self.m_Zone == nil then
 			return false
@@ -621,6 +727,7 @@ function Bot:UpdateZoneMovement(p_DeltaTime)
 		local s_Passed = s_State.Targets[s_State.Step]
 		if s_Passed ~= nil and s_Passed.Point ~= nil then
 			s_State.Point = s_Passed.Point
+			self:_ZoneTrail(s_State)
 		end
 		s_State.Step = s_State.Step + 1
 	end
@@ -639,8 +746,9 @@ function Bot:UpdateZoneMovement(p_DeltaTime)
 			return self:_ZoneAction(p_DeltaTime)
 		end
 
-		-- In a base the bot only waits for its objective, on the mesh outside of the zones as well.
-		if s_State.Zone.Kind == 'base' or s_State.Zone.Kind == 'mesh' then
+		-- In a base the bot only waits for its objective, on the mesh outside of the zones as well. At the border of the
+		-- combat area until it tries again (UpdateBorder).
+		if s_State.Zone.Kind == 'base' or s_State.Zone.Kind == 'mesh' or self.m_Border ~= nil then
 			s_State.Waiting = true
 			self:LookAround(p_DeltaTime)
 			return true
@@ -720,6 +828,12 @@ function Bot:UpdateZoneMovement(p_DeltaTime)
 		end
 	end
 
+	-- Where the soldier who recorded the way jumped (a step into a train, over a railing): jump as well.
+	if s_Target.Flags & NavZoneFlags.Jump ~= 0 and s_Distance < ZONE_JUMP_RANGE then
+		self:_SetInput(EntryInputActionEnum.EIAJump, 1)
+		self:_SetInput(EntryInputActionEnum.EIAQuicktimeJumpClimb, 1)
+	end
+
 	local s_Reach = (s_Target.Point ~= nil and not s_Narrow) and ZONE_REACH_POINT or ZONE_REACH_CORNER
 	if self.m_ActiveSpeedValue == BotMoveSpeeds.Sprint then
 		s_Reach = s_Reach * ZONE_REACH_SPRINT
@@ -728,6 +842,7 @@ function Bot:UpdateZoneMovement(p_DeltaTime)
 	if s_Distance < s_Reach and math.abs(s_Target.Position.y - s_Position.y) < ZONE_REACH_HEIGHT then
 		if s_Target.Point ~= nil then
 			s_State.Point = s_Target.Point
+			self:_ZoneTrail(s_State)
 		end
 		s_State.Step = s_State.Step + 1
 		s_State.Progress = math.huge
