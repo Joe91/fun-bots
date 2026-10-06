@@ -709,14 +709,15 @@ function GameDirector:_CheckProgressOffMesh(p_Bot)
 		return
 	end
 
-	-- Where it walks to: the end of the navigation path, else its objective. The time counts per path (or objective):
-	-- a bot that turns around on it again and again (skipping waypoints it can't reach) doesn't start anew.
-	local s_End = g_NavRoutes:Heading(p_Bot._PathIndex, p_Bot._InvertPathDirection)
+	-- Where it walks to: the next node of the routes on its path (an end, a link, a junction), else its objective. The
+	-- time counts per path (or objective): a bot that turns around on it again and again (skipping waypoints it can't
+	-- reach) doesn't start anew.
+	local s_End = g_NavRoutes:Heading(p_Bot._PathIndex, p_Bot._CurrentWayPoint, p_Bot._InvertPathDirection)
 	local s_Key = nil
 	local s_Target = nil
 	if s_End ~= nil then
 		s_Key = 'path ' .. p_Bot._PathIndex
-		s_Target = s_End.Junction.Waypoint.Position
+		s_Target = s_End.Position
 	else
 		s_Key = p_Bot:GetObjective()
 		s_Target = self:_GetObjectivePosition(s_Key)
@@ -748,6 +749,16 @@ function GameDirector:_CheckProgressOffMesh(p_Bot)
 	end
 	p_Bot._KillYourselfTimer = p_Bot._KillYourselfTimer + Registry.GAME_DIRECTOR.UPDATE_OBJECTIVES_CYCLE
 
+	-- The stretch of the path it got stuck on costs more for all bots from now on (once per bot and path).
+	if p_Bot._KillYourselfTimer > Registry.GAME_DIRECTOR.OFF_MESH_TELEPORT_TIME and s_End ~= nil
+		and p_Bot._OffMeshBlocked ~= s_Key and g_NavRoutes:BlockStretch(p_Bot._PathIndex, p_Bot._CurrentWayPoint) then
+		p_Bot._OffMeshBlocked = s_Key
+		if m_DebugBridge.m_Enabled then
+			local s_Here = s_Soldier.worldTransform.trans
+			m_DebugBridge:Event('path_stuck', { bot = p_Bot.m_Player.name, path = p_Bot._PathIndex,
+				point = p_Bot._CurrentWayPoint, pos = { s_Here.x, s_Here.y, s_Here.z } })
+		end
+	end
 	if Config.TeleportIfStuck and p_Bot._KillYourselfTimer > Registry.GAME_DIRECTOR.OFF_MESH_TELEPORT_TIME
 		and p_Bot:TeleportToMesh(Registry.GAME_DIRECTOR.OFF_MESH_TELEPORT_RANGE) then
 		p_Bot._KillYourselfTimer = 0.0
@@ -2074,11 +2085,15 @@ function GameDirector:_InitObjectives()
 	for _, l_Objective in pairs(self:_EngineCapturePoints()) do
 		m_NodeCollection:AddKnownObjective(l_Objective)
 	end
-	-- Every zone of the mesh (capture points, MCOMs, bases): the paths are cut at them and have no names of zones. Not
-	-- the spawns of the game (the bots only start there) and not the hubs (where paths meet).
+	-- Every zone of the mesh (capture points, MCOMs, bases): the paths are trimmed at them and have no names. Not the
+	-- spawns of the game (the bots only start there) and not the hubs (where paths meet). An MCOM also gets its
+	-- "mcom N interact" (arm or disarm it): the bots do that on the mesh, no path needed (BotZoneMovement).
 	for l_Name, l_Zone in pairs(m_NavZones:GetZones()) do
 		if l_Name:lower():sub(1, 6) ~= 'spawn ' and l_Zone.Kind ~= 'hub' then
 			m_NodeCollection:AddKnownObjective(l_Name)
+			if l_Zone.Kind == 'mcom' then
+				m_NodeCollection:AddKnownObjective(l_Name .. ' interact')
+			end
 		end
 	end
 	local s_Engine = {}
@@ -2758,8 +2773,22 @@ local MCOM_SAME = 1.0
 -- An MCOM is close to the waypoints players recorded; the level also has interactions far off (other layouts, dummies).
 local MCOM_NEAR_WAYPOINTS = 40.0
 
+---Whether an interaction of the engine is an MCOM of the level: close to the waypoints, or to an MCOM-zone of the mesh
+---(the paths are trimmed there).
+---@param p_Position Vec3
+---@return boolean
+function GameDirector:_NearWaypointsOrMcomZone(p_Position)
+	for _, l_Zone in pairs(m_NavZones:GetZones()) do
+		if l_Zone.Kind == 'mcom' and l_Zone.Center:Distance(p_Position) < MCOM_NEAR_WAYPOINTS then
+			return true
+		end
+	end
+	local s_Node = self:FindClosestPath(p_Position, false, true, nil, 1)
+	return s_Node ~= nil and s_Node.Position:Distance(p_Position) < MCOM_NEAR_WAYPOINTS
+end
+
 ---The positions of the MCOMs of the engine (its interactions, GameInteractionEntityData, ~1 m from where a soldier
----arms it), once per level. Only the ones close to the waypoints.
+---arms it), once per level. Only the ones close to the waypoints or to an MCOM-zone.
 ---@return Vec3[]
 function GameDirector:_FindEngineMcoms()
 	if self.m_EngineMcoms ~= nil then
@@ -2786,11 +2815,8 @@ function GameDirector:_FindEngineMcoms()
 					break
 				end
 			end
-			if s_Position ~= nil and not s_Known then
-				local s_Node = self:FindClosestPath(s_Position, false, true, nil, 1)
-				if s_Node ~= nil and s_Node.Position:Distance(s_Position) < MCOM_NEAR_WAYPOINTS then
-					self.m_EngineMcoms[#self.m_EngineMcoms + 1] = s_Position
-				end
+			if s_Position ~= nil and not s_Known and self:_NearWaypointsOrMcomZone(s_Position) then
+				self.m_EngineMcoms[#self.m_EngineMcoms + 1] = s_Position
 			end
 		end
 		s_Entity = s_Iterator:Next()

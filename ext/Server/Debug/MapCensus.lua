@@ -46,7 +46,7 @@ local NODES_PER_EVENT = 250
 -- Grids around the objectives.
 local AREA_MARGIN = 15.0          -- Metres around the capture-radius.
 local AREA_MCOM_RADIUS = 30.0
-local AREA_SPAWN_MARGIN = 8.0     -- Areas around the spawns of the game that no other area covers: this far around the
+local AREA_SPAWN_MARGIN = 15.0    -- Areas around the spawns of the game that no other area covers: this far around the
 local AREA_SPAWN_MERGE = 40.0     -- outer spawns of a group, one group for spawns this close to each other.
 local AREA_SPAWN_COVERED = 2.0    -- A spawn at least this far inside of another area is covered by it.
 local AREA_WAY_RADIUS = 12.0      -- The way from a group of spawns to its target: discs of this radius...
@@ -1244,8 +1244,9 @@ end
 ---Each group of spawns also gets the way to its target (_WayArea, kind "way"): the mesh leads from the spawn to the
 ---MCOMs of its stage, to the capture point it belongs to.
 ---@param p_Areas table[] the areas so far
+---@param p_Ways boolean also the ways from the spawns to their targets
 ---@return table[]
-local function _SpawnAreas(p_Areas)
+local function _SpawnAreas(p_Areas, p_Ways)
 	-- { position (on the ground), team (0: whoever holds the capture point), rush stage }
 	local s_Positions = {}
 	local s_Alternates = _AlternateSpawns()
@@ -1364,7 +1365,7 @@ local function _SpawnAreas(p_Areas)
 				s_Covered[#s_Covered + 1] = l_Group.positions[l_Position]
 			end
 		end
-		for _, l_Positions in ipairs({ l_Group.uncovered, s_Covered }) do
+		for _, l_Positions in ipairs(p_Ways and { l_Group.uncovered, s_Covered } or {}) do
 			if #l_Positions > 0 then
 				local s_From, s_Reach = _Circle(l_Positions)
 				s_Reach = s_Reach + AREA_SPAWN_MARGIN
@@ -1567,18 +1568,19 @@ end
 function CensusTask:_StartAreas()
 	self.Areas = self:_DefaultAreas()
 	if self.Args.spawns ~= false then
-		local s_Spawns = _SpawnAreas(self.Areas)
+		local s_Spawns = _SpawnAreas(self.Areas, self.Args.ways == true)
 		for l_Index = 1, #s_Spawns do
 			self.Areas[#self.Areas + 1] = s_Spawns[l_Index]
 		end
 	end
-	if self.Args.hubs ~= false then
+	-- Only the objectives and the spawns get mesh: the paths lead between them (hubs and corridors only on request).
+	if self.Args.hubs == true then
 		local s_Hubs = _HubAreas(self.Areas)
 		for l_Index = 1, #s_Hubs do
 			self.Areas[#self.Areas + 1] = s_Hubs[l_Index]
 		end
 	end
-	if self.Args.corridors ~= false then
+	if self.Args.corridors == true then
 		local s_Corridors = _CorridorAreas(self.Areas)
 		for l_Index = 1, #s_Corridors do
 			self.Areas[#self.Areas + 1] = s_Corridors[l_Index]

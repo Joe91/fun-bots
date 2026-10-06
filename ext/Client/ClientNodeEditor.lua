@@ -355,7 +355,7 @@ function ClientNodeEditor:GetColor(p_Node, p_IsTracePath)
 		return self.m_TraceColor
 	end
 
-	-- Navigation paths (cut at the zones, from zone to zone) all have the same color.
+	-- The paths of the routes (trimmed at the mesh) all have the same color.
 	local s_First = self.m_FirstNodeInPath[p_Node.PathIndex]
 	if s_First ~= nil and s_First.Data ~= nil and s_First.Data.Nav ~= nil then
 		return self.m_NavPathColor
@@ -1244,8 +1244,7 @@ function ClientNodeEditor:_GetNodeInfoText(p_Node)
 		s_Text = s_Text .. string.format('Vehicles: %s\n', g_Utilities:dump(s_FirstNode.Data.Vehicles, false))
 		local s_Nav = s_FirstNode.Data.Nav
 		if type(s_Nav) == 'table' then
-			s_Text = s_Text .. string.format('Navigation: %s -> %s (%d m)\n', tostring(s_Nav.From), tostring(s_Nav.To),
-				math.floor(tonumber(s_Nav.Length) or 0))
+			s_Text = s_Text .. string.format('Navigation: %d m\n', math.floor(tonumber(s_Nav.Length) or 0))
 		end
 	end
 	s_Text = s_Text .. string.format('InputVar: %d\n', p_Node.InputVar)

@@ -53,7 +53,8 @@ SPAWN_ZONE = 25.0         # Metres around the spawns of a spawn area that count 
 SPAWN_HEIGHT = 1.0        # A spawn (on the ground) is on the surface this close above or below it.
 CROUCH_HEADROOM = 1.7     # Less headroom: crouching.
 COVER_RANGE = 3           # Cells in each of the 8 directions that are checked for cover.
-ATTACH_HEIGHT = 1.0       # A waypoint belongs to a surface this close below or above it.
+ATTACH_HEIGHT = 1.0       # A waypoint belongs to a surface this close below or above it...
+ROAD_ATTACH_HEIGHT = 3.0  # ...a waypoint of a land vehicle path (where the vehicle was) this close.
 STEP_HEIGHT = 0.6         # Same as report.STEP_HEIGHT: what a straight line may step up or down per cell.
 MERGE_HEIGHT = 0.5        # Surfaces of the same cell from overlapping areas this close in height are the same.
 MESH_ONLY = ("spawn", "way")  # Kinds of areas that are no zones, only mesh (spawns, the ways from them to the targets).
@@ -794,6 +795,12 @@ def _land(nodes: _Nodes) -> set[int]:
             if "land" in [str(name).lower() for name in entry.get("vehicles") or []]}
 
 
+def _roads(nodes: _Nodes) -> set[int]:
+    """The paths soldiers walk besides their own: land vehicle paths that don't cross water (no amphibious ones)."""
+    return {path for path in _land(nodes)
+            if "water" not in [str(name).lower() for name in nodes.paths[path].get("vehicles") or []]}
+
+
 def spawn_positions(census: dict) -> list[list[float]]:
     """Where the game spawns soldiers in the mode of the census, on the ground: the alternate spawns of the mode and the
     spawns of the spawn areas (MapCensus.lua). Censuses before them have none."""
@@ -828,9 +835,14 @@ def build(census: dict, attach: dict | None = None, checks: dict | None = None) 
     def attached(paths: set[int], height: float) -> tuple[list, _Nodes] | None:
         return None if attach_nodes is None else (_walked(grid, attach_nodes, paths, height), attach_nodes)
 
+    # The soldiers get junctions with the roads as well (the land vehicle paths, trimmed paths only): they walk them
+    # where they lead to the target (NavRoutes.lua). Their waypoints are where the vehicle was, above the ground.
+    soldier_attach = None
+    if attach_nodes is not None:
+        soldier_attach = (_walked(grid, attach_nodes, attach_nodes.foot, ATTACH_HEIGHT)
+                          + _walked(grid, attach_nodes, _roads(attach_nodes), ROAD_ATTACH_HEIGHT), attach_nodes)
     soldier = _network(grid, clearance, set(grid.surfaces), _walked(grid, nodes, nodes.foot, ATTACH_HEIGHT), nodes,
-                       inside_any, SOLDIER, True, attached(attach_nodes.foot, ATTACH_HEIGHT) if attach_nodes else None,
-                       spawns=spawn_positions(census))
+                       inside_any, SOLDIER, True, soldier_attach, spawns=spawn_positions(census))
     soldier = _reattach(check_apply(soldier, checks, spawn_positions(census)), checks)
     nav_paths = {int(path) for path, entry in (attach or {}).items() if entry.get("nav")}
     if nav_paths:

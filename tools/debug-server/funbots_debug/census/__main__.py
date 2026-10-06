@@ -8,7 +8,7 @@
     python -m funbots_debug.census report census/XP3_Desert_ConquestLarge0.json.gz [--issues 40]
     python -m funbots_debug.census navzones census/*.json.gz        # walking networks of the zones (navzones.py)
     python -m funbots_debug.census navpaths MP_012_RushLarge0 [--write] [--db ../../mod.db]
-                                                                     # cut the paths at the zones (navpaths.py)
+                                                                     # trim the paths at the mesh (navpaths.py)
     python -m funbots_debug.census check MP_Subway_RushLarge0        # rays of the game over the mesh (check.py)
 
 The debug-server saves every census into its census-folder (--census, default tools/debug-server/census). Switching
@@ -504,26 +504,30 @@ def command_navpaths(options) -> int:
         if any("Nav" in path.first.data for path in before.paths.values()):
             print(f"{name}: the paths are cut already (navigation paths in {map_file.name})", file=sys.stderr)
             return 1
-        # The mesh as it will be (with the checks of the game): the cut drops paths where it leads.
+        # The mesh as it will be (with the checks of the game): the paths are trimmed where it is.
         census = load(census_file)
         checks = check.load_checks(census_file)
-        result = navpaths.build(before, navzones.build(census, checks=checks), navpaths.census_blocked(census))
+        result = navpaths.trim(before, navzones.build(census, checks=checks))
         print(name)
         print(navpaths.summary(result, before, options.verbose))
         if not options.write:
             continue
-        # The networks again, with the junctions on the new paths.
+        # The mesh again, with the junctions on the trimmed paths; without the paths that got no junction where the trim
+        # expected one and lead nowhere then (the mesh again after that).
         networks = navzones.build(census, attach=navpaths.attach_nodes(result.data), checks=checks)
+        for _ in range(5):
+            dropped = navpaths.prune_unattached(result, networks)
+            if not dropped:
+                break
+            print(f"  {dropped} more foot paths without junctions dropped")
+            networks = navzones.build(census, attach=navpaths.attach_nodes(result.data), checks=checks)
         if networks.get("stats", {}).get("checkRemovedPoints") is not None:
             print(f"  check: {networks['stats']['checkRemovedEdges']} connections and "
                   f"{networks['stats']['checkRemovedPoints']} points left out")
         networks["map"] = name
         result.data.save(map_file)
         navzones.save(networks, zones_file)
-        print(f"  written {map_file} and {zones_file} "
-              f"({len(networks['attach'])} junctions)")
-        for path, end in navpaths.missing_ends(result.data, networks):
-            print(f"  warning: navigation path {path} has no junction at its {end}, the bots don't use it")
+        print(f"  written {map_file} and {zones_file} ({len(networks['attach'])} junctions)")
         if options.db:
             navpaths.write_db(options.db, name, result.data, networks)
             print(f"  written into {options.db}")
@@ -584,15 +588,15 @@ def main() -> int:
                         help="check the level as it runs (default: a new round, the bots killed at once)")
     checks.set_defaults(handler=command_check)
 
-    paths = commands.add_parser("navpaths", help="cut the paths at the zones: navigation paths from zone to zone")
+    paths = commands.add_parser("navpaths", help="trim the paths at the mesh: the ways between its areas")
     paths.add_argument("maps", nargs="+", help="<Level>_<Mode>, e.g. MP_012_RushLarge0")
     paths.add_argument("--mapfiles", type=Path, default=MAPFILES)
     paths.add_argument("--navzones", type=Path, default=NAVZONES, help="the networks (navzones/<map>.json)")
     paths.add_argument("--census", type=Path, default=CENSUS, help="the censuses the networks were made from")
     paths.add_argument("--write", action="store_true",
-                       help="write the waypoint-file and the networks (with junctions on the new paths)")
+                       help="write the waypoint-file and the mesh (with junctions on the trimmed paths)")
     paths.add_argument("--db", type=Path, metavar="MOD_DB", help="with --write: also into the tables of this mod.db")
-    paths.add_argument("-v", "--verbose", action="store_true", help="list the navigation paths")
+    paths.add_argument("-v", "--verbose", action="store_true", help="list the dropped paths")
     paths.set_defaults(handler=command_navpaths)
 
     options = parser.parse_args()

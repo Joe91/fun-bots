@@ -143,10 +143,12 @@ function Bot:__init(p_Player)
 	self._KillYourselfTimer = 0.0
 	-- Off the mesh: where the bot walks to (end of its navigation path, or objective) and how close it got to it
 	-- (GameDirector:_CheckProgressOffMesh, the time only counts without progress).
-	---@type NavRouteEnd|string|nil
+	---@type string|nil
 	self._OffMeshTarget = nil
-	---@type NavRouteEnd|nil the end of the navigation path it walks to (GameDirector:_CheckProgressOffMesh)
+	---@type Waypoint|nil the node of the routes it walks to (GameDirector:_CheckProgressOffMesh)
 	self._OffMeshEnd = nil
+	-- The key of the path whose stretch it got stuck on (NavRoutes:BlockStretch), once per path.
+	self._OffMeshBlocked = nil
 	self._OffMeshBestDistance = math.huge
 	self._RocketCooldownTimer = 0.0
 
@@ -222,6 +224,8 @@ function Bot:__init(p_Player)
 	-- Out of a vehicle: onto the mesh once on the ground (VehicleActions, UpdateNormalMovement).
 	self._MeshAfterExit = false
 	self._MeshRetryTimer = 0.0
+	-- The node of the paths the bot decided at last (NavRoutes:Step): it doesn't go straight back there.
+	self._NavCame = nil
 	self._FireCycleModifier = 1.0
 
 	-- Vehicle stuff.

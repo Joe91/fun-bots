@@ -916,12 +916,12 @@ function Bot:UpdateNormalMovement(p_DeltaTime)
 					return
 				end
 			end
-			-- Off the mesh on a path that isn't a way between zones (the closest one after a vehicle was destroyed, a
-			-- bail-out): onto the mesh as soon as it is in sight, else the bot walks that path to wherever it leads.
+			-- Off the mesh where the routes don't guide it (no route to its objective, a path that isn't part of them):
+			-- onto the mesh as soon as it is in sight, else the bot walks that path to wherever it leads.
 			self._MeshRetryTimer = self._MeshRetryTimer + p_DeltaTime
 			if self._MeshRetryTimer >= MESH_RETRY_TIME then
 				self._MeshRetryTimer = 0.0
-				if self.m_Zone == nil and math.abs(s_VelocityFalling) < 1.0 and m_NavRoutes:GetPath(self._PathIndex) == nil
+				if self.m_Zone == nil and math.abs(s_VelocityFalling) < 1.0 and not m_NavRoutes:Guides(self._PathIndex, self._Objective)
 					and SharedUtils:GetTime() - (self.m_LeftMeshTime or -math.huge) > MESH_LEFT_TIME
 					and not self:_PathLeadsToObjective() and self:TryEnterZoneAt(s_SoldierPos) then
 					return

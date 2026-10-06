@@ -58,219 +58,120 @@ def _line(x0, x1, z, step=2.0):
     return [(x0 + (x1 - x0) * i / count, z) for i in range(count + 1)]
 
 
-class NavpathsTest(unittest.TestCase):
+class TrimTest(unittest.TestCase):
     def setUp(self):
-        # Zones a (around x=0) and b (around x=100), c (around z=100) only over a road.
+        # Zones a (around x=0) and b (around x=100), c (around z=100): squares of mesh from -18 to 18 m around them.
         self.zones = _mesh(("a", 0, 0), ("b", 100, 0), ("c", 0, 100))
 
-    def test_path_through_two_zones(self):
+    def test_path_between_two_zones(self):
         data = MapData({1: _path(1, _line(-5, 105, 0), {"Objectives": ["a", "b"]})})
-        result = navpaths.build(data, self.zones)
-        self.assertEqual(len(result.routes), 1)
+        result = navpaths.trim(data, self.zones)
+        self.assertEqual(result.pieces, 1)
         path = result.data.paths[1]
-        nav = path.first.data["Nav"]
-        self.assertEqual((nav["From"], nav["To"]), ("a", "b"))
-        # The zones aren't labels of the path: the bots find their way over the mesh and "Nav".
+        # No names: the bots find their way over the mesh and the waypoints. The mark of a trimmed path instead.
         self.assertEqual(path.objectives, [])
+        self.assertIn("Length", path.first.data["Nav"])
         self.assertFalse(path.loops)
         self.assertEqual(path.first.input >> 8, NO_LOOP)
-        # From the first waypoint in a to the first one in b, nothing deeper in the zones.
-        self.assertAlmostEqual(path.nodes[0].pos[0], 10.0, delta=2.1)
-        self.assertAlmostEqual(path.nodes[-1].pos[0], 90.0, delta=2.1)
-        self.assertAlmostEqual(nav["Length"], 80.0, delta=4.5)
+        # From the last waypoint on the mesh of a to the first one on the mesh of b (up to MESH_DISTANCE beyond its
+        # points at 18 m), nothing deeper in.
+        self.assertAlmostEqual(path.nodes[0].pos[0], 20.0, delta=2.5)
+        self.assertAlmostEqual(path.nodes[-1].pos[0], 80.0, delta=2.5)
 
-    def test_inside_and_back_dropped(self):
+    def test_all_on_the_mesh_dropped(self):
         loop = [(-6, -6), (6, -6), (6, 6), (-6, 6)]
-        out_and_back = _line(0, 40, 0) + list(reversed(_line(0, 40, 4)))
-        data = MapData({1: _path(1, loop, {"Objectives": ["a"]}, loops=True), 2: _path(2, out_and_back)})
-        result = navpaths.build(data, self.zones)
-        self.assertEqual(result.routes, [])
-        self.assertEqual(result.dropped[1], "inside of a zone")
+        result = navpaths.trim(MapData({1: _path(1, loop, {"Objectives": ["a"]}, loops=True)}), self.zones)
+        self.assertEqual(result.data.paths, {})
+        self.assertEqual(result.dropped[1], "all on the mesh")
 
-    def test_open_end_extended_over_link(self):
-        # Path 2 starts outside and only goes on over a link to path 1 at x=50.
-        path1 = _path(1, _line(-5, 105, 0))
-        path2 = _path(2, [(50, 2)] + _line(50, 105, 8)[1:])
-        path1.nodes[27].set_links([(2, 1)])  # x = 49
-        path2.nodes[0].set_links([(1, 28)])
-        result = navpaths.build(MapData({1: path1, 2: path2}), self.zones)
-        origins = sorted(route.origin for route in result.routes)
-        self.assertEqual(origins, ["extended", "path"])
-        extended = next(route for route in result.routes if route.origin == "extended")
-        self.assertEqual({result.zones[extended.start], result.zones[extended.end]}, {"a", "b"})
-        self.assertIn((1, 28), extended.vertices)
+    def test_off_the_mesh_kept_whole_if_connected(self):
+        # Path 2 never comes onto the mesh, but connects two pieces of path 1 and 3 over links.
+        walk = _path(1, _line(-5, 40, 0))
+        bridge = _path(2, _line(42, 58, 4), {"Objectives": ["x"]})
+        other = _path(3, _line(60, 105, 0))
+        walk.nodes[-1].set_links([(2, 1)])
+        bridge.nodes[0].set_links([(1, len(walk.nodes))])
+        bridge.nodes[-1].set_links([(3, 1)])
+        other.nodes[0].set_links([(2, len(bridge.nodes))])
+        result = navpaths.trim(MapData({1: walk, 2: bridge, 3: other}), self.zones)
+        self.assertEqual(result.kept, 1)
+        self.assertEqual(result.dead_ends, 0)
+        kept = next(path for path in result.data.paths.values() if len(path.nodes) == len(bridge.nodes))
+        self.assertEqual(kept.objectives, [])
+        self.assertEqual(len([node for node in kept.nodes if node.links]), 2)
 
-    def test_duplicate_along_another_dropped(self):
-        data = MapData({1: _path(1, _line(-5, 105, 0)), 2: _path(2, _line(-5, 105, 1))})
-        result = navpaths.build(data, self.zones)
-        self.assertEqual(len(result.routes), 1)
-        self.assertEqual(result.duplicates, 1)
+    def test_paths_that_lead_nowhere_dropped(self):
+        alone = _path(1, [(40, 50), (60, 50), (60, 60), (40, 60)], loops=True)
+        stub = _path(2, _line(10, 40, 4))  # From the mesh of a out into nothing.
+        branch = _path(3, [(50, 10 + 2 * i) for i in range(10)])  # Off a stub only.
+        stub.nodes[-1].set_links([(3, 1)])
+        branch.nodes[0].set_links([(2, len(stub.nodes))])
+        result = navpaths.trim(MapData({1: alone, 2: stub, 3: branch}), self.zones)
+        self.assertEqual(result.data.paths, {})
+        self.assertEqual(result.dead_ends, 3)
 
-    def test_road_where_no_path_leads(self):
-        road = _path(2, [(0, z) for z in range(0, 101, 4)], {"Vehicles": ["land"]})
-        data = MapData({1: _path(1, _line(-5, 105, 0)), 2: road})
-        result = navpaths.build(data, self.zones)
-        pairs = {frozenset((result.zones[route.start], result.zones[route.end])) for route in result.routes}
-        self.assertIn(frozenset(("a", "c")), pairs)
-        crafted = next(route for route in result.routes if route.origin == "crafted")
-        self.assertEqual(crafted.source, [2])
-        # The road itself stays as it is.
-        self.assertEqual(result.fixed[2], "vehicles")
+    def test_short_piece_where_the_mesh_leads_dropped(self):
+        out_and_back = [(10, 0), (17.5, 0), (22.2, 0), (17.5, 0.5), (10, 0.5)]
+        result = navpaths.trim(MapData({1: _path(1, out_and_back)}), self.zones)
+        self.assertEqual(result.short, 1)
+        self.assertEqual(result.data.paths, {})
 
-    def test_kept_paths_and_their_links(self):
-        beacon = _path(1, [(50, 4), (50, 8)], {"Objectives": ["beacon"]})
-        beacon.nodes[0].data["Action"] = {"type": "beacon"}
-        beacon.nodes[0].set_links([(2, 28)])
-        walk = _path(2, _line(-5, 105, 0))
-        walk.nodes[27].set_links([(1, 1)])
-        result = navpaths.build(MapData({1: beacon, 2: walk}), self.zones)
-        kept = result.data.paths[1]
-        self.assertEqual(kept.objectives, ["beacon"])
-        target = kept.nodes[0].links[0]
-        self.assertIn("Nav", result.data.paths[target[0]].first.data)
-        back = result.data.paths[target[0]].nodes[target[1] - 1]
-        self.assertEqual(back.links, [(1, 1)])
-        self.assertEqual(result.moved_links, 1)
+    def test_ways_to_something_to_do_dropped(self):
+        mcom = _path(1, [(50, 4), (50, 8)], {"Objectives": ["mcom 1 interact"]})
+        mcom.nodes[0].data["Action"] = {"type": "mcom"}
+        tank = _path(2, _line(20, 60, 10), {"Objectives": ["vehicle tank1 us"]})
+        result = navpaths.trim(MapData({1: mcom, 2: tank}), self.zones)
+        self.assertEqual(result.functions, 2)
+        self.assertEqual(result.data.paths, {})
 
-    def test_kept_path_linked_far_away_gets_a_connector(self):
-        # The beacon at the end of path 2, which never comes into a zone: path 2 is dropped, the beacon keeps the way
-        # from there to the navigation path.
+    def test_links_kept_between_the_waypoints_left(self):
         walk = _path(1, _line(-5, 105, 0))
-        side = _path(2, [(50, 2 + 2 * i) for i in range(20)])
+        side = _path(2, [(50, 2 + 2 * i) for i in range(10)])
         walk.nodes[27].set_links([(2, 1)])  # x = 49
         side.nodes[0].set_links([(1, 28)])
-        beacon = _path(3, [(52, 40), (54, 40)], {"Objectives": ["beacon"]})
-        beacon.nodes[1].data["Action"] = {"type": "beacon"}
-        beacon.nodes[0].set_links([(2, 20)])
-        side.nodes[19].set_links([(3, 1)])
-        result = navpaths.build(MapData({1: walk, 2: side, 3: beacon}), self.zones)
-        self.assertEqual((result.connectors, result.lost_links), (1, 0))
-        kept = next(path for path in result.data.paths.values() if path.objectives == ["beacon"])
-        connector = result.data.paths[kept.nodes[0].links[0][0]]
-        self.assertNotIn("Nav", connector.first.data)
-        self.assertEqual(len(connector.nodes), 20)
-        self.assertEqual(connector.first.links, [(kept.index, 1)])
-        end = connector.nodes[-1].links[0]
-        self.assertIn("Nav", result.data.paths[end[0]].first.data)
-        self.assertEqual(connector.objectives, [])
+        road = _path(3, [(0, z) for z in range(0, 101, 4)], {"Vehicles": ["land"], "Objectives": ["a", "c"]})
+        road.nodes[0].set_links([(1, 3)])  # x = -1: on the mesh, dropped
+        # The side path leads on to the road as well (else it's a branch off one link, dropped).
+        side.nodes[-1].set_links([(3, 10)])
+        road.nodes[9].set_links([(2, 10)])
+        result = navpaths.trim(MapData({1: walk, 2: side, 3: road}), self.zones)
+        # The vehicle path as it is.
+        kept_road = next(path for path in result.data.paths.values() if path.vehicles)
+        self.assertEqual(kept_road.objectives, ["a", "c"])
+        self.assertEqual(kept_road.nodes[0].links, [])
+        piece = next(path for path in result.data.paths.values() if len(path.nodes) > 20)
+        side_new = next(path for path in result.data.paths.values() if len(path.nodes) == 10)
+        linked = [node for node in piece.nodes if node.links]
+        self.assertEqual(len(linked), 1)
+        self.assertEqual(linked[0].links, [(side_new.index, 1)])
+        self.assertEqual(side_new.nodes[0].links, [(piece.index, linked[0].point)])
+        self.assertEqual(side_new.nodes[-1].links, [(kept_road.index, 10)])
+        self.assertEqual(result.lost_links, 1)
 
-    def test_kept_foot_path_keeps_only_what_it_leads_to(self):
-        # The way from zone a to a tank: the zone isn't a label of it anymore. A vehicle-path keeps all of its labels.
-        way = _path(1, [(0, 2 * i) for i in range(20)], {"Objectives": ["a", "vehicle tank1 us"]})
-        road = _path(2, [(0, z) for z in range(0, 101, 4)], {"Objectives": ["a", "c"], "Vehicles": ["land"]})
-        other = _path(3, [(4, 4), (6, 4)], {"Objectives": ["a", "explore"]})
-        other.nodes[0].data["Action"] = {"type": "explore"}
-        result = navpaths.build(MapData({1: way, 2: road, 3: other, 4: _path(4, _line(-5, 105, 0))}), self.zones)
-        labels = sorted(path.objectives for index, path in result.data.paths.items() if index in result.old_paths)
-        # The way to the tank has no function with a mesh: the bots find the vehicles themselves.
-        self.assertEqual(labels, [["a", "c"], ["explore"]])
-        self.assertIn("no function", result.dropped[1])
+    def test_closed_loop_walked_around_once(self):
+        loop = _line(0, 50, 0) + [(50, z) for z in range(2, 31, 2)] + _line(50, 0, 30)[1:] \
+            + [(0, z) for z in range(28, 1, -2)]
+        result = navpaths.trim(MapData({1: _path(1, loop, loops=True)}), self.zones)
+        self.assertEqual(result.pieces, 1)
+        path = result.data.paths[1]
+        # From the edge of the mesh at the bottom around to the edge on the left side.
+        self.assertAlmostEqual(path.nodes[0].pos[0], 20.0, delta=2.5)
+        self.assertAlmostEqual(path.nodes[-1].pos[2], 20.0, delta=2.5)
+        self.assertFalse(path.loops)
 
-    def test_vehicle_entry_dropped(self):
-        entry = _path(1, [(50, 4), (50, 8)], {"Objectives": ["vehicle tank us"]})
-        entry.nodes[0].data["Action"] = {"type": "vehicle"}
-        entry.nodes[0].set_links([(2, 28)])
-        walk = _path(2, _line(-5, 105, 0))
-        walk.nodes[27].set_links([(1, 1)])
-        result = navpaths.build(MapData({1: entry, 2: walk}), self.zones)
-        self.assertEqual(result.entries, 1)
-        self.assertNotIn(1, result.old_paths.values())
-        # The link to it is gone from the navigation path.
-        self.assertTrue(all((1, 1) not in node.links for path in result.data.paths.values() for node in path.nodes))
+    def test_attach_nodes(self):
+        result = navpaths.trim(MapData({1: _path(1, _line(-5, 105, 0))}), self.zones)
+        entry = navpaths.attach_nodes(result.data)[1]
+        self.assertTrue(entry["nav"])
+        self.assertEqual(len(entry["points"]), len(result.data.paths[1].nodes))
 
-    def test_short_piece_between_touching_zones_dropped(self):
-        # Circles just around the squares: the gap between them isn't on the mesh (as where no mesh was measured). The
-        # piece between them is 10 m long here, dropped with a higher limit.
-        zones = _mesh(("a", 0, 0), ("b", 26, 0))
-        for zone in zones["zones"]:
-            zone["radius"] = 12.0
-        data = MapData({1: _path(1, _line(-5, 31, 0), {"Objectives": ["a", "b"]})})
-        # Not shorter than the limit, but the mesh leads from a to b about as far: no function either.
-        result = navpaths.build(data, zones)
-        self.assertEqual((len(result.routes), result.short, result.mesh_ways), (0, 0, 1))
-        limit = navpaths.MIN_LENGTH
-        navpaths.MIN_LENGTH = 12.0
-        try:
-            result = navpaths.build(data, zones)
-        finally:
-            navpaths.MIN_LENGTH = limit
-        self.assertEqual(result.routes, [])
-        self.assertEqual(result.short, 1)
 
-    def test_far_out_and_back_dropped(self):
-        # Path 2 leaves a, goes 200 m away and comes back to b: a and b are connected by path 1 already.
-        out = [(10, -20 - 4 * i) for i in range(50)]
-        detour = _path(2, [(5, 0)] + out + list(reversed([(90, z) for _, z in out])) + [(95, 0)])
-        data = MapData({1: _path(1, _line(-5, 105, 0)), 2: detour})
-        result = navpaths.build(data, self.zones)
-        self.assertEqual(result.detours, 1)
-        self.assertEqual(len(result.routes), 1)
-
-    def test_missing_ends(self):
-        data = MapData({1: _path(1, _line(-5, 105, 0))})
-        result = navpaths.build(data, self.zones)
-        count = len(result.data.paths[1].nodes)
-        networks = {"attach": [[1, 1, 0, 1.0, [0, 0, 0], []], [1, count - 20, 0, 1.0, [0, 0, 0], []]]}
-        self.assertEqual(navpaths.missing_ends(result.data, networks), [(1, "end in b")])
-
-    def test_end_at_the_edge_moves_inside(self):
-        # Close to a point at the edge of the mesh, but outside of the circle of the zone: no junction there, the
-        # path is cut further inside.
-        zones = _mesh(("a", 0, 0), ("b", 100, 0))
-        for zone in zones["zones"]:
-            zone["radius"] = 20.0
-        data = MapData({1: _path(1, _line(-10, 110, 0))})
-        result = navpaths.build(data, zones)
-        self.assertEqual(len(result.routes), 1)
-        path = result.data.paths[min(result.data.paths)]
-        for node in (path.nodes[0], path.nodes[-1]):
-            center = 0.0 if node.pos[0] < 50 else 100.0
-            self.assertLessEqual(abs(node.pos[0] - center), 20.0 - navpaths.COVER_MARGIN)
-
-    def test_piece_on_the_mesh_dropped(self):
-        # Zones a and d overlap in their margins: the piece between them lies on the mesh, the bots walk the mesh.
-        zones = _mesh(("a", 0, 0), ("d", 26, 0))
-        data = MapData({1: _path(1, _line(-5, 31, 0))})
-        result = navpaths.build(data, zones)
-        self.assertEqual(result.routes, [])
-        self.assertEqual(result.on_mesh, 1)
-
-    def test_zone_in_two_parts(self):
-        # Zone a's mesh is two pieces (the census didn't see the stairs between them): the path from the one into the
-        # other is the way between them, not a piece inside of the zone.
-        zones = _mesh(("a", 0, 0))
-        zones["edges"] = [edge for edge in zones["edges"]
-                          if (zones["points"][edge[0]][0] < 0) == (zones["points"][edge[1]][0] < 0)]
-        path = _path(1, _line(-8, 8, 0))
-        for node in path.nodes:
-            if -3 < node.pos[0] < 3:
-                node.pos = (node.pos[0], 3.0, node.pos[2])  # Up the stairs, where the mesh has no points.
-        result = navpaths.build(MapData({1: path}), zones)
-        self.assertEqual(len(result.routes), 1)
-        route = result.routes[0]
-        self.assertEqual({result.zones[route.start], result.zones[route.end]}, {"a", "a (2)"})
-
-    def test_blocked_step_not_walked(self):
-        # The census found the way from waypoint 28 of path 1 to the next blocked (a closed door): the cut doesn't
-        # extend over it, the open end of path 2 goes the other way.
-        path1 = _path(1, _line(-5, 105, 0))
-        path2 = _path(2, [(50, 2)] + _line(50, 105, 8)[1:])
-        path2.nodes[0].set_links([(1, 28)])
-        path1.nodes[27].set_links([(2, 1)])
-        data = MapData({1: path1, 2: path2})
-        open_way = navpaths.build(data, self.zones)
-        blocked = navpaths.build(data, self.zones, {(1, 27), (1, 28)})
-        self.assertNotEqual(sorted(route.length for route in open_way.routes),
-                            sorted(route.length for route in blocked.routes))
-
-    def test_dead_end_dropped(self):
-        # A path from zone a to a hub nothing else leads to (an old base of the waypoints): no function.
-        zones = _mesh(("a", 0, 0), ("h", 100, 0))
-        zones["zones"][1]["kind"] = "hub"
-        data = MapData({1: _path(1, _line(-5, 105, 0))})
-        result = navpaths.build(data, zones)
-        self.assertEqual(result.routes, [])
-        self.assertEqual(result.dead_ends, 1)
+    def test_roads_are_ways_for_the_soldiers(self):
+        road = _path(1, _line(-5, 105, 30), {"Vehicles": ["land"]})
+        amphibious = _path(2, _line(-5, 105, 40), {"Vehicles": ["land", "water"]})
+        boat = _path(3, _line(-5, 105, 50), {"Vehicles": ["water"]})
+        entries = navpaths.attach_nodes(navpaths.trim(MapData({1: road, 2: amphibious, 3: boat}), self.zones).data)
+        self.assertEqual([entries[index]["nav"] for index in (1, 2, 3)], [True, False, False])
 
 
 if __name__ == "__main__":

@@ -96,18 +96,16 @@ local ZONE_ENTER_HEIGHT = 3.0    -- the bot goes onto the mesh from.
 ---@field FallTime number time of the last fall off a way
 ---@field Trail integer[]|nil the last points it reached (Bot:_ZoneTrail)
 
----Called when the bot reached a waypoint. At a junction of the mesh it walks the mesh from now on.
+---Called when the bot reached a waypoint. Where the routes guide it (NavRoutes:Step, a level with a mesh): at a node of
+---the paths it goes onto the mesh, switches over a link or turns to the way on. Else at a junction it walks the mesh
+---from now on, unless it walks the way to its objective (a vehicle-path with its name).
 ---@param p_Point Waypoint (or an offset-point with the fields of its waypoint)
----@return boolean true if the bot is on the mesh now
+---@return boolean true if the bot is on the mesh now or on another path (the caller doesn't go on)
 function Bot:_CheckForZoneEntry(p_Point)
 	if self.m_Zone ~= nil then
 		return false
 	end
 	local s_Waypoint = p_Point.Original or p_Point
-	local s_Entry = m_NavZones:GetJunction(s_Waypoint)
-	if s_Entry == nil then
-		return false
-	end
 	-- Only if the bot is there: the obstacle-handling counts a waypoint as reached when it skips it, from far away.
 	local s_Soldier = self.m_Player.soldier
 	if s_Soldier == nil then
@@ -116,26 +114,51 @@ function Bot:_CheckForZoneEntry(p_Point)
 	local s_Here = s_Soldier.worldTransform.trans
 	local s_DeltaX = s_Waypoint.Position.x - s_Here.x
 	local s_DeltaZ = s_Waypoint.Position.z - s_Here.z
-	if s_DeltaX * s_DeltaX + s_DeltaZ * s_DeltaZ > ZONE_ENTER_RANGE * ZONE_ENTER_RANGE
-		or math.abs(s_Waypoint.Position.y - s_Here.y) > ZONE_ENTER_HEIGHT then
-		return false
-	end
+	local s_There = s_DeltaX * s_DeltaX + s_DeltaZ * s_DeltaZ <= ZONE_ENTER_RANGE * ZONE_ENTER_RANGE
+		and math.abs(s_Waypoint.Position.y - s_Here.y) <= ZONE_ENTER_HEIGHT
 	-- Just left the mesh here: on along the path (else it goes on and off the mesh at the same junction).
 	local s_Left = self.m_LeftZoneAt
-	if s_Left ~= nil and s_Left.Point == s_Entry.Junction.Point and SharedUtils:GetTime() - s_Left.Time < ZONE_REENTER_TIME then
+	local s_NoEnter = s_Left ~= nil and SharedUtils:GetTime() - s_Left.Time < ZONE_REENTER_TIME and s_Left.Point or nil
+
+	if m_NavRoutes:Guides(s_Waypoint.PathIndex, self._Objective) then
+		-- Not onto the mesh from far away (a skipped waypoint): on along the paths then.
+		if not s_There then
+			local s_Junction = m_NavZones:GetJunction(s_Waypoint)
+			s_NoEnter = s_Junction ~= nil and s_Junction.Junction.Point or s_NoEnter
+		end
+		local s_Step = m_NavRoutes:Step(s_Waypoint, self._Objective, self.m_RouteSeed, self._NavCame, s_NoEnter)
+		if s_Step == nil then
+			return false
+		end
+		self._NavCame = s_Step.Node
+		if s_Step.Enter ~= nil then
+			self:_EnterZone(m_NavZones:ZoneAtPoint(s_Step.Enter.Point, self._Objective) or m_NavZones:GetMesh(),
+				s_Step.Enter.Point, false, s_Step.Enter)
+			return self.m_Zone ~= nil
+		end
+		if s_Step.Switch ~= nil then
+			self._PathIndex = s_Step.Switch.PathIndex
+			self._CurrentWayPoint = s_Step.Switch.PointIndex
+			self._TargetPoint = s_Step.Switch
+			if s_Step.Direction ~= nil then
+				self._InvertPathDirection = s_Step.Direction == 'Previous'
+			end
+			self._NextTargetPoint = m_NodeCollection:Get(self:_GetWayIndex(self._InvertPathDirection and -1 or 1),
+				self._PathIndex)
+			return true
+		end
+		if s_Step.Direction ~= nil then
+			self._InvertPathDirection = s_Step.Direction == 'Previous'
+		end
 		return false
 	end
 
-	local s_Path = m_NavRoutes:GetPath(s_Waypoint.PathIndex)
-	if s_Path ~= nil then
-		-- A navigation path: onto the mesh at the end the bot walks to (not where it just left the mesh).
-		local s_Count = #(m_NodeCollection:Get(nil, s_Waypoint.PathIndex) or {})
-		local s_TowardsStart = self._InvertPathDirection
-		if (s_TowardsStart and s_Waypoint.PointIndex > s_Count / 2) or (not s_TowardsStart and s_Waypoint.PointIndex <= s_Count / 2) then
-			return false
-		end
-	elseif self._Objective ~= '' and m_NavZones:GetZone(self._Objective) == nil then
-		-- The way to a vehicle, a beacon, the action-node of an MCOM: the bot walks it to its end.
+	local s_Entry = m_NavZones:GetJunction(s_Waypoint)
+	if s_Entry == nil or not s_There or s_NoEnter == s_Entry.Junction.Point then
+		return false
+	end
+	if self._Objective ~= '' and m_NavZones:GetZone(self._Objective) == nil then
+		-- The way to a vehicle, a beacon: the bot walks it to its end.
 		local s_First = m_NodeCollection:GetFirst(s_Waypoint.PathIndex)
 		local s_Objectives = type(s_First) == 'table' and s_First.Data and s_First.Data.Objectives or {}
 		if table.has(s_Objectives, self._Objective) or not m_NavRoutes:Knows(self._Objective) then
@@ -555,8 +578,8 @@ function Bot:_ZoneReplan(p_NewGoal)
 	end
 end
 
----Without a route over the mesh (NavRoutes): the junction of a navigation path whose other end is closest to the
----objective, else of any other path the bot can take (not the dead end of another objective), the closest one.
+---Without a route over the mesh (NavRoutes): the junction of a path of the routes closest to the objective, else of
+---any other path the bot can take (not the dead end of another objective).
 ---@param p_Objective string
 ---@return NavZoneJunction|nil
 function Bot:_ZoneBestExit(p_Objective)
@@ -581,26 +604,19 @@ function Bot:_ZoneBestExit(p_Objective)
 				s_Usable = m_PathSwitcher:IsWalkable(s_Waypoint.PathIndex)
 			end
 		end
-		-- Dead ends of other objectives (the way to a vehicle, a beacon, the action-node of an MCOM) lead nowhere: the
-		-- bot would walk it to its end, get onto the mesh there and take it again.
-		local s_NavPath = s_Usable and not s_State.Vehicle and m_NavRoutes:GetPath(s_Waypoint.PathIndex) or nil
-		if s_Usable and s_NavPath == nil and not s_State.Vehicle then
+		-- Dead ends of other objectives (the way to a vehicle, a beacon) lead nowhere: the bot would walk it to its end,
+		-- get onto the mesh there and take it again.
+		local s_Route = s_Usable and not s_State.Vehicle and m_NavRoutes:IsRoutePath(s_Waypoint.PathIndex)
+		if s_Usable and not s_Route and not s_State.Vehicle then
 			local s_Objectives = s_First.Data and s_First.Data.Objectives or {}
 			s_Usable = #s_Objectives == 0 or table.has(s_Objectives, p_Objective)
 		end
 		if s_Usable then
 			---@cast s_Waypoint Waypoint
-			-- Where the path leads: the other end of a navigation path, else the junction itself.
-			local s_Position = s_Waypoint.Position
-			if s_NavPath ~= nil then
-				local s_Other = s_NavPath.Start.Junction == l_Junction and s_NavPath.Finish or s_NavPath.Start
-				s_Position = s_Other.Junction.Waypoint.Position
-			end
-			local s_Distance = g_GameDirector:_GetDistanceFromObjective(p_Objective, s_Position)
-			local s_Navigation = s_NavPath ~= nil
-			if (s_Navigation and not s_BestNavigation) or (s_Navigation == s_BestNavigation and s_Distance < s_BestDistance) then
+			local s_Distance = g_GameDirector:_GetDistanceFromObjective(p_Objective, s_Waypoint.Position)
+			if (s_Route and not s_BestNavigation) or (s_Route == s_BestNavigation and s_Distance < s_BestDistance) then
 				s_Best = l_Junction
-				s_BestNavigation = s_Navigation
+				s_BestNavigation = s_Route
 				s_BestDistance = s_Distance
 			end
 		end
@@ -640,17 +656,18 @@ function Bot:_LeaveZone(p_Junction)
 		s_Waypoint = g_GameDirector:FindClosestPath(self.m_Player.soldier.worldTransform.trans, false, true, nil)
 	end
 
-	local s_NavPath = p_Junction ~= nil and s_Waypoint ~= nil and m_NavRoutes:GetPath(s_Waypoint.PathIndex) or nil
-	if s_NavPath ~= nil and (s_NavPath.Start.Junction == p_Junction or s_NavPath.Finish.Junction == p_Junction) then
-		-- Out over a navigation path: away from the zone, to the other end.
-		self._PathIndex = s_Waypoint.PathIndex
-		self._CurrentWayPoint = s_Waypoint.PointIndex
-		self._InvertPathDirection = s_NavPath.Finish.Junction == p_Junction
-	elseif s_Waypoint ~= nil then
+	self._NavCame = nil
+	if s_Waypoint ~= nil then
+		-- Onto the waypoint: there the routes decide the way on (_CheckForZoneEntry), until then towards the objective.
 		self._PathIndex = s_Waypoint.PathIndex
 		self._CurrentWayPoint = s_Waypoint.PointIndex
 		if self._Objective ~= '' then
-			local s_Direction = m_NodeCollection:ObjectiveDirection(s_Waypoint, self._Objective, s_State ~= nil and s_State.Vehicle)
+			local s_Direction = nil
+			if s_State == nil or not s_State.Vehicle then
+				s_Direction = m_NavRoutes:Direction(s_Waypoint, self._Objective, self.m_RouteSeed)
+			end
+			s_Direction = s_Direction
+				or m_NodeCollection:ObjectiveDirection(s_Waypoint, self._Objective, s_State ~= nil and s_State.Vehicle)
 			if s_Direction then
 				self._InvertPathDirection = (s_Direction == 'Previous')
 			end

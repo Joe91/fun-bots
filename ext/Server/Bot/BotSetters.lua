@@ -182,6 +182,7 @@ function Bot:ResetVars()
 	self._SpawnDelayTimer = 0.0
 	self._KillYourselfTimer = 0.0
 	self._OffMeshTarget = nil
+	self._OffMeshBlocked = nil
 	self._RocketCooldownTimer = 0.0
 	self._SpawnProtectionTimer = 0.0
 	self._Objective = ''
@@ -236,6 +237,8 @@ function Bot:ResetSpawnVars()
 	self._BreachCount = 0
 	self._MeshAfterExit = false
 	self._MeshRetryTimer = 0.0
+	-- The node of the paths the bot decided at last (NavRoutes:Step): it doesn't go straight back there.
+	self._NavCame = nil
 	self._LowSpeedTimer = 0.0
 	self._NoProgressTimer = 0.0
 	self._ProgressNode = nil

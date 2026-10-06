@@ -181,9 +181,9 @@ local function _HasAction(p_PathIndex)
 	return false
 end
 
----Soldiers. Where the level has a mesh they find their way over it and the navigation paths (NavRoutes, BotZoneMovement):
----on a navigation path a bot walks on to its end, on the way to its objective (a vehicle, an MCOM to arm, the paths
----with that name) it stays, and onto it it switches. A bot with a beacon to place takes the way to a beacon now and
+---Soldiers. Where the level has a mesh they find their way over it and the paths (NavRoutes, BotZoneMovement): where
+---the routes know the objective they decide at the nodes (NavRoutes:Step), not here. On the way to its objective (a
+---vehicle, the paths with that name) a bot stays, and onto it it switches. A bot with a beacon to place takes the way to a beacon now and
 ---then. Any other path (spawned at a beacon, a connecting path, after the vehicle left) it leaves: for a navigation path,
 ---else for a path that isn't the dead end of another objective. Without a mesh (deathmatch modes, no objectives) the bots
 ---walk the paths and switch at random.
@@ -232,6 +232,11 @@ function PathSwitcher:_GetNewFootPath(p_Bot, p_Point, p_Objective)
 		return false
 	end
 
+	-- The routes guide the bot (NavRoutes:Step at the nodes, Bot:_CheckForZoneEntry).
+	if m_NavRoutes:Guides(p_Point.PathIndex, p_Objective) then
+		return false
+	end
+
 	if p_Objective ~= '' then
 		-- Onto the way to the objective; on it, onto the path with its action-node (where the bot gets into the vehicle).
 		local s_OnObjectivePath = table.has(s_Current, p_Objective)
@@ -253,7 +258,7 @@ function PathSwitcher:_GetNewFootPath(p_Bot, p_Point, p_Objective)
 		return true, s_Beacon, m_NodeCollection:_ActionDirection(s_Beacon)
 	end
 
-	if m_NavRoutes:GetPath(p_Point.PathIndex) ~= nil then
+	if m_NavRoutes:IsRoutePath(p_Point.PathIndex) then
 		return false
 	end
 
@@ -261,7 +266,7 @@ function PathSwitcher:_GetNewFootPath(p_Bot, p_Point, p_Objective)
 	local s_Others = {}
 	for l_Index = 1, #s_Candidates do
 		local l_Candidate = s_Candidates[l_Index]
-		if m_NavRoutes:GetPath(l_Candidate.PathIndex) ~= nil then
+		if m_NavRoutes:IsRoutePath(l_Candidate.PathIndex) then
 			s_Navigation[#s_Navigation + 1] = l_Candidate
 		elseif #_Labels(l_Candidate.PathIndex) == 0
 			or (not _HasAction(l_Candidate.PathIndex) and table.has(_Labels(p_Point.PathIndex), _Labels(l_Candidate.PathIndex)[1])) then
