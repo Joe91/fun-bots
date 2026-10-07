@@ -25,8 +25,6 @@ local m_Logger = Logger('NavRoutes', Debug.Server.PATH)
 -- Metres added for a link (rather stay on a path), longer links are no way to walk.
 local LINK_COST = 2.0
 local LINK_MAX = 15.0
--- A looping path whose ends are this close is walked over from its last waypoint to its first.
-local LOOP_CLOSE = 30.0
 -- Metres added for leaving the mesh and coming back to it (waiting bots, corners): the mesh wins a tie.
 local MESH_CROSSING = 10.0
 -- Metres added to an exit a bot didn't get to over the mesh, and to a stretch of a path a bot got stuck on (for all
@@ -320,12 +318,10 @@ function NavRoutes:_Ensure()
 			end
 			-- A closed loop: from the last waypoint on to the first.
 			local s_First = l_Waypoints[1]
-			if s_Count > 2 and s_First.OptValue ~= 0xFF then
+			if m_NodeCollection:Loops(l_PathIndex) then
 				local s_Gap = l_Waypoints[s_Count].Position:Distance(s_First.Position)
-				if s_Gap <= LOOP_CLOSE then
-					_Connect(self._NodeOf[l_Waypoints[s_Count].ID], self._NodeOf[s_First.ID], s_Gap * s_Factor, l_PathIndex,
-						'Next', 'Previous')
-				end
+				_Connect(self._NodeOf[l_Waypoints[s_Count].ID], self._NodeOf[s_First.ID], s_Gap * s_Factor, l_PathIndex,
+					'Next', 'Previous')
 			end
 		end
 	end

@@ -821,6 +821,22 @@ function NodeCollection:GetFirst(p_PathIndex)
 	return s_FirstWaypoint
 end
 
+-- A path marked as a loop is one only with its ends this close: else the bot at the last waypoint walks straight back
+-- to the first one, and round again (XP5_003 path 15: 70 m apart).
+local LOOP_CLOSE = 30.0
+
+---Whether the path continues at its first waypoint after its last (marked as a loop, OptValue of the first waypoint not
+---0xFF, and the ends within LOOP_CLOSE). Else the bot turns around at its ends.
+---@param p_PathIndex integer
+---@return boolean
+function NodeCollection:Loops(p_PathIndex)
+	local s_Waypoints = self._WaypointsByPathIndex[p_PathIndex]
+	if s_Waypoints == nil or #s_Waypoints < 3 or s_Waypoints[1].OptValue == 0xFF then
+		return false
+	end
+	return s_Waypoints[1].Position:Distance(s_Waypoints[#s_Waypoints].Position) <= LOOP_CLOSE
+end
+
 ---@param p_PathIndex? integer
 ---@return Waypoint|boolean
 function NodeCollection:GetLast(p_PathIndex)

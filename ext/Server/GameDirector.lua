@@ -2409,9 +2409,12 @@ function GameDirector:_InitObjectives()
 		end
 
 		-- Other names on paths ("explore", "sniper") are nothing to capture. In conquest only the capture points of the
-		-- engine and the zones are (rush: the MCOMs, by their numbers, see _UpdateValidObjectives).
-		if Globals.IsConquest and not s_Objective.isBase and s_Objective.canBeCaptured and not s_Engine[l_ObjectiveName]
-			and m_NavZones:GetZone(l_ObjectiveName) == nil then
+		-- engine and the zones are (rush: the MCOMs, by their numbers, see _UpdateValidObjectives). With a mesh only the
+		-- zones: a capture point of the engine without one is of another mode (CQS of XP3_Desert, XP5_003: the "G" of the
+		-- large layout, nobody can take it, the census found it inactive).
+		if Globals.IsConquest and not s_Objective.isBase and s_Objective.canBeCaptured
+			and m_NavZones:GetZone(l_ObjectiveName) == nil
+			and (m_NavZones:GetMesh() ~= nil or not s_Engine[l_ObjectiveName]) then
 			s_Objective.active = false
 			s_Objective.canBeCaptured = false
 		end

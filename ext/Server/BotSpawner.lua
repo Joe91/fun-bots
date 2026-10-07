@@ -1563,7 +1563,7 @@ function BotSpawner:_SpawnSingleWayBot(p_Player, p_UseRandomWay, p_ActiveWayInde
 
 		-- Find out direction, if path has a return point.
 		if s_InverseDirection == nil then
-			if m_NodeCollection:Get(1, p_ActiveWayIndex).OptValue == 0xFF then
+			if not m_NodeCollection:Loops(p_ActiveWayIndex) then
 				s_InverseDirection = (MathUtils:GetRandomInt(0, 1) == 1)
 			else
 				s_InverseDirection = false

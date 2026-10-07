@@ -59,7 +59,7 @@ local function _GetPathNeighbour(p_Node, p_Step)
 
 	if s_Index < 1 or s_Index > s_Count then
 		-- Only looping paths continue at the other end (see Bot:_GetWayIndex).
-		if s_Count == 0 or s_Nodes[1].OptValue == 0xFF then
+		if s_Count == 0 or not m_NodeCollection:Loops(p_Node.PathIndex) then
 			return nil
 		end
 		s_Index = ((s_Index - 1) % s_Count) + 1
