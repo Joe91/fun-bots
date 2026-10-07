@@ -28,6 +28,7 @@ end
 function Bot:_OnFootAgain()
 	self.m_ActiveVehicle = nil
 	self._ChopperStartHeight = nil
+	self._VehicleStart = nil
 	self:SetState(g_BotStates.States.Moving)
 	local s_Node = g_GameDirector:FindClosestPath(self.m_Player.soldier.worldTransform.trans:Clone(), false, true, nil)
 

@@ -52,6 +52,8 @@ local ZONE_ARM_PITCH_MIN = -1.2  -- ...not steeper down...
 local ZONE_ARM_PITCH_MAX = 0.6   -- ...or up than this.
 local ZONE_ARM_STEP_UP = 0.3     -- The spot to arm from this much higher than the soldier (a step it doesn't walk up)...
 local ZONE_ARM_JUMP_RANGE = 2.0  -- ...and this close (horizontal metres): it jumps.
+local ZONE_ARM_PLACE_TIME = 2.5  -- Not at the spot after this many seconds, but this close (horizontal metres): it is
+local ZONE_ARM_PLACE_RANGE = 2.5 -- put there.
 local ZONE_VEHICLE_REACH = 10.0  -- Registry.VEHICLES.MIN_DISTANCE_VEHICLE_ENTER: the bot gets in from this close.
 local ZONE_VEHICLE_NEAR = 5.5    -- Horizontal metres to the middle of the vehicle (a tank is about 8 m long): on the way
 local ZONE_VEHICLE_FLOOR = 3.0   -- to the point next to it the bot gets in from here. The point can be under the hull.
@@ -71,6 +73,7 @@ local ZONE_REJOIN_MIN_PART = 10  -- ...with this many points at least (NavZones 
 local ZONE_RECENT_EXIT_TIME = 60.0 -- Seconds a bot doesn't leave the mesh again at a junction it left it at.
 local ZONE_AVOID_ENTRY_TIME = 30.0 -- Seconds a bot that came onto the mesh from a path takes no exit back to that path.
 local ZONE_REENTER_TIME = 5.0    -- Seconds a bot that left the mesh at a junction doesn't go onto it there again.
+local ZONE_REENTER_PART_TIME = 20.0 -- Seconds it doesn't go back onto that piece of the mesh mid-path (_BackOntoLeftPart).
 local ZONE_FALL = 1.5            -- Metres below the way to the target (and ZONE_FALL_BELOW below both ends of it): the
 local ZONE_FALL_BELOW = 1.0      -- bot fell off, the way is given up.
 local ZONE_FALL_PAUSE = 3.0      -- Seconds after a fall before the next one counts (landing, getting up).
@@ -141,6 +144,8 @@ function Bot:_CheckForZoneEntry(p_Point)
 		if not s_There then
 			local s_Junction = m_NavZones:GetJunction(s_Waypoint)
 			s_NoEnter = s_Junction ~= nil and s_Junction.Junction.Point or s_NoEnter
+		elseif self:_BackOntoLeftPart(s_Waypoint) then
+			s_NoEnter = m_NavZones:GetJunction(s_Waypoint).Junction.Point
 		end
 		local s_Step = m_NavRoutes:Step(s_Waypoint, self._Objective, self.m_RouteSeed, self._NavCame, s_NoEnter)
 		if s_Step == nil then
@@ -229,6 +234,25 @@ function Bot:TeleportToMesh(p_Range)
 	s_Soldier:SetTransform(s_Transform)
 	self:_EnterZone(m_NavZones:ZoneAtPoint(s_Point, self._Objective) or s_Mesh, s_Point)
 	return self.m_Zone ~= nil
+end
+
+---Back onto the piece of the mesh the bot left a moment ago, in the middle of a path: it would go round between two
+---pieces close to each other, out over one path and back over the next (MP_018 at spawn 7: three paths 10 m long
+---between them, back and forth). It goes on along the path then. At the end of a path it goes onto the mesh anyway.
+---@param p_Waypoint Waypoint
+---@return boolean
+function Bot:_BackOntoLeftPart(p_Waypoint)
+	local s_Left = self.m_LeftZoneAt
+	local s_Mesh = m_NavZones:GetMesh()
+	if s_Left == nil or s_Mesh == nil or SharedUtils:GetTime() - s_Left.Time >= ZONE_REENTER_PART_TIME then
+		return false
+	end
+	local s_Junction = m_NavZones:GetJunction(p_Waypoint)
+	if s_Junction == nil or s_Mesh.Part[s_Junction.Junction.Point] ~= s_Mesh.Part[s_Left.Point] then
+		return false
+	end
+	local s_Count = #(m_NodeCollection:Get(nil, p_Waypoint.PathIndex) or {})
+	return p_Waypoint.PointIndex > 1 and p_Waypoint.PointIndex < s_Count
 end
 
 ---Called when the driver of a land vehicle reached a waypoint of its vehicle-path. At a junction of the vehicle-network
@@ -1234,11 +1258,18 @@ function Bot:_ZoneAction(p_DeltaTime)
 		self.m_ActiveSpeedValue = BotMoveSpeeds.Slow
 		self._TargetPoint = { Position = s_Goal }
 		self._NextTargetPoint = nil
-		-- The spot is up a step (XP3_Desert MCOM 2 stands on a platform 0.5 m high the mesh doesn't cover, armed from
-		-- below it doesn't work): jump up.
+		-- The spot is up a step (XP3_Desert MCOM 2 stands on a platform 0.5 m high the mesh doesn't cover, with an edge
+		-- the bot doesn't get over from the mesh; armed from below it doesn't work): jump up, and if that doesn't
+		-- get it there, onto the spot (a known one: recorded, or ground found next to the MCOM).
 		if s_Goal.y - s_Position.y > ZONE_ARM_STEP_UP and s_GoalDistance < ZONE_ARM_JUMP_RANGE then
 			self:_SetInput(EntryInputActionEnum.EIAJump, 1)
 			self:_SetInput(EntryInputActionEnum.EIAQuicktimeJumpClimb, 1)
+		end
+		if s_State.ActionTime > ZONE_ARM_PLACE_TIME and s_GoalDistance < ZONE_ARM_PLACE_RANGE then
+			local s_Transform = s_Soldier.worldTransform:Clone()
+			s_Transform.trans = Vec3(s_Goal.x, s_Goal.y + 0.05, s_Goal.z)
+			s_Soldier:SetTransform(s_Transform)
+			m_Logger:Write(self.m_Player.name .. ' put onto the spot to arm ' .. tostring(self._Objective))
 		end
 		return true
 	end

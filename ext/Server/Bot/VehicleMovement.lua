@@ -55,6 +55,9 @@ function VehicleMovement:_DetectObstacle(p_Bot, p_Vehicle, p_Distance, p_DeltaTi
 	return false
 end
 
+-- Metres a vehicle has to be driven before an "exit" on its path counts.
+local VEHICLE_EXIT_MIN_DRIVE = 50.0
+
 -- The driver waits for passengers on their way to the vehicle (GameDirector:PassengersComing) at most this many seconds
 -- in all, checking again every VEHICLE_WAIT_STEP.
 local VEHICLE_WAIT_MAX = 25.0
@@ -113,10 +116,22 @@ function VehicleMovement:UpdateNormalMovementVehicle(p_DeltaTime, p_Bot)
 			return
 		end
 
+		-- Where the bot started driving: a vehicle that spawns at the end of a path with an "exit" there (XP5_003: dirt
+		-- bikes at A) is left at once, by one bot after the other.
+		local s_VehicleEntity = p_Bot.m_Player.controlledControllable
+		local s_Here = s_VehicleEntity ~= nil and s_VehicleEntity.transform.trans or nil
+		if p_Bot._VehicleStart == nil and s_Here ~= nil then
+			p_Bot._VehicleStart = s_Here:Clone()
+		end
+		local s_Driven = s_Here ~= nil and p_Bot._VehicleStart ~= nil and s_Here:Distance(p_Bot._VehicleStart) >= VEHICLE_EXIT_MIN_DRIVE
+
 		-- Execute Action if needed.
 		if p_Bot._ActiveAction == BotActionFlags.OtherActionActive then
 			if s_Point.Data ~= nil and s_Point.Data.Action ~= nil then
-				if s_Point.Data.Action.type == 'exit' then
+				if s_Point.Data.Action.type == 'exit' and not s_Driven then
+					-- Not driven anywhere yet: drive on.
+					p_Bot:_ResetActionFlag(BotActionFlags.OtherActionActive)
+				elseif s_Point.Data.Action.type == 'exit' then
 					p_Bot:_ResetActionFlag(BotActionFlags.OtherActionActive)
 					local s_OnlyPassengers = false
 					if s_Point.Data.Action.onlyPassengers ~= nil and s_Point.Data.Action.onlyPassengers == true then

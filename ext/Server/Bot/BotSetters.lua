@@ -260,6 +260,7 @@ function Bot:ResetSpawnVars()
 	self._ProgressObjective = nil
 	self._VehicleAnchor = nil
 	self._VehicleGoal = nil
+	self._VehicleStart = nil
 	self._VehicleGoalBest = 0.0
 	self._VehicleGoalTime = 0.0
 	self._LowSpeedTimer = 0.0

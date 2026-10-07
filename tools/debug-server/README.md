@@ -429,12 +429,24 @@ zone it walks in, `@mesh` outside of the zones) and `zoneExit` on its way out.
 - **Forward spawns (rush)**: the game still offers the base of a stage that fell, and spawns bots there now and then.
   A bot that spawned more than 100 m farther from the MCOMs than the most forward spawn of its team starts at one of
   the forward spawns instead (`GameDirector:ForwardSpawn`, on the ground below the spawn).
+- **Paths after a spawn**: the closest path is searched along all of each path (they are trimmed: their first
+  waypoints can be far off) and among the routes' paths, roads included (`GameDirector:FindClosestPath`).
+- **Route spread**: each bot weighs stretches a bit differently (`NAV_ROUTE_SPREAD`), at most 15 m more
+  (`NavRoutes` `SPREAD_MAX`), and not when it decides between the mesh and the path it is on: a bigger spread made
+  loops over nearby junctions look shorter. A bot doesn't go back onto the piece of the mesh it left within 20 s in the
+  middle of a path (`Bot:_BackOntoLeftPart`, MP_018 spawn 7).
 - **Last resorts**: a bot on foot that doesn't get 5 m closer to its objective for 90 s respawns (not within 30 m of
   it or in its zone, not while it fights; event `no_progress`, `GameDirector:_CheckObjectiveProgress`), on a mate away
   from there if it spawns close to that spot again (a rush base behind a border that stays closed). A ground vehicle
   whose driver doesn't get 5 m away for 30 s (not waiting for passengers, not at its objective; also an aircraft that
   stands on the ground, a point of the mesh close below) is left by all bots in it (event `vehicle_stuck`,
-  `_CheckVehicleProgress`). A passenger (also on an outer seat or a mounted weapon) whose seat doesn't move for 45 s
+  `_CheckVehicleProgress`), also one that doesn't get 10 m closer to its objective in 90 s (back and forth between two
+  waypoints), one on its side or roof after 5 s, an unarmed one standing at an own capture point, a launcher (TOW,
+  Kornet) without a target for 30 s. A vehicle that got stuck is no objective for 5 min unless it moved; launchers are
+  objectives only within 100 m of a capture point or MCOM. A bot on foot that doesn't get within 10 m of the vehicle it
+  was sent to in 30 s gives it up for 5 min (`vehicle_unreachable`); one that got out or gave a vehicle up isn't sent
+  to it again for 60 / 20 s. Drivers prefer attacking (defending seems 1000 m farther). An "exit" on a vehicle path
+  counts only after 50 m of driving (bikes spawned at the end of a path were left at once). A passenger (also on an outer seat or a mounted weapon) whose seat doesn't move for 45 s
   and that doesn't fight gets out (event `passenger_out`), still on it 5 s later it respawns (`passenger_respawn`).
   A passenger whose vehicle is gone (destroyed, thrown off) walks on at once (`StateOnVehicleIdle`). A helicopter far
   from its target flies at least 40 m above where it took off: a target far below (MP_013: the base on the mountain,
@@ -444,10 +456,14 @@ zone it walks in, `@mesh` outside of the zones) and `zoneExit` on its way out.
   be solved (NaN) keeps the view (`Bot:UpdateYaw`): the bot spun around its axis without end.
 - **MCOMs behind walls**: without a point of the mesh in sight of the MCOM the closest ones are taken (up to 25 m),
   the bots shoot their way through what can be shot away (Subway MCOM 7). Only points on the floor of the MCOM (at
-  most 1 m above its interaction point, 2.5 m below): from a floor or rubble above it the bots interacted in vain
+  most 2 m above its interaction point, 2.5 m below): from a floor or rubble above it the bots interacted in vain
   (XP4_Rubble MCOM 2). Without a recorded spot to arm it from (the trim drops the ways to the MCOMs) the free spots
   1 m around it are found with rays (free at chest height, ground below, `GameDirector:_McomStands`); after each try
-  that failed the next bot takes the next one (`McomTryFailed`).
+  that failed the next bot takes the next one (`McomTryFailed`). The middle of the MCOM's zone is the spot the
+  recording soldier stood on: it is tried first. The bot aims at the interaction of the engine (pitch from its eyes),
+  jumps up to a spot higher than it, and is put onto the spot if it is still not there after 2.5 s within 2.5 m
+  (XP3_Desert MCOM 2 stands on a platform the mesh doesn't cover). Points up to 2 m above the MCOM count (MP_018
+  MCOM 3).
 - **No route from its part of the mesh**: the bot walks straight to the closest point of another part from which a
   route leads on, up to 30 m away, else up to 120 m over open ground (at most 1 m up or down per 4 m, plus 3 m): a
   spawn on a piece of the mesh the census didn't join to the rest (18-110 m on Rubble, Caspian Border, XP5_004). Not
@@ -455,7 +471,9 @@ zone it walks in, `@mesh` outside of the zones) and `zoneExit` on its way out.
 - **Stranded**: a spawn from which neither the mesh nor the paths lead to any objective (the ship of the
   attackers in stage 1 of MP_018: the boats are their way) spawns the bot on a squad-mate (or its beacon, its vehicle)
   more than 60 m away whenever there is one (`GameDirector:IsStranded`). Else the bot waits there: the GameDirector only
-  gives a bot on the mesh objectives it gets to (`Bot:CanReach`), a vehicle next to it as soon as there is one. A bot
+  gives a bot on the mesh objectives it gets to (`Bot:CanReach`), a vehicle next to it as soon as there is one. Without
+  an objective and without a way to any objective or vehicle for 30 s it respawns at such a mate (`stranded`,
+  `GameDirector:_CheckStranded`). A bot
   on the mesh without a way to its objective only goes onto a path within 30 m (`Bot:_ZoneNoWay`), not straight to one
   far away.
 - **Rush border**: the area of the next stage opens a while after the last one fell, the objectives are the new MCOMs at

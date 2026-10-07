@@ -244,6 +244,7 @@ function Bot:__init(p_Player)
 	self._ProgressTime = 0.0
 	self._VehicleAnchor = nil
 	self._VehicleGoal = nil
+	self._VehicleStart = nil
 	self._VehicleGoalBest = 0.0
 	self._VehicleGoalTime = 0.0
 	self._VehicleStuckTime = 0.0

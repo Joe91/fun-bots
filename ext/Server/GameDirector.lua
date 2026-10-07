@@ -84,6 +84,8 @@ function GameDirector:RegisterVars()
 	-- MCOMs of the level: "mcom N" -> { Position, Stand, Yaw } or false (GetMcom), the positions of the engine.
 	self.m_Mcoms = {}
 	self.m_McomTries = {}
+	-- Vehicles that got stuck with a bot driving ("vehicle <id>" -> { Position, Time }): no objective for a while.
+	self.m_StuckVehicles = {}
 	self.m_EngineMcoms = nil
 
 	self.m_SpawnableStationaryAas = {}
@@ -998,6 +1000,9 @@ local VEHICLE_FLIPPED_TIME = 5.0
 -- A driver that doesn't get this many metres closer to its objective in VEHICLE_GOAL_TIME seconds is stuck as well.
 local VEHICLE_GOAL_PROGRESS = 10.0
 local VEHICLE_GOAL_TIME = 90.0
+-- A vehicle that got stuck is no objective for this many seconds, unless it moved this many metres meanwhile.
+local STUCK_VEHICLE_TIME = 300.0
+local STUCK_VEHICLE_MOVED = 10.0
 
 ---A ground vehicle whose driver doesn't get VEHICLE_PROGRESS_MIN metres away from where it was for
 ---VEHICLE_PROGRESS_TIME seconds is stuck (in terrain, on a rock, flipped, against a wall the obstacle handling doesn't
@@ -1112,6 +1117,8 @@ function GameDirector:_CheckVehicleProgress(p_Bot)
 		m_DebugBridge:Event('vehicle_stuck', { bot = p_Bot.m_Player.name, pos = { s_Position.x, s_Position.y, s_Position.z } })
 	end
 	local s_Id = s_Vehicle.instanceId
+	-- Not the next bot into it right away (XP5_003: dirt bikes left at A got stuck there with one bot after the other).
+	self.m_StuckVehicles['vehicle ' .. tostring(s_Id)] = { Position = s_Position:Clone(), Time = SharedUtils:GetTime() }
 	local s_Bots = g_BotManager:GetBots()
 	for l_Index = 1, #s_Bots do
 		local l_Bot = s_Bots[l_Index]
@@ -2623,6 +2630,8 @@ function GameDirector:ReloadObjectives()
 	self.m_ObjectivePositions = {}
 	self.m_Mcoms = {}
 	self.m_McomTries = {}
+	-- Vehicles that got stuck with a bot driving ("vehicle <id>" -> { Position, Time }): no objective for a while.
+	self.m_StuckVehicles = {}
 	-- _InitObjectives counts the stage up outside of conquest (_UpdateValidObjectives), as at the start of the round.
 	if not Globals.IsConquest then
 		self.m_RushStageCounter = self.m_RushStageCounter - 1
@@ -2990,6 +2999,22 @@ function GameDirector:_NearFront(p_Position)
 	return false
 end
 
+---Whether the vehicle got stuck with a bot driving it a short while ago and still stands there.
+---@param p_Name string "vehicle <id>"
+---@param p_Position Vec3
+---@return boolean
+function GameDirector:_IsStuckVehicle(p_Name, p_Position)
+	local s_Stuck = self.m_StuckVehicles[p_Name]
+	if s_Stuck == nil then
+		return false
+	end
+	if SharedUtils:GetTime() - s_Stuck.Time > STUCK_VEHICLE_TIME or s_Stuck.Position:Distance(p_Position) > STUCK_VEHICLE_MOVED then
+		self.m_StuckVehicles[p_Name] = nil
+		return false
+	end
+	return true
+end
+
 ---Levels with a mesh: every vehicle is an objective of its own ("vehicle <id>", isVehicleEntity), active while it
 ---stands still with a free seat. The bots walk over the mesh to it and get in there (BotZoneMovement), no paths with
 ---actions needed. Not the stationary weapons and gadgets (AABots, beacons).
@@ -3042,6 +3067,7 @@ function GameDirector:_RefreshVehicleEntities()
 				-- keeps the bot out of the fight.
 				and (not m_Vehicles:IsVehicleType(s_Data, VehicleTypes.StationaryLauncher)
 					or self:_NearFront(s_Objective.position))
+				and not self:_IsStuckVehicle(s_Name, s_Objective.position)
 		end
 		s_Entity = s_Iterator:Next()
 	end
@@ -3055,6 +3081,7 @@ function GameDirector:_RefreshVehicleEntities()
 			l_Objective.entity = nil
 			self.m_VehicleObjectives[l_Objective.name] = nil
 			self.m_VehicleSpawnTeams[tonumber(l_Objective.name:sub(9)) or -1] = nil
+			self.m_StuckVehicles[l_Objective.name] = nil
 			if g_NavRoutes ~= nil then
 				g_NavRoutes:Forget(l_Objective.name)
 			end
