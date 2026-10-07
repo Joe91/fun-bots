@@ -70,6 +70,9 @@ local ACTION_RANGE = 8.0
 -- An MCOM: only points in sight of it (_InSight), up to this far.
 local ACTION_RANGE_MCOM = 12.0
 local ACTION_RANGE_MCOM_FAR = 25.0
+-- An MCOM: points at most this far above its interaction point (the soldier stands a bit lower), this far below.
+local ACTION_MCOM_ABOVE = 1.0
+local ACTION_MCOM_BELOW = 2.5
 local ACTION_FLOOR = 3.0
 local ACTION_POINTS = 4
 -- A vehicle that moved this far: its points anew.
@@ -558,7 +561,12 @@ function NavRoutes:_ActionTarget(p_Objective, p_Action)
 			local s_DeltaZ = s_Position.z - s_From.z
 			local s_Distance = math.sqrt(s_DeltaX * s_DeltaX + s_DeltaZ * s_DeltaZ)
 			-- Not on an island of the mesh (a point in a room the bots can't get into over the mesh).
-			if s_Distance <= l_Range and math.abs(s_Position.y - s_From.y) <= ACTION_FLOOR
+			-- On the floor of the vehicle or the MCOM: for an MCOM not above it (a floor or rubble over it, the soldier
+			-- interacted from up there in vain, XP4_Rubble MCOM 2).
+			local s_Height = s_Position.y - s_From.y
+			local s_OnFloor = p_Action.Kind == 'mcom' and s_Height <= ACTION_MCOM_ABOVE and s_Height >= -ACTION_MCOM_BELOW
+				or p_Action.Kind ~= 'mcom' and math.abs(s_Height) <= ACTION_FLOOR
+			if s_Distance <= l_Range and s_OnFloor
 				and (s_Mesh.PartSize[s_Mesh.Part[l_Point]] or 0) >= ACTION_MIN_PART then
 				s_Candidates[#s_Candidates + 1] = { l_Point, s_Distance }
 			end

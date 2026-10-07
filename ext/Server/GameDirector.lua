@@ -77,6 +77,7 @@ function GameDirector:RegisterVars()
 	self.m_VehicleObjectives = {}
 	-- MCOMs of the level: "mcom N" -> { Position, Stand, Yaw } or false (GetMcom), the positions of the engine.
 	self.m_Mcoms = {}
+	self.m_McomTries = {}
 	self.m_EngineMcoms = nil
 
 	self.m_SpawnableStationaryAas = {}
@@ -2420,6 +2421,7 @@ function GameDirector:ReloadObjectives()
 	self.m_Translations = {}
 	self.m_ObjectivePositions = {}
 	self.m_Mcoms = {}
+	self.m_McomTries = {}
 	-- _InitObjectives counts the stage up outside of conquest (_UpdateValidObjectives), as at the start of the round.
 	if not Globals.IsConquest then
 		self.m_RushStageCounter = self.m_RushStageCounter - 1
@@ -2870,7 +2872,12 @@ function GameDirector:GetActionTarget(p_Objective)
 		if s_Mcom == nil then
 			return nil
 		end
-		return { Kind = 'mcom', Zone = s_Zone, Position = s_Mcom.Position, Stand = s_Mcom.Stand, Yaw = s_Mcom.Yaw }
+		local s_Stand = s_Mcom.Stand
+		if s_Stand == nil and s_Mcom.Stands ~= nil and #s_Mcom.Stands > 0 then
+			-- Without a recorded spot: the free spots around it in turn, the next one after each try that failed.
+			s_Stand = s_Mcom.Stands[(self.m_McomTries[s_Parent] or 0) % #s_Mcom.Stands + 1]
+		end
+		return { Kind = 'mcom', Zone = s_Zone, Position = s_Mcom.Position, Stand = s_Stand, Yaw = s_Mcom.Yaw }
 	end
 	return nil
 end
@@ -2921,9 +2928,44 @@ function GameDirector:GetMcom(p_Name)
 	end
 	if not s_Known and (s_Engine ~= nil or s_Zone ~= nil) then
 		s_Known = { Position = s_Engine or s_Zone.Center }
+		if s_Engine ~= nil then
+			s_Known.Stands = self:_McomStands(s_Engine)
+		end
 	end
 	self.m_Mcoms[p_Name] = s_Known
 	return s_Known or nil
+end
+
+-- Spots to arm an MCOM from without a recorded one: this far from its interaction point, in MCOM_STAND_DIRECTIONS
+-- directions, free at chest height towards it and with ground below.
+local MCOM_STAND_DISTANCE = 1.0
+local MCOM_STAND_DIRECTIONS = 8
+
+---The free spots around an MCOM (rays), by their angle: the bots try them in turn (McomTryFailed).
+---@param p_Position Vec3 the interaction point of the engine
+---@return Vec3[]
+function GameDirector:_McomStands(p_Position)
+	local s_Flags = RayCastFlags.DontCheckCharacter | RayCastFlags.DontCheckRagdoll | RayCastFlags.DontCheckWater
+	---@cast s_Flags RayCastFlags
+	local s_Result = {}
+	local s_From = p_Position + Vec3(0.0, 1.0, 0.0)
+	for l_Index = 0, MCOM_STAND_DIRECTIONS - 1 do
+		local s_Angle = l_Index * 2 * math.pi / MCOM_STAND_DIRECTIONS
+		local s_Spot = p_Position + Vec3(math.cos(s_Angle), 0.0, math.sin(s_Angle)) * MCOM_STAND_DISTANCE
+		local s_Blocked = RaycastManager:CollisionRaycast(s_From, s_Spot + Vec3(0.0, 1.0, 0.0), 1, 0, s_Flags)[1]
+		local s_Ground = RaycastManager:CollisionRaycast(s_Spot + Vec3(0.0, 1.0, 0.0), s_Spot - Vec3(0.0, 1.5, 0.0), 1, 0,
+			s_Flags)[1]
+		if s_Blocked == nil and s_Ground ~= nil then
+			s_Result[#s_Result + 1] = s_Ground.position
+		end
+	end
+	return s_Result
+end
+
+---A bot didn't get the MCOM armed or disarmed from where it was: the next bot tries the next free spot around it.
+---@param p_Name string "mcom N"
+function GameDirector:McomTryFailed(p_Name)
+	self.m_McomTries[p_Name] = (self.m_McomTries[p_Name] or 0) + 1
 end
 
 -- Two interactions this close are the same MCOM (one per team).

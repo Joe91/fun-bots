@@ -53,6 +53,10 @@ local ZONE_OFF_POINT = 3.0       -- Horizontal metres from its point: a new rout
 local ZONE_SMOOTH_ROOM = 2.5     -- Smoothing: metres before a point the bot turns towards the next one (at most).
 local ZONE_REJOIN_RANGE = 30.0   -- No route from the point the bot is at (a piece of the mesh cut off by given-up
                                  -- connections): it goes on from a point of another part this close...
+local ZONE_REJOIN_FAR = 120.0    -- Nothing that close: up to this far over open ground (a spawn on an island of the
+local ZONE_REJOIN_SLOPE = 0.25   -- mesh, no path to the rest), not steeper than this (height per metre) plus
+local ZONE_REJOIN_STEP = 3.0     -- this many metres.
+local ZONE_REJOIN_SPEED = 3.0    -- Metres per second the bot is given for the way to the point it rejoins at.
 local ZONE_REJOIN_MIN_PART = 10  -- ...with this many points at least (NavZones MIN_PART).
 local ZONE_RECENT_EXIT_TIME = 60.0 -- Seconds a bot doesn't leave the mesh again at a junction it left it at.
 local ZONE_AVOID_ENTRY_TIME = 30.0 -- Seconds a bot that came onto the mesh from a path takes no exit back to that path.
@@ -432,6 +436,10 @@ function Bot:_ZoneRejoin()
 		return false
 	end
 	m_Logger:Write(self.m_Player.name .. ' no route from point ' .. s_State.Point .. ', goes on from ' .. l_Point)
+	-- On the way there (up to ZONE_REJOIN_FAR, a few metres per second): not snapped back meanwhile (_ZoneResnap).
+	local s_From = s_State.Zone.Points[s_State.Point]
+	local s_Way = s_From ~= nil and s_From.Position:Distance(s_Mesh.Points[l_Point].Position) or 0.0
+	s_State.RejoinUntil = SharedUtils:GetTime() + s_Way / ZONE_REJOIN_SPEED
 	s_State.Point = l_Point
 	-- On the way there: not snapped back to the closest point (_ZoneResnap), that one has no route.
 	s_State.Entered = SharedUtils:GetTime()
@@ -462,6 +470,23 @@ function Bot:_ZoneRejoinPoint(p_Objective)
 			end
 		end
 	end
+	-- None close by (a spawn on a piece of the mesh the census didn't join to the rest, no path across): farther, over
+	-- open ground (not down a cliff or a roof: at most ZONE_REJOIN_SLOPE metres up or down per metre, plus a step).
+	-- Not to the shore from a ship or a carrier: those are farther, the boats are the way there.
+	if #s_Candidates == 0 then
+		for l_Index = 1, #s_Mesh.Points do
+			if s_Mesh.Part[l_Index] ~= s_Part and (s_Mesh.PartSize[s_Mesh.Part[l_Index]] or 0) >= ZONE_REJOIN_MIN_PART then
+				local s_Position = s_Mesh.Points[l_Index].Position
+				local s_DeltaX = s_Position.x - s_From.x
+				local s_DeltaZ = s_Position.z - s_From.z
+				local s_Distance = math.sqrt(s_DeltaX * s_DeltaX + s_DeltaZ * s_DeltaZ)
+				if s_Distance <= ZONE_REJOIN_FAR
+					and math.abs(s_Position.y - s_From.y) <= ZONE_REJOIN_SLOPE * s_Distance + ZONE_REJOIN_STEP then
+					s_Candidates[#s_Candidates + 1] = { l_Index, s_Distance }
+				end
+			end
+		end
+	end
 	table.sort(s_Candidates, function(p_A, p_B) return p_A[2] < p_B[2] end)
 	local s_Tried = {}
 	for l_Index = 1, #s_Candidates do
@@ -483,7 +508,8 @@ end
 function Bot:_ZoneResnap()
 	local s_State = self.m_Zone
 	local s_Soldier = self.m_Player.soldier
-	if s_State == nil or s_Soldier == nil or s_State.Vehicle or SharedUtils:GetTime() - s_State.Entered < ZONE_RESNAP_AFTER then
+	if s_State == nil or s_Soldier == nil or s_State.Vehicle or SharedUtils:GetTime() - s_State.Entered < ZONE_RESNAP_AFTER
+		or (s_State.RejoinUntil ~= nil and SharedUtils:GetTime() < s_State.RejoinUntil) then
 		return
 	end
 	local s_Current = s_State.Zone.Points[s_State.Point]
@@ -1164,6 +1190,9 @@ function Bot:_ZoneAction(p_DeltaTime)
 		-- Doesn't work from here: the MCOM itself again, the GameDirector may send the bot anew.
 		m_Logger:Write(self.m_Player.name .. ' could not interact with ' .. tostring(self._Objective))
 		local s_Parent = g_GameDirector:_GetObjectiveFromSubObj(self._Objective)
+		if s_Parent ~= nil then
+			g_GameDirector:McomTryFailed(s_Parent)
+		end
 		self:SetObjective(s_Parent or '', self._ObjectiveMode)
 	end
 	return true

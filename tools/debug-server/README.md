@@ -438,7 +438,15 @@ zone it walks in, `@mesh` outside of the zones) and `zoneExit` on its way out.
   C4 for 20 s (`StateAttacking`). An aim that can't
   be solved (NaN) keeps the view (`Bot:UpdateYaw`): the bot spun around its axis without end.
 - **MCOMs behind walls**: without a point of the mesh in sight of the MCOM the closest ones are taken (up to 25 m),
-  the bots shoot their way through what can be shot away (Subway MCOM 7).
+  the bots shoot their way through what can be shot away (Subway MCOM 7). Only points on the floor of the MCOM (at
+  most 1 m above its interaction point, 2.5 m below): from a floor or rubble above it the bots interacted in vain
+  (XP4_Rubble MCOM 2). Without a recorded spot to arm it from (the trim drops the ways to the MCOMs) the free spots
+  1 m around it are found with rays (free at chest height, ground below, `GameDirector:_McomStands`); after each try
+  that failed the next bot takes the next one (`McomTryFailed`).
+- **No route from its part of the mesh**: the bot walks straight to the closest point of another part from which a
+  route leads on, up to 30 m away, else up to 120 m over open ground (at most 1 m up or down per 4 m, plus 3 m): a
+  spawn on a piece of the mesh the census didn't join to the rest (18-110 m on Rubble, Caspian Border, XP5_004). Not
+  from a ship or a carrier (150-900 m): the boats are the way there (`Bot:_ZoneRejoin`).
 - **Stranded**: a spawn from which neither the mesh nor the paths lead to any objective (the ship of the
   attackers in stage 1 of MP_018: the boats are their way) spawns the bot on a squad-mate (or its beacon, its vehicle)
   more than 60 m away whenever there is one (`GameDirector:IsStranded`). Else the bot waits there: the GameDirector only
