@@ -529,6 +529,9 @@ def command_navpaths(options) -> int:
         else:
             networks = navzones.build(census, attach=navpaths.attach_nodes(result.data), checks=checks,
                                       loose=navpaths.loose_ends(result.data))
+        thinned = navpaths.thin_junctions(result.data, networks)
+        if thinned:
+            print(f"  {thinned} junctions dropped next to another one of the same path")
         if networks.get("stats", {}).get("checkRemovedPoints") is not None:
             print(f"  check: {networks['stats']['checkRemovedEdges']} connections and "
                   f"{networks['stats']['checkRemovedPoints']} points left out")

@@ -696,6 +696,57 @@ function GameDirector:_TeamSpawnPositions(p_TeamId)
 	return s_Result
 end
 
+-- Rush: a spawn this many metres farther from the MCOMs than the most forward spawn of the team is behind (the base of a
+-- stage that fell: the game still offers it). The bot is moved to a forward spawn (ForwardSpawn).
+local FORWARD_SPAWN_MARGIN = 100.0
+-- Among the forward spawns: the ones up to this much farther than the best one.
+local FORWARD_SPAWN_CHOICE = 30.0
+
+---Rush: where a bot that spawned at p_Position starts instead, if the game spawned it far behind the front (players
+---can choose the base of the first stage as long as it is on, the engine picks it for bots now and then): one of the
+---most forward spawns of the team, on the ground. nil if p_Position is fine.
+---@param p_TeamId TeamId|integer
+---@param p_Position Vec3
+---@return Vec3|nil
+function GameDirector:ForwardSpawn(p_TeamId, p_Position)
+	if not Globals.IsRush then
+		return nil
+	end
+	local s_Targets = self:GetActiveMcomPositions()
+	if #s_Targets == 0 then
+		return nil
+	end
+	local function _Distance(p_Pos)
+		local s_Best = math.huge
+		for l_Index = 1, #s_Targets do
+			local s_DeltaX = s_Targets[l_Index].x - p_Pos.x
+			local s_DeltaZ = s_Targets[l_Index].z - p_Pos.z
+			s_Best = math.min(s_Best, math.sqrt(s_DeltaX * s_DeltaX + s_DeltaZ * s_DeltaZ))
+		end
+		return s_Best
+	end
+	local s_Spawns = self:_TeamSpawnPositions(p_TeamId)
+	local s_Best = math.huge
+	for l_Index = 1, #s_Spawns do
+		s_Best = math.min(s_Best, _Distance(s_Spawns[l_Index]))
+	end
+	if s_Best == math.huge or _Distance(p_Position) <= s_Best + FORWARD_SPAWN_MARGIN then
+		return nil
+	end
+	local s_Choice = {}
+	for l_Index = 1, #s_Spawns do
+		if _Distance(s_Spawns[l_Index]) <= s_Best + FORWARD_SPAWN_CHOICE then
+			s_Choice[#s_Choice + 1] = s_Spawns[l_Index]
+		end
+	end
+	local s_Spawn = s_Choice[MathUtils:GetRandomInt(1, #s_Choice)]
+	-- Spawn-entities may float above the ground (40 m on XP5_004): the soldier stands on the ground below.
+	local s_Flags = RayCastFlags.DontCheckCharacter | RayCastFlags.DontCheckRagdoll | RayCastFlags.DontCheckWater
+	---@cast s_Flags RayCastFlags
+	local s_Hit = RaycastManager:CollisionRaycast(s_Spawn + Vec3(0, 1.0, 0), s_Spawn - Vec3(0, 60.0, 0), 1, 0, s_Flags)[1]
+	return s_Hit ~= nil and s_Hit.position + Vec3(0, 0.1, 0) or s_Spawn
+end
+
 ---Off the mesh a soldier walks a navigation path to its end, or the way to its objective (a vehicle, an MCOM to arm). If
 ---it doesn't get closer to where it walks to for a while, it is stuck there (walks a dead end back and forth, can't get
 ---past something): onto the mesh close by, later it respawns. Not while it fights, waits or does an action.

@@ -54,6 +54,8 @@ local ZONE_SMOOTH_ROOM = 2.5     -- Smoothing: metres before a point the bot tur
 local ZONE_REJOIN_RANGE = 30.0   -- No route from the point the bot is at (a piece of the mesh cut off by given-up
                                  -- connections): it goes on from a point of another part this close...
 local ZONE_REJOIN_MIN_PART = 10  -- ...with this many points at least (NavZones MIN_PART).
+local ZONE_RECENT_EXIT_TIME = 60.0 -- Seconds a bot doesn't leave the mesh again at a junction it left it at.
+local ZONE_AVOID_ENTRY_TIME = 30.0 -- Seconds a bot that came onto the mesh from a path takes no exit back to that path.
 local ZONE_REENTER_TIME = 5.0    -- Seconds a bot that left the mesh at a junction doesn't go onto it there again.
 local ZONE_FALL = 1.5            -- Metres below the way to the target (and ZONE_FALL_BELOW below both ends of it): the
 local ZONE_FALL_BELOW = 1.0      -- bot fell off, the way is given up.
@@ -337,8 +339,23 @@ function Bot:_ZoneDecide(p_Rejoined)
 	end
 
 	-- The routes are over the mesh of the soldiers, a vehicle leaves its network at the junction closest to the objective.
+	-- Just came onto the mesh from a path: not back there at once (NavRoutes:Next).
+	local s_Avoid = s_State.EntryJunction ~= nil and SharedUtils:GetTime() - s_State.Entered < ZONE_AVOID_ENTRY_TIME
+		and self._NavCame or nil
+	local s_Used = nil
+	if self.m_RecentExits ~= nil then
+		local s_Now = SharedUtils:GetTime()
+		for l_Junction, l_Time in pairs(self.m_RecentExits) do
+			if s_Now - l_Time > ZONE_RECENT_EXIT_TIME then
+				self.m_RecentExits[l_Junction] = nil
+			else
+				s_Used = s_Used or {}
+				s_Used[l_Junction] = true
+			end
+		end
+	end
 	local s_Next = not s_State.Vehicle
-		and m_NavRoutes:Next(s_State.Point, self._Objective, self.m_RouteSeed, self.m_Player.teamId) or nil
+		and m_NavRoutes:Next(s_State.Point, self._Objective, self.m_RouteSeed, self.m_Player.teamId, s_Avoid, s_Used) or nil
 	if s_Next ~= nil and s_Next.Action ~= nil and s_Next.Point ~= nil then
 		-- Into the vehicle, arm the MCOM: to the point next to it, then do it there (_ZoneAction).
 		s_State.Zone = s_Next.Zone or s_State.Zone
@@ -650,6 +667,11 @@ function Bot:_LeaveZone(p_Junction)
 
 	local s_Waypoint = p_Junction and p_Junction.Waypoint
 	self.m_LeftZoneAt = p_Junction ~= nil and { Point = p_Junction.Point, Time = SharedUtils:GetTime() } or nil
+	-- The exits it took lately: not again for a while (a loop over junctions next to each other, NavRoutes:Next).
+	if p_Junction ~= nil then
+		self.m_RecentExits = self.m_RecentExits or {}
+		self.m_RecentExits[p_Junction] = SharedUtils:GetTime()
+	end
 	self.m_LeftMeshTime = SharedUtils:GetTime()
 	if s_Waypoint == nil and s_State ~= nil and s_State.Vehicle and self.m_Player.controlledControllable ~= nil then
 		s_Waypoint = g_GameDirector:FindClosestPath(self.m_Player.controlledControllable.transform.trans, true, false,
@@ -1175,6 +1197,13 @@ function Bot:_ZoneGiveUpConnection(p_Position, p_Target)
 	end
 	if s_Next ~= nil and s_Next ~= s_State.Point then
 		m_NavZones:BlockEdge(s_State.Zone, s_State.Point, s_Next)
+	elseif s_Next ~= nil then
+		-- It didn't get back to its own point (pushed off, came onto the mesh beside it): the way there from the point it
+		-- stands at is blocked (a railing, a bench the census and the checks don't see), for all bots.
+		local s_Near = m_NavZones:Closest(s_State.Zone, p_Position, s_Next)
+		if s_Near ~= nil and s_Near ~= s_Next then
+			m_NavZones:BlockEdge(s_State.Zone, s_Near, s_Next)
+		end
 	end
 	-- All ways from the last point failed, or the bot didn't get back to it (_ZoneRouteTo, from ZONE_OFF_POINT away):
 	-- start the next route at another point.

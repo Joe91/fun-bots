@@ -6,7 +6,7 @@ local m_Utilities = require('__shared/Utilities')
 
 -- Seconds a bot runs after the target of an action (C4, repair, revive, into a vehicle) at most: a moving target (a
 -- vehicle driving on) made it run around it without end. Then C4 isn't used for CHASE_COOLDOWN seconds.
-local CHASE_MAX = 12.0
+local CHASE_MAX = 8.0
 local CHASE_COOLDOWN = 20.0
 
 
@@ -59,6 +59,11 @@ function StateAttacking:Update(p_Bot, p_DeltaTime)
 	p_Bot:UpdateZoneSubObjective(p_DeltaTime)
 
 	local s_Action = p_Bot._ActiveAction
+	-- The time counts per target: the action is broken off and started again now and then.
+	if p_Bot._ChaseTarget ~= p_Bot._ShootPlayer then
+		p_Bot._ChaseTarget = p_Bot._ShootPlayer
+		p_Bot._ChaseTime = 0.0
+	end
 	if s_Action == BotActionFlags.ReviveActive or s_Action == BotActionFlags.EnterVehicleActive or
 		s_Action == BotActionFlags.RepairActive or s_Action == BotActionFlags.C4Active then
 		p_Bot._ChaseTime = p_Bot._ChaseTime + p_DeltaTime
@@ -71,8 +76,6 @@ function StateAttacking:Update(p_Bot, p_DeltaTime)
 			p_Bot:AbortAttack()
 			return
 		end
-	else
-		p_Bot._ChaseTime = 0.0
 	end
 
 	-- TODO: split revive, repari, c4 and so on

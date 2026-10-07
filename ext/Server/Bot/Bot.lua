@@ -226,8 +226,10 @@ function Bot:__init(p_Player)
 	self._MeshRetryTimer = 0.0
 	-- The node of the paths the bot decided at last (NavRoutes:Step): it doesn't go straight back there.
 	self._NavCame = nil
+	self.m_RecentExits = nil
 	-- Seconds the bot runs after the target of an action, and until when it uses no C4 (StateAttacking).
 	self._ChaseTime = 0.0
+	self._ChaseTarget = nil
 	self._ChaseCooldown = 0.0
 	-- Progress towards the objective and of the vehicle (GameDirector:_CheckObjectiveProgress, _CheckVehicleProgress).
 	self._ProgressObjective = nil

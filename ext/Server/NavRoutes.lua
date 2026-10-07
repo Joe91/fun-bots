@@ -33,6 +33,13 @@ local MESH_CROSSING = 10.0
 -- bots, until the level ends).
 local EXIT_PENALTY = 100.0
 local STRETCH_PENALTY = 100.0
+-- A stretch of a path shorter than this between two junctions whose points the mesh connects with a way at most
+-- SHORTCUT_DETOUR times as long (plus SHORTCUT_SLACK metres) is no way for the routes (_DropShortcuts).
+local SHORTCUT_LENGTH = 30.0
+local SHORTCUT_DETOUR = 1.5
+local SHORTCUT_SLACK = 20.0
+-- A bot that just left the mesh doesn't go onto it again at a junction this close to where it left (metres).
+local NO_ENTER_RANGE = 10.0
 -- A field is measured anew when the mesh or the penalties changed, but at most this often (seconds).
 local FIELD_REFRESH = 5.0
 
@@ -76,6 +83,9 @@ local JUNCTION_COST_CACHE = 1500
 -- Metres a path seems longer for each bot of the team on it or on the way to it (_Crowd): the bots spread over the ways
 -- to their objective (the other staircase, the next street) instead of all taking the shortest one.
 local CROWD_COST = 15.0
+-- At most this many metres in all: enough to take the next staircase, not a long way round that ends where it began
+-- (ten bots on the way north made a loop of 300 m south and back look shorter, MP_018).
+local CROWD_MAX = 45.0
 -- Seconds the counts of the bots per path are kept.
 local CROWD_TIME = 1.0
 
@@ -349,7 +359,74 @@ function NavRoutes:_Ensure()
 			s_Junctions = s_Junctions + 1
 		end
 	end
-	m_Logger:Write(#self._Nodes .. ' nodes on the paths, ' .. s_LinkCount .. ' links, ' .. s_Junctions .. ' junctions')
+	local s_Shortcuts = self:_DropShortcuts(s_Mesh)
+	m_Logger:Write(#self._Nodes .. ' nodes on the paths, ' .. s_LinkCount .. ' links, ' .. s_Junctions .. ' junctions, '
+		.. s_Shortcuts .. ' shortcuts dropped')
+end
+
+---Without the short stretches of paths between two junctions that the mesh connects about as well (SHORTCUT_*): the
+---bots went off the mesh, a few metres along the path and onto it again, at the next such stretch off again (each bot
+---weighs them a bit differently, they are all about as long).
+---@param p_Mesh NavZone
+---@return integer how many
+function NavRoutes:_DropShortcuts(p_Mesh)
+	local s_Count = 0
+	for l_Node = 1, #self._Nodes do
+		local s_Entry = self._Nodes[l_Node]
+		local s_Junction = s_Entry.Junction
+		if s_Junction ~= nil then
+			for l_Index = #s_Entry.Edges, 1, -1 do
+				local l_Edge = s_Entry.Edges[l_Index]
+				local s_Other = self._Nodes[l_Edge.To].Junction
+				if l_Edge.Path ~= nil and l_Edge.To > l_Node and s_Other ~= nil and l_Edge.Cost < SHORTCUT_LENGTH
+					and p_Mesh.Part[s_Junction.Point] == p_Mesh.Part[s_Other.Point] then
+					local s_Limit = SHORTCUT_DETOUR * l_Edge.Cost + SHORTCUT_SLACK
+					if self:_MeshDistance(s_Junction.Point, s_Other.Point, s_Limit) <= s_Limit then
+						table.remove(s_Entry.Edges, l_Index)
+						local s_Back = self._Nodes[l_Edge.To].Edges
+						for l_Back = #s_Back, 1, -1 do
+							if s_Back[l_Back].To == l_Node and s_Back[l_Back].Path == l_Edge.Path then
+								table.remove(s_Back, l_Back)
+							end
+						end
+						s_Count = s_Count + 1
+					end
+				end
+			end
+		end
+	end
+	return s_Count
+end
+
+---Metres over the mesh from point to point, math.huge if more than p_Limit.
+---@param p_From integer
+---@param p_To integer
+---@param p_Limit number
+---@return number
+function NavRoutes:_MeshDistance(p_From, p_To, p_Limit)
+	local s_Mesh = m_NavZones:GetMesh()
+	---@cast s_Mesh -nil
+	local s_Cost = { [p_From] = 0.0 }
+	local s_Heap = { { 0.0, p_From } }
+	while #s_Heap > 0 do
+		local s_Entry = _Pop(s_Heap)
+		local s_Current = s_Entry[2]
+		if s_Current == p_To then
+			return s_Entry[1]
+		end
+		if s_Entry[1] <= s_Cost[s_Current] and s_Entry[1] <= p_Limit then
+			local s_Neighbours = s_Mesh.Neighbours[s_Current]
+			for l_Index = 1, #s_Neighbours do
+				local l_Edge = s_Neighbours[l_Index]
+				local s_Next = s_Entry[1] + l_Edge.Cost
+				if not l_Edge.Removed and s_Next < (s_Cost[l_Edge.To] or math.huge) then
+					s_Cost[l_Edge.To] = s_Next
+					_Push(s_Heap, { s_Next, l_Edge.To })
+				end
+			end
+		end
+	end
+	return math.huge
 end
 
 -- =============================================
@@ -747,8 +824,11 @@ end
 ---@param p_Objective string
 ---@param p_Seed? number the bot's: its own route among similar ones (_Spread)
 ---@param p_Team? TeamId|integer the bot's: away from the paths its team crowds (_Crowd)
+---@param p_Avoid? integer the node of the paths the bot just came onto the mesh from: no exit back there (it went on and
+---off the mesh at two junctions next to each other)
+---@param p_Used? table<NavZoneJunction, boolean> exits the bot took a short while ago: not again (a loop)
 ---@return NavStep|nil
-function NavRoutes:Next(p_Point, p_Objective, p_Seed, p_Team)
+function NavRoutes:Next(p_Point, p_Objective, p_Seed, p_Team, p_Avoid, p_Used)
 	local s_Target = self:Target(p_Objective)
 	local s_Mesh = m_NavZones:GetMesh()
 	if s_Target == nil or s_Mesh == nil or s_Mesh.Points[p_Point] == nil then
@@ -769,16 +849,18 @@ function NavRoutes:Next(p_Point, p_Objective, p_Seed, p_Team)
 		local s_Entry = self._Nodes[l_Node]
 		local s_Path = s_Entry.Waypoint.PathIndex
 		local s_Out = math.huge
-		for l_Index = 1, #s_Entry.Edges do
+		-- Not an exit the bot took a short while ago (a loop), nor back to where it came onto the mesh.
+		local s_Usable = l_Node ~= p_Avoid and not (p_Used ~= nil and p_Used[s_Entry.Junction])
+		for l_Index = 1, s_Usable and #s_Entry.Edges or 0 do
 			local l_Edge = s_Entry.Edges[l_Index]
 			local s_Rest = s_Field.Node[l_Edge.To]
-			if s_Rest ~= nil then
+			if s_Rest ~= nil and l_Edge.To ~= p_Avoid then
 				s_Out = math.min(s_Out, l_Edge.Cost * _Spread(p_Seed, l_Edge.Path or -l_Edge.To) + (l_Edge.Penalty or 0.0) + s_Rest)
 			end
 		end
 		if s_Out < math.huge then
 			local s_Cost = l_Cost * _Spread(p_Seed, s_Path) + s_Out + s_Entry.JunctionCost + MESH_CROSSING
-				+ (self._Penalty[s_Entry.Junction] or 0.0) + (s_Crowd[s_Path] or 0) * CROWD_COST
+				+ (self._Penalty[s_Entry.Junction] or 0.0) + math.min((s_Crowd[s_Path] or 0) * CROWD_COST, CROWD_MAX)
 			if s_Cost < s_ExitCost then
 				s_Exit = s_Entry.Junction
 				s_ExitCost = s_Cost
@@ -850,6 +932,13 @@ function NavRoutes:Step(p_Waypoint, p_Objective, p_Seed, p_Came, p_NoEnter)
 		end
 	end
 	local s_Junction = s_Entry.Junction
+	local s_Mesh = m_NavZones:GetMesh()
+	-- Not onto the mesh where the bot just left it, nor at a junction next to that (two junctions of one path end).
+	local s_Left = p_NoEnter ~= nil and s_Mesh ~= nil and s_Mesh.Points[p_NoEnter] or nil
+	if s_Junction ~= nil and s_Left ~= nil and s_Mesh.Points[s_Junction.Point] ~= nil
+		and s_Mesh.Points[s_Junction.Point].Position:Distance(s_Left.Position) < NO_ENTER_RANGE then
+		s_Junction = nil
+	end
 	if s_Junction ~= nil and s_Junction.Point ~= p_NoEnter then
 		local s_Rest = s_Field.Mesh[s_Junction.Point]
 		if s_Rest ~= nil and s_Entry.JunctionCost + (self._EntryPenalty[s_Junction] or 0.0) + s_Rest <= s_BestCost then

@@ -207,6 +207,14 @@ function BotSpawner:OnEngineUpdate(p_DeltaTime, p_SimulationDeltaTime)
 				if g_GameDirector:GetReservedVehicle(l_Bot) == nil then
 					-- Spawned where no way leads on (the ship of the attackers): on a mate away from there, if any.
 					local s_Here = l_Bot.m_Player.soldier.worldTransform.trans:Clone()
+					-- Rush: spawned far behind the front (the base of a stage that fell): at a forward spawn instead.
+					local s_Forward = g_GameDirector:ForwardSpawn(l_Bot.m_Player.teamId, s_Here)
+					if s_Forward ~= nil then
+						local s_Transform = l_Bot.m_Player.soldier.worldTransform:Clone()
+						s_Transform.trans = s_Forward
+						l_Bot.m_Player.soldier:SetTransform(s_Transform)
+						s_Here = s_Forward:Clone()
+					end
 					local s_Stranded = g_GameDirector:IsStranded(s_Here, l_Bot.m_Player.teamId) and s_Here or nil
 					-- Respawned because it got nowhere (GameDirector:_CheckObjectiveProgress) and spawned close to that spot
 					-- again (a rush base behind a border that stays closed): on a mate away from there as well.

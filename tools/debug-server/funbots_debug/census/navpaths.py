@@ -332,6 +332,37 @@ def _places(path: PathData, points: set[int]) -> int:
     return count
 
 
+def thin_junctions(data: MapData, networks: dict) -> int:
+    """One junction per place of a foot path (PLACE_DISTANCE along it): the one closest to the end of the path. Two
+    junctions next to each other with different points of the mesh let the bots go off the mesh at the one and onto it
+    at the other, again and again. Returns how many were dropped."""
+    attach = networks.get("attach") or []
+    by_path: dict[int, list] = defaultdict(list)
+    for entry in attach:
+        path = data.paths.get(int(entry[0]))
+        if path is not None and not path.vehicles:
+            by_path[int(entry[0])].append(entry)
+    drop = set()
+    for index, entries in by_path.items():
+        path = data.paths[index]
+        count = len(path.nodes)
+        along = [0.0]
+        for a, b in zip(path.nodes, path.nodes[1:]):
+            along.append(along[-1] + math.dist(a.pos, b.pos))
+        entries.sort(key=lambda entry: int(entry[1]))
+        cluster: list = []
+        for entry in entries + [None]:
+            if entry is not None and cluster and along[int(entry[1]) - 1] - along[int(cluster[0][1]) - 1] <= PLACE_DISTANCE:
+                cluster.append(entry)
+                continue
+            if len(cluster) > 1:
+                keep = min(cluster, key=lambda item: min(int(item[1]) - 1, count - int(item[1])))
+                drop.update(id(item) for item in cluster if item is not keep)
+            cluster = [entry] if entry is not None else []
+    networks["attach"] = [entry for entry in attach if id(entry) not in drop]
+    return len(drop)
+
+
 def loose_ends(data: MapData) -> list[list]:
     """The ends of the foot paths without a link: the mesh attaches them where it has no junction for them
     (navzones.build(..., loose=...), up to navzones.LOOSE_RANGE away). [path, point, position]"""

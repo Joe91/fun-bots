@@ -191,5 +191,14 @@ class TrimTest(unittest.TestCase):
         self.assertEqual(result.data.paths, {})
 
 
+    def test_thin_junctions(self):
+        walk = _path(1, _line(0, 40, 0))
+        data = MapData({1: walk})
+        networks = {"attach": [[1, 1, 5, 1.0, [0, 0, 0], []], [1, 2, 9, 1.0, [2, 0, 0], []],
+                               [1, len(walk.nodes), 7, 1.0, [40, 0, 0], []]]}
+        self.assertEqual(navpaths.thin_junctions(data, networks), 1)
+        self.assertEqual([entry[1] for entry in networks["attach"]], [1, len(walk.nodes)])
+
+
 if __name__ == "__main__":
     unittest.main()

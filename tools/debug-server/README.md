@@ -426,6 +426,19 @@ zone it walks in, `@mesh` outside of the zones) and `zoneExit` on its way out.
 - **Rush spawns**: the bots spawn where the game spawns its players (the alternate spawns of the stage); one bot per
   free vehicle at the spawn next to it (`GameDirector:ReserveVehicle`, only vehicles up to 100 m from a spawn of the
   team that is on).
+- **Forward spawns (rush)**: the game still offers the base of a stage that fell, and spawns bots there now and then.
+  A bot that spawned more than 100 m farther from the MCOMs than the most forward spawn of its team starts at one of
+  the forward spawns instead (`GameDirector:ForwardSpawn`, on the ground below the spawn).
+- **Last resorts**: a bot on foot that doesn't get 5 m closer to its objective for 90 s respawns (not within 30 m of
+  it or in its zone, not while it fights; event `no_progress`, `GameDirector:_CheckObjectiveProgress`), on a mate away
+  from there if it spawns close to that spot again (a rush base behind a border that stays closed). A ground vehicle
+  whose driver doesn't get 5 m away for 30 s (not waiting for passengers, not at its objective) is left by all bots in
+  it (event `vehicle_stuck`, `_CheckVehicleProgress`). A bot runs after the target of C4, repair, revive or a vehicle to
+  get into at most 8 s per target (a vehicle that drives on, a launcher on a ledge it can't get to), then it uses no
+  C4 for 20 s (`StateAttacking`). An aim that can't
+  be solved (NaN) keeps the view (`Bot:UpdateYaw`): the bot spun around its axis without end.
+- **MCOMs behind walls**: without a point of the mesh in sight of the MCOM the closest ones are taken (up to 25 m),
+  the bots shoot their way through what can be shot away (Subway MCOM 7).
 - **Stranded**: a spawn from which neither the mesh nor the paths lead to any objective (the ship of the
   attackers in stage 1 of MP_018: the boats are their way) spawns the bot on a squad-mate (or its beacon, its vehicle)
   more than 60 m away whenever there is one (`GameDirector:IsStranded`). Else the bot waits there: the GameDirector only
@@ -456,6 +469,9 @@ zone it walks in, `@mesh` outside of the zones) and `zoneExit` on its way out.
   (`MfPenetrable`: wood, boards, glass) right in front of it, towards its target, stands, turns to it and shoots at it for
   2.5 s, then goes on (at most twice per target; `Bot:_TryBreach`). On MP_Subway the boards over the doors of the train
   with MCOM 7 need that. Concrete and rock have no such flag, nothing happens there.
+- **Back to its point**: a bot that doesn't get back to its own point of the mesh (pushed off it, came onto the mesh
+  beside it) blocks the connection from the point it stands at to that one, for all bots (a railing or a bench the
+  census and the checks don't see).
 - **Stuck on the mesh**: beside the line of the connection (pushed aside, a corner cut) the bot steps back onto it
   sideways, the census found the line free (a pillar next to it held the bots). A bot that leaves a vehicle (bails out
   of a helicopter) goes onto the mesh where it lands. It only goes onto the mesh at a junction it is next to (6 m), and
@@ -530,9 +546,14 @@ python -m funbots_debug.census navpaths MP_012_RushLarge0 --write --db ../../mod
    on the mesh. The pieces are walked back and forth.
 3. Links stay where both waypoints are left (both ways), the others are dropped.
 4. Foot paths that lead nowhere are dropped, again until there is none: fewer than two ways out (a waypoint on the
-   mesh, a link to a path that is left; a vehicle path always counts). A stub that touches the mesh once, a branch off
+   mesh or an end up to 15 m from it, a link to a path that is left; a vehicle path always counts; ways out within
+   10 m along the path are one). A stub that touches the mesh once, a branch off
    a single link, a path without any connection: a bot on it would walk to its end and back. After the mesh is made
-   with the junctions, once more with the junctions it really has (a waypoint on the mesh can get none), and without
+   with the junctions: an end without junction or link is attached straight to the closest usable point up to 15 m
+   away (also outside of the areas: a wrong junction is better than a dead end), else the path is cut back to its
+   outermost junction or link. Junctions of a foot path within 10 m along it are thinned to one (the one closest to the
+   end of the path, `thin_junctions`): with two next to each other on different points of the mesh the bots went off
+   the mesh at one and onto it at the other, again and again. Once more with the junctions it really has (a waypoint on the mesh can get none), and without
    foot paths under 50 m whose first and last junction the mesh connects about as well (1.5 times as long plus 20 m):
    bits at the edge of an area. The short ones that are left join parts of the mesh nothing else joins (stairs, a
    door the census didn't see).
@@ -555,6 +576,9 @@ to a vehicle or an MCOM (in sight of it), or the junctions of a vehicle-path of 
 the target if the mesh leads there about as cheaply, else to the junction where its route leaves the mesh. Off the
 mesh it decides at each node (`NavRoutes:Step`, `Bot:_CheckForZoneEntry`): onto the mesh at the junction there, over a
 link to another path, or on along its path in one of the two directions, not straight back to the node it came from.
+For 30 s after a bot came onto the mesh from a path, no exit leads straight back to that path node, and for 5 s after
+it left the mesh it doesn't go onto it at a junction within 10 m of where it left: the weighing of each bot
+(`_Spread`) could send it back and forth there.
 Between the nodes it keeps its direction (`NavRoutes:Direction`, also for `NodeCollection:ObjectiveDirection`). Where
 the routes don't know the objective the old path-switching goes on (`PathSwitcher`). An exit a bot doesn't get to costs
 100 m more for all bots, the bot tries another one. So does a stretch of a path a bot got stuck on (no progress off the
@@ -566,7 +590,7 @@ bots learn them during the round.
 The bots spread over the ways: each one weighs each path by a factor of its own (1 to 1 + `NAV_ROUTE_SPREAD`, per
 life; for the way to the junction and the first stretch only, the rest is what the field says: a stub that leads back
 onto the mesh never seems shorter), and each bot of its team on a path or on the mesh on its way to one adds 15 m to
-the exit onto that path (`NavRoutes:_Crowd`): the next ones take the other staircase, the next street. On the mesh the regions of 30 m weigh
+the exit onto that path, at most 45 m (`NavRoutes:_Crowd`): the next ones take the other staircase, the next street, but no long way round. On the mesh the regions of 30 m weigh
 differently for each bot as well (`NavZones:Route`).
 
 **On the map** the debug-server loads `navzones/<map>.json` of the running level on its own. The zones as areas (the hull of their points: green capture points, blue bases, orange
