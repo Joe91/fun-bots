@@ -52,6 +52,8 @@ end
 -- (rush) a spawn of the game of its team.
 local VEHICLE_HQ_RANGE = 120.0
 local VEHICLE_SPAWN_POINT_RANGE = 60.0
+-- Seconds a bot isn't sent back to the vehicle it got out of.
+local LEFT_VEHICLE_TIME = 60.0
 
 function GameDirector:__init()
 	self:RegisterVars()
@@ -422,6 +424,10 @@ function GameDirector:OnEngineUpdate(p_DeltaTime)
 						l_Objective.isEnterVehiclePath and
 						(l_Objective.team == l_BotTeam or (l_Objective.isVehicleEntity and l_Objective.team == TeamId.TeamNeutral)) and
 						l_Objective.assigned[l_BotTeam] < (l_Objective.seats or 1) and
+						-- Not back into the vehicle it just got out of (passenger near an objective, stuck vehicle): parked
+						-- with a free seat, it would be its objective again at once, in and out in a loop.
+						not (l_Bot._LeftVehicle == l_Objective.name
+							and SharedUtils:GetTime() - l_Bot._LeftVehicleTime < LEFT_VEHICLE_TIME) and
 						-- Also idle: just spawned, it gets its first objective before it may move.
 						(s_BotStates:IsSoldierState(l_Bot.m_ActiveState) or l_Bot.m_ActiveState == s_BotStates.States.Idle) and
 						self:_GetDistanceFromObjective(l_Objective.name, l_Bot.m_Player.soldier.worldTransform.trans)
@@ -944,14 +950,18 @@ function GameDirector:_CheckVehicleProgress(p_Bot)
 		and (not m_Vehicles:IsAirVehicle(p_Bot.m_ActiveVehicle) or (s_Vehicle ~= nil and _OnTheGround(s_Vehicle)))
 		and not m_Vehicles:IsVehicleType(p_Bot.m_ActiveVehicle, VehicleTypes.StationaryAA)
 		and not m_Vehicles:IsVehicleType(p_Bot.m_ActiveVehicle, VehicleTypes.Gadgets)
+	-- A launcher (TOW, Kornet) never moves: it is of use while it has a target, without one for VEHICLE_PROGRESS_TIME
+	-- the bot gets out, also next to its objective.
+	local s_Launcher = s_Driver and m_Vehicles:IsVehicleType(p_Bot.m_ActiveVehicle, VehicleTypes.StationaryLauncher)
 	if p_Bot.m_Player.soldier == nil or not (s_Passenger or (s_Driver and s_Vehicle ~= nil))
-		or (s_Driver and p_Bot._VehicleWaitTimer > 0.0) or (s_Passenger and p_Bot._ShootPlayer ~= nil) then
+		or (s_Driver and p_Bot._VehicleWaitTimer > 0.0) or (s_Passenger and p_Bot._ShootPlayer ~= nil)
+		or (s_Launcher and p_Bot._ShootPlayer ~= nil) then
 		p_Bot._VehicleAnchor = nil
 		return
 	end
 	local s_Position = s_Passenger and p_Bot.m_Player.soldier.worldTransform.trans or s_Vehicle.transform.trans
 	local s_Objective = p_Bot:GetObjective()
-	if s_Objective ~= nil and s_Objective ~= ''
+	if not s_Launcher and s_Objective ~= nil and s_Objective ~= ''
 		and self:_GetDistanceFromObjective(s_Objective, s_Position) < s_Registry.OBJECTIVE_PROGRESS_NEAR then
 		p_Bot._VehicleAnchor = nil
 		return
@@ -2830,6 +2840,28 @@ function GameDirector:_VehicleOwner(p_Position)
 	return s_Best or TeamId.TeamNeutral
 end
 
+-- A launcher (TOW, Kornet) is an objective this close to a capture point or an active MCOM.
+local LAUNCHER_FRONT_RANGE = 100.0
+
+---Whether a capture point or an active MCOM is within LAUNCHER_FRONT_RANGE.
+---@param p_Position Vec3
+---@return boolean
+function GameDirector:_NearFront(p_Position)
+	local s_CapturePoints = self:GetAllCapturePoints() or {}
+	for l_Index = 1, #s_CapturePoints do
+		if s_CapturePoints[l_Index].transform.trans:Distance(p_Position) <= LAUNCHER_FRONT_RANGE then
+			return true
+		end
+	end
+	local s_Mcoms = self:GetActiveMcomPositions()
+	for l_Index = 1, #s_Mcoms do
+		if s_Mcoms[l_Index]:Distance(p_Position) <= LAUNCHER_FRONT_RANGE then
+			return true
+		end
+	end
+	return false
+end
+
 ---Levels with a mesh: every vehicle is an objective of its own ("vehicle <id>", isVehicleEntity), active while it
 ---stands still with a free seat. The bots walk over the mesh to it and get in there (BotZoneMovement), no paths with
 ---actions needed. Not the stationary weapons and gadgets (AABots, beacons).
@@ -2878,6 +2910,10 @@ function GameDirector:_RefreshVehicleEntities()
 			s_Objective.seats = m_Vehicles:FreeBotSeats(s_Vehicle, s_Data)
 			s_Objective.active = s_Objective.seats > 0
 				and PhysicsEntity(s_Vehicle).velocity.magnitude < VEHICLE_PARKED_SPEED
+				-- A launcher (TOW, Kornet) only next to a capture point or MCOM: one deep in a base shoots at nothing and
+				-- keeps the bot out of the fight.
+				and (not m_Vehicles:IsVehicleType(s_Data, VehicleTypes.StationaryLauncher)
+					or self:_NearFront(s_Objective.position))
 		end
 		s_Entity = s_Iterator:Next()
 	end

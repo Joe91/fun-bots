@@ -8,6 +8,14 @@ end
 function Bot:_DoExitVehicle()
 	if self._ExitVehicleActive then
 		self:AbortAttack()
+		local s_Vehicle = self.m_Player.controlledControllable
+		if s_Vehicle ~= nil and s_Vehicle.typeInfo.name == "ServerSoldierEntity" then
+			s_Vehicle = self.m_Player.attachedControllable
+		end
+		if s_Vehicle ~= nil then
+			self._LeftVehicle = 'vehicle ' .. tostring(s_Vehicle.instanceId)
+			self._LeftVehicleTime = SharedUtils:GetTime()
+		end
 		self.m_Player:ExitVehicle(true, false)
 		self:_OnFootAgain()
 		return true

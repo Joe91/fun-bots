@@ -231,6 +231,9 @@ function Bot:__init(p_Player)
 	self._ChaseTime = 0.0
 	self._ChopperStartHeight = nil
 	self._PassengerExitTime = nil
+	-- The vehicle the bot got out of ("vehicle <id>") and when: it isn't sent back to it at once.
+	self._LeftVehicle = nil
+	self._LeftVehicleTime = 0.0
 	self._ChaseTarget = nil
 	self._ChaseCooldown = 0.0
 	-- Progress towards the objective and of the vehicle (GameDirector:_CheckObjectiveProgress, _CheckVehicleProgress).
