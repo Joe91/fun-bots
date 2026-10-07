@@ -68,8 +68,10 @@ local ACTION_RANGE = 8.0
 -- An MCOM: only points in sight of it (_InSight), up to this far.
 local ACTION_RANGE_MCOM = 12.0
 local ACTION_RANGE_MCOM_FAR = 25.0
--- An MCOM: points at most this far above its interaction point (the soldier stands a bit lower), this far below.
-local ACTION_MCOM_ABOVE = 1.0
+-- An MCOM: points at most this far above its interaction point (the soldier stands a bit lower), this far below. Not
+-- less: the ground around an MCOM can be higher than where the level places it (MP_018 MCOM 3: 1.3 m and more, no point
+-- next to it was left, nobody armed it); a floor above it is higher than this (XP4_Rubble MCOM 2).
+local ACTION_MCOM_ABOVE = 2.0
 local ACTION_MCOM_BELOW = 2.5
 local ACTION_FLOOR = 3.0
 local ACTION_POINTS = 4
@@ -144,6 +146,20 @@ local function _Spread(p_Seed, p_Key)
 	end
 	local s_Hash = math.sin(p_Seed * 12.9898 + p_Key * 78.233) * 43758.5453
 	return 1.0 + Registry.BOT.NAV_ROUTE_SPREAD * (s_Hash - math.floor(s_Hash))
+end
+
+-- Metres the spread adds at most to a stretch: it chooses among similar ways. More made the long way across the mesh
+-- (a spread of the whole of it) seem longer than a loop back onto it, whose rest the field gives without any
+-- (MP_013: from the spawn over a path to another spawn and back, round and round).
+local SPREAD_MAX = 15.0
+
+---The metres of a stretch as the bot weighs them: with its spread, at most SPREAD_MAX more.
+---@param p_Cost number
+---@param p_Seed number|nil
+---@param p_Key number
+---@return number
+local function _Spreaded(p_Cost, p_Seed, p_Key)
+	return p_Cost + math.min(p_Cost * (_Spread(p_Seed, p_Key) - 1.0), SPREAD_MAX)
 end
 
 ---What NavRoutes:Next returns: walk the mesh to Point (in Zone), or leave it over Exit. With Action: do it at Point.
@@ -523,6 +539,21 @@ local function _InSight(p_From, p_To)
 	return true
 end
 
+---An objective that is gone for good (a vehicle destroyed or unspawned, "vehicle <id>"): its targets and fields go as
+---well. Each vehicle that spawns has a new name, kept they added up over a long round (a field holds every point of
+---the mesh).
+---@param p_Objective string
+function NavRoutes:Forget(p_Objective)
+	for _, l_Cache in ipairs({ self._Targets, self._ActionTargets }) do
+		local s_Known = l_Cache[p_Objective]
+		if s_Known then
+			self._Fields[s_Known] = nil
+			self._MeshFields[s_Known] = nil
+		end
+		l_Cache[p_Objective] = nil
+	end
+end
+
 ---The target of an objective that is done on the mesh: the points next to the vehicle or the MCOM (in the zone of the
 ---MCOM, closest to where the soldier stands). Again when the vehicle moved.
 ---@param p_Objective string
@@ -859,11 +890,11 @@ function NavRoutes:Next(p_Point, p_Objective, p_Seed, p_Team, p_Avoid, p_Used)
 			local l_Edge = s_Entry.Edges[l_Index]
 			local s_Rest = s_Field.Node[l_Edge.To]
 			if s_Rest ~= nil and l_Edge.To ~= p_Avoid then
-				s_Out = math.min(s_Out, l_Edge.Cost * _Spread(p_Seed, l_Edge.Path or -l_Edge.To) + (l_Edge.Penalty or 0.0) + s_Rest)
+				s_Out = math.min(s_Out, _Spreaded(l_Edge.Cost, p_Seed, l_Edge.Path or -l_Edge.To) + (l_Edge.Penalty or 0.0) + s_Rest)
 			end
 		end
 		if s_Out < math.huge then
-			local s_Cost = l_Cost * _Spread(p_Seed, s_Path) + s_Out + s_Entry.JunctionCost + MESH_CROSSING
+			local s_Cost = _Spreaded(l_Cost, p_Seed, s_Path) + s_Out + s_Entry.JunctionCost + MESH_CROSSING
 				+ (self._Penalty[s_Entry.Junction] or 0.0) + math.min((s_Crowd[s_Path] or 0) * CROWD_COST, CROWD_MAX)
 			if s_Cost < s_ExitCost then
 				s_Exit = s_Entry.Junction
@@ -877,7 +908,7 @@ function NavRoutes:Next(p_Point, p_Objective, p_Seed, p_Team, p_Avoid, p_Used)
 	local s_Towards = s_Action ~= nil and (s_Action.Stand or s_Action.Position) or s_Mesh.Points[p_Point].Position
 	local s_Found = _TargetIn(s_Target, s_Mesh.Part[p_Point], s_Towards)
 	local s_MeshCost = self:_MeshField(s_Target)[p_Point]
-	if s_Found ~= nil and s_MeshCost ~= nil and (s_Exit == nil or s_MeshCost * _Spread(p_Seed, 0) <= s_ExitCost) then
+	if s_Found ~= nil and s_MeshCost ~= nil and (s_Exit == nil or _Spreaded(s_MeshCost, p_Seed, 0) <= s_ExitCost) then
 		if s_Target.Action ~= nil then
 			return { Zone = s_Target.Zone or m_NavZones:ZoneAtPoint(s_Found, nil), Point = s_Found, Action = s_Target.Action }
 		end
@@ -917,21 +948,29 @@ function NavRoutes:Step(p_Waypoint, p_Objective, p_Seed, p_Came, p_NoEnter)
 
 	local s_Best = nil
 	local s_BestCost = math.huge
+	-- The way on along the paths without the spread of the bot: against the mesh (which has none). With it the mesh
+	-- seemed shorter in the middle of a path the bot had just taken from it (XP3_Alborz: on and off the mesh at the
+	-- junctions of parallel paths 20 m apart, back and forth for minutes).
+	local s_PathCost = math.huge
 	local s_Back = nil
 	local s_BackCost = math.huge
 	for l_Index = 1, #s_Entry.Edges do
 		local l_Edge = s_Entry.Edges[l_Index]
 		local s_Rest = s_Field.Node[l_Edge.To]
 		if s_Rest ~= nil then
-			local s_Cost = l_Edge.Cost * _Spread(p_Seed, l_Edge.Path or -l_Edge.To) + (l_Edge.Penalty or 0.0) + s_Rest
+			local s_Plain = l_Edge.Cost + (l_Edge.Penalty or 0.0) + s_Rest
+			local s_Cost = _Spreaded(l_Edge.Cost, p_Seed, l_Edge.Path or -l_Edge.To) + (l_Edge.Penalty or 0.0) + s_Rest
 			if l_Edge.To == p_Came then
 				if s_Cost < s_BackCost then
 					s_Back = l_Edge
 					s_BackCost = s_Cost
 				end
-			elseif s_Cost < s_BestCost then
-				s_Best = l_Edge
-				s_BestCost = s_Cost
+			else
+				s_PathCost = math.min(s_PathCost, s_Plain)
+				if s_Cost < s_BestCost then
+					s_Best = l_Edge
+					s_BestCost = s_Cost
+				end
 			end
 		end
 	end
@@ -945,7 +984,7 @@ function NavRoutes:Step(p_Waypoint, p_Objective, p_Seed, p_Came, p_NoEnter)
 	end
 	if s_Junction ~= nil and s_Junction.Point ~= p_NoEnter then
 		local s_Rest = s_Field.Mesh[s_Junction.Point]
-		if s_Rest ~= nil and s_Entry.JunctionCost + (self._EntryPenalty[s_Junction] or 0.0) + s_Rest <= s_BestCost then
+		if s_Rest ~= nil and s_Entry.JunctionCost + (self._EntryPenalty[s_Junction] or 0.0) + s_Rest <= s_PathCost then
 			return { Node = s_Node, Enter = s_Junction }
 		end
 	end
@@ -974,7 +1013,7 @@ function NavRoutes:_NodeDirection(p_Node, p_Field, p_Seed, p_Came)
 		local l_Edge = s_Entry.Edges[l_Index]
 		local s_Rest = p_Field.Node[l_Edge.To]
 		if l_Edge.Path ~= nil and l_Edge.To ~= p_Came and s_Rest ~= nil then
-			local s_Cost = l_Edge.Cost * _Spread(p_Seed, l_Edge.Path) + (l_Edge.Penalty or 0.0) + s_Rest
+			local s_Cost = _Spreaded(l_Edge.Cost, p_Seed, l_Edge.Path) + (l_Edge.Penalty or 0.0) + s_Rest
 			if s_Cost < s_BestCost then
 				s_Best = l_Edge.Direction
 				s_BestCost = s_Cost
@@ -1004,12 +1043,12 @@ function NavRoutes:Direction(p_Waypoint, p_Objective, p_Seed)
 	if s_Node ~= nil then
 		return self:_NodeDirection(s_Node, s_Field, p_Seed, nil)
 	end
-	local s_Spread = _Spread(p_Seed, p_Waypoint.PathIndex)
+	local s_Key = p_Waypoint.PathIndex
 	local s_Before, s_After = s_Around.Before[s_Index], s_Around.After[s_Index]
 	local s_Back = s_Before ~= nil and s_Field.Node[s_Before] ~= nil
-		and s_Around.BeforeCost[s_Index] * s_Spread + s_Field.Node[s_Before] or math.huge
+		and _Spreaded(s_Around.BeforeCost[s_Index], p_Seed, s_Key) + s_Field.Node[s_Before] or math.huge
 	local s_Forward = s_After ~= nil and s_Field.Node[s_After] ~= nil
-		and s_Around.AfterCost[s_Index] * s_Spread + s_Field.Node[s_After] or math.huge
+		and _Spreaded(s_Around.AfterCost[s_Index], p_Seed, s_Key) + s_Field.Node[s_After] or math.huge
 	if s_Back == math.huge and s_Forward == math.huge then
 		return nil
 	end

@@ -45,12 +45,22 @@ local ZONE_DETOUR_MIN = 40.0     -- ...or this many metres. None of them: the bo
 local ZONE_ARM_DISTANCE = 1.3    -- Horizontal metres to the MCOM the soldier walks up to before it interacts.
 local ZONE_ARM_APPROACH = 4.0    -- Seconds at most for that, then it interacts from where it is.
 local ZONE_ARM_TIME = 8.0        -- Seconds of interacting (arming takes about 6): then the bot gives up for now.
-local ZONE_ARM_PITCH = -0.6      -- The MCOM stands on the ground.
+local ZONE_ARM_PITCH = -0.6      -- The MCOM stands on the ground (no interaction of the engine known).
+local ZONE_ARM_EYE = 1.0         -- Metres above the feet the crouching soldier looks from...
+local ZONE_ARM_MIN_FLAT = 0.5    -- ...at the interaction this far away at least (horizontal)...
+local ZONE_ARM_PITCH_MIN = -1.2  -- ...not steeper down...
+local ZONE_ARM_PITCH_MAX = 0.6   -- ...or up than this.
+local ZONE_ARM_STEP_UP = 0.3     -- The spot to arm from this much higher than the soldier (a step it doesn't walk up)...
+local ZONE_ARM_JUMP_RANGE = 2.0  -- ...and this close (horizontal metres): it jumps.
 local ZONE_VEHICLE_REACH = 10.0  -- Registry.VEHICLES.MIN_DISTANCE_VEHICLE_ENTER: the bot gets in from this close.
 local ZONE_VEHICLE_NEAR = 5.5    -- Horizontal metres to the middle of the vehicle (a tank is about 8 m long): on the way
 local ZONE_VEHICLE_FLOOR = 3.0   -- to the point next to it the bot gets in from here. The point can be under the hull.
 local ZONE_OFF_POINT = 3.0       -- Horizontal metres from its point: a new route first leads back to it.
 local ZONE_SMOOTH_ROOM = 2.5     -- Smoothing: metres before a point the bot turns towards the next one (at most).
+local ZONE_INLINE_SHARE = 0.7    -- Look-ahead (Bot:_ZoneInLine): the free radius around a point is its clearance times
+local ZONE_INLINE_MARGIN = 0.75  -- this (measured along the grid, more than straight) less this many metres...
+local ZONE_INLINE_MIN = 1.5      -- ...at least this much at both points...
+local ZONE_INLINE_OVERLAP = 1.0  -- ...and the two circles overlap by this many metres.
 local ZONE_REJOIN_RANGE = 30.0   -- No route from the point the bot is at (a piece of the mesh cut off by given-up
                                  -- connections): it goes on from a point of another part this close...
 local ZONE_REJOIN_FAR = 120.0    -- Nothing that close: up to this far over open ground (a spawn on an island of the
@@ -585,14 +595,22 @@ function Bot:_ZoneRouteTo(p_Goal, p_Route)
 		end
 	end
 	-- The route starts at the point of the bot: if it isn't there (spawned up to ZONE_SPAWN_RANGE away, halfway to the
-	-- next point), first to it. Straight to the second point the way can lead through a wall.
+	-- next point), first to it. Straight to the second point the way can lead through a wall. Not where the bot stands in
+	-- the open around its point and the first target is in the open as well (_ZoneInLine): it would turn round to a point
+	-- it passed already at each new route (after a fight, a new goal).
 	local s_Soldier = self.m_Player.soldier
 	local s_Start = s_State.Zone.Points[s_State.Point]
 	if not s_State.Vehicle and s_Soldier ~= nil and s_Start ~= nil then
-		local s_DeltaX = s_Start.Position.x - s_Soldier.worldTransform.trans.x
-		local s_DeltaZ = s_Start.Position.z - s_Soldier.worldTransform.trans.z
-		if s_DeltaX * s_DeltaX + s_DeltaZ * s_DeltaZ > ZONE_OFF_POINT * ZONE_OFF_POINT then
-			table.insert(s_State.Targets, 1, { Position = s_Start.Position, Flags = s_Start.Flags, Point = s_State.Point })
+		local s_Here = s_Soldier.worldTransform.trans
+		local s_DeltaX = s_Start.Position.x - s_Here.x
+		local s_DeltaZ = s_Start.Position.z - s_Here.z
+		local s_Distance = math.sqrt(s_DeltaX * s_DeltaX + s_DeltaZ * s_DeltaZ)
+		if s_Distance > ZONE_OFF_POINT then
+			local s_Target = { Position = s_Start.Position, Flags = s_Start.Flags, Point = s_State.Point }
+			table.insert(s_State.Targets, 1, s_Target)
+			if self:_ZoneInLine(s_State, s_Target, s_Start, s_Here, s_Distance) then
+				table.remove(s_State.Targets, 1)
+			end
 		end
 	end
 end
@@ -992,7 +1010,8 @@ function Bot:UpdateZoneMovement(p_DeltaTime)
 		s_Reach = s_Reach * ZONE_REACH_SPRINT
 	end
 	s_Reach = self:_ZoneSmooth(s_State, s_Target, s_TargetPoint, s_Distance, s_Reach, s_Narrow)
-	if s_Distance < s_Reach and math.abs(s_Target.Position.y - s_Position.y) < ZONE_REACH_HEIGHT then
+	if (s_Distance < s_Reach and math.abs(s_Target.Position.y - s_Position.y) < ZONE_REACH_HEIGHT)
+		or self:_ZoneInLine(s_State, s_Target, s_TargetPoint, s_Position, s_Distance) then
 		if s_Target.Point ~= nil then
 			s_State.Point = s_Target.Point
 			self:_ZoneTrail(s_State)
@@ -1116,6 +1135,50 @@ function Bot:_ZoneSmooth(p_State, p_Target, p_TargetPoint, p_Distance, p_Reach, 
 	return s_Room
 end
 
+---Look-ahead: the bot goes on to the next target already when the straight way there is free, through the open space
+---around its target and around the next point (their clearance). The points of the mesh lie on a grid: a way at an
+---angle to it zigzags from point to point, the bot ran it corner by corner. Not for corners (around a wall), jumps,
+---crouching or steps, nor in a vehicle. The route stays the same: the passed target counts as reached.
+---@param p_State table
+---@param p_Target { Position: Vec3, Flags: integer, Point: integer|nil }
+---@param p_TargetPoint NavZonePoint|nil
+---@param p_Position Vec3 of the soldier
+---@param p_Distance number horizontal metres to the target
+---@return boolean
+function Bot:_ZoneInLine(p_State, p_Target, p_TargetPoint, p_Position, p_Distance)
+	local s_Next = p_State.Targets[p_State.Step + 1]
+	if not Registry.BOT.ZONE_SMOOTHING or p_State.Vehicle or p_TargetPoint == nil or s_Next == nil
+		or s_Next.Point == nil then
+		return false
+	end
+	local s_Special = NavZoneFlags.Jump | NavZoneFlags.Crouch
+	if p_Target.Flags & s_Special ~= 0 or s_Next.Flags & s_Special ~= 0 then
+		return false
+	end
+	local s_NextPoint = p_State.Zone.Points[s_Next.Point]
+	if s_NextPoint == nil then
+		return false
+	end
+	local s_Radius = p_TargetPoint.Clearance * ZONE_INLINE_SHARE - ZONE_INLINE_MARGIN
+	local s_NextRadius = s_NextPoint.Clearance * ZONE_INLINE_SHARE - ZONE_INLINE_MARGIN
+	if s_Radius < ZONE_INLINE_MIN or s_NextRadius < ZONE_INLINE_MIN or p_Distance > s_Radius then
+		return false
+	end
+	local s_DeltaX = s_Next.Position.x - p_Target.Position.x
+	local s_DeltaZ = s_Next.Position.z - p_Target.Position.z
+	if math.sqrt(s_DeltaX * s_DeltaX + s_DeltaZ * s_DeltaZ) > s_Radius + s_NextRadius - ZONE_INLINE_OVERLAP then
+		return false
+	end
+	-- Even ground: the target lies on the way from the soldier to the next one (no step up or down in between).
+	local s_ToNextX = s_Next.Position.x - p_Position.x
+	local s_ToNextZ = s_Next.Position.z - p_Position.z
+	local s_Length = math.sqrt(s_ToNextX * s_ToNextX + s_ToNextZ * s_ToNextZ)
+	local s_Share = s_Length > 0.1 and math.max(0.0, math.min(1.0, p_Distance / s_Length)) or 0.0
+	local s_Height = p_Position.y + (s_Next.Position.y - p_Position.y) * s_Share
+	return math.abs(p_Target.Position.y - s_Height) < ZONE_STEEP
+		and math.abs(s_Next.Position.y - p_Target.Position.y) < ZONE_STEEP
+end
+
 ---At the goal of its action: get into the vehicle, or walk up to the MCOM, look at it and interact (the GameDirector
 ---gives the bot its MCOM back as objective once it is armed or disarmed, _ZoneDecide then ends this).
 ---@param p_DeltaTime number
@@ -1166,10 +1229,17 @@ function Bot:_ZoneAction(p_DeltaTime)
 	local s_DeltaX = s_Goal.x - s_Position.x
 	local s_DeltaZ = s_Goal.z - s_Position.z
 	local s_Reach = s_Action.Stand ~= nil and 0.5 or ZONE_ARM_DISTANCE
-	if math.sqrt(s_DeltaX * s_DeltaX + s_DeltaZ * s_DeltaZ) > s_Reach and s_State.ActionTime < ZONE_ARM_APPROACH then
+	local s_GoalDistance = math.sqrt(s_DeltaX * s_DeltaX + s_DeltaZ * s_DeltaZ)
+	if s_GoalDistance > s_Reach and s_State.ActionTime < ZONE_ARM_APPROACH then
 		self.m_ActiveSpeedValue = BotMoveSpeeds.Slow
 		self._TargetPoint = { Position = s_Goal }
 		self._NextTargetPoint = nil
+		-- The spot is up a step (XP3_Desert MCOM 2 stands on a platform 0.5 m high the mesh doesn't cover, armed from
+		-- below it doesn't work): jump up.
+		if s_Goal.y - s_Position.y > ZONE_ARM_STEP_UP and s_GoalDistance < ZONE_ARM_JUMP_RANGE then
+			self:_SetInput(EntryInputActionEnum.EIAJump, 1)
+			self:_SetInput(EntryInputActionEnum.EIAQuicktimeJumpClimb, 1)
+		end
 		return true
 	end
 
@@ -1181,7 +1251,18 @@ function Bot:_ZoneAction(p_DeltaTime)
 		local s_Atan = math.atan(s_Action.Position.z - s_Position.z, s_Action.Position.x - s_Position.x)
 		self._TargetYaw = (s_Atan > math.pi / 2) and (s_Atan - math.pi / 2) or (s_Atan + 3 * math.pi / 2)
 	end
-	self._TargetPitch = ZONE_ARM_PITCH
+	-- At the interaction of the engine, from the eyes of the crouching soldier: it can be higher than the ground the bot
+	-- stands on (XP3_Desert MCOM 2: 1.2 m, looking down at the ground it never armed it). Else down at the ground.
+	local s_Aim = s_Action.Aim
+	if s_Aim ~= nil then
+		local s_AimX = s_Aim.x - s_Position.x
+		local s_AimZ = s_Aim.z - s_Position.z
+		local s_Flat = math.max(math.sqrt(s_AimX * s_AimX + s_AimZ * s_AimZ), ZONE_ARM_MIN_FLAT)
+		local s_Pitch = math.atan(s_Aim.y - (s_Position.y + ZONE_ARM_EYE), s_Flat)
+		self._TargetPitch = math.max(ZONE_ARM_PITCH_MIN, math.min(ZONE_ARM_PITCH_MAX, s_Pitch))
+	else
+		self._TargetPitch = ZONE_ARM_PITCH
+	end
 	if s_Soldier.pose ~= CharacterPoseType.CharacterPoseType_Crouch then
 		s_Soldier:SetPose(CharacterPoseType.CharacterPoseType_Crouch, true, true)
 	end

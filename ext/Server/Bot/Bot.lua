@@ -231,9 +231,11 @@ function Bot:__init(p_Player)
 	self._ChaseTime = 0.0
 	self._ChopperStartHeight = nil
 	self._PassengerExitTime = nil
-	-- The vehicle the bot got out of ("vehicle <id>") and when: it isn't sent back to it at once.
+	-- The vehicle the bot got out of or didn't get to ("vehicle <id>"): it isn't sent to it again until then.
 	self._LeftVehicle = nil
-	self._LeftVehicleTime = 0.0
+	self._LeftVehicleUntil = 0.0
+	-- Seconds without an objective where no way leads on (GameDirector:_CheckStranded).
+	self._StrandedTime = 0.0
 	self._ChaseTarget = nil
 	self._ChaseCooldown = 0.0
 	-- Progress towards the objective and of the vehicle (GameDirector:_CheckObjectiveProgress, _CheckVehicleProgress).
@@ -241,6 +243,9 @@ function Bot:__init(p_Player)
 	self._ProgressBest = math.huge
 	self._ProgressTime = 0.0
 	self._VehicleAnchor = nil
+	self._VehicleGoal = nil
+	self._VehicleGoalBest = 0.0
+	self._VehicleGoalTime = 0.0
 	self._VehicleStuckTime = 0.0
 	-- Where it got nowhere before it was respawned: not again close to there (BotSpawner).
 	self._RespawnAway = nil

@@ -119,6 +119,15 @@ Registry = {
 		OBJECTIVE_PROGRESS_MIN = 5.0,
 		OBJECTIVE_PROGRESS_TIME = 90,
 		OBJECTIVE_PROGRESS_NEAR = 30.0,
+		-- On foot to a vehicle: not within VEHICLE_OBJECTIVE_NEAR metres for VEHICLE_OBJECTIVE_TIME seconds, the bot gives
+		-- it up and isn't sent to it again for VEHICLE_UNREACHABLE_TIME seconds (a boat it can't get to). After getting out
+		-- of a vehicle it isn't sent back to it for LEFT_VEHICLE_TIME seconds.
+		VEHICLE_OBJECTIVE_NEAR = 10.0,
+		VEHICLE_OBJECTIVE_TIME = 30,
+		VEHICLE_UNREACHABLE_TIME = 300,
+		LEFT_VEHICLE_TIME = 60,
+		-- A vehicle a bot on foot was sent to and that it gave up (no way there, no seat): not again for this long.
+		VEHICLE_RETRY_TIME = 20,
 		-- A ground vehicle whose driver doesn't get VEHICLE_PROGRESS_MIN metres away for VEHICLE_PROGRESS_TIME seconds
 		-- (not waiting for passengers, not at its objective): all bots get out.
 		VEHICLE_PROGRESS_MIN = 5.0,

@@ -91,6 +91,17 @@ function Bot:SetObjective(p_Objective, p_ObjectiveMode)
 		if p_Objective ~= nil and p_Objective ~= '' and g_GameDirector:IsVehicleEnterPath(p_Objective) then
 			self._LastActionId = nil
 		end
+		-- A vehicle given up on foot (no way there from here, gone for a moment, no seat): not that one again at once.
+		-- Else the GameDirector gave it back the next cycle, the bot turned to it and away from it every 1.5 s
+		-- (MP_013: round and round on a path next to a parked vehicle).
+		local s_Old = self._Objective
+		if s_Old ~= nil and s_Old:sub(1, 8) == 'vehicle ' and p_Objective ~= s_Old and self.m_ActiveVehicle == nil then
+			local s_Until = SharedUtils:GetTime() + Registry.GAME_DIRECTOR.VEHICLE_RETRY_TIME
+			if self._LeftVehicle ~= s_Old or self._LeftVehicleUntil < s_Until then
+				self._LeftVehicle = s_Old
+				self._LeftVehicleUntil = s_Until
+			end
+		end
 		self._Objective = p_Objective or ''
 		self._ObjectiveMode = p_ObjectiveMode or BotObjectiveModes.Default
 		local s_Point = m_NodeCollection:Get(self._CurrentWayPoint, self._PathIndex)
@@ -244,9 +255,13 @@ function Bot:ResetSpawnVars()
 	self._ChopperStartHeight = nil
 	self._PassengerExitTime = nil
 	self._LeftVehicle = nil
-	self._LeftVehicleTime = 0.0
+	self._LeftVehicleUntil = 0.0
+	self._StrandedTime = 0.0
 	self._ProgressObjective = nil
 	self._VehicleAnchor = nil
+	self._VehicleGoal = nil
+	self._VehicleGoalBest = 0.0
+	self._VehicleGoalTime = 0.0
 	self._LowSpeedTimer = 0.0
 	self._NoProgressTimer = 0.0
 	self._ProgressNode = nil

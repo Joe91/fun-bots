@@ -52,8 +52,12 @@ end
 -- (rush) a spawn of the game of its team.
 local VEHICLE_HQ_RANGE = 120.0
 local VEHICLE_SPAWN_POINT_RANGE = 60.0
--- Seconds a bot isn't sent back to the vehicle it got out of.
-local LEFT_VEHICLE_TIME = 60.0
+-- Metres a capture point to defend seems farther to a driver than one to attack: it attacks if it can.
+local DRIVER_DEFEND_PENALTY = 1000.0
+-- A spawn without a way to any objective (the ship of the attackers): a squad-mate at least this far away is spawned on.
+local STRANDED_MATE_DISTANCE = 60.0
+-- Seconds a bot without an objective waits where no way leads on before it respawns at a mate (_CheckStranded).
+local STRANDED_TIME = 30.0
 
 function GameDirector:__init()
 	self:RegisterVars()
@@ -266,6 +270,7 @@ function GameDirector:OnEngineUpdate(p_DeltaTime)
 			l_Bot:UpdateBorder()
 			self:_CheckProgressOffMesh(l_Bot)
 			self:_CheckObjectiveProgress(l_Bot)
+			self:_CheckStranded(l_Bot)
 			self:_CheckVehicleProgress(l_Bot)
 		end
 	end
@@ -402,7 +407,10 @@ function GameDirector:OnEngineUpdate(p_DeltaTime)
 					end
 				end
 
-				-- Find the closest objective for bot.
+				-- Find the closest objective for bot. A driver attacks: defending its own capture point it would stand
+				-- there (XP5_003: dirt bikes spawned at A, their drivers got A to defend and sat on them for minutes).
+				local s_Driving = l_Bot.m_ActiveVehicle ~= nil and l_Bot.m_Player.controlledEntryId == 0
+					and s_BotStates:IsInVehicleState(l_Bot.m_ActiveState)
 				local s_ClosestDistance = nil
 				local s_ClosestObjective = nil
 				local s_ClosestObjectiveMode = BotObjectiveModes.Default
@@ -426,8 +434,7 @@ function GameDirector:OnEngineUpdate(p_DeltaTime)
 						l_Objective.assigned[l_BotTeam] < (l_Objective.seats or 1) and
 						-- Not back into the vehicle it just got out of (passenger near an objective, stuck vehicle): parked
 						-- with a free seat, it would be its objective again at once, in and out in a loop.
-						not (l_Bot._LeftVehicle == l_Objective.name
-							and SharedUtils:GetTime() - l_Bot._LeftVehicleTime < LEFT_VEHICLE_TIME) and
+						not (l_Bot._LeftVehicle == l_Objective.name and SharedUtils:GetTime() < l_Bot._LeftVehicleUntil) and
 						-- Also idle: just spawned, it gets its first objective before it may move.
 						(s_BotStates:IsSoldierState(l_Bot.m_ActiveState) or l_Bot.m_ActiveState == s_BotStates.States.Idle) and
 						self:_GetDistanceFromObjective(l_Objective.name, l_Bot.m_Player.soldier.worldTransform.trans)
@@ -448,6 +455,9 @@ function GameDirector:OnEngineUpdate(p_DeltaTime)
 					if l_Objective.team == l_BotTeam and Config.DefendObjectives then
 						if l_Objective.assigned[l_BotTeam] < s_MaxAssignsDefend[l_BotTeam] then
 							local s_Distance = self:_GetDistanceFromObjective(l_Objective.name, l_Bot.m_Player.soldier.worldTransform.trans:Clone())
+							if s_Driving then
+								s_Distance = s_Distance + DRIVER_DEFEND_PENALTY
+							end
 
 							if (s_ClosestDistance == nil or s_ClosestDistance > s_Distance) and self:_CanReach(l_Bot, l_Objective.name) then
 								s_ClosestDistance = s_Distance
@@ -836,6 +846,56 @@ end
 ---OBJECTIVE_PROGRESS_MIN metres closer to its objective for OBJECTIVE_PROGRESS_TIME seconds respawns. Not close to the
 ---objective (it holds it, walks around in its zone), not while it fights, waits, sits in a vehicle or does an action.
 ---@param p_Bot Bot
+---A bot on the mesh without an objective, where no way leads to any objective nor to a vehicle (a beach of MP_018 the
+---mesh of the spawn doesn't connect to the rest, all its mates spawned there at the start): after STRANDED_TIME it
+---respawns at a squad mate away from there (BotSpawner, _RespawnAway).
+---@param p_Bot Bot
+function GameDirector:_CheckStranded(p_Bot)
+	local s_Soldier = p_Bot.m_Player.soldier
+	local s_Objective = p_Bot:GetObjective()
+	if s_Soldier == nil or (s_Objective ~= nil and s_Objective ~= '') or p_Bot.m_Zone == nil
+		or not g_BotStates:IsSoldierState(p_Bot.m_ActiveState) or p_Bot._ShootPlayer ~= nil then
+		p_Bot._StrandedTime = 0.0
+		return
+	end
+	local s_Here = s_Soldier.worldTransform.trans
+	if not self:IsStranded(s_Here, p_Bot.m_Player.teamId, p_Bot.m_Zone.Point) then
+		p_Bot._StrandedTime = 0.0
+		return
+	end
+	-- A vehicle it can get to (a boat at the beach): it gets that one as objective.
+	local s_TeamId = p_Bot.m_Player.teamId
+	for l_Index = 1, #self.m_AllObjectives do
+		local l_Objective = self.m_AllObjectives[l_Index]
+		if l_Objective.isVehicleEntity and l_Objective.active
+			and (l_Objective.team == s_TeamId or l_Objective.team == TeamId.TeamNeutral) and p_Bot:CanReach(l_Objective.name) then
+			p_Bot._StrandedTime = 0.0
+			return
+		end
+	end
+	p_Bot._StrandedTime = (p_Bot._StrandedTime or 0.0) + Registry.GAME_DIRECTOR.UPDATE_OBJECTIVES_CYCLE
+	if p_Bot._StrandedTime < STRANDED_TIME then
+		return
+	end
+	p_Bot._StrandedTime = 0.0
+	-- Only with a squad mate away from here to spawn at (BotSpawner): else it would spawn right here again.
+	local s_Mates = PlayerManager:GetPlayersBySquad(s_TeamId, p_Bot.m_Player.squadId)
+	for l_Index = 1, #s_Mates do
+		local l_Mate = s_Mates[l_Index]
+		if l_Mate ~= p_Bot.m_Player and l_Mate.soldier ~= nil and l_Mate.isAllowedToSpawnOn
+			and l_Mate.soldier.worldTransform.trans:Distance(s_Here) > STRANDED_MATE_DISTANCE then
+			m_Logger:Write(p_Bot.m_Player.name .. " is stranded, respawn at a mate")
+			if m_DebugBridge.m_Enabled then
+				m_DebugBridge:Event('stranded', { bot = p_Bot.m_Player.name, pos = { s_Here.x, s_Here.y, s_Here.z } })
+			end
+			p_Bot._RespawnAway = s_Here:Clone()
+			p_Bot.m_DontRevive = true
+			s_Soldier:Kill()
+			return
+		end
+	end
+end
+
 function GameDirector:_CheckObjectiveProgress(p_Bot)
 	local s_Soldier = p_Bot.m_Player.soldier
 	local s_Objective = p_Bot:GetObjective()
@@ -847,7 +907,10 @@ function GameDirector:_CheckObjectiveProgress(p_Bot)
 		return
 	end
 	local s_Distance = self:_GetDistanceFromObjective(s_Objective, s_Soldier.worldTransform.trans)
-	if s_Distance == math.huge or s_Distance < s_Registry.OBJECTIVE_PROGRESS_NEAR then
+	-- On the way to a vehicle: until it can get in (a boat in the water, MP_018: the bot stood on the shore 20 m away).
+	local s_ToVehicle = s_Objective:sub(1, 8) == 'vehicle '
+	if s_Distance == math.huge
+		or s_Distance < (s_ToVehicle and s_Registry.VEHICLE_OBJECTIVE_NEAR or s_Registry.OBJECTIVE_PROGRESS_NEAR) then
 		p_Bot._ProgressObjective = nil
 		return
 	end
@@ -868,10 +931,22 @@ function GameDirector:_CheckObjectiveProgress(p_Bot)
 		return
 	end
 	p_Bot._ProgressTime = p_Bot._ProgressTime + s_Registry.UPDATE_OBJECTIVES_CYCLE
-	if p_Bot._ProgressTime < s_Registry.OBJECTIVE_PROGRESS_TIME then
+	if p_Bot._ProgressTime < (s_ToVehicle and s_Registry.VEHICLE_OBJECTIVE_TIME or s_Registry.OBJECTIVE_PROGRESS_TIME) then
 		return
 	end
 	p_Bot._ProgressObjective = nil
+	if s_ToVehicle then
+		-- Not that vehicle for a while: something else to do, no respawn.
+		p_Bot._LeftVehicle = s_Objective
+		p_Bot._LeftVehicleUntil = SharedUtils:GetTime() + s_Registry.VEHICLE_UNREACHABLE_TIME
+		p_Bot:SetObjective('')
+		if m_DebugBridge.m_Enabled then
+			local s_Here = s_Soldier.worldTransform.trans
+			m_DebugBridge:Event('vehicle_unreachable', { bot = p_Bot.m_Player.name, objective = s_Objective,
+				pos = { s_Here.x, s_Here.y, s_Here.z } })
+		end
+		return
+	end
 	-- The way it was on costs more for all bots (off the mesh: the stretch of its path).
 	if p_Bot.m_Zone == nil and g_NavRoutes ~= nil then
 		g_NavRoutes:BlockStretch(p_Bot._PathIndex, p_Bot._CurrentWayPoint)
@@ -916,6 +991,13 @@ end
 local VEHICLE_PASSENGER_FACTOR = 1.5
 -- Seconds after it was told to get out: still on the seat, it respawns.
 local PASSENGER_EXIT_GRACE = 5.0
+-- A ground vehicle whose up vector points less upwards than this lies on its side or roof.
+local VEHICLE_FLIPPED_UP = 0.4
+-- Seconds the bots stay in a flipped vehicle (it may roll back).
+local VEHICLE_FLIPPED_TIME = 5.0
+-- A driver that doesn't get this many metres closer to its objective in VEHICLE_GOAL_TIME seconds is stuck as well.
+local VEHICLE_GOAL_PROGRESS = 10.0
+local VEHICLE_GOAL_TIME = 90.0
 
 ---A ground vehicle whose driver doesn't get VEHICLE_PROGRESS_MIN metres away from where it was for
 ---VEHICLE_PROGRESS_TIME seconds is stuck (in terrain, on a rock, flipped, against a wall the obstacle handling doesn't
@@ -960,21 +1042,58 @@ function GameDirector:_CheckVehicleProgress(p_Bot)
 		return
 	end
 	local s_Position = s_Passenger and p_Bot.m_Player.soldier.worldTransform.trans or s_Vehicle.transform.trans
+	-- On its side or roof: nobody gets it back on its wheels, out after VEHICLE_FLIPPED_TIME, also at the objective
+	-- (XP5_003: a BMP2 on its side held B with its driver for 20 minutes).
+	local s_Body = s_Passenger and p_Bot.m_Player.attachedControllable or s_Vehicle
+	local s_Flipped = s_Body ~= nil and s_Body.transform.up.y < VEHICLE_FLIPPED_UP
+		and (p_Bot.m_ActiveVehicle == nil or not m_Vehicles:IsAirVehicle(p_Bot.m_ActiveVehicle))
+	-- Close to its objective it holds the capture point: while it takes it (not of its team yet), at an own one only
+	-- with a weapon (a tank, a jeep with a gun; on a dirt bike it is no use there for minutes, XP5_003). Not in an
+	-- aircraft standing on the ground (XP5_003: a Mi28 parked on B with its pilot for 18 minutes): out, on foot.
 	local s_Objective = p_Bot:GetObjective()
-	if not s_Launcher and s_Objective ~= nil and s_Objective ~= ''
+	if not s_Launcher and not s_Flipped and s_Objective ~= nil and s_Objective ~= ''
+		and (p_Bot.m_ActiveVehicle == nil or not m_Vehicles:IsAirVehicle(p_Bot.m_ActiveVehicle))
 		and self:_GetDistanceFromObjective(s_Objective, s_Position) < s_Registry.OBJECTIVE_PROGRESS_NEAR then
-		p_Bot._VehicleAnchor = nil
-		return
+		local s_Target = self:_GetObjectiveObject(s_Objective)
+		if s_Target == nil or s_Target.team ~= p_Bot.m_Player.teamId or p_Bot.m_ActiveVehicle == nil
+			or not m_Vehicles:IsVehicleType(p_Bot.m_ActiveVehicle, VehicleTypes.NoArmorVehicle) then
+			p_Bot._VehicleAnchor = nil
+			return
+		end
 	end
-	if p_Bot._VehicleAnchor == nil or p_Bot._VehicleAnchor:Distance(s_Position) > s_Registry.VEHICLE_PROGRESS_MIN then
-		p_Bot._VehicleAnchor = s_Position:Clone()
-		p_Bot._VehicleStuckTime = 0.0
-		return
+	-- A driver that goes back and forth (between two waypoints 20 m apart, MP_013) moves, but doesn't get closer to its
+	-- objective: VEHICLE_GOAL_TIME without VEHICLE_GOAL_PROGRESS metres closer counts as stuck as well. Not while it
+	-- fights.
+	local s_Wandering = false
+	if s_Driver and not s_Launcher and p_Bot.m_ActiveVehicle ~= nil and not m_Vehicles:IsAirVehicle(p_Bot.m_ActiveVehicle)
+		and s_Objective ~= nil and s_Objective ~= '' and p_Bot._ShootPlayer == nil then
+		local s_Distance = self:_GetDistanceFromObjective(s_Objective, s_Position)
+		if s_Distance ~= math.huge then
+			if p_Bot._VehicleGoal ~= s_Objective or s_Distance < p_Bot._VehicleGoalBest - VEHICLE_GOAL_PROGRESS then
+				p_Bot._VehicleGoal = s_Objective
+				p_Bot._VehicleGoalBest = s_Distance
+				p_Bot._VehicleGoalTime = 0.0
+			else
+				p_Bot._VehicleGoalTime = p_Bot._VehicleGoalTime + s_Registry.UPDATE_OBJECTIVES_CYCLE
+				s_Wandering = p_Bot._VehicleGoalTime >= VEHICLE_GOAL_TIME
+			end
+		end
+	elseif not s_Driver or p_Bot._ShootPlayer ~= nil then
+		p_Bot._VehicleGoal = nil
 	end
-	p_Bot._VehicleStuckTime = p_Bot._VehicleStuckTime + s_Registry.UPDATE_OBJECTIVES_CYCLE
-	if p_Bot._VehicleStuckTime < s_Registry.VEHICLE_PROGRESS_TIME * (s_Passenger and VEHICLE_PASSENGER_FACTOR or 1.0) then
-		return
+	if not s_Wandering then
+		if p_Bot._VehicleAnchor == nil or p_Bot._VehicleAnchor:Distance(s_Position) > s_Registry.VEHICLE_PROGRESS_MIN then
+			p_Bot._VehicleAnchor = s_Position:Clone()
+			p_Bot._VehicleStuckTime = 0.0
+			return
+		end
+		p_Bot._VehicleStuckTime = p_Bot._VehicleStuckTime + s_Registry.UPDATE_OBJECTIVES_CYCLE
+		local s_Limit = s_Registry.VEHICLE_PROGRESS_TIME * (s_Passenger and VEHICLE_PASSENGER_FACTOR or 1.0)
+		if p_Bot._VehicleStuckTime < (s_Flipped and VEHICLE_FLIPPED_TIME or s_Limit) then
+			return
+		end
 	end
+	p_Bot._VehicleGoal = nil
 	p_Bot._VehicleAnchor = nil
 	if s_Passenger then
 		-- Only this one: the driver (if any) is checked on its own. Getting out doesn't always work (checked a moment
@@ -1917,6 +2036,11 @@ function GameDirector:FindClosestPath(p_Trans, p_VehiclePath, p_DetailedSearch, 
 					(p_VehicleTerrain == VehicleTerrains.Water and s_isWaterPath) or
 					(p_VehicleTerrain == VehicleTerrains.Land and not s_isWaterPath and not s_isAirPath) or
 					(p_VehicleTerrain == VehicleTerrains.Amphibious and not s_isAirPath))
+			elseif s_SkipActions and g_NavRoutes ~= nil then
+				-- On foot with a mesh: the paths the routes lead over, roads (land vehicle paths) as well. A spawn on the
+				-- beach of MP_018 has only roads around it: the closest foot path was 500 m away, the bot walked straight
+				-- at it over the terrain and got stuck.
+				s_Search = g_NavRoutes:IsRoutePath(l_PathIndex) and not s_isSpawnVehiclePath and not s_Action
 			else -- Not in vehicle. Only use infantery-paths
 				s_Search = not s_isVehiclePath and not s_isSpawnVehiclePath and not s_Action
 			end
@@ -1949,9 +2073,6 @@ function GameDirector:GetPlayerBeacon(p_PlayerName)
 
 	return s_Beacon
 end
-
--- A spawn without a way to any objective (the ship of the attackers): a squad-mate at least this far away is spawned on.
-local STRANDED_MATE_DISTANCE = 60.0
 
 ---Spawn at a beacon or on a squad-mate (now and then). p_Stranded: the spawn of the game the bot is at leads nowhere
 ---(IsStranded), it spawns on a mate (or its beacon) away from there whenever there is one.
@@ -1992,7 +2113,7 @@ function GameDirector:GetSpawnableBeaconOrMate(p_TeamId, p_SquadId, p_Stranded)
 						return 1, 1, false, s_Vehicle, nil
 					end
 				else
-					local s_Node = self:FindClosestPath(l_Player.soldier.worldTransform.trans:Clone(), false, false)
+					local s_Node = self:FindClosestPath(l_Player.soldier.worldTransform.trans:Clone(), false, true)
 					if s_Node then
 						return s_Node.PathIndex, s_Node.PointIndex, false, nil, l_Player.soldier.worldTransform.trans:Clone()
 					end
@@ -2006,13 +2127,17 @@ end
 ---navigation paths: the ship of the attackers, the boats are their way (GetSpawnableBeaconOrMate).
 ---@param p_Position Vec3
 ---@param p_TeamId TeamId|integer
+---@param p_Point integer|nil the point of the mesh the bot is at, if known (else the one in sight of the position)
 ---@return boolean
-function GameDirector:IsStranded(p_Position, p_TeamId)
+function GameDirector:IsStranded(p_Position, p_TeamId, p_Point)
 	if m_NavZones:GetMesh() == nil or g_NavRoutes == nil then
 		return false
 	end
-	local _, s_Point, s_Closest = m_NavZones:ZoneAtVisible(p_Position, 30.0, nil)
-	s_Point = s_Point or s_Closest
+	local s_Point = p_Point
+	if s_Point == nil then
+		local _, s_Visible, s_Closest = m_NavZones:ZoneAtVisible(p_Position, 30.0, nil)
+		s_Point = s_Visible or s_Closest
+	end
 	if s_Point == nil then
 		return false
 	end
@@ -2929,6 +3054,10 @@ function GameDirector:_RefreshVehicleEntities()
 			l_Objective.destroyed = true
 			l_Objective.entity = nil
 			self.m_VehicleObjectives[l_Objective.name] = nil
+			self.m_VehicleSpawnTeams[tonumber(l_Objective.name:sub(9)) or -1] = nil
+			if g_NavRoutes ~= nil then
+				g_NavRoutes:Forget(l_Objective.name)
+			end
 			table.remove(self.m_AllObjectives, l_Index)
 		end
 	end
@@ -2979,7 +3108,7 @@ function GameDirector:GetActionTarget(p_Objective)
 			-- Without a recorded spot: the free spots around it in turn, the next one after each try that failed.
 			s_Stand = s_Mcom.Stands[(self.m_McomTries[s_Parent] or 0) % #s_Mcom.Stands + 1]
 		end
-		return { Kind = 'mcom', Zone = s_Zone, Position = s_Mcom.Position, Stand = s_Stand, Yaw = s_Mcom.Yaw }
+		return { Kind = 'mcom', Zone = s_Zone, Position = s_Mcom.Position, Stand = s_Stand, Yaw = s_Mcom.Yaw, Aim = s_Mcom.Aim }
 	end
 	return nil
 end
@@ -2988,6 +3117,9 @@ end
 local MCOM_IN_FRONT = 1.0
 -- An MCOM of the engine this close to the middle of the zone of "mcom N" is that MCOM.
 local MCOM_ENGINE_MATCH = 15.0
+-- The middle of the zone this far from the MCOM of the engine (horizontal metres): a spot a soldier armed it from.
+local MCOM_RECORDED_MIN = 0.4
+local MCOM_RECORDED_MAX = 2.0
 
 ---Where the MCOM ("mcom N") is: Position (to walk up to and look at), and from a recorded path "mcom N interact" Stand
 ---(the action-node, where the soldier stood) and Yaw. From the MCOMs of the engine (_FindEngineMcoms), else the path,
@@ -3020,7 +3152,7 @@ function GameDirector:GetMcom(p_Name)
 			if l_Action ~= nil and l_Action.type == 'mcom' and l_Action.yaw ~= nil then
 				local s_Stand = s_Waypoints[l_Node].Position
 				local s_Front = s_Stand + Vec3(-math.sin(l_Action.yaw), 0.0, math.cos(l_Action.yaw)) * MCOM_IN_FRONT
-				s_Known = { Position = s_Engine or s_Front, Stand = s_Stand, Yaw = l_Action.yaw }
+				s_Known = { Position = s_Engine or s_Front, Stand = s_Stand, Yaw = l_Action.yaw, Aim = s_Engine }
 				break
 			end
 		end
@@ -3029,9 +3161,18 @@ function GameDirector:GetMcom(p_Name)
 		end
 	end
 	if not s_Known and (s_Engine ~= nil or s_Zone ~= nil) then
-		s_Known = { Position = s_Engine or s_Zone.Center }
+		s_Known = { Position = s_Engine or s_Zone.Center, Aim = s_Engine }
 		if s_Engine ~= nil then
 			s_Known.Stands = self:_McomStands(s_Engine)
+			-- The middle of the zone is where the soldier stood who recorded the path to arm it (the census measured the
+			-- zone there, the path is trimmed now): the spot that works first, then the free ones around it in turn
+			-- (XP3_Desert MCOM 2: none of those worked, nobody armed it).
+			local s_DeltaX = s_Zone.Center.x - s_Engine.x
+			local s_DeltaZ = s_Zone.Center.z - s_Engine.z
+			local s_Apart = math.sqrt(s_DeltaX * s_DeltaX + s_DeltaZ * s_DeltaZ)
+			if s_Apart >= MCOM_RECORDED_MIN and s_Apart <= MCOM_RECORDED_MAX then
+				table.insert(s_Known.Stands, 1, s_Zone.Center:Clone())
+			end
 		end
 	end
 	self.m_Mcoms[p_Name] = s_Known

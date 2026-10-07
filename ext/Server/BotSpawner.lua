@@ -259,7 +259,8 @@ function BotSpawner:OnEngineUpdate(p_DeltaTime, p_SimulationDeltaTime)
 				local s_Position = l_Bot.m_Player.soldier.worldTransform.trans:Clone()
 				local s_Link = nil
 
-				local s_Node = g_GameDirector:FindClosestPath(s_Position, false, false)
+				-- All along the paths: since they are trimmed at the mesh their first waypoints can be far off.
+				local s_Node = g_GameDirector:FindClosestPath(s_Position, false, true)
 				if s_Node then
 					s_Link = { s_Node.PathIndex, s_Node.PointIndex }
 				end

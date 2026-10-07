@@ -14,7 +14,7 @@ function Bot:_DoExitVehicle()
 		end
 		if s_Vehicle ~= nil then
 			self._LeftVehicle = 'vehicle ' .. tostring(s_Vehicle.instanceId)
-			self._LeftVehicleTime = SharedUtils:GetTime()
+			self._LeftVehicleUntil = SharedUtils:GetTime() + Registry.GAME_DIRECTOR.LEFT_VEHICLE_TIME
 		end
 		self.m_Player:ExitVehicle(true, false)
 		self:_OnFootAgain()
