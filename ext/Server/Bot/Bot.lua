@@ -229,6 +229,8 @@ function Bot:__init(p_Player)
 	self.m_RecentExits = nil
 	-- Seconds the bot runs after the target of an action, and until when it uses no C4 (StateAttacking).
 	self._ChaseTime = 0.0
+	self._ChopperStartHeight = nil
+	self._PassengerExitTime = nil
 	self._ChaseTarget = nil
 	self._ChaseCooldown = 0.0
 	-- Progress towards the objective and of the vehicle (GameDirector:_CheckObjectiveProgress, _CheckVehicleProgress).

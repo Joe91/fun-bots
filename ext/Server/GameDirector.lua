@@ -881,6 +881,36 @@ function GameDirector:_CheckObjectiveProgress(p_Bot)
 	s_Soldier:Kill()
 end
 
+-- An aircraft this close (height, horizontally) to a point of the mesh stands on the ground: a helicopter the pilot
+-- doesn't get off the ground (MP_013). The mesh is only on the ground, a flying or hovering one is far above it.
+local AIRCRAFT_GROUND_HEIGHT = 3.0
+local AIRCRAFT_GROUND_RANGE = 6.0
+
+---Whether the vehicle stands on the ground (for aircraft: not flying, not hovering).
+---@param p_Vehicle ControllableEntity
+---@return boolean
+local function _OnTheGround(p_Vehicle)
+	local s_Mesh = m_NavZones:GetMesh()
+	if s_Mesh == nil then
+		return false
+	end
+	local s_Position = p_Vehicle.transform.trans
+	local s_Point = m_NavZones:Closest(s_Mesh, s_Position)
+	if s_Point == nil then
+		return false
+	end
+	local s_Ground = s_Mesh.Points[s_Point].Position
+	local s_DeltaX = s_Ground.x - s_Position.x
+	local s_DeltaZ = s_Ground.z - s_Position.z
+	return math.abs(s_Ground.y - s_Position.y) <= AIRCRAFT_GROUND_HEIGHT
+		and math.sqrt(s_DeltaX * s_DeltaX + s_DeltaZ * s_DeltaZ) <= AIRCRAFT_GROUND_RANGE
+end
+
+-- A passenger waits this many times as long as a driver before it gets out of a vehicle that doesn't move.
+local VEHICLE_PASSENGER_FACTOR = 1.5
+-- Seconds after it was told to get out: still on the seat, it respawns.
+local PASSENGER_EXIT_GRACE = 5.0
+
 ---A ground vehicle whose driver doesn't get VEHICLE_PROGRESS_MIN metres away from where it was for
 ---VEHICLE_PROGRESS_TIME seconds is stuck (in terrain, on a rock, flipped, against a wall the obstacle handling doesn't
 ---get past): all bots in it get out and go on foot. Not while the driver waits for passengers, nor close to its
@@ -889,16 +919,37 @@ end
 function GameDirector:_CheckVehicleProgress(p_Bot)
 	local s_Vehicle = p_Bot.m_Player.controlledControllable
 	local s_Registry = Registry.GAME_DIRECTOR
-	if s_Vehicle == nil or p_Bot.m_Player.soldier == nil or p_Bot.m_Player.controlledEntryId ~= 0
-		or not g_BotStates:IsInVehicleState(p_Bot.m_ActiveState) or p_Bot.m_ActiveVehicle == nil
-		or m_Vehicles:IsAirVehicle(p_Bot.m_ActiveVehicle)
-		or m_Vehicles:IsVehicleType(p_Bot.m_ActiveVehicle, VehicleTypes.StationaryAA)
-		or m_Vehicles:IsVehicleType(p_Bot.m_ActiveVehicle, VehicleTypes.Gadgets)
-		or p_Bot._VehicleWaitTimer > 0.0 then
+	-- Told to get out (below) a moment ago and still on it (a seat the exit doesn't free, the state flips back to the
+	-- passenger at once): it respawns.
+	if p_Bot._PassengerExitTime ~= nil and SharedUtils:GetTime() - p_Bot._PassengerExitTime > PASSENGER_EXIT_GRACE then
+		p_Bot._PassengerExitTime = nil
+		local s_Soldier = p_Bot.m_Player.soldier
+		if s_Soldier ~= nil and p_Bot.m_Player.attachedControllable ~= nil then
+			local s_Here = s_Soldier.worldTransform.trans
+			m_Logger:Write(p_Bot.m_Player.name .. " still sits there, respawn")
+			if m_DebugBridge.m_Enabled then
+				m_DebugBridge:Event('passenger_respawn', { bot = p_Bot.m_Player.name, pos = { s_Here.x, s_Here.y, s_Here.z } })
+			end
+			p_Bot.m_DontRevive = true
+			s_Soldier:Kill()
+			return
+		end
+	end
+	-- A passenger (also on a seat outside of a vehicle or on a mounted weapon the mod doesn't know as a vehicle): the
+	-- vehicle may have no driver at all (got out, killed; a helicopter parked at the base nobody flies, MP_013), it gets
+	-- out a while later than a driver, not while it fights. A flying aircraft moves more than VEHICLE_PROGRESS_MIN.
+	local s_Passenger = g_BotStates:IsOnVehicleState(p_Bot.m_ActiveState)
+	local s_Driver = not s_Passenger and p_Bot.m_Player.controlledEntryId == 0
+		and g_BotStates:IsInVehicleState(p_Bot.m_ActiveState) and p_Bot.m_ActiveVehicle ~= nil
+		and (not m_Vehicles:IsAirVehicle(p_Bot.m_ActiveVehicle) or (s_Vehicle ~= nil and _OnTheGround(s_Vehicle)))
+		and not m_Vehicles:IsVehicleType(p_Bot.m_ActiveVehicle, VehicleTypes.StationaryAA)
+		and not m_Vehicles:IsVehicleType(p_Bot.m_ActiveVehicle, VehicleTypes.Gadgets)
+	if p_Bot.m_Player.soldier == nil or not (s_Passenger or (s_Driver and s_Vehicle ~= nil))
+		or (s_Driver and p_Bot._VehicleWaitTimer > 0.0) or (s_Passenger and p_Bot._ShootPlayer ~= nil) then
 		p_Bot._VehicleAnchor = nil
 		return
 	end
-	local s_Position = s_Vehicle.transform.trans
+	local s_Position = s_Passenger and p_Bot.m_Player.soldier.worldTransform.trans or s_Vehicle.transform.trans
 	local s_Objective = p_Bot:GetObjective()
 	if s_Objective ~= nil and s_Objective ~= ''
 		and self:_GetDistanceFromObjective(s_Objective, s_Position) < s_Registry.OBJECTIVE_PROGRESS_NEAR then
@@ -911,10 +962,22 @@ function GameDirector:_CheckVehicleProgress(p_Bot)
 		return
 	end
 	p_Bot._VehicleStuckTime = p_Bot._VehicleStuckTime + s_Registry.UPDATE_OBJECTIVES_CYCLE
-	if p_Bot._VehicleStuckTime < s_Registry.VEHICLE_PROGRESS_TIME then
+	if p_Bot._VehicleStuckTime < s_Registry.VEHICLE_PROGRESS_TIME * (s_Passenger and VEHICLE_PASSENGER_FACTOR or 1.0) then
 		return
 	end
 	p_Bot._VehicleAnchor = nil
+	if s_Passenger then
+		-- Only this one: the driver (if any) is checked on its own. Getting out doesn't always work (checked a moment
+		-- later, above).
+		local s_Here = p_Bot.m_Player.soldier.worldTransform.trans
+		p_Bot._PassengerExitTime = SharedUtils:GetTime()
+		m_Logger:Write("vehicle of " .. p_Bot.m_Player.name .. " doesn't move, the passenger gets out")
+		if m_DebugBridge.m_Enabled then
+			m_DebugBridge:Event('passenger_out', { bot = p_Bot.m_Player.name, pos = { s_Here.x, s_Here.y, s_Here.z } })
+		end
+		p_Bot:ExitVehicle()
+		return
+	end
 	m_Logger:Write("vehicle of " .. p_Bot.m_Player.name .. " stuck, everybody out")
 	if m_DebugBridge.m_Enabled then
 		m_DebugBridge:Event('vehicle_stuck', { bot = p_Bot.m_Player.name, pos = { s_Position.x, s_Position.y, s_Position.z } })
@@ -3368,31 +3431,39 @@ end
 ---@param p_Objective string
 ---@return string|nil
 function GameDirector:_GetSubObjectiveFromObj(p_Objective)
+	-- The exact name: a search for the text found "mcom 10 interact" for "mcom 1" (MP_013 has ten MCOMs), the bots tried
+	-- to arm an MCOM of a later stage and never armed theirs.
+	if p_Objective == nil or p_Objective == '' then
+		return nil
+	end
+	local s_Wanted = p_Objective:lower() .. ' interact'
 	for l_Index = 1, #self.m_AllObjectives do
 		local l_TempObjective = self.m_AllObjectives[l_Index]
-		if l_TempObjective.subObjective and l_TempObjective.name ~= p_Objective then
-			local s_Name = l_TempObjective.name:lower()
-
-			if string.find(s_Name, p_Objective:lower()) ~= nil then
-				return l_TempObjective.name
-			end
+		if l_TempObjective.subObjective and l_TempObjective.name:lower() == s_Wanted then
+			return l_TempObjective.name
 		end
 	end
+	return nil
 end
 
 ---@param p_SubObjective string
 ---@return string|nil
 function GameDirector:_GetObjectiveFromSubObj(p_SubObjective)
+	-- "mcom N interact" -> "mcom N", exactly (not "mcom 1" for "mcom 10 interact", not a flag "c" for "mcom 2").
+	if p_SubObjective == nil then
+		return nil
+	end
+	local s_Parent = p_SubObjective:lower():match('^(.-) interact$')
+	if s_Parent == nil then
+		return nil
+	end
 	for l_Index = 1, #self.m_AllObjectives do
 		local l_TempObjective = self.m_AllObjectives[l_Index]
-		if not l_TempObjective.subObjective and l_TempObjective.name ~= p_SubObjective then
-			local s_Name = l_TempObjective.name:lower()
-
-			if string.find(p_SubObjective:lower(), s_Name) ~= nil then
-				return l_TempObjective.name
-			end
+		if not l_TempObjective.subObjective and l_TempObjective.name:lower() == s_Parent then
+			return l_TempObjective.name
 		end
 	end
+	return nil
 end
 
 ---@param p_BotTeam TeamId|integer

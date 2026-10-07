@@ -6,6 +6,11 @@ VehicleChopperControl = class('VehicleChopperControl')
 local m_Utilities = require('__shared/Utilities')
 ---@type Vehicles
 
+-- Farther from the target than this (horizontal metres) the chopper flies at least CHOPPER_MIN_CLIMB metres above the
+-- height it took off at, then it goes down to the target.
+local CHOPPER_DESCEND_RANGE = 150.0
+local CHOPPER_MIN_CLIMB = 40.0
+
 function VehicleChopperControl:__init()
 	-- Nothing to do.
 end
@@ -26,9 +31,23 @@ function VehicleChopperControl:UpdateMovementChopper(p_DeltaTime, p_Bot)
 		p_Bot._VehicleTakeoffTimer = p_Bot._VehicleTakeoffTimer - p_DeltaTime
 	end
 
+	local s_Vehicle = p_Bot.m_Player.controlledControllable
 	local s_TargetPoint = g_GameDirector:GetActiveTargetPointPosition(p_Bot.m_Player.teamId,
-		p_Bot.m_Player.controlledControllable and p_Bot.m_Player.controlledControllable.transform.trans):Clone()
+		s_Vehicle and s_Vehicle.transform.trans):Clone()
 	s_TargetPoint.y = s_TargetPoint.y + Registry.VEHICLES.CHOPPER_TARGET_HEIGHT
+	-- Far from the target: not lower than CHOPPER_MIN_CLIMB above where the chopper took off. A target far below (the
+	-- base on the mountain of MP_013, the MCOMs in the valley) gave no throttle at all, the chopper never took off.
+	if s_Vehicle ~= nil then
+		local s_Position = s_Vehicle.transform.trans
+		if p_Bot._ChopperStartHeight == nil then
+			p_Bot._ChopperStartHeight = s_Position.y
+		end
+		local s_DeltaX = s_TargetPoint.x - s_Position.x
+		local s_DeltaZ = s_TargetPoint.z - s_Position.z
+		if math.sqrt(s_DeltaX * s_DeltaX + s_DeltaZ * s_DeltaZ) > CHOPPER_DESCEND_RANGE then
+			s_TargetPoint.y = math.max(s_TargetPoint.y, p_Bot._ChopperStartHeight + CHOPPER_MIN_CLIMB)
+		end
+	end
 	if (p_Bot.m_Player.teamId % 2) == 1 then
 		s_TargetPoint.z = s_TargetPoint.z + 20
 	else

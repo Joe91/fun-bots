@@ -432,8 +432,13 @@ zone it walks in, `@mesh` outside of the zones) and `zoneExit` on its way out.
 - **Last resorts**: a bot on foot that doesn't get 5 m closer to its objective for 90 s respawns (not within 30 m of
   it or in its zone, not while it fights; event `no_progress`, `GameDirector:_CheckObjectiveProgress`), on a mate away
   from there if it spawns close to that spot again (a rush base behind a border that stays closed). A ground vehicle
-  whose driver doesn't get 5 m away for 30 s (not waiting for passengers, not at its objective) is left by all bots in
-  it (event `vehicle_stuck`, `_CheckVehicleProgress`). A bot runs after the target of C4, repair, revive or a vehicle to
+  whose driver doesn't get 5 m away for 30 s (not waiting for passengers, not at its objective; also an aircraft that
+  stands on the ground, a point of the mesh close below) is left by all bots in it (event `vehicle_stuck`,
+  `_CheckVehicleProgress`). A passenger (also on an outer seat or a mounted weapon) whose seat doesn't move for 45 s
+  and that doesn't fight gets out (event `passenger_out`), still on it 5 s later it respawns (`passenger_respawn`).
+  A passenger whose vehicle is gone (destroyed, thrown off) walks on at once (`StateOnVehicleIdle`). A helicopter far
+  from its target flies at least 40 m above where it took off: a target far below (MP_013: the base on the mountain,
+  the MCOMs in the valley) gave no throttle, it never took off. A bot runs after the target of C4, repair, revive or a vehicle to
   get into at most 8 s per target (a vehicle that drives on, a launcher on a ledge it can't get to), then it uses no
   C4 for 20 s (`StateAttacking`). An aim that can't
   be solved (NaN) keeps the view (`Bot:UpdateYaw`): the bot spun around its axis without end.
