@@ -20,6 +20,8 @@ NavZones = class('NavZones')
 local m_NodeCollection = require('NodeCollection')
 ---@type Logger
 local m_Logger = Logger('NavZones', Debug.Server.PATH)
+---@type MinHeap
+local m_Heap = require('__shared/Utils/MinHeap')
 
 NavZoneFlags = {
 	InZone = 1,
@@ -43,10 +45,18 @@ local REMOVE_AFTER = 3
 local MCOM_FLOOR = 3.0
 -- Parts of the mesh with fewer points get no junctions (_LinkJunctions).
 local MIN_PART = 10
+-- Metres of a cell of the grid of the points (Closest).
+local GRID_CELL = 8.0
+-- Closest searches the grid ring by ring up to this many rings for a point on the same floor, then all points.
+local GRID_MAX_RINGS = 16
 
 ---@class NavZonePoint
 ---@field Index integer
 ---@field Position Vec3
+---@field X number the position as plain numbers: the searches read them often, an access of a Vec3 is a call into the
+---engine
+---@field Y number
+---@field Z number
 ---@field Clearance number
 ---@field Cover integer
 ---@field Flags integer
@@ -76,6 +86,14 @@ local MIN_PART = 10
 ---@field PartSize table<integer, integer> part -> its points
 ---@field ByWaypoint table<string, NavZoneJunction> waypoint-ID -> junction, set by _LinkJunctions
 ---@field Mesh NavZone the mesh the zone is on
+---@field Grid NavZoneGrid the points by cells (Closest)
+
+---@class NavZoneGrid
+---@field Cells table<integer, integer[]> cell-key -> points
+---@field MinX integer
+---@field MaxX integer
+---@field MinZ integer
+---@field MaxZ integer
 
 function NavZones:__init()
 	self:Clear()
@@ -208,6 +226,60 @@ local function _Vec(p_Raw)
 	return Vec3(tonumber(p_Raw[1]) or 0, tonumber(p_Raw[2]) or 0, tonumber(p_Raw[3]) or 0)
 end
 
+---@param p_X integer
+---@param p_Z integer
+---@return integer
+local function _CellKey(p_X, p_Z)
+	return (p_X + 32768) * 65536 + (p_Z + 32768)
+end
+
+---The points by cells of GRID_CELL metres (horizontally), for Closest.
+---@param p_Points NavZonePoint[]
+---@return NavZoneGrid
+local function _BuildGrid(p_Points)
+	local s_Grid = { Cells = {}, MinX = math.huge, MaxX = -math.huge, MinZ = math.huge, MaxZ = -math.huge }
+	for l_Index = 1, #p_Points do
+		local s_X = math.floor(p_Points[l_Index].X / GRID_CELL)
+		local s_Z = math.floor(p_Points[l_Index].Z / GRID_CELL)
+		local s_Key = _CellKey(s_X, s_Z)
+		local s_Cell = s_Grid.Cells[s_Key]
+		if s_Cell == nil then
+			s_Cell = {}
+			s_Grid.Cells[s_Key] = s_Cell
+		end
+		s_Cell[#s_Cell + 1] = l_Index
+		s_Grid.MinX = math.min(s_Grid.MinX, s_X)
+		s_Grid.MaxX = math.max(s_Grid.MaxX, s_X)
+		s_Grid.MinZ = math.min(s_Grid.MinZ, s_Z)
+		s_Grid.MaxZ = math.max(s_Grid.MaxZ, s_Z)
+	end
+	return s_Grid
+end
+
+---The points in the cells up to p_Range metres around the position (horizontally; some are farther away).
+---@param p_Grid NavZoneGrid
+---@param p_Position Vec3
+---@param p_Range number
+---@return integer[]
+local function _PointsAround(p_Grid, p_Position, p_Range)
+	local s_Result = {}
+	local s_MinX = math.floor((p_Position.x - p_Range) / GRID_CELL)
+	local s_MaxX = math.floor((p_Position.x + p_Range) / GRID_CELL)
+	local s_MinZ = math.floor((p_Position.z - p_Range) / GRID_CELL)
+	local s_MaxZ = math.floor((p_Position.z + p_Range) / GRID_CELL)
+	for l_X = s_MinX, s_MaxX do
+		for l_Z = s_MinZ, s_MaxZ do
+			local s_Cell = p_Grid.Cells[_CellKey(l_X, l_Z)]
+			if s_Cell ~= nil then
+				for l_Index = 1, #s_Cell do
+					s_Result[#s_Result + 1] = s_Cell[l_Index]
+				end
+			end
+		end
+	end
+	return s_Result
+end
+
 ---One mesh (points, edges, attach).
 ---@param p_Data table
 ---@return NavZone
@@ -232,15 +304,20 @@ local function _ParseMesh(p_Data)
 	local s_Points = p_Data.points or {}
 	for l_Index = 1, #s_Points do
 		local l_Point = s_Points[l_Index]
+		local s_X, s_Y, s_Z = tonumber(l_Point[1]) or 0.0, tonumber(l_Point[2]) or 0.0, tonumber(l_Point[3]) or 0.0
 		s_Mesh.Points[l_Index] = {
 			Index = l_Index,
-			Position = Vec3(l_Point[1], l_Point[2], l_Point[3]),
+			Position = Vec3(s_X, s_Y, s_Z),
+			X = s_X,
+			Y = s_Y,
+			Z = s_Z,
 			Clearance = tonumber(l_Point[4]) or 0,
 			Cover = math.floor(tonumber(l_Point[5]) or 0),
 			Flags = math.floor(tonumber(l_Point[6]) or 0),
 		}
 		s_Mesh.Neighbours[l_Index] = {}
 	end
+	s_Mesh.Grid = _BuildGrid(s_Mesh.Points)
 
 	local s_Edges = p_Data.edges or {}
 	for l_Index = 1, #s_Edges do
@@ -317,6 +394,7 @@ local function _ZoneOn(p_Mesh, p_Data, p_Inside)
 		Part = p_Mesh.Part,
 		PartSize = p_Mesh.PartSize,
 		ByWaypoint = p_Mesh.ByWaypoint,
+		Grid = p_Mesh.Grid,
 		Mesh = p_Mesh,
 	}
 	for l_Index = 1, #(p_Inside or {}) do
@@ -423,11 +501,6 @@ function NavZones:GetTopology()
 	return self._Topology
 end
 
----@return integer
-function NavZones:GetCount()
-	return self._Count
-end
-
 ---The mesh (a zone without name and points of its own). nil without mesh.
 ---@return NavZone|nil
 function NavZones:GetMesh()
@@ -491,34 +564,76 @@ function NavZones:GetZones()
 	return self._Zones
 end
 
+---Scores the points p_Indices (nil: all points of the zone) for Closest, returns the best so far.
+---@return integer|nil, boolean, number
+local function _ScanClosest(p_Zone, p_Indices, p_Position, p_Avoid, p_RangeSq, p_Best, p_BestOtherFloor, p_BestDistance)
+	local s_Points = p_Zone.Points
+	local s_Part = p_Zone.Part
+	local s_PartSize = p_Zone.PartSize
+	local s_X, s_Y, s_Z = p_Position.x, p_Position.y, p_Position.z
+	for l_Entry = 1, p_Indices ~= nil and #p_Indices or #s_Points do
+		local l_Index = p_Indices ~= nil and p_Indices[l_Entry] or l_Entry
+		if l_Index ~= p_Avoid and (s_PartSize[s_Part[l_Index]] or 0) >= MIN_PART then
+			local s_Point = s_Points[l_Index]
+			local s_DeltaX = s_Point.X - s_X
+			local s_DeltaY = s_Point.Y - s_Y
+			local s_DeltaZ = s_Point.Z - s_Z
+			local s_Horizontal = s_DeltaX * s_DeltaX + s_DeltaZ * s_DeltaZ
+			if p_RangeSq == nil or s_Horizontal <= p_RangeSq then
+				local s_Distance = s_Horizontal + 4 * s_DeltaY * s_DeltaY
+				local s_OtherFloor = math.abs(s_DeltaY) > FLOOR_HEIGHT
+				if (p_BestOtherFloor and not s_OtherFloor) or (s_OtherFloor == p_BestOtherFloor and s_Distance < p_BestDistance) then
+					p_BestDistance = s_Distance
+					p_BestOtherFloor = s_OtherFloor
+					p_Best = l_Index
+				end
+			end
+		end
+	end
+	return p_Best, p_BestOtherFloor, p_BestDistance
+end
+
 ---The point of the network closest to the position. Points on the same floor (FLOOR_HEIGHT) come first: a soldier
 ---can't reach the point above it. Not on an island of the mesh (fewer than MIN_PART points, e.g. a point behind a wall
 ---the checks of the game cut off): the bot can't get there, no route leads on from there.
+---Searches the grid ring by ring outwards (the same result as all points, the zones share the whole mesh).
 ---@param p_Zone NavZone
 ---@param p_Position Vec3
 ---@param p_Avoid? integer a point not to take (a dead end the bot got stuck at)
+---@param p_Range? number only points up to this many metres away horizontally (nil: any)
 ---@return integer|nil point, number distance
-function NavZones:Closest(p_Zone, p_Position, p_Avoid)
+function NavZones:Closest(p_Zone, p_Position, p_Avoid, p_Range)
 	local s_Best = nil
 	local s_BestOtherFloor = true
 	local s_BestDistance = math.huge
-	local s_PartSize = p_Zone.PartSize
-	for l_Index = 1, #p_Zone.Points do
-		if l_Index == p_Avoid or (s_PartSize ~= nil and (s_PartSize[p_Zone.Part[l_Index]] or 0) < MIN_PART) then
-			goto continue
+	local s_Grid = p_Zone.Grid
+	local s_RangeSq = p_Range ~= nil and p_Range * p_Range or nil
+	local s_CellX = math.floor(p_Position.x / GRID_CELL)
+	local s_CellZ = math.floor(p_Position.z / GRID_CELL)
+	-- Beyond this ring there are no cells with points.
+	local s_Extent = math.max(s_CellX - s_Grid.MinX, s_Grid.MaxX - s_CellX, s_CellZ - s_Grid.MinZ, s_Grid.MaxZ - s_CellZ)
+	local s_MaxRings = p_Range ~= nil and math.ceil(p_Range / GRID_CELL) or GRID_MAX_RINGS
+	local s_Cells = s_Grid.Cells
+	for l_Ring = 0, math.min(s_MaxRings, s_Extent) do
+		for l_X = -l_Ring, l_Ring do
+			-- The rows at the top and bottom of the ring whole, of the others only both ends.
+			local s_Step = (l_X == -l_Ring or l_X == l_Ring) and 1 or math.max(2 * l_Ring, 1)
+			for l_Z = -l_Ring, l_Ring, s_Step do
+				local s_Cell = s_Cells[_CellKey(s_CellX + l_X, s_CellZ + l_Z)]
+				if s_Cell ~= nil then
+					s_Best, s_BestOtherFloor, s_BestDistance = _ScanClosest(p_Zone, s_Cell, p_Position, p_Avoid, s_RangeSq,
+						s_Best, s_BestOtherFloor, s_BestDistance)
+				end
+			end
 		end
-		local s_Pos = p_Zone.Points[l_Index].Position
-		local s_DeltaX = s_Pos.x - p_Position.x
-		local s_DeltaY = s_Pos.y - p_Position.y
-		local s_DeltaZ = s_Pos.z - p_Position.z
-		local s_Distance = s_DeltaX * s_DeltaX + 4 * s_DeltaY * s_DeltaY + s_DeltaZ * s_DeltaZ
-		local s_OtherFloor = math.abs(s_DeltaY) > FLOOR_HEIGHT
-		if (s_BestOtherFloor and not s_OtherFloor) or (s_OtherFloor == s_BestOtherFloor and s_Distance < s_BestDistance) then
-			s_BestDistance = s_Distance
-			s_BestOtherFloor = s_OtherFloor
-			s_Best = l_Index
+		-- The points of the next rings are at least this far away horizontally (and the height only adds).
+		if s_Best ~= nil and not s_BestOtherFloor and s_BestDistance <= (l_Ring * GRID_CELL) ^ 2 then
+			return s_Best, math.sqrt(s_BestDistance)
 		end
-		::continue::
+	end
+	if p_Range == nil and s_Extent > s_MaxRings then
+		-- Nothing on the same floor close by: all points.
+		s_Best, s_BestOtherFloor, s_BestDistance = _ScanClosest(p_Zone, nil, p_Position, p_Avoid, nil, nil, true, math.huge)
 	end
 	return s_Best, math.sqrt(s_BestDistance)
 end
@@ -543,13 +658,16 @@ function NavZones:ZoneAtVisible(p_Position, p_Range, p_Objective)
 	local s_Part = self._Mesh.Part
 	local s_PartSize = self._Mesh.PartSize
 	local s_Candidates = {}
-	for l_Index = 1, #s_Points do
-		local s_Pos = s_Points[l_Index].Position
-		local s_DeltaX = s_Pos.x - p_Position.x
-		local s_DeltaZ = s_Pos.z - p_Position.z
+	local s_X, s_Y, s_Z = p_Position.x, p_Position.y, p_Position.z
+	local s_Around = _PointsAround(self._Mesh.Grid, p_Position, p_Range)
+	for l_Entry = 1, #s_Around do
+		local l_Index = s_Around[l_Entry]
+		local s_Point = s_Points[l_Index]
+		local s_DeltaX = s_Point.X - s_X
+		local s_DeltaZ = s_Point.Z - s_Z
 		local s_Distance = s_DeltaX * s_DeltaX + s_DeltaZ * s_DeltaZ
 		-- Not on an island of the mesh (a nook next to a spawn the checks cut off): no way leads on from there.
-		if s_Distance <= p_Range * p_Range and math.abs(s_Pos.y - p_Position.y) <= FLOOR_HEIGHT
+		if s_Distance <= p_Range * p_Range and math.abs(s_Point.Y - s_Y) <= FLOOR_HEIGHT
 			and (s_PartSize[s_Part[l_Index]] or 0) >= MIN_PART then
 			s_Candidates[#s_Candidates + 1] = { l_Index, s_Distance }
 		end
@@ -686,6 +804,23 @@ function NavZones:BlockEdge(p_Zone, p_A, p_B)
 	end
 end
 
+---Whether the connection was given up REMOVE_AFTER times but kept: it is the only way between two parts of the mesh
+---(BlockEdge). A bot stuck there again is put across it (Bot:_ZoneGiveUpConnection).
+---@param p_Zone NavZone
+---@param p_A integer
+---@param p_B integer
+---@return boolean
+function NavZones:IsKeptBlocked(p_Zone, p_A, p_B)
+	local s_Neighbours = p_Zone.Neighbours[p_A] or {}
+	for l_Index = 1, #s_Neighbours do
+		local l_Edge = s_Neighbours[l_Index]
+		if l_Edge.To == p_B then
+			return not l_Edge.Removed and l_Edge.Penalty >= BLOCKED_PENALTY * REMOVE_AFTER
+		end
+	end
+	return false
+end
+
 -- A second death in a damage area this close to an earlier one: a hazard on the mesh (the rails in a metro), not the
 -- border of the combat area (those deaths are spread out). The points this close to it are left out until the level ends.
 local HAZARD_DEATHS_RANGE = 3.0
@@ -743,11 +878,12 @@ local SPREAD_REGION = 30.0
 ---How much longer the ways in the region of the position seem to the bot (Registry.BOT.NAV_ROUTE_SPREAD): the bots
 ---take different streets and corridors, not all the shortest one. The same for a life of the bot (p_Seed).
 ---@param p_Seed number
----@param p_Position Vec3
+---@param p_X number
+---@param p_Z number
 ---@return number factor 1 .. 1 + NAV_ROUTE_SPREAD
-local function _RegionSpread(p_Seed, p_Position)
-	local s_Hash = math.sin(p_Seed * 12.9898 + math.floor(p_Position.x / SPREAD_REGION) * 78.233
-		+ math.floor(p_Position.z / SPREAD_REGION) * 37.719) * 43758.5453
+local function _RegionSpread(p_Seed, p_X, p_Z)
+	local s_Hash = math.sin(p_Seed * 12.9898 + math.floor(p_X / SPREAD_REGION) * 78.233
+		+ math.floor(p_Z / SPREAD_REGION) * 37.719) * 43758.5453
 	return 1.0 + Registry.BOT.NAV_ROUTE_SPREAD * (s_Hash - math.floor(s_Hash))
 end
 
@@ -764,58 +900,25 @@ function NavZones:Route(p_Zone, p_From, p_To, p_Seed)
 	end
 
 	local s_Points = p_Zone.Points
-	local s_Goal = s_Points[p_To].Position
+	local s_GoalX, s_GoalY, s_GoalZ = s_Points[p_To].X, s_Points[p_To].Y, s_Points[p_To].Z
 	local s_Costs = { [p_From] = 0.0 }
 	local s_Came = {}
 	local s_Closed = {}
-	-- Binary heap of { estimate, point }.
-	local s_Heap = { { s_Points[p_From].Position:Distance(s_Goal), p_From } }
+	-- Points by their estimate (the straight way to the goal).
+	local s_Heap = m_Heap.New()
+	m_Heap.Push(s_Heap, 0.0, p_From)
 
-	local function _Push(p_Entry)
-		s_Heap[#s_Heap + 1] = p_Entry
-		local s_Index = #s_Heap
-		while s_Index > 1 do
-			local s_Parent = s_Index // 2
-			if s_Heap[s_Parent][1] <= s_Heap[s_Index][1] then
-				break
-			end
-			s_Heap[s_Parent], s_Heap[s_Index] = s_Heap[s_Index], s_Heap[s_Parent]
-			s_Index = s_Parent
-		end
-	end
-
-	local function _Pop()
-		local s_Top = s_Heap[1]
-		local s_Last = table.remove(s_Heap)
-		if #s_Heap > 0 then
-			s_Heap[1] = s_Last
-			local s_Index = 1
-			while true do
-				local s_Smallest = s_Index
-				local s_Left = 2 * s_Index
-				local s_Right = s_Left + 1
-				if s_Left <= #s_Heap and s_Heap[s_Left][1] < s_Heap[s_Smallest][1] then
-					s_Smallest = s_Left
-				end
-				if s_Right <= #s_Heap and s_Heap[s_Right][1] < s_Heap[s_Smallest][1] then
-					s_Smallest = s_Right
-				end
-				if s_Smallest == s_Index then
-					break
-				end
-				s_Heap[s_Smallest], s_Heap[s_Index] = s_Heap[s_Index], s_Heap[s_Smallest]
-				s_Index = s_Smallest
-			end
-		end
-		return s_Top
-	end
-
-	while #s_Heap > 0 do
-		local s_Current = _Pop()[2]
+	while s_Heap.Size > 0 do
+		local _, s_Current = m_Heap.Pop(s_Heap)
 		if s_Current == p_To then
+			-- Back from the goal, then reversed.
 			local s_Route = { p_To }
-			while s_Came[s_Route[1]] ~= nil do
-				table.insert(s_Route, 1, s_Came[s_Route[1]])
+			while s_Came[s_Route[#s_Route]] ~= nil do
+				s_Route[#s_Route + 1] = s_Came[s_Route[#s_Route]]
+			end
+			for l_Index = 1, #s_Route // 2 do
+				local s_Other = #s_Route - l_Index + 1
+				s_Route[l_Index], s_Route[s_Other] = s_Route[s_Other], s_Route[l_Index]
 			end
 			return s_Route, s_Costs[p_To]
 		end
@@ -823,17 +926,24 @@ function NavZones:Route(p_Zone, p_From, p_To, p_Seed)
 		if not s_Closed[s_Current] then
 			s_Closed[s_Current] = true
 			local s_Neighbours = p_Zone.Neighbours[s_Current]
+			local s_CurrentCost = s_Costs[s_Current]
 			for l_Index = 1, #s_Neighbours do
 				local l_Edge = s_Neighbours[l_Index]
-				local s_Step = l_Edge.Cost
-				if p_Seed ~= nil then
-					s_Step = s_Step * _RegionSpread(p_Seed, s_Points[l_Edge.To].Position)
-				end
-				local s_Cost = s_Costs[s_Current] + s_Step + l_Edge.Penalty
-				if not l_Edge.Removed and not s_Closed[l_Edge.To] and s_Cost < (s_Costs[l_Edge.To] or math.huge) then
-					s_Costs[l_Edge.To] = s_Cost
-					s_Came[l_Edge.To] = s_Current
-					_Push({ s_Cost + s_Points[l_Edge.To].Position:Distance(s_Goal), l_Edge.To })
+				local s_To = l_Edge.To
+				if not l_Edge.Removed and not s_Closed[s_To] then
+					local s_Point = s_Points[s_To]
+					local s_Step = l_Edge.Cost
+					if p_Seed ~= nil then
+						s_Step = s_Step * _RegionSpread(p_Seed, s_Point.X, s_Point.Z)
+					end
+					local s_Cost = s_CurrentCost + s_Step + l_Edge.Penalty
+					if s_Cost < (s_Costs[s_To] or math.huge) then
+						s_Costs[s_To] = s_Cost
+						s_Came[s_To] = s_Current
+						local s_DeltaX, s_DeltaY, s_DeltaZ = s_Point.X - s_GoalX, s_Point.Y - s_GoalY, s_Point.Z - s_GoalZ
+						m_Heap.Push(s_Heap, s_Cost + math.sqrt(s_DeltaX * s_DeltaX + s_DeltaY * s_DeltaY + s_DeltaZ * s_DeltaZ),
+							s_To)
+					end
 				end
 			end
 		end

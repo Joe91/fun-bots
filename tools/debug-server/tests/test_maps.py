@@ -10,7 +10,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from funbots_debug import maps  # noqa: E402
+from funbots_debug import backups, maps  # noqa: E402
 from funbots_debug.paths.mapfile import MapData, Node, PathData  # noqa: E402
 
 
@@ -67,7 +67,36 @@ class MapsTest(unittest.TestCase):
         other.paths[1].nodes[1].pos = (9.0, 0.0, 9.0)
         maps.import_map(self.db, "MP_001_GunMaster0", other, None)
         state = self.states()["MP_001_GunMaster0"]
-        self.assertEqual((state["kind"], state["db"], state["missing"]), ("paths", "differs", ["import"]))
+        # Recorded in the game or older? The person decides (export or import), nothing is overwritten by itself.
+        self.assertEqual((state["kind"], state["db"], state["missing"]), ("paths", "differs", []))
+
+    def test_paths_recorded_on_a_cut_level_need_the_cut(self):
+        data = _data(cut=True)
+        recorded = [Node(2, point, (float(point), 0.0, 9.0), 3) for point in range(1, 4)]
+        data.paths[2] = PathData(2, recorded)
+        data.save(self.mapfiles / "MP_001_ConquestLarge0.map")
+        networks = {"version": 2, "points": [], "edges": [], "attach": [], "zones": [{"name": "a"}]}
+        (self.navzones / "MP_001_ConquestLarge0.json").write_text(json.dumps(networks), encoding="utf-8")
+        (self.census / "MP_001_ConquestLarge0.checks.json").write_text("{}", encoding="utf-8")
+        maps.import_map(self.db, "MP_001_ConquestLarge0", data, networks)
+        state = self.states()["MP_001_ConquestLarge0"]
+        self.assertEqual((state["recorded"], state["missing"]), (1, ["cut"]))
+
+
+class BackupTest(unittest.TestCase):
+    def test_files_and_tables_are_copied(self):
+        with tempfile.TemporaryDirectory() as folder:
+            root = Path(folder)
+            file = root / "MP_001_RushLarge0.map"
+            _data().save(file)
+            db = root / "mod.db"
+            maps.import_map(db, "MP_001_RushLarge0", _data(cut=True), {"points": []})
+            saved = backups.backup("MP_001_RushLarge0", "cut", [file, root / "missing.json"], db, root / "backups")
+            self.assertEqual(sorted(path.name for path in saved.iterdir()),
+                             ["MP_001_RushLarge0.map", "db.map", "db.navzones.json"])
+            self.assertEqual(MapData.load(saved / "db.map").dumps(), _data(cut=True).dumps())
+            self.assertIsNone(backups.backup("MP_001_RushLarge0", "cut", [root / "missing.json"], None,
+                                             root / "backups"))
 
 
 if __name__ == "__main__":

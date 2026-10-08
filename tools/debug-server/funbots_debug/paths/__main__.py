@@ -13,6 +13,7 @@ import sys
 import urllib.request
 from pathlib import Path
 
+from ..backups import backup
 from .labeler import Options, anchors_from_flags, anchors_from_labels, label, merge_anchors, uses_objectives
 from .mapfile import MapData
 
@@ -53,8 +54,11 @@ def main(argv: list[str] | None = None) -> int:
         anchors = anchors_from_labels(data)
         if flags is not None:
             anchors = merge_anchors(anchors_from_flags(flags), anchors)
+        # A cut level (navigation paths, "Nav"): the mesh has the objectives, the paths only get links.
+        cut = any(not path.vehicles and "Nav" in path.first.data for path in data.paths.values())
         options = Options(relabel=args.relabel, relink=args.relink, crossings=args.crossings, vehicles=args.vehicles,
-                          loops=not args.keep_loops, objectives=uses_objectives(file.stem.rsplit("_", 1)[-1]))
+                          loops=not args.keep_loops,
+                          objectives=uses_objectives(file.stem.rsplit("_", 1)[-1]) and not cut)
         result = label(data, anchors, options)
         counts = result.counts()
         summary = ", ".join(f"{count} {kind}" for kind, count in sorted(counts.items())) or "nothing to do"
@@ -65,6 +69,9 @@ def main(argv: list[str] | None = None) -> int:
                 target = f" -> {change.target[0]}:{change.target[1]}" if change.target else ""
                 print(f"  {change.kind:12s} {where}{target}  {change.message}")
         if args.write and any(kind != "warning" for kind in counts):
+            saved = backup(file.stem, "label", [file])
+            if saved is not None:
+                print(f"  backup of the file before: {saved}")
             data.save(file)
     return 0
 

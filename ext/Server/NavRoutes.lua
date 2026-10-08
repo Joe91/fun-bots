@@ -21,6 +21,8 @@ local m_NodeCollection = require('NodeCollection')
 local m_NavZones = require('NavZones')
 ---@type Logger
 local m_Logger = Logger('NavRoutes', Debug.Server.PATH)
+---@type MinHeap
+local m_Heap = require('__shared/Utils/MinHeap')
 
 -- Metres added for a link (rather stay on a path), longer links are no way to walk.
 local LINK_COST = 2.0
@@ -91,49 +93,6 @@ local CROWD_COST = 15.0
 local CROWD_MAX = 45.0
 -- Seconds the counts of the bots per path are kept.
 local CROWD_TIME = 1.0
-
----Binary heap of { cost, ... }.
----@param p_Heap table
----@param p_Entry table
-local function _Push(p_Heap, p_Entry)
-	p_Heap[#p_Heap + 1] = p_Entry
-	local s_Index = #p_Heap
-	while s_Index > 1 do
-		local s_Parent = s_Index // 2
-		if p_Heap[s_Parent][1] <= p_Heap[s_Index][1] then
-			break
-		end
-		p_Heap[s_Parent], p_Heap[s_Index] = p_Heap[s_Index], p_Heap[s_Parent]
-		s_Index = s_Parent
-	end
-end
-
----@param p_Heap table
----@return table
-local function _Pop(p_Heap)
-	local s_Top = p_Heap[1]
-	local s_Last = table.remove(p_Heap)
-	if #p_Heap > 0 then
-		p_Heap[1] = s_Last
-		local s_Index = 1
-		while true do
-			local s_Smallest = s_Index
-			local s_Left = 2 * s_Index
-			if s_Left <= #p_Heap and p_Heap[s_Left][1] < p_Heap[s_Smallest][1] then
-				s_Smallest = s_Left
-			end
-			if s_Left + 1 <= #p_Heap and p_Heap[s_Left + 1][1] < p_Heap[s_Smallest][1] then
-				s_Smallest = s_Left + 1
-			end
-			if s_Smallest == s_Index then
-				break
-			end
-			p_Heap[s_Smallest], p_Heap[s_Index] = p_Heap[s_Index], p_Heap[s_Smallest]
-			s_Index = s_Smallest
-		end
-	end
-	return s_Top
-end
 
 ---How much longer a way seems to the bot (Registry.BOT.NAV_ROUTE_SPREAD): each bot takes its own route, not all of
 ---them the shortest one. The same for the way during a life of the bot (p_Seed).
@@ -422,21 +381,21 @@ function NavRoutes:_MeshDistance(p_From, p_To, p_Limit)
 	local s_Mesh = m_NavZones:GetMesh()
 	---@cast s_Mesh -nil
 	local s_Cost = { [p_From] = 0.0 }
-	local s_Heap = { { 0.0, p_From } }
-	while #s_Heap > 0 do
-		local s_Entry = _Pop(s_Heap)
-		local s_Current = s_Entry[2]
+	local s_Heap = m_Heap.New()
+	m_Heap.Push(s_Heap, 0.0, p_From)
+	while s_Heap.Size > 0 do
+		local s_Distance, s_Current = m_Heap.Pop(s_Heap)
 		if s_Current == p_To then
-			return s_Entry[1]
+			return s_Distance
 		end
-		if s_Entry[1] <= s_Cost[s_Current] and s_Entry[1] <= p_Limit then
+		if s_Distance <= s_Cost[s_Current] and s_Distance <= p_Limit then
 			local s_Neighbours = s_Mesh.Neighbours[s_Current]
 			for l_Index = 1, #s_Neighbours do
 				local l_Edge = s_Neighbours[l_Index]
-				local s_Next = s_Entry[1] + l_Edge.Cost
+				local s_Next = s_Distance + l_Edge.Cost
 				if not l_Edge.Removed and s_Next < (s_Cost[l_Edge.To] or math.huge) then
 					s_Cost[l_Edge.To] = s_Next
-					_Push(s_Heap, { s_Next, l_Edge.To })
+					m_Heap.Push(s_Heap, s_Next, l_Edge.To)
 				end
 			end
 		end
@@ -673,23 +632,22 @@ function NavRoutes:_MeshField(p_Target)
 	local s_Mesh = m_NavZones:GetMesh()
 	---@cast s_Mesh -nil
 	local s_Cost = {}
-	local s_Heap = {}
+	local s_Heap = m_Heap.New()
 	for l_Index = 1, #p_Target.Points do
 		local l_Point = p_Target.Points[l_Index]
 		s_Cost[l_Point] = 0.0
-		_Push(s_Heap, { 0.0, l_Point })
+		m_Heap.Push(s_Heap, 0.0, l_Point)
 	end
-	while #s_Heap > 0 do
-		local s_Entry = _Pop(s_Heap)
-		local s_Current = s_Entry[2]
-		if s_Entry[1] <= s_Cost[s_Current] then
+	while s_Heap.Size > 0 do
+		local s_Distance, s_Current = m_Heap.Pop(s_Heap)
+		if s_Distance <= s_Cost[s_Current] then
 			local s_Neighbours = s_Mesh.Neighbours[s_Current]
 			for l_Index = 1, #s_Neighbours do
 				local l_Edge = s_Neighbours[l_Index]
-				local s_Next = s_Entry[1] + l_Edge.Cost
+				local s_Next = s_Distance + l_Edge.Cost
 				if not l_Edge.Removed and s_Next < (s_Cost[l_Edge.To] or math.huge) then
 					s_Cost[l_Edge.To] = s_Next
-					_Push(s_Heap, { s_Next, l_Edge.To })
+					m_Heap.Push(s_Heap, s_Next, l_Edge.To)
 				end
 			end
 		end
@@ -715,24 +673,23 @@ function NavRoutes:_Field(p_Target)
 	---@cast s_Mesh -nil
 	local s_MeshCost = {}
 	local s_NodeCost = {}
-	-- Entries { cost, point } for the mesh, { cost, -node } for the nodes.
-	local s_Heap = {}
+	-- Values: the point for the mesh, -node for the nodes.
+	local s_Heap = m_Heap.New()
 	for l_Index = 1, #p_Target.Points do
 		local l_Point = p_Target.Points[l_Index]
 		s_MeshCost[l_Point] = 0.0
-		_Push(s_Heap, { 0.0, l_Point })
+		m_Heap.Push(s_Heap, 0.0, l_Point)
 	end
 
 	local function _ToNode(p_Node, p_Cost)
 		if p_Cost < (s_NodeCost[p_Node] or math.huge) then
 			s_NodeCost[p_Node] = p_Cost
-			_Push(s_Heap, { p_Cost, -p_Node })
+			m_Heap.Push(s_Heap, p_Cost, -p_Node)
 		end
 	end
 
-	while #s_Heap > 0 do
-		local s_Entry = _Pop(s_Heap)
-		local s_Cost, s_Id = s_Entry[1], s_Entry[2]
+	while s_Heap.Size > 0 do
+		local s_Cost, s_Id = m_Heap.Pop(s_Heap)
 		if s_Id > 0 then
 			if s_Cost <= s_MeshCost[s_Id] then
 				local s_Neighbours = s_Mesh.Neighbours[s_Id]
@@ -741,32 +698,35 @@ function NavRoutes:_Field(p_Target)
 					local s_Next = s_Cost + l_Edge.Cost + l_Edge.Penalty
 					if not l_Edge.Removed and s_Next < (s_MeshCost[l_Edge.To] or math.huge) then
 						s_MeshCost[l_Edge.To] = s_Next
-						_Push(s_Heap, { s_Next, l_Edge.To })
+						m_Heap.Push(s_Heap, s_Next, l_Edge.To)
 					end
 				end
 				-- From the waypoint of a junction onto the mesh here (entries bots didn't get onto the mesh at cost more).
 				local s_Junctions = self._JunctionNodes[s_Id]
-				for l_Index = 1, #(s_Junctions or {}) do
-					local l_Node = s_Junctions[l_Index]
-					local s_Entry = self._Nodes[l_Node]
-					_ToNode(l_Node, s_Cost + s_Entry.JunctionCost + (self._EntryPenalty[s_Entry.Junction] or 0.0))
+				if s_Junctions ~= nil then
+					for l_Index = 1, #s_Junctions do
+						local l_Node = s_Junctions[l_Index]
+						local s_JunctionNode = self._Nodes[l_Node]
+						_ToNode(l_Node,
+							s_Cost + s_JunctionNode.JunctionCost + (self._EntryPenalty[s_JunctionNode.Junction] or 0.0))
+					end
 				end
 			end
 		else
 			local s_Node = -s_Id
 			if s_Cost <= s_NodeCost[s_Node] then
-				local s_Entry = self._Nodes[s_Node]
-				for l_Index = 1, #s_Entry.Edges do
-					local l_Edge = s_Entry.Edges[l_Index]
+				local s_NodeEntry = self._Nodes[s_Node]
+				for l_Index = 1, #s_NodeEntry.Edges do
+					local l_Edge = s_NodeEntry.Edges[l_Index]
 					_ToNode(l_Edge.To, s_Cost + l_Edge.Cost + (l_Edge.Penalty or 0.0))
 				end
 				-- From the mesh off at this junction: leaving costs (MESH_CROSSING, the exits bots didn't get to more).
-				local s_Junction = s_Entry.Junction
+				local s_Junction = s_NodeEntry.Junction
 				if s_Junction ~= nil then
-					local s_Next = s_Cost + s_Entry.JunctionCost + MESH_CROSSING + (self._Penalty[s_Junction] or 0.0)
+					local s_Next = s_Cost + s_NodeEntry.JunctionCost + MESH_CROSSING + (self._Penalty[s_Junction] or 0.0)
 					if s_Next < (s_MeshCost[s_Junction.Point] or math.huge) then
 						s_MeshCost[s_Junction.Point] = s_Next
-						_Push(s_Heap, { s_Next, s_Junction.Point })
+						m_Heap.Push(s_Heap, s_Next, s_Junction.Point)
 					end
 				end
 			end
@@ -798,22 +758,24 @@ function NavRoutes:_JunctionCosts(p_Point)
 	---@cast s_Mesh -nil
 	local s_Result = {}
 	local s_Cost = { [p_Point] = 0.0 }
-	local s_Heap = { { 0.0, p_Point } }
-	while #s_Heap > 0 do
-		local s_Entry = _Pop(s_Heap)
-		local s_Current = s_Entry[2]
-		if s_Entry[1] <= s_Cost[s_Current] then
+	local s_Heap = m_Heap.New()
+	m_Heap.Push(s_Heap, 0.0, p_Point)
+	while s_Heap.Size > 0 do
+		local s_Distance, s_Current = m_Heap.Pop(s_Heap)
+		if s_Distance <= s_Cost[s_Current] then
 			local s_Nodes = self._JunctionNodes[s_Current]
-			for l_Index = 1, #(s_Nodes or {}) do
-				s_Result[s_Nodes[l_Index]] = s_Entry[1]
+			if s_Nodes ~= nil then
+				for l_Index = 1, #s_Nodes do
+					s_Result[s_Nodes[l_Index]] = s_Distance
+				end
 			end
 			local s_Neighbours = s_Mesh.Neighbours[s_Current]
 			for l_Index = 1, #s_Neighbours do
 				local l_Edge = s_Neighbours[l_Index]
-				local s_Next = s_Entry[1] + l_Edge.Cost + l_Edge.Penalty
+				local s_Next = s_Distance + l_Edge.Cost + l_Edge.Penalty
 				if not l_Edge.Removed and s_Next < (s_Cost[l_Edge.To] or math.huge) then
 					s_Cost[l_Edge.To] = s_Next
-					_Push(s_Heap, { s_Next, l_Edge.To })
+					m_Heap.Push(s_Heap, s_Next, l_Edge.To)
 				end
 			end
 		end

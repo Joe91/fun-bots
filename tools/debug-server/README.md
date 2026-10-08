@@ -62,10 +62,11 @@ Two tabs: **Live** (below) and **Maps**.
 
 **Maps** lists every waypoint-file of `mapfiles/` with what is done for it (census, mesh, trim, `mod.db` against the
 files, changes since the last commit, the steps still to do) and runs steps for the selected levels as jobs, one after
-the other, with their output: export from `mod.db`, label, import into `mod.db`, census, trim (again from the untrimmed
-version in git) and report (`funbots_debug/maps.py`, `GET /api/maps`, `POST /api/maps/run`). *Start game-server* runs
-`--game-command` (default `census/start_vu.sh`), which the census also uses after a crash. How a new level gets
-supported: `NEW_MAP.md`.
+the other, with their output: export from `mod.db`, label, import into `mod.db`, census, trim (from the file as it is:
+on a level that is trimmed already only the paths recorded since) and report (`funbots_debug/maps.py`, `GET /api/maps`,
+`POST /api/maps/run`). Every step copies what it overwrites to `backups/<map>/` first (`funbots_debug/backups.py`).
+*Start game-server* runs `--game-command` (default `census/start_vu.sh`), which the census also uses after a crash. How
+a new level gets supported, and how to add paths to one: `NEW_MAP.md`.
 
 The **Live** tab:
 

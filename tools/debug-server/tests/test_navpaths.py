@@ -191,6 +191,53 @@ class TrimTest(unittest.TestCase):
         self.assertEqual(result.data.paths, {})
 
 
+    def test_cut_paths_stay_new_ones_are_trimmed(self):
+        # A level cut already (path 1, "Nav", edited in the game: an odd waypoint) and a path recorded since (path 2)
+        # from the mesh of a to the mesh of b, linked to the cut one.
+        cut = _path(1, _line(20, 80, 30) + [(81, 33)], {"Nav": {"Length": 61.0}, "Objectives": ["a"]})
+        recorded = _path(2, _line(-5, 105, 0))
+        cut.nodes[10].set_links([(2, 20)])
+        recorded.nodes[19].set_links([(1, 11)])
+        before = MapData({1: cut, 2: recorded})
+        result = navpaths.trim(before, self.zones)
+        self.assertEqual(result.cut_before, 1)
+        kept = next(path for path in result.data.paths.values() if "Nav" in path.first.data
+                    and len(path.nodes) == len(cut.nodes))
+        self.assertEqual([node.pos for node in kept.nodes], [node.pos for node in cut.nodes])
+        self.assertEqual(kept.first.data["Nav"], {"Length": 61.0})
+        self.assertEqual(kept.objectives, [])
+        piece = next(path for path in result.data.paths.values() if path is not kept)
+        self.assertLess(len(piece.nodes), len(recorded.nodes))
+        # The link between them is kept, both ways.
+        target = next(node for node in piece.nodes if node.links)
+        self.assertEqual(target.links, [(kept.index, 11)])
+        self.assertEqual(kept.nodes[10].links, [(piece.index, target.point)])
+
+    def test_cut_paths_are_never_dropped(self):
+        # A cut path that leads nowhere now (no junction, no link): kept, the person edited it that way.
+        alone = _path(1, [(40, 50), (60, 50), (60, 60)], {"Nav": {"Length": 30.0}})
+        result = navpaths.trim(MapData({1: alone}), self.zones)
+        self.assertEqual(len(result.data.paths), 1)
+        self.assertEqual(result.dead_ends, 0)
+        networks = {"attach": []}
+        self.assertEqual(navpaths.cut_loose(result, networks), 0)
+        self.assertEqual(navpaths.prune_unattached(result, networks), 0)
+        self.assertEqual(len(result.data.paths[1].nodes), 3)
+
+    def test_cut_again_changes_nothing(self):
+        once = navpaths.trim(MapData({1: _path(1, _line(-5, 105, 0))}), self.zones).data
+        twice = navpaths.trim(MapData.parse(once.dumps()), self.zones).data
+        self.assertEqual(twice.dumps(), once.dumps())
+
+    def test_recorded_paths_teach_the_mesh(self):
+        cut = _path(1, _line(20, 80, 30), {"Nav": {"Length": 60.0}})
+        recorded = _path(2, _line(-5, 105, 0))
+        road = _path(3, _line(-5, 105, 40), {"Vehicles": ["land"]})
+        nodes = navpaths.recorded_nodes(MapData({1: cut, 2: recorded, 3: road}))
+        self.assertEqual(list(nodes), [str(navpaths.RECORDED_OFFSET + 2)])
+        census = navpaths.with_recorded({"nodes": {"1": {"points": []}}}, MapData({2: recorded}))
+        self.assertEqual(sorted(census["nodes"]), ["1", str(navpaths.RECORDED_OFFSET + 2)])
+
     def test_thin_junctions(self):
         walk = _path(1, _line(0, 40, 0))
         data = MapData({1: walk})

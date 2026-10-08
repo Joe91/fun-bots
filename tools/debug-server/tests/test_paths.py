@@ -401,6 +401,19 @@ class CliTest(unittest.TestCase):
                 paths_main([str(file), "--flags", str(flags), "--write"])
             self.assertEqual(MapData.load(file).paths[5].objectives, ["a", "b"])
 
+    def test_cut_level_only_gets_links(self):
+        # A level cut already (one navigation path): the mesh has the objectives, the paths get no names.
+        with tempfile.TemporaryDirectory() as folder:
+            file = Path(folder) / "TEST_ConquestSmall0.map"
+            data = level()
+            data.paths[1].first.data["Nav"] = {"Length": 10.0}
+            data.save(file)
+            flags = Path(folder) / "flags.json"
+            flags.write_text(json.dumps({"objectives": {"flags": FLAGS}}))
+            with redirect_stdout(io.StringIO()):
+                paths_main([str(file), "--flags", str(flags), "--write"])
+            self.assertTrue(all(not path.objectives for path in MapData.load(file).paths.values()))
+
 
 def nodes_events(data: MapData) -> list[dict]:
     """The waypoints as the mod streams them (DebugCommands.Nodes)."""

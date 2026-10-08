@@ -142,7 +142,6 @@ function VehicleMovement:UpdateNormalMovementVehicle(p_DeltaTime, p_Bot)
 					end
 
 					-- Let all other bots exit the vehicle.
-					local s_VehicleEntity = p_Bot.m_Player.controlledControllable
 					if s_VehicleEntity ~= nil then
 						for i = 1, (s_VehicleEntity.entryCount - 1) do
 							local s_Player = s_VehicleEntity:GetPlayerInEntry(i)

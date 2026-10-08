@@ -25,6 +25,12 @@ Vehicle paths stay as they are, with their names: the vehicles still find their 
 roads (land vehicle paths) too where they lead to the target (the mesh gets junctions with them). Their links to dropped
 foot waypoints are dropped.
 
+The waypoint-file as it is now is the only source: a level that is cut already is cut again with the paths recorded
+since (foot paths without "Nav"). The paths that are cut already stay as they are (they may have been edited in the
+game), nothing drops or shortens them; only the new ones are trimmed. Their links to the old ones are kept. The new
+paths also teach the mesh (recorded_nodes): where one walks from one part of the mesh into another the census didn't
+connect (a ramp, stairs), the mesh gets a connection along its waypoints.
+
 A waypoint is on the mesh where a point of a part the bots can use (MIN_PART points) is close (MESH_DISTANCE, on the same
 floor) and it lies inside of the circle of an area of the census.
 
@@ -42,6 +48,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 
 from ..paths.mapfile import MapData, Node, PathData
+from .navzones import RECORDED_OFFSET
 
 MESH_DISTANCE = 4.0       # A waypoint this close to a point of the mesh (horizontally)...
 FLOOR_HEIGHT = 1.5        # ...and on its floor is on the mesh...
@@ -74,7 +81,9 @@ class Result:
     dead_ends: int = 0  # foot paths dropped that lead nowhere (fewer than two ways out)
     shortcuts: int = 0  # short foot paths dropped whose ends the mesh connects
     cut_ends: int = 0  # foot paths cut back to their outermost junction or link (a loose end)
+    cut_before: int = 0  # foot paths that were cut already (kept as they are)
     dropped: dict[int, str] = field(default_factory=dict)  # old path -> why it's gone
+    protected: set[int] = field(default_factory=set)  # paths (new numbers) that were cut already: never dropped or cut
 
 
 class Mesh:
@@ -177,6 +186,32 @@ def _pieces(path: PathData, on: list[bool]) -> list[list[int]]:
     return pieces
 
 
+def is_cut(path: PathData) -> bool:
+    """A foot path that was cut already (its first waypoint has "Nav")."""
+    return not path.vehicles and "Nav" in path.first.data
+
+
+
+
+def recorded_nodes(data: MapData) -> dict[str, dict]:
+    """The foot paths of the file that aren't cut yet (recorded since the last cut, or all of a level never cut), as
+    waypoints of the census (census["nodes"]): the mesh gets connections along them where they walk from one of its
+    parts into another (navzones._trace_edges). Numbered from RECORDED_OFFSET."""
+    return {str(RECORDED_OFFSET + index): {"points": [list(node.pos) for node in path.nodes],
+                                           "inputs": [node.input for node in path.nodes],
+                                           "vehicles": [], "objectives": path.objectives}
+            for index, path in data.paths.items()
+            if path.nodes and not path.vehicles and not is_cut(path) and not _is_function(path)}
+
+
+def with_recorded(census: dict, data: MapData) -> dict:
+    """The census with the paths recorded since the last cut among its waypoints (recorded_nodes)."""
+    recorded = recorded_nodes(data)
+    if not recorded:
+        return census
+    return dict(census, nodes={**(census.get("nodes") or {}), **recorded})
+
+
 def trim(data: MapData, navzones: dict) -> Result:
     mesh = Mesh(navzones)
     result = Result(MapData(info=data.info))
@@ -208,6 +243,14 @@ def trim(data: MapData, navzones: dict) -> Result:
         if path.vehicles:
             add(path.nodes, [(index, node.point) for node in path.nodes], path.loops, True)
             result.vehicles += 1
+            continue
+        if is_cut(path):
+            # Cut already: as it is (an edit in the game stays), only without names (the mesh has the objectives).
+            number = add(path.nodes, [(index, node.point) for node in path.nodes], path.loops, True)
+            paths[number].objectives = []
+            ends[number] = {node.point for node in path.nodes if mesh.on_mesh(node.pos)} | _near_ends(mesh, path.nodes)
+            result.protected.add(number)
+            result.cut_before += 1
             continue
         if _is_function(path):
             result.functions += 1
@@ -305,7 +348,7 @@ def prune_unattached(result: Result, networks: dict) -> int:
     for index, entries in junctions.items():
         path = result.data.paths[index]
         length = _length([node.pos for node in path.nodes])
-        if length >= SHORTCUT_LENGTH or len(entries) < 2:
+        if length >= SHORTCUT_LENGTH or len(entries) < 2 or index in result.protected:
             continue
         first, last = min(entries)[1], max(entries)[1]
         limit = SHORTCUT_DETOUR * length + SHORTCUT_SLACK
@@ -384,7 +427,7 @@ def cut_loose(result: Result, networks: dict) -> int:
         junctions[int(entry[0])].add(int(entry[1]))
     cuts: dict[int, tuple[int, int]] = {}
     for index, path in result.data.paths.items():
-        if path.vehicles:
+        if path.vehicles or index in result.protected:
             continue
         connected = junctions[index] | {node.point for node in path.nodes if node.links}
         count = len(path.nodes)
@@ -429,13 +472,13 @@ def _prune(paths: dict[int, PathData], ends: dict[int, set[int]], result: Result
     now). A way out is a waypoint on the mesh (a junction) or a link to a path that is left (a vehicle path always is).
     So no stub that only touches the mesh once, no branch off a single link, no path without any connection: a bot on
     it would walk to its end and back. The paths are numbered anew, their links with them."""
-    alive = set(paths) - set(drop)
+    alive = set(paths) - (set(drop) - result.protected)
     changed = True
     while changed:
         changed = False
         for number in sorted(alive):
-            if number not in ends:
-                continue  # A vehicle path.
+            if number not in ends or number in result.protected:
+                continue  # A vehicle path, or one that was cut already.
             linked = {node.point for node in paths[number].nodes
                       if any(target in alive for target, _ in node.links)}
             if _places(paths[number], ends[number] | linked) < 2:
@@ -452,6 +495,7 @@ def _prune(paths: dict[int, PathData], ends: dict[int, set[int]], result: Result
             fresh.set_links([(new_index[target], point) for target, point in node.links if target in new_index])
             nodes.append(fresh)
         kept[new] = PathData(new, nodes)
+    result.protected = {new_index[old] for old in result.protected if old in new_index}
     return kept
 
 
@@ -475,6 +519,9 @@ def summary(result: Result, before: MapData, verbose: bool = False) -> str:
         f"  links: {result.links} kept, {result.lost_links} to dropped waypoints",
         f"  foot paths dropped that lead nowhere (a stub, a branch off one link, no connection): {result.dead_ends}",
     ]
+    if result.cut_before:
+        lines.insert(1, f"  {result.cut_before} foot paths cut already, kept as they are; "
+                        f"{len(recorded_nodes(before))} recorded since, trimmed")
     if verbose:
         for index, reason in sorted(result.dropped.items()):
             lines.append(f"    dropped path {index} ({', '.join(before.paths[index].objectives) or '-'}): {reason}")

@@ -30,7 +30,6 @@ require('__shared/Settings/SettingsDefinition')
 require('__shared/WeaponList')
 require('__shared/EbxEditUtils')
 require('__shared/Utils/Logger')
-require('__shared/Utils/Profiler')
 require('Vehicles')
 require('UIServer')
 require('BotStates/BotStates')
@@ -562,11 +561,21 @@ function FunBotServer:_UpdateRoundStats(p_DeltaTime)
 		s_Parts = {}
 		for l_Index = 1, math.min(25, #s_Functions) do
 			local l_Function = s_Functions[l_Index]
-			s_Parts[#s_Parts + 1] = string.format("%s %.2f ms/frame %.0f/s %.2f KB/call", l_Function.Key,
-				l_Function.Entry.Total / s_Frames, l_Function.Entry.Count / Registry.DEBUG.ROUND_STATS_INTERVAL,
+			s_Parts[#s_Parts + 1] = string.format("%s %.2f ms/frame (max %.0f) %.0f/s %.2f KB/call", l_Function.Key,
+				l_Function.Entry.Total / s_Frames, l_Function.Entry.Max,
+				l_Function.Entry.Count / Registry.DEBUG.ROUND_STATS_INTERVAL,
 				l_Function.Entry.AllocKb / math.max(l_Function.Entry.Count, 1))
 		end
 		print("[RoundStats] Functions: " .. table.concat(s_Parts, " | "))
+
+		-- The single calls that took longest (the spikes).
+		table.sort(s_Functions, function(a, b) return a.Entry.Max > b.Entry.Max end)
+		s_Parts = {}
+		for l_Index = 1, math.min(12, #s_Functions) do
+			local l_Function = s_Functions[l_Index]
+			s_Parts[#s_Parts + 1] = string.format("%s %.0f ms", l_Function.Key, l_Function.Entry.Max)
+		end
+		print("[RoundStats] Longest function calls: " .. table.concat(s_Parts, " | "))
 	end
 
 	-- The bot calls that allocate the most memory (exact only while no GC step runs inside).

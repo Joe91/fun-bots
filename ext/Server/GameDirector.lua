@@ -247,8 +247,6 @@ function GameDirector:OnEngineUpdate(p_DeltaTime)
 		return
 	end
 
-	-- g_Profiler:Start("GameDirector:Update1")
-
 	if Globals.IsRush then
 		self:_UpdateTimersOfMcoms(self.m_UpdateTimer)
 	end
@@ -276,9 +274,6 @@ function GameDirector:OnEngineUpdate(p_DeltaTime)
 			self:_CheckVehicleProgress(l_Bot)
 		end
 	end
-
-	-- g_Profiler:End("GameDirector:Update1")
-	-- g_Profiler:Start("GameDirector:Update2")
 
 	local s_MaxAssignsAttack = {}
 	local s_MaxAssignsDefend = {}
@@ -378,9 +373,6 @@ function GameDirector:OnEngineUpdate(p_DeltaTime)
 			s_Objective.assigned[s_Objective.team] = s_Objective.assigned[s_Objective.team] + 1
 		end
 	end
-
-	-- g_Profiler:End("GameDirector:Update2")
-	-- g_Profiler:Start("GameDirector:Update3")
 
 	for l_BotTeam = 1, Globals.NrOfTeams do
 		local l_Bots = s_BotsByTeam[l_BotTeam] or {}
@@ -567,7 +559,6 @@ function GameDirector:OnEngineUpdate(p_DeltaTime)
 			::continue_with_next_bot::
 		end
 	end
-	-- g_Profiler:End("GameDirector:Update3")
 end
 
 -- Seconds a vehicle stays reserved for the bot that spawns for it, until the bot is on the mesh and takes it.
@@ -978,15 +969,8 @@ local function _OnTheGround(p_Vehicle)
 		return false
 	end
 	local s_Position = p_Vehicle.transform.trans
-	local s_Point = m_NavZones:Closest(s_Mesh, s_Position)
-	if s_Point == nil then
-		return false
-	end
-	local s_Ground = s_Mesh.Points[s_Point].Position
-	local s_DeltaX = s_Ground.x - s_Position.x
-	local s_DeltaZ = s_Ground.z - s_Position.z
-	return math.abs(s_Ground.y - s_Position.y) <= AIRCRAFT_GROUND_HEIGHT
-		and math.sqrt(s_DeltaX * s_DeltaX + s_DeltaZ * s_DeltaZ) <= AIRCRAFT_GROUND_RANGE
+	local s_Point = m_NavZones:Closest(s_Mesh, s_Position, nil, AIRCRAFT_GROUND_RANGE)
+	return s_Point ~= nil and math.abs(s_Mesh.Points[s_Point].Position.y - s_Position.y) <= AIRCRAFT_GROUND_HEIGHT
 end
 
 -- A passenger waits this many times as long as a driver before it gets out of a vehicle that doesn't move.

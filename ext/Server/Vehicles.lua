@@ -255,16 +255,6 @@ end
 
 ---@param p_VehicleData VehicleDataInner
 ---@param p_VehicleTerrain VehicleTerrains
-function Vehicles:IsVehicleTerrain(p_VehicleData, p_VehicleTerrain)
-	if p_VehicleData and p_VehicleData.Terrain then
-		return p_VehicleData.Terrain == p_VehicleTerrain
-	else
-		return false
-	end
-end
-
----@param p_VehicleData VehicleDataInner
----@param p_VehicleTerrain VehicleTerrains
 function Vehicles:IsNotVehicleTerrain(p_VehicleData, p_VehicleTerrain)
 	if p_VehicleData and p_VehicleData.Terrain then
 		return p_VehicleData.Terrain ~= p_VehicleTerrain
@@ -287,11 +277,6 @@ end
 ---@param p_VehicleType VehicleTypes
 function Vehicles:IsVehicleType(p_VehicleData, p_VehicleType)
 	return self:VehicleType(p_VehicleData) == p_VehicleType
-end
-
----@param p_VehicleData VehicleDataInner
-function Vehicles:IsTransportChopper(p_VehicleData)
-	return self:IsVehicleType(p_VehicleData, VehicleTypes.TransportChopper)
 end
 
 ---@param p_VehicleData VehicleDataInner

@@ -313,7 +313,6 @@ Registry = {
 		FIRST_SHOT_TARGET_ANGLE = 0.05,
 		-- Probability (%) that a bot with a beacon to place takes the way to a beacon at a link to it.
 		PROBABILITY_SWITCH_TO_BEACON_PATH = 80,
-		PROBABILITY_KEEP_KIT_IF_HAS_BEACON = 80,
 		-- number of nodes in every direction to scan for best way back
 		NUMBER_NODES_TO_SCAN_AFTER_ATTACK = 20,
 		-- Delay on destroying several bots

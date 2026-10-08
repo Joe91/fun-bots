@@ -109,7 +109,7 @@
 			if (map.kind !== kind) {
 				return false;
 			}
-		} else if (kind === "todo" && map.missing.length === 0) {
+		} else if (kind === "todo" && map.missing.length === 0 && map.db !== "differs") {
 			return false;
 		} else if (kind === "git" && !map.git) {
 			return false;
@@ -161,7 +161,10 @@
 			row.appendChild(cell(db ? "same" : `waypoints ${map.db}` + (map.dbMesh && map.dbMesh !== "same" ? `, mesh ${map.dbMesh}` : ""),
 				db ? "ok" : "warn", "mod.db against mapfiles/ and navzones/"));
 			row.appendChild(cell(map.git, map.git ? "warn" : ""));
-			row.appendChild(cell(map.missing.join(", ") || "-", map.missing.length ? "warn" : "ok"));
+			// Other waypoints in mod.db than in the file: recorded in the game (export) or older (import)? Never guessed.
+			const decide = map.db === "differs" ? "export or import (mod.db differs)" : "";
+			row.appendChild(cell(decide || map.missing.join(", ") || "-", decide || map.missing.length ? "warn" : "ok",
+				decide ? "export: keep what the game has (new recordings); import: keep the file" : ""));
 			row.addEventListener("click", (event) => {
 				if (event.target !== check) {
 					check.checked = !check.checked;
@@ -170,7 +173,7 @@
 			});
 			body.appendChild(row);
 		}
-		const todo = data.maps.filter((map) => map.missing.length > 0).length;
+		const todo = data.maps.filter((map) => map.missing.length > 0 || map.db === "differs").length;
 		$("maps-count").textContent = `${shown.length} of ${data.maps.length} levels, ${selected.size} selected, `
 			+ `${todo} with something to do` + (data.refreshing ? " (reading...)" : "");
 		renderJobs();

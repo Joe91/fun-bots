@@ -48,17 +48,39 @@ levels and run steps; each one runs as a job, its output is listed next to the t
 | Step | What it does | Command |
 |---|---|---|
 | Export from mod.db | the paths recorded in the game into `mapfiles/<map>.map` | – |
-| Label | links path ends and sets the loop mode | `python -m funbots_debug.paths <file> --write` |
+| Label | links path ends and sets the loop mode (on a level that is cut already only links, no names) | `python -m funbots_debug.paths <file> --write` |
 | Import into mod.db | `mapfiles/<map>.map` and `navzones/<map>.json` into `mod.db` | – |
 | Census | measures the level (switches to it over RCON) and makes its mesh, 3 to 5 minutes | `python -m funbots_debug.census run --map "<Level> <Mode>" --apply` |
-| Cut | trims the paths at the mesh (drops names and the ways to vehicles, beacons, MCOMs); a level that is trimmed already is trimmed again from its newest untrimmed version in git | `python -m funbots_debug.census navpaths <map> --write --db ../../mod.db` |
-| Check | rays of the game over the finished mesh (switches to the level), then the trim again: connections through walls and points under ceilings the census missed are left out | `python -m funbots_debug.census check <map>`, then trim |
+| Cut | trims the paths at the mesh (drops names and the ways to vehicles, beacons, MCOMs), from the file as it is: on a level that is cut already only the paths recorded since are trimmed, the cut ones stay as they are | `python -m funbots_debug.census navpaths <map> --write --db ../../mod.db` |
+| Check | rays of the game over the finished mesh (switches to the level), then the cut again: connections through walls and points under ceilings the census missed are left out | `python -m funbots_debug.census check <map>`, then the cut |
 | Report | the checks of the census | `python -m funbots_debug.census report census/<map>.json.gz` |
 
 For a new level: record and save in the game, then **Export from mod.db** and **Run missing steps** (import, census,
 trim, check). The census needs the game-server with RCON; *Start game-server* starts it with the command in the field (it also
 restarts it when it crashes during a census). Afterwards play the level for a few minutes with the Live tab open
 (*Findings* lists bots stuck on the mesh) and commit `mapfiles/`, `navzones/` and `mod.db`.
+
+### More paths for a level that is cut already
+
+The files as they are are the only source: nothing is taken from an older version in git.
+
+1. In the game: load the level, record the new paths (link them where they meet the old ones), save.
+2. Maps tab: **Export from mod.db** first (the new paths are only in `mod.db` until then), then **Label** and **Cut**.
+   *Run missing steps* shows the cut as missing once the file has paths recorded since the last cut.
+3. Play the level, then commit `mapfiles/`, `navzones/` and `mod.db`.
+
+What the cut does with the new paths: the paths cut before (first waypoint with `"Nav"`) stay exactly as they are,
+also edits made in the game, and are never dropped. The new foot paths are trimmed like on a new level (the waypoints on
+the mesh go, the pieces between the areas stay, with their links to the old paths). On the mesh they still count: each
+stretch a new path walks between two points of the mesh becomes a connection along it (a new one, or the straight one of
+the grid takes the way the person walked). So a path recorded over a spot where the bots get stuck on the mesh (a ramp
+they reach over its side, a railing the census doesn't see) shows them the way there. A path that does nothing on the
+mesh (a way to arm an MCOM, to a vehicle) is dropped as on a new level.
+
+**Nothing gets lost:** every step that overwrites `mapfiles/<map>.map`, `navzones/<map>.json`, the census or the tables
+of the level in `mod.db` copies them first to `backups/<map>/<time>-<step>/` (not in git, the newest 50 per level;
+`db.map` is the waypoints of `mod.db` as a waypoint-file). *Run missing steps* never imports a file over `mod.db` that
+holds other waypoints: export or import by hand, whichever is right.
 
 ### New Rush levels
 

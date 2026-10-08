@@ -9,7 +9,7 @@ SpikeTracer = class('SpikeTracer')
 -- "GC ran" is only shown when it freed memory (sweep), not for its marking steps.
 
 local SKIP_CLASSES = {
-	Logger = true, Profiler = true, FunctionProfiler = true, SpikeTracer = true, Range = true, ArrayMap = true,
+	Logger = true, FunctionProfiler = true, SpikeTracer = true, Range = true, ArrayMap = true,
 }
 
 local s_Depth = 0

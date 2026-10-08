@@ -298,6 +298,39 @@ class DeadPartsTest(unittest.TestCase):
         self.assertEqual(result["edges"], [[0, 1, 5.0, []], [2, 3, 5.0, []]])
 
 
+class RecordedTraceTest(unittest.TestCase):
+    """Paths recorded since the cut take the connections of the grid along the way the person walked."""
+
+    def trace(self, path):
+        from funbots_debug.census.navzones import _trace_edges
+        from funbots_debug.census.report import _Nodes
+
+        class Grid:
+            def pos(self, key):
+                return key
+
+        # Two points of the mesh, connected by the grid in a straight line; the person walked around at z = 3.
+        points = [(0.0, 0.0, 0.0), (10.0, 0.0, 0.0)]
+        owner = {points[0]: 0, (5.0, 0.0, 3.0): 0, points[1]: 1}
+        walked = [(path, 1, [0.0, 0.0, 0.0], points[0]), (path, 2, [5.0, 0.0, 3.0], (5.0, 0.0, 3.0)),
+                  (path, 3, [10.0, 0.0, 0.0], points[1])]
+        nodes = _Nodes({"nodes": {str(path): {"points": [pos for _, _, pos, _ in walked]}}})
+        edges = [[0, 1, 10.0, []]]
+        return _trace_edges(Grid(), owner, points, edges, walked, nodes), edges
+
+    def test_recorded_path_reroutes_the_grid_connection(self):
+        from funbots_debug.census.navzones import RECORDED_OFFSET
+        added, edges = self.trace(RECORDED_OFFSET + 1)
+        self.assertEqual(added, [])
+        self.assertEqual(edges[0][:2], [0, 1])
+        self.assertEqual(edges[0][3], [[5.0, 0.0, 3.0], [10.0, 0.0, 0.0]])
+        self.assertEqual(edges[0][4], 1)
+
+    def test_census_path_leaves_a_connected_part_alone(self):
+        added, edges = self.trace(1)
+        self.assertEqual((added, edges), ([], [[0, 1, 10.0, []]]))
+
+
 class SpawnPositionsTest(unittest.TestCase):
     def test_prefab_spawns_at_the_origin_are_left_out(self):
         from funbots_debug.census.navzones import spawn_positions

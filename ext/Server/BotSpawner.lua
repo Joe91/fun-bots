@@ -125,14 +125,12 @@ function BotSpawner:OnEngineUpdate(p_DeltaTime, p_SimulationDeltaTime)
 
 	if #self._SpawnSets > 0 then
 		if self._BotSpawnTimer > 0.3 then -- Time to wait between spawn. 0.2 works
-			-- g_Profiler:Start("BotSpawner:Spawn")
 			self._BotSpawnTimer = 0.0
 			local s_PosOfSetInTable = MathUtils:GetRandomInt(1, #self._SpawnSets)
 			---@type SpawnSet
 			local s_SpawnSet = table.remove(self._SpawnSets, s_PosOfSetInTable)
 			self:_SpawnSingleWayBot(s_SpawnSet.PlayerVarOfBot, s_SpawnSet.UseRandomWay, s_SpawnSet.ActiveWayIndex,
 				s_SpawnSet.IndexOnPath, s_SpawnSet.Bot, s_SpawnSet.Team)
-			-- g_Profiler:End("BotSpawner:Spawn")
 		end
 
 		self._BotSpawnTimer = self._BotSpawnTimer + p_DeltaTime
@@ -172,7 +170,6 @@ function BotSpawner:OnEngineUpdate(p_DeltaTime, p_SimulationDeltaTime)
 	end
 
 	if #self._BotsWithoutPath > 0 then
-		-- g_Profiler:Start("BotSpawner:AfterSpawn")
 		for l_Index = 1, #self._BotsWithoutPath do
 			local l_Bot = self._BotsWithoutPath[l_Index]
 			if l_Bot == nil or l_Bot.m_Player == nil then
@@ -282,7 +279,6 @@ function BotSpawner:OnEngineUpdate(p_DeltaTime, p_SimulationDeltaTime)
 				end
 			end
 		end
-		-- g_Profiler:End("BotSpawner:AfterSpawn")
 	end
 end
 
@@ -1413,7 +1409,6 @@ function BotSpawner:_SpawnSingleWayBot(p_Player, p_UseRandomWay, p_ActiveWayInde
 
 	if s_Name ~= nil or s_IsRespawn then
 		---@cast s_Name -nil
-		-- g_Profiler:Start("BotSpawner:SpawnPart2") -- about 60 ms on conquest (close to 0 on deathmatch)
 		if self:_UseGameSpawn() and
 			not (Globals.IsTdm and (self._DelayDirectSpawn > -(Registry.BOT_SPAWN.DELAY_DIRECT_SPAWN))) then -- workaround for TDM-Spawn-Behaviour
 			local s_Bot = self:GetBot(p_ExistingBot, s_Name, s_TeamId, s_SquadId)
@@ -1545,8 +1540,6 @@ function BotSpawner:_SpawnSingleWayBot(p_Player, p_UseRandomWay, p_ActiveWayInde
 			s_SpawnPoint = m_NodeCollection:Get(p_IndexOnPath, p_ActiveWayIndex)
 		end
 
-		-- g_Profiler:End("BotSpawner:SpawnPart2")
-		-- g_Profiler:Start("BotSpawner:SpawnPart3") -- about 20 ms
 		if s_SpawnPoint == nil then
 			if s_SquadSpawnVehicle ~= nil then
 				s_SpawnPoint = m_NodeCollection:Get()[1]
@@ -1597,7 +1590,6 @@ function BotSpawner:_SpawnSingleWayBot(p_Player, p_UseRandomWay, p_ActiveWayInde
 				end
 			end
 		end
-		-- g_Profiler:End("BotSpawner:SpawnPart3")
 	end
 end
 

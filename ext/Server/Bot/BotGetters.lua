@@ -205,11 +205,6 @@ function Bot:GetWayIndex()
 	return self._PathIndex
 end
 
----@return integer
-function Bot:GetPointIndex()
-	return self._CurrentWayPoint
-end
-
 ---@return Player|nil
 function Bot:GetTargetPlayer()
 	return self._TargetPlayer
@@ -221,15 +216,6 @@ function Bot:IsInactive()
 		return false
 	else
 		return true
-	end
-end
-
----@return boolean
-function Bot:IsStuck()
-	if self._ObstacleSequenceTimer ~= 0 then
-		return true
-	else
-		return false
 	end
 end
 

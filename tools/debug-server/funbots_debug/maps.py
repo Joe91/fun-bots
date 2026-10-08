@@ -8,11 +8,17 @@ other, each as the same command a person would type:
     import   mapfiles/<map>.map (and navzones/<map>.json) -> mod.db
     census   measure the level and make its mesh (python -m funbots_debug.census run --map ... --apply), needs the
              game-server and RCON
-    cut      the paths trimmed at the mesh (python -m funbots_debug.census navpaths <map> --write --db mod.db); a
-             level that is trimmed already is trimmed again from the newest version in git without "Nav"
+    cut      the paths trimmed at the mesh (python -m funbots_debug.census navpaths <map> --write --db mod.db), from
+             the file as it is: on a level that is cut already only the paths recorded since are trimmed, the others
+             stay as they are
     check    rays of the game over the mesh (python -m funbots_debug.census check <map>, switches the level), then
-             the trim again: walls and ceilings the census missed are left out of the mesh
+             the cut again: walls and ceilings the census missed are left out of the mesh
     report   the checks of the census
+
+The files as they are are the only source (never an older version from git). Every step that overwrites a file or the
+tables of a level in mod.db copies them first (backups.py: backups/<map>/). Paths recorded in the game since the last
+export are only in mod.db: export them before anything else (a file that differs from mod.db is never imported over it
+by "missing").
 
     GET  /api/maps            the levels and their state, the jobs
     POST /api/maps/run        {maps: [name], steps: [step]} or {maps, steps: "missing"}: queue jobs
@@ -32,7 +38,8 @@ from collections import deque
 from dataclasses import dataclass, field
 from pathlib import Path
 
-from .census.navpaths import MESH_ROW, write_db
+from .backups import backup
+from .census.navpaths import MESH_ROW, is_cut, write_db
 from .paths.mapfile import HEADER, MapData
 
 REPO = Path(__file__).resolve().parents[3]
@@ -151,6 +158,9 @@ def level_states(mapfiles: Path = MAPFILES, navzones: Path = NAVZONES, census: P
                 "paths": len(data.paths), "waypoints": sum(len(path.nodes) for path in data.paths.values()),
                 "cut": any("Nav" in path.first.data for path in data.paths.values()),
                 "navigation": sum(1 for path in data.paths.values() if "Nav" in path.first.data),
+                # Foot paths recorded since the cut (not cut yet).
+                "recorded": sum(1 for path in data.paths.values() if path.nodes and not path.vehicles
+                                and not is_cut(path)),
                 "links": sum(len(node.links) for path in data.paths.values() for node in path.nodes),
                 "git": git.get(f"mapfiles/{name}.map") or git.get(f"navzones/{name}.json") or "",
             }
@@ -201,6 +211,9 @@ def missing_steps(state: dict) -> list[str]:
     """What is still to do for the level, in order. Export from mod.db is never guessed: if the game has other
     waypoints than the file, the person decides which ones are right."""
     steps = []
+    # The game has other waypoints than the file: recorded ones (export) or older ones (import)? The person decides.
+    if state["db"] == "differs":
+        return steps
     if state["kind"] == "mesh":
         if not state["cut"]:
             if state["db"] != "same":
@@ -212,6 +225,8 @@ def missing_steps(state: dict) -> list[str]:
         else:
             if state["db"] != "same" or state.get("dbMesh") not in ("same", None):
                 steps.append("import")
+            if state.get("recorded"):
+                steps.append("cut")
             if state.get("checked") is None:
                 steps.append("check")
     elif state["kind"] == "paths":
@@ -367,6 +382,7 @@ class MapWorkbench:
         file = self.mapfiles / f"{name}.map"
         if job.step == "export":
             data = export_map(self.db, name)
+            self._backup(job, "export", [file])
             data.save(file)
             job.log.append(f"written {file} ({len(data.paths)} paths) from {self.db}")
             return True
@@ -374,6 +390,7 @@ class MapWorkbench:
             data = MapData.load(file)
             zones_file = self.navzones / f"{name}.json"
             networks = json.loads(zones_file.read_text(encoding="utf-8")) if zones_file.is_file() else None
+            self._backup(job, "import", [], self.db)
             import_map(self.db, name, data, networks)
             job.log.append(f"written {name} into {self.db}" + (" with its mesh" if networks else ""))
             return True
@@ -386,16 +403,11 @@ class MapWorkbench:
                 command += ["--restart-command", self.restart_command]
             return self._command(job, command)
         if job.step == "cut":
-            if any("Nav" in path.first.data for path in MapData.load(file).paths.values()) \
-                    and not self._restore_uncut(job, file):
-                return False
             return self._command(job, [sys.executable, "-m", "funbots_debug.census", "navpaths", name, "--write",
                                        "--db", str(self.db)])
         if job.step == "check":
             if not self._command(job, [sys.executable, "-u", "-m", "funbots_debug.census", "check", name, "--server",
                                        self.server_url]):
-                return False
-            if not self._restore_uncut(job, file):
                 return False
             return self._command(job, [sys.executable, "-m", "funbots_debug.census", "navpaths", name, "--write",
                                        "--db", str(self.db)])
@@ -405,24 +417,10 @@ class MapWorkbench:
         job.log.append(f"unknown step {job.step}")
         return False
 
-    def _restore_uncut(self, job: Job, file: Path) -> bool:
-        """The newest version of the waypoint-file in git without navigation paths (the cut is made from it)."""
-        relative = file.relative_to(self.repo).as_posix()
-        try:
-            commits = subprocess.run(["git", "-C", str(self.repo), "log", "--format=%h", "--", relative],
-                                     capture_output=True, text=True, timeout=30).stdout.split()
-            for commit in commits:
-                text = subprocess.run(["git", "-C", str(self.repo), "show", f"{commit}:{relative}"],
-                                      capture_output=True, text=True, timeout=30).stdout
-                if text and '"Nav"' not in text:
-                    file.write_text(text, encoding="utf-8")
-                    job.log.append(f"{file.name}: the uncut version of {commit}")
-                    return True
-        except (OSError, subprocess.SubprocessError) as error:
-            job.log.append(f"git: {error}")
-            return False
-        job.log.append(f"{file.name}: no version without navigation paths in git, record the paths anew")
-        return False
+    def _backup(self, job: Job, step: str, files: list[Path], db: Path | None = None) -> None:
+        folder = backup(job.map, step, files, db)
+        if folder is not None:
+            job.log.append(f"backup of what is overwritten: {folder}")
 
     def _command(self, job: Job, command: list[str]) -> bool:
         job.log.append("$ " + " ".join(command[1:] if command[0] == sys.executable else command))

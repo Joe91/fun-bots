@@ -12,6 +12,7 @@ from pathlib import Path
 from typing import Any, Callable
 
 from .analyzers import Analyzer, Finding
+from .backups import backup
 from .census.report import Report, build_report
 from .census import check, navzones
 from .census.store import Census, CensusStore
@@ -403,6 +404,10 @@ class Hub:
             raise LabelError(f"the networks of the census {census} aren't built yet")
         if not self.accept_commands:
             raise LabelError("replay-mode, no mod to send the networks to")
+        if save and self.mapfiles is not None and data.get("map"):
+            # The mod overwrites the mesh in mod.db, the file below is overwritten too.
+            backup(data["map"], "mesh", [self.mapfiles.parent / "navzones" / f"{data['map']}.json"],
+                   self.mapfiles.parent / "mod.db")
         command = self.submit_command("navzones_apply", {"map": data.get("map"), "mesh": data, "save": save})
         self.commands.wait(command, timeout)
         result = command.to_json()
@@ -509,6 +514,7 @@ class Hub:
         except ValueError as error:
             raise LabelError(f"{file.name} doesn't hold the paths of the game ({error}): save them in the game and "
                              f"export them with the fun-bots-helper first") from error
+        backup(file.stem, "labels", [file])
         data.save(file)
         return {"file": str(file), "paths": len(labels["patch"])}
 

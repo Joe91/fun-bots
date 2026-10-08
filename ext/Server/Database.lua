@@ -24,11 +24,6 @@ function Database:__init()
 	self.m_LastError = nil
 end
 
--- This is unused.
-function Database:GetLastError()
-	return self.m_LastError
-end
-
 function Database:Now()
 	return 'CURRENT_TIMESTAMP'
 end

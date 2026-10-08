@@ -34,7 +34,6 @@ function NodeCollection:InitVars()
 	self._SpawnPointLevelName = ''
 
 	self._SelectedWaypoints = {}
-	self._SelectedSpawnPoints = {}
 	self._HiddenPaths = {}
 
 	self._Objectives = {}
@@ -983,10 +982,6 @@ function NodeCollection:IsSelected(p_SelectionId, p_Waypoint, p_PathIndex)
 	return self._SelectedWaypoints[p_SelectionId][p_Waypoint.ID] ~= nil
 end
 
-function NodeCollection:GetSelectedSpawn(p_SelectionId)
-	return self._SelectedSpawnPoints[p_SelectionId]
-end
-
 ---@param p_PathIndex? integer
 ---@return Waypoint[]
 function NodeCollection:GetSelected(p_SelectionId, p_PathIndex)
@@ -1215,18 +1210,6 @@ function NodeCollection:IsMapAvailable(p_LevelName, p_GameMode)
 		SQL:Close()
 		return true
 	end
-end
-
--- Function to check if a node is in front of or behind a point with direction
-function NodeCollection:isNodeInFront(p_Point, p_Direction, p_Node)
-	-- Vector from point to node
-	local s_VectorToNode = p_Node - p_Point
-
-	-- Calculate the dot product
-	local dotProduct = s_VectorToNode:Dot(p_Direction)
-
-	-- If dot product is positive, the node is in front of the point
-	return dotProduct > 0
 end
 
 -----------------------------

@@ -176,3 +176,6 @@ tools/debug-server/census/*
 
 # Local notes
 /TODO.txt
+
+# Copies of the map data before a tool overwrote it (tools/debug-server/funbots_debug/backups.py)
+backups/

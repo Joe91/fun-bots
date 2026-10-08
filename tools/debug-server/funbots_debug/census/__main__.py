@@ -32,6 +32,7 @@ import urllib.error
 import urllib.request
 from pathlib import Path
 
+from ..backups import backup
 from ..paths.mapfile import MapData
 from . import check, navpaths, navzones
 from .report import build_report
@@ -477,6 +478,7 @@ def command_check(options) -> int:
             print(check.summary(networks, found))
             merged = check.merge(check.load_checks(census_file), found)
             target = check.checks_file(census_file)
+            backup(name, "check", [target])
             target.write_text(json.dumps(merged, separators=(",", ":")), encoding="utf-8")
             print(f"  saved {target}")
         except (RuntimeError, OSError) as error:
@@ -500,12 +502,11 @@ def command_navpaths(options) -> int:
             if not file.is_file():
                 print(f"{name}: {file} is missing", file=sys.stderr)
                 return 1
+        # The file as it is: cut already or not, with the paths recorded since (navpaths: those are trimmed, the cut
+        # ones stay). They teach the mesh as well (navpaths.with_recorded).
         before = MapData.load(map_file)
-        if any("Nav" in path.first.data for path in before.paths.values()):
-            print(f"{name}: the paths are cut already (navigation paths in {map_file.name})", file=sys.stderr)
-            return 1
         # The mesh as it will be (with the checks of the game): the paths are trimmed where it is.
-        census = load(census_file)
+        census = navpaths.with_recorded(load(census_file), before)
         checks = check.load_checks(census_file)
         result = navpaths.trim(before, navzones.build(census, checks=checks))
         print(name)
@@ -536,6 +537,9 @@ def command_navpaths(options) -> int:
             print(f"  check: {networks['stats']['checkRemovedEdges']} connections and "
                   f"{networks['stats']['checkRemovedPoints']} points left out")
         networks["map"] = name
+        saved = backup(name, "cut", [map_file, zones_file], options.db)
+        if saved is not None:
+            print(f"  backup of the files before: {saved}")
         result.data.save(map_file)
         navzones.save(networks, zones_file)
         print(f"  written {map_file} and {zones_file} ({len(networks['attach'])} junctions)")

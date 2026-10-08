@@ -33,6 +33,8 @@ local ZONE_SIDESTEP_OFFSET = 0.3 -- the target: the bot steps back onto it sidew
 local ZONE_JUMP_RANGE = 1.5      -- Horizontal metres before a corner where the way was recorded with a jump: jump.
 local ZONE_STUCK_TIME = 4.0      -- Seconds without progress before the bot gives up this way.
 local ZONE_MAX_FAILS = 3         -- Ways given up before the bot leaves the zone.
+local ZONE_FORCE_RANGE = 10.0    -- Stuck on the only way between two parts of the mesh that all bots gave up a few times
+local ZONE_FORCE_HEIGHT = 3.0    -- already (an obstacle the census missed): put onto its next point, this close.
 local ZONE_MAX_GIVE_UPS = 3      -- Zones left like that in a row (no goal, no exit reached): the bot is stuck in a
                                  -- place it doesn't get out of, it respawns (as on the waypoints, Bot:_ObstacleHandling).
 local ZONE_WAIT_ATTACK = { 1.0, 3.0 } -- Seconds at each point while capturing.
@@ -1310,6 +1312,46 @@ function Bot:_ZoneAction(p_DeltaTime)
 	return true
 end
 
+---Puts the bot onto the point (the next one of its route, behind an obstacle it doesn't get past) if it is close, and
+---routes on from there.
+---@param p_Position Vec3
+---@param p_Point integer
+---@return boolean true if the bot was put there
+function Bot:_ZoneForceAcross(p_Position, p_Point)
+	local s_State = self.m_Zone
+	local s_Soldier = self.m_Player.soldier
+	local s_Target = s_State ~= nil and s_State.Zone.Points[p_Point] or nil
+	if s_State == nil or s_Soldier == nil or s_Target == nil then
+		return false
+	end
+	local s_DeltaX = s_Target.X - p_Position.x
+	local s_DeltaZ = s_Target.Z - p_Position.z
+	if s_DeltaX * s_DeltaX + s_DeltaZ * s_DeltaZ > ZONE_FORCE_RANGE * ZONE_FORCE_RANGE
+		or math.abs(s_Target.Y - p_Position.y) > ZONE_FORCE_HEIGHT then
+		return false
+	end
+	m_Logger:Write(self.m_Player.name .. ' put across the blocked way to point ' .. p_Point)
+	if m_DebugBridge.m_Enabled then
+		m_DebugBridge:Event('zone_force', {
+			zone = s_State.Zone.Name,
+			to = p_Point - 1,
+			pos = DebugBridge.Vec(p_Position),
+			target = DebugBridge.Vec(s_Target.Position),
+			bot = self.m_Id,
+		})
+	end
+	local s_Transform = s_Soldier.worldTransform:Clone()
+	s_Transform.trans = s_Target.Position:Clone()
+	s_Soldier:SetTransform(s_Transform)
+	s_State.Point = p_Point
+	s_State.Avoid = nil
+	s_State.Fails = 0
+	s_State.Stuck = 0.0
+	s_State.Progress = math.huge
+	self:_ZoneReplan(false)
+	return true
+end
+
 ---The bot doesn't get along to the next point: all bots avoid this connection from now on, the bot takes another
 ---way. After ZONE_MAX_FAILS of them in a row it goes back to the waypoints.
 ---@param p_Position Vec3
@@ -1336,14 +1378,25 @@ function Bot:_ZoneGiveUpConnection(p_Position, p_Target)
 			break
 		end
 	end
+	local s_From = nil
 	if s_Next ~= nil and s_Next ~= s_State.Point then
-		m_NavZones:BlockEdge(s_State.Zone, s_State.Point, s_Next)
+		s_From = s_State.Point
 	elseif s_Next ~= nil then
 		-- It didn't get back to its own point (pushed off, came onto the mesh beside it): the way there from the point it
 		-- stands at is blocked (a railing, a bench the census and the checks don't see), for all bots.
 		local s_Near = m_NavZones:Closest(s_State.Zone, p_Position, s_Next)
 		if s_Near ~= nil and s_Near ~= s_Next then
-			m_NavZones:BlockEdge(s_State.Zone, s_Near, s_Next)
+			s_From = s_Near
+		end
+	end
+	if s_From ~= nil then
+		---@cast s_Next -nil
+		m_NavZones:BlockEdge(s_State.Zone, s_From, s_Next)
+		-- The only way on, and the bots keep getting stuck there: without it they would wait for good (MP_013 Rush, the
+		-- defenders at their spawn of stage 1). Put across it.
+		if not s_State.Vehicle and m_NavZones:IsKeptBlocked(s_State.Zone, s_From, s_Next)
+			and self:_ZoneForceAcross(p_Position, s_Next) then
+			return false
 		end
 	end
 	-- All ways from the last point failed, or the bot didn't get back to it (_ZoneRouteTo, from ZONE_OFF_POINT away):

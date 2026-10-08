@@ -537,12 +537,20 @@ def _ladder(positions: list) -> bool:
     return False
 
 
+# Paths of the census from this number on were recorded since the last cut (navpaths.recorded_nodes).
+RECORDED_OFFSET = 100000
+
+
 def _trace_edges(grid: _Area, owner: dict[Surface, int], points: list[Surface], edges: list,
                  walked: list[tuple[int, int, list[float], Surface | None]], nodes: _Nodes) -> list:
     """Connections along the waypoints between parts of the network that the grid doesn't connect: stairs, jumps the
     vertical rays don't see. A path that walks from one part into another joins them, over its waypoints. Not up a
     ladder (_ladder): the bots can't climb it on the mesh, the cut keeps the path there. Not where the census found the
-    way between two of its waypoints blocked (_blocked)."""
+    way between two of its waypoints blocked (_blocked).
+    Paths recorded since the last cut (RECORDED_OFFSET) show the way also within a part: a person walked there because
+    the bots didn't get along (a ramp the mesh only reaches over its side, past a railing). Each stretch between two
+    points becomes a connection along it: a new one, or the one of the grid between them takes the way of the person
+    (the straight line of the grid ran into something the census didn't see)."""
     parent = list(range(len(points)))
 
     def find(index: int) -> int:
@@ -553,6 +561,8 @@ def _trace_edges(grid: _Area, owner: dict[Surface, int], points: list[Surface], 
 
     for a, b, *_ in edges:
         parent[find(a)] = find(b)
+    grid_edges = {(min(edge[0], edge[1]), max(edge[0], edge[1])): edge for edge in edges}
+    along: set[tuple[int, int]] = set()
 
     by_path: dict[int, dict[int, list[float]]] = defaultdict(dict)
     owned: dict[tuple[int, int], int] = {}
@@ -571,7 +581,9 @@ def _trace_edges(grid: _Area, owner: dict[Surface, int], points: list[Surface], 
                 continue
             # Only along waypoints that all lie in the areas: where the path leaves them in between, the corners
             # would skip that stretch (a straight line across), the navigation paths lead there.
-            if last is not None and point - last[0] <= 40 and find(last[1]) != find(network) \
+            pair = (min(last[1], network), max(last[1], network)) if last is not None else None
+            recorded = path >= RECORDED_OFFSET and last is not None and last[1] != network and pair not in along
+            if last is not None and point - last[0] <= 40 and (find(last[1]) != find(network) or recorded) \
                     and all(index in positions for index in range(last[0], point + 1)) \
                     and not _ladder([positions[index] for index in range(last[0], point + 1)]) \
                     and not any(_blocked(nodes, path, index) for index in range(last[0], point)):
@@ -582,8 +594,14 @@ def _trace_edges(grid: _Area, owner: dict[Surface, int], points: list[Surface], 
                 # (counted from 0) where the person jumped (the extra-mode of the waypoint): the bots jump there too.
                 jumps = [number for number, index in enumerate(range(last[0], point + 1))
                          if _jumps(nodes, path, index)]
-                result.append([last[1], network, round(length, 1), corners, 1] + ([jumps] if jumps else []))
+                entry = [last[1], network, round(length, 1), corners, 1] + ([jumps] if jumps else [])
+                if pair in grid_edges:
+                    # The connection of the grid takes the way the person walked (both directions in the game).
+                    grid_edges[pair][:] = entry
+                else:
+                    result.append(entry)
                 parent[find(last[1])] = find(network)
+                along.add(pair)
             last = (point, network)
     return result
 

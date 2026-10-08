@@ -21,6 +21,7 @@ import json
 import time
 from pathlib import Path
 
+from ..backups import backup
 from ..protocol import as_dict, as_list
 
 VERSION = 1
@@ -159,6 +160,7 @@ class CensusStore:
             return None
         self.directory.mkdir(parents=True, exist_ok=True)
         file = self.directory / f"{census.name}.json.gz"
+        backup(census.name, "census", [file, file.with_name(f"{census.name}.navzones.json")])
         with gzip.open(file, "wt", encoding="utf-8") as stream:
             json.dump(census.to_json(), stream, separators=(",", ":"))
         self.saves += 1

@@ -16,7 +16,13 @@ local TARGETS = {
 		'_CheckAndDoPathSwitch', '_CheckForAction', '_CheckForVehicleActions', '_SetActiveVars', '_SetActiveVarsSlow',
 		'_GetPathOffsetEntry', 'ApplyPathOffset', 'LookAround', 'UpdateObjective', 'ShootAt',
 		'DeployIfPossible', 'UpdateDontAttackFlag', 'FindVehiclePath', '_UpdateRespawn', 'GetAttackDistance',
+		'UpdateZoneMovement', '_CheckForZoneEntry', '_CheckForVehicleZoneEntry', 'TryEnterZoneAt', 'CanReach',
+		'_ZoneDecide', '_ZoneRejoin', '_ZoneReplan', '_ZoneRouteTo', '_ZoneBestExit', '_ZoneSmooth', '_ZoneAction',
+		'UpdateBorder', '_TryBreach',
 	} },
+	{ 'NavRoutes', 'g_NavRoutes', { '_Ensure', '_MeshField', '_Field', '_JunctionCosts', '_Crowd', 'Next', 'Step' } },
+	{ 'NavZones', 'g_NavZones', { 'Closest', 'ZoneAtVisible', 'Route' } },
+	{ 'PathSwitcher', 'g_PathSwitcher', { 'GetNewPath' } },
 	{ 'VehicleMovement', 'g_VehicleMovement', {
 		'UpdateNormalMovementVehicle', 'UpdateShootMovementVehicle', 'UpdateSpeedOfMovementVehicle',
 		'UpdateTargetMovementVehicle', 'UpdateYawVehicle', '_DetectObstacle', 'UpdateVehicleLookAround',
@@ -33,7 +39,11 @@ local TARGETS = {
 		'OnClientRaycastResults', 'RefreshTables', 'CreateBot', 'SpawnBot', 'GetKitCount',
 	} },
 	{ 'ServerRaycasts', 'g_ServerRaycasts', { 'CheckSight', 'UpdatePlayerChecks' } },
-	{ 'GameDirector', 'g_GameDirector', { 'OnEngineUpdate', 'FindClosestPath' } },
+	{ 'GameDirector', 'g_GameDirector', {
+		'OnEngineUpdate', 'FindClosestPath', '_CheckProgressOffMesh', '_CheckStranded', '_CheckObjectiveProgress',
+		'_CheckVehicleProgress', '_RefreshVehicleEntities', '_RefreshVehicleObjectives', '_UpdateValidObjectives',
+		'_CanReach', 'GetMcom',
+	} },
 	{ 'BotSpawner', 'g_BotSpawner', {
 		'OnEngineUpdate', 'UpdateBotAmountAndTeam', '_SpawnSingleWayBot', '_GetSpawnPoint', '_SpawnBot', '_SelectLoadout',
 		'_SetBotWeapons', '_SetKitAndAppearance', '_GetCustomization', '_TriggerSpawn', '_ApplyKitLimit',
@@ -55,10 +65,12 @@ local function _Record(p_Name, p_Start, p_Mem, ...)
 		end
 		local s_Entry = s_Functions[p_Name]
 		if s_Entry == nil then
-			s_Entry = { Total = 0, Count = 0, AllocKb = 0 }
+			s_Entry = { Total = 0, Max = 0, Count = 0, AllocKb = 0 }
 			s_Functions[p_Name] = s_Entry
 		end
-		s_Entry.Total = s_Entry.Total + (SharedUtils:GetTimeNS() - p_Start) / 1000000
+		local s_Ms = (SharedUtils:GetTimeNS() - p_Start) / 1000000
+		s_Entry.Total = s_Entry.Total + s_Ms
+		s_Entry.Max = math.max(s_Entry.Max, s_Ms)
 		s_Entry.Count = s_Entry.Count + 1
 		-- Only exact while no GC step runs inside, otherwise freed memory is subtracted.
 		s_Entry.AllocKb = s_Entry.AllocKb + math.max(0, collectgarbage("count") - p_Mem)
