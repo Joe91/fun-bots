@@ -10,6 +10,9 @@ import json
 
 from loguru import logger
 
+# The one row of a <map>_navzones table: the whole mesh (NavZones.lua).
+NAVMESH_ROW = "@mesh"
+
 
 def set_permission_config_files(cursor: sqlite3.Cursor) -> None:
     """Write permission_and_config files out of the database.
@@ -227,3 +230,64 @@ def set_traces_db(cursor: sqlite3.Cursor) -> None:
                 + " (pathIndex, pointIndex, transX, transY, transZ, inputVar, data) VALUES(?,?,?,?,?,?,?)",
                 all_node_data,
             )
+
+
+def set_navzones_db(cursor: sqlite3.Cursor) -> None:
+    """Write the walking meshes into the database, out of the navzones folder.
+
+    Each navzones/<map>.json becomes the table <map>_navzones with one row: name "@mesh", data the whole mesh as JSON
+    (points, edges, junctions, the vehicle-mesh and the zones on it), the format NavZones.lua reads. Made by the
+    debug-server (tools/debug-server, census/navzones.py).
+
+    Args:
+        - cursor - The object that'll interact with the database
+
+    Returns:
+        None
+    """
+    source_folder = "navzones"
+    if not os.path.isdir(source_folder):
+        return
+
+    for file_name in sorted(os.listdir(source_folder)):
+        if not file_name.endswith(".json"):
+            continue
+        table_name = file_name[: -len(".json")] + "_navzones"
+        logger.info("Import " + table_name)
+        with open(source_folder + "/" + file_name, "r", encoding="utf-8") as in_file:
+            data = json.load(in_file)
+        cursor.execute("DROP TABLE IF EXISTS " + table_name)
+        cursor.execute("CREATE TABLE " + table_name + " (name TEXT, data TEXT)")
+        cursor.execute(
+            "INSERT INTO " + table_name + " (name, data) VALUES (?, ?)",
+            (NAVMESH_ROW, json.dumps(data, separators=(",", ":"))),
+        )
+
+
+def set_navzones_files(cursor: sqlite3.Cursor) -> None:
+    """Write the walking meshes out of the database, into navzones/<map>.json.
+
+    Args:
+        - cursor - The object that'll interact with the database
+
+    Returns:
+        None
+    """
+    dest_folder = "navzones"
+    tables = cursor.execute(
+        "SELECT name FROM sqlite_master WHERE type='table' AND name LIKE '%\\_navzones' ESCAPE '\\'"
+    ).fetchall()
+    if tables and not os.path.isdir(dest_folder):
+        os.makedirs(dest_folder)
+
+    for (table_name,) in tables:
+        rows = cursor.execute(
+            "SELECT data FROM " + table_name + " WHERE name = ?", (NAVMESH_ROW,)
+        ).fetchall()
+        if not rows:
+            continue
+        logger.info("Export " + table_name)
+        map_name = table_name[: -len("_navzones")]
+        data = json.loads(rows[0][0])
+        with open(dest_folder + "/" + map_name + ".json", "w", encoding="utf-8") as out_file:
+            json.dump(data, out_file, separators=(",", ":"))

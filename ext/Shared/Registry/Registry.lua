@@ -53,7 +53,7 @@ Registry = {
 		-- Patch version.
 		VERSION_PATCH = 0,
 		-- Additional label for pre-releases and build metadata.
-		VERSION_LABEL = "dev3",
+		VERSION_LABEL = "dev4",
 		-- Current version type of this build.
 		VERSION_TYPE = VersionType.DevBuild,
 		-- The Version used for the Update-Check.
@@ -102,22 +102,44 @@ Registry = {
 	},
 	GAME_DIRECTOR = {
 		UPDATE_OBJECTIVES_CYCLE = 1.5,
+		-- A bot is only sent to a vehicle this close (metres): with the navigation paths it would walk to any.
+		MAX_VEHICLE_OBJECTIVE_DISTANCE = 100.0,
 		-- Time after a MCO is considered destroyed.
 		MCOMS_CHECK_CYCLE = 26.5,
-		-- Teleport bots without valid paths (no active objective, base-path alone, destroyed MCOM) after this amount
-		-- of time onto a path of their objective, if they don't fight (and TeleportIfStuck is on).
-		TELEPORT_ON_INVALID_PATH_TIME = 20,
-		-- Off a base-path, the time above only counts while a bot doesn't get this many m closer to its objective.
-		INVALID_PATH_MIN_PROGRESS = 5.0,
-		-- Kill Bots without valid paths after this amount of time
-		KILL_ON_INVALID_PATH_TIME = 50,
+		-- Off the mesh, a bot that doesn't get this many metres closer to the end of its navigation path (or to its
+		-- objective) for OFF_MESH_TELEPORT_TIME seconds is teleported onto the mesh, if it is up to
+		-- OFF_MESH_TELEPORT_RANGE metres away (and TeleportIfStuck is on), after OFF_MESH_KILL_TIME seconds killed.
+		-- Not while it fights, waits or does an action.
+		OFF_MESH_MIN_PROGRESS = 5.0,
+		OFF_MESH_TELEPORT_TIME = 20,
+		OFF_MESH_TELEPORT_RANGE = 30.0,
+		OFF_MESH_KILL_TIME = 50,
+		-- The last resort: a bot on foot that doesn't get OBJECTIVE_PROGRESS_MIN metres closer to its objective for
+		-- OBJECTIVE_PROGRESS_TIME seconds respawns (not within OBJECTIVE_PROGRESS_NEAR metres of it, not while it fights).
+		OBJECTIVE_PROGRESS_MIN = 5.0,
+		OBJECTIVE_PROGRESS_TIME = 90,
+		OBJECTIVE_PROGRESS_NEAR = 30.0,
+		-- On foot to a vehicle: not within VEHICLE_OBJECTIVE_NEAR metres for VEHICLE_OBJECTIVE_TIME seconds, the bot gives
+		-- it up and isn't sent to it again for VEHICLE_UNREACHABLE_TIME seconds (a boat it can't get to). After getting out
+		-- of a vehicle it isn't sent back to it for LEFT_VEHICLE_TIME seconds.
+		VEHICLE_OBJECTIVE_NEAR = 10.0,
+		VEHICLE_OBJECTIVE_TIME = 30,
+		VEHICLE_UNREACHABLE_TIME = 300,
+		LEFT_VEHICLE_TIME = 60,
+		-- A vehicle a bot on foot was sent to and that it gave up (no way there, no seat): not again for this long.
+		VEHICLE_RETRY_TIME = 20,
+		-- A ground vehicle whose driver doesn't get VEHICLE_PROGRESS_MIN metres away for VEHICLE_PROGRESS_TIME seconds
+		-- (not waiting for passengers, not at its objective): all bots get out.
+		VEHICLE_PROGRESS_MIN = 5.0,
+		VEHICLE_PROGRESS_TIME = 30,
 		-- Increments of nodes to search best patch with.
 		NODE_SEARCH_INCREMENTS = 10,
 		--- Weight for attacking objectives
 		WEIGHT_ATTACK_OBJECTIVE = 4.0,
 		--- Weight for defending objectives
 		WEIGHT_DEFEND_OBJECTIVE = 1.0,
-		--- PathSwitch on same prio
+		--- Levels without a mesh: probability (%) that a bot switches to another path at a link. Vehicles: between
+		--- paths of the same priority.
 		PROBABILITY_SWITCH_SAME_PRIO = 20,
 		--- Allow bots to spawn on the last tickets in conquest.
 		DONT_SPAWN_BOTS_ON_LAST_TICKETS = true,
@@ -227,10 +249,16 @@ Registry = {
 		ROCKET_RELOAD_COOLDOWN = 13.0,
 		-- The probability to use the rifle to attack a chopper.
 		PROBABILITY_ATTACK_CHOPPER_WITH_RIFLE = 25,
-		-- If the game mode is Rush or Conquest, change direction if the bot is stuck on non-connecting paths.
-		PROBABILITY_CHANGE_DIRECTION_IF_STUCK = 50,
 		-- Hard reroutes to the closest path a stuck bot tries before it is killed.
 		MAX_STUCK_REROUTES = 2,
+		-- Drivers of land vehicles also drive the vehicle-networks of the capture points (experimental).
+		USE_VEHICLE_ZONE_NETWORKS = true,
+		-- On the mesh: turn towards the next point before reaching one, as far as there is room around it (smoother
+		-- ways instead of walking from point to point and turning there).
+		ZONE_SMOOTHING = true,
+		-- Share by which a navigation path may seem longer to a bot (random per bot and life): the bots spread over
+		-- the routes to their objective instead of all taking the shortest one. 0: all take the shortest.
+		NAV_ROUTE_SPREAD = 0.25,
 		-- Seconds a bot tries to free a stuck ground-vehicle before they exit it and continue on foot.
 		VEHICLE_STUCK_EXIT_TIME = 30.0,
 		-- Trace delta, a bot uses when they are off a trace path to find his way back to the best path.
@@ -283,9 +311,8 @@ Registry = {
 		-- multiples of FIRST_SHOT_TARGET_ANGLE (180° → +0.24 s, 20° → +0.12 s).
 		FIRST_SHOT_DELAY_PER_BIT = 0.04,
 		FIRST_SHOT_TARGET_ANGLE = 0.05,
+		-- Probability (%) that a bot with a beacon to place takes the way to a beacon at a link to it.
 		PROBABILITY_SWITCH_TO_BEACON_PATH = 80,
-		PROBABILITY_SWITCH_TO_EXPLORE_PATH = 60,
-		PROBABILITY_KEEP_KIT_IF_HAS_BEACON = 80,
 		-- number of nodes in every direction to scan for best way back
 		NUMBER_NODES_TO_SCAN_AFTER_ATTACK = 20,
 		-- Delay on destroying several bots
@@ -293,7 +320,14 @@ Registry = {
 		-- Distance to closest objective on which passengers should exit vehicles
 		PASSENGER_EXIT_DISTANCE = 50,
 		-- Probability to stop in while shooting
-		PROBABILITY_STOP_TO_SHOOT = 35
+		PROBABILITY_STOP_TO_SHOOT = 35,
+		-- Rush: probability (%) that an attacker keeps going to its MCOM while shooting, instead of fighting where they
+		-- are. Else the respawned defenders are back before the attackers reach the MCOM.
+		RUSH_PUSH_PROBABILITY = 50,
+		-- Rush: closer than this (metres) to its MCOM an attacker always keeps going while shooting, unless the enemy
+		-- is closer than RUSH_PUSH_MIN_ENEMY_DISTANCE.
+		RUSH_PUSH_OBJECTIVE_DISTANCE = 40.0,
+		RUSH_PUSH_MIN_ENEMY_DISTANCE = 10.0,
 	},
 	-- Bot team balancing (only in keep_playercount - spawn-mode)
 	BOT_TEAM_BALANCING = {
@@ -315,22 +349,12 @@ Registry = {
 		DELAY_DIRECT_SPAWN = 6.0,
 		-- Probability of a bot spawning on a member of the same squad.
 		PROBABILITY_SQUADMATE_SPAWN = 20,
-		-- Probability of a bot spawning in the vehicle of a bot of the same squad.
-		PROBABILITY_SQUADMATE_VEHICLE_SPAWN = 70,
-		-- Probability of a bot spawning on a random teammate
-		PROBABILITY_TEAMMATE_SPAWN = 1,
-		-- Probability of a bot spawning in a random teammate vehicle
-		PROBABILITY_TEAMMATE_VEHICLE_SPAWN = 50,
-		-- Probability of a bot spawning in the vehicle of a player of the same squad.
-		PROBABILITY_SQUADMATE_PLAYER_VEHICLE_SPAWN = 50,
-		-- Probability of a bot spawning on the closest spawn point.
-		PROBABILITY_CLOSEST_SPAWN = 40,
-		-- Probability of a bot spawning on an attacked spawn point.
-		PROBABILITY_ATTACKED_SPAWN = 60,
-		-- Probability of a bot spawning on their deployment base.
-		PROBABILITY_BASE_SPAWN = 5,
-		-- Probability of a bot spawning on their deployment base.
-		PROBABILITY_BASE_VEHICLE_SPAWN = 30,
+		-- Conquest: probability (%) that a spawning bot takes a free vehicle of its team: it spawns at the capture
+		-- point (or HQ) next to it and goes there. Else at the capture point closest to the front.
+		PROBABILITY_SPAWN_FOR_VEHICLE = 50,
+		-- Rush: the defenders (always Team2) get this share of the bots of their team (balanced_teams), e.g. to test
+		-- the attack. 1.0 = as many as the attackers.
+		RUSH_DEFENDER_FACTOR = 0.85,
 	},
 	-- Debug
 	DEBUG = {

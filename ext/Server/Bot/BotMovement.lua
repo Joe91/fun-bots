@@ -6,6 +6,9 @@ local m_Utilities = require('__shared/Utilities')
 local m_PathSwitcher = require('PathSwitcher')
 ---@type NodeCollection
 local m_NodeCollection = require('NodeCollection')
+---@type DebugBridge
+local m_DebugBridge = require('Debug/DebugBridge')
+local m_NavRoutes = require('NavRoutes')
 
 
 -- >>> SMART PATH OFFSET
@@ -30,6 +33,27 @@ local OBSTACLE_START_GRACE = 1.2       -- Seconds without standstill-check when 
 local OBSTACLE_NO_PROGRESS_TIME = 5.0  -- Seconds without getting closer to the target before the obstacle-sequence starts.
 local OBSTACLE_MIN_PROGRESS = 0.5      -- Meters the bot has to get closer to count as progress.
 local OBSTACLE_RESOLVED_PROGRESS = 1.0 -- Meters closer to the target than at the start of the sequence: obstacle overcome.
+local OBSTACLE_TELEPORT_RANGE = 10.0   -- Meters to the target at most for a teleport onto it.
+local ZONE_SKIP_RANGE = 2.0            -- On the mesh a target counts as passed only this close (UpdateTargetMovement).
+local MESH_RETRY_TIME = 2.0            -- Seconds between tries onto the mesh in sight, off it and off a navigation path.
+local MESH_LEFT_TIME = 15.0            -- Not within this many seconds after the bot left the mesh (on purpose).
+
+-- Breaching: a wall of the level right in front of a bot that doesn't get along, on the way to its target (boards over
+-- the doors of a train, a wooden fence: the paths were recorded after they were shot away, the census saw them whole).
+-- The bot shoots at it before it tries anything else. Only materials bullets go through (MfPenetrable: wood, thin
+-- walls, glass): not concrete or rock, nothing happens there.
+local BREACH_RANGE = 3.0          -- Metres towards the target that are checked.
+local BREACH_HEIGHTS = { 0.9, 1.5 } -- Heights of the rays: both blocked, a wall (not a step).
+local BREACH_TIME = 2.5           -- Seconds of shooting at it.
+local BREACH_MAX = 2              -- Breaches on the way to one target...
+local BREACH_SPOT_MAX = 3         -- ...and at one spot of a wall by all bots: it doesn't break (a fence of a
+local BREACH_SPOT_SIZE = 1.0      -- GroupPhysicsEntity, MP_013), nobody shoots at it again. Metres of a spot.
+
+-- Breaches per spot of a wall in this level, by all bots (_TryBreach).
+local s_BreachSpots = {}
+local s_BreachLevel = nil
+local BREACH_AIM = 0.15           -- Radians off the wall at most: then it fires.
+local BREACH_EYE = 1.5            -- Metres above the feet the bot shoots from.
 
 ---@param p_Node Waypoint
 ---@param p_Step integer
@@ -41,7 +65,7 @@ local function _GetPathNeighbour(p_Node, p_Step)
 
 	if s_Index < 1 or s_Index > s_Count then
 		-- Only looping paths continue at the other end (see Bot:_GetWayIndex).
-		if s_Count == 0 or s_Nodes[1].OptValue == 0xFF then
+		if s_Count == 0 or not m_NodeCollection:Loops(p_Node.PathIndex) then
 			return nil
 		end
 		s_Index = ((s_Index - 1) % s_Count) + 1
@@ -246,6 +270,19 @@ function Bot:_ExecuteActionIfNeeded(p_Point, p_DeltaTime)
 						self._LastActionId = p_Point.Index
 						return true
 					end
+					if m_DebugBridge.m_Enabled then
+						m_DebugBridge:Event('vehicle_enter_failed', {
+							bot = self.m_Id,
+							code = s_RetCode,
+							path = p_Point.PathIndex,
+							pos = DebugBridge.Vec(self.m_Player.soldier.worldTransform.trans),
+						})
+					end
+					-- No vehicle (anymore) or no seat: something else to do, else the bot walks the way to the vehicle
+					-- back and forth (the action-node counts as done).
+					if g_GameDirector:IsVehicleEnterPath(self._Objective) then
+						self:SetObjective('')
+					end
 				end
 				self:_ResetActionFlag(BotActionFlags.OtherActionActive)
 			elseif p_Point.Data.Action.type == "beacon"
@@ -283,51 +320,6 @@ function Bot:_ExecuteActionIfNeeded(p_Point, p_DeltaTime)
 		if self._ActiveAction ~= BotActionFlags.OtherActionActive then -- action finished
 			self._LastActionId = p_Point.Index                   -- remember last action node to continue from here
 		end
-	end
-
-	return false
-end
-
----@return boolean true if defending took over the movement this tick
-function Bot:_HandleDefendingIfNeeded(p_DeltaTime)
-	if self._ObjectiveMode == BotObjectiveModes.Defend and g_GameDirector:IsAtTargetObjective(self._PathIndex, self._Objective) then
-		self._DefendTimer = self._DefendTimer + p_DeltaTime
-
-		local s_TargetTime = self.m_Id % 5 + 4 -- min 2 sec on path, then 2 sec movement to side
-		if self._DefendTimer >= s_TargetTime then
-			-- look around
-			self.m_ActiveSpeedValue = BotMoveSpeeds.NoMovement
-
-			local s_DefendMode = self.m_Id % 3
-			if s_DefendMode == 0 then
-				if self.m_Player.soldier.pose ~= CharacterPoseType.CharacterPoseType_Crouch then
-					self.m_Player.soldier:SetPose(CharacterPoseType.CharacterPoseType_Crouch, true, true)
-				end
-			elseif s_DefendMode == 1 then
-				if self.m_Player.soldier.pose ~= CharacterPoseType.CharacterPoseType_Stand then
-					self.m_Player.soldier:SetPose(CharacterPoseType.CharacterPoseType_Stand, true, true)
-				end
-			else
-				if self.m_Player.soldier.pose ~= CharacterPoseType.CharacterPoseType_Prone then
-					self.m_Player.soldier:SetPose(CharacterPoseType.CharacterPoseType_Prone, true, true)
-				end
-			end
-
-			self:LookAround(p_DeltaTime)
-
-			-- don't do anything else
-			return true
-		elseif self._DefendTimer >= (s_TargetTime - 2) then
-			self.m_ActiveSpeedValue = BotMoveSpeeds.Backwards
-			local s_StrafeValue = 1.0
-			if self.m_Id % 2 == 0 then
-				s_StrafeValue = -1.0
-			end
-			self:_SetInput(EntryInputActionEnum.EIAStrafe, s_StrafeValue)
-			return true
-		end
-	else
-		self._DefendTimer = 0.0
 	end
 
 	return false
@@ -447,6 +439,119 @@ function Bot:_ResetObstacleSequence()
 	self:_ResetActionFlag(BotActionFlags.MeleeActive)
 end
 
+---The path the bot walks is the way to its objective (a vehicle, a beacon): it stays on it.
+---@return boolean
+function Bot:_PathLeadsToObjective()
+	if self._Objective == '' then
+		return false
+	end
+	local s_First = m_NodeCollection:GetFirst(self._PathIndex)
+	local s_Objectives = type(s_First) == 'table' and s_First.Data and s_First.Data.Objectives or {}
+	return table.has(s_Objectives, self._Objective)
+end
+
+---Starts a breach if something that can be shot away blocks the way towards the target, right in front of the bot.
+---At most BREACH_MAX times per target (p_Key: the waypoint, the step on the mesh), and BREACH_SPOT_MAX times at one spot
+---by all bots (the way isn't open after that: the bots give up the way instead, BotZoneMovement).
+---@param p_Target Vec3
+---@param p_Key any
+---@return boolean true if the bot breaches now
+function Bot:_TryBreach(p_Target, p_Key)
+	local s_Soldier = self.m_Player.soldier
+	-- Not while it fights (pushing on to the MCOM while shooting).
+	if s_Soldier == nil or self.m_KnifeMode or self.m_Primary == nil or self._ShootPlayer ~= nil then
+		return false
+	end
+	if self._BreachKey ~= p_Key then
+		self._BreachKey = p_Key
+		self._BreachCount = 0
+	end
+	if self._BreachCount >= BREACH_MAX then
+		return false
+	end
+	local s_From = s_Soldier.worldTransform.trans
+	local s_DeltaX = p_Target.x - s_From.x
+	local s_DeltaZ = p_Target.z - s_From.z
+	local s_Length = math.sqrt(s_DeltaX * s_DeltaX + s_DeltaZ * s_DeltaZ)
+	if s_Length < 0.5 then
+		return false
+	end
+	local s_Range = math.min(BREACH_RANGE, s_Length)
+	local s_Flags = RayCastFlags.DontCheckCharacter | RayCastFlags.DontCheckRagdoll | RayCastFlags.DontCheckWater
+	---@cast s_Flags RayCastFlags
+	---@type MaterialFlags|integer
+	local s_NoMaterialFlags = 0
+	local s_Aim = nil
+	for _, l_Height in ipairs(BREACH_HEIGHTS) do
+		local s_Start = Vec3(s_From.x, s_From.y + l_Height, s_From.z)
+		local s_End = Vec3(s_From.x + s_DeltaX / s_Length * s_Range, s_From.y + l_Height,
+			s_From.z + s_DeltaZ / s_Length * s_Range)
+		local s_Hit = RaycastManager:CollisionRaycast(s_Start, s_End, 1, s_NoMaterialFlags, s_Flags)[1]
+		if s_Hit == nil or s_Hit.material == nil or not s_Hit.material:Is('MaterialContainerPair')
+			or (MaterialContainerPair(s_Hit.material).flagsAndIndex & MaterialFlags.MfPenetrable) == 0 then
+			return false
+		end
+		s_Aim = s_Aim or s_Hit.position:Clone()
+	end
+	---@cast s_Aim -nil
+	local s_Level = SharedUtils:GetLevelName()
+	if s_BreachLevel ~= s_Level then
+		s_BreachLevel = s_Level
+		s_BreachSpots = {}
+	end
+	local s_Spot = math.floor(s_Aim.x / BREACH_SPOT_SIZE) .. ':' .. math.floor(s_Aim.y / BREACH_SPOT_SIZE) .. ':'
+		.. math.floor(s_Aim.z / BREACH_SPOT_SIZE)
+	if (s_BreachSpots[s_Spot] or 0) >= BREACH_SPOT_MAX then
+		return false
+	end
+	s_BreachSpots[s_Spot] = (s_BreachSpots[s_Spot] or 0) + 1
+	self._BreachCount = self._BreachCount + 1
+	self._Breach = { Position = s_Aim, Time = BREACH_TIME, Fire = false }
+	m_Logger:Write(self.m_Player.name .. ' breaches at ' .. tostring(s_Aim))
+	if m_DebugBridge.m_Enabled then
+		m_DebugBridge:Event('breach', { bot = self.m_Id, pos = DebugBridge.Vec(s_Aim) })
+	end
+	return true
+end
+
+---While breaching the bot stands, turns to the wall and shoots at it (the trigger pulled and released: also the
+---weapons that fire single shots).
+---@param p_DeltaTime number
+---@return boolean true while it breaches (it does nothing else)
+function Bot:_UpdateBreach(p_DeltaTime)
+	local s_Breach = self._Breach
+	local s_Soldier = self.m_Player.soldier
+	if s_Breach == nil or self._ShootPlayer ~= nil then
+		return false
+	end
+	s_Breach.Time = s_Breach.Time - p_DeltaTime
+	if s_Breach.Time <= 0.0 or s_Soldier == nil then
+		self._Breach = nil
+		self:_ResetObstacleSequence()
+		return false
+	end
+	self.m_ActiveSpeedValue = BotMoveSpeeds.NoMovement
+	self._TargetPoint = { Position = s_Breach.Position }
+	self._NextTargetPoint = nil
+	self._WeaponToUse = BotWeapons.Primary
+	local s_From = s_Soldier.worldTransform.trans
+	local s_DeltaX = s_Breach.Position.x - s_From.x
+	local s_DeltaZ = s_Breach.Position.z - s_From.z
+	self._TargetPitch = math.atan(s_Breach.Position.y - (s_From.y + BREACH_EYE),
+		math.max(0.3, math.sqrt(s_DeltaX * s_DeltaX + s_DeltaZ * s_DeltaZ)))
+	local s_Atan = math.atan(s_DeltaZ, s_DeltaX)
+	local s_Yaw = (s_Atan > math.pi / 2) and (s_Atan - math.pi / 2) or (s_Atan + 3 * math.pi / 2)
+	local s_Off = math.abs(self.m_Input.authoritativeAimingYaw - s_Yaw) % (2 * math.pi)
+	if s_Off > math.pi then
+		s_Off = 2 * math.pi - s_Off
+	end
+	if s_Off < BREACH_AIM then
+		s_Breach.Fire = not s_Breach.Fire
+		self:_SetInput(EntryInputActionEnum.EIAFire, s_Breach.Fire and 1 or 0)
+	end
+	return true
+end
+
 function Bot:_ObstacleHandling(p_Velocity, p_DistanceSquared, p_HeightDistance, p_DeltaTime, p_PlayerPos)
 	local s_SetTargetReached = false
 	local s_IncrementNodes = 0
@@ -469,6 +574,11 @@ function Bot:_ObstacleHandling(p_Velocity, p_DistanceSquared, p_HeightDistance, 
 
 	-- handling on standstill
 	if self._ObstacleSequenceTimer ~= 0 or self:_DetectObstacle(p_Velocity, p_DeltaTime, p_PlayerPos) then
+		-- A wall that can be shot away: that first.
+		if self._ObstacleSequenceTimer == 0
+			and self:_TryBreach(self._TargetPoint.Position, self._TargetPoint.Original or self._TargetPoint) then
+			return { s_SetTargetReached, s_IncrementNodes }
+		end
 		-- Try to get around obstacle.
 		self.m_ActiveSpeedValue = BotMoveSpeeds.Normal                  -- Always try to stand.
 		if p_HeightDistance > 1.5 then                                  -- no change to get there, so skip the obstacle-stuff
@@ -545,7 +655,10 @@ function Bot:_ObstacleHandling(p_Velocity, p_DistanceSquared, p_HeightDistance, 
 			self:_ResetObstacleSequence()
 			s_SetTargetReached = true
 
-			if Config.TeleportIfStuck and m_Utilities:CheckProbability(Registry.BOT.PROBABILITY_TELEPORT_IF_STUCK) then
+			-- Only onto a waypoint close by: else the bot was sent straight to a path far away and would cross water or
+			-- walls in one go.
+			if Config.TeleportIfStuck and m_Utilities:CheckProbability(Registry.BOT.PROBABILITY_TELEPORT_IF_STUCK)
+				and (self._TargetPoint.Original or self._TargetPoint).Position:Distance(p_PlayerPos) <= OBSTACLE_TELEPORT_RANGE then
 				-- Teleport onto the path itself, the offset-point might be inside a wall.
 				local s_TargetPosition = (self._TargetPoint.Original or self._TargetPoint).Position
 				local s_NextPosition = self._NextTargetPoint and (self._NextTargetPoint.Original or self._NextTargetPoint).Position
@@ -560,14 +673,6 @@ function Bot:_ObstacleHandling(p_Velocity, p_DistanceSquared, p_HeightDistance, 
 				s_IncrementNodes = MathUtils:GetRandomInt(0, 4) -- Go up to 4 points further.
 				if s_IncrementNodes == 0 then
 					s_IncrementNodes = -2           -- Go backwards and try again.
-				end
-
-				if (Globals.IsConquest or Globals.IsRush) then
-					if g_GameDirector:IsOnObjectivePath(self._PathIndex)
-						and m_Utilities:CheckProbability(Registry.BOT.PROBABILITY_CHANGE_DIRECTION_IF_STUCK)
-					then
-						self._InvertPathDirection = not self._InvertPathDirection
-					end
 				end
 			end
 		end
@@ -661,19 +766,17 @@ function Bot:_CheckForAction(p_Point)
 end
 
 function Bot:_CheckAndDoPathSwitch(p_Point)
-	-- CHECK FOR PATH-SWITCHES.
-	local s_NewWaypoint = nil
-	local s_SwitchPath = false
-	s_SwitchPath, s_NewWaypoint = m_PathSwitcher:GetNewPath(self, self.m_Id, p_Point, self._Objective, false,
-		self.m_Player.teamId, nil)
+	-- CHECK FOR PATH-SWITCHES (PathSwitcher: on a navigation path only onto the way to the objective or a beacon).
+	local s_SwitchPath, s_NewWaypoint, s_Direction = m_PathSwitcher:GetNewPath(self, self.m_Id, p_Point, self._Objective,
+		false, self.m_Player.teamId, nil)
 
 	if s_SwitchPath and not self._OnSwitch and s_NewWaypoint then
-		if self._Objective ~= '' then
-			-- 'Best' direction for objective on switch.
-			local s_Direction = m_NodeCollection:ObjectiveDirection(s_NewWaypoint, self._Objective, false)
-			if s_Direction then
-				self._InvertPathDirection = (s_Direction == 'Previous')
-			end
+		if s_Direction == nil and self._Objective ~= '' then
+			-- 'Best' direction for objective on switch (the route over the mesh, the action-node of its path).
+			s_Direction = m_NodeCollection:ObjectiveDirection(s_NewWaypoint, self._Objective, false)
+		end
+		if s_Direction ~= nil then
+			self._InvertPathDirection = (s_Direction == 'Previous')
 		else
 			-- Random path direction on switch.
 			self._InvertPathDirection = MathUtils:GetRandomInt(1, 2) == 1
@@ -693,35 +796,6 @@ function Bot:_CheckAndDoPathSwitch(p_Point)
 	end
 end
 
----Teleports the bot onto a node of another path and walks on there, heading for its objective (GameDirector, for bots
----on paths they can't leave).
----@param p_Node Waypoint
-function Bot:TeleportToPath(p_Node)
-	local s_Soldier = self.m_Player.soldier
-	if s_Soldier == nil then
-		return
-	end
-
-	local s_Transform = s_Soldier.worldTransform:Clone()
-	s_Transform.trans = p_Node.Position:Clone()
-	s_Soldier:SetTransform(s_Transform)
-
-	self._PathIndex = p_Node.PathIndex
-	self._CurrentWayPoint = p_Node.PointIndex
-	if self._Objective ~= '' then
-		local s_Direction = m_NodeCollection:ObjectiveDirection(p_Node, self._Objective, false)
-		if s_Direction then
-			self._InvertPathDirection = (s_Direction == 'Previous')
-		end
-	end
-
-	self:CenterPathOffset(4.0)
-	self._StuckTimer = 0.0
-	self._ObstacleRetryCounter = 0
-	self:_ResetObstacleSequence()
-	self._LastWayDistance = 1000.0
-end
-
 ---@param p_DeltaTime number
 function Bot:UpdateNormalMovement(p_DeltaTime)
 	-- Move along points.
@@ -729,6 +803,19 @@ function Bot:UpdateNormalMovement(p_DeltaTime)
 
 
 	if self._FollowTargetPlayer == nil then -- default movement
+		-- Shooting a wall in its way away (on the paths and on the mesh).
+		if self:_UpdateBreach(p_DeltaTime) then
+			return
+		end
+		-- In the zone of the objective the bot walks the network of the zone (BotZoneMovement).
+		if self.m_Zone ~= nil and self:UpdateZoneMovement(p_DeltaTime) then
+			return
+		end
+		-- Killed there (stuck for good).
+		if self.m_Player.soldier == nil then
+			return
+		end
+
 		local s_ActivePointIndex, s_InvertPathDirection = self:_GetWayIndex(0)
 		self._CurrentWayPoint = s_ActivePointIndex
 		self._InvertPathDirection = s_InvertPathDirection
@@ -788,11 +875,6 @@ function Bot:UpdateNormalMovement(p_DeltaTime)
 			s_Point, s_NextPoint = self:ApplyPathOffset(s_Point, s_NextPoint, s_NextToNextPoint, p_DeltaTime)
 		end
 
-		if self:_HandleDefendingIfNeeded(p_DeltaTime) then
-			-- Standing / moving aside on purpose. A running obstacle-sequence would stay frozen otherwise.
-			self:_StopObstacleSequence()
-			return -- DON'T DO ANYTHING ELSE.
-		end
 		if self:_ExecuteActionIfNeeded(s_Point, p_DeltaTime) then
 			-- In a vehicle now: the point belongs to the foot path. Reaching it would switch to a linked foot path
 			-- or overwrite the point on the vehicle path, and the vehicle can't leave a foot path any more.
@@ -846,18 +928,39 @@ function Bot:UpdateNormalMovement(p_DeltaTime)
 				self:_SetInput(EntryInputActionEnum.EIAToggleParachute, 1)
 			end
 
+			-- Out of a vehicle (bailed out, a passenger at the objective): onto the mesh once on the ground.
+			if self._MeshAfterExit and math.abs(s_VelocityFalling) < 1.0 then
+				self._MeshAfterExit = false
+				if self:TryEnterZoneAt(s_SoldierPos) then
+					return
+				end
+			end
+			-- Off the mesh where the routes don't guide it (no route to its objective, a path that isn't part of them):
+			-- onto the mesh as soon as it is in sight, else the bot walks that path to wherever it leads.
+			self._MeshRetryTimer = self._MeshRetryTimer + p_DeltaTime
+			if self._MeshRetryTimer >= MESH_RETRY_TIME then
+				self._MeshRetryTimer = 0.0
+				if self.m_Zone == nil and math.abs(s_VelocityFalling) < 1.0 and not m_NavRoutes:Guides(self._PathIndex, self._Objective)
+					and SharedUtils:GetTime() - (self.m_LeftMeshTime or -math.huge) > MESH_LEFT_TIME
+					and not self:_PathLeadsToObjective() and self:TryEnterZoneAt(s_SoldierPos) then
+					return
+				end
+			end
+
 			local s_DifferenceY = s_Point.Position.z - s_SoldierPos.z
 			local s_DifferenceX = s_Point.Position.x - s_SoldierPos.x
 			local s_DistanceFromTargetSquared = s_DifferenceX ^ 2 + s_DifferenceY ^ 2
 			local s_HeightDistance = math.abs(s_Point.Position.y - s_SoldierPos.y)
 
-			-- Hard reroute to the closest path when stuck for long (skipping nodes did not help).
-			-- (See also Bot:TeleportToPath for bots on paths they can't leave.)
-			-- Only a limited number of times: after that the stuck timer keeps running,
+			-- Hard reroute when stuck for long (skipping nodes did not help): onto the mesh close by, else to the closest
+			-- path. Only a limited number of times: after that the stuck timer keeps running,
 			-- so _ObstacleHandling kills the bot at 15 s.
 			if self._StuckTimer > 6.0 and self._StuckRerouteCount < Registry.BOT.MAX_STUCK_REROUTES then
 				if s_Soldier ~= nil then
-					local s_Node = g_GameDirector:FindClosestPath(s_SoldierPos, false, true, nil)
+					local s_Node = nil
+					if not self:TryEnterZoneAt(s_SoldierPos) then
+						s_Node = g_GameDirector:FindClosestPath(s_SoldierPos, false, true, nil)
+					end
 					if s_Node ~= nil then
 						self._PathIndex = s_Node.PathIndex
 						self._CurrentWayPoint = s_Node.PointIndex
@@ -925,6 +1028,18 @@ function Bot:UpdateNormalMovement(p_DeltaTime)
 						if s_Point.Index ~= self._LastActionId and self:_CheckForAction(s_Point) then
 							self._CurrentWayPoint = s_Point.PointIndex
 							return -- DON'T DO ANYTHING ELSE ANY MORE.
+						end
+
+						if self:_CheckForZoneEntry(s_Point) then
+							-- On the mesh now; or switched over a link (the waypoint of the other path is set then).
+							if self.m_Zone ~= nil then
+								self._CurrentWayPoint = s_Point.PointIndex
+							else
+								self._ObstacleRetryCounter = 0
+								self:_ResetObstacleSequence()
+								self._LastWayDistance = 1000.0
+							end
+							return
 						end
 
 						self:_CheckAndDoPathSwitch(s_Point)
@@ -1248,6 +1363,75 @@ function Bot:UpdateShootMovement(p_DeltaTime)
 	end
 end
 
+---Rush: whether the bot keeps going to its MCOM while shooting: by chance (decided now and then in StateAttacking),
+---and always close to the MCOM unless the enemy is close as well. Attackers to arm it, defenders only while it is armed
+---(to disarm it, else they fight where they are).
+---@return boolean
+function Bot:ShouldPushWhileShooting()
+	if not Globals.IsRush or self.m_KnifeMode or self.m_Player.soldier == nil
+		or self._Objective:lower():sub(1, 4) ~= 'mcom' then
+		return false
+	end
+	if self.m_Player.teamId ~= TeamId.Team1 and (self.m_Player.teamId ~= TeamId.Team2
+		or not g_GameDirector:IsMcomArmed(g_GameDirector:_GetObjectiveFromSubObj(self._Objective) or self._Objective)) then
+		return false
+	end
+	local s_Weapon = self.m_ActiveWeapon
+	if s_Weapon == nil or s_Weapon.type == WeaponTypes.Sniper or s_Weapon.type == WeaponTypes.MissileAir or
+		s_Weapon.type == WeaponTypes.MissileLand then
+		return false
+	end
+	if self._PushWhileShooting then
+		return true
+	end
+	return self._DistanceToPlayer > Registry.BOT.RUSH_PUSH_MIN_ENEMY_DISTANCE and
+		g_GameDirector:_GetDistanceFromObjective(self._Objective, self.m_Player.soldier.worldTransform.trans) <
+		Registry.BOT.RUSH_PUSH_OBJECTIVE_DISTANCE
+end
+
+---While shooting: on along the path or the mesh (as Bot:UpdateNormalMovement), aiming at the enemy. Walks towards the
+---next target with throttle and strafe, relative to where the bot aims.
+---@param p_DeltaTime number
+function Bot:UpdatePushMovement(p_DeltaTime)
+	-- The bot stays on its way: no way back to it after the fight (only after shooting without pushing).
+	if self._Pushing then
+		self._ShootWayPoints = {}
+	end
+	-- The normal movement turns the bot to the target (looking around in a zone, obstacles): it aims at the enemy.
+	local s_Yaw = self._TargetYaw
+	local s_Pitch = self._TargetPitch
+	self:UpdateNormalMovement(p_DeltaTime)
+	self._TargetYaw = s_Yaw
+	self._TargetPitch = s_Pitch
+
+	local s_Soldier = self.m_Player.soldier
+	local s_Target = self._TargetPoint
+	self:_SetInput(EntryInputActionEnum.EIASprint, 0)
+	if s_Soldier == nil or s_Target == nil or self.m_ActiveSpeedValue == BotMoveSpeeds.NoMovement or
+		self._ActiveAction == BotActionFlags.OtherActionActive then
+		self:_SetInput(EntryInputActionEnum.EIAThrottle, 0)
+		self:_SetInput(EntryInputActionEnum.EIAStrafe, 0)
+		return
+	end
+
+	local s_Pose = CharacterPoseType.CharacterPoseType_Stand
+	if self.m_ActiveSpeedValue == BotMoveSpeeds.SlowCrouch or self.m_ActiveSpeedValue == BotMoveSpeeds.VerySlowProne then
+		s_Pose = CharacterPoseType.CharacterPoseType_Crouch
+	end
+	if s_Soldier.pose ~= s_Pose then
+		s_Soldier:SetPose(s_Pose, true, true)
+	end
+
+	-- Yaw grows clockwise (seen from above), strafe is positive to the right.
+	local s_Position = s_Soldier.worldTransform.trans
+	local s_Atan = math.atan(s_Target.Position.z - s_Position.z, s_Target.Position.x - s_Position.x)
+	local s_MoveYaw = (s_Atan > math.pi / 2) and (s_Atan - math.pi / 2) or (s_Atan + 3 * math.pi / 2)
+	local s_Delta = s_MoveYaw - self.m_Input.authoritativeAimingYaw
+	local s_Speed = Config.SpeedFactor * Config.SpeedFactorAttack
+	self:_SetInput(EntryInputActionEnum.EIAThrottle, math.cos(s_Delta) * s_Speed)
+	self:_SetInput(EntryInputActionEnum.EIAStrafe, math.sin(s_Delta) * s_Speed)
+end
+
 function Bot:UpdateSpeedOfMovement(p_InAttackMode)
 	-- Additional movement.
 	local s_Soldier = self.m_Player.soldier
@@ -1317,7 +1501,10 @@ function Bot:UpdateTargetMovement()
 
 			-- Skip the node, if it was passed: the distance grows and the bot is already beyond the node, seen in the
 			-- direction of the next node. The distance alone also grows while turning or strafing far from the node.
-			if not s_Skip and s_Distance > (self._LastWayDistance + 0.001) and self._ObstacleSequenceTimer == 0 then
+			-- On the mesh only close to the target: the points and corners lie far apart, the next one can be beside
+			-- the target (around a wall), "beyond" it is then everything on the side the bot comes from.
+			if not s_Skip and s_Distance > (self._LastWayDistance + 0.001) and self._ObstacleSequenceTimer == 0
+				and (self.m_Zone == nil or s_Distance < ZONE_SKIP_RANGE) then
 				local s_TargetPos = self._TargetPoint.Position
 				local s_NextPos = s_NextTargetPoint.Position
 				s_Skip = (s_SoldierPos.x - s_TargetPos.x) * (s_NextPos.x - s_TargetPos.x) +
@@ -1381,7 +1568,22 @@ function Bot:UpdateYaw()
 	local s_Input = self.m_Input
 	---@cast s_Input -nil
 	local s_CurrentYaw = s_Input.authoritativeAimingYaw
+	if s_CurrentYaw ~= s_CurrentYaw then
+		s_CurrentYaw = 0.0
+	end
 	local s_TargetYaw = self._TargetYaw
+	-- An aim that can't be solved (NaN, infinite: a target at the bot's own position, a projectile that can't reach it)
+	-- made the bot spin around its axis without end: every comparison with NaN fails. Keep looking where it looks.
+	if s_TargetYaw ~= s_TargetYaw or s_TargetYaw == math.huge or s_TargetYaw == -math.huge then
+		s_TargetYaw = s_CurrentYaw
+		self._TargetYaw = s_CurrentYaw
+	elseif s_TargetYaw >= 2 * math.pi or s_TargetYaw < 0.0 then
+		s_TargetYaw = s_TargetYaw % (2 * math.pi)
+	end
+	local s_TargetPitchRaw = self._TargetPitch
+	if s_TargetPitchRaw ~= s_TargetPitchRaw or s_TargetPitchRaw == math.huge or s_TargetPitchRaw == -math.huge then
+		self._TargetPitch = 0.0
+	end
 	local s_DeltaYaw = s_CurrentYaw - s_TargetYaw
 
 	if s_DeltaYaw > math.pi then

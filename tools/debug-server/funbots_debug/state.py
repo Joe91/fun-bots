@@ -93,7 +93,7 @@ class WorldState:
         self.players: dict[int, dict] = {}
         self.vehicles: dict[int, dict] = {}
         # {"flags": [...], "mcoms": [...], "stage": n}, see DebugSnapshots.CollectObjectives
-        self.objectives: dict[str, Any] = {"flags": [], "mcoms": [], "stage": 0}
+        self.objectives: dict[str, Any] = {"flags": [], "mcoms": [], "vehicles": [], "stage": 0}
         self.trails: dict[int, deque] = {}
         self.extras: dict[str, Any] = {}
         # path-index -> {"points": [[x, y, z]], "inputs": [inputVar], "data": {"<point>": {...}}, "objectives": [...],
@@ -144,7 +144,7 @@ class WorldState:
         if "objectives" in frame:
             objectives = as_dict(frame["objectives"])
             self.objectives = {"flags": as_list(objectives.get("flags")), "mcoms": as_list(objectives.get("mcoms")),
-                               "stage": objectives.get("stage", 0)}
+                               "vehicles": as_list(objectives.get("vehicles")), "stage": objectives.get("stage", 0)}
 
         for key, value in frame.items():
             if key not in KNOWN_FRAME_KEYS:

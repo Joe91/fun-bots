@@ -1,11 +1,12 @@
 from tools.addons.gets import get_it_running, get_tables
-from tools.addons.sets import set_traces_files
+from tools.addons.sets import set_navzones_files, set_traces_files
 
 
 def export_traces() -> None:
 
     connection, cursor = get_tables()
     set_traces_files(cursor)
+    set_navzones_files(cursor)
     connection.close()
 
 

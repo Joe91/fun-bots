@@ -12,6 +12,10 @@ local m_Utilities = require('__shared/Utilities')
 
 local m_SpeedModeNames = { [0] = 'Wait', 'Prone', 'Crouch', 'Walk', 'Sprint' }
 
+-- The walking mesh is drawn from a grid of cells (meters, horizontally), and only rebuilt after the player moved that far.
+local NAV_ZONE_CELL = 16.0
+local NAV_ZONE_REBUILD_DISTANCE = 2.0
+
 function ClientNodeEditor:__init()
 	-- new Mode stuff
 	self.m_WayPoints = {}
@@ -26,6 +30,14 @@ function ClientNodeEditor:__init()
 	self.m_MinDistanceToPath = {}
 
 	self.m_ScanForNode = false
+
+	-- The walking mesh (server: NavZones): "@mesh" -> { Points, Edges, Junctions }, zone name -> { Name, Kind, Center, Size }.
+	self.m_NavZones = {}
+	-- What gets drawn of the mesh. Rebuilt by _UpdateNavZoneDraw when the player moved or something changed.
+	self.m_NavZoneSpheres = {}
+	self.m_NavZoneLines = {}
+	self.m_NavZoneTexts = {}
+	self.m_NavZoneDrawState = nil
 
 	-- Caching values for drawing performance.
 	self.m_PlayerPos = nil
@@ -88,6 +100,16 @@ function ClientNodeEditor:__init()
 	-- Shared color tables, so GetColor doesn't create new ones for every node.
 	self.m_TraceColor = { Node = self.m_Colors.White, Line = self.m_Colors.White }
 	self.m_NoPathColor = { Node = self.m_Colors.Red, Line = self.m_Colors.Red }
+	self.m_NavPathColor = { Node = Vec4(0.35, 0.8, 0.9, 0.35), Line = Vec4(0.35, 0.8, 0.9, 1) }
+	-- Walking networks: points in the zone, points around it, connections, junctions with the waypoints.
+	self.m_NavZoneColors = {
+		Inside = Vec4(0.3, 0.85, 0.45, 0.6),
+		Outside = Vec4(0.45, 0.6, 0.75, 0.5),
+		Edge = Vec4(0.3, 0.85, 0.45, 1),
+		EdgeOutside = Vec4(0.45, 0.6, 0.75, 1),
+		Junction = Vec4(1, 0.72, 0.25, 1),
+		Text = Vec4(0.3, 0.85, 0.45, 1),
+	}
 
 	self.m_EventsReady = false
 end
@@ -106,6 +128,8 @@ function ClientNodeEditor:OnRegisterEvents()
 	NetEvents:Subscribe('ClientNodeEditor:ClearCustomTrace', self, self._OnClearCustomTrace)
 	NetEvents:Subscribe('ClientNodeEditor:ClearTrace', self, self._OnClearTrace)
 	NetEvents:Subscribe('ClientNodeEditor:ClearAll', self, self._OnClearAll)
+	NetEvents:Subscribe('ClientNodeEditor:ClearNavZones', self, self._OnClearNavZones)
+	NetEvents:Subscribe('ClientNodeEditor:ReceiveNavZone', self, self._OnReceiveNavZone)
 
 	NetEvents:Subscribe('UI_CommoRose_Action_Select', self, self._onSelectNode)
 	NetEvents:Subscribe('UI_CommoRose_Action_Remove', self, self._onRemoveNode)
@@ -224,6 +248,101 @@ function ClientNodeEditor:_OnReceiveNodes(p_WayPoints)
 	end
 end
 
+function ClientNodeEditor:_OnClearNavZones()
+	self.m_NavZones = {}
+	self.m_NavZoneDrawState = nil
+end
+
+---@param p_X number
+---@param p_Z number
+---@return integer
+local function _NavZoneCellKey(p_X, p_Z)
+	return (math.floor(p_X / NAV_ZONE_CELL) + 32768) * 65536 + (math.floor(p_Z / NAV_ZONE_CELL) + 32768)
+end
+
+---@param p_Cells table<integer, integer[]>
+---@param p_X number
+---@param p_Z number
+---@param p_Index integer
+local function _AddToNavZoneCell(p_Cells, p_X, p_Z, p_Index)
+	local s_Key = _NavZoneCellKey(p_X, p_Z)
+	local s_Cell = p_Cells[s_Key]
+	if s_Cell == nil then
+		s_Cell = {}
+		p_Cells[s_Key] = s_Cell
+	end
+	s_Cell[#s_Cell + 1] = p_Index
+end
+
+---Calls p_Callback with every index in the cells within p_Range (horizontally) of the position.
+---@param p_Cells table<integer, integer[]>
+---@param p_X number
+---@param p_Z number
+---@param p_Range number
+---@param p_Callback fun(p_Index: integer)
+local function _ForEachInNavZoneCells(p_Cells, p_X, p_Z, p_Range, p_Callback)
+	local s_MinX = math.floor((p_X - p_Range) / NAV_ZONE_CELL)
+	local s_MaxX = math.floor((p_X + p_Range) / NAV_ZONE_CELL)
+	local s_MinZ = math.floor((p_Z - p_Range) / NAV_ZONE_CELL)
+	local s_MaxZ = math.floor((p_Z + p_Range) / NAV_ZONE_CELL)
+	for l_CellX = s_MinX, s_MaxX do
+		for l_CellZ = s_MinZ, s_MaxZ do
+			local s_Cell = p_Cells[(l_CellX + 32768) * 65536 + (l_CellZ + 32768)]
+			if s_Cell ~= nil then
+				for l_Index = 1, #s_Cell do
+					p_Callback(s_Cell[l_Index])
+				end
+			end
+		end
+	end
+end
+
+---Takes plain coordinates of the points and junctions (a field of a Vec3 is a call into the engine) and puts them into
+---cells, together with the connections of each point. So drawing only looks at the mesh around the player.
+function ClientNodeEditor:_OnReceiveNavZone(p_Zone)
+	if type(p_Zone) ~= 'table' or p_Zone.Name == nil then
+		return
+	end
+
+	if p_Zone.Points ~= nil then
+		local s_Points = p_Zone.Points
+		local s_PointCells = {}
+		for l_Index = 1, #s_Points do
+			local l_Point = s_Points[l_Index]
+			local s_Position = l_Point.Position
+			l_Point.X, l_Point.Y, l_Point.Z = s_Position.x, s_Position.y, s_Position.z
+			l_Point.IsInside = (l_Point.Flags or 0) & 1 ~= 0
+			_AddToNavZoneCell(s_PointCells, l_Point.X, l_Point.Z, l_Index)
+		end
+
+		local s_PointEdges = {}
+		local s_Edges = p_Zone.Edges or {}
+		for l_Index = 1, #s_Edges do
+			local l_Edge = s_Edges[l_Index]
+			s_PointEdges[l_Edge.From] = s_PointEdges[l_Edge.From] or {}
+			s_PointEdges[l_Edge.From][#s_PointEdges[l_Edge.From] + 1] = l_Index
+			s_PointEdges[l_Edge.To] = s_PointEdges[l_Edge.To] or {}
+			s_PointEdges[l_Edge.To][#s_PointEdges[l_Edge.To] + 1] = l_Index
+		end
+
+		local s_JunctionCells = {}
+		local s_Junctions = p_Zone.Junctions or {}
+		for l_Index = 1, #s_Junctions do
+			local l_Junction = s_Junctions[l_Index]
+			local s_Position = l_Junction.Position
+			l_Junction.X, l_Junction.Y, l_Junction.Z = s_Position.x, s_Position.y, s_Position.z
+			_AddToNavZoneCell(s_JunctionCells, l_Junction.X, l_Junction.Z, l_Index)
+		end
+
+		p_Zone.PointCells = s_PointCells
+		p_Zone.PointEdges = s_PointEdges
+		p_Zone.JunctionCells = s_JunctionCells
+	end
+
+	self.m_NavZones[p_Zone.Name] = p_Zone
+	self.m_NavZoneDrawState = nil
+end
+
 function ClientNodeEditor:_OnUpdateSelection(p_Data)
 	self.m_Selections = p_Data or {}
 	self.m_SelectionSet = {}
@@ -330,6 +449,12 @@ function ClientNodeEditor:GetColor(p_Node, p_IsTracePath)
 		return self.m_TraceColor
 	end
 
+	-- The paths of the routes (trimmed at the mesh) all have the same color.
+	local s_First = self.m_FirstNodeInPath[p_Node.PathIndex]
+	if s_First ~= nil and s_First.Data ~= nil and s_First.Data.Nav ~= nil then
+		return self.m_NavPathColor
+	end
+
 	if p_Node.PathIndex > 0 then
 		if self.m_Colors[p_Node.PathIndex] == nil then
 			local r, g, b = (math.random(20, 100) / 100), (math.random(20, 100) / 100), (math.random(20, 100) / 100)
@@ -349,10 +474,6 @@ function ClientNodeEditor:GetIsSelected(p_NodeId, p_IsTracePath)
 	return not p_IsTracePath and self.m_SelectionSet[p_NodeId] == true
 end
 
-function ClientNodeEditor:GetLinkNode(p_LinkID)
-	return self.m_WayPointsById[p_LinkID]
-end
-
 function ClientNodeEditor:OnUISettings(p_Data)
 	if p_Data == false then -- Client closed settings.
 		-- Saving the settings overwrites Config with the server values, so an open editor has to stay enabled.
@@ -364,6 +485,7 @@ end
 function ClientNodeEditor:OnSettingsChanged()
 	self.m_PathsToSkipForCycles = {}
 	self.m_MinDistanceToPath = {}
+	self.m_NavZoneDrawState = nil
 end
 
 function ClientNodeEditor:GetDistance(p_Position1, p_Position2)
@@ -660,6 +782,11 @@ function ClientNodeEditor:_onUnload()
 	self.m_FirstNodeInPath = {}
 	self.m_PathsToSkipForCycles = {}
 	self.m_MinDistanceToPath = {}
+	self.m_NavZones = {}
+	self.m_NavZoneSpheres = {}
+	self.m_NavZoneLines = {}
+	self.m_NavZoneTexts = {}
+	self.m_NavZoneDrawState = nil
 
 	self.m_NodesToDraw = {}
 	self.m_NodesToDraw_temp = {}
@@ -1084,6 +1211,8 @@ function ClientNodeEditor:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 			::continue::
 		end
 
+		self:_UpdateNavZoneDraw(s_WaypointRangeSq, s_LineRangeSq, s_TextRangeSq)
+
 		if s_LastUpdatedIndex >= s_MaxIndex then
 			m_ClientSpawnPointHelper:Update(self.m_PlayerPos, self.m_NodesToDraw_temp, self.m_LinesToDraw_temp)
 			self.m_LastUpdateIndex = 0
@@ -1129,6 +1258,128 @@ function ClientNodeEditor:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 	end
 end
 
+---The walking mesh close to the player: points (green in a zone), connections, junctions with the waypoints (orange),
+---and the names of the zones. Only rebuilt when the player moved NAV_ZONE_REBUILD_DISTANCE, the ranges or the mesh
+---changed; OnUIDrawHud draws the lists every frame.
+---@param p_PointRangeSq number
+---@param p_LineRangeSq number
+---@param p_TextRangeSq number
+function ClientNodeEditor:_UpdateNavZoneDraw(p_PointRangeSq, p_LineRangeSq, p_TextRangeSq)
+	local s_PlayerX, s_PlayerY, s_PlayerZ = self.m_PlayerPos.x, self.m_PlayerPos.y, self.m_PlayerPos.z
+	local s_State = self.m_NavZoneDrawState
+
+	if s_State ~= nil and s_State.PointRangeSq == p_PointRangeSq and s_State.LineRangeSq == p_LineRangeSq
+		and s_State.TextRangeSq == p_TextRangeSq then
+		local s_DiffX, s_DiffY, s_DiffZ = s_PlayerX - s_State.X, s_PlayerY - s_State.Y, s_PlayerZ - s_State.Z
+		if s_DiffX * s_DiffX + s_DiffY * s_DiffY + s_DiffZ * s_DiffZ < NAV_ZONE_REBUILD_DISTANCE * NAV_ZONE_REBUILD_DISTANCE then
+			return
+		end
+	end
+
+	self.m_NavZoneDrawState = {
+		X = s_PlayerX,
+		Y = s_PlayerY,
+		Z = s_PlayerZ,
+		PointRangeSq = p_PointRangeSq,
+		LineRangeSq = p_LineRangeSq,
+		TextRangeSq = p_TextRangeSq,
+	}
+
+	local s_Spheres = {}
+	local s_Lines = {}
+	local s_Texts = {}
+	local s_Colors = self.m_NavZoneColors
+	local function _DistanceSq(p_X, p_Y, p_Z)
+		local s_X, s_Y, s_Z = p_X - s_PlayerX, p_Y - s_PlayerY, p_Z - s_PlayerZ
+		return s_X * s_X + s_Y * s_Y + s_Z * s_Z
+	end
+	local function _AddLine(p_From, p_To, p_Color)
+		s_Lines[#s_Lines + 1] = { from = p_From, to = p_To, colorFrom = p_Color, colorTo = p_Color }
+	end
+
+	local s_Range = math.sqrt(math.max(p_PointRangeSq, p_LineRangeSq, 0))
+
+	for _, l_Zone in pairs(self.m_NavZones) do
+		local s_Points = l_Zone.Points
+
+		if s_Points ~= nil and l_Zone.PointCells ~= nil then
+			local s_Edges = l_Zone.Edges or {}
+			local s_PointEdges = l_Zone.PointEdges
+			local s_EdgesDone = {}
+
+			_ForEachInNavZoneCells(l_Zone.PointCells, s_PlayerX, s_PlayerZ, s_Range, function(p_Index)
+				local s_Point = s_Points[p_Index]
+				local s_DistanceSq = _DistanceSq(s_Point.X, s_Point.Y, s_Point.Z)
+
+				if s_DistanceSq <= p_PointRangeSq then
+					s_Spheres[#s_Spheres + 1] = {
+						pos = s_Point.Position,
+						radius = 0.12,
+						color = s_Point.IsInside and s_Colors.Inside or s_Colors.Outside,
+						renderLines = false,
+						smallSizeSegmentDecrease = true,
+					}
+				end
+
+				-- A connection is drawn when one of its points is in range.
+				if s_DistanceSq > p_LineRangeSq or s_PointEdges[p_Index] == nil then
+					return
+				end
+
+				local s_EdgeIndices = s_PointEdges[p_Index]
+				for l_Index = 1, #s_EdgeIndices do
+					local l_EdgeIndex = s_EdgeIndices[l_Index]
+
+					if not s_EdgesDone[l_EdgeIndex] then
+						s_EdgesDone[l_EdgeIndex] = true
+						local l_Edge = s_Edges[l_EdgeIndex]
+						local s_From = s_Points[l_Edge.From]
+						local s_To = s_Points[l_Edge.To]
+
+						if s_From ~= nil and s_To ~= nil then
+							local s_Color = (s_From.IsInside and s_To.IsInside) and s_Colors.Edge or s_Colors.EdgeOutside
+							local s_Last = s_From.Position
+							local s_Corners = l_Edge.Corners or {}
+							for l_Corner = 1, #s_Corners do
+								_AddLine(s_Last, s_Corners[l_Corner], s_Color)
+								s_Last = s_Corners[l_Corner]
+							end
+							_AddLine(s_Last, s_To.Position, s_Color)
+						end
+					end
+				end
+			end)
+
+			if p_LineRangeSq > 0 then
+				local s_Junctions = l_Zone.Junctions or {}
+				_ForEachInNavZoneCells(l_Zone.JunctionCells, s_PlayerX, s_PlayerZ, s_Range, function(p_Index)
+					local s_Junction = s_Junctions[p_Index]
+					local s_Point = s_Points[s_Junction.Point]
+
+					if s_Point ~= nil and _DistanceSq(s_Junction.X, s_Junction.Y, s_Junction.Z) <= p_LineRangeSq then
+						_AddLine(s_Junction.Position, s_Point.Position, s_Colors.Junction)
+					end
+				end)
+			end
+		end
+
+		local s_Center = l_Zone.Center
+		if s_Center ~= nil and _DistanceSq(s_Center.x, s_Center.y, s_Center.z) <= math.max(p_TextRangeSq, p_PointRangeSq) then
+			s_Texts[#s_Texts + 1] = {
+				pos = s_Center + Vec3.up * 2.0,
+				text = 'Zone ' .. tostring(l_Zone.Name) .. ' (' .. tostring(l_Zone.Kind) .. ', ' .. tostring(l_Zone.Size or 0)
+					.. ' points)',
+				color = s_Colors.Text,
+				scale = 1.2,
+			}
+		end
+	end
+
+	self.m_NavZoneSpheres = s_Spheres
+	self.m_NavZoneLines = s_Lines
+	self.m_NavZoneTexts = s_Texts
+end
+
 ---Debug text shown for selected nodes.
 ---@param p_Node table
 ---@return string
@@ -1153,6 +1404,10 @@ function ClientNodeEditor:_GetNodeInfoText(p_Node)
 	if s_FirstNode and s_FirstNode.Data then
 		s_Text = s_Text .. string.format('Path Objectives: %s\n', g_Utilities:dump(s_FirstNode.Data.Objectives, false))
 		s_Text = s_Text .. string.format('Vehicles: %s\n', g_Utilities:dump(s_FirstNode.Data.Vehicles, false))
+		local s_Nav = s_FirstNode.Data.Nav
+		if type(s_Nav) == 'table' then
+			s_Text = s_Text .. string.format('Navigation: %d m\n', math.floor(tonumber(s_Nav.Length) or 0))
+		end
 	end
 	s_Text = s_Text .. string.format('InputVar: %d\n', p_Node.InputVar)
 	s_Text = s_Text .. string.format('SpeedMode: %s (%d)\n', s_SpeedMode, s_SpeedModeValue)
@@ -1163,6 +1418,35 @@ function ClientNodeEditor:_GetNodeInfoText(p_Node)
 	return s_Text
 end
 
+---@param p_Spheres table[]
+local function _DrawSpheres(p_Spheres)
+	for l_Index = 1, #p_Spheres do
+		local l_Node = p_Spheres[l_Index]
+		DebugRenderer:DrawSphere(l_Node.pos, l_Node.radius, l_Node.color, l_Node.renderLines, l_Node.smallSizeSegmentDecrease)
+	end
+end
+
+---@param p_Lines table[]
+local function _DrawLines(p_Lines)
+	for l_Index = 1, #p_Lines do
+		local l_Line = p_Lines[l_Index]
+		DebugRenderer:DrawLine(l_Line.from, l_Line.to, l_Line.colorFrom, l_Line.colorTo)
+	end
+end
+
+---Texts at a position in the world.
+---@param p_Texts table[]
+local function _DrawPosTexts(p_Texts)
+	for l_Index = 1, #p_Texts do
+		local l_TextPos = p_Texts[l_Index]
+		local s_ScreenPos = ClientUtils:WorldToScreen(l_TextPos.pos)
+
+		if s_ScreenPos ~= nil then
+			DebugRenderer:DrawText2D(s_ScreenPos.x, s_ScreenPos.y, l_TextPos.text, l_TextPos.color, l_TextPos.scale)
+		end
+	end
+end
+
 ---VEXT Client UI:DrawHud Event
 function ClientNodeEditor:OnUIDrawHud()
 	-- Don't process waypoints if we're not supposed to see them.
@@ -1170,36 +1454,21 @@ function ClientNodeEditor:OnUIDrawHud()
 		return
 	end
 
-	for l_Index = 1, #self.m_NodesToDraw do
-		local l_Node = self.m_NodesToDraw[l_Index]
-		-- Draw spheres.
-		DebugRenderer:DrawSphere(l_Node.pos, l_Node.radius, l_Node.color, l_Node.renderLines, l_Node.smallSizeSegmentDecrease)
-	end
-
-	for l_Index = 1, #self.m_LinesToDraw do
-		local l_Line = self.m_LinesToDraw[l_Index]
-		-- Draw lines.
-		DebugRenderer:DrawLine(l_Line.from, l_Line.to, l_Line.colorFrom, l_Line.colorTo)
-	end
+	_DrawSpheres(self.m_NodesToDraw)
+	_DrawSpheres(self.m_NavZoneSpheres)
+	_DrawLines(self.m_LinesToDraw)
+	_DrawLines(self.m_NavZoneLines)
 
 	for l_Index = 1, #self.m_TextToDraw do
 		local l_Text = self.m_TextToDraw[l_Index]
-		-- Draw text.
 		DebugRenderer:DrawText2D(l_Text.x, l_Text.y, l_Text.text, l_Text.color, l_Text.scale)
 	end
 
-	for l_Index = 1, #self.m_TextPosToDraw do
-		local l_TextPos = self.m_TextPosToDraw[l_Index]
-		local s_ScreenPos = ClientUtils:WorldToScreen(l_TextPos.pos)
-
-		if s_ScreenPos ~= nil then
-			DebugRenderer:DrawText2D(s_ScreenPos.x, s_ScreenPos.y, l_TextPos.text, l_TextPos.color, l_TextPos.scale)
-		end
-	end
+	_DrawPosTexts(self.m_TextPosToDraw)
+	_DrawPosTexts(self.m_NavZoneTexts)
 
 	for l_Index = 1, #self.m_ObbToDraw do
 		local l_Obb = self.m_ObbToDraw[l_Index]
-		-- Draw OBB.
 		DebugRenderer:DrawOBB(l_Obb.aab, l_Obb.transform, l_Obb.color)
 	end
 end

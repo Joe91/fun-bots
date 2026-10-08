@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import argparse
 import os
+import sys
 import threading
 import webbrowser
 from pathlib import Path
@@ -11,6 +12,7 @@ from pathlib import Path
 from . import __version__
 from .analyzers import create_analyzers, load_plugins
 from .hub import Hub
+from .maps import MapWorkbench
 from .rcon import DEFAULT_PORT, RconClient, find_startup_password
 from .recorder import Recorder, replay
 from .server import DebugServer
@@ -18,6 +20,10 @@ from .server import DebugServer
 
 # mapfiles/ of the repository this debug-server is part of (tools/debug-server/funbots_debug/__main__.py).
 MAPFILES = Path(__file__).resolve().parents[3] / "mapfiles"
+# Where the censuses of the levels are saved (tools/debug-server/census).
+CENSUS = Path(__file__).resolve().parents[1] / "census"
+# A script that starts the game-server (see ALL_MAPS.md).
+DEFAULT_GAME_COMMAND = CENSUS / "start_vu.sh"
 
 
 def main() -> None:
@@ -40,6 +46,14 @@ def main() -> None:
     parser.add_argument("--no-rcon", action="store_true", help="no direct RCON-connection")
     parser.add_argument("--mapfiles", type=Path, metavar="DIR", default=MAPFILES,
                         help="waypoint-files the labeler writes into (default: mapfiles/ of this repository)")
+    parser.add_argument("--census", type=Path, metavar="DIR", default=CENSUS,
+                        help="folder for the censuses of the levels (default: tools/debug-server/census)")
+    parser.add_argument("--navzones", type=Path, metavar="FILE",
+                        help="show the walking networks of a census (.json.gz) or a .navzones.json on the map")
+    parser.add_argument("--game-command", metavar="CMD", default=str(DEFAULT_GAME_COMMAND)
+                        if DEFAULT_GAME_COMMAND.is_file() else None,
+                        help="starts the game-server: the Maps tab runs it, the census after a crash (default: "
+                             "census/start_vu.sh if it exists)")
     parser.add_argument("--open", action="store_true", help="open the browser")
     parser.add_argument("--verbose", action="store_true", help="log every request")
     args = parser.parse_args()
@@ -49,10 +63,17 @@ def main() -> None:
     analyzers = create_analyzers(set(args.disable))
     recorder = Recorder(args.record) if args.record else None
     hub = Hub(analyzers, recorder=recorder, accept_commands=args.replay is None, rcon=create_rcon(args),
-              mapfiles=args.mapfiles if args.mapfiles and args.mapfiles.is_dir() else None)
+              mapfiles=args.mapfiles if args.mapfiles and args.mapfiles.is_dir() else None, census=args.census)
 
-    server = DebugServer((args.host, args.port), hub, quiet=not args.verbose)
+    if args.navzones:
+        print(f"zone networks: {hub.navzones_from(args.navzones)}")
+    try:
+        server = DebugServer((args.host, args.port), hub, quiet=not args.verbose)
+    except OSError as error:
+        sys.exit(f"cannot listen on {args.host}:{args.port}: {error.strerror or error} "
+                 f"(another debug-server running? use --port)")
     url = f"http://{'127.0.0.1' if args.host in ('0.0.0.0', '') else args.host}:{args.port}/"
+    server.workbench = MapWorkbench(url.rstrip("/"), args.game_command, census=args.census)
     print(f"fun-bots debug-server {__version__} on {url}")
     print(f"analyzers: {', '.join(analyzer.name for analyzer in analyzers)}")
 

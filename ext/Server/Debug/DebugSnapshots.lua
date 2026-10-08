@@ -125,9 +125,21 @@ function DebugSnapshots.CollectBots()
 			s_Entry.health = _Round(s_Soldier.health, 1)
 			s_Entry.pose = s_Soldier.pose
 			s_Entry.stuck = l_Bot._ObstacleSequenceTimer ~= 0
+			-- Rush: on to the MCOM while shooting (Bot:UpdatePushMovement).
+			s_Entry.push = l_Bot._Pushing or nil
 			-- Standing on purpose: defending, waiting on a node, executing an action, waiting for passengers.
 			s_Entry.holding = l_Bot._DefendTimer > 0.0 or l_Bot._WayWaitTimer > 0.0 or l_Bot._VehicleWaitTimer > 0.0 or
-				l_Bot._ActiveAction == BotActionFlags.OtherActionActive
+				l_Bot._ActiveAction == BotActionFlags.OtherActionActive or (l_Bot.m_Zone ~= nil and l_Bot.m_Zone.Waiting)
+			-- Free in the zone of the objective (BotZoneMovement): its name, and whether the bot is on its way out.
+			if l_Bot.m_Zone ~= nil then
+				s_Entry.zone = l_Bot.m_Zone.Zone.Name
+				s_Entry.zoneExit = l_Bot.m_Zone.Exit ~= nil
+				-- Why it walks or runs on the mesh (Bot:UpdateZoneMovement).
+				s_Entry.speedWhy = l_Bot._ZoneSpeedReason
+			end
+			s_Entry.speed = l_Bot.m_ActiveSpeedValue
+			-- Rush: left the combat area, waits at the border (Bot:OnCombatAreaLeft).
+			s_Entry.border = l_Bot.m_Border ~= nil or nil
 
 			local s_TargetPoint = l_Bot._TargetPoint
 			if type(s_TargetPoint) == 'table' and s_TargetPoint.Position ~= nil then
@@ -233,15 +245,21 @@ function DebugSnapshots.CollectObjectives()
 
 	while s_Entity ~= nil do
 		local s_CapturePoint = CapturePointEntity(s_Entity)
+		-- Who is inside: the debug-server estimates the size of the zone from it (census/zones.py).
+		local s_Inside = {}
+		for _, l_Player in pairs(s_CapturePoint.playersInside) do
+			s_Inside[#s_Inside + 1] = l_Player.id
+		end
 		s_Flags[#s_Flags + 1] = {
 			name = s_CapturePoint.name,
 			objective = s_Translations[s_CapturePoint.name],
-			hq = string.sub(s_CapturePoint.name, -2) == 'HQ',
+			hq = m_Utilities:IsHq(s_CapturePoint),
 			pos = _Vec(s_CapturePoint.transform.trans),
 			team = s_CapturePoint.team,
 			attacked = s_CapturePoint.isAttacked,
 			controlled = s_CapturePoint.isControlled,
 			flag = _Round(s_CapturePoint.flagLocation, 1),
+			inside = s_Inside,
 		}
 		s_Entity = s_Iterator:Next()
 	end

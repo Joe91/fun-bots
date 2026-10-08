@@ -17,10 +17,13 @@ end
 
 ---Where a jet flies when it doesn't attack: above the active objective, offset by team.
 ---@param p_Bot Bot
+---@param p_Position? Vec3 where the jet is (nil: read from its vehicle)
 ---@return Vec3
-function VehicleJetControl:_GetPatrolPosition(p_Bot)
-	local s_TargetPosition = g_GameDirector:GetActiveTargetPointPosition(p_Bot.m_Player.teamId,
-		p_Bot.m_Player.controlledControllable and p_Bot.m_Player.controlledControllable.transform.trans):Clone()
+function VehicleJetControl:_GetPatrolPosition(p_Bot, p_Position)
+	if p_Position == nil then
+		p_Position = p_Bot.m_Player.controlledControllable and p_Bot.m_Player.controlledControllable.transform.trans
+	end
+	local s_TargetPosition = g_GameDirector:GetActiveTargetPointPosition(p_Bot.m_Player.teamId, p_Position):Clone()
 	if not Globals.IsAirSuperiority then
 		s_TargetPosition.y = s_TargetPosition.y + Registry.VEHICLES.JET_TARGET_HEIGHT
 	end
@@ -195,6 +198,10 @@ function VehicleJetControl:UpdateYawJet(p_Bot, p_Attacking, p_DeltaTime)
 	local s_Transform = s_Vehicle.transform
 	local s_Input = p_Bot.m_Input
 
+	local s_Trans = s_Transform.trans
+	-- Once per call: it goes over all capture points.
+	local s_PatrolHeight = self:_GetPatrolPosition(p_Bot, s_Trans).y
+
 	local s_DeltaYaw, s_DeltaPitch = 0, 0
 	if p_Attacking then
 		-- Aim with the gun, not with the center of the jet: from the muzzle, corrected by the angle of the gun.
@@ -202,7 +209,6 @@ function VehicleJetControl:UpdateYawJet(p_Bot, p_Attacking, p_DeltaTime)
 		local s_Slot = p_Bot._ActiveVehicleWeaponSlot
 		local s_Offset = m_Vehicles:GetOffsets(p_Bot.m_ActiveVehicle, s_EntryId, s_Slot)
 		local s_OffX, s_OffY, s_OffZ = s_Offset.x, s_Offset.y, s_Offset.z
-		local s_Trans = s_Transform.trans
 		local s_Left = s_Transform.left
 		local s_Up = s_Transform.up
 		local s_Forward = s_Transform.forward
@@ -218,7 +224,6 @@ function VehicleJetControl:UpdateYawJet(p_Bot, p_Attacking, p_DeltaTime)
 		-- Stay in a band around the patrol-height. Not _TargetPoint: UpdateMovementJet doesn't run while attacking, it
 		-- still held an old point (often the climb-point right above the jet), so jets climbed higher with every attack.
 		local s_Height = s_Trans.y
-		local s_PatrolHeight = self:_GetPatrolPosition(p_Bot).y
 		if s_Height > s_PatrolHeight + 120 or s_Height < s_PatrolHeight - 75 then
 			p_Bot._JetTakeoffActive = false
 			p_Bot:AbortAttack()
@@ -246,8 +251,7 @@ function VehicleJetControl:UpdateYawJet(p_Bot, p_Attacking, p_DeltaTime)
 	-- Ground avoidance, above everything else (not while taking off). Diving after ground-targets, often rolled over,
 	-- the jets pulled "up" through a split-S into the ground. Roll upright first (bank-angle: 0 level, > 0 banked
 	-- right, +-pi inverted), pull up once the jet isn't upside down any more.
-	local s_Trans = s_Transform.trans
-	local s_GroundHeight = self:_GetPatrolPosition(p_Bot).y
+	local s_GroundHeight = s_PatrolHeight
 	if not Globals.IsAirSuperiority then
 		s_GroundHeight = s_GroundHeight - Registry.VEHICLES.JET_TARGET_HEIGHT
 	end

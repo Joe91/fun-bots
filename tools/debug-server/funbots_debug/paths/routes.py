@@ -1,5 +1,8 @@
 """Rush: where bots get stuck on the way to their MCOM.
 
+This plays through the path-switches of the waypoint navigation before the mesh: in the game the soldiers don't switch
+by these rules anymore (NavRoutes, see README), only levels without a census are prepared with it.
+
 The bots of both teams go for the MCOMs of the stage, and when one is destroyed, for the other one. They follow the
 path-switches of PathSwitcher:GetNewPath, which mostly only lead towards their objective. This module plays that
 through for every stage, both teams, and with none or one of the MCOMs destroyed: from the base-paths of the team and the
@@ -208,7 +211,7 @@ class Play:
 
     def stuck(self) -> list[int]:
         """The paths bots get to, but not from there to their MCOM. Not those without an active objective: bots there
-        are killed after a while (GameDirector, KILL_ON_INVALID_PATH_TIME)."""
+        were killed after a while (GameDirector of the waypoint navigation)."""
         successors = self.successors()
         seen, todo = set(self.starts()), list(self.starts())
         while todo:

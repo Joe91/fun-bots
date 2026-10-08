@@ -26,39 +26,6 @@ local CORPSE_HEIGHT = 0.4
 local PASS_THROUGH_FLAGS = MaterialFlags.MfSeeThrough | MaterialFlags.MfPenetrable | MaterialFlags.MfClientDestructible
 ---@cast PASS_THROUGH_FLAGS MaterialFlags
 
--- A collision-raycast stops at the first solid hit. All hits before it are parts the ray passed through
--- (windows, fences, ...), so only the last hit can block the sight.
----@param p_RayHits RayCastHit[]
----@param p_TargetVehicle ControllableEntity|nil the ray may end on the hull of this vehicle
----@return boolean
-local function _IsInSight(p_RayHits, p_TargetVehicle)
-	local s_HitCount = #p_RayHits
-	if s_HitCount == 0 then
-		return true
-	end
-
-	local s_LastHit = p_RayHits[s_HitCount]
-	if s_LastHit.rigidBody == nil then
-		return false
-	end
-
-	-- The physics-entity of a vehicle has the vehicle itself as userData.
-	local s_PhysicsEntity = PhysicsEntityBase(s_LastHit.rigidBody)
-	if p_TargetVehicle ~= nil then
-		local s_Owner = s_PhysicsEntity.userData
-		if s_Owner ~= nil and s_Owner.instanceId == p_TargetVehicle.instanceId then
-			return true
-		end
-	end
-
-	-- The ray might have stopped before the target.
-	if s_HitCount >= MAX_HITS then
-		return false
-	end
-
-	return (s_PhysicsEntity:GetPartMaterialFlags(s_LastHit.part) & PASS_THROUGH_FLAGS) ~= 0
-end
-
 ---Eye-position of a player. In a vehicle it is above the vehicle-center (as the clients do it).
 ---@param p_Player Player
 ---@param p_InVehicle boolean
@@ -136,7 +103,7 @@ function ServerRaycasts:CheckSight(p_From, p_To, p_FromInVehicle, p_TargetVehicl
 	---@cast s_RaycastFlags RayCastFlags
 
 	local s_RayHits = RaycastManager:CollisionRaycast(p_From, p_To, MAX_HITS, PASS_THROUGH_FLAGS, s_RaycastFlags)
-	local s_Visible = _IsInSight(s_RayHits, p_TargetVehicle)
+	local s_Visible = m_Utilities:IsInSight(s_RayHits, PASS_THROUGH_FLAGS, p_To, p_TargetVehicle ~= nil)
 
 	if m_DebugBridge.m_TraceRaycasts then
 		local s_LastHit = s_RayHits[#s_RayHits]

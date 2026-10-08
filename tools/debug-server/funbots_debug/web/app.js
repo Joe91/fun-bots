@@ -56,6 +56,7 @@ const store = {
 	labelStatus: null, // {kind: "ok" | "error", text} of the last action of the path-labels panel
 	objectives: { flags: [], mcoms: [], stage: 0 }, // see DebugSnapshots.CollectObjectives
 	scans: new Map(), // scan-id -> ScanLayer
+	navzones: null, // the walking mesh (census/navzones.py): {map, spacing, points, edges, attach, vehicle, zones: [{name, kind, center, inside}]}
 	findings: [],
 	stats: {},
 	commands: new Map(), // id -> command (see commands.py)
@@ -275,6 +276,11 @@ function drawPaths() {
 	for (const [index, path] of Object.entries(store.paths)) {
 		const points = path.points;
 		if (!points.length) continue;
+		// Navigation paths (cut at the zones, census/navpaths.py) lead from zone to zone: own color, "from -> to".
+		const nav = path.data && path.data[1] && path.data[1].Nav;
+		ctx.strokeStyle = nav ? "rgba(90, 200, 230, 0.8)" : "rgba(160, 170, 190, 0.55)";
+		ctx.fillStyle = nav ? "rgba(90, 200, 230, 0.95)" : "rgba(160, 170, 190, 0.8)";
+		ctx.lineWidth = nav ? 2 : 1.5;
 		ctx.beginPath();
 		ctx.moveTo(sx(points[0][0]), sy(points[0][2]));
 		for (let i = 1; i < points.length; i++) ctx.lineTo(sx(points[i][0]), sy(points[i][2]));
@@ -286,12 +292,31 @@ function drawPaths() {
 			const preview = store.labels && store.labels.paths[index];
 			const objectives = preview ? preview.objectives : path.objectives || [];
 			const changed = preview && objectives.join() !== (path.objectives || []).join();
-			const label = objectives.length ? `${index} ${objectives.join(", ")}` : index;
+			let label = objectives.length ? `${index} ${objectives.join(", ")}` : index;
+			if (nav && !changed) label = `${index} ${nav.From} \u2192 ${nav.To} (${Math.round(nav.Length || 0)} m)`;
 			if (changed) ctx.fillStyle = theme["accent"];
 			ctx.fillText(label, sx(points[0][0]) + 4, sy(points[0][2]) - 4);
-			if (changed) ctx.fillStyle = "rgba(160, 170, 190, 0.8)";
 		}
 	}
+	ctx.lineWidth = 1.5;
+}
+
+// Convex hull of [x, y, z] points on the map plane (x, z), counter-clockwise.
+function hull(points) {
+	const sorted = [...points].sort((a, b) => a[0] - b[0] || a[2] - b[2]);
+	if (sorted.length < 3) return sorted;
+	const cross = (o, a, b) => (a[0] - o[0]) * (b[2] - o[2]) - (a[2] - o[2]) * (b[0] - o[0]);
+	const lower = [];
+	for (const p of sorted) {
+		while (lower.length >= 2 && cross(lower[lower.length - 2], lower[lower.length - 1], p) <= 0) lower.pop();
+		lower.push(p);
+	}
+	const upper = [];
+	for (const p of sorted.reverse()) {
+		while (upper.length >= 2 && cross(upper[upper.length - 2], upper[upper.length - 1], p) <= 0) upper.pop();
+		upper.push(p);
+	}
+	return lower.slice(0, -1).concat(upper.slice(0, -1));
 }
 
 // Point of a path, [x, y, z].
@@ -302,6 +327,68 @@ function pathPoint(path, point) {
 
 // Links (junctions) of the waypoints, or of the labels while there is a preview: grey the ones that stay, green the
 // new ones, red the removed ones. With a preview also the areas of the objectives the labeler used.
+// The walking mesh (census/navzones.py). Point: [x, y, z, clearance, cover, flags], flags 1 = in a zone,
+// 2 = indoors, 4 = crouch. Edge: [a, b, length, corners]. Junction with the waypoints: [path, point, mesh-point, distance,
+// pos]. The zones are lists of mesh-points ("inside"), drawn as areas (the hull of their points).
+function drawNavzones() {
+	const data = store.navzones;
+	if (!data) return;
+	const points = data.points || [];
+	const radius = view.scale > 3 ? 3 : 2;
+	ctx.lineWidth = 1.2;
+	// The areas of the zones first, under everything else.
+	for (const zone of data.zones || []) {
+		const area = hull((zone.inside || []).map((index) => points[index]).filter((p) => p));
+		if (area.length < 3) continue;
+		ctx.fillStyle = zone.kind === "base" ? "rgba(90, 162, 255, 0.10)" : zone.kind === "mcom" ? "rgba(245, 184, 65, 0.12)" : "rgba(80, 200, 120, 0.12)";
+		ctx.strokeStyle = zone.kind === "base" ? "rgba(90, 162, 255, 0.5)" : zone.kind === "mcom" ? "rgba(245, 184, 65, 0.55)" : "rgba(80, 200, 120, 0.55)";
+		ctx.beginPath();
+		ctx.moveTo(sx(area[0][0]), sy(area[0][2]));
+		for (const p of area.slice(1)) ctx.lineTo(sx(p[0]), sy(p[2]));
+		ctx.closePath();
+		ctx.fill();
+		ctx.stroke();
+	}
+	for (const [a, b, , corners] of data.edges || []) {
+		const p = points[a];
+		const q = points[b];
+		if (!p || !q) continue;
+		ctx.strokeStyle = p[5] & 1 && q[5] & 1 ? "rgba(80, 200, 120, 0.75)" : "rgba(120, 160, 200, 0.5)";
+		ctx.beginPath();
+		ctx.moveTo(sx(p[0]), sy(p[2]));
+		for (const c of corners || []) ctx.lineTo(sx(c[0]), sy(c[2]));
+		ctx.lineTo(sx(q[0]), sy(q[2]));
+		ctx.stroke();
+	}
+	ctx.setLineDash([3, 3]);
+	ctx.strokeStyle = "rgba(245, 184, 65, 0.8)";
+	for (const [, , index, , pos] of data.attach || []) {
+		const p = points[index];
+		if (p && pos) line(pos, p);
+	}
+	ctx.setLineDash([]);
+	for (const p of points) {
+		ctx.fillStyle = p[5] & 1 ? "#50c878" : "#7890a8";
+		ctx.beginPath();
+		ctx.arc(sx(p[0]), sy(p[2]), radius, 0, Math.PI * 2);
+		ctx.fill();
+		if (p[5] & 6) {
+			ctx.strokeStyle = p[5] & 4 ? "#f5b841" : "#5aa2ff";
+			ctx.beginPath();
+			ctx.arc(sx(p[0]), sy(p[2]), radius + 2, 0, Math.PI * 2);
+			ctx.stroke();
+		}
+	}
+	if (view.scale > 0.4) {
+		ctx.font = "12px system-ui, sans-serif";
+		for (const zone of data.zones || []) {
+			if (!zone.center) continue;
+			ctx.fillStyle = zone.kind === "base" ? "#5aa2ff" : zone.kind === "mcom" ? "#f5b841" : "#50c878";
+			ctx.fillText(`${zone.name}: ${(zone.inside || []).length} points`, sx(zone.center[0]) + 8, sy(zone.center[2]) + 16);
+		}
+	}
+}
+
 function drawLinks() {
 	const labels = store.labels;
 	const size = view.scale > 2 ? 3 : 2;
@@ -642,6 +729,7 @@ const LAYERS = [
 	{ id: "heightmap", label: "Height-map", on: true, draw: drawHeightmap },
 	{ id: "paths", label: "Waypoints", on: true, draw: drawPaths },
 	{ id: "links", label: "Links", on: true, draw: drawLinks },
+	{ id: "navzones", label: "Mesh", on: true, draw: drawNavzones },
 	{ id: "objectives", label: "Objectives", on: true, draw: () => { drawFlags(); drawMcoms(); } },
 	{ id: "trails", label: "Trails", on: true, draw: drawTrails },
 	{ id: "traces", label: "Raycasts", on: true, draw: drawTraces },
@@ -808,6 +896,7 @@ function resetStore() {
 	store.kills = [];
 	store.paths = {};
 	store.labels = null;
+	store.navzones = null;
 	store.scans.clear();
 	store.extras = {};
 	store.botDetails = null;
@@ -847,6 +936,7 @@ const handlers = {
 		store.traces = (data.traces || []).map((trace) => Object.assign(trace, { arrival: old }));
 		store.paths = data.paths || {};
 		store.labels = data.labels || null;
+		store.navzones = data.navzones || null;
 		for (const scan of data.scans || []) {
 			const layer = new ScanLayer(scan);
 			for (const [row, heights, normals] of scan.rowData) layer.setRow(row, heights, normals);
@@ -882,6 +972,10 @@ const handlers = {
 	paths(data) {
 		store.paths = data || {};
 	},
+	navzones(data) {
+		store.navzones = data || null;
+		if (!view.fitted) fit();
+	},
 	scan_started(event) {
 		store.scans.set(event.scan, new ScanLayer(event));
 	},
@@ -895,7 +989,7 @@ const handlers = {
 	command(command) {
 		store.commands.set(command.id, command);
 		const callback = commandCallbacks.get(command.id);
-		if (callback && (command.status === "ok" || command.status === "error")) {
+		if (callback && (command.status !== "queued" && command.status !== "sent")) {
 			commandCallbacks.delete(command.id);
 			callback(command);
 		}
@@ -1140,7 +1234,7 @@ function runConsole() {
 	const answer = (c) => {
 		answered = true;
 		consoleDone(sent);
-		if (c.status === "error") {
+		if (c.status !== "ok") {
 			consolePrint("error", c.error);
 			if (String(c.error).startsWith("unknown command:")) consolePrint("error", modOutdatedHint());
 			return;
@@ -1476,7 +1570,7 @@ function renderStats() {
 function renderCommands() {
 	const commands = [...store.commands.values()].sort((a, b) => b.id - a.id).slice(0, 25);
 	setHtml($("commands"), commands.map((c) => {
-		const result = c.status === "error" ? c.error : c.result !== null && c.result !== undefined ? JSON.stringify(c.result) : "";
+		const result = c.error ? c.error : c.result !== null && c.result !== undefined ? JSON.stringify(c.result) : "";
 		return `<li title="${escapeHtml(result)}"><span class="status-${c.status}">${c.status}</span><span>${escapeHtml(c.type)}</span><span class="grow muted small">${escapeHtml(result)}</span></li>`;
 	}).join("") || `<li class="muted">none yet</li>`);
 }
@@ -1496,6 +1590,7 @@ function fit() {
 	if (!points.length) {
 		for (const path of Object.values(store.paths)) points.push(...path.points);
 	}
+	if (!points.length && store.navzones) points.push(...(store.navzones.points || []));
 	if (!points.length || !view.width) return;
 	const xs = points.map((p) => p[0]);
 	const zs = points.map((p) => p[2]);

@@ -2,7 +2,7 @@ import sqlite3
 
 from loguru import logger
 from tools.addons.gets import get_it_running
-from tools.addons.sets import set_traces_db
+from tools.addons.sets import set_navzones_db, set_traces_db
 
 
 def import_traces() -> None:
@@ -14,6 +14,7 @@ def import_traces() -> None:
     try:
         cursor.execute("BEGIN")
         set_traces_db(cursor)
+        set_navzones_db(cursor)
     except KeyboardInterrupt:
         connection.rollback()
         logger.warning("Crtl+C detected! Database was restored!")

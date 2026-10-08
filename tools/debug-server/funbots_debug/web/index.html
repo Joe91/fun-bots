@@ -7,6 +7,11 @@
 	<link rel="stylesheet" href="style.css">
 </head>
 <body>
+	<nav id="tabs">
+		<button class="tab on" data-tab="live" title="The running game: bots, map, console">Live</button>
+		<button class="tab" data-tab="maps" title="The levels of mapfiles/: what is done for them, run the missing steps">Maps</button>
+	</nav>
+	<div id="live">
 	<aside id="sidebar">
 		<header class="panel head">
 			<div class="title-row">
@@ -150,7 +155,70 @@
 		<div id="coords" class="overlay"></div>
 		<div id="help" class="overlay">drag: pan · wheel: zoom · click: select · F: fit · C: follow · Esc: deselect</div>
 	</main>
+	</div>
+
+	<section id="maps-view" hidden>
+		<div class="maps-main">
+			<div class="maps-toolbar">
+				<input id="maps-filter" type="search" placeholder="filter: level, mode, state">
+				<select id="maps-kind" title="Which levels to list">
+					<option value="">all modes</option>
+					<option value="mesh" selected>with mesh (conquest, rush, ...)</option>
+					<option value="paths">paths only (deathmatch, ...)</option>
+					<option value="todo">something to do</option>
+					<option value="git">changed since the last commit</option>
+				</select>
+				<button id="maps-refresh" title="Read the files and mod.db anew">Refresh</button>
+				<span id="maps-count" class="muted"></span>
+			</div>
+			<div class="maps-actions">
+				<span class="muted">Selected:</span>
+				<button id="maps-missing" title="Run what is still to do for the selected levels (see the column 'to do')">Run missing steps</button>
+				<button data-step="export" title="mod.db -> mapfiles/&lt;map&gt;.map: take over the paths recorded in the game">Export from mod.db</button>
+				<button data-step="label" title="Link the paths and set their loop mode (labeler)">Label</button>
+				<button data-step="import" title="mapfiles/&lt;map&gt;.map and navzones/&lt;map&gt;.json -> mod.db">Import into mod.db</button>
+				<button data-step="census" title="Measure the level and make its mesh (switches the level; needs the game-server and RCON)">Census</button>
+				<button data-step="cut" title="Navigation paths between the zones (a cut level is cut again from its uncut version in git)">Cut</button>
+				<button data-step="check" title="Rays of the game over the mesh (switches the level): connections through walls and points under ceilings the census missed are left out, then cut again">Check</button>
+				<button data-step="report" title="The checks of the census">Report</button>
+			</div>
+			<div class="maps-table-wrap">
+				<table id="maps-table">
+					<thead>
+						<tr>
+							<th><input id="maps-all" type="checkbox" title="Select all listed"></th>
+							<th>Level</th><th>Mode</th><th>Paths</th><th>Census</th><th>Mesh</th><th>Cut</th><th>Checked</th>
+							<th>mod.db</th><th>Git</th><th>To do</th>
+						</tr>
+					</thead>
+					<tbody></tbody>
+				</table>
+			</div>
+		</div>
+		<aside class="maps-side">
+			<div class="panel">
+				<div class="row"><strong>Game-server</strong></div>
+				<div class="row">
+					<input id="maps-game" type="text" spellcheck="false" placeholder="command that starts the game-server" title="Also restarts it when it crashed during a census">
+				</div>
+				<div class="row">
+					<button id="maps-start-game" title="Start the game-server with this command">Start game-server</button>
+					<span id="maps-game-status" class="small muted"></span>
+				</div>
+			</div>
+			<div class="panel">
+				<div class="row"><strong>Jobs</strong> <button id="maps-cancel" title="Stop the running job and drop the queued ones">Stop all</button></div>
+				<ul id="maps-jobs" class="list"></ul>
+				<pre id="maps-log" class="console"></pre>
+			</div>
+			<div class="panel small muted">
+				How a level gets supported: <code>tools/debug-server/NEW_MAP.md</code>. Record the paths in the game and
+				save them, then <em>Export from mod.db</em> and <em>Run missing steps</em>.
+			</div>
+		</aside>
+	</section>
 
 	<script src="app.js"></script>
+	<script src="maps.js"></script>
 </body>
 </html>

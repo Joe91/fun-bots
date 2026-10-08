@@ -142,6 +142,100 @@ function Vehicles:GetNrOfFreeSeats(p_Entity, p_PlayerIsDriver)
 	return s_NrOfFreeSeats
 end
 
+---The seats bots may take (0 .. count - 1): one is kept free for a player if there are enough, at most
+---Config.MaxBotsPerVehicle (one more if a player drives).
+---@param p_Entity ControllableEntity
+---@param p_VehicleData VehicleDataInner
+---@param p_PlayerIsDriver boolean
+---@return integer
+function Vehicles:GetBotSeatCount(p_Entity, p_VehicleData, p_PlayerIsDriver)
+	local s_MaxEntries = p_Entity.entryCount
+	if p_VehicleData.Type == VehicleTypes.Gunship then
+		s_MaxEntries = 2
+	end
+	if p_VehicleData.Type == VehicleTypes.MobileArtillery then
+		s_MaxEntries = 1
+	end
+	if p_VehicleData.Type == VehicleTypes.UnarmedGunship then
+		s_MaxEntries = 0
+	end
+
+	if not p_PlayerIsDriver then
+		-- Leave a place for a player if more than two seats are available.
+		if s_MaxEntries > 2 and Config.KeepVehicleSeatForPlayer then
+			s_MaxEntries = s_MaxEntries - 1
+		end
+		-- Limit the bots per vehicle, if no player is the driver.
+		if s_MaxEntries > Config.MaxBotsPerVehicle then
+			s_MaxEntries = Config.MaxBotsPerVehicle
+		end
+	else
+		-- Allow one more bot, if driver is player.
+		if s_MaxEntries > (Config.MaxBotsPerVehicle + 1) then
+			s_MaxEntries = Config.MaxBotsPerVehicle + 1
+		end
+	end
+	return s_MaxEntries
+end
+
+---Whether a bot may get into the vehicle (Bot:_EnterVehicleEntity): allowed by the config, a seat for bots is free.
+---@param p_Entity ControllableEntity
+---@param p_VehicleData VehicleDataInner
+---@return boolean
+function Vehicles:HasFreeBotSeat(p_Entity, p_VehicleData)
+	if not Config.UseAirVehicles and self:IsAirVehicle(p_VehicleData) then
+		return false
+	end
+	if not Config.UseJets and self:IsVehicleType(p_VehicleData, VehicleTypes.Plane) then
+		return false
+	end
+	for l_Seat = 0, self:GetBotSeatCount(p_Entity, p_VehicleData, false) - 1 do
+		if p_Entity:GetPlayerInEntry(l_Seat) == nil then
+			return true
+		end
+	end
+	return false
+end
+
+---How many seats a bot may still take (HasFreeBotSeat): the driver and its passengers walk to the vehicle together.
+---@param p_Entity ControllableEntity
+---@param p_VehicleData VehicleDataInner
+---@return integer
+function Vehicles:FreeBotSeats(p_Entity, p_VehicleData)
+	if not self:HasFreeBotSeat(p_Entity, p_VehicleData) then
+		return 0
+	end
+	local s_Free = 0
+	for l_Seat = 0, self:GetBotSeatCount(p_Entity, p_VehicleData, false) - 1 do
+		if p_Entity:GetPlayerInEntry(l_Seat) == nil then
+			s_Free = s_Free + 1
+		end
+	end
+	return s_Free
+end
+
+---The passenger seats of a transport helicopter or an AMTRAC that a bot may spawn in. They don't count towards
+---Config.MaxBotsPerVehicle (that limits the crew: driver and gunners), the passengers get out at the objective
+---(Bot:_CheckShouldExitVehicleIfPassenger). One of them is kept for a player (Config.KeepVehicleSeatForPlayer).
+---@param p_Entity ControllableEntity
+---@param p_VehicleData VehicleDataInner|nil
+---@return integer[] seat indices
+function Vehicles:FreePassengerSeats(p_Entity, p_VehicleData)
+	local s_Free = {}
+	if p_VehicleData == nil or p_VehicleData.FirstPassengerSeat == nil then
+		return s_Free
+	end
+	for l_Seat = p_VehicleData.FirstPassengerSeat - 1, p_Entity.entryCount - 1 do
+		if p_Entity:GetPlayerInEntry(l_Seat) == nil then
+			s_Free[#s_Free + 1] = l_Seat
+		end
+	end
+	if Config.KeepVehicleSeatForPlayer then
+		table.remove(s_Free)
+	end
+	return s_Free
+end
+
 ---@param p_Entity ControllableEntity
 function Vehicles:IsEmpty(p_Entity)
 	return self:GetNrOfFreeSeats(p_Entity, true) == p_Entity.entryCount
@@ -183,16 +277,6 @@ end
 
 ---@param p_VehicleData VehicleDataInner
 ---@param p_VehicleTerrain VehicleTerrains
-function Vehicles:IsVehicleTerrain(p_VehicleData, p_VehicleTerrain)
-	if p_VehicleData and p_VehicleData.Terrain then
-		return p_VehicleData.Terrain == p_VehicleTerrain
-	else
-		return false
-	end
-end
-
----@param p_VehicleData VehicleDataInner
----@param p_VehicleTerrain VehicleTerrains
 function Vehicles:IsNotVehicleTerrain(p_VehicleData, p_VehicleTerrain)
 	if p_VehicleData and p_VehicleData.Terrain then
 		return p_VehicleData.Terrain ~= p_VehicleTerrain
@@ -215,11 +299,6 @@ end
 ---@param p_VehicleType VehicleTypes
 function Vehicles:IsVehicleType(p_VehicleData, p_VehicleType)
 	return self:VehicleType(p_VehicleData) == p_VehicleType
-end
-
----@param p_VehicleData VehicleDataInner
-function Vehicles:IsTransportChopper(p_VehicleData)
-	return self:IsVehicleType(p_VehicleData, VehicleTypes.TransportChopper)
 end
 
 ---@param p_VehicleData VehicleDataInner

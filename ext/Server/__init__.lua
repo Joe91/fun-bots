@@ -30,7 +30,6 @@ require('__shared/Settings/SettingsDefinition')
 require('__shared/WeaponList')
 require('__shared/EbxEditUtils')
 require('__shared/Utils/Logger')
-require('__shared/Utils/Profiler')
 require('Vehicles')
 require('UIServer')
 require('BotStates/BotStates')
@@ -69,6 +68,10 @@ require('Commands/RCON')
 local m_AirTargets = require('AirTargets')
 ---@type GameDirector
 local m_GameDirector = require('GameDirector')
+---@type NavZones
+local m_NavZones = require('NavZones')
+-- Routes over the navigation paths, from zone to zone (sets g_NavRoutes, used by NodeCollection and GameDirector).
+require('NavRoutes')
 ---@type AimEvaluation
 local m_AimEvaluation = require('AimEvaluation')
 ---@type ServerRaycasts
@@ -88,6 +91,8 @@ PermissionManager = require('PermissionManager')
 function FunBotServer:__init()
 	-- Used to calculate the respawn delay.
 	self.m_PlayerKilledDelay = 0
+	-- Players outside of the combat area (CombatArea events): player id -> true.
+	self.m_OutsideCombatArea = {}
 	Events:Subscribe('Engine:Init', self, self.OnEngineInit)
 	Events:Subscribe('Extension:Loaded', self, self.OnExtensionLoaded)
 end
@@ -556,11 +561,21 @@ function FunBotServer:_UpdateRoundStats(p_DeltaTime)
 		s_Parts = {}
 		for l_Index = 1, math.min(25, #s_Functions) do
 			local l_Function = s_Functions[l_Index]
-			s_Parts[#s_Parts + 1] = string.format("%s %.2f ms/frame %.0f/s %.2f KB/call", l_Function.Key,
-				l_Function.Entry.Total / s_Frames, l_Function.Entry.Count / Registry.DEBUG.ROUND_STATS_INTERVAL,
+			s_Parts[#s_Parts + 1] = string.format("%s %.2f ms/frame (max %.0f) %.0f/s %.2f KB/call", l_Function.Key,
+				l_Function.Entry.Total / s_Frames, l_Function.Entry.Max,
+				l_Function.Entry.Count / Registry.DEBUG.ROUND_STATS_INTERVAL,
 				l_Function.Entry.AllocKb / math.max(l_Function.Entry.Count, 1))
 		end
 		print("[RoundStats] Functions: " .. table.concat(s_Parts, " | "))
+
+		-- The single calls that took longest (the spikes).
+		table.sort(s_Functions, function(a, b) return a.Entry.Max > b.Entry.Max end)
+		s_Parts = {}
+		for l_Index = 1, math.min(12, #s_Functions) do
+			local l_Function = s_Functions[l_Index]
+			s_Parts[#s_Parts + 1] = string.format("%s %.0f ms", l_Function.Key, l_Function.Entry.Max)
+		end
+		print("[RoundStats] Longest function calls: " .. table.concat(s_Parts, " | "))
 	end
 
 	-- The bot calls that allocate the most memory (exact only while no GC step runs inside).
@@ -583,17 +598,25 @@ function FunBotServer:OnScoringStatEvent(p_Player, p_ObjectPlayer, p_StatEvent, 
 	if p_StatEvent == StatEvent.StatEvent_CrateDisarmed then
 		m_GameDirector:OnMcomDisarmed(p_Player)
 	end
-	--[[ If p_StatEvent == StatEvent.StatEvent_CrateDestroyed then.
-		-- Not reliably usable, since place can be anywhere at this moment.
-	end ]]
+	-- The player who armed it, anywhere by now: the GameDirector knows which MCOM that was.
+	if p_StatEvent == StatEvent.StatEvent_CrateDestroyed then
+		m_GameDirector:OnMcomDestroyedBy(p_Player)
+	end
 end
 
 function FunBotServer:OnCombatAreaDeserting(p_Entity, p_Player)
-	m_GameDirector:ToggleDirectionCombatZone(p_Entity, p_Player)
+	-- Outside of the combat area: a death in a damage area now is the border, no hazard of the mesh (OnPlayerKilled).
+	if p_Player ~= nil then
+		self.m_OutsideCombatArea[p_Player.id] = true
+	end
+	m_GameDirector:OnCombatArea(p_Player, true)
 end
 
 function FunBotServer:OnCombatAreaReturning(p_Entity, p_Player)
-	m_GameDirector:ToggleDirectionCombatZone(p_Entity, p_Player)
+	if p_Player ~= nil then
+		self.m_OutsideCombatArea[p_Player.id] = nil
+	end
+	m_GameDirector:OnCombatArea(p_Player, false)
 end
 
 function FunBotServer:OnLifeCounterBaseDestoyed(p_LifeCounterEntity, p_FinalBase)
@@ -658,6 +681,8 @@ end
 
 function FunBotServer:OnFinishedLoading()
 	m_NodeEditor:EndOfLoad()
+	-- The zones first: the GameDirector takes the MCOMs from them.
+	m_NavZones:OnLoadFinished()
 	m_GameDirector:OnLoadFinished()
 end
 
@@ -683,11 +708,13 @@ end
 
 ---VEXT Shared Level:Destroy Event
 function FunBotServer:OnLevelDestroy()
+	self.m_OutsideCombatArea = {}
 	m_BotManager:OnLevelDestroy()
 	m_BotSpawner:OnLevelDestroy()
 	m_NodeEditor:OnLevelDestroy()
 	m_AirTargets:OnLevelDestroy()
 	m_GameDirector:OnLevelDestroy()
+	m_NavZones:Clear()
 	m_AimEvaluation:OnLevelDestroy()
 	m_ServerRaycasts:OnLevelDestroy()
 	m_DebugBridge:OnLevelDestroy()
@@ -756,6 +783,11 @@ function FunBotServer:OnPlayerKilled(p_Player, p_Inflictor, p_Position, p_Weapon
 	m_NodeEditor:OnPlayerKilled(p_Player)
 	m_AirTargets:OnPlayerKilled(p_Player)
 	m_DebugSnapshots:OnPlayerKilled(p_Player, p_Inflictor, p_Position, p_Weapon, p_IsRoadKill, p_IsHeadShot)
+	-- Killed for leaving the combat area (rush: the defenders in the area of the stage that fell) is no hazard.
+	if p_Weapon == 'DamageArea' and not self.m_OutsideCombatArea[p_Player.id] then
+		m_NavZones:OnDamageAreaDeath(p_Position)
+	end
+	self.m_OutsideCombatArea[p_Player.id] = nil
 end
 
 ---VEXT Server Player:Chat Event
@@ -956,8 +988,8 @@ function FunBotServer:OnRequestClientSettings(p_Player)
 	m_ServerRaycasts:SendStateToPlayer(p_Player)
 end
 
-function FunBotServer:OnRequestEnterVehicle(p_Player, p_BotName)
-	m_BotManager:OnRequestEnterVehicle(p_Player, p_BotName)
+function FunBotServer:OnRequestEnterVehicle(p_Player, p_BotId)
+	m_BotManager:OnRequestEnterVehicle(p_Player, p_BotId)
 end
 
 function FunBotServer:OnRequestChangeSeatVehicle(p_Player, p_SeatNumber)
@@ -1015,7 +1047,8 @@ function FunBotServer:SpawnGrenade(p_Position)
 end
 
 function FunBotServer:OnTeleportTo(p_Player, p_Transform)
-	if p_Player == nil or p_Player.soldier == nil then
+	-- The transform comes from the client.
+	if p_Player == nil or p_Player.soldier == nil or type(p_Transform) ~= 'userdata' then
 		return
 	end
 

@@ -8,6 +8,8 @@ require('__shared/Config')
 local m_NodeCollection = require('NodeCollection')
 ---@type GameDirector
 local m_GameDirector = require('GameDirector')
+---@type NavRoutes
+local m_NavRoutes = require('NavRoutes')
 ---@type Logger
 local m_Logger = Logger("PathSwitcher", Debug.Server.PATH)
 ---@type Utilities
@@ -95,9 +97,10 @@ function PathSwitcher:IsWalkable(p_PathIndex)
 	return s_Gap > math.max(15.0, 0.05 * s_Length)
 end
 
----Whether a path the bots have to leave (see GetNewPath) has a regular way out at any of its junctions: off a base-path
----a walkable path with all objectives active, but no base-path alone (no path with a base at all off a path out of a
----base), the way to a vehicle or a beacon. Off other paths one with all objectives active that leads to the objective.
+---Whether a vehicle-path the bots have to leave (see _GetNewVehiclePath) has a regular way out at any of its junctions:
+---off a base-path a path with all objectives active, but no base-path alone (no path with a base at all off a path out
+---of a base), the way to a vehicle or a beacon. Off other paths one with all objectives active that leads to the
+---objective.
 ---@param p_PathIndex integer
 ---@param p_Objective string
 ---@param p_OnBasePath boolean
@@ -135,6 +138,7 @@ function PathSwitcher:_HasRegularExit(p_PathIndex, p_Objective, p_OnBasePath)
 	return false
 end
 
+---Whether the bot switches to another path at a waypoint with links, and onto which waypoint.
 ---@param p_Bot Bot
 ---@param p_BotId integer
 ---@param p_Point Waypoint
@@ -144,11 +148,149 @@ end
 ---@param p_ActiveVehicle VehicleDataInner|nil
 ---@returns boolean
 ---@returns Waypoint|nil
+---@returns string|nil soldiers: the direction on the new path, if the switch decides it ('Next', 'Previous')
 function PathSwitcher:GetNewPath(p_Bot, p_BotId, p_Point, p_Objective, p_InVehicle, p_TeamId, p_ActiveVehicle)
 	if p_Point.Data == nil or p_Point.Data.Links == nil or #p_Point.Data.Links < 1 then
 		return false
 	end
+	if p_InVehicle then
+		return self:_GetNewVehiclePath(p_Point, p_Objective, p_TeamId, p_ActiveVehicle)
+	end
+	return self:_GetNewFootPath(p_Bot, p_Point, p_Objective or '')
+end
 
+---The objectives of a path (its first waypoint).
+---@param p_PathIndex integer
+---@return string[]
+local function _Labels(p_PathIndex)
+	local s_First = m_NodeCollection:GetFirst(p_PathIndex)
+	return type(s_First) == 'table' and s_First.Data ~= nil and s_First.Data.Objectives or {}
+end
+
+---Whether the path has an action-node (vehicle, MCOM, beacon).
+---@param p_PathIndex integer
+---@return boolean
+local function _HasAction(p_PathIndex)
+	local s_Waypoints = m_NodeCollection:Get(nil, p_PathIndex) or {}
+	for l_Index = 1, #s_Waypoints do
+		local l_Data = s_Waypoints[l_Index].Data
+		if l_Data ~= nil and l_Data.Action ~= nil and l_Data.Action.type ~= 'exit' then
+			return true
+		end
+	end
+	return false
+end
+
+---Soldiers. Where the level has a mesh they find their way over it and the paths (NavRoutes, BotZoneMovement): where
+---the routes know the objective they decide at the nodes (NavRoutes:Step), not here. On the way to its objective (a
+---vehicle, the paths with that name) a bot stays, and onto it it switches. A bot with a beacon to place takes the way to a beacon now and
+---then. Any other path (spawned at a beacon, a connecting path, after the vehicle left) it leaves: for a navigation path,
+---else for a path that isn't the dead end of another objective. Without a mesh (deathmatch modes, no objectives) the bots
+---walk the paths and switch at random.
+---@param p_Bot Bot
+---@param p_Point Waypoint
+---@param p_Objective string
+---@returns boolean
+---@returns Waypoint|nil
+---@returns string|nil
+function PathSwitcher:_GetNewFootPath(p_Bot, p_Point, p_Objective)
+	local s_Candidates = {}
+	for l_Index = 1, #p_Point.Data.Links do
+		local s_Target = m_NodeCollection:Get(p_Point.Data.Links[l_Index])
+		if s_Target ~= nil and s_Target.PathIndex ~= p_Point.PathIndex and self:IsWalkable(s_Target.PathIndex) then
+			s_Candidates[#s_Candidates + 1] = s_Target
+		end
+	end
+	if #s_Candidates == 0 then
+		return false
+	end
+
+	local s_Current = _Labels(p_Point.PathIndex)
+
+	-- A beacon to place: onto the way to a beacon, to its action-node.
+	local s_Beacon = nil
+	if not table.has(s_Current, 'beacon') and p_Bot.m_SecondaryGadget ~= nil
+		and p_Bot.m_SecondaryGadget.type == WeaponTypes.Beacon and not p_Bot.m_HasBeacon then
+		for l_Index = 1, #s_Candidates do
+			if table.has(_Labels(s_Candidates[l_Index].PathIndex), 'beacon') then
+				s_Beacon = s_Candidates[l_Index]
+				break
+			end
+		end
+	end
+	local s_TakeBeacon = s_Beacon ~= nil and m_Utilities:CheckProbability(Registry.BOT.PROBABILITY_SWITCH_TO_BEACON_PATH)
+
+	if not m_NavRoutes:IsActive() then
+		if s_TakeBeacon then
+			---@cast s_Beacon -nil
+			return true, s_Beacon, m_NodeCollection:_ActionDirection(s_Beacon)
+		end
+		if m_Utilities:CheckProbability(Registry.GAME_DIRECTOR.PROBABILITY_SWITCH_SAME_PRIO) then
+			m_Logger:Write('switch at random')
+			return true, s_Candidates[MathUtils:GetRandomInt(1, #s_Candidates)]
+		end
+		return false
+	end
+
+	-- The routes guide the bot (NavRoutes:Step at the nodes, Bot:_CheckForZoneEntry).
+	if m_NavRoutes:Guides(p_Point.PathIndex, p_Objective) then
+		return false
+	end
+
+	if p_Objective ~= '' then
+		-- Onto the way to the objective; on it, onto the path with its action-node (where the bot gets into the vehicle).
+		local s_OnObjectivePath = table.has(s_Current, p_Objective)
+		local s_HasAction = s_OnObjectivePath and _HasAction(p_Point.PathIndex)
+		for l_Index = 1, #s_Candidates do
+			local l_Candidate = s_Candidates[l_Index]
+			if table.has(_Labels(l_Candidate.PathIndex), p_Objective)
+				and (not s_OnObjectivePath or (not s_HasAction and _HasAction(l_Candidate.PathIndex))) then
+				return true, l_Candidate
+			end
+		end
+		if s_OnObjectivePath then
+			return false
+		end
+	end
+
+	if s_TakeBeacon then
+		---@cast s_Beacon -nil
+		return true, s_Beacon, m_NodeCollection:_ActionDirection(s_Beacon)
+	end
+
+	if m_NavRoutes:IsRoutePath(p_Point.PathIndex) then
+		return false
+	end
+
+	local s_Navigation = {}
+	local s_Others = {}
+	for l_Index = 1, #s_Candidates do
+		local l_Candidate = s_Candidates[l_Index]
+		if m_NavRoutes:IsRoutePath(l_Candidate.PathIndex) then
+			s_Navigation[#s_Navigation + 1] = l_Candidate
+		elseif #_Labels(l_Candidate.PathIndex) == 0
+			or (not _HasAction(l_Candidate.PathIndex) and table.has(_Labels(p_Point.PathIndex), _Labels(l_Candidate.PathIndex)[1])) then
+			-- A connecting path (leads to a navigation path, or onto the mesh), not the way to another vehicle or beacon.
+			-- Also the way back from where an MCOM is armed (named like that path, without the action).
+			s_Others[#s_Others + 1] = l_Candidate
+		end
+	end
+	local s_Exits = #s_Navigation > 0 and s_Navigation or s_Others
+	if #s_Exits == 0 then
+		return false
+	end
+	m_Logger:Write('leave the path ' .. p_Point.PathIndex)
+	return true, s_Exits[MathUtils:GetRandomInt(1, #s_Exits)]
+end
+
+---Vehicles: by the objectives on the vehicle-paths.
+---@param p_Point Waypoint
+---@param p_Objective string|nil
+---@param p_TeamId TeamId
+---@param p_ActiveVehicle VehicleDataInner|nil
+---@returns boolean
+---@returns Waypoint|nil
+function PathSwitcher:_GetNewVehiclePath(p_Point, p_Objective, p_TeamId, p_ActiveVehicle)
 	-- Check if on base, or on path away from base. In this case: change path.
 	local s_OnBasePath = false
 	local s_CurrentPathFirst = m_NodeCollection:GetFirst(p_Point.PathIndex)
@@ -160,8 +302,8 @@ function PathSwitcher:GetNewPath(p_Bot, p_BotId, p_Point, p_Objective, p_InVehic
 	p_Objective = p_Objective or ''
 
 	-- Bots always leave a path of a base alone, where they spawn, a path out of a base at its end (else they walk it
-	-- back to the base), the path of a destroyed MCOM, and the way to a vehicle that isn't their objective (of the other
-	-- team, or gone). If the path has no regular way out, over any other path (see below).
+	-- back to the base), the path of a destroyed MCOM, the way to a vehicle that isn't their objective (of the other
+	-- team, or gone) and the way to a beacon. If the path has no regular way out, over any other path (see below).
 	local s_LeavePath = false
 	if s_OnBasePath then
 		s_LeavePath = #s_CurrentPathFirst.Data.Objectives == 1 or p_Point.PointIndex == 1
@@ -173,6 +315,8 @@ function PathSwitcher:GetNewPath(p_Bot, p_BotId, p_Point, p_Objective, p_InVehic
 		s_LeavePath = m_GameDirector:IsDestroyedPath(s_Objectives) or (#s_Objectives == 1
 			and s_Objectives[1] ~= p_Objective and m_GameDirector:IsVehicleEnterPath(s_Objectives[1])
 			and not m_GameDirector:UseVehicle(p_TeamId, s_Objectives[1]))
+			-- The way to a beacon is a dead end (bots that spawned at the beacon start on it).
+			or (#s_Objectives == 1 and s_Objectives[1] ~= p_Objective and m_GameDirector:IsBeaconPath(s_Objectives[1]))
 	end
 	local s_Exits = {}
 	local s_BestExitScore = -1
@@ -191,11 +335,7 @@ function PathSwitcher:GetNewPath(p_Bot, p_BotId, p_Point, p_Objective, p_InVehic
 		local s_NewPoint = m_NodeCollection:Get(p_Point.Data.Links[i])
 
 		if s_NewPoint ~= nil then
-			if not p_InVehicle then
-				if self:IsWalkable(s_NewPoint.PathIndex) then
-					s_PossiblePaths[#s_PossiblePaths + 1] = s_NewPoint
-				end
-			else
+			do
 				local s_PathNode = m_NodeCollection:GetFirst(s_NewPoint.PathIndex)
 
 				if s_PathNode.Data.Vehicles ~= nil and #s_PathNode.Data.Vehicles > 0 then -- Check for vehicle-type.
@@ -255,34 +395,6 @@ function PathSwitcher:GetNewPath(p_Bot, p_BotId, p_Point, p_Objective, p_InVehic
 				goto skip
 			end
 
-			-- Check for beacon
-			if m_GameDirector:IsBeaconPath(s_PathNode.Data.Objectives[1]) then
-				if p_Bot.m_SecondaryGadget ~= nil and p_Bot.m_SecondaryGadget.type == WeaponTypes.Beacon
-					and not p_Bot.m_HasBeacon
-					and m_Utilities:CheckProbability(Registry.BOT.PROBABILITY_SWITCH_TO_BEACON_PATH)
-				then
-					return true, s_NewPoint
-				end
-			end
-
-			if m_GameDirector:IsExplorePath(s_PathNode.Data.Objectives[1]) then
-				if (p_Bot:AtObjectivePath()
-						and MathUtils:GetRandomInt(1, 100) <= Registry.BOT.PROBABILITY_SWITCH_TO_EXPLORE_PATH)
-					or MathUtils:GetRandomInt(1, 100) <= Registry.BOT.PROBABILITY_SWITCH_TO_EXPLORE_PATH / 2
-				then
-					return true, s_NewPoint
-				end
-			end
-		end
-
-		-- This path has listed objectives.
-		if s_PathNode.Data.Objectives ~= nil and p_Objective ~= '' then
-			-- Check for possible subObjective.
-			if #s_PathNode.Data.Objectives == 1 then
-				if m_GameDirector:UseSubobjective(p_BotId, p_TeamId, s_PathNode.Data.Objectives[1]) == true then
-					return true, s_NewPoint
-				end
-			end
 		end
 
 		-- Fallback way out: any path but a base-path alone, the way to a vehicle or a beacon, or another destroyed

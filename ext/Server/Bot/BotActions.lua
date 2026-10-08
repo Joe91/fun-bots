@@ -311,35 +311,7 @@ function Bot:_EnterVehicleEntity(p_Entity, p_PlayerIsDriver)
 		return -3 -- Not allowed to use.
 	end
 
-	-- Keep one seat free, if enough available.
-	local s_MaxEntries = p_Entity.entryCount
-	if s_VehicleData.Type == VehicleTypes.Gunship then
-		s_MaxEntries = 2
-	end
-	if s_VehicleData.Type == VehicleTypes.MobileArtillery then
-		s_MaxEntries = 1
-	end
-	-- The idea is to avoid the bots from seating in the 3rd slot of the tanks to be more useful somwhere else.
-	if s_VehicleData.Type == VehicleTypes.UnarmedGunship then
-		s_MaxEntries = 0
-	end
-
-	--Now the bots may fully occupy a vehicle ( attack choppers, scout choppers, and some other transport vehicles.)
-	if not p_PlayerIsDriver then
-		-- Leave a place for a player if more than two seats are available.
-		if s_MaxEntries > 2 and Config.KeepVehicleSeatForPlayer then
-			s_MaxEntries = s_MaxEntries - 1
-		end
-		-- Limit the bots per vehicle, if no player is the driver.
-		if s_MaxEntries > Config.MaxBotsPerVehicle then
-			s_MaxEntries = Config.MaxBotsPerVehicle
-		end
-	else
-		-- Allow one more bot, if driver is player.
-		if s_MaxEntries > (Config.MaxBotsPerVehicle + 1) then
-			s_MaxEntries = Config.MaxBotsPerVehicle + 1
-		end
-	end
+	local s_MaxEntries = m_Vehicles:GetBotSeatCount(p_Entity, s_VehicleData, p_PlayerIsDriver)
 
 	for l_IndexOfSeat = 0, s_MaxEntries - 1 do
 		local s_SeatIndex = l_IndexOfSeat
@@ -357,7 +329,11 @@ function Bot:_EnterVehicleEntity(p_Entity, p_PlayerIsDriver)
 			self._ActiveVehicleWeaponSlot = 0
 			self:UpdateVehicleMovableId()
 			if s_SeatIndex == 0 then
-				if s_SeatIndex == s_MaxEntries - 1 then
+				if m_Vehicles:IsVehicleType(s_VehicleData, VehicleTypes.StationaryLauncher) then
+					-- Nothing to wait for: the timer only runs down while driving (UpdateNormalMovementVehicle), never in a
+					-- launcher, and while it runs the bot isn't checked for getting out (GameDirector:_CheckVehicleProgress).
+					self._VehicleWaitTimer = 0.0
+				elseif s_SeatIndex == s_MaxEntries - 1 then
 					self._VehicleWaitTimer = 0.5 -- Always wait a short time to check for free start.
 					if Globals.IsAirSuperiority then
 						self._VehicleTakeoffTimer = 0.0
@@ -369,6 +345,7 @@ function Bot:_EnterVehicleEntity(p_Entity, p_PlayerIsDriver)
 					g_GameDirector:_SetVehicleObjectiveState(p_Entity.transform.trans:Clone(), false)
 				else
 					self._VehicleWaitTimer = Config.VehicleWaitForPassengersTime
+					self._VehicleWaited = 0.0
 					self._BrakeTimer = 0.0
 				end
 			else
@@ -391,6 +368,31 @@ function Bot:_EnterVehicleEntity(p_Entity, p_PlayerIsDriver)
 
 	-- No place left.
 	return -2
+end
+
+---Into a free passenger seat of a transport helicopter or an AMTRAC (Vehicles:FreePassengerSeats): spawned in it, the
+---bot rides along and gets out at the objective.
+---@param p_Entity ControllableEntity
+---@return integer 0 if it got in
+function Bot:_EnterPassengerSeat(p_Entity)
+	local s_VehicleData = m_Vehicles:GetVehicleByEntity(p_Entity)
+	if s_VehicleData == nil then
+		return -2
+	end
+	if not Config.UseAirVehicles and m_Vehicles:IsAirVehicle(s_VehicleData) then
+		return -3
+	end
+	local s_Seats = m_Vehicles:FreePassengerSeats(p_Entity, s_VehicleData)
+	if #s_Seats == 0 then
+		return -2
+	end
+	self.m_Player:EnterVehicle(p_Entity, s_Seats[1])
+	self._ExitVehicleHealth = PhysicsEntity(p_Entity).internalHealth * (Registry.VEHICLES.VEHICLE_EXIT_HEALTH / 100.0)
+	self.m_ActiveVehicle = s_VehicleData
+	self._ActiveVehicleWeaponSlot = 0
+	self:UpdateVehicleMovableId()
+	self._VehicleWaitTimer = 0.0
+	return 0
 end
 
 ---@param p_PlayerIsDriver boolean

@@ -62,6 +62,12 @@ end
 
 function Bot:SetObjectiveIfPossible(p_Objective, p_ObjectiveMode)
 	if self._Objective ~= p_Objective and p_Objective ~= '' then
+		-- On the mesh: if a route leads there (NavRoutes), e.g. to the path of a vehicle.
+		if self.m_Zone ~= nil and not self.m_Zone.Vehicle and g_NavRoutes ~= nil and g_NavRoutes:Knows(p_Objective) then
+			self._Objective = p_Objective
+			self._ObjectiveMode = p_ObjectiveMode
+			return true
+		end
 		local s_Point = m_NodeCollection:Get(self._CurrentWayPoint, self._PathIndex)
 
 		if s_Point ~= nil then
@@ -81,6 +87,21 @@ end
 
 function Bot:SetObjective(p_Objective, p_ObjectiveMode)
 	if self._Objective ~= p_Objective or p_ObjectiveMode ~= self._ObjectiveMode then
+		-- Sent to a vehicle (again): its action-node counts, also if the bot failed to get in there before.
+		if p_Objective ~= nil and p_Objective ~= '' and g_GameDirector:IsVehicleEnterPath(p_Objective) then
+			self._LastActionId = nil
+		end
+		-- A vehicle given up on foot (no way there from here, gone for a moment, no seat): not that one again at once.
+		-- Else the GameDirector gave it back the next cycle, the bot turned to it and away from it every 1.5 s
+		-- (MP_013: round and round on a path next to a parked vehicle).
+		local s_Old = self._Objective
+		if s_Old ~= nil and s_Old:sub(1, 8) == 'vehicle ' and p_Objective ~= s_Old and self.m_ActiveVehicle == nil then
+			local s_Until = SharedUtils:GetTime() + Registry.GAME_DIRECTOR.VEHICLE_RETRY_TIME
+			if self._LeftVehicle ~= s_Old or self._LeftVehicleUntil < s_Until then
+				self._LeftVehicle = s_Old
+				self._LeftVehicleUntil = s_Until
+			end
+		end
 		self._Objective = p_Objective or ''
 		self._ObjectiveMode = p_ObjectiveMode or BotObjectiveModes.Default
 		local s_Point = m_NodeCollection:Get(self._CurrentWayPoint, self._PathIndex)
@@ -171,7 +192,8 @@ function Bot:ResetVars()
 	self._FollowWayPoints = {}
 	self._SpawnDelayTimer = 0.0
 	self._KillYourselfTimer = 0.0
-	self._InvalidPathObjective = nil
+	self._OffMeshTarget = nil
+	self._OffMeshBlocked = nil
 	self._RocketCooldownTimer = 0.0
 	self._SpawnProtectionTimer = 0.0
 	self._Objective = ''
@@ -179,10 +201,16 @@ function Bot:ResetVars()
 end
 
 function Bot:ResetSpawnVars()
+	-- Spawned (or in a vehicle): on the waypoints again.
+	self.m_Zone = nil
+	self.m_ZoneGiveUps = 0
+	self.m_RouteSeed = math.random() * 1000.0
+	self.m_Border = nil
 	-- Timers
 	self._SpawnDelayTimer = 0.0
 	self._WayWaitTimer = 0.0
 	self._VehicleWaitTimer = 0.0
+	self._VehicleWaited = 0.0
 	self._VehicleLookAroundTimer = 0.0
 	self._LookAroundYawOffset = 0.0
 	self._LookAroundYawGoal = 0.0
@@ -208,13 +236,33 @@ function Bot:ResetSpawnVars()
 	self._DefendTimer = 0.0
 	self._SidewardsTimer = 0.0
 	self._KillYourselfTimer = 0.0
-	self._InvalidPathObjective = nil
+	self._OffMeshTarget = nil
 	self._RocketCooldownTimer = 0.0
 	self._SpawnProtectionTimer = 2.0
 	self._DeployTimer = MathUtils:GetRandomInt(1, Config.DeployCycle)
 
 	self._ObstacleRetryCounter = 0
 	self._StuckRerouteCount = 0
+	self._Breach = nil
+	self._BreachKey = nil
+	self._BreachCount = 0
+	self._MeshAfterExit = false
+	self._MeshRetryTimer = 0.0
+	-- The node of the paths the bot decided at last (NavRoutes:Step): it doesn't go straight back there.
+	self._NavCame = nil
+	self.m_RecentExits = nil
+	self._ChaseTime = 0.0
+	self._ChopperStartHeight = nil
+	self._PassengerExitTime = nil
+	self._LeftVehicle = nil
+	self._LeftVehicleUntil = 0.0
+	self._StrandedTime = 0.0
+	self._ProgressObjective = nil
+	self._VehicleAnchor = nil
+	self._VehicleGoal = nil
+	self._VehicleStart = nil
+	self._VehicleGoalBest = 0.0
+	self._VehicleGoalTime = 0.0
 	self._LowSpeedTimer = 0.0
 	self._NoProgressTimer = 0.0
 	self._ProgressNode = nil

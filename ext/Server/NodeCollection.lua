@@ -34,7 +34,6 @@ function NodeCollection:InitVars()
 	self._SpawnPointLevelName = ''
 
 	self._SelectedWaypoints = {}
-	self._SelectedSpawnPoints = {}
 	self._HiddenPaths = {}
 
 	self._Objectives = {}
@@ -821,6 +820,22 @@ function NodeCollection:GetFirst(p_PathIndex)
 	return s_FirstWaypoint
 end
 
+-- A path marked as a loop is one only with its ends this close: else the bot at the last waypoint walks straight back
+-- to the first one, and round again (XP5_003 path 15: 70 m apart).
+local LOOP_CLOSE = 30.0
+
+---Whether the path continues at its first waypoint after its last (marked as a loop, OptValue of the first waypoint not
+---0xFF, and the ends within LOOP_CLOSE). Else the bot turns around at its ends.
+---@param p_PathIndex integer
+---@return boolean
+function NodeCollection:Loops(p_PathIndex)
+	local s_Waypoints = self._WaypointsByPathIndex[p_PathIndex]
+	if s_Waypoints == nil or #s_Waypoints < 3 or s_Waypoints[1].OptValue == 0xFF then
+		return false
+	end
+	return s_Waypoints[1].Position:Distance(s_Waypoints[#s_Waypoints].Position) <= LOOP_CLOSE
+end
+
 ---@param p_PathIndex? integer
 ---@return Waypoint|boolean
 function NodeCollection:GetLast(p_PathIndex)
@@ -965,10 +980,6 @@ function NodeCollection:IsSelected(p_SelectionId, p_Waypoint, p_PathIndex)
 	end
 
 	return self._SelectedWaypoints[p_SelectionId][p_Waypoint.ID] ~= nil
-end
-
-function NodeCollection:GetSelectedSpawn(p_SelectionId)
-	return self._SelectedSpawnPoints[p_SelectionId]
 end
 
 ---@param p_PathIndex? integer
@@ -1199,18 +1210,6 @@ function NodeCollection:IsMapAvailable(p_LevelName, p_GameMode)
 		SQL:Close()
 		return true
 	end
-end
-
--- Function to check if a node is in front of or behind a point with direction
-function NodeCollection:isNodeInFront(p_Point, p_Direction, p_Node)
-	-- Vector from point to node
-	local s_VectorToNode = p_Node - p_Point
-
-	-- Calculate the dot product
-	local dotProduct = s_VectorToNode:Dot(p_Direction)
-
-	-- If dot product is positive, the node is in front of the point
-	return dotProduct > 0
 end
 
 -----------------------------
@@ -1706,6 +1705,24 @@ function NodeCollection:ObjectiveDirection(p_Waypoint, p_Objective, p_InVehicle)
 		return nil, nil
 	end
 
+	if not p_InVehicle then
+		-- On a navigation path: the way of the route over the mesh (NavRoutes, loaded after this file).
+		if g_NavRoutes ~= nil then
+			local s_NavDirection = g_NavRoutes:Direction(p_Waypoint, p_Objective)
+			if s_NavDirection ~= nil then
+				return s_NavDirection, p_Waypoint
+			end
+		end
+		-- On the path of the objective (the way to a vehicle, to arm an MCOM, to place a beacon): to its action-node.
+		local s_First = self:GetFirst(p_Waypoint.PathIndex)
+		if type(s_First) == 'table' and s_First.Data.Objectives ~= nil and table.has(s_First.Data.Objectives, p_Objective) then
+			local s_ActionDirection = self:_ActionDirection(p_Waypoint)
+			if s_ActionDirection ~= nil then
+				return s_ActionDirection, p_Waypoint
+			end
+		end
+	end
+
 	local s_BestDirection = nil
 	local s_BestWaypoint = nil
 
@@ -1755,6 +1772,29 @@ function NodeCollection:ObjectiveDirection(p_Waypoint, p_Objective, p_InVehicle)
 	return s_BestDirection, s_BestWaypoint
 end
 
+---Which way the action-node of the path is (vehicle, MCOM, beacon): 'Next', 'Previous', or nil if it has none or the
+---waypoint is the action-node.
+---@param p_Waypoint Waypoint
+---@return string|nil
+function NodeCollection:_ActionDirection(p_Waypoint)
+	local s_Waypoints = self._WaypointsByPathIndex[p_Waypoint.PathIndex] or {}
+	for l_Index = 1, #s_Waypoints do
+		local l_Waypoint = s_Waypoints[l_Index]
+		if l_Waypoint.Data ~= nil and l_Waypoint.Data.Action ~= nil and l_Waypoint.Data.Action.type ~= 'exit' then
+			if l_Waypoint.PointIndex > p_Waypoint.PointIndex then
+				return 'Next'
+			elseif l_Waypoint.PointIndex < p_Waypoint.PointIndex then
+				return 'Previous'
+			end
+			return nil
+		end
+	end
+	return nil
+end
+
+---The objectives of paths of them alone ("vehicle tank1 us", "mcom 2 interact", on paths not cut at the zones also the
+---capture points and bases): objective -> its paths. The zones of the mesh and the capture points of the engine are added
+---by the GameDirector (AddKnownObjective).
 function NodeCollection:ParseObjectives()
 	self._Objectives = {}
 
@@ -1775,6 +1815,14 @@ end
 
 function NodeCollection:GetKnownObjectives()
 	return self._Objectives
+end
+
+---An objective without paths of its own, e.g. a capture point of the engine (GameDirector:_InitObjectives).
+---@param p_Objective string
+function NodeCollection:AddKnownObjective(p_Objective)
+	if self._Objectives[p_Objective] == nil then
+		self._Objectives[p_Objective] = {}
+	end
 end
 
 -- This method avoids the use of the Vec3:Distance() method to avoid complex maths internally.

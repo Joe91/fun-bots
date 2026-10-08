@@ -8,13 +8,19 @@ DebugCommands = class('DebugCommands')
 --   channels        { <channel> = bool, ... }   switch parts of the snapshot / the traces on and off
 --   interval        { seconds }                 time between two snapshots
 --   server_raycasts { enabled }                 Registry.GAME_RAYCASTING.USE_SERVER_RAYCASTS at runtime
---   raycast         { from, to, detailed, maxHits }   -> all hits of one raycast
+--   raycast         { from, to, detailed, maxHits }   -> all hits of one raycast (entity, material flags and names)
 --   bot             { id }                      -> all plain fields of a bot (Bot.lua)
 --   nodes           {}                          streams all waypoints as "nodes" events
 --   paths_apply     { paths, save }             objectives, loop and links from the labeler of the debug-server
 --                                               (funbots_debug/paths), see DebugCommands.PathsApply
 --   scan            see MapScanner:Start        streams the scan as "scan_row" events
 --   scan_stop       { scan }                    stops one (or all) scans
+--   census          see MapCensus:Start         everything about the level for the waypoint-tools, streamed as
+--                                               "census_*" events (funbots_debug/census)
+--   census_stop     {}                          stops a running census
+--   spawns          {}                          -> the spawn-entities and the alternate spawns of the running mode
+--   entities        { type, pos, radius }       -> the entities of the type (near pos): { id, data, pos }
+--   navzones_apply  { map, mesh, save }         the walking mesh and its zones (NavZones.lua), save: into mod.db
 --   rcon            { command, args }           any RCON-command (also the vanilla ones) -> { lines }
 --   chat            { message, player }         a chat-command, as the player with that id or (no player) as
 --                                               ChatCommands.CONSOLE with all permissions -> { lines }
@@ -25,6 +31,12 @@ local m_DebugBridge = require('Debug/DebugBridge')
 local m_Utilities = require('__shared/Utilities')
 ---@type MapScanner
 local m_MapScanner = require('Debug/MapScanner')
+---@type MapCensus
+local m_MapCensus = require('Debug/MapCensus')
+---@type ZoneProbe
+local m_ZoneProbe = require('Debug/ZoneProbe')
+---@type NavZones
+local m_NavZones = require('NavZones')
 ---@type ServerRaycasts
 local m_ServerRaycasts = require('ServerRaycasts')
 ---@type BotManager
@@ -116,11 +128,18 @@ function DebugCommands:__init()
 	m_DebugBridge:RegisterCommand('interval', self.Interval)
 	m_DebugBridge:RegisterCommand('server_raycasts', self.ServerRaycasts)
 	m_DebugBridge:RegisterCommand('raycast', self.Raycast)
+	m_DebugBridge:RegisterCommand('rays', self.Rays)
 	m_DebugBridge:RegisterCommand('bot', self.Bot)
 	m_DebugBridge:RegisterCommand('nodes', self.Nodes)
 	m_DebugBridge:RegisterCommand('paths_apply', self.PathsApply)
 	m_DebugBridge:RegisterCommand('scan', self.Scan)
 	m_DebugBridge:RegisterCommand('scan_stop', self.ScanStop)
+	m_DebugBridge:RegisterCommand('census', self.Census)
+	m_DebugBridge:RegisterCommand('census_stop', self.CensusStop)
+	m_DebugBridge:RegisterCommand('spawns', self.Spawns)
+	m_DebugBridge:RegisterCommand('entities', self.Entities)
+	m_DebugBridge:RegisterCommand('zone_probe', self.ZoneProbe)
+	m_DebugBridge:RegisterCommand('navzones_apply', self.NavZonesApply)
 	m_DebugBridge:RegisterCommand('rcon', self.Rcon)
 	m_DebugBridge:RegisterCommand('chat', self.Chat)
 end
@@ -152,6 +171,12 @@ function DebugCommands.ServerRaycasts(p_Args)
 	return { enabled = m_ServerRaycasts:IsEnabled() }
 end
 
+-- The flags of a material the test-raycast names (MaterialFlags).
+local MATERIAL_FLAG_NAMES = {
+	'MfPenetrable', 'MfClientDestructible', 'MfBashable', 'MfSeeThrough', 'MfNoCollisionResponse',
+	'MfNoCollisionResponseCombined',
+}
+
 ---A test-raycast, e.g. to find out which materials block the sight.
 function DebugCommands.Raycast(p_Args)
 	local s_From = _ToVec3(p_Args.from, 'from')
@@ -178,17 +203,59 @@ function DebugCommands.Raycast(p_Args)
 		local s_Entry = { pos = _Vec(l_Hit.position), normal = _Vec(l_Hit.normal), part = l_Hit.part }
 		if l_Hit.rigidBody ~= nil then
 			s_Entry.entity = l_Hit.rigidBody.typeInfo.name
-			local s_Physics = PhysicsEntityBase(l_Hit.rigidBody)
-			s_Entry.materialFlags = s_Physics:GetPartMaterialFlags(l_Hit.part)
-			if s_Physics.userData ~= nil then
-				s_Entry.owner = s_Physics.userData.typeInfo.name
+		end
+		-- Same source as Utilities:IsInSight. No cast of the rigidBody or its userData (crashes on some entities).
+		if l_Hit.material ~= nil and l_Hit.material:Is('MaterialContainerPair') then
+			s_Entry.materialFlags = MaterialContainerPair(l_Hit.material).flagsAndIndex
+			-- The names of the flags that are set (the lower bits are the index of the material). The enum can't be
+			-- iterated: by name.
+			local s_Names = {}
+			for _, l_Name in ipairs(MATERIAL_FLAG_NAMES) do
+				local s_Value = MaterialFlags[l_Name]
+				if type(s_Value) == 'number' and s_Value > 0 and (s_Entry.materialFlags & s_Value) == s_Value then
+					s_Names[#s_Names + 1] = l_Name
+				end
 			end
+			s_Entry.materialNames = s_Names
 		end
 		s_Result[#s_Result + 1] = s_Entry
 	end
 
 	m_DebugBridge:Trace('test', s_From, s_To, #s_Hits == 0, s_Hits[1] and s_Hits[1].position)
 	return { from = _Vec(s_From), to = _Vec(s_To), hits = s_Result }
+end
+
+-- At most this many rays per command (rays).
+local MAX_RAYS = 4000
+
+---Many rays at once, e.g. to check the connections of the mesh: args.rays = { {x1, y1, z1, x2, y2, z2}, ... },
+---args.flags = names of RayCastFlags (default DontCheckCharacter, DontCheckRagdoll, DontCheckWater, as the census).
+---Returns per ray the distance to the first hit, -1 without hit.
+function DebugCommands.Rays(p_Args)
+	local s_Rays = type(p_Args.rays) == 'table' and p_Args.rays or {}
+	if #s_Rays > MAX_RAYS then
+		error('at most ' .. MAX_RAYS .. ' rays')
+	end
+	local s_Flags = 0
+	local s_Names = type(p_Args.flags) == 'table' and p_Args.flags
+		or { 'DontCheckCharacter', 'DontCheckRagdoll', 'DontCheckWater' }
+	for l_Index = 1, #s_Names do
+		local s_Flag = RayCastFlags[s_Names[l_Index]]
+		if s_Flag == nil then
+			error('unknown flag ' .. tostring(s_Names[l_Index]))
+		end
+		s_Flags = s_Flags | s_Flag
+	end
+	---@cast s_Flags RayCastFlags
+	local s_Result = {}
+	for l_Index = 1, #s_Rays do
+		local l_Ray = s_Rays[l_Index]
+		local s_From = Vec3(l_Ray[1], l_Ray[2], l_Ray[3])
+		local s_To = Vec3(l_Ray[4], l_Ray[5], l_Ray[6])
+		local s_Hit = RaycastManager:CollisionRaycast(s_From, s_To, 1, 0, s_Flags)[1]
+		s_Result[l_Index] = s_Hit ~= nil and math.floor(s_Hit.position:Distance(s_From) * 100 + 0.5) / 100 or -1
+	end
+	return { hits = s_Result }
 end
 
 function DebugCommands.Bot(p_Args)
@@ -208,6 +275,31 @@ function DebugCommands.Bot(p_Args)
 	if s_Soldier ~= nil then
 		s_Fields.pos = _Vec(s_Soldier.worldTransform.trans)
 		s_Fields.maxHealth = _Round(s_Soldier.maxHealth, 1)
+	end
+
+	-- On the mesh (BotZoneMovement): where it is, where it goes. Points counted from 0, as in the file of the mesh.
+	local s_Zone = s_Bot.m_Zone
+	if s_Zone ~= nil then
+		local s_Targets = {}
+		for l_Index = 1, #s_Zone.Targets do
+			local l_Target = s_Zone.Targets[l_Index]
+			s_Targets[l_Index] = { pos = _Vec(l_Target.Position), point = l_Target.Point and l_Target.Point - 1 }
+		end
+		s_Fields.zoneState = {
+			zone = s_Zone.Zone.Name,
+			objective = s_Zone.Objective,
+			point = s_Zone.Point and s_Zone.Point - 1,
+			goal = s_Zone.Goal and s_Zone.Goal - 1,
+			step = s_Zone.Step,
+			targets = s_Targets,
+			fails = s_Zone.Fails,
+			exitFails = s_Zone.ExitFails,
+			exit = s_Zone.Exit and { point = s_Zone.Exit.Point - 1, path = s_Zone.Exit.Waypoint and s_Zone.Exit.Waypoint.PathIndex,
+				waypoint = s_Zone.Exit.Waypoint and s_Zone.Exit.Waypoint.PointIndex } or nil,
+			action = s_Zone.Action and s_Zone.Action.Kind,
+			stuck = _Round(s_Zone.Stuck, 1),
+			waiting = s_Zone.Waiting,
+		}
 	end
 	return s_Fields
 end
@@ -378,6 +470,73 @@ end
 
 function DebugCommands.ScanStop(p_Args, p_Bridge)
 	return { stopped = m_MapScanner:Stop(p_Bridge, tonumber(p_Args.scan)) }
+end
+
+function DebugCommands.Census(p_Args, p_Bridge, p_Command)
+	m_MapCensus:Start(p_Bridge, p_Command.id, p_Args)
+	return DebugBridge.ASYNC
+end
+
+function DebugCommands.CensusStop(p_Args, p_Bridge)
+	return { stopped = m_MapCensus:Stop(p_Bridge) }
+end
+
+function DebugCommands.Spawns()
+	return m_MapCensus:EngineSpawns()
+end
+
+-- At most this many entities per answer (entities).
+local MAX_ENTITIES = 200
+
+---The entities of a type (args.type, e.g. "ServerInteractionEntity"), optionally only within args.radius of args.pos:
+---{ id, data (type of its data), pos, enabled (spawn-entities) }.
+function DebugCommands.Entities(p_Args)
+	local s_Type = tostring(p_Args.type or '')
+	local s_Near = p_Args.pos ~= nil and _ToVec3(p_Args.pos, 'pos') or nil
+	local s_Radius = tonumber(p_Args.radius) or math.huge
+	local s_Result = {}
+	local s_Iterator = EntityManager:GetIterator(s_Type)
+	local s_Entity = s_Iterator:Next()
+	while s_Entity ~= nil and #s_Result < MAX_ENTITIES do
+		local s_Ok, s_Position = pcall(function() return s_Entity.computedWorldTransform.trans:Clone() end)
+		if not s_Ok or s_Position == nil then
+			s_Ok, s_Position = pcall(function() return SpatialEntity(s_Entity).transform.trans:Clone() end)
+			s_Position = s_Ok and s_Position or nil
+		end
+		if s_Near == nil or (s_Position ~= nil and s_Position:Distance(s_Near) <= s_Radius) then
+			s_Result[#s_Result + 1] = {
+				id = s_Entity.instanceId,
+				data = s_Entity.data ~= nil and s_Entity.data.typeInfo.name or nil,
+				pos = s_Position ~= nil and _Vec(s_Position) or nil,
+			}
+		end
+		s_Entity = s_Iterator:Next()
+	end
+	return { type = s_Type, entities = s_Result }
+end
+
+---Measures the capture zones with the bots (ZoneProbe.lua): they are put around the capture points.
+function DebugCommands.ZoneProbe(p_Args, p_Bridge, p_Command)
+	m_ZoneProbe:Start(p_Bridge, p_Command.id)
+	return DebugBridge.ASYNC
+end
+
+function DebugCommands.NavZonesApply(p_Args)
+	if p_Args.map ~= m_NodeCollection:GetMapName() then
+		error('the networks are for ' .. tostring(p_Args.map) .. ', the level is ' .. m_NodeCollection:GetMapName())
+	end
+	-- Bots on the mesh walk on the old one: back to the waypoints, they go onto the new one at the next junction.
+	local s_Bots = m_BotManager:GetBots()
+	for l_Index = 1, #s_Bots do
+		if s_Bots[l_Index].m_Zone ~= nil then
+			s_Bots[l_Index]:_LeaveZone(nil)
+		end
+	end
+	if type(p_Args.mesh) ~= 'table' then
+		error('navzones_apply needs the mesh')
+	end
+	local s_Zones, s_Junctions = m_NavZones:Apply(p_Args.mesh, p_Args.save == true)
+	return { zones = s_Zones, junctions = s_Junctions, saved = p_Args.save == true }
 end
 
 function DebugCommands.Rcon(p_Args)

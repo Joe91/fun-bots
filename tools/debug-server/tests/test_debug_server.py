@@ -20,7 +20,7 @@ from funbots_debug.analyzers import create_analyzers  # noqa: E402
 from funbots_debug.analyzers.combat import CombatAnalyzer  # noqa: E402
 from funbots_debug.analyzers.stuck import StuckBotAnalyzer  # noqa: E402
 from funbots_debug.console_commands import MOD_EXT, catalog  # noqa: E402
-from funbots_debug.hub import Hub  # noqa: E402
+from funbots_debug.hub import Hub, LabelError  # noqa: E402
 from funbots_debug.protocol import as_list, yaw_to_direction  # noqa: E402
 from funbots_debug.rcon import RconClient, RconError, decode_packet, encode_packet  # noqa: E402
 from funbots_debug.recorder import Recorder, read_recording, replay  # noqa: E402
@@ -97,6 +97,36 @@ class HubTest(unittest.TestCase):
         self.assertEqual(command.status, "error")
         self.assertIn("unknown", command.error)
 
+    def test_big_args_only_go_to_the_mod(self):
+        zones = [{"name": "a", "points": [[float(i), 0.0, 0.0]] * 50} for i in range(20)]
+        command = self.hub.submit_command("navzones_apply", {"map": "MP_001_ConquestLarge0", "zones": zones})
+        self.assertEqual(self.hub.ingest(payload())["commands"][0]["args"]["zones"], zones)
+        shown = self.hub.snapshot()["commands"][0]["args"]
+        self.assertEqual(shown["map"], "MP_001_ConquestLarge0")
+        self.assertNotIn("zones", shown)
+        self.assertGreater(shown["_bytes"], 2000)
+        self.assertEqual(command.args["zones"], zones)
+
+    def test_apply_only_networks_of_the_census(self):
+        self.hub.ingest(payload())
+        self.hub.set_navzones({"version": 1, "map": "MP_001_ConquestLarge0", "zones": []})  # loaded from navzones/
+        with self.assertRaises(LabelError):
+            self.hub.apply_navzones(timeout=0, census="MP_001_ConquestLarge0")
+        self.hub.set_navzones({"version": 2, "map": "MP_001_ConquestLarge0", "zones": []}, "MP_001_ConquestLarge0")
+        self.hub.apply_navzones(timeout=0, census="MP_001_ConquestLarge0")
+        self.assertEqual(self.hub.ingest(payload())["commands"][0]["args"]["mesh"]["version"], 2)
+
+    def test_mod_gone_loses_sent_commands(self):
+        command = self.hub.submit_command("census", {})
+        self.hub.ingest(payload())
+        queued_later = self.hub.submit_command("ping", {})
+        self.hub._last_request -= 60
+        self.hub.check_connection()
+        self.assertFalse(self.hub.mod_connected)
+        self.assertEqual(command.status, "lost")
+        self.assertTrue(self.hub.commands.wait(command, 0))
+        self.assertEqual(queued_later.status, "queued")
+
     def test_level_change_resets(self):
         self.hub.ingest(payload([frame(1.0, [bot(1, (0, 0, 0))])],
                                 [{"type": "nodes", "path": 1, "first": 1, "points": [[0, 0, 0], [1, 0, 1]], "t": 1}]))
@@ -125,7 +155,7 @@ class HubTest(unittest.TestCase):
     def test_objectives(self):
         flag = {"name": "CP_A", "pos": [1, 2, 3], "team": 1, "flag": 50.0}
         self.hub.ingest(payload([frame(1.0, objectives={"flags": [flag], "mcoms": {}, "stage": 0})]))
-        self.assertEqual(self.hub.state.objectives, {"flags": [flag], "mcoms": [], "stage": 0})
+        self.assertEqual(self.hub.state.objectives, {"flags": [flag], "mcoms": [], "vehicles": [], "stage": 0})
         self.assertNotIn("objectives", self.hub.state.extras)
         self.assertEqual(self.hub.snapshot()["objectives"]["flags"], [flag])
 
@@ -224,6 +254,10 @@ class HttpTest(unittest.TestCase):
     def tearDown(self):
         self.server.shutdown()
         self.server.server_close()
+
+    def test_port_in_use(self):
+        with self.assertRaises(OSError):
+            DebugServer(("127.0.0.1", self.server.server_address[1]), self.hub)
 
     def post(self, path, data):
         request = urllib.request.Request(self.url + path, data=json.dumps(data).encode(), method="POST",

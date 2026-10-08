@@ -6,6 +6,7 @@ require('Bot/BotAiming')
 require('Bot/BotAimError')
 require('Bot/BotAttacking')
 require('Bot/BotMovement')
+require('Bot/BotZoneMovement')
 require('Bot/BotWeaponHandling')
 
 require('Bot/BotActions')
@@ -111,6 +112,8 @@ function Bot:__init(p_Player)
 	self._SpawnDelayTimer = 0.0
 	self._WayWaitTimer = 0.0
 	self._VehicleWaitTimer = 0.0
+	-- Seconds the driver waited for passengers so far (VehicleMovement).
+	self._VehicleWaited = 0.0
 	self._VehicleLookAroundTimer = 0.0
 	self._LookAroundYawOffset = 0.0
 	self._LookAroundYawGoal = 0.0
@@ -138,10 +141,15 @@ function Bot:__init(p_Player)
 	self._DefendTimer = 0.0
 	self._SidewardsTimer = 0.0
 	self._KillYourselfTimer = 0.0
-	-- Objective and closest distance to it on an invalid path (GameDirector: the time only counts without progress).
+	-- Off the mesh: where the bot walks to (end of its navigation path, or objective) and how close it got to it
+	-- (GameDirector:_CheckProgressOffMesh, the time only counts without progress).
 	---@type string|nil
-	self._InvalidPathObjective = nil
-	self._InvalidPathBestDistance = math.huge
+	self._OffMeshTarget = nil
+	---@type Waypoint|nil the node of the routes it walks to (GameDirector:_CheckProgressOffMesh)
+	self._OffMeshEnd = nil
+	-- The key of the path whose stretch it got stuck on (NavRoutes:BlockStretch), once per path.
+	self._OffMeshBlocked = nil
+	self._OffMeshBestDistance = math.huge
 	self._RocketCooldownTimer = 0.0
 
 	-- Shared movement vars.
@@ -206,6 +214,42 @@ function Bot:__init(p_Player)
 	self._ActiveDelay = 0.0
 	self._VehicleMoveWhileShooting = false
 	self._MoveWhileShooting = false
+	-- Rush: the attacker keeps going to its MCOM while shooting (StateAttacking, Bot:UpdatePushMovement).
+	self._PushWhileShooting = false
+	self._Pushing = false
+	-- Shooting at a wall in the way (Bot:_TryBreach): { Position, Time, Fire }, and how often for which target.
+	self._Breach = nil
+	self._BreachKey = nil
+	self._BreachCount = 0
+	-- Out of a vehicle: onto the mesh once on the ground (VehicleActions, UpdateNormalMovement).
+	self._MeshAfterExit = false
+	self._MeshRetryTimer = 0.0
+	-- The node of the paths the bot decided at last (NavRoutes:Step): it doesn't go straight back there.
+	self._NavCame = nil
+	self.m_RecentExits = nil
+	-- Seconds the bot runs after the target of an action, and until when it uses no C4 (StateAttacking).
+	self._ChaseTime = 0.0
+	self._ChopperStartHeight = nil
+	self._PassengerExitTime = nil
+	-- The vehicle the bot got out of or didn't get to ("vehicle <id>"): it isn't sent to it again until then.
+	self._LeftVehicle = nil
+	self._LeftVehicleUntil = 0.0
+	-- Seconds without an objective where no way leads on (GameDirector:_CheckStranded).
+	self._StrandedTime = 0.0
+	self._ChaseTarget = nil
+	self._ChaseCooldown = 0.0
+	-- Progress towards the objective and of the vehicle (GameDirector:_CheckObjectiveProgress, _CheckVehicleProgress).
+	self._ProgressObjective = nil
+	self._ProgressBest = math.huge
+	self._ProgressTime = 0.0
+	self._VehicleAnchor = nil
+	self._VehicleGoal = nil
+	self._VehicleStart = nil
+	self._VehicleGoalBest = 0.0
+	self._VehicleGoalTime = 0.0
+	self._VehicleStuckTime = 0.0
+	-- Where it got nowhere before it was respawned: not again close to there (BotSpawner).
+	self._RespawnAway = nil
 	self._FireCycleModifier = 1.0
 
 	-- Vehicle stuff.
@@ -295,6 +339,17 @@ function Bot:__init(p_Player)
 
 	self._FollowTargetPlayer = nil
 	self._FollowingTraceTimer = 0.0
+
+	-- Free movement in the zone of the objective (BotZoneMovement), nil on the waypoints.
+	---@type BotZoneState|nil
+	self.m_Zone = nil
+	-- Times the bot left the mesh after getting stuck, without reaching a goal or an exit in between.
+	self.m_ZoneGiveUps = 0
+	-- Its own route among similar ones, for a life (NavRoutes:Next).
+	self.m_RouteSeed = math.random() * 1000.0
+	-- Rush: left the combat area (the next stage isn't open yet), waits at the border (Bot:OnCombatAreaLeft).
+	---@type { Left: number, Returned: number|nil, Inverted: boolean }|nil
+	self.m_Border = nil
 end
 
 -- =============================================
@@ -502,10 +557,13 @@ function Bot:_CheckShouldExitVehicleIfPassenger(p_VehicleEntity, p_OnVehicle)
 		return (s_DeltaX * s_DeltaX + s_DeltaZ * s_DeltaZ) < s_ExitDistanceSquared
 	end
 
+	-- At a capture point the team doesn't hold (where the pilot flies), not over the own ones on the way.
 	local s_ShouldExit = false
+	local s_TeamId = self.m_Player.teamId
 	local s_AllCapturePoints = g_GameDirector:GetAllCapturePoints()
 	for l_Index = 1, #s_AllCapturePoints do
-		if _IsInExitRange(s_AllCapturePoints[l_Index].transform.trans) then
+		local l_CapturePoint = s_AllCapturePoints[l_Index]
+		if l_CapturePoint.team ~= s_TeamId and _IsInExitRange(l_CapturePoint.transform.trans) then
 			s_ShouldExit = true
 			break
 		end
@@ -751,16 +809,6 @@ function Bot:UpdateVehicleMovableId()
 		end
 	end
 	self:UpdateDontAttackFlag()
-end
-
-function Bot:AtObjectivePath()
-	local s_FirstPoint = m_NodeCollection:GetFirst(self._PathIndex)
-
-	if #s_FirstPoint.Data.Objectives == 1 and s_FirstPoint.Data.Objectives[1] == self._Objective then
-		return true
-	end
-
-	return false
 end
 
 function Bot:AbortAttack()

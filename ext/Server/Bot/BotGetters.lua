@@ -205,11 +205,6 @@ function Bot:GetWayIndex()
 	return self._PathIndex
 end
 
----@return integer
-function Bot:GetPointIndex()
-	return self._CurrentWayPoint
-end
-
 ---@return Player|nil
 function Bot:GetTargetPlayer()
 	return self._TargetPlayer
@@ -221,15 +216,6 @@ function Bot:IsInactive()
 		return false
 	else
 		return true
-	end
-end
-
----@return boolean
-function Bot:IsStuck()
-	if self._ObstacleSequenceTimer ~= 0 then
-		return true
-	else
-		return false
 	end
 end
 
@@ -246,17 +232,17 @@ function Bot:_GetWayIndex(p_Increment)
 
 		-- Direction handling.
 		local s_CountOfPoints = #m_NodeCollection:Get(nil, self._PathIndex)
-		local s_FirstPoint = m_NodeCollection:GetFirst(self._PathIndex)
+		local s_Loops = m_NodeCollection:Loops(self._PathIndex)
 
 		if s_ActivePointIndex > s_CountOfPoints then
-			if s_FirstPoint and s_FirstPoint.OptValue == 0xFF then -- Inversion needed.		
+			if not s_Loops then -- Inversion needed.
 				s_ActivePointIndex = s_CountOfPoints
 				s_InvertPathDirection = true
 			else
 				s_ActivePointIndex = 1
 			end
 		elseif s_ActivePointIndex < 1 then
-			if s_FirstPoint and s_FirstPoint.OptValue == 0xFF then -- Inversion needed.
+			if not s_Loops then -- Inversion needed.
 				s_ActivePointIndex = 1
 				s_InvertPathDirection = false
 			else

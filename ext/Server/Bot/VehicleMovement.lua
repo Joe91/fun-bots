@@ -18,6 +18,14 @@ local VEHICLE_OBSTACLE_STANDSTILL_SPEED = 0.8     -- Horizontal m/s below which 
 local VEHICLE_OBSTACLE_STANDSTILL_TIME = 1.5      -- Seconds of standstill before the obstacle-sequence starts.
 local VEHICLE_OBSTACLE_RESOLVED_PROGRESS = 3.0    -- Meters closer to the target than at the start of the sequence.
 
+-- Driving the vehicle-network of a zone (NavZones, BotZoneMovement).
+local VEHICLE_ZONE_REACH = 4.0         -- Horizontal metres to a position that count as reached.
+local VEHICLE_ZONE_REACH_HEIGHT = 3.0
+local VEHICLE_ZONE_MIN_PROGRESS = 0.5  -- Metres closer to the target that count as progress.
+local VEHICLE_ZONE_STUCK_TIME = 3.0    -- Seconds without progress before the vehicle reverses.
+local VEHICLE_ZONE_REVERSE_TIME = 2.0
+local VEHICLE_ZONE_REVERSES = 3        -- Reverses before the connection is given up.
+
 function VehicleMovement:__init()
 	-- Nothing to do.
 end
@@ -47,12 +55,30 @@ function VehicleMovement:_DetectObstacle(p_Bot, p_Vehicle, p_Distance, p_DeltaTi
 	return false
 end
 
+-- Metres a vehicle has to be driven before an "exit" on its path counts.
+local VEHICLE_EXIT_MIN_DRIVE = 50.0
+
+-- A target point closer than this (horizontally) gives no direction to steer to.
+local VEHICLE_STEER_MIN_DISTANCE = 1.5
+
+-- The driver waits for passengers on their way to the vehicle (GameDirector:PassengersComing) at most this many seconds
+-- in all, checking again every VEHICLE_WAIT_STEP.
+local VEHICLE_WAIT_MAX = 25.0
+local VEHICLE_WAIT_STEP = 1.0
+
 ---@param p_DeltaTime number
 ---@param p_Bot Bot
 function VehicleMovement:UpdateNormalMovementVehicle(p_DeltaTime, p_Bot)
 	if p_Bot._VehicleWaitTimer > 0.0 then
 		p_Bot._VehicleWaitTimer = p_Bot._VehicleWaitTimer - p_DeltaTime
+		p_Bot._VehicleWaited = p_Bot._VehicleWaited + p_DeltaTime
+		-- Teammates on their way to get in (passengers sent to the vehicle): a while longer.
+		if p_Bot._VehicleWaitTimer <= 0.0 and p_Bot._VehicleWaited < VEHICLE_WAIT_MAX
+			and g_GameDirector:PassengersComing(p_Bot.m_Player.controlledControllable, p_Bot.m_Player.teamId) then
+			p_Bot._VehicleWaitTimer = VEHICLE_WAIT_STEP
+		end
 		if p_Bot._VehicleWaitTimer <= 0.0 then
+			p_Bot._VehicleWaited = 0.0
 			g_GameDirector:_SetVehicleObjectiveState(p_Bot.m_Player.controlledControllable.transform.trans:Clone(), false)
 		else
 			return
@@ -61,6 +87,11 @@ function VehicleMovement:UpdateNormalMovementVehicle(p_DeltaTime, p_Bot)
 
 	if p_Bot._VehicleTakeoffTimer > 0.0 then
 		p_Bot._VehicleTakeoffTimer = p_Bot._VehicleTakeoffTimer - p_DeltaTime
+	end
+
+	-- In the zone of the objective the vehicle drives the vehicle-network of the zone.
+	if p_Bot.m_Zone ~= nil and p_Bot.m_Zone.Vehicle and self:_UpdateZoneMovementVehicle(p_DeltaTime, p_Bot) then
+		return
 	end
 
 
@@ -88,10 +119,22 @@ function VehicleMovement:UpdateNormalMovementVehicle(p_DeltaTime, p_Bot)
 			return
 		end
 
+		-- Where the bot started driving: a vehicle that spawns at the end of a path with an "exit" there (XP5_003: dirt
+		-- bikes at A) is left at once, by one bot after the other.
+		local s_VehicleEntity = p_Bot.m_Player.controlledControllable
+		local s_Here = s_VehicleEntity ~= nil and s_VehicleEntity.transform.trans or nil
+		if p_Bot._VehicleStart == nil and s_Here ~= nil then
+			p_Bot._VehicleStart = s_Here:Clone()
+		end
+		local s_Driven = s_Here ~= nil and p_Bot._VehicleStart ~= nil and s_Here:Distance(p_Bot._VehicleStart) >= VEHICLE_EXIT_MIN_DRIVE
+
 		-- Execute Action if needed.
 		if p_Bot._ActiveAction == BotActionFlags.OtherActionActive then
 			if s_Point.Data ~= nil and s_Point.Data.Action ~= nil then
-				if s_Point.Data.Action.type == 'exit' then
+				if s_Point.Data.Action.type == 'exit' and not s_Driven then
+					-- Not driven anywhere yet: drive on.
+					p_Bot:_ResetActionFlag(BotActionFlags.OtherActionActive)
+				elseif s_Point.Data.Action.type == 'exit' then
 					p_Bot:_ResetActionFlag(BotActionFlags.OtherActionActive)
 					local s_OnlyPassengers = false
 					if s_Point.Data.Action.onlyPassengers ~= nil and s_Point.Data.Action.onlyPassengers == true then
@@ -99,7 +142,6 @@ function VehicleMovement:UpdateNormalMovementVehicle(p_DeltaTime, p_Bot)
 					end
 
 					-- Let all other bots exit the vehicle.
-					local s_VehicleEntity = p_Bot.m_Player.controlledControllable
 					if s_VehicleEntity ~= nil then
 						for i = 1, (s_VehicleEntity.entryCount - 1) do
 							local s_Player = s_VehicleEntity:GetPlayerInEntry(i)
@@ -280,6 +322,12 @@ function VehicleMovement:UpdateNormalMovementVehicle(p_DeltaTime, p_Bot)
 					end
 				end
 
+				-- A junction of the vehicle-network of the zone of the objective: drive it from now on.
+				if p_Bot:_CheckForVehicleZoneEntry(s_Point) then
+					p_Bot._CurrentWayPoint = s_Point.PointIndex
+					return
+				end
+
 				-- CHECK FOR PATH-SWITCHES.
 				---@type Waypoint|nil
 				local s_NewWaypoint = nil
@@ -341,6 +389,112 @@ function VehicleMovement:UpdateNormalMovementVehicle(p_DeltaTime, p_Bot)
 			end
 		end
 	end
+end
+
+---Driving in the zone of the objective, on its vehicle-network: from point to point, standing a moment at each. A
+---vehicle that doesn't get along reverses, after a few times it takes another way (Bot:_ZoneGiveUpConnection).
+---@param p_DeltaTime number
+---@param p_Bot Bot
+---@return boolean true while the vehicle is in the zone
+function VehicleMovement:_UpdateZoneMovementVehicle(p_DeltaTime, p_Bot)
+	local s_State = p_Bot.m_Zone
+	local s_Vehicle = p_Bot.m_Player.controlledControllable
+	if s_State == nil or s_Vehicle == nil then
+		return false
+	end
+
+	-- New objective: out over the vehicle-junction that suits it best. Without objective the vehicle stays.
+	if p_Bot._Objective ~= s_State.Objective and s_State.Exit == nil then
+		if p_Bot._Objective == '' then
+			s_State.Objective = ''
+		else
+			local s_Exit = p_Bot:_ZoneBestExit(p_Bot._Objective)
+			if s_Exit == nil then
+				p_Bot:_LeaveZone(nil)
+				return false
+			end
+			p_Bot:_ZoneRouteToExit(s_Exit)
+		end
+	end
+
+	-- The fast update switched to the next target already.
+	local s_Following = s_State.Targets[s_State.Step + 1]
+	if s_Following ~= nil and p_Bot._TargetPoint == s_Following then
+		s_State.Step = s_State.Step + 1
+	end
+
+	local s_Target = s_State.Targets[s_State.Step]
+	if s_Target == nil then
+		if s_State.Exit ~= nil then
+			p_Bot:_LeaveZone(s_State.Exit)
+			return false
+		end
+		if s_State.Wait > 0.0 then
+			s_State.Waiting = true
+			s_State.Wait = s_State.Wait - p_DeltaTime
+			p_Bot.m_ActiveSpeedValue = BotMoveSpeeds.NoMovement
+			p_Bot._TargetPoint = nil
+			return true
+		end
+		p_Bot:_ZoneNewGoal()
+		return true
+	end
+
+	s_State.Waiting = false
+	p_Bot._TargetPoint = s_Target
+	p_Bot._NextTargetPoint = s_State.Targets[s_State.Step + 1]
+
+	if s_State.Reverse > 0.0 then
+		s_State.Reverse = s_State.Reverse - p_DeltaTime
+		p_Bot.m_ActiveSpeedValue = BotMoveSpeeds.Backwards
+		return true
+	end
+
+	if s_Target.Flags & NavZoneFlags.InZone ~= 0 then
+		p_Bot.m_ActiveSpeedValue = BotMoveSpeeds.Normal
+	else
+		p_Bot.m_ActiveSpeedValue = BotMoveSpeeds.Sprint
+	end
+
+	local s_Position = s_Vehicle.transform.trans
+	local s_DeltaX = s_Target.Position.x - s_Position.x
+	local s_DeltaZ = s_Target.Position.z - s_Position.z
+	local s_Distance = math.sqrt(s_DeltaX * s_DeltaX + s_DeltaZ * s_DeltaZ)
+
+	if s_Distance < VEHICLE_ZONE_REACH and math.abs(s_Target.Position.y - s_Position.y) < VEHICLE_ZONE_REACH_HEIGHT then
+		if s_Target.Point ~= nil then
+			s_State.Point = s_Target.Point
+		end
+		s_State.Step = s_State.Step + 1
+		s_State.Progress = math.huge
+		s_State.Stuck = 0.0
+		s_State.Fails = 0
+		s_State.Reverses = 0
+		return true
+	end
+
+	if s_Distance < s_State.Progress - VEHICLE_ZONE_MIN_PROGRESS then
+		s_State.Progress = s_Distance
+		s_State.Stuck = 0.0
+	else
+		s_State.Stuck = s_State.Stuck + p_DeltaTime
+	end
+
+	if s_State.Stuck > VEHICLE_ZONE_STUCK_TIME then
+		s_State.Stuck = 0.0
+		s_State.Progress = math.huge
+		s_State.Reverses = s_State.Reverses + 1
+		if s_State.Reverses >= VEHICLE_ZONE_REVERSES then
+			s_State.Reverses = 0
+			if p_Bot:_ZoneGiveUpConnection(s_Position, s_Target.Position) then
+				return false
+			end
+		else
+			s_State.Reverse = VEHICLE_ZONE_REVERSE_TIME
+		end
+	end
+
+	return true
 end
 
 ---@param p_Bot Bot
@@ -426,6 +580,13 @@ function VehicleMovement:UpdateTargetMovementVehicle(p_Bot, p_DeltaTime)
 		local s_TargetPos = p_Bot._TargetPoint.Position
 		local s_DifferenceY = s_TargetPos.z - s_VehiclePos.z
 		local s_DifferenceX = s_TargetPos.x - s_VehiclePos.x
+		if p_Bot._VehicleWaitTimer > 0.0 or s_DifferenceX ^ 2 + s_DifferenceY ^ 2 < VEHICLE_STEER_MIN_DISTANCE ^ 2 then
+			-- Waiting for passengers, or the point is (nearly) under the vehicle (the first one of a path at its spawn):
+			-- its direction is any, a tank turned on the spot towards it. Keep the heading.
+			local s_Forward = p_Bot.m_Player.controlledControllable.transform.forward
+			s_DifferenceY = s_Forward.z
+			s_DifferenceX = s_Forward.x
+		end
 		local s_AtanDzDx = math.atan(s_DifferenceY, s_DifferenceX)
 		local s_Yaw = (s_AtanDzDx > math.pi / 2) and (s_AtanDzDx - math.pi / 2) or (s_AtanDzDx + 3 * math.pi / 2)
 		p_Bot._TargetYaw = s_Yaw
