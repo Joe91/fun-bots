@@ -214,6 +214,28 @@ function Vehicles:FreeBotSeats(p_Entity, p_VehicleData)
 	return s_Free
 end
 
+---The passenger seats of a transport helicopter or an AMTRAC that a bot may spawn in. They don't count towards
+---Config.MaxBotsPerVehicle (that limits the crew: driver and gunners), the passengers get out at the objective
+---(Bot:_CheckShouldExitVehicleIfPassenger). One of them is kept for a player (Config.KeepVehicleSeatForPlayer).
+---@param p_Entity ControllableEntity
+---@param p_VehicleData VehicleDataInner|nil
+---@return integer[] seat indices
+function Vehicles:FreePassengerSeats(p_Entity, p_VehicleData)
+	local s_Free = {}
+	if p_VehicleData == nil or p_VehicleData.FirstPassengerSeat == nil then
+		return s_Free
+	end
+	for l_Seat = p_VehicleData.FirstPassengerSeat - 1, p_Entity.entryCount - 1 do
+		if p_Entity:GetPlayerInEntry(l_Seat) == nil then
+			s_Free[#s_Free + 1] = l_Seat
+		end
+	end
+	if Config.KeepVehicleSeatForPlayer then
+		table.remove(s_Free)
+	end
+	return s_Free
+end
+
 ---@param p_Entity ControllableEntity
 function Vehicles:IsEmpty(p_Entity)
 	return self:GetNrOfFreeSeats(p_Entity, true) == p_Entity.entryCount

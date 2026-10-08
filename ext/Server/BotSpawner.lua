@@ -178,12 +178,14 @@ function BotSpawner:OnEngineUpdate(p_DeltaTime, p_SimulationDeltaTime)
 			end
 
 			if l_Bot.m_Player.soldier ~= nil then
-				local _, s_SpecialSpawnEntity = self:_GetSpecialSpawnEnity(l_Bot, l_Bot.m_Player.teamId)
+				local s_SpecialSpawn, s_SpecialSpawnEntity = self:_GetSpecialSpawnEnity(l_Bot, l_Bot.m_Player.teamId)
 				if s_SpecialSpawnEntity then
 					table.remove(self._BotsWithoutPath, l_Index)
 					l_Bot:SetVarsWay(nil, true, 0, 0, false)
 
-					if l_Bot:_EnterVehicleEntity(s_SpecialSpawnEntity, false) ~= 0 then
+					local s_Entered = s_SpecialSpawn == "SpawnInMobileVehicle" and l_Bot:_EnterPassengerSeat(s_SpecialSpawnEntity)
+						or l_Bot:_EnterVehicleEntity(s_SpecialSpawnEntity, false)
+					if s_Entered ~= 0 then
 						self:_KillSoldierKeepRespawn(l_Bot)
 					else
 						l_Bot:FindVehiclePath(s_SpecialSpawnEntity.transform.trans:Clone())
@@ -1509,7 +1511,9 @@ function BotSpawner:_SpawnSingleWayBot(p_Player, p_UseRandomWay, p_ActiveWayInde
 					p_ExistingBot:SetVarsWay(nil, true, 0, 0, false)
 					self:_SpawnBot(p_ExistingBot, s_Transform, false)
 
-					if p_ExistingBot:_EnterVehicleEntity(s_SpawnEntity, false) ~= 0 then
+					local s_Entered = s_SpawnPoint == "SpawnAtMobileVehicle" and p_ExistingBot:_EnterPassengerSeat(s_SpawnEntity)
+						or p_ExistingBot:_EnterVehicleEntity(s_SpawnEntity, false)
+					if s_Entered ~= 0 then
 						self:_KillSoldierKeepRespawn(p_ExistingBot)
 					elseif s_SpawnEntity ~= nil then
 						p_ExistingBot:FindVehiclePath(s_SpawnEntity.transform.trans:Clone())
@@ -1526,7 +1530,9 @@ function BotSpawner:_SpawnSingleWayBot(p_Player, p_UseRandomWay, p_ActiveWayInde
 						s_Bot:SetVarsWay(nil, true, 0, 0, false)
 						self:_SpawnBot(s_Bot, s_Transform, true)
 
-						if s_Bot:_EnterVehicleEntity(s_SpawnEntity, false) ~= 0 then
+						local s_Entered = s_SpawnPoint == "SpawnAtMobileVehicle" and s_Bot:_EnterPassengerSeat(s_SpawnEntity)
+							or s_Bot:_EnterVehicleEntity(s_SpawnEntity, false)
+						if s_Entered ~= 0 then
 							self:_KillSoldierKeepRespawn(s_Bot)
 						elseif s_SpawnEntity then
 							s_Bot:FindVehiclePath(s_SpawnEntity.transform.trans:Clone())

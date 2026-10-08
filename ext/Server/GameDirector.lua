@@ -1298,7 +1298,7 @@ function GameDirector:GetMobileRespawnVehicles(p_TeamId)
 	_PruneInvalidEntities(self.m_MobileRespawnVehicles[p_TeamId])
 	for l_Index = 1, #self.m_MobileRespawnVehicles[p_TeamId] do
 		local l_Vehicle = self.m_MobileRespawnVehicles[p_TeamId][l_Index]
-		if l_Vehicle ~= nil and m_Vehicles:GetNrOfFreeSeats(l_Vehicle, false) > 0 then
+		if l_Vehicle ~= nil and #m_Vehicles:FreePassengerSeats(l_Vehicle, m_Vehicles:GetVehicleByEntity(l_Vehicle)) > 0 then
 			s_Vehicles[#s_Vehicles + 1] = l_Vehicle
 		end
 	end

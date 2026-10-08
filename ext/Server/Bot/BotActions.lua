@@ -370,6 +370,31 @@ function Bot:_EnterVehicleEntity(p_Entity, p_PlayerIsDriver)
 	return -2
 end
 
+---Into a free passenger seat of a transport helicopter or an AMTRAC (Vehicles:FreePassengerSeats): spawned in it, the
+---bot rides along and gets out at the objective.
+---@param p_Entity ControllableEntity
+---@return integer 0 if it got in
+function Bot:_EnterPassengerSeat(p_Entity)
+	local s_VehicleData = m_Vehicles:GetVehicleByEntity(p_Entity)
+	if s_VehicleData == nil then
+		return -2
+	end
+	if not Config.UseAirVehicles and m_Vehicles:IsAirVehicle(s_VehicleData) then
+		return -3
+	end
+	local s_Seats = m_Vehicles:FreePassengerSeats(p_Entity, s_VehicleData)
+	if #s_Seats == 0 then
+		return -2
+	end
+	self.m_Player:EnterVehicle(p_Entity, s_Seats[1])
+	self._ExitVehicleHealth = PhysicsEntity(p_Entity).internalHealth * (Registry.VEHICLES.VEHICLE_EXIT_HEALTH / 100.0)
+	self.m_ActiveVehicle = s_VehicleData
+	self._ActiveVehicleWeaponSlot = 0
+	self:UpdateVehicleMovableId()
+	self._VehicleWaitTimer = 0.0
+	return 0
+end
+
 ---@param p_PlayerIsDriver boolean
 ---@param p_Distance integer|nil
 ---@return integer
