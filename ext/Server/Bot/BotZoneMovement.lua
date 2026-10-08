@@ -994,13 +994,18 @@ function Bot:UpdateZoneMovement(p_DeltaTime)
 	local s_Distance = math.sqrt(s_DeltaX * s_DeltaX + s_DeltaZ * s_DeltaZ)
 	local s_Narrow = (s_TargetPoint ~= nil and s_TargetPoint.Clearance < ZONE_NARROW)
 		or (s_Distance < ZONE_STEEP_RANGE and math.abs(s_Target.Position.y - s_Position.y) > ZONE_STEEP)
+	-- The reason only for the debug-snapshot (DebugSnapshots).
 	if s_Target.Flags & NavZoneFlags.Crouch ~= 0 then
 		self.m_ActiveSpeedValue = BotMoveSpeeds.SlowCrouch
+		self._ZoneSpeedReason = 'crouch'
 	elseif s_Narrow or (s_State.Exit == nil and s_Target.Flags & NavZoneFlags.InZone ~= 0) then
 		-- Walking around in the zone. On the way out (to the next objective, to arm or disarm) the bot runs.
 		self.m_ActiveSpeedValue = BotMoveSpeeds.Normal
+		self._ZoneSpeedReason = s_Narrow and ((s_TargetPoint ~= nil and s_TargetPoint.Clearance < ZONE_NARROW)
+			and 'narrow' or 'steep') or 'zone'
 	else
 		self.m_ActiveSpeedValue = BotMoveSpeeds.Sprint
+		self._ZoneSpeedReason = 'sprint'
 	end
 	self:_ApplyReactionAction(p_DeltaTime)
 	if Config.OverWriteBotSpeedMode ~= BotMoveSpeeds.NoMovement then
@@ -1022,6 +1027,7 @@ function Bot:UpdateZoneMovement(p_DeltaTime)
 		end
 		if s_Turn > ZONE_TURN_ANGLE then
 			self.m_ActiveSpeedValue = BotMoveSpeeds.Slow
+			self._ZoneSpeedReason = 'turn'
 		end
 	end
 

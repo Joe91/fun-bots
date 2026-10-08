@@ -1680,6 +1680,23 @@ function BotSpawner:_ApplyCosumizationAfterSpawn(p_Bot)
 	p_Bot.m_Player.soldier:ApplyCustomization(self:_GetCustomization(p_Bot, p_Bot.m_Kit))
 end
 
+---Probability (%) that a bot spawns in a transport helicopter or an AMTRAC of its team: in conquest 100 % while the team
+---holds no capture point, 10 % when it holds all of them; else 30 %.
+---@param p_TeamId TeamId|integer
+---@return number
+function BotSpawner:_MobileSpawnProbability(p_TeamId)
+	if not Globals.IsConquest then
+		return 30
+	end
+	local s_CaptureStats = g_GameDirector:CapturePointStats()
+	local s_TotalCapturePoints = #s_CaptureStats.all
+	if s_TotalCapturePoints == 0 then
+		return 30
+	end
+	local s_Captured = #s_CaptureStats.captured[p_TeamId]
+	return (-90 / s_TotalCapturePoints) * s_Captured + 100
+end
+
 ---comment
 ---@param p_Bot Bot
 ---@param p_TeamId TeamId
@@ -1691,6 +1708,15 @@ function BotSpawner:_GetSpecialSpawnEnity(p_Bot, p_TeamId)
 	end
 	if Config.UseVehicles and self._DelayDirectSpawn <= 0.0 and #g_GameDirector:GetSpawnableVehicle(p_TeamId) > 0 then
 		return "SpawnInVehicle", g_GameDirector:GetSpawnableVehicle(p_TeamId)[1]
+	end
+
+	-- Into a transport helicopter or an AMTRAC of the team that is under way (the passengers get out at the objective,
+	-- Bot:_CheckShouldExitVehicleIfPassenger). The game spawns on a level with a mesh only lead here.
+	if Config.UseVehicles and Config.SpawnInMobileRespawnVehicles then
+		local s_Vehicles = g_GameDirector:GetMobileRespawnVehicles(p_TeamId)
+		if #s_Vehicles > 0 and m_Utilities:CheckProbability(self:_MobileSpawnProbability(p_TeamId)) then
+			return "SpawnInMobileVehicle", s_Vehicles[1]
+		end
 	end
 
 	if Config.AABots and #g_GameDirector:GetStationaryAas(p_TeamId) > 0 then
@@ -1729,22 +1755,8 @@ function BotSpawner:_GetSpawnPoint(p_TeamId, p_SquadId)
 
 	if Config.UseVehicles and Config.SpawnInMobileRespawnVehicles then
 		local s_Vehicles = g_GameDirector:GetMobileRespawnVehicles(p_TeamId)
-		if #s_Vehicles > 0 then
-			local s_ProbabilityToSpawn = 0 -- percents
-
-			if Globals.IsConquest then
-				local s_CaptureStats = g_GameDirector:CapturePointStats()
-				local s_TotalCapturePoints = #s_CaptureStats.all
-				local s_Captured = #s_CaptureStats.captured[p_TeamId]
-				-- 100% if 0 flags captured, 10% if all flags captured
-				s_ProbabilityToSpawn = (-90 / s_TotalCapturePoints) * s_Captured + 100
-			else
-				s_ProbabilityToSpawn = 30
-			end
-
-			if m_Utilities:CheckProbability(s_ProbabilityToSpawn) then
-				return "SpawnAtMobileVehicle"
-			end
+		if #s_Vehicles > 0 and m_Utilities:CheckProbability(self:_MobileSpawnProbability(p_TeamId)) then
+			return "SpawnAtMobileVehicle"
 		end
 	end
 

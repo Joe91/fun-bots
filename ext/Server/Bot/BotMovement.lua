@@ -45,7 +45,13 @@ local MESH_LEFT_TIME = 15.0            -- Not within this many seconds after the
 local BREACH_RANGE = 3.0          -- Metres towards the target that are checked.
 local BREACH_HEIGHTS = { 0.9, 1.5 } -- Heights of the rays: both blocked, a wall (not a step).
 local BREACH_TIME = 2.5           -- Seconds of shooting at it.
-local BREACH_MAX = 2              -- Breaches on the way to one target.
+local BREACH_MAX = 2              -- Breaches on the way to one target...
+local BREACH_SPOT_MAX = 3         -- ...and at one spot of a wall by all bots: it doesn't break (a fence of a
+local BREACH_SPOT_SIZE = 1.0      -- GroupPhysicsEntity, MP_013), nobody shoots at it again. Metres of a spot.
+
+-- Breaches per spot of a wall in this level, by all bots (_TryBreach).
+local s_BreachSpots = {}
+local s_BreachLevel = nil
 local BREACH_AIM = 0.15           -- Radians off the wall at most: then it fires.
 local BREACH_EYE = 1.5            -- Metres above the feet the bot shoots from.
 
@@ -445,7 +451,8 @@ function Bot:_PathLeadsToObjective()
 end
 
 ---Starts a breach if something that can be shot away blocks the way towards the target, right in front of the bot.
----At most BREACH_MAX times per target (p_Key: the waypoint, the step on the mesh).
+---At most BREACH_MAX times per target (p_Key: the waypoint, the step on the mesh), and BREACH_SPOT_MAX times at one spot
+---by all bots (the way isn't open after that: the bots give up the way instead, BotZoneMovement).
 ---@param p_Target Vec3
 ---@param p_Key any
 ---@return boolean true if the bot breaches now
@@ -486,6 +493,18 @@ function Bot:_TryBreach(p_Target, p_Key)
 		end
 		s_Aim = s_Aim or s_Hit.position:Clone()
 	end
+	---@cast s_Aim -nil
+	local s_Level = SharedUtils:GetLevelName()
+	if s_BreachLevel ~= s_Level then
+		s_BreachLevel = s_Level
+		s_BreachSpots = {}
+	end
+	local s_Spot = math.floor(s_Aim.x / BREACH_SPOT_SIZE) .. ':' .. math.floor(s_Aim.y / BREACH_SPOT_SIZE) .. ':'
+		.. math.floor(s_Aim.z / BREACH_SPOT_SIZE)
+	if (s_BreachSpots[s_Spot] or 0) >= BREACH_SPOT_MAX then
+		return false
+	end
+	s_BreachSpots[s_Spot] = (s_BreachSpots[s_Spot] or 0) + 1
 	self._BreachCount = self._BreachCount + 1
 	self._Breach = { Position = s_Aim, Time = BREACH_TIME, Fire = false }
 	m_Logger:Write(self.m_Player.name .. ' breaches at ' .. tostring(s_Aim))

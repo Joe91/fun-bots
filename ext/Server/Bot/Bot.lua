@@ -557,10 +557,13 @@ function Bot:_CheckShouldExitVehicleIfPassenger(p_VehicleEntity, p_OnVehicle)
 		return (s_DeltaX * s_DeltaX + s_DeltaZ * s_DeltaZ) < s_ExitDistanceSquared
 	end
 
+	-- At a capture point the team doesn't hold (where the pilot flies), not over the own ones on the way.
 	local s_ShouldExit = false
+	local s_TeamId = self.m_Player.teamId
 	local s_AllCapturePoints = g_GameDirector:GetAllCapturePoints()
 	for l_Index = 1, #s_AllCapturePoints do
-		if _IsInExitRange(s_AllCapturePoints[l_Index].transform.trans) then
+		local l_CapturePoint = s_AllCapturePoints[l_Index]
+		if l_CapturePoint.team ~= s_TeamId and _IsInExitRange(l_CapturePoint.transform.trans) then
 			s_ShouldExit = true
 			break
 		end

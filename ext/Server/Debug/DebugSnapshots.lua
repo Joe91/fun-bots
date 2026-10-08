@@ -134,7 +134,10 @@ function DebugSnapshots.CollectBots()
 			if l_Bot.m_Zone ~= nil then
 				s_Entry.zone = l_Bot.m_Zone.Zone.Name
 				s_Entry.zoneExit = l_Bot.m_Zone.Exit ~= nil
+				-- Why it walks or runs on the mesh (Bot:UpdateZoneMovement).
+				s_Entry.speedWhy = l_Bot._ZoneSpeedReason
 			end
+			s_Entry.speed = l_Bot.m_ActiveSpeedValue
 			-- Rush: left the combat area, waits at the border (Bot:OnCombatAreaLeft).
 			s_Entry.border = l_Bot.m_Border ~= nil or nil
 
