@@ -3,13 +3,11 @@
 ClientSpawnPointHelper = class 'ClientSpawnPointHelper'
 
 require('__shared/Config')
-local m_Utilities = require('__shared/Utilities')
 
 function ClientSpawnPointHelper:__init()
 	self.m_Enabled = false
 	self.m_SpawnPointTable = {}
 	self.m_SelectedSpawnPoint = nil
-	self.m_SelectedSpawnPointIndex = nil
 end
 
 ---VEXT Shared Partition:Loaded Event
@@ -41,28 +39,6 @@ function ClientSpawnPointHelper:OnSetEnabled(p_Args)
 	self.m_Enabled = (s_Enabled == true or s_Enabled == 'true' or s_Enabled == '1')
 end
 
-function ClientSpawnPointHelper:FindSpawn(p_Position)
-	local s_ClosestIndex = 0
-	local s_ClosestDistance = 999999
-
-	for l_Index = 1, #self.m_SpawnPointTable do
-		local s_Transform = self.m_SpawnPointTable[l_Index]
-		local s_Distance = m_Utilities:DistanceFast(s_Transform.trans:Clone(), p_Position)
-		if s_Distance < s_ClosestDistance then
-			s_ClosestIndex = l_Index
-			s_ClosestDistance = s_Distance
-		end
-	end
-
-	if s_ClosestDistance < 0.6 then
-		return s_ClosestIndex
-	end
-end
-
-function ClientSpawnPointHelper:GetSelectedSpawn()
-	return self.m_SelectedSpawnPointIndex
-end
-
 function ClientSpawnPointHelper:Update(p_PlayerPos, p_NodesToDraw, p_LinesToDraw)
 	if not Config.DrawSpawnPoints or not self.m_Enabled then
 		return
@@ -82,7 +58,6 @@ function ClientSpawnPointHelper:Update(p_PlayerPos, p_NodesToDraw, p_LinesToDraw
 			-- Select point if it's close to the hitPosition.
 			if s_PointScreenPos and s_Center:Distance(s_PointScreenPos) < 20 then
 				self.m_SelectedSpawnPoint = l_Transform
-				self.m_SelectedSpawnPointIndex = l_Index
 				s_Color = Vec4(0, 0, 1, 0.5)
 			end
 
