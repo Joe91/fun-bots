@@ -10,80 +10,41 @@ This is the changelog for release **V3.6.0**. Don't forget to [join us on Discor
 ## Changelog
 
 ### New features / improvements
-* Kick bot out of Gunship by bot-command (#380)
-* Some performance improvements
-* World-Compensation for vehicle-guns
-* Try to fix Auto-AA on Rush
-* Add logic for jets in Rush
-* Improved Air-Vehicle-Control (much smoother now)
-* Much improved GC times
-* Some Jet aim rework
-* improved "lookaround"
-* Optional server-side raycasts: bots also fight each other without any client ("!serverraycasts on")
-* Debug-server (tools/debug-server): live map, analyzers, recordings and map-scans in the browser ("!debugbridge on")
-* Debug-server: objectives on the map, console for RCON and chat commands (with suggestions)
-* Debug-server: auto-labeler for paths (objectives, junctions, loops) from the capture points of the running game
-* Rework of bot aiming: new settings "Bot Aim Error" (in milliradians), "Bot Aim Error of Snipers / Support" and "Bot Aim Error Spread" replace the old "Aim Worsening" settings (old values are not taken over, set them again if you changed them)
-* More human aiming: smaller aim error on greater distances, less precise hip-fire on short distances
-* New grenade behavior: bots throw grenades at the last known position of a target that went out of sight
-* New movement and stuck logic: smoother path offset (one side per life, fades in and out), better obstacle detection, stuck bots reroute and get killed after a few tries
-* Bots leave a stuck ground vehicle after 30 s and continue on foot
-* Soldiers don't switch onto vehicle-only paths anymore
-* Better hit detection for vehicles (see-through parts, low vehicles)
-* Improved chopper aiming
-* Improved PID controllers for vehicle control
-* Aim evaluation to check the vehicle data ("!aimeval on|off|report|reset|verbose")
-* Web UI: values can be typed directly into the settings, changed values are marked and can be restored to default
-* Node editor: better performance and more info on selected nodes
-* Adjusted default bot numbers (InitNumberOfBots and max bots per team for some modes)
-* All server events now check the permissions of the player
-* Performance statistics for debugging (Registry ROUND_STATS_INTERVAL)
-* Lua checks (luacheck) in CI and a developer guide (docs/DEVELOPER_GUIDE.md)
-* Better Linux support for development (WebUI build, helper script)
-
-
-### Some optional TODOs:
-* Fully support default spawn method? (for now only on TDM/GM/SDM by default)
-* (Rework raycasts for better performance)
-* (Improve node editor)
+* **New navigation:** on Conquest and Rush the bots walk a navigation mesh at the objectives and spawns and use the
+  paths only between them. Routes are found over both, bots spread over different ways and learn spots where they get
+  stuck (other ways, shooting through penetrable walls, getting back onto the mesh)
+* **Spawning:** bots use the spawn points of the game on Conquest and Rush, spawn next to free vehicles and in transport
+  helicopters and AMTRACs (passengers jump out at the objective)
+* **Rush:** MCOMs are found and armed/disarmed without recorded paths, defenders hold their MCOMs, bots wait at the
+  border of the combat area
+* **Vehicles:** vehicles and their teams are found automatically, smoother air-vehicle control and aiming (choppers,
+  jets, PID controllers, world compensation for vehicle guns), bots leave stuck or flipped vehicles
+* **Aiming and combat:** reworked, more human aim error (new settings "Bot Aim Error", "... of Snipers / Support",
+  "... Spread"; old "Aim Worsening" values are not taken over), grenades at the last known position of a target,
+  improved look-around, better hit detection on vehicles
+* **Optional server-side raycasts:** bots fight each other without any client ("!serverraycasts on")
+* **Debug-server** (tools/debug-server): live map, recordings and analyzers in the browser, RCON/chat console, and a
+  *Maps* tab that makes the mesh of a level and cuts its paths (see tools/debug-server/NEW_MAP.md); every step keeps a
+  backup of what it overwrites
+* **Performance:** much less garbage collection, faster route and mesh searches
+* Web UI: values can be typed directly, changed values are marked and can be reset
+* Node editor: better performance, shows the mesh, more info on selected nodes
+* All server events check the permissions of the player
+* Development: luacheck in CI, developer guide (docs/DEVELOPER_GUIDE.md), better Linux support
 
 ### Bug fixes
-* Mobile artillery and light AA attack again (switch to the gunner seat)
-* Seats without an aimable weapon don't fire anymore
-* Errors with destroyed vehicles and beacons on round switch (#382)
-* "Save temporarily" in the settings UI deleted all saved settings
-* "config.saveall" and "config.restore" did each other's job
-* Importing traces with the helper wiped settings and permissions
-* A failed trace save destroyed the saved traces of the map
-* Invalid default settings (weapons, language)
-* Weapon and enum settings via RCON or console picked the wrong value, empty number fields broke the settings save
-* Language and max-bots changes via RCON or console took no effect
-* Values with a ' broke the database queries
-* Chat commands fixed: !spawnway, !spawnbots, !setbotkit, !setbotcolor, !permissions, !stop, !stopall, !kickplayer, !kick 0; no crash if the caller is dead
-* Anyone could change the vehicle aim offsets with !dbg
-* The comm-rose "Defend objective" made bots attack
-* No objectives assigned when team 1 had no active bots
-* Defending bots hold their position again
-* Scavenger and GunMaster crashed on beacon paths
-* Stuck bots looped through the same reroute
-* Rejoining the path after a fight picked the wrong node
-* Team balancing moved dead bots and counted them as players
-* Beacon and squad-mate spawns were overwritten and could teleport repeatedly
-* A failed vehicle spawn disabled the bot permanently
-* Path switching ignored better paths if the best one was filtered out
-* Bots aimed with the part of the previous weapon after a weapon switch
-* Choppers and jets of one team all flew to the same flag
-* Passengers only saw one MCOM (Rush) or none (Squad Rush) when deciding to get out
-* Vehicle bots kept attacking forever when shooting was disabled
-* Bots following a player who left the server
-* Invalid entries in the air targets
-* Destroyed player objects on the client
-* Possible bug with repairing vehicles
-* Fixes for the VU runtime branch
-* More robust angle normalization (by kruschk)
-* Several more small bugs are fixed
+* Settings: "Save temporarily", "config.saveall"/"config.restore", RCON/console values, invalid defaults and quotes in
+  values fixed; importing traces no longer wipes settings, permissions or saved traces
+* Chat commands fixed (!spawnway, !spawnbots, !setbotkit, !setbotcolor, !permissions, !stop, !stopall, !kickplayer,
+  !kick), !dbg needs permission
+* Vehicles: mobile artillery and light AA attack again, no firing from seats without weapon, failed vehicle spawns no
+  longer disable a bot, choppers and jets don't all fly to the same flag
+* Objectives: "Defend objective" of the comm-rose, defending bots hold their position, objectives with an empty team 1
+* Spawning and team balance: dead bots no longer moved or counted, beacon/squad spawns no longer overwritten
+* Errors with destroyed vehicles, beacons and players on round switch, crashes on Scavenger and GunMaster
+* Many more small fixes
 
 ### Updated maps
-* XP4_FD_ConquestLarge (by ThyKingdomCome)
-* MP_007_ConquestLarge, MP_001_ConquestLarge, XP3_Desert_ConquestLarge
-* All maps: objectives, junctions and loops checked and completed with the new auto-labeler
+* All Conquest and Rush maps: navigation mesh at the objectives and spawns, paths cut at it
+* New paths on MP_013 Rush; XP4_FD_ConquestLarge (by ThyKingdomCome), MP_007_ConquestLarge, MP_001_ConquestLarge,
+  XP3_Desert_ConquestLarge
