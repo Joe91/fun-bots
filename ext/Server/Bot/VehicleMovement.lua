@@ -58,6 +58,9 @@ end
 -- Metres a vehicle has to be driven before an "exit" on its path counts.
 local VEHICLE_EXIT_MIN_DRIVE = 50.0
 
+-- A target point closer than this (horizontally) gives no direction to steer to.
+local VEHICLE_STEER_MIN_DISTANCE = 1.5
+
 -- The driver waits for passengers on their way to the vehicle (GameDirector:PassengersComing) at most this many seconds
 -- in all, checking again every VEHICLE_WAIT_STEP.
 local VEHICLE_WAIT_MAX = 25.0
@@ -578,6 +581,13 @@ function VehicleMovement:UpdateTargetMovementVehicle(p_Bot, p_DeltaTime)
 		local s_TargetPos = p_Bot._TargetPoint.Position
 		local s_DifferenceY = s_TargetPos.z - s_VehiclePos.z
 		local s_DifferenceX = s_TargetPos.x - s_VehiclePos.x
+		if p_Bot._VehicleWaitTimer > 0.0 or s_DifferenceX ^ 2 + s_DifferenceY ^ 2 < VEHICLE_STEER_MIN_DISTANCE ^ 2 then
+			-- Waiting for passengers, or the point is (nearly) under the vehicle (the first one of a path at its spawn):
+			-- its direction is any, a tank turned on the spot towards it. Keep the heading.
+			local s_Forward = p_Bot.m_Player.controlledControllable.transform.forward
+			s_DifferenceY = s_Forward.z
+			s_DifferenceX = s_Forward.x
+		end
 		local s_AtanDzDx = math.atan(s_DifferenceY, s_DifferenceX)
 		local s_Yaw = (s_AtanDzDx > math.pi / 2) and (s_AtanDzDx - math.pi / 2) or (s_AtanDzDx + 3 * math.pi / 2)
 		p_Bot._TargetYaw = s_Yaw
