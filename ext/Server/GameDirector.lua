@@ -775,9 +775,12 @@ function GameDirector:_CheckProgressOffMesh(p_Bot)
 	-- Where it walks to: the next node of the routes on its path (an end, a link, a junction), else its objective. The
 	-- time counts per path (or objective): a bot that turns around on it again and again (skipping waypoints it can't
 	-- reach) doesn't start anew.
-	local s_End = g_NavRoutes:Heading(p_Bot._PathIndex, p_Bot._CurrentWayPoint, p_Bot._InvertPathDirection)
+	local s_End, s_Along = g_NavRoutes:Heading(p_Bot._PathIndex, p_Bot._CurrentWayPoint, p_Bot._InvertPathDirection)
 	local s_Key = nil
 	local s_Target = nil
+	-- On a path the way left to its node counts, not the straight distance: around a loop (a vehicle-path round a
+	-- block, XP4_Parl path 46) the node is close at first and the bot gets away from it while it walks on.
+	local s_Waypoint = s_End ~= nil and m_NodeCollection:Get(p_Bot._CurrentWayPoint, p_Bot._PathIndex) or nil
 	if s_End ~= nil then
 		s_Key = 'path ' .. p_Bot._PathIndex
 		s_Target = s_End.Position
@@ -790,22 +793,33 @@ function GameDirector:_CheckProgressOffMesh(p_Bot)
 		p_Bot._OffMeshTarget = nil
 		return
 	end
+	local s_Here = s_Soldier.worldTransform.trans
 	if s_Key ~= p_Bot._OffMeshTarget then
 		p_Bot._OffMeshTarget = s_Key
 		p_Bot._OffMeshEnd = s_End
 		p_Bot._OffMeshBestDistance = math.huge
+		p_Bot._OffMeshMoved = s_Here:Clone()
 		p_Bot._KillYourselfTimer = 0.0
-	elseif s_End ~= p_Bot._OffMeshEnd then
-		-- Turned around on the path: closer to the other end from now on, the time goes on.
-		p_Bot._OffMeshEnd = s_End
-		p_Bot._OffMeshBestDistance = s_Target:Distance(s_Soldier.worldTransform.trans)
 	end
 
-	local s_Distance = s_Target:Distance(s_Soldier.worldTransform.trans)
+	local s_Distance = s_Target:Distance(s_Here)
+	if s_Waypoint ~= nil and s_Along ~= nil then
+		s_Distance = s_Waypoint.Position:Distance(s_Here) + s_Along
+	end
+	if s_End ~= p_Bot._OffMeshEnd then
+		-- Turned around on the path, or on to the next node: closer to that from now on, the time goes on.
+		p_Bot._OffMeshEnd = s_End
+		p_Bot._OffMeshBestDistance = s_Distance
+	end
 	if s_Distance < p_Bot._OffMeshBestDistance - Registry.GAME_DIRECTOR.OFF_MESH_MIN_PROGRESS then
 		p_Bot._OffMeshBestDistance = s_Distance
-		p_Bot._KillYourselfTimer = 0.0
-		return
+		-- Only if the soldier got somewhere as well: skipping waypoints it can't get to moves its waypoint along the
+		-- path, not itself (XP1_003: upstairs at MCOM 2, a path 7 m below, 170 s on the spot).
+		if p_Bot._OffMeshMoved == nil or s_Here:Distance(p_Bot._OffMeshMoved) >= Registry.GAME_DIRECTOR.OFF_MESH_MIN_PROGRESS then
+			p_Bot._OffMeshMoved = s_Here:Clone()
+			p_Bot._KillYourselfTimer = 0.0
+			return
+		end
 	end
 	if p_Bot._ShootPlayer ~= nil or p_Bot._WayWaitTimer > 0.0 then
 		return
@@ -817,7 +831,6 @@ function GameDirector:_CheckProgressOffMesh(p_Bot)
 		and p_Bot._OffMeshBlocked ~= s_Key and g_NavRoutes:BlockStretch(p_Bot._PathIndex, p_Bot._CurrentWayPoint) then
 		p_Bot._OffMeshBlocked = s_Key
 		if m_DebugBridge.m_Enabled then
-			local s_Here = s_Soldier.worldTransform.trans
 			m_DebugBridge:Event('path_stuck', { bot = p_Bot.m_Player.name, path = p_Bot._PathIndex,
 				point = p_Bot._CurrentWayPoint, pos = { s_Here.x, s_Here.y, s_Here.z } })
 		end
@@ -2099,8 +2112,10 @@ function GameDirector:GetSpawnableBeaconOrMate(p_TeamId, p_SquadId, p_Stranded)
 					---@type ControllableEntity
 					local s_Vehicle = l_Player.controlledControllable
 
-					-- Check for free seats.
-					if m_Vehicles:GetNrOfFreeSeats(s_Vehicle, true) > 0 then
+					-- Check for free seats: one a bot may take (Bot:_EnterVehicleEntity). Any free seat let the bot spawn
+					-- here, fail to get in and be killed again (a ticket lost).
+					local s_VehicleData = m_Vehicles:GetVehicleByEntity(s_Vehicle)
+					if s_VehicleData ~= nil and m_Vehicles:HasFreeBotSeat(s_Vehicle, s_VehicleData) then
 						return 1, 1, false, s_Vehicle, nil
 					end
 				else

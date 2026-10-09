@@ -35,6 +35,11 @@ local ZONE_STUCK_TIME = 4.0      -- Seconds without progress before the bot give
 local ZONE_MAX_FAILS = 3         -- Ways given up before the bot leaves the zone.
 local ZONE_FORCE_RANGE = 10.0    -- Stuck on the only way between two parts of the mesh that all bots gave up a few times
 local ZONE_FORCE_HEIGHT = 3.0    -- already (an obstacle the census missed): put onto its next point, this close.
+local ZONE_TRAP_GIVE_UPS = 3     -- Ways given up from within ZONE_TRAP_RANGE metres of each other within ZONE_TRAP_TIME
+local ZONE_TRAP_RANGE = 4.0      -- seconds: the soldier is trapped (a pit, between wrecks, stairs the mesh doesn't
+local ZONE_TRAP_TIME = 25.0      -- cover) and put out (_ZoneForceAcross), else back onto its point this close:
+local ZONE_TRAP_BACK_RANGE = 25.0
+local ZONE_TRAP_BACK_HEIGHT = 4.0
 local ZONE_MAX_GIVE_UPS = 3      -- Zones left like that in a row (no goal, no exit reached): the bot is stuck in a
                                  -- place it doesn't get out of, it respawns (as on the waypoints, Bot:_ObstacleHandling).
 local ZONE_WAIT_ATTACK = { 1.0, 3.0 } -- Seconds at each point while capturing.
@@ -142,14 +147,16 @@ function Bot:_CheckForZoneEntry(p_Point)
 	local s_NoEnter = s_Left ~= nil and SharedUtils:GetTime() - s_Left.Time < ZONE_REENTER_TIME and s_Left.Point or nil
 
 	if m_NavRoutes:Guides(s_Waypoint.PathIndex, self._Objective) then
-		-- Not onto the mesh from far away (a skipped waypoint): on along the paths then.
+		-- Not onto the mesh from far away (a skipped waypoint): on along the paths then. Back onto the piece it left:
+		-- only if clearly shorter, or instead of turning back (NavRoutes:Step).
+		local s_Avoid = false
 		if not s_There then
 			local s_Junction = m_NavZones:GetJunction(s_Waypoint)
 			s_NoEnter = s_Junction ~= nil and s_Junction.Junction.Point or s_NoEnter
-		elseif self:_BackOntoLeftPart(s_Waypoint) then
-			s_NoEnter = m_NavZones:GetJunction(s_Waypoint).Junction.Point
+		else
+			s_Avoid = self:_BackOntoLeftPart(s_Waypoint)
 		end
-		local s_Step = m_NavRoutes:Step(s_Waypoint, self._Objective, self.m_RouteSeed, self._NavCame, s_NoEnter)
+		local s_Step = m_NavRoutes:Step(s_Waypoint, self._Objective, self.m_RouteSeed, self._NavCame, s_NoEnter, s_Avoid)
 		if s_Step == nil then
 			return false
 		end
@@ -1322,8 +1329,10 @@ end
 ---routes on from there.
 ---@param p_Position Vec3
 ---@param p_Point integer
+---@param p_Range? number horizontal metres at most (ZONE_FORCE_RANGE)
+---@param p_Height? number metres up or down at most (ZONE_FORCE_HEIGHT)
 ---@return boolean true if the bot was put there
-function Bot:_ZoneForceAcross(p_Position, p_Point)
+function Bot:_ZoneForceAcross(p_Position, p_Point, p_Range, p_Height)
 	local s_State = self.m_Zone
 	local s_Soldier = self.m_Player.soldier
 	local s_Target = s_State ~= nil and s_State.Zone.Points[p_Point] or nil
@@ -1332,8 +1341,9 @@ function Bot:_ZoneForceAcross(p_Position, p_Point)
 	end
 	local s_DeltaX = s_Target.X - p_Position.x
 	local s_DeltaZ = s_Target.Z - p_Position.z
-	if s_DeltaX * s_DeltaX + s_DeltaZ * s_DeltaZ > ZONE_FORCE_RANGE * ZONE_FORCE_RANGE
-		or math.abs(s_Target.Y - p_Position.y) > ZONE_FORCE_HEIGHT then
+	local s_Range = p_Range or ZONE_FORCE_RANGE
+	if s_DeltaX * s_DeltaX + s_DeltaZ * s_DeltaZ > s_Range * s_Range
+		or math.abs(s_Target.Y - p_Position.y) > (p_Height or ZONE_FORCE_HEIGHT) then
 		return false
 	end
 	m_Logger:Write(self.m_Player.name .. ' put across the blocked way to point ' .. p_Point)
@@ -1403,6 +1413,31 @@ function Bot:_ZoneGiveUpConnection(p_Position, p_Target)
 		if not s_State.Vehicle and m_NavZones:IsKeptBlocked(s_State.Zone, s_From, s_Next)
 			and self:_ZoneForceAcross(p_Position, s_Next) then
 			return false
+		end
+	end
+	-- Trapped: the last ways all given up from the same spot (MP_003: in a pit at (-372, -291), 13 ways in 65 s until
+	-- it was killed). Out onto the next point, else back onto its own one (XP1_003: on stairs at MCOM 2 the mesh doesn't
+	-- cover, 20 m from it).
+	if not s_State.Vehicle then
+		local s_Now = SharedUtils:GetTime()
+		local s_Trap = self.m_ZoneTrap or {}
+		s_Trap[#s_Trap + 1] = { Position = p_Position:Clone(), Time = s_Now }
+		while #s_Trap > ZONE_TRAP_GIVE_UPS do
+			table.remove(s_Trap, 1)
+		end
+		self.m_ZoneTrap = s_Trap
+		local s_Trapped = #s_Trap >= ZONE_TRAP_GIVE_UPS and s_Now - s_Trap[1].Time <= ZONE_TRAP_TIME
+		for l_Index = 1, s_Trapped and #s_Trap or 0 do
+			if s_Trap[l_Index].Position:Distance(p_Position) > ZONE_TRAP_RANGE then
+				s_Trapped = false
+			end
+		end
+		if s_Trapped then
+			self.m_ZoneTrap = nil
+			if (s_Next ~= nil and self:_ZoneForceAcross(p_Position, s_Next))
+				or self:_ZoneForceAcross(p_Position, s_State.Point, ZONE_TRAP_BACK_RANGE, ZONE_TRAP_BACK_HEIGHT) then
+				return false
+			end
 		end
 	end
 	-- All ways from the last point failed, or the bot didn't get back to it (_ZoneRouteTo, from ZONE_OFF_POINT away):

@@ -24,6 +24,15 @@ local m_NodeCollection = require('NodeCollection')
 local m_Logger = Logger('Bot', Debug.Server.BOT)
 ---@type Vehicles
 local m_Vehicles = require('Vehicles')
+---@type NavZones
+local m_NavZones = require('NavZones')
+
+-- A passenger of a vehicle on the ground or in the water gets out at the objective only with a point of the mesh this
+-- close (horizontal metres) at about the height of the vehicle (Bot:_CheckShouldExitVehicleIfPassenger), checked at
+-- most this often (seconds).
+local PASSENGER_EXIT_MESH_RANGE = 20.0
+local PASSENGER_EXIT_MESH_HEIGHT = 2.5
+local PASSENGER_EXIT_CHECK_TIME = 1.0
 
 -- Create a new bot.
 ---@param p_Player Player
@@ -150,6 +159,8 @@ function Bot:__init(p_Player)
 	-- The key of the path whose stretch it got stuck on (NavRoutes:BlockStretch), once per path.
 	self._OffMeshBlocked = nil
 	self._OffMeshBestDistance = math.huge
+	---@type Vec3|nil where the soldier was at its last progress
+	self._OffMeshMoved = nil
 	self._RocketCooldownTimer = 0.0
 
 	-- Shared movement vars.
@@ -262,6 +273,8 @@ function Bot:__init(p_Player)
 	self._JetAbortAttackActive = false
 	self._JetTakeoffActive = false
 	self._ExitVehicleHealth = 0.0
+	-- When a passenger checks next whether it can get out here (_CheckShouldExitVehicleIfPassenger).
+	self._PassengerExitCheck = 0.0
 	self._LastVehicleHealth = 0.0
 	self._VehicleWeaponSlotToUse = 1
 	self._ActiveVehicleWeaponSlot = 0
@@ -345,6 +358,8 @@ function Bot:__init(p_Player)
 	self.m_Zone = nil
 	-- Times the bot left the mesh after getting stuck, without reaching a goal or an exit in between.
 	self.m_ZoneGiveUps = 0
+	---@type { Position: Vec3, Time: number }[]|nil where and when it gave up its last ways (trapped: _ZoneGiveUpConnection)
+	self.m_ZoneTrap = nil
 	-- Its own route among similar ones, for a life (NavRoutes:Next).
 	self.m_RouteSeed = math.random() * 1000.0
 	-- Rush: left the combat area (the next stage isn't open yet), waits at the border (Bot:OnCombatAreaLeft).
@@ -576,6 +591,24 @@ function Bot:_CheckShouldExitVehicleIfPassenger(p_VehicleEntity, p_OnVehicle)
 				s_ShouldExit = true
 				break
 			end
+		end
+	end
+
+	-- On the ground or in the water: only where the soldiers get onto the mesh (a point close by, at the height of the
+	-- vehicle). An AMTRAC in the canal below the quay (MP_017 Rush, 45 m from MCOM 1): the passengers got out in the
+	-- water, stood at the wall for good, respawned in the AMTRAC and got out there again; stage 1 never fell.
+	if s_ShouldExit and m_NavZones:GetMesh() ~= nil and not m_Vehicles:IsAirVehicle(self.m_ActiveVehicle) then
+		local s_Now = SharedUtils:GetTime()
+		if s_Now < self._PassengerExitCheck then
+			return
+		end
+		self._PassengerExitCheck = s_Now + PASSENGER_EXIT_CHECK_TIME
+		local s_Mesh = m_NavZones:GetMesh()
+		---@cast s_Mesh -nil
+		local s_Ground = p_VehicleEntity.transform.trans
+		local s_Point = m_NavZones:Closest(s_Mesh, s_Ground, nil, PASSENGER_EXIT_MESH_RANGE)
+		if s_Point == nil or math.abs(s_Mesh.Points[s_Point].Y - s_Ground.y) > PASSENGER_EXIT_MESH_HEIGHT then
+			s_ShouldExit = false
 		end
 	end
 

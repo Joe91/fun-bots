@@ -38,8 +38,11 @@ local STRETCH_PENALTY = 100.0
 local SHORTCUT_LENGTH = 30.0
 local SHORTCUT_DETOUR = 1.5
 local SHORTCUT_SLACK = 20.0
--- A bot that just left the mesh doesn't go onto it again at a junction this close to where it left (metres).
+-- A bot that just left the mesh goes onto it again at a junction this close to where it left (metres), or back onto the
+-- piece it left in the middle of a path, only if that is shorter by NO_ENTER_SOFT_COST metres than the way on along the
+-- paths (more than the spread of the bots, SPREAD_MAX), or the only way besides turning back.
 local NO_ENTER_RANGE = 10.0
+local NO_ENTER_SOFT_COST = 30.0
 -- A field is measured anew when the mesh or the penalties changed, but at most this often (seconds).
 local FIELD_REFRESH = 5.0
 
@@ -896,8 +899,10 @@ end
 ---@param p_Seed? number
 ---@param p_Came? integer
 ---@param p_NoEnter? integer a point of the mesh
+---@param p_Avoid? boolean onto the mesh at this node only if clearly shorter, or instead of turning back
+---(Bot:_BackOntoLeftPart)
 ---@return { Node: integer, Enter: NavZoneJunction|nil, Switch: Waypoint|nil, Direction: string|nil }|nil
-function NavRoutes:Step(p_Waypoint, p_Objective, p_Seed, p_Came, p_NoEnter)
+function NavRoutes:Step(p_Waypoint, p_Objective, p_Seed, p_Came, p_NoEnter, p_Avoid)
 	self:_Ensure()
 	local s_Node = p_Waypoint ~= nil and self._NodeOf[p_Waypoint.ID] or nil
 	local s_Target = s_Node ~= nil and self:Target(p_Objective) or nil
@@ -938,15 +943,20 @@ function NavRoutes:Step(p_Waypoint, p_Objective, p_Seed, p_Came, p_NoEnter)
 	end
 	local s_Junction = s_Entry.Junction
 	local s_Mesh = m_NavZones:GetMesh()
-	-- Not onto the mesh where the bot just left it, nor at a junction next to that (two junctions of one path end).
+	-- Not onto the mesh where the bot just left it. Next to that (two junctions of one path end) or back onto the piece
+	-- it left (p_Avoid) only if clearly shorter (NO_ENTER_SOFT_COST) or instead of turning back: XP4_Parl path 46 left
+	-- the mesh at a junction 10 m from the next one, which the routes meant it to go on at (a wall between them on the
+	-- mesh); turned back it walked a loop of 110 m.
 	local s_Left = p_NoEnter ~= nil and s_Mesh ~= nil and s_Mesh.Points[p_NoEnter] or nil
+	local s_Soft = p_Avoid == true
 	if s_Junction ~= nil and s_Left ~= nil and s_Mesh.Points[s_Junction.Point] ~= nil
 		and s_Mesh.Points[s_Junction.Point].Position:Distance(s_Left.Position) < NO_ENTER_RANGE then
-		s_Junction = nil
+		s_Soft = true
 	end
 	if s_Junction ~= nil and s_Junction.Point ~= p_NoEnter then
 		local s_Rest = s_Field.Mesh[s_Junction.Point]
-		if s_Rest ~= nil and s_Entry.JunctionCost + (self._EntryPenalty[s_Junction] or 0.0) + s_Rest <= s_PathCost then
+		if s_Rest ~= nil and (s_Best == nil or s_Entry.JunctionCost + (self._EntryPenalty[s_Junction] or 0.0) + s_Rest
+				+ (s_Soft and NO_ENTER_SOFT_COST or 0.0) <= s_PathCost) then
 			return { Node = s_Node, Enter = s_Junction }
 		end
 	end
@@ -1022,6 +1032,8 @@ end
 ---@param p_PointIndex integer|nil
 ---@param p_Inverted boolean walking towards the first waypoint
 ---@return Waypoint|nil
+---@return number|nil the way from the waypoint to it along the path (a loop: the nodes at both ends of a long stretch can
+---be close to each other)
 function NavRoutes:Heading(p_PathIndex, p_PointIndex, p_Inverted)
 	self:_Ensure()
 	local s_Around = p_PathIndex ~= nil and self._Around[p_PathIndex] or nil
@@ -1029,7 +1041,11 @@ function NavRoutes:Heading(p_PathIndex, p_PointIndex, p_Inverted)
 		return nil
 	end
 	local s_Node = p_Inverted and s_Around.Before[p_PointIndex] or s_Around.After[p_PointIndex]
-	return s_Node ~= nil and self._Nodes[s_Node].Waypoint or nil
+	if s_Node == nil then
+		return nil
+	end
+	return self._Nodes[s_Node].Waypoint,
+		p_Inverted and s_Around.BeforeCost[p_PointIndex] or s_Around.AfterCost[p_PointIndex]
 end
 
 ---A bot got stuck on the path there (no progress off the mesh, GameDirector:_CheckProgressOffMesh): the stretch between

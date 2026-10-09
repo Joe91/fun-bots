@@ -231,6 +231,13 @@ function BotSpawner:OnEngineUpdate(p_DeltaTime, p_SimulationDeltaTime)
 					l_Bot:SetVarsWay(nil, true, s_PathIndex, s_IndexOnPath, s_InvertDirection)
 					local s_Killed = false
 					if s_SpawnEntity then
+						-- Into the vehicle of the mate. The way on foot from here, not path 1 point 1 (GetSpawnableBeaconOrMate):
+						-- the engine doesn't always seat the bot (two bots for the last seat), on foot it walked straight to that
+						-- waypoint, up to 440 m away (XP3_Shield, MP_003).
+						local s_Node = g_GameDirector:FindClosestPath(l_Bot.m_Player.soldier.worldTransform.trans:Clone(), false, true)
+						if s_Node ~= nil then
+							l_Bot:SetVarsWay(nil, true, s_Node.PathIndex, s_Node.PointIndex, false)
+						end
 						if l_Bot:_EnterVehicleEntity(s_SpawnEntity, false) ~= 0 then
 							self:_KillSoldierKeepRespawn(l_Bot)
 							s_Killed = true
@@ -1053,39 +1060,41 @@ function BotSpawner:_RushSpawn(p_Bot, p_Near)
 		p_Bot.m_Player.teamId)
 	local s_EntityIterator = EntityManager:GetIterator("ServerCharacterSpawnEntity")
 	local s_Entity = s_EntityIterator:Next()
-	local s_Best = nil
-	local s_BestDistance = math.huge
+	-- [1]: spawns without a vehicle-spawn on their bus, [2]: with one (a spawn into the vehicle). The B2K levels have
+	-- one on the bus of all their spawns (XP1_003: no spawn left, no bot spawned): those are taken if there is no other.
+	local s_Best = {}
+	local s_BestDistance = { math.huge, math.huge }
 
 	while s_Entity do
 		if s_Entity.data:Is('CharacterSpawnReferenceObjectData') then
 			-- Only the spawns of the current stage are enabled.
 			if CharacterSpawnReferenceObjectData(s_Entity.data).team == p_Bot.m_Player.teamId and SpawnEntity(s_Entity).enabled then
-				-- Skip if it is a vehicle spawn.
+				local s_Kind = 1
 				for l_Index = 1, #s_Entity.bus.entities do
 					local l_Entity = s_Entity.bus.entities[l_Index]
 					if l_Entity:Is("ServerVehicleSpawnEntity") then
-						goto skip
+						s_Kind = 2
+						break
 					end
 				end
 
-				if p_Near == nil then
-					s_Entity:FireEvent(s_Event)
-					return
+				local s_Distance = p_Near ~= nil and SpawnEntity(s_Entity).transform.trans:Distance(p_Near) or 0.0
+				if s_Best[s_Kind] == nil or s_Distance < s_BestDistance[s_Kind] then
+					s_Best[s_Kind] = s_Entity
+					s_BestDistance[s_Kind] = s_Distance
 				end
-				local s_Distance = SpawnEntity(s_Entity).transform.trans:Distance(p_Near)
-				if s_Distance < s_BestDistance then
-					s_Best = s_Entity
-					s_BestDistance = s_Distance
+				if s_Kind == 1 and p_Near == nil then
+					break
 				end
 			end
 		end
 
-		::skip::
 		s_Entity = s_EntityIterator:Next()
 	end
 
-	if s_Best ~= nil then
-		s_Best:FireEvent(s_Event)
+	local s_Spawn = s_Best[1] or s_Best[2]
+	if s_Spawn ~= nil then
+		s_Spawn:FireEvent(s_Event)
 	end
 end
 

@@ -273,7 +273,9 @@ function Bot:ShootAt(p_Player, p_IgnoreYaw)
 				-- check for changed weapon
 				BotSpawner:UpdateGmWeapon(self)
 			end
-			self._KillYourselfTimer = 0.0
+			-- Not the time without progress off the mesh (GameDirector:_CheckProgressOffMesh): it doesn't count while the
+			-- bot has a target anyway. Reset at each new one, a bot stuck where it sees enemies all the time never got
+			-- onto the mesh again (XP1_003: defenders on stairs at MCOM 2 the mesh doesn't cover, 160 s).
 			self.m_AttackPriority = s_NewAttackPriority
 			return true
 		else
