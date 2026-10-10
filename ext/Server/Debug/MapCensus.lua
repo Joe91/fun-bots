@@ -1258,10 +1258,21 @@ local function _SpawnAreas(p_Areas, p_Ways)
 	end
 	if #s_Positions == 0 then
 		local s_Spawns = _CharacterSpawns()
+		-- Spawns into a vehicle only for a team without others: the B2K levels have a vehicle-spawn on the bus of all
+		-- their spawns (BotSpawner:_RushSpawn).
+		local s_OnFoot = {}
 		for l_Index = 1, #s_Spawns do
 			local l_Spawn = s_Spawns[l_Index]
 			local s_Team = (l_Spawn.dataTeam == 1 or l_Spawn.dataTeam == 2) and l_Spawn.dataTeam or l_Spawn.team
-			if l_Spawn.vehicleSpawn == nil and (l_Spawn.playerType or 0) == 0 and (s_Team == 1 or s_Team == 2) then
+			if l_Spawn.vehicleSpawn == nil and (l_Spawn.playerType or 0) == 0 then
+				s_OnFoot[s_Team] = true
+			end
+		end
+		for l_Index = 1, #s_Spawns do
+			local l_Spawn = s_Spawns[l_Index]
+			local s_Team = (l_Spawn.dataTeam == 1 or l_Spawn.dataTeam == 2) and l_Spawn.dataTeam or l_Spawn.team
+			if (l_Spawn.vehicleSpawn == nil or not s_OnFoot[s_Team]) and (l_Spawn.playerType or 0) == 0
+				and (s_Team == 1 or s_Team == 2) then
 				-- The spawn-entity can be far above the ground (40 m on XP5_004): the grid around it must reach the ground.
 				s_Positions[#s_Positions + 1] = { _Ground(Vec3(l_Spawn.pos[1], l_Spawn.pos[2], l_Spawn.pos[3])), s_Team }
 			end

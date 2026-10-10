@@ -195,6 +195,19 @@ class Hub:
         self._publish(messages)
         return answer
 
+    def add_game_log(self, events: list[dict]) -> None:
+        """Lines of the console of the game-server (gamelog.py): into the recording, also while the mod hangs or after
+        the game-server crashed, and to the analyzers (errors become findings)."""
+        with self.lock:
+            for event in events:
+                event["t"] = self.state.time
+                for analyzer in self.analyzers:
+                    analyzer.on_event(event, self.state)
+            if self.recorder is not None:
+                self.recorder.write_extra({"events": events})
+            messages = [("analysis", self._analysis())]
+        self._publish(messages)
+
     def _auto_navzones(self, messages: list) -> None:
         """The networks of the running level from navzones/ of the repository, if none are shown yet."""
         name = self.state.meta.get("paths")

@@ -766,6 +766,8 @@ function GameDirector:_CheckProgressOffMesh(p_Bot)
 	if s_Soldier == nil or p_Bot.m_Zone ~= nil or m_NavZones:GetMesh() == nil or g_NavRoutes == nil
 		or p_Bot.m_Border ~= nil -- Waits at the border of the combat area.
 		or g_BotStates:IsInVehicleState(p_Bot.m_ActiveState) or g_BotStates:IsStaticState(p_Bot.m_ActiveState)
+		-- A passenger on an outside seat (XP3_Shield: on a jeep, the driver takes another way than its path).
+		or g_BotStates:IsOnVehicleState(p_Bot.m_ActiveState)
 		or p_Bot._FollowTargetPlayer ~= nil or p_Bot._ActiveAction == BotActionFlags.OtherActionActive then
 		p_Bot._KillYourselfTimer = 0.0
 		p_Bot._OffMeshTarget = nil
@@ -798,8 +800,12 @@ function GameDirector:_CheckProgressOffMesh(p_Bot)
 		p_Bot._OffMeshTarget = s_Key
 		p_Bot._OffMeshEnd = s_End
 		p_Bot._OffMeshBestDistance = math.huge
-		p_Bot._OffMeshMoved = s_Here:Clone()
-		p_Bot._KillYourselfTimer = 0.0
+		-- Anew only if the soldier got somewhere since: skipping the waypoints it can't get to on the spot, onto the
+		-- linked path and back, the time went on never (MP_017: in the canal below the quay, the paths 7 m higher).
+		if p_Bot._OffMeshMoved == nil or s_Here:Distance(p_Bot._OffMeshMoved) >= Registry.GAME_DIRECTOR.OFF_MESH_MIN_PROGRESS then
+			p_Bot._OffMeshMoved = s_Here:Clone()
+			p_Bot._KillYourselfTimer = 0.0
+		end
 	end
 
 	local s_Distance = s_Target:Distance(s_Here)
@@ -908,6 +914,8 @@ function GameDirector:_CheckObjectiveProgress(p_Bot)
 	local s_Registry = Registry.GAME_DIRECTOR
 	if s_Soldier == nil or s_Objective == nil or s_Objective == ''
 		or g_BotStates:IsInVehicleState(p_Bot.m_ActiveState) or g_BotStates:IsStaticState(p_Bot.m_ActiveState)
+		-- A passenger on an outside seat: _CheckVehicleProgress gets it out.
+		or g_BotStates:IsOnVehicleState(p_Bot.m_ActiveState)
 		or p_Bot._ActiveAction == BotActionFlags.OtherActionActive or p_Bot._FollowTargetPlayer ~= nil then
 		p_Bot._ProgressObjective = nil
 		return
@@ -2998,7 +3006,15 @@ function GameDirector:_NearFront(p_Position)
 	return false
 end
 
----Whether the vehicle got stuck with a bot driving it a short while ago and still stands there.
+---Whether the vehicle got stuck with a bot driving it a short while ago and still stands there: no bot gets in, also
+---not when it spawns or passes by (MP_017: an AMTRAC in the canal below the quay, six crews in a row got in and out into
+---the water).
+---@param p_Entity ControllableEntity
+---@return boolean
+function GameDirector:IsStuckVehicle(p_Entity)
+	return self:_IsStuckVehicle('vehicle ' .. tostring(p_Entity.instanceId), p_Entity.transform.trans)
+end
+
 ---@param p_Name string "vehicle <id>"
 ---@param p_Position Vec3
 ---@return boolean

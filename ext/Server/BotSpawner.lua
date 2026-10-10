@@ -179,23 +179,31 @@ function BotSpawner:OnEngineUpdate(p_DeltaTime, p_SimulationDeltaTime)
 
 			if l_Bot.m_Player.soldier ~= nil then
 				local s_SpecialSpawn, s_SpecialSpawnEntity = self:_GetSpecialSpawnEnity(l_Bot, l_Bot.m_Player.teamId)
+				local s_Entered = -1
 				if s_SpecialSpawnEntity then
+					local s_SpawnTransform = l_Bot.m_Player.soldier.worldTransform:Clone()
+					s_Entered = s_SpecialSpawn == "SpawnInMobileVehicle" and l_Bot:_EnterPassengerSeat(s_SpecialSpawnEntity)
+						or l_Bot:_EnterVehicleEntity(s_SpecialSpawnEntity, false)
+					if s_Entered ~= 0 and l_Bot.m_Player.soldier ~= nil then
+						-- Didn't get in (the seat taken in the same frame): on foot where the game spawned it, like any other
+						-- spawn below, not dead (a ticket) and not on foot with a vehicle-path (MP_017: into the water
+						-- towards a boat path).
+						l_Bot.m_ActiveVehicle = nil
+						if l_Bot.m_Player.soldier.worldTransform.trans:Distance(s_SpawnTransform.trans) > 2.0 then
+							l_Bot.m_Player.soldier:SetTransform(s_SpawnTransform)
+						end
+					end
+				end
+				if s_Entered == 0 then
 					table.remove(self._BotsWithoutPath, l_Index)
 					l_Bot:SetVarsWay(nil, true, 0, 0, false)
+					l_Bot:FindVehiclePath(s_SpecialSpawnEntity.transform.trans:Clone())
 
-					local s_Entered = s_SpecialSpawn == "SpawnInMobileVehicle" and l_Bot:_EnterPassengerSeat(s_SpecialSpawnEntity)
-						or l_Bot:_EnterVehicleEntity(s_SpecialSpawnEntity, false)
-					if s_Entered ~= 0 then
-						self:_KillSoldierKeepRespawn(l_Bot)
-					else
-						l_Bot:FindVehiclePath(s_SpecialSpawnEntity.transform.trans:Clone())
+					self:_ApplyCosumizationAfterSpawn(l_Bot)
 
-						self:_ApplyCosumizationAfterSpawn(l_Bot)
-
-						-- for Civilianizer-mod:
-						if Globals.RemoveKitVisuals then
-							Events:Dispatch('Bot:SoldierEntity', l_Bot.m_Player.soldier)
-						end
+					-- for Civilianizer-mod:
+					if Globals.RemoveKitVisuals then
+						Events:Dispatch('Bot:SoldierEntity', l_Bot.m_Player.soldier)
 					end
 
 					break
@@ -229,7 +237,6 @@ function BotSpawner:OnEngineUpdate(p_DeltaTime, p_SimulationDeltaTime)
 					-- overwrite the chosen path, and the bot must not be teleported again.
 					table.remove(self._BotsWithoutPath, l_Index)
 					l_Bot:SetVarsWay(nil, true, s_PathIndex, s_IndexOnPath, s_InvertDirection)
-					local s_Killed = false
 					if s_SpawnEntity then
 						-- Into the vehicle of the mate. The way on foot from here, not path 1 point 1 (GetSpawnableBeaconOrMate):
 						-- the engine doesn't always seat the bot (two bots for the last seat), on foot it walked straight to that
@@ -239,8 +246,9 @@ function BotSpawner:OnEngineUpdate(p_DeltaTime, p_SimulationDeltaTime)
 							l_Bot:SetVarsWay(nil, true, s_Node.PathIndex, s_Node.PointIndex, false)
 						end
 						if l_Bot:_EnterVehicleEntity(s_SpawnEntity, false) ~= 0 then
-							self:_KillSoldierKeepRespawn(l_Bot)
-							s_Killed = true
+							-- Not in (the seat taken meanwhile): on foot from the spawn of the game, not dead (a ticket).
+							l_Bot.m_ActiveVehicle = nil
+							l_Bot:TryEnterZoneAt(l_Bot.m_Player.soldier.worldTransform.trans:Clone(), true)
 						end
 					elseif s_SpawnPosition then
 						local s_Transform = l_Bot.m_Player.soldier.worldTransform:Clone()
@@ -250,13 +258,11 @@ function BotSpawner:OnEngineUpdate(p_DeltaTime, p_SimulationDeltaTime)
 						l_Bot:TryEnterZoneAt(s_SpawnPosition, true)
 					end
 
-					if not s_Killed then
-						self:_ApplyCosumizationAfterSpawn(l_Bot)
+					self:_ApplyCosumizationAfterSpawn(l_Bot)
 
-						-- for Civilianizer-mod:
-						if Globals.RemoveKitVisuals then
-							Events:Dispatch('Bot:SoldierEntity', l_Bot.m_Player.soldier)
-						end
+					-- for Civilianizer-mod:
+					if Globals.RemoveKitVisuals then
+						Events:Dispatch('Bot:SoldierEntity', l_Bot.m_Player.soldier)
 					end
 
 					break

@@ -11,6 +11,7 @@ from pathlib import Path
 
 from . import __version__
 from .analyzers import create_analyzers, load_plugins
+from .gamelog import GameLog
 from .hub import Hub
 from .maps import MapWorkbench
 from .rcon import DEFAULT_PORT, RconClient, find_startup_password
@@ -22,8 +23,9 @@ from .server import DebugServer
 MAPFILES = Path(__file__).resolve().parents[3] / "mapfiles"
 # Where the censuses of the levels are saved (tools/debug-server/census).
 CENSUS = Path(__file__).resolve().parents[1] / "census"
-# A script that starts the game-server (see ALL_MAPS.md).
+# A script that starts the game-server (see ALL_MAPS.md), and the file it writes the console of the game-server into.
 DEFAULT_GAME_COMMAND = CENSUS / "start_vu.sh"
+DEFAULT_GAME_LOG = CENSUS / "vu.log"
 
 
 def main() -> None:
@@ -54,6 +56,9 @@ def main() -> None:
                         if DEFAULT_GAME_COMMAND.is_file() else None,
                         help="starts the game-server: the Maps tab runs it, the census after a crash (default: "
                              "census/start_vu.sh if it exists)")
+    parser.add_argument("--game-log", type=Path, metavar="FILE",
+                        help="console output of the game-server: its errors and the lines of fun-bots go into the "
+                             "recording and the findings (default: census/vu.log with the default --game-command)")
     parser.add_argument("--open", action="store_true", help="open the browser")
     parser.add_argument("--verbose", action="store_true", help="log every request")
     args = parser.parse_args()
@@ -85,6 +90,13 @@ def main() -> None:
               "the console sends RCON-commands through the mod (only the commands of the mods)")
 
     stop = threading.Event()
+    game_log = args.game_log
+    if game_log is None and args.game_command == str(DEFAULT_GAME_COMMAND):
+        game_log = DEFAULT_GAME_LOG
+    if game_log is not None and args.replay is None:
+        print(f"game-log: {game_log}")
+        threading.Thread(target=GameLog(game_log, hub.add_game_log).run, args=(stop,), name="game-log",
+                         daemon=True).start()
     if args.replay:
         print(f"replaying {args.replay} (speed {args.speed})")
         threading.Thread(target=replay, args=(args.replay, hub.ingest, args.speed, args.loop, stop),

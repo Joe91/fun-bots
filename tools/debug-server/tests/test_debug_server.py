@@ -10,6 +10,7 @@ import struct
 import sys
 import tempfile
 import threading
+import time
 import unittest
 import urllib.request
 from pathlib import Path
@@ -20,6 +21,7 @@ from funbots_debug.analyzers import create_analyzers  # noqa: E402
 from funbots_debug.analyzers.combat import CombatAnalyzer  # noqa: E402
 from funbots_debug.analyzers.stuck import StuckBotAnalyzer  # noqa: E402
 from funbots_debug.console_commands import MOD_EXT, catalog  # noqa: E402
+from funbots_debug.gamelog import GameLog  # noqa: E402
 from funbots_debug.hub import Hub, LabelError  # noqa: E402
 from funbots_debug.protocol import as_list, yaw_to_direction  # noqa: E402
 from funbots_debug.rcon import RconClient, RconError, decode_packet, encode_packet  # noqa: E402
@@ -241,6 +243,58 @@ class RecorderTest(unittest.TestCase):
             replay(recorder.path, replayed.ingest, speed=0)
             self.assertEqual(replayed.state.bots[1]["pos"], [1, 0, 0])
             self.assertEqual(replayed.ingest(payload())["commands"], [])
+
+
+class GameLogTest(unittest.TestCase):
+    LINES = [
+        "[2026-10-09 21:37:34+02:00] [info] Registering team 2 with 16 player slots and 4 squad slots.",
+        "[2026-10-09 21:37:35+02:00] [info] [VeniceEXT] [fun-bots] [NavZones] 28 zones for MP_013_RushLarge0",
+        "[2026-10-09 21:38:00+02:00] [error] [VeniceEXT] [fun-bots] Error: __init__.lua:10: attempt to index a nil value",
+        "stack traceback:",
+        "\t[C]: in ?",
+        "[2026-10-09 21:38:01+02:00] [info] [VeniceEXT] Loading VeniceEXT module 'fastload'.",
+        "next line without prefix of a dropped line",
+    ]
+
+    def test_lines_kept_and_errors(self):
+        events = GameLog(Path("unused"), lambda _: None)._events(self.LINES)
+        self.assertEqual([event["text"] for event in events], [
+            "[VeniceEXT] [fun-bots] [NavZones] 28 zones for MP_013_RushLarge0",
+            "[VeniceEXT] [fun-bots] Error: __init__.lua:10: attempt to index a nil value",
+            "stack traceback:", "\t[C]: in ?"])
+        self.assertEqual([event["error"] for event in events], [False, True, True, False])
+
+    def test_follows_file_into_recording_before_the_level(self):
+        with tempfile.TemporaryDirectory() as directory:
+            log = Path(directory) / "vu.log"
+            log.write_text("old line of the last start\n", encoding="utf-8")
+            recorder = Recorder(Path(directory) / "rec")
+            hub = Hub(create_analyzers(), recorder=recorder)
+            stop = threading.Event()
+            thread = threading.Thread(target=GameLog(log, hub.add_game_log).run, args=(stop,), daemon=True)
+            thread.start()
+            try:
+                time.sleep(0.3)
+                with open(log, "a", encoding="utf-8") as file:
+                    file.write("\n".join(self.LINES) + "\n")
+                for _ in range(40):
+                    time.sleep(0.1)
+                    if any(f["message"].startswith("game-server:") for f in hub._analysis()["findings"]):
+                        break
+            finally:
+                stop.set()
+                thread.join(2)
+            # No file without a level: the lines go into the recording of the next level.
+            self.assertIsNone(recorder.path)
+            hub.ingest(payload([frame(1.0, [bot(1, (0, 0, 0))])]))
+            recorder.close()
+            self.assertIn("MP_001", recorder.path.name)
+            entries = list(read_recording(recorder.path))
+            texts = [event["text"] for _, entry in entries for event in entry.get("events") or []
+                     if event.get("type") == "game_log"]
+            self.assertEqual(len(texts), 4)
+            server = next(analyzer for analyzer in hub.analyzers if analyzer.name == "server")
+            self.assertEqual(server.stats()["game-server errors"], 2)
 
 
 class HttpTest(unittest.TestCase):

@@ -34,7 +34,7 @@ from pathlib import Path
 
 from ..backups import backup
 from ..paths.mapfile import MapData
-from . import check, navpaths, navzones
+from . import check, lint, navpaths, navzones
 from .report import build_report
 from .store import load
 
@@ -549,6 +549,26 @@ def command_navpaths(options) -> int:
     return 0
 
 
+def command_lint(options) -> int:
+    """Offline checks of the routes (lint.py). Exit code 1 if there are errors or warnings that aren't known."""
+    names = options.maps or lint.all_maps(options.navzones, options.mapfiles)
+    known = set() if options.all_findings else lint.load_known()
+    findings = lint.lint(names, options.navzones, options.mapfiles)
+    shown = [f for f in findings if f.key not in known and (options.info or f.severity != "info")]
+    for finding in shown:
+        print(f"[{finding.severity}] {finding.key}")
+    counts = {severity: sum(1 for f in findings if f.severity == severity) for severity in ("error", "warning", "info")}
+    new = [f for f in findings if f.severity != "info" and f.key not in known]
+    print(f"{len(names)} levels: {counts['error']} errors, {counts['warning']} warnings, {counts['info']} infos, "
+          f"{len(findings) - len([f for f in findings if f.key not in known])} known; {len(new)} new errors/warnings")
+    if options.write_known:
+        keys = sorted(f.key for f in findings if f.severity != "info")
+        lint.KNOWN.write_text(json.dumps({"known": keys}, indent=1) + "\n", encoding="utf-8")
+        print(f"written {len(keys)} known findings to {lint.KNOWN}")
+        return 0
+    return 1 if new else 0
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(prog="python -m funbots_debug.census", description=__doc__,
                                      formatter_class=argparse.RawDescriptionHelpFormatter)
@@ -613,6 +633,16 @@ def main() -> int:
     paths.add_argument("--db", type=Path, metavar="MOD_DB", help="with --write: also into the tables of this mod.db")
     paths.add_argument("-v", "--verbose", action="store_true", help="list the dropped paths")
     paths.set_defaults(handler=command_navpaths)
+
+    lints = commands.add_parser("lint", help="offline checks of the routes over mesh and paths (no game needed)")
+    lints.add_argument("maps", nargs="*", help="<Level>_<Mode> (default: all with a mesh)")
+    lints.add_argument("--mapfiles", type=Path, default=MAPFILES)
+    lints.add_argument("--navzones", type=Path, default=NAVZONES, help="the networks (navzones/<map>.json)")
+    lints.add_argument("--info", action="store_true", help="also list the infos (split junctions)")
+    lints.add_argument("--all-findings", action="store_true", help="also list the known findings (lint_known.json)")
+    lints.add_argument("--write-known", action="store_true",
+                       help="accept all errors and warnings as they are now (writes lint_known.json)")
+    lints.set_defaults(handler=command_lint)
 
     options = parser.parse_args()
     return options.handler(options)

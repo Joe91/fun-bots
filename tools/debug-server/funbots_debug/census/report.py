@@ -425,12 +425,21 @@ def _check_combat_area(census: dict, nodes: _Nodes, issues: list[Issue], summary
                                f"both: {sum(len(points) for points in outside.values())}")
 
 
+def _spawn_team(spawn: dict):
+    """The team of a soldier-spawn: that of its data, else of the entity (MapCensus._SpawnAreas)."""
+    return spawn.get("dataTeam") if spawn.get("dataTeam") in (1, 2) else spawn.get("team")
+
+
 def _check_spawns(entities: dict, nodes: _Nodes, issues: list[Issue], summary: dict) -> None:
     foot = nodes.positions(nodes.foot)
     distances = []
-    for spawn in as_list(entities.get("spawns")):
+    spawns = as_list(entities.get("spawns"))
+    # A spawn with a vehicle-spawn on its bus puts the soldier into the vehicle: only checked for a team without other
+    # spawns (the B2K levels have one on the bus of all their spawns, the game spawns the soldier there on foot).
+    on_foot = {_spawn_team(spawn) for spawn in spawns if spawn.get("vehicleSpawn") is None}
+    for spawn in spawns:
         pos = as_list(spawn.get("pos"))
-        if len(pos) < 3 or spawn.get("vehicleSpawn") is not None or not foot:
+        if len(pos) < 3 or (spawn.get("vehicleSpawn") is not None and _spawn_team(spawn) in on_foot) or not foot:
             continue
         distance, _ = _closest(foot, pos)
         distances.append(distance)

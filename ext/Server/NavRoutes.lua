@@ -30,9 +30,15 @@ local LINK_MAX = 15.0
 -- Metres added for leaving the mesh and coming back to it (waiting bots, corners): the mesh wins a tie.
 local MESH_CROSSING = 10.0
 -- Metres added to an exit a bot didn't get to over the mesh, and to a stretch of a path a bot got stuck on (for all
--- bots, until the level ends).
+-- bots).
 local EXIT_PENALTY = 100.0
 local STRETCH_PENALTY = 100.0
+-- Those fade: half of one is gone after PENALTY_HALF_LIFE seconds (in steps of PENALTY_DECAY_STEP), below PENALTY_MIN
+-- metres it is dropped. A blocker that stays (a fence) gets new ones from the bots stuck there, one that moves away (a
+-- parked tank) is forgotten.
+local PENALTY_HALF_LIFE = 300.0
+local PENALTY_DECAY_STEP = 30.0
+local PENALTY_MIN = 10.0
 -- A stretch of a path shorter than this between two junctions whose points the mesh connects with a way at most
 -- SHORTCUT_DETOUR times as long (plus SHORTCUT_SLACK metres) is no way for the routes (_DropShortcuts).
 local SHORTCUT_LENGTH = 30.0
@@ -153,12 +159,16 @@ function NavRoutes:Clear()
 	---junction -> metres added for coming onto the mesh there (BlockEntry)
 	---@type table<NavZoneJunction, number>
 	self._EntryPenalty = {}
+	---edges with a penalty (BlockStretch)
+	---@type table<NavEdge, boolean>
+	self._PenaltyEdges = {}
 	self._PenaltyVersion = 0
+	self._DecayTime = nil
 	---objective -> its target (false: none), see Target
 	self._Targets = {}
 	---objective -> its target next to a vehicle or an MCOM (false: none on the mesh), see _ActionTarget
 	self._ActionTargets = {}
-	---target -> { Topology, Penalties, Time, Mesh = point -> metres, Node = node -> metres }
+	---target -> { Topology, Penalties, MeshPenalties, Time, Mesh = point -> metres, Node = node -> metres }
 	self._Fields = {}
 	---target -> { Topology, Cost = point -> metres over the mesh alone }
 	self._MeshFields = {}
@@ -665,10 +675,13 @@ end
 ---@param p_Target NavTarget
 ---@return { Mesh: table<integer, number>, Node: table<integer, number> }
 function NavRoutes:_Field(p_Target)
+	self:_Decay()
 	local s_Topology = m_NavZones:GetTopology()
 	local s_Now = SharedUtils:GetTime()
+	local s_MeshPenalties = m_NavZones:GetPenalties()
 	local s_Known = self._Fields[p_Target]
-	if s_Known ~= nil and ((s_Known.Topology == s_Topology and s_Known.Penalties == self._PenaltyVersion)
+	if s_Known ~= nil and ((s_Known.Topology == s_Topology and s_Known.Penalties == self._PenaltyVersion
+				and s_Known.MeshPenalties == s_MeshPenalties)
 			or s_Now - s_Known.Time < FIELD_REFRESH) then
 		return s_Known
 	end
@@ -736,8 +749,8 @@ function NavRoutes:_Field(p_Target)
 		end
 	end
 
-	local s_Field = { Topology = s_Topology, Penalties = self._PenaltyVersion, Time = s_Now, Mesh = s_MeshCost,
-		Node = s_NodeCost }
+	local s_Field = { Topology = s_Topology, Penalties = self._PenaltyVersion, MeshPenalties = s_MeshPenalties,
+		Time = s_Now, Mesh = s_MeshCost, Node = s_NodeCost }
 	self._Fields[p_Target] = s_Field
 	return s_Field
 end
@@ -1071,6 +1084,7 @@ function NavRoutes:BlockStretch(p_PathIndex, p_PointIndex)
 			local l_Edge = s_Edges[l_Index]
 			if l_Edge.To == l_Pair[2] and l_Edge.Path == p_PathIndex then
 				l_Edge.Penalty = (l_Edge.Penalty or 0.0) + STRETCH_PENALTY
+				self._PenaltyEdges[l_Edge] = true
 				s_Found = true
 			end
 		end
@@ -1096,6 +1110,42 @@ end
 function NavRoutes:BlockExit(p_Junction)
 	self._Penalty[p_Junction] = (self._Penalty[p_Junction] or 0.0) + EXIT_PENALTY
 	self._PenaltyVersion = self._PenaltyVersion + 1
+end
+
+---Lets the penalties of stretches, entries and exits fade (PENALTY_HALF_LIFE).
+function NavRoutes:_Decay()
+	local s_Now = SharedUtils:GetTime()
+	if self._DecayTime == nil or s_Now < self._DecayTime then
+		self._DecayTime = s_Now
+		return
+	end
+	local s_Elapsed = s_Now - self._DecayTime
+	if s_Elapsed < PENALTY_DECAY_STEP then
+		return
+	end
+	self._DecayTime = s_Now
+	local s_Factor = 0.5 ^ (s_Elapsed / PENALTY_HALF_LIFE)
+	local s_Changed = false
+	for _, l_Penalties in ipairs({ self._Penalty, self._EntryPenalty }) do
+		for l_Junction, l_Penalty in pairs(l_Penalties) do
+			local s_Penalty = l_Penalty * s_Factor
+			l_Penalties[l_Junction] = s_Penalty >= PENALTY_MIN and s_Penalty or nil
+			s_Changed = true
+		end
+	end
+	for l_Edge in pairs(self._PenaltyEdges) do
+		local s_Penalty = (l_Edge.Penalty or 0.0) * s_Factor
+		if s_Penalty >= PENALTY_MIN then
+			l_Edge.Penalty = s_Penalty
+		else
+			l_Edge.Penalty = nil
+			self._PenaltyEdges[l_Edge] = nil
+		end
+		s_Changed = true
+	end
+	if s_Changed then
+		self._PenaltyVersion = self._PenaltyVersion + 1
+	end
 end
 
 if g_NavRoutes == nil then

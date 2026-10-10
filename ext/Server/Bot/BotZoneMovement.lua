@@ -42,6 +42,8 @@ local ZONE_TRAP_BACK_RANGE = 25.0
 local ZONE_TRAP_BACK_HEIGHT = 4.0
 local ZONE_MAX_GIVE_UPS = 3      -- Zones left like that in a row (no goal, no exit reached): the bot is stuck in a
                                  -- place it doesn't get out of, it respawns (as on the waypoints, Bot:_ObstacleHandling).
+local ZONE_GIVE_UP_PATH = 50.0   -- Leaving after ZONE_MAX_FAILS onto the closest path only this close: farther it walks
+                                 -- there straight (MP_017: 350 m, through the water), it tries from another point.
 local ZONE_WAIT_ATTACK = { 1.0, 3.0 } -- Seconds at each point while capturing.
 local ZONE_WAIT_DEFEND = { 5.0, 12.0 } -- Seconds at each point while defending.
 local ZONE_SUBOBJECTIVE_CYCLE = 1.0 -- Seconds between two checks whether the bot shall arm / disarm the MCOM.
@@ -1480,6 +1482,16 @@ function Bot:_ZoneGiveUpConnection(p_Position, p_Target)
 			self:_LeaveZone(nil)
 			self.m_Player.soldier:Kill()
 			return true
+		end
+		if not s_State.Vehicle then
+			local s_Path = g_GameDirector:FindClosestPath(p_Position, false, true, nil)
+			if s_Path == nil or s_Path.Position:Distance(p_Position) > ZONE_GIVE_UP_PATH then
+				m_Logger:Write(self.m_Player.name .. ' no path close to ' .. s_State.Zone.Name .. ', stays')
+				s_State.Fails = 0
+				s_State.Avoid = s_State.Point
+				self:_ZoneReplan(true)
+				return false
+			end
 		end
 		self:_LeaveZone(nil)
 		return true

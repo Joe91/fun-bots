@@ -12,7 +12,8 @@ MIN_HITCH = 0.5
 @register
 class ServerHealthAnalyzer(Analyzer):
     name = "server"
-    description = "Hitches of the server (gaps between snapshots), Lua-memory and errors of the debug-bridge."
+    description = ("Hitches of the server (gaps between snapshots), Lua-memory, errors of the debug-bridge and of the "
+                   "console of the game-server (--game-log).")
 
     def __init__(self) -> None:
         super().__init__()
@@ -27,6 +28,7 @@ class ServerHealthAnalyzer(Analyzer):
         self._memory_start: int | None = None
         self._memory: int | None = None
         self._errors = 0
+        self._game_errors = 0
 
     def on_frame(self, frame: dict, state) -> None:
         t = float(frame.get("t", 0))
@@ -56,6 +58,12 @@ class ServerHealthAnalyzer(Analyzer):
             self.resolve(key)
 
     def on_event(self, event: dict, state) -> None:
+        if event.get("type") == "game_log" and event.get("error"):
+            self._game_errors += 1
+            text = str(event.get("text") or "")
+            self.report(Finding(
+                key=f"game:{text[:120]}", severity="error", time=float(event.get("t") or 0),
+                message=f"game-server: {text}"))
         if event.get("type") == "error":
             self._errors += 1
             self.report(Finding(
@@ -63,7 +71,8 @@ class ServerHealthAnalyzer(Analyzer):
                 message=f"debug-bridge error in {event.get('source')}: {event.get('message')}"))
 
     def stats(self) -> dict:
-        data = {"hitches": self._hitches, "max gap (s)": round(self._max_gap, 2), "bridge errors": self._errors}
+        data = {"hitches": self._hitches, "max gap (s)": round(self._max_gap, 2), "bridge errors": self._errors,
+                "game-server errors": self._game_errors}
         if self._memory is not None:
             data["lua memory (MB)"] = round(self._memory / 1024, 1)
             data["lua memory growth (MB)"] = round((self._memory - (self._memory_start or 0)) / 1024, 1)

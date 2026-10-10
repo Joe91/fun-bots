@@ -220,6 +220,12 @@ python -m funbots_debug --replay recordings/<file> --speed 4
 Each line is one request of the mod: `{"recv": <unix time>, "payload": <body>}`. Read recordings in your own scripts
 with `funbots_debug.recorder.read_recording()`.
 
+Lua errors, tracebacks and the prints of the mod are only in the console of the game-server. With
+`--game-log FILE` (default `census/vu.log`, which `census/start_vu.sh` writes, when `--game-command` is the default)
+the debug-server follows that file: the lines of fun-bots, all warnings and errors, and the lines that continue them
+(a traceback) go into the recording as events `game_log` (`{level, text, error}`, entries of their own:
+`{"recv", "payload": {"events": [...]}}`), also while the mod hangs; errors show up as findings (`funbots_debug/gamelog.py`).
+
 ## Protocol
 
 The mod always makes the request, and only one request is in flight at a time (`DebugBridge.lua`).
@@ -617,7 +623,8 @@ the routes don't know the objective the old path-switching goes on (`PathSwitche
 mesh until it is teleported, `NavRoutes:BlockStretch`, event `path_stuck`), and a junction where a bot came onto the
 mesh but didn't get from its waypoint to its point (`NavRoutes:BlockEntry`, a pillar or a corner the census measured
 too open): the levels have issues no tool finds (a door that is closed now, a fence, a gap the recording jumped), the
-bots learn them during the round.
+bots learn them during the round. Those penalties fade (half gone after 5 minutes, `PENALTY_HALF_LIFE`): a blocker
+that stays gets new ones from the next bots stuck there, one that moves away (a parked tank) is forgotten.
 
 The bots spread over the ways: each one weighs each path by a factor of its own (1 to 1 + `NAV_ROUTE_SPREAD`, per
 life; for the way to the junction and the first stretch only, the rest is what the field says: a stub that leads back
@@ -641,4 +648,11 @@ walkability grids and generated nav meshes.
 
 ```
 python -m unittest discover -s tests
+python -m funbots_debug.census lint            # routes of all levels with a mesh, offline (CI: nav-checks.yml)
 ```
+
+`census lint` (`funbots_debug/census/lint.py`) checks the mesh and the paths the way `NavRoutes.lua` sees them: every
+objective can be walked to from every other one (error), every spawn area reaches an objective (warning: the carriers
+and ships of some levels don't, by design), no foot path is a dead end (warning), and with `--info` the junctions next
+to each other whose mesh points the mesh doesn't connect. The findings accepted as they are stand in
+`funbots_debug/census/lint_known.json` (`--write-known` writes the current ones); only others fail.

@@ -116,6 +116,8 @@ function NavZones:Clear()
 	self._Version = (self._Version or 0) + 1
 	-- Counts up whenever connections are removed as well (NavRoutes measures the ways anew then).
 	self._Topology = (self._Topology or 0) + 1
+	-- Counts up whenever a connection costs more (BlockEdge): the fields of NavRoutes include those costs.
+	self._Penalties = (self._Penalties or 0) + 1
 end
 
 -- =============================================
@@ -501,6 +503,11 @@ function NavZones:GetTopology()
 	return self._Topology
 end
 
+---@return integer counts up when a connection was given up (BlockEdge)
+function NavZones:GetPenalties()
+	return self._Penalties
+end
+
 ---The mesh (a zone without name and points of its own). nil without mesh.
 ---@return NavZone|nil
 function NavZones:GetMesh()
@@ -796,6 +803,7 @@ function NavZones:BlockEdge(p_Zone, p_A, p_B)
 			end
 		end
 	end
+	self._Penalties = self._Penalties + 1
 	local s_Removed = s_Remove == true
 	if s_Removed then
 		self._Topology = self._Topology + 1

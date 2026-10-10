@@ -219,6 +219,14 @@ function Bot:IsInactive()
 	end
 end
 
+---In a vehicle or on one: Player:EnterVehicle fails silently now and then (the seat taken in the same frame), the
+---soldier stays on foot.
+---@return boolean
+function Bot:IsSeated()
+	local s_Controllable = self.m_Player.controlledControllable
+	return (s_Controllable ~= nil and not s_Controllable:Is('ServerSoldierEntity')) or self.m_Player.attachedControllable ~= nil
+end
+
 ---@return integer
 ---@return boolean
 function Bot:_GetWayIndex(p_Increment)

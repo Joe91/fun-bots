@@ -313,6 +313,10 @@ function Bot:_EnterVehicleEntity(p_Entity, p_PlayerIsDriver)
 		return -3 -- Not allowed to use.
 	end
 
+	if g_GameDirector:IsStuckVehicle(p_Entity) then
+		return -2
+	end
+
 	local s_MaxEntries = m_Vehicles:GetBotSeatCount(p_Entity, s_VehicleData, p_PlayerIsDriver)
 
 	for l_IndexOfSeat = 0, s_MaxEntries - 1 do
@@ -325,6 +329,9 @@ function Bot:_EnterVehicleEntity(p_Entity, p_PlayerIsDriver)
 		-- A reserved seat is kept free for a player.
 		if not s_SeatReserved and (p_Entity:GetPlayerInEntry(s_SeatIndex) == nil or Globals.IsAirSuperiority or (Globals.MapHasDynamiJetSpawns and m_Vehicles:IsVehicleType(s_VehicleData, VehicleTypes.Plane))) then -- already in this seat in air superiority
 			self.m_Player:EnterVehicle(p_Entity, s_SeatIndex)
+			if not self:IsSeated() then
+				goto next_seat
+			end
 			self._ExitVehicleHealth = PhysicsEntity(p_Entity).internalHealth * (Registry.VEHICLES.VEHICLE_EXIT_HEALTH / 100.0)
 			-- Get ID.
 			self.m_ActiveVehicle = s_VehicleData
@@ -366,6 +373,7 @@ function Bot:_EnterVehicleEntity(p_Entity, p_PlayerIsDriver)
 
 			return 0, s_Position -- Everything fine.
 		end
+		::next_seat::
 	end
 
 	-- No place left.
@@ -384,11 +392,17 @@ function Bot:_EnterPassengerSeat(p_Entity)
 	if not Config.UseAirVehicles and m_Vehicles:IsAirVehicle(s_VehicleData) then
 		return -3
 	end
+	if g_GameDirector:IsStuckVehicle(p_Entity) then
+		return -2
+	end
 	local s_Seats = m_Vehicles:FreePassengerSeats(p_Entity, s_VehicleData)
 	if #s_Seats == 0 then
 		return -2
 	end
 	self.m_Player:EnterVehicle(p_Entity, s_Seats[1])
+	if not self:IsSeated() then
+		return -2
+	end
 	self._ExitVehicleHealth = PhysicsEntity(p_Entity).internalHealth * (Registry.VEHICLES.VEHICLE_EXIT_HEALTH / 100.0)
 	self.m_ActiveVehicle = s_VehicleData
 	self._ActiveVehicleWeaponSlot = 0
