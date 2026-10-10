@@ -8,7 +8,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from funbots_debug.census import check  # noqa: E402
+from funbots_debug.census import check, navzones  # noqa: E402
 
 
 def _network():
@@ -76,6 +76,17 @@ class CheckTest(unittest.TestCase):
         self.assertEqual(found["blockedJunctions"], [[15.0, 0.0, 0.0, 15.0, 0.0, 3.0]])
         result = check.apply(network, found)
         self.assertEqual([entry[0] for entry in result["attach"]], [1])
+
+    def test_loose_end_not_attached_where_the_checks_found_it_blocked(self):
+        # A loose end 1 m beside point 3; the way from point 3 is blocked: the next closest point (2) instead. With 10
+        # points in one part (navzones.MIN_PART).
+        points = [[float(index * 5), 0.0, 0.0, 2.0, 0, 0] for index in range(10)]
+        edges = [[index, index + 1, 5.0, []] for index in range(9)]
+        network = {"points": points, "edges": edges, "attach": [], "stats": {}}
+        loose = [[7, 1, [15.0, 0.0, 1.0]]]
+        self.assertEqual(navzones._attach_loose(network, loose)["attach"][0][2], 3)
+        checks = {"blockedJunctions": [[15.0, 0.0, 0.0, 15.0, 0.0, 1.0]]}
+        self.assertEqual(navzones._attach_loose(network, loose, checks)["attach"][0][2], 2)
 
 
 if __name__ == "__main__":

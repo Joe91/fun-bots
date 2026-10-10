@@ -352,11 +352,11 @@ function Bot:_HandleSidwardsMovement(p_DeltaTime)
 		else
 			if self._SidewardsTimer <= 0.0 then
 				if self.m_StrafeValue ~= 0 then
-					self._SidewardsTimer = MathUtils:GetRandom(Config.MinMoveCycle, Config.MaxStraigtCycle)
+					self._SidewardsTimer = MathUtils:GetRandom(Registry.BOT.MIN_MOVE_CYCLE, Registry.BOT.MAX_STRAIGHT_CYCLE)
 					self.m_StrafeValue = 0.0
 					self.m_YawOffset = 0.0
 				else
-					self._SidewardsTimer = MathUtils:GetRandom(Config.MinMoveCycle, Config.MaxSideCycle)
+					self._SidewardsTimer = MathUtils:GetRandom(Registry.BOT.MIN_MOVE_CYCLE, Registry.BOT.MAX_SIDE_CYCLE)
 					if MathUtils:GetRandomInt(0, 1) > 0 then -- Random direction.
 						self.m_StrafeValue = 1.0
 					else
@@ -614,7 +614,7 @@ function Bot:_ObstacleHandling(p_Velocity, p_DistanceSquared, p_HeightDistance, 
 					self:_SetInput(EntryInputActionEnum.EIAQuicktimeFastMelee, 1)
 					self:_SetInput(EntryInputActionEnum.EIAMeleeAttack, 1)
 					self.m_ActiveWeapon = self.m_Knife
-					self._MeleeCooldownTimer = Config.MeleeAttackCoolDown -- Set time to ensure bot exit knife-mode when attack starts.
+					self._MeleeCooldownTimer = Registry.BOT.MELEE_ATTACK_COOLDOWN -- Set time to ensure bot exit knife-mode when attack starts.
 				else
 					self:_SetInput(EntryInputActionEnum.EIAFire, 1)
 				end
@@ -719,7 +719,7 @@ end
 
 function Bot:_IsTargetDistanceReached(p_DistanceFromTargetSquared, p_HeightDistance)
 	-- apply speed values
-	local s_TargetDistanceSpeed = Config.TargetDistanceWayPoint
+	local s_TargetDistanceSpeed = Registry.BOT.TARGET_DISTANCE_WAYPOINT
 	if self.m_ActiveSpeedValue == BotMoveSpeeds.Sprint then
 		s_TargetDistanceSpeed = s_TargetDistanceSpeed * 1.5
 	elseif self.m_ActiveSpeedValue == BotMoveSpeeds.SlowCrouch or self.m_ActiveSpeedValue == BotMoveSpeeds.Slow then
@@ -990,7 +990,7 @@ function Bot:UpdateNormalMovement(p_DeltaTime)
 			-- do the obstacle-handling
 			local s_Result = self:_ObstacleHandling(s_Velocity, s_DistanceFromTargetSquared, s_HeightDistance, p_DeltaTime, s_SoldierPos)
 			if s_Result == nil then
-				s_Soldier:Kill()
+				self:KillSoldier('path_obstacle')
 				m_Logger:Write(self.m_Player.name .. ' got stuck. Kill')
 				return
 			else

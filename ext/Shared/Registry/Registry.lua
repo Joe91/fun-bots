@@ -27,7 +27,8 @@ Registry = {
 		GUNSHIP_SEAT_RESERVE_TIME = 30.0,
 		-- Use load of Bundle to fix Bug of weapons disappearing (thanks to Lesley!) !!! THIS MIGHT CAUSE CRASHES OR OTHER ISSUES!!!
 		USE_LOAD_BUNDLE_BUGFIX = false,
-		-- Keep the last ticket in conquest for the gamemode counter
+		-- Conquest: bots don't spawn on the last ticket of their team (it stays for the counter of the game mode, else the
+		-- end of the round could crash).
 		DONT_SPAWN_BOTS_ON_LAST_CONQUEST_TICKET = true,
 		-- Valid keys can be found here: https://docs.veniceunleashed.net/vext/ref/fb/inputdevicekeys/.
 		BOT_COMMAND_KEY = InputDeviceKeys.IDK_LeftAlt,
@@ -65,7 +66,7 @@ Registry = {
 	},
 	-- Some Client Variables.
 	CLIENT = {
-		-- Distance a bot tries to revive a player.
+		-- Distance a bot tries to revive a real player (BOT.REVIVE_DISTANCE: another bot).
 		REVIVE_DISTANCE = 30.0,
 		-- The number of attack-checks done per cycle.
 		MAX_CHECKS_PER_CYCLE = 10,
@@ -94,7 +95,7 @@ Registry = {
 		-- Do all sight-checks (bot-bot, bot-player, player-revive) with server-side raycasts instead of sending
 		-- them to the clients. No client is needed then: bots also fight each other on an empty server.
 		-- Costs server performance. Toggle ingame with "!serverraycasts on|off" or RCON "funbots.serverRaycasts".
-		USE_SERVER_RAYCASTS = false,
+		USE_SERVER_RAYCASTS = true,
 		-- Max server-raycasts per bot-bot-check (every BOT_BOT_CHECK_INTERVAL).
 		SERVER_RAYCASTS_BOT_BOT = 6,
 		-- Max server-raycasts per real player and update for the bot-player- and revive-checks.
@@ -141,8 +142,6 @@ Registry = {
 		--- Levels without a mesh: probability (%) that a bot switches to another path at a link. Vehicles: between
 		--- paths of the same priority.
 		PROBABILITY_SWITCH_SAME_PRIO = 20,
-		--- Allow bots to spawn on the last tickets in conquest.
-		DONT_SPAWN_BOTS_ON_LAST_TICKETS = true,
 	},
 	VEHICLES = {
 		-- Distance for the "enter vehicle" command.
@@ -168,13 +167,13 @@ Registry = {
 		JET_EXTEND_MAX_DISTANCE = 600.0,
 		-- Target height for jets.
 		JET_TARGET_HEIGHT = 350,
-		-- Seconds between target-scans of a jet that is not attacking (while attacking: BotVehicleFireModeDuration).
+		-- Seconds between target-scans of a jet that is not attacking (while attacking: BOT.VEHICLE_FIRE_MODE_DURATION).
 		JET_TARGET_SCAN_INTERVAL = 1.0,
 		-- Target-selection of jets: metres added to the distance per radian the target is away from the nose.
 		-- Prefers targets in front, that can be attacked sooner. 0 = closest target only.
 		JET_TARGET_ANGLE_PENALTY = 400,
 		-- A jet keeps its target as long as the attack is promising: target within this angle (rad) from the nose and
-		-- within MAX_ATTACK_DISTANCE_JET. Checked every BotVehicleFireModeDuration, else it aborts and extends.
+		-- within MAX_ATTACK_DISTANCE_JET. Checked every BOT.VEHICLE_FIRE_MODE_DURATION, else it aborts and extends.
 		JET_ATTACK_KEEP_ANGLE = 1.57,
 		-- The lead of jets includes the acceleration of the target (turning targets). Smoothing-time (s) of the
 		-- measured acceleration, and its limit (m/s²) against spikes.
@@ -210,7 +209,7 @@ Registry = {
 	},
 	-- Bot related.
 	BOT = {
-		-- Distance a bot tries to revive a bot.
+		-- Distance a bot tries to revive another bot (CLIENT.REVIVE_DISTANCE: a real player).
 		REVIVE_DISTANCE = 15.0,
 		-- Revive probabilities
 		REVIVE_PROBABILITY = 80.0,
@@ -328,6 +327,25 @@ Registry = {
 		-- is closer than RUSH_PUSH_MIN_ENEMY_DISTANCE.
 		RUSH_PUSH_OBJECTIVE_DISTANCE = 40.0,
 		RUSH_PUSH_MIN_ENEMY_DISTANCE = 10.0,
+		-- Seconds a bot keeps shooting at one target at least (on foot, in a vehicle). Below 2.5 in a vehicle the bots
+		-- switch targets too often.
+		MIN_TIME_SHOOT_AT_PLAYER = 0.7,
+		VEHICLE_MIN_TIME_SHOOT_AT_PLAYER = 4.0,
+		-- Seconds a bot tries to shoot a target at least (on foot, in a vehicle). Below 3.0 (7.0 in a vehicle) they give up
+		-- too early.
+		FIRE_MODE_DURATION = 4.5,
+		VEHICLE_FIRE_MODE_DURATION = 9.0,
+		-- Degrees a bot turns per second at most.
+		MAX_YAW_PER_SEC = 550,
+		-- Metres to a waypoint at which a bot goes on to the next one (on foot and in land vehicles, in aircraft).
+		TARGET_DISTANCE_WAYPOINT = 0.8,
+		TARGET_DISTANCE_WAYPOINT_AIR = 16.0,
+		-- Seconds a bot waits before it attacks with the knife again.
+		MELEE_ATTACK_COOLDOWN = 3.5,
+		-- Sidewards movement (Config.MoveSidewards): seconds straight at most, sidewards at most, either at least.
+		MAX_STRAIGHT_CYCLE = 10.0,
+		MAX_SIDE_CYCLE = 5.0,
+		MIN_MOVE_CYCLE = 0.3,
 	},
 	-- Bot team balancing (only in keep_playercount - spawn-mode)
 	BOT_TEAM_BALANCING = {
@@ -355,6 +373,17 @@ Registry = {
 		-- Rush: the defenders (always Team2) get this share of the bots of their team (balanced_teams), e.g. to test
 		-- the attack. 1.0 = as many as the attackers.
 		RUSH_DEFENDER_FACTOR = 0.85,
+		-- Bots spawn at the spawn-points of the game in all game modes. Else only in TDM, SDM, GunMaster, AirSuperiority
+		-- and in conquest and rush on levels with a mesh; elsewhere on the waypoints (the game-spawns of the other modes
+		-- don't work on most levels).
+		GAME_SPAWNS_EVERYWHERE = false,
+		-- Spawning on the waypoints: at least this far (metres) from the soldiers of the other team (one at least
+		-- HEIGHT_DISTANCE_TO_PLAYERS above or below is on another floor and doesn't count). After MAX_TRIES_AT_DISTANCE
+		-- tries the distance gets DISTANCE_REDUCTION smaller.
+		DISTANCE_TO_PLAYERS = 30,
+		HEIGHT_DISTANCE_TO_PLAYERS = 2.8,
+		DISTANCE_REDUCTION = 8,
+		MAX_TRIES_AT_DISTANCE = 3,
 	},
 	-- Debug
 	DEBUG = {
@@ -372,7 +401,7 @@ Registry = {
 		SPIKE_TRACE_MS = 0,
 		-- Streams the game-state to the external debug-server (tools/debug-server) and executes its commands.
 		-- Toggle ingame with "!debugbridge on|off" or RCON "funbots.debugBridge".
-		DEBUG_BRIDGE = false,
+		DEBUG_BRIDGE = true,
 		-- Address of the debug-server.
 		DEBUG_BRIDGE_URL = "http://127.0.0.1:8765",
 		-- Seconds between two snapshots sent to the debug-server.

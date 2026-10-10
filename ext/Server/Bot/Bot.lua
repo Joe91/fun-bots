@@ -26,6 +26,8 @@ local m_Logger = Logger('Bot', Debug.Server.BOT)
 local m_Vehicles = require('Vehicles')
 ---@type NavZones
 local m_NavZones = require('NavZones')
+---@type DebugBridge
+local m_DebugBridge = require('Debug/DebugBridge')
 
 -- A passenger of a vehicle on the ground or in the water gets out at the objective only with a point of the mesh this
 -- close (horizontal metres) at about the height of the vehicle (Bot:_CheckShouldExitVehicleIfPassenger), checked at
@@ -641,15 +643,39 @@ function Bot:ClearPlayer(p_Player)
 	end
 end
 
-function Bot:Kill()
+---@param p_Reason string|nil why the mod kills the bot (debug-bridge event "mod_kill"), default "reset"
+function Bot:Kill(p_Reason)
 	self:ResetVars()
 
 	if self.m_Player.soldier ~= nil then
 		if m_Vehicles:IsVehicleType(self.m_ActiveVehicle, VehicleTypes.StationaryAA) then
 			g_GameDirector:ReturnStationaryAaEntity(self.m_Player.controlledControllable, self.m_Player.teamId)
 		end
-		self.m_Player.soldier:Kill()
+		self:KillSoldier(p_Reason or 'reset')
 	end
+end
+
+---Kills the soldier for a reason of the mod (stuck, no progress, a seat it didn't get, ...); the bot respawns as usual.
+---The game reports these deaths as "Death" without a killer: the debug-bridge gets the reason (event "mod_kill").
+---@param p_Reason string
+function Bot:KillSoldier(p_Reason)
+	local s_Soldier = self.m_Player.soldier
+	if s_Soldier == nil then
+		return
+	end
+	if m_DebugBridge.m_Enabled then
+		m_DebugBridge:Event('mod_kill', {
+			bot = self.m_Id,
+			team = self.m_Player.teamId,
+			reason = p_Reason,
+			zone = self.m_Zone ~= nil and self.m_Zone.Zone.Name or nil,
+			path = self.m_Zone == nil and self._PathIndex or nil,
+			objective = self._Objective,
+			vehicle = self.m_ActiveVehicle ~= nil and self.m_ActiveVehicle.Name or nil,
+			pos = DebugBridge.Vec(s_Soldier.worldTransform.trans),
+		})
+	end
+	s_Soldier:Kill()
 end
 
 function Bot:Destroy()

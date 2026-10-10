@@ -135,7 +135,6 @@ Config = {
 
 	-- ADVANCED 
 	DistanceForDirectAttack = 6,		-- Distance bots can hear you at 
-	MeleeAttackCoolDown = 3.5,			-- The time a bot waits before attacking with melee again 
 	AimForHead = false,					-- Bots without sniper aim for the head. A more experimental config 
 	AimForHeadSniper = false,			-- Bots with sniper aim for the head. A more experimental config 
 	AimForHeadSupport = false,			-- Bots with support LMGs aim for the head. A more experimental config 
@@ -147,28 +146,13 @@ Config = {
 	SpeedFactorAttack = 0.6,			-- Reduces the movement speed while attacking. 1 = normal, 0 = standing 
 	SpeedFactorVehicleAttack = 0.6,		-- Reduces the movement speed while attacking in vehicles. 1 = normal, 0 = standing 
 	MoveSidewards = true,				-- Bots move sidewards 
-	MaxStraigtCycle = 10.0,				-- Max time bots move straight, before sidewards-movement (in sec) 
-	MaxSideCycle = 5.0,					-- Max time bots move sidewards, before straight-movement (in sec) 
-	MinMoveCycle = 0.3,					-- Min time bots move sidewards or straight before switching (in sec) 
 	DefendObjectives = true,			-- Bots will stay on captured objectives and defend them 
 
 	-- EXPERT 
 	BotFirstShotDelay = 0.2,			-- Minimum delay for the first shot at a new target in seconds (human reaction time) 
-	BotMinTimeShootAtPlayer = 0.7,		-- The minimum time a bot shoots at one player 
-	BotVehicleMinTimeShootAtPlayer = 4.0,	-- The minimum time a bot shoots at one player if in vehicle - recommended minimum 2.5, below this you will have issues 
-	BotFireModeDuration = 4.5,			-- The minimum time a bot tries to shoot a player - recommended minimum 3.0, below this you will have issues 
-	BotVehicleFireModeDuration = 9.0,	-- The minimum time a bot tries to shoot a player or vehicle, when in a vehicle - recommended minimum 7.0 
-	MaximunYawPerSec = 550,				-- In Degrees. Rotation Movement per second 
-	TargetDistanceWayPoint = 0.8,		-- The distance the bots have to reach to continue with the next Waypoint 
-	TargetDistanceWayPointAirVehicles = 16.0,	-- The distance the bots have to reach to continue with the next Waypoint on air vehicles 
 	KeepOneSlotForPlayers = true,		-- Always keep one slot for free new Players to join 
-	DistanceToSpawnBots = 30,			-- Distance to spawn Bots away from players 
-	HeightDistanceToSpawn = 2.8,		-- Distance vertically, Bots should spawn away, if closer than distance 
-	DistanceToSpawnReduction = 8,		-- Reduce distance if not possible 
-	MaxTrysToSpawnAtDistance = 3,		-- Try this often to spawn a bot away from players 
 	AttackWayBots = true,				-- Bots on paths attack player 
 	RespawnWayBots = true,				-- Bots on paths respawn if killed 
-	SpawnMethod = SpawnMethod.SpawnOnTdm,	-- Method the bots spawn with. Careful, not supported on most of the maps!! 
 
 	-- OTHER 
 	DisableUserInterface = false,		-- If true, the complete UI will be disabled (not available in the UI) 

@@ -1236,7 +1236,7 @@ local function _WayArea(p_Name, p_From, p_Reach, p_Target)
 	}
 end
 
----Areas around the spawns of the game: bots spawned by the game (SpawnMethod.Spawn) start on the mesh there. Only the
+---Areas around the spawns of the game: bots spawned by the game (BotSpawner:_UseGameSpawn) start on the mesh there. Only the
 ---engine decides where they are, no waypoints: the alternate spawns of the running mode, else (none found) the
 ---soldier-spawn-entities. In rush they are zones (kind "base"): the navigation paths lead from them to the MCOMs.
 ---Elsewhere they only add to the mesh (kind "spawn"). Spawns another area covers get none of their own. Spawns into

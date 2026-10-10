@@ -382,9 +382,7 @@ function BotSpawner:OnTeamChange(p_Player, p_TeamId, p_SquadId)
 	-- kill bot, if still alive
 	local s_Bot = m_BotManager:GetBotById(p_Player.id)
 	if s_Bot ~= nil then
-		if s_Bot.m_Player.soldier ~= nil then
-			s_Bot.m_Player.soldier:Kill()
-		end
+		s_Bot:KillSoldier('team_change')
 		s_Bot.m_Player.teamId = p_TeamId --not needed, but does not hurt as well.
 	end
 
@@ -417,12 +415,10 @@ end
 ---@param p_Bot Bot
 function BotSpawner:TriggerRespawnBot(p_Bot)
 	-- fix for end-of-round-crash
-	if Registry.COMMON.DONT_SPAWN_BOTS_ON_LAST_CONQUEST_TICKET and Globals.IsConquest then
-		local s_TicketsOfPlayerTeam = TicketManager:GetTicketCount(p_Bot.m_Player.teamId)
-		if Registry.GAME_DIRECTOR.DONT_SPAWN_BOTS_ON_LAST_TICKETS and s_TicketsOfPlayerTeam < 2 then
-			-- only one ticket remaining. Don't spawn
-			return
-		end
+	if Registry.COMMON.DONT_SPAWN_BOTS_ON_LAST_CONQUEST_TICKET and Globals.IsConquest
+		and TicketManager:GetTicketCount(p_Bot.m_Player.teamId) < 2 then
+		-- Only one ticket left: don't spawn.
+		return
 	end
 
 	local s_SpawnMode = p_Bot:GetSpawnMode()
@@ -523,11 +519,11 @@ function BotSpawner:UpdateBotAmountAndTeam()
 		s_PlayerCount = s_PlayerCount + s_CountPlayers[i]
 	end
 
-	-- The debug-bridge watches the game without a player: spawn the bots as if one player joined the player-team.
+	-- The debug-bridge watches the game without a player: spawn the bots as if one player joined the player-team. The
+	-- player isn't there, so it takes no place of a bot (the other team had one bot more in all tests).
 	-- Not on TDM: creating a bot-player (PlayerManager:CreatePlayer) on a TDM-server without a real player crashes it.
 	if s_PlayerCount == 0 and m_DebugBridge:IsEnabled() and not Globals.IsTdm then
 		s_CountPlayers[s_PlayerTeam] = 1
-		s_TeamCount[s_PlayerTeam] = s_TeamCount[s_PlayerTeam] + 1
 		s_PlayerCount = 1
 	end
 
@@ -536,7 +532,7 @@ function BotSpawner:UpdateBotAmountAndTeam()
 	-- Kill and destroy bots, if no player left.
 	if s_PlayerCount == 0 then
 		if s_BotCount > 0 then
-			m_BotManager:KillAll() -- Trigger once.
+			m_BotManager:KillAll(nil, nil, 'no_players') -- Trigger once.
 		else
 			self._UpdateActive = false
 		end
@@ -579,7 +575,7 @@ function BotSpawner:UpdateBotAmountAndTeam()
 			if s_TeamCount[i] < s_TargetTeamCount[i] then
 				self:SpawnWayBots(s_TargetTeamCount[i] - s_TeamCount[i], true, 0, 0, i)
 			elseif s_TeamCount[i] > s_TargetTeamCount[i] and s_CountBots[i] > 0 then
-				m_BotManager:KillAll(s_TeamCount[i] - s_TargetTeamCount[i], i)
+				m_BotManager:KillAll(s_TeamCount[i] - s_TargetTeamCount[i], i, 'balance')
 			end
 		end
 
@@ -644,7 +640,7 @@ function BotSpawner:UpdateBotAmountAndTeam()
 			if s_TeamCount[i] < s_TargetTeamCount[i] then
 				self:SpawnWayBots(s_TargetTeamCount[i] - s_TeamCount[i], true, 0, 0, i)
 			elseif s_TeamCount[i] > s_TargetTeamCount[i] then
-				m_BotManager:KillAll(s_TeamCount[i] - s_TargetTeamCount[i], i)
+				m_BotManager:KillAll(s_TeamCount[i] - s_TargetTeamCount[i], i, 'balance')
 			end
 		end
 
@@ -679,14 +675,14 @@ function BotSpawner:UpdateBotAmountAndTeam()
 				if s_TeamCount[i] < s_TargetTeamCount[i] then
 					self:SpawnWayBots(s_TargetTeamCount[i] - s_TeamCount[i], true, 0, 0, i)
 				elseif s_TeamCount[i] > s_TargetTeamCount[i] and s_CountBots[i] > 0 then
-					m_BotManager:KillAll(s_TeamCount[i] - s_TargetTeamCount[i], i)
+					m_BotManager:KillAll(s_TeamCount[i] - s_TargetTeamCount[i], i, 'balance')
 				end
 			end
 		else
 			-- Check for bots in wrong team.
 			for i = 1, Globals.NrOfTeams do
 				if i == s_PlayerTeam and s_CountBots[i] > 0 then
-					m_BotManager:KillAll(nil, i)
+					m_BotManager:KillAll(nil, i, 'balance')
 				end
 			end
 
@@ -703,7 +699,7 @@ function BotSpawner:UpdateBotAmountAndTeam()
 					if s_TeamCount[i] < s_TargetBotCountPerEnemyTeam then
 						self:SpawnWayBots(s_TargetBotCountPerEnemyTeam - s_TeamCount[i], true, 0, 0, i)
 					elseif s_TeamCount[i] > s_TargetBotCountPerEnemyTeam then
-						m_BotManager:KillAll(s_TeamCount[i] - s_TargetBotCountPerEnemyTeam, i)
+						m_BotManager:KillAll(s_TeamCount[i] - s_TargetBotCountPerEnemyTeam, i, 'balance')
 					end
 				end
 			end
@@ -731,14 +727,14 @@ function BotSpawner:UpdateBotAmountAndTeam()
 				if s_TeamCount[i] < s_TargetTeamCount[i] then
 					self:SpawnWayBots(s_TargetTeamCount[i] - s_TeamCount[i], true, 0, 0, i)
 				elseif s_TeamCount[i] > s_TargetTeamCount[i] and s_CountBots[i] > 0 then
-					m_BotManager:KillAll(s_TeamCount[i] - s_TargetTeamCount[i], i)
+					m_BotManager:KillAll(s_TeamCount[i] - s_TargetTeamCount[i], i, 'balance')
 				end
 			end
 		else
 			-- Check for bots in wrong team.
 			for i = 1, Globals.NrOfTeams do
 				if i == s_PlayerTeam and s_CountBots[i] > 0 then
-					m_BotManager:KillAll(nil, i)
+					m_BotManager:KillAll(nil, i, 'balance')
 				end
 			end
 
@@ -754,7 +750,7 @@ function BotSpawner:UpdateBotAmountAndTeam()
 					if s_TeamCount[i] < s_TargetBotCountPerEnemyTeam then
 						self:SpawnWayBots(s_TargetBotCountPerEnemyTeam - s_TeamCount[i], true, 0, 0, i)
 					elseif s_TeamCount[i] > s_TargetBotCountPerEnemyTeam then
-						m_BotManager:KillAll(s_TeamCount[i] - s_TargetBotCountPerEnemyTeam, i)
+						m_BotManager:KillAll(s_TeamCount[i] - s_TargetBotCountPerEnemyTeam, i, 'balance')
 					end
 				end
 			end
@@ -1001,11 +997,11 @@ function BotSpawner:_SelectLoadout(p_Bot)
 	self:_SetKitAndAppearance(p_Bot, s_BotKit, s_BotColor)
 end
 
----Spawn at the spawn-points of the game (SpawnMethod.Spawn) instead of on waypoints. Always in conquest and rush on a
+---Spawn at the spawn-points of the game (Globals.UseGameSpawn) instead of on waypoints. Always in conquest and rush on a
 ---level with a mesh: the bots start on it (Bot:TryEnterZoneAt), the paths have no names of objectives to spawn at.
 ---@return boolean
 function BotSpawner:_UseGameSpawn()
-	if Globals.UsedSpawnMethod == SpawnMethod.Spawn then
+	if Globals.UseGameSpawn then
 		return true
 	end
 	return (Globals.IsConquest or Globals.IsRush) and m_NavZones:GetMesh() ~= nil
@@ -1680,9 +1676,8 @@ end
 ---Bot:Kill() would also reset the bot to NoRespawn and so disable it.
 ---@param p_Bot Bot
 function BotSpawner:_KillSoldierKeepRespawn(p_Bot)
-	if p_Bot.m_Player.soldier ~= nil then
-		p_Bot.m_Player.soldier:Kill()
-	end
+	-- Spawned into a vehicle (mobile spawn, squad-mate's vehicle) but the engine didn't seat it.
+	p_Bot:KillSoldier('not_seated')
 end
 
 ---@param p_Bot Bot
@@ -1765,8 +1760,8 @@ function BotSpawner:_GetSpawnPoint(p_TeamId, p_SquadId)
 	local s_TargetNode = nil
 	local s_VehicleToSpawnIn = nil
 	local s_ValidPointFound = false
-	local s_TargetDistance = Config.DistanceToSpawnBots
-	local s_RetryCounter = Config.MaxTrysToSpawnAtDistance
+	local s_TargetDistance = Registry.BOT_SPAWN.DISTANCE_TO_PLAYERS
+	local s_RetryCounter = Registry.BOT_SPAWN.MAX_TRIES_AT_DISTANCE
 	local s_MaximumTrys = 100
 	local s_TrysDone = 0
 
@@ -1831,7 +1826,7 @@ function BotSpawner:_GetSpawnPoint(p_TeamId, p_SquadId)
 						local s_Distance = s_TempPlayer.soldier.worldTransform.trans:Distance(s_SpawnPoint)
 						local s_HeightDiff = math.abs(s_TempPlayer.soldier.worldTransform.trans.y - s_SpawnPoint.y)
 
-						if s_Distance < s_TargetDistance and s_HeightDiff < Config.HeightDistanceToSpawn then
+						if s_Distance < s_TargetDistance and s_HeightDiff < Registry.BOT_SPAWN.HEIGHT_DISTANCE_TO_PLAYERS then
 							s_PlayerNearby = true
 							break
 						end
@@ -1843,8 +1838,8 @@ function BotSpawner:_GetSpawnPoint(p_TeamId, p_SquadId)
 			s_TrysDone = s_TrysDone + 1
 
 			if s_RetryCounter == 0 then
-				s_RetryCounter = Config.MaxTrysToSpawnAtDistance
-				s_TargetDistance = s_TargetDistance - Config.DistanceToSpawnReduction
+				s_RetryCounter = Registry.BOT_SPAWN.MAX_TRIES_AT_DISTANCE
+				s_TargetDistance = s_TargetDistance - Registry.BOT_SPAWN.DISTANCE_REDUCTION
 
 				if s_TargetDistance < 0 then
 					s_TargetDistance = 0

@@ -833,10 +833,18 @@ LOOSE_RANGE = 15.0        # A loose end of a trimmed path (no junction, no link)
 LOOSE_FLOOR = 3.0         # usable part up to this far (horizontally) and this far above or below, also outside the areas.
 
 
-def _attach_loose(network: dict, loose: list) -> dict:
+def _attach_loose(network: dict, loose: list, checks: dict | None = None) -> dict:
     """Junctions for loose ends of the trimmed paths ([path, point, position]): straight to the closest point of a part
-    with at least MIN_PART points (navpaths.py asks for them; a wrong junction is better than a dead end)."""
+    with at least MIN_PART points (navpaths.py asks for them; a wrong junction is better than a dead end). Not to a
+    point the checks found the way from blocked (blockedJunctions): these junctions come after check.apply, the same
+    blocked one came back with every cut (XP3_Valley rush: a wall 3 m before the path, the bots ran against it)."""
     points = network.get("points") or []
+    blocked = [entry for entry in (checks or {}).get("blockedJunctions") or []]
+
+    def is_blocked(point: list, pos: list) -> bool:
+        return any(math.dist(entry[:3], point[:3]) <= REATTACH_MATCH and math.dist(entry[3:], pos[:3]) <= REATTACH_MATCH
+                   for entry in blocked)
+
     parent = list(range(len(points)))
 
     def find(index: int) -> int:
@@ -857,7 +865,7 @@ def _attach_loose(network: dict, loose: list) -> dict:
             continue
         best = None
         for index, entry in enumerate(points):
-            if abs(entry[1] - pos[1]) > LOOSE_FLOOR or sizes[find(index)] < MIN_PART:
+            if abs(entry[1] - pos[1]) > LOOSE_FLOOR or sizes[find(index)] < MIN_PART or is_blocked(entry, pos):
                 continue
             horizontal = math.hypot(entry[0] - pos[0], entry[2] - pos[2])
             if horizontal <= LOOSE_RANGE and (best is None or horizontal < best[0]):
@@ -907,7 +915,7 @@ def build(census: dict, attach: dict | None = None, checks: dict | None = None, 
     if nav_paths:
         soldier = _drop_dead_parts(soldier, nav_paths)
     if loose:
-        soldier = _attach_loose(soldier, loose)
+        soldier = _attach_loose(soldier, loose, checks)
     data.update(points=soldier["points"], edges=soldier["edges"], attach=soldier["attach"],
                 stats=dict(soldier["stats"], surfaces=len(grid.surfaces)))
 

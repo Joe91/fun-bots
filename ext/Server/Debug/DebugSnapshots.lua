@@ -62,7 +62,26 @@ end
 
 ---@return table
 function DebugSnapshots.CollectMeta()
+	-- Per team: tickets, bots and real players (the course of the round, the balance of the teams).
+	local s_Tickets = {}
+	local s_TeamBots = {}
+	local s_TeamPlayers = {}
+	for l_Team = 1, Globals.NrOfTeams do
+		s_Tickets[l_Team] = TicketManager:GetTicketCount(l_Team)
+		s_TeamBots[l_Team] = m_BotManager:GetActiveBotCount(l_Team)
+		s_TeamPlayers[l_Team] = 0
+	end
+	local s_Players = PlayerManager:GetPlayers()
+	for l_Index = 1, #s_Players do
+		local l_Player = s_Players[l_Index]
+		if not m_Utilities:isBot(l_Player) and s_TeamPlayers[l_Player.teamId] ~= nil then
+			s_TeamPlayers[l_Player.teamId] = s_TeamPlayers[l_Player.teamId] + 1
+		end
+	end
 	return {
+		tickets = s_Tickets,
+		teamBots = s_TeamBots,
+		teamPlayers = s_TeamPlayers,
 		level = SharedUtils:GetLevelName(),
 		mode = SharedUtils:GetCurrentGameMode(),
 		paths = m_NodeCollection:GetMapName(), -- the waypoints of this mode, mapfiles/<paths>.map
@@ -107,6 +126,9 @@ function DebugSnapshots.CollectBots()
 			path = l_Bot._PathIndex,
 			point = type(l_Bot._CurrentWayPoint) == 'number' and l_Bot._CurrentWayPoint or nil,
 			objective = l_Bot._Objective,
+			-- Skill of the bot (BotCreator): 0 = best aim / fastest reaction, 1 = worst / slowest.
+			inaccuracy = _Round(l_Bot.m_Inaccuracy, 2),
+			reaction = _Round(l_Bot.m_Reaction, 2),
 		}
 
 		if s_Soldier ~= nil then

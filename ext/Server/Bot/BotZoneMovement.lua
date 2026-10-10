@@ -209,7 +209,7 @@ end
 -- A spawn-point of the game this far from a point of the mesh: the bot walks straight to it and starts on the mesh.
 local ZONE_SPAWN_RANGE = 30.0
 
----After a spawn at a spawn-point of the game (BotSpawner, SpawnMethod.Spawn): on the mesh there (a base, a capture
+---After a spawn at a spawn-point of the game (BotSpawner:_UseGameSpawn): on the mesh there (a base, a capture
 ---point) the bot starts on it, and goes where its objective is.
 ---Only a point the bot can walk to straight (NavZones:ZoneAtVisible). Just spawned and none in sight (the spawn is in
 ---a corner the mesh doesn't reach): onto the closest point at once, nobody sees it there yet.
@@ -1502,7 +1502,7 @@ function Bot:_ZoneGiveUpConnection(p_Position, p_Target)
 		if self.m_ZoneGiveUps >= ZONE_MAX_GIVE_UPS then
 			m_Logger:Write(self.m_Player.name .. ' stuck in the zone of ' .. s_State.Zone.Name .. '. Kill')
 			self:_LeaveZone(nil)
-			self.m_Player.soldier:Kill()
+			self:KillSoldier('zone_give_up')
 			return true
 		end
 		if not s_State.Vehicle then

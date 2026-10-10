@@ -223,7 +223,7 @@ function BotManager:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 	-- and the turning count frames: scale them with the real frame-time, else all timers of the bots and their
 	-- turning run at half the speed there.
 	local s_FrameFactor = math.min(math.max(p_DeltaTime / self._CycleTimeL0, 1.0), 4.0)
-	Globals.YawPerFrame = math.rad(Config.MaximunYawPerSec) * self._CycleTimeL0 * s_FrameFactor
+	Globals.YawPerFrame = math.rad(Registry.BOT.MAX_YAW_PER_SEC) * self._CycleTimeL0 * s_FrameFactor
 
 	self:UpdateBotsInBatches(self._Bots, s_BotCount, self._L1Counter, self._RatioL0L2, "Update",
 		self._L2CycleTime * s_FrameFactor)
@@ -816,7 +816,7 @@ end
 
 ---@return number
 function BotManager:CalcYawPerFrame()
-	local s_DegreePerDeltaTime = Config.MaximunYawPerSec / SharedUtils:GetTickrate()
+	local s_DegreePerDeltaTime = Registry.BOT.MAX_YAW_PER_SEC / SharedUtils:GetTickrate()
 	return (s_DegreePerDeltaTime / 360.0) * 2 * math.pi
 end
 
@@ -1088,9 +1088,7 @@ function BotManager:KillPlayerBots(p_Player)
 		if l_Bot:GetTargetPlayer() == p_Player then
 			l_Bot:ResetVars()
 
-			if l_Bot.m_Player.soldier then
-				l_Bot.m_Player.soldier:Kill()
-			end
+			l_Bot:KillSoldier('player_bots')
 		end
 	end
 end
@@ -1098,13 +1096,14 @@ end
 function BotManager:ResetAllBots()
 	for l_Index = 1, #self._Bots do
 		local l_Bot = self._Bots[l_Index]
-		l_Bot:Kill() -- this also will call l_Bot:ResetVars()
+		l_Bot:Kill('reset_all') -- this also will call l_Bot:ResetVars()
 	end
 end
 
 ---@param p_Amount? integer
 ---@param p_TeamId? TeamId
-function BotManager:KillAll(p_Amount, p_TeamId)
+---@param p_Reason? string for the debug-bridge (event "mod_kill"), default "kill_all"
+function BotManager:KillAll(p_Amount, p_TeamId, p_Reason)
 	local s_BotTable = self._Bots
 
 	if p_TeamId then
@@ -1122,7 +1121,7 @@ function BotManager:KillAll(p_Amount, p_TeamId)
 
 		-- Inactive bots are already out of the game and don't count towards the amount.
 		if not l_Bot:IsInactive() then
-			l_Bot:Kill()
+			l_Bot:Kill(p_Reason or 'kill_all')
 			p_Amount = p_Amount - 1
 		end
 	end

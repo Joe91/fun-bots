@@ -241,13 +241,13 @@ function Bot:ShootAt(p_Player, p_IgnoreYaw)
 			end
 			self._LastSeenPosition = s_TargetPos
 			if s_InVehicle then
-				self._ShootModeTimer = Config.BotVehicleFireModeDuration
+				self._ShootModeTimer = Registry.BOT.VEHICLE_FIRE_MODE_DURATION
 			else
-				self._ShootModeTimer = Config.BotFireModeDuration
+				self._ShootModeTimer = Registry.BOT.FIRE_MODE_DURATION
 				if self.m_Behavior == BotBehavior.LongerAttacking then
-					self._ShootModeTimer = Config.BotFireModeDuration * 1.7
+					self._ShootModeTimer = Registry.BOT.FIRE_MODE_DURATION * 1.7
 				elseif self.m_Behavior == BotBehavior.AbortAttackFast then
-					self._ShootModeTimer = Config.BotFireModeDuration * 0.5
+					self._ShootModeTimer = Registry.BOT.FIRE_MODE_DURATION * 0.5
 				end
 			end
 			self._ActiveShootDuration = self._ShootModeTimer

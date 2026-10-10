@@ -32,9 +32,9 @@ function Bot:IsReadyToAttack(p_ShootBackAfterHit, p_Player, p_CheckShootTimer, p
 	local s_InVehicle = g_BotStates:IsInVehicleState(self.m_ActiveState)
 	if self._ShootPlayerId == -1 or
 		(p_Player and not p_IsNewTarget) or -- if still the same enemy, you can trigger directly again
-		(s_InVehicle and (self._DoneShootDuration > Config.BotVehicleMinTimeShootAtPlayer)) or
-		(not s_InVehicle and (self._DoneShootDuration > Config.BotMinTimeShootAtPlayer)) or
-		(self.m_KnifeMode and self._ShootModeTimer > ((Config.BotMinTimeShootAtPlayer * 0.5))) then
+		(s_InVehicle and (self._DoneShootDuration > Registry.BOT.VEHICLE_MIN_TIME_SHOOT_AT_PLAYER)) or
+		(not s_InVehicle and (self._DoneShootDuration > Registry.BOT.MIN_TIME_SHOOT_AT_PLAYER)) or
+		(self.m_KnifeMode and self._ShootModeTimer > ((Registry.BOT.MIN_TIME_SHOOT_AT_PLAYER * 0.5))) then
 		return true
 	else
 		return false

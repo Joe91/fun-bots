@@ -19,7 +19,6 @@ require('__shared/Constants/WeaponTypes')
 require('__shared/Constants/BotAttackModes')
 require('__shared/Constants/BotMoveSpeeds')
 require('__shared/Constants/SpawnModes')
-require('__shared/Constants/SpawnMethods')
 require('__shared/Constants/TeamSwitchModes')
 require('__shared/Languages/Languages')
 require('__shared/Settings/Type')
@@ -655,18 +654,10 @@ function FunBotServer:OnLevelLoaded(p_LevelName, p_GameMode, p_Round, p_RoundsPe
 	self:DetectSpecialMods()
 	self:RegisterInputRestrictionEventCallbacks()
 	self:SetGameMode(p_GameMode, p_LevelName)
-	Globals.UsedSpawnMethod = Config.SpawnMethod
-	if Config.SpawnMethod == SpawnMethod.SpawnOnTdm then
-		if Globals.IsTdm or Globals.IsSdm or Globals.IsGm then
-			Globals.UsedSpawnMethod = SpawnMethod.Spawn
-		else
-			Globals.UsedSpawnMethod = SpawnMethod.SpawnSoldierAt
-		end
-	end
-	-- If AirSuperiority is active, set SpawnMethod to Spawn.
-	if Globals.IsAirSuperiority then
-		Globals.UsedSpawnMethod = SpawnMethod.Spawn
-	end
+	-- Spawns of the game in these modes (conquest and rush on a level with a mesh as well, BotSpawner:_UseGameSpawn),
+	-- else on the waypoints.
+	Globals.UseGameSpawn = Registry.BOT_SPAWN.GAME_SPAWNS_EVERYWHERE or Globals.IsTdm or Globals.IsSdm or Globals.IsGm
+		or Globals.IsAirSuperiority
 	self:SetMaxBotsPerTeam(p_GameMode)
 	if Registry.COMMON.DESTROY_OBSTACLES_ON_START then
 		self:DestroyObstacles(p_LevelName, p_GameMode)

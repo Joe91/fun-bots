@@ -163,6 +163,13 @@ end
 ---@param p_RoundTime number
 ---@param p_WinningTeam TeamId|integer
 function GameDirector:OnRoundOver(p_RoundTime, p_WinningTeam)
+	if m_DebugBridge.m_Enabled then
+		local s_Tickets = {}
+		for l_Team = 1, Globals.NrOfTeams do
+			s_Tickets[l_Team] = TicketManager:GetTicketCount(l_Team)
+		end
+		m_DebugBridge:Event('round_over', { winner = p_WinningTeam, roundTime = p_RoundTime, tickets = s_Tickets })
+	end
 	self.m_UpdateTimer = -1
 	self.m_Beacons = {}
 	-- Vehicles of this round get destroyed, and their unspawn is ignored from now on.
@@ -847,7 +854,7 @@ function GameDirector:_CheckProgressOffMesh(p_Bot)
 		m_Logger:Write("teleport " .. p_Bot.m_Player.name .. " onto the mesh, it got stuck off the mesh")
 	elseif p_Bot._KillYourselfTimer > Registry.GAME_DIRECTOR.OFF_MESH_KILL_TIME then
 		p_Bot.m_DontRevive = true
-		s_Soldier:Kill()
+		p_Bot:KillSoldier('off_mesh')
 		p_Bot._KillYourselfTimer = 0.0
 		m_Logger:Write("kill " .. p_Bot.m_Player.name .. ", it got stuck off the mesh")
 	end
@@ -902,7 +909,7 @@ function GameDirector:_CheckStranded(p_Bot)
 			end
 			p_Bot._RespawnAway = s_Here:Clone()
 			p_Bot.m_DontRevive = true
-			s_Soldier:Kill()
+			p_Bot:KillSoldier('stranded')
 			return
 		end
 	end
@@ -973,7 +980,7 @@ function GameDirector:_CheckObjectiveProgress(p_Bot)
 	end
 	p_Bot._RespawnAway = s_Soldier.worldTransform.trans:Clone()
 	p_Bot.m_DontRevive = true
-	s_Soldier:Kill()
+	p_Bot:KillSoldier('no_progress')
 end
 
 -- An aircraft this close (height, horizontally) to a point of the mesh stands on the ground: a helicopter the pilot
@@ -1029,7 +1036,7 @@ function GameDirector:_CheckVehicleProgress(p_Bot)
 				m_DebugBridge:Event('passenger_respawn', { bot = p_Bot.m_Player.name, pos = { s_Here.x, s_Here.y, s_Here.z } })
 			end
 			p_Bot.m_DontRevive = true
-			s_Soldier:Kill()
+			p_Bot:KillSoldier('passenger_stuck')
 			return
 		end
 	end
@@ -1117,9 +1124,24 @@ function GameDirector:_CheckVehicleProgress(p_Bot)
 		p_Bot:ExitVehicle()
 		return
 	end
+	self:VehicleStuck(p_Bot, 'progress')
+end
+
+---The vehicle of the bot (its driver) is stuck: all bots get out, and none gets in again for a while (IsStuckVehicle).
+---@param p_Bot Bot
+---@param p_Source string what found it (debug-bridge): "progress" (_CheckVehicleProgress), "obstacle" (VehicleMovement)
+function GameDirector:VehicleStuck(p_Bot, p_Source)
+	local s_Vehicle = p_Bot.m_Player.controlledControllable
+	if s_Vehicle == nil then
+		p_Bot:ExitVehicle()
+		return
+	end
+	local s_Position = s_Vehicle.transform.trans
 	m_Logger:Write("vehicle of " .. p_Bot.m_Player.name .. " stuck, everybody out")
 	if m_DebugBridge.m_Enabled then
-		m_DebugBridge:Event('vehicle_stuck', { bot = p_Bot.m_Player.name, pos = { s_Position.x, s_Position.y, s_Position.z } })
+		m_DebugBridge:Event('vehicle_stuck', { bot = p_Bot.m_Player.name, source = p_Source,
+			vehicle = p_Bot.m_ActiveVehicle ~= nil and p_Bot.m_ActiveVehicle.Name or nil,
+			pos = { s_Position.x, s_Position.y, s_Position.z } })
 	end
 	local s_Id = s_Vehicle.instanceId
 	-- Not the next bot into it right away (XP5_003: dirt bikes left at A got stuck there with one bot after the other).

@@ -245,9 +245,10 @@ function VehicleMovement:UpdateNormalMovementVehicle(p_DeltaTime, p_Bot)
 					p_Bot._StuckTimer = p_Bot._StuckTimer + p_DeltaTime
 
 					if p_Bot._StuckTimer > Registry.BOT.VEHICLE_STUCK_EXIT_TIME then
-						-- Nothing helped (flipped, stuck in terrain, ...): continue on foot.
+						-- Nothing helped (flipped, stuck in terrain, ...): everybody continues on foot, and the vehicle is
+						-- left alone for a while (else the next bot got in at once).
 						m_Logger:Write(p_Bot.m_Player.name .. ' got stuck in vehicle. Exit')
-						p_Bot:ExitVehicle()
+						g_GameDirector:VehicleStuck(p_Bot, 'obstacle')
 						return
 					end
 
@@ -281,10 +282,10 @@ function VehicleMovement:UpdateNormalMovementVehicle(p_DeltaTime, p_Bot)
 
 			p_Bot._LastWayDistance = s_CurrentWayPointDistance
 
-			local s_TargetDistanceSpeed = Config.TargetDistanceWayPoint * 5
+			local s_TargetDistanceSpeed = Registry.BOT.TARGET_DISTANCE_WAYPOINT * 5
 
 			if m_Vehicles:IsAirVehicle(p_Bot.m_ActiveVehicle) then
-				s_TargetDistanceSpeed = Config.TargetDistanceWayPointAirVehicles
+				s_TargetDistanceSpeed = Registry.BOT.TARGET_DISTANCE_WAYPOINT_AIR
 			end
 
 			if p_Bot.m_ActiveSpeedValue == BotMoveSpeeds.Sprint then

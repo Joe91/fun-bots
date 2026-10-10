@@ -85,11 +85,11 @@ function StateInVehicleJetControl:UpdateFast(p_Bot, p_DeltaTime)
 	-- Without a target scan often, to attack as soon as possible. While attacking keep the target (a new one right
 	-- when the jet lined up spoiled the attack): go on while the attack is promising, else abort. A new target only
 	-- after the abort (and the extending).
-	local s_ScanInterval = s_IsAttacking and (Config.BotVehicleFireModeDuration - 0.5) or Registry.VEHICLES.JET_TARGET_SCAN_INTERVAL
+	local s_ScanInterval = s_IsAttacking and (Registry.BOT.VEHICLE_FIRE_MODE_DURATION - 0.5) or Registry.VEHICLES.JET_TARGET_SCAN_INTERVAL
 	if p_Bot._DeployTimer > s_ScanInterval and p_Bot._VehicleTakeoffTimer <= 0.0 then
 		if s_IsAttacking then
 			if _IsAttackPromising(p_Bot) then
-				p_Bot._ShootModeTimer = Config.BotVehicleFireModeDuration
+				p_Bot._ShootModeTimer = Registry.BOT.VEHICLE_FIRE_MODE_DURATION
 			else
 				p_Bot:AbortAttack()
 			end
@@ -103,7 +103,7 @@ function StateInVehicleJetControl:UpdateFast(p_Bot, p_DeltaTime)
 				p_Bot._ShootPlayerId = s_Target.id
 				p_Bot._ShootPlayer = PlayerManager:GetPlayerById(p_Bot._ShootPlayerId)
 				p_Bot._ShootPlayerVehicleType = s_TargetData.Vehicle
-				p_Bot._ShootModeTimer = Config.BotVehicleFireModeDuration
+				p_Bot._ShootModeTimer = Registry.BOT.VEHICLE_FIRE_MODE_DURATION
 			end
 		end
 

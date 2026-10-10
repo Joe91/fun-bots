@@ -252,13 +252,13 @@ local function _DefaultAttackingAction(p_DeltaTime, p_Bot)
 		p_Bot:_SetInput(EntryInputActionEnum.EIASelectWeapon7, 1)
 		p_Bot:_SetInput(EntryInputActionEnum.EIAQuicktimeFastMelee, 1)
 		p_Bot:_SetInput(EntryInputActionEnum.EIAMeleeAttack, 1)
-		p_Bot._MeleeCooldownTimer = Config.MeleeAttackCoolDown
+		p_Bot._MeleeCooldownTimer = Registry.BOT.MELEE_ATTACK_COOLDOWN
 	else
 		if p_Bot._MeleeCooldownTimer < 0.0 then
 			p_Bot._MeleeCooldownTimer = 0.0
 		elseif p_Bot._MeleeCooldownTimer > 0.0 then
 			p_Bot._MeleeCooldownTimer = p_Bot._MeleeCooldownTimer - p_DeltaTime
-			if p_Bot._MeleeCooldownTimer < (Config.MeleeAttackCoolDown - 0.8) then
+			if p_Bot._MeleeCooldownTimer < (Registry.BOT.MELEE_ATTACK_COOLDOWN - 0.8) then
 				p_Bot:_ResetActionFlag(BotActionFlags.MeleeActive)
 			else
 				p_Bot:_SetInput(EntryInputActionEnum.EIAFire, 1)
