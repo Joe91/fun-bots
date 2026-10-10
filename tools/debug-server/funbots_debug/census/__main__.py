@@ -34,7 +34,7 @@ from pathlib import Path
 
 from ..backups import backup
 from ..paths.mapfile import MapData
-from . import check, lint, navpaths, navzones
+from . import check, lint, navpaths, navzones, record
 from .report import build_report
 from .store import load
 
@@ -570,6 +570,55 @@ def command_lint(options) -> int:
     return 1 if new else 0
 
 
+def command_record(options) -> int:
+    """Records the missing ways of the cut-off spawns (record.py): planned with the rays of the game, walked by a bot.
+    The paths go into mapfiles/<map>.map (cut them with `navpaths --write`) and census/recorded/<map>.json."""
+    server = Server(options.server)
+    status = 0
+    for name in options.maps:
+        name = Path(name).name.split(".")[0]
+        level, _, mode = name.rpartition("_")
+        networks = json.loads((options.navzones / f"{name}.json").read_text(encoding="utf-8"))
+        map_file = options.mapfiles / f"{name}.map"
+        data = MapData.load(map_file)
+        found = [gap for gap in record.gaps(name, networks, data)
+                 if not options.spawn or any(spawn in gap.spawn.split(" + ") for spawn in options.spawn)]
+        census_file = options.census / f"{name}.json.gz"
+        shapes = record.area_shapes(load(census_file)) if census_file.is_file() else []
+        print(f"{name}: {len(found)} cut-off spawns", flush=True)
+        if not found:
+            continue
+        switch_level(server, level, mode)
+        settings = quiet_bots(server)
+        entries = []
+        try:
+            end = time.monotonic() + QUIET_SPAWN_TIMEOUT
+            while not _bots_alive(server) and time.monotonic() < end:
+                time.sleep(2)
+            for gap in found:
+                distance = math.dist(*gap.best)
+                if distance > options.max_gap:
+                    print(f"  {gap.spawn}: {distance:.0f} m to the network, skipped (--max-gap)")
+                    continue
+                print(f"  {gap.spawn}: {distance:.0f} m to the network", flush=True)
+                way = record.record_gap(server, gap, log=lambda message: print(message, flush=True), shapes=shapes)
+                if way:
+                    entries.append({"spawn": gap.spawn, "points": way, "link": record.link_of(gap, way[-1])})
+                    print(f"  {gap.spawn}: way of {len(way)} points recorded")
+                else:
+                    print(f"  {gap.spawn}: no way found", file=sys.stderr)
+                    status = 1
+        finally:
+            restore_bots(server, settings)
+        if entries and not options.dry_run:
+            for entry in entries:
+                entry["path"] = record.add_path(data, entry["points"], entry.get("link"))
+            data.save(map_file)
+            print(f"  {len(entries)} paths added to {map_file}, recorded in {record.save_recorded(name, entries)}; "
+                  f"cut them: census navpaths {name} --write")
+    return status
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(prog="python -m funbots_debug.census", description=__doc__,
                                      formatter_class=argparse.RawDescriptionHelpFormatter)
@@ -638,6 +687,18 @@ def main() -> int:
     paths.set_defaults(handler=command_navpaths)
 
     lints = commands.add_parser("lint", help="offline checks of the routes over mesh and paths (no game needed)")
+    records = commands.add_parser("record", help="record the missing ways of cut-off spawns with a bot (record.py)")
+    records.add_argument("maps", nargs="+", help="<Level>_<Mode>, e.g. XP4_Rubble_RushLarge0")
+    records.add_argument("--spawn", action="append", help="only this spawn (name of its zone, repeatable)")
+    records.add_argument("--max-gap", type=float, default=120.0,
+                         help="skip spawns farther from the network (metres; carriers, ships)")
+    records.add_argument("--dry-run", action="store_true", help="plan and walk, don't write the paths")
+    records.add_argument("--server", default="http://127.0.0.1:8765", help="address of the debug-server")
+    records.add_argument("--navzones", type=Path, default=NAVZONES)
+    records.add_argument("--mapfiles", type=Path, default=MAPFILES)
+    records.add_argument("--census", type=Path, default=CENSUS, help="the censuses (combat-areas)")
+    records.set_defaults(handler=command_record)
+
     lints.add_argument("maps", nargs="*", help="<Level>_<Mode> (default: all with a mesh)")
     lints.add_argument("--mapfiles", type=Path, default=MAPFILES)
     lints.add_argument("--navzones", type=Path, default=NAVZONES, help="the networks (navzones/<map>.json)")

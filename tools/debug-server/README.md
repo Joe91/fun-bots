@@ -566,6 +566,30 @@ junction leads to. On MP_Subway (rush) that removed 343 of 4051 connections and 
 found nothing. In the Maps tab: step *Check* (check, then trim). `census run --detail-mesh` makes the census rays hit the
 detail-meshes as well, `--area-layers N` keeps more floors per cell (default 4).
 
+`check --junctions` casts only the rays of the junctions (seconds instead of minutes): a cut attaches the loose ends of
+the paths after the check (`navzones._attach_loose`), those were never checked. Repeat check and cut until nothing new is
+blocked; what can't be freed stays a `blocked-junction` warning of the lint. Hits within 4.5 m of a parked vehicle (9 m
+of an aircraft, from the state of the debug-server) don't count, the stationary weapons do: the roads start at the
+vehicle-spawns, and their junctions were all "blocked" by the vehicles standing there.
+
+### Recording missing ways with a bot
+
+A spawn the bots can't walk to any objective from (lint: `spawn-cut-off`) gets its way recorded
+(`census/record.py`):
+```
+python -m funbots_debug.census record XP4_Rubble_RushLarge0 [--spawn "spawn us 1"] [--max-gap 120] [--dry-run]
+python -m funbots_debug.census navpaths XP4_Rubble_RushLarge0 --write --db ../../mod.db
+```
+The way is planned with rays of the game: A* over cells of 1.5 m from the spawn to the closest part of the network
+(ground at the neighbour and halfway to it, walls at 0.7 and 1.4 m, room above; near walls a step costs more, so the way
+keeps to the middle), joined to straight pieces where nothing is in the way, points every 1.8 m. Then a bot walks it
+(command `walk` of the mod, `ext/Server/Debug/BotWalker.lua`: the bot follows the points as it follows a player, with
+its obstacle handling). Where it gets stuck the cells around are blocked, where it leaves the combat-area (rush: the
+level gives no shapes of it) a wider circle, and the way is planned again. The way it walked is added to the waypoint-
+file as a recorded path (walked back and forth, linked to the waypoint it ends at if that is a path), the cut trims it
+at the mesh. Spawns that reach each other get one way (three parallel ones from neighbouring spawns made a ring the bots
+walked round in). Spawns of a later rush stage are outside of the combat-area of the first one: not recorded.
+
 ### Paths: trimmed at the mesh
 
 In the areas of the mesh the bots walk the mesh, between them the recorded paths (as released, with their links: the
@@ -653,6 +677,7 @@ python -m funbots_debug.census lint            # routes of all levels with a mes
 
 `census lint` (`funbots_debug/census/lint.py`) checks the mesh and the paths the way `NavRoutes.lua` sees them: every
 objective can be walked to from every other one (error), every spawn area reaches an objective (warning: the carriers
-and ships of some levels don't, by design), no foot path is a dead end (warning), and with `--info` the junctions next
-to each other whose mesh points the mesh doesn't connect. The findings accepted as they are stand in
+and ships of some levels don't, by design), no foot path is a dead end (warning), no junction the checks of the game
+found blocked is left in the mesh (warning `blocked-junction`, census/<map>.checks.json), and with `--info` the
+junctions next to each other whose mesh points the mesh doesn't connect. The findings accepted as they are stand in
 `funbots_debug/census/lint_known.json` (`--write-known` writes the current ones); only others fail.

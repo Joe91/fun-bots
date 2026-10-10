@@ -24,6 +24,8 @@ DebugCommands = class('DebugCommands')
 --   rcon            { command, args }           any RCON-command (also the vanilla ones) -> { lines }
 --   chat            { message, player }         a chat-command, as the player with that id or (no player) as
 --                                               ChatCommands.CONSOLE with all permissions -> { lines }
+--   walk            see BotWalker               a bot walks given points, answers where it got (stuck)
+--   walk_stop       {}                          stops it
 
 ---@type DebugBridge
 local m_DebugBridge = require('Debug/DebugBridge')
@@ -35,6 +37,8 @@ local m_MapScanner = require('Debug/MapScanner')
 local m_MapCensus = require('Debug/MapCensus')
 ---@type ZoneProbe
 local m_ZoneProbe = require('Debug/ZoneProbe')
+---@type BotWalker
+local m_BotWalker = require('Debug/BotWalker')
 ---@type NavZones
 local m_NavZones = require('NavZones')
 ---@type ServerRaycasts
@@ -139,6 +143,8 @@ function DebugCommands:__init()
 	m_DebugBridge:RegisterCommand('spawns', self.Spawns)
 	m_DebugBridge:RegisterCommand('entities', self.Entities)
 	m_DebugBridge:RegisterCommand('zone_probe', self.ZoneProbe)
+	m_DebugBridge:RegisterCommand('walk', self.Walk)
+	m_DebugBridge:RegisterCommand('walk_stop', self.WalkStop)
 	m_DebugBridge:RegisterCommand('navzones_apply', self.NavZonesApply)
 	m_DebugBridge:RegisterCommand('rcon', self.Rcon)
 	m_DebugBridge:RegisterCommand('chat', self.Chat)
@@ -513,6 +519,16 @@ function DebugCommands.Entities(p_Args)
 		s_Entity = s_Iterator:Next()
 	end
 	return { type = s_Type, entities = s_Result }
+end
+
+---A bot walks the given points (BotWalker.lua), the answer comes when it got there or got stuck.
+function DebugCommands.Walk(p_Args, p_Bridge, p_Command)
+	m_BotWalker:Start(p_Bridge, p_Command.id, p_Args)
+	return DebugBridge.ASYNC
+end
+
+function DebugCommands.WalkStop(p_Args, p_Bridge)
+	return { stopped = m_BotWalker:Stop(p_Bridge) }
 end
 
 ---Measures the capture zones with the bots (ZoneProbe.lua): they are put around the capture points.

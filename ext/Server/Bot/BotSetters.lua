@@ -271,6 +271,7 @@ function Bot:ResetSpawnVars()
 	self._LastActionId = -1
 	self._ShootPlayer = nil
 	self._FollowTargetPlayer = nil
+	self._RemoteWalk = nil
 	self._DontAttackPlayers = false
 	self._ShootPlayerId = -1
 	self._AttackMode = BotAttackModes.RandomNotSet

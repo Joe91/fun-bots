@@ -798,7 +798,8 @@ function GameDirector:_CheckProgressOffMesh(p_Bot)
 		or g_BotStates:IsInVehicleState(p_Bot.m_ActiveState) or g_BotStates:IsStaticState(p_Bot.m_ActiveState)
 		-- A passenger on an outside seat (XP3_Shield: on a jeep, the driver takes another way than its path).
 		or g_BotStates:IsOnVehicleState(p_Bot.m_ActiveState)
-		or p_Bot._FollowTargetPlayer ~= nil or p_Bot._ActiveAction == BotActionFlags.OtherActionActive then
+		or p_Bot._FollowTargetPlayer ~= nil or p_Bot._RemoteWalk ~= nil
+		or p_Bot._ActiveAction == BotActionFlags.OtherActionActive then
 		p_Bot._KillYourselfTimer = 0.0
 		p_Bot._OffMeshTarget = nil
 		return
@@ -946,7 +947,8 @@ function GameDirector:_CheckObjectiveProgress(p_Bot)
 		or g_BotStates:IsInVehicleState(p_Bot.m_ActiveState) or g_BotStates:IsStaticState(p_Bot.m_ActiveState)
 		-- A passenger on an outside seat: _CheckVehicleProgress gets it out.
 		or g_BotStates:IsOnVehicleState(p_Bot.m_ActiveState)
-		or p_Bot._ActiveAction == BotActionFlags.OtherActionActive or p_Bot._FollowTargetPlayer ~= nil then
+		or p_Bot._ActiveAction == BotActionFlags.OtherActionActive or p_Bot._FollowTargetPlayer ~= nil
+		or p_Bot._RemoteWalk ~= nil then
 		p_Bot._ProgressObjective = nil
 		return
 	end

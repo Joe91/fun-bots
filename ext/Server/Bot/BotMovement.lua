@@ -802,7 +802,7 @@ function Bot:UpdateNormalMovement(p_DeltaTime)
 	self._AttackModeMoveTimer = 0.0
 
 
-	if self._FollowTargetPlayer == nil then -- default movement
+	if self._FollowTargetPlayer == nil and self._RemoteWalk == nil then -- default movement
 		-- Shooting a wall in its way away (on the paths and on the mesh).
 		if self:_UpdateBreach(p_DeltaTime) then
 			return
@@ -1147,6 +1147,19 @@ function Bot:UpdateNormalMovement(p_DeltaTime)
 					Position = s_PlayerPos:Clone(),
 				}
 			end
+		elseif self._RemoteWalk ~= nil then
+			-- Walked by the debug-server (Debug/BotWalker.lua): along the points it was given, to the last one.
+			if #self._FollowWayPoints == 0 then
+				s_Point = {
+					SpeedMode = BotMoveSpeeds.NoMovement,
+					OptValue = 0x128,
+					Position = self.m_Player.soldier.worldTransform.trans:Clone(),
+				}
+			else
+				s_Point = self._FollowWayPoints[1]
+				s_NextPoint = self._FollowWayPoints[2]
+				s_NextToNextPoint = self._FollowWayPoints[3]
+			end
 		else
 			self._FollowTargetPlayer = nil
 			self._FollowWayPoints = {}
@@ -1160,7 +1173,8 @@ function Bot:UpdateNormalMovement(p_DeltaTime)
 			return
 		end
 
-		if Registry.BOT.USE_PATH_OFFSETS and s_Point and s_NextPoint and s_NextToNextPoint then
+		-- Not when walked by the debug-server: it records the way exactly as given.
+		if Registry.BOT.USE_PATH_OFFSETS and s_Point and s_NextPoint and s_NextToNextPoint and self._RemoteWalk == nil then
 			s_Point, s_NextPoint = self:ApplyPathOffset(s_Point, s_NextPoint, s_NextToNextPoint, p_DeltaTime)
 		end
 
@@ -1219,7 +1233,8 @@ function Bot:UpdateNormalMovement(p_DeltaTime)
 				self._OnSwitch = false
 
 				for _ = 1, math.abs(s_PointIncrement) do
-					if #self._FollowWayPoints > 1 then
+					-- Following a player the last point stays (the player goes on), walked the last one is the goal.
+					if #self._FollowWayPoints > 1 or (self._RemoteWalk ~= nil and #self._FollowWayPoints > 0) then
 						table.remove(self._FollowWayPoints, 1)
 					end
 				end

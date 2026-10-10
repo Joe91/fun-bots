@@ -354,6 +354,8 @@ function Bot:__init(p_Player)
 
 	self._FollowTargetPlayer = nil
 	self._FollowingTraceTimer = 0.0
+	-- Walked by the debug-server along given points (Debug/BotWalker.lua), nil otherwise.
+	self._RemoteWalk = nil
 
 	-- Free movement in the zone of the objective (BotZoneMovement), nil on the waypoints.
 	---@type BotZoneState|nil
