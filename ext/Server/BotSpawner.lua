@@ -494,6 +494,8 @@ function BotSpawner:UpdateBotAmountAndTeam()
 	local s_TeamCount = {}
 	local s_CountBots = {}
 	local s_TargetTeamCount = {}
+	-- Bots and players that are there, without the places held for the vehicles (s_BotsToDelay).
+	local s_PresentCount = {}
 
 	local s_BotsToDelay = {}
 
@@ -515,7 +517,10 @@ function BotSpawner:UpdateBotAmountAndTeam()
 			end
 		end
 
-		s_TeamCount[i] = s_CountBots[i] + s_CountPlayers[i] + s_BotsToDelay[i]
+		-- The places held for the vehicles only hold back new spawns: they never kill a bot. Their number grows when a
+		-- vehicle spawns late (the second jet on Firestorm), which killed the bot that spawned last ("balance").
+		s_PresentCount[i] = s_CountBots[i] + s_CountPlayers[i]
+		s_TeamCount[i] = s_PresentCount[i] + s_BotsToDelay[i]
 		s_PlayerCount = s_PlayerCount + s_CountPlayers[i]
 	end
 
@@ -574,8 +579,8 @@ function BotSpawner:UpdateBotAmountAndTeam()
 		for i = 1, Globals.NrOfTeams do
 			if s_TeamCount[i] < s_TargetTeamCount[i] then
 				self:SpawnWayBots(s_TargetTeamCount[i] - s_TeamCount[i], true, 0, 0, i)
-			elseif s_TeamCount[i] > s_TargetTeamCount[i] and s_CountBots[i] > 0 then
-				m_BotManager:KillAll(s_TeamCount[i] - s_TargetTeamCount[i], i, 'balance')
+			elseif s_PresentCount[i] > s_TargetTeamCount[i] and s_CountBots[i] > 0 then
+				m_BotManager:KillAll(s_PresentCount[i] - s_TargetTeamCount[i], i, 'balance')
 			end
 		end
 
@@ -639,8 +644,8 @@ function BotSpawner:UpdateBotAmountAndTeam()
 		for i = 1, Globals.NrOfTeams do
 			if s_TeamCount[i] < s_TargetTeamCount[i] then
 				self:SpawnWayBots(s_TargetTeamCount[i] - s_TeamCount[i], true, 0, 0, i)
-			elseif s_TeamCount[i] > s_TargetTeamCount[i] then
-				m_BotManager:KillAll(s_TeamCount[i] - s_TargetTeamCount[i], i, 'balance')
+			elseif s_PresentCount[i] > s_TargetTeamCount[i] then
+				m_BotManager:KillAll(s_PresentCount[i] - s_TargetTeamCount[i], i, 'balance')
 			end
 		end
 
@@ -674,8 +679,8 @@ function BotSpawner:UpdateBotAmountAndTeam()
 			for i = 1, Globals.NrOfTeams do
 				if s_TeamCount[i] < s_TargetTeamCount[i] then
 					self:SpawnWayBots(s_TargetTeamCount[i] - s_TeamCount[i], true, 0, 0, i)
-				elseif s_TeamCount[i] > s_TargetTeamCount[i] and s_CountBots[i] > 0 then
-					m_BotManager:KillAll(s_TeamCount[i] - s_TargetTeamCount[i], i, 'balance')
+				elseif s_PresentCount[i] > s_TargetTeamCount[i] and s_CountBots[i] > 0 then
+					m_BotManager:KillAll(s_PresentCount[i] - s_TargetTeamCount[i], i, 'balance')
 				end
 			end
 		else
@@ -698,8 +703,8 @@ function BotSpawner:UpdateBotAmountAndTeam()
 				if i ~= s_PlayerTeam then
 					if s_TeamCount[i] < s_TargetBotCountPerEnemyTeam then
 						self:SpawnWayBots(s_TargetBotCountPerEnemyTeam - s_TeamCount[i], true, 0, 0, i)
-					elseif s_TeamCount[i] > s_TargetBotCountPerEnemyTeam then
-						m_BotManager:KillAll(s_TeamCount[i] - s_TargetBotCountPerEnemyTeam, i, 'balance')
+					elseif s_PresentCount[i] > s_TargetBotCountPerEnemyTeam then
+						m_BotManager:KillAll(s_PresentCount[i] - s_TargetBotCountPerEnemyTeam, i, 'balance')
 					end
 				end
 			end
@@ -726,8 +731,8 @@ function BotSpawner:UpdateBotAmountAndTeam()
 			for i = 1, Globals.NrOfTeams do
 				if s_TeamCount[i] < s_TargetTeamCount[i] then
 					self:SpawnWayBots(s_TargetTeamCount[i] - s_TeamCount[i], true, 0, 0, i)
-				elseif s_TeamCount[i] > s_TargetTeamCount[i] and s_CountBots[i] > 0 then
-					m_BotManager:KillAll(s_TeamCount[i] - s_TargetTeamCount[i], i, 'balance')
+				elseif s_PresentCount[i] > s_TargetTeamCount[i] and s_CountBots[i] > 0 then
+					m_BotManager:KillAll(s_PresentCount[i] - s_TargetTeamCount[i], i, 'balance')
 				end
 			end
 		else
@@ -749,8 +754,8 @@ function BotSpawner:UpdateBotAmountAndTeam()
 				if i ~= s_PlayerTeam then
 					if s_TeamCount[i] < s_TargetBotCountPerEnemyTeam then
 						self:SpawnWayBots(s_TargetBotCountPerEnemyTeam - s_TeamCount[i], true, 0, 0, i)
-					elseif s_TeamCount[i] > s_TargetBotCountPerEnemyTeam then
-						m_BotManager:KillAll(s_TeamCount[i] - s_TargetBotCountPerEnemyTeam, i, 'balance')
+					elseif s_PresentCount[i] > s_TargetBotCountPerEnemyTeam then
+						m_BotManager:KillAll(s_PresentCount[i] - s_TargetBotCountPerEnemyTeam, i, 'balance')
 					end
 				end
 			end
