@@ -381,11 +381,32 @@ function GameDirector:OnEngineUpdate(p_DeltaTime)
 		end
 	end
 
+	-- Rush: the armed MCOMs. They blow up after 25 s: the defenders close enough go there, also the ones of the other
+	-- MCOM (they stayed there, and an armed MCOM was disarmed once in 15 times, mostly nobody arrived).
+	local s_ArmedMcoms = nil
+	if Globals.IsRush then
+		for l_Index = 1, #self.m_AllObjectives do
+			local l_Objective = self.m_AllObjectives[l_Index]
+			if l_Objective.isAttacked and l_Objective.active and not l_Objective.destroyed and not l_Objective.subObjective
+				and self.m_ArmedMcoms[l_Objective.name] ~= nil then
+				s_ArmedMcoms = s_ArmedMcoms or {}
+				s_ArmedMcoms[#s_ArmedMcoms + 1] = l_Objective.name
+			end
+		end
+	end
+
 	for l_BotTeam = 1, Globals.NrOfTeams do
 		local l_Bots = s_BotsByTeam[l_BotTeam] or {}
 		for l_Index0 = 1, #l_Bots do
 			local l_Bot = l_Bots[l_Index0]
 			local s_BotObjective = l_Bot:GetObjective()
+			if s_ArmedMcoms ~= nil and l_BotTeam == TeamId.Team2 then
+				local s_Armed = self:_ArmedMcomToDefend(l_Bot, s_ArmedMcoms)
+				if s_Armed ~= nil then
+					l_Bot:SetObjective(s_Armed, BotObjectiveModes.Attack)
+					s_BotObjective = s_Armed
+				end
+			end
 			if s_BotObjective == '' or s_BotObjective == nil then -- no active objective of bot
 				if l_Bot.m_Player.soldier == nil then
 					goto continue_with_next_bot
@@ -543,7 +564,9 @@ function GameDirector:OnEngineUpdate(p_DeltaTime)
 
 				if s_ObjectiveMode ~= BotObjectiveModes.Defend then
 					if s_Objective.team ~= l_BotTeam then
-						if s_Objective.assigned[l_BotTeam] > s_MaxAssignsAttack[l_BotTeam] then
+						-- Not from an armed MCOM of the defenders (_ArmedMcomToDefend sends them there): back and forth.
+						if s_Objective.assigned[l_BotTeam] > s_MaxAssignsAttack[l_BotTeam]
+							and not (l_BotTeam == TeamId.Team2 and s_Objective.isAttacked and Globals.IsRush) then
 							s_Objective.assigned[l_BotTeam] = s_Objective.assigned[l_BotTeam] - 1
 							l_Bot:SetObjective()
 						end
@@ -1222,6 +1245,37 @@ function GameDirector:OnMcomDestroyedBy(p_Player)
 	if s_Objective ~= nil then
 		self:OnMcomDestroyed(s_Objective, 'event')
 	end
+end
+
+---Rush: the armed MCOM a defender on foot goes to (the closest one in reach that a way leads to), nil if it should keep
+---its objective (already there, too far, in a vehicle).
+---@param p_Bot Bot
+---@param p_ArmedMcoms string[]
+---@return string|nil
+function GameDirector:_ArmedMcomToDefend(p_Bot, p_ArmedMcoms)
+	local s_Soldier = p_Bot.m_Player.soldier
+	if s_Soldier == nil or not g_BotStates:IsSoldierState(p_Bot.m_ActiveState) then
+		return nil
+	end
+	local s_Current = p_Bot:GetObjective()
+	if s_Current ~= nil and s_Current ~= '' then
+		s_Current = self:_GetObjectiveFromSubObj(s_Current) or s_Current
+	end
+	local s_Position = s_Soldier.worldTransform.trans
+	local s_Best = nil
+	local s_BestDistance = Registry.BOT.RUSH_DEFEND_ARMED_DISTANCE
+	for l_Index = 1, #p_ArmedMcoms do
+		local l_Name = p_ArmedMcoms[l_Index]
+		if l_Name == s_Current then
+			return nil
+		end
+		local s_Distance = self:_GetDistanceFromObjective(l_Name, s_Position)
+		if s_Distance < s_BestDistance and self:_CanReach(p_Bot, l_Name) then
+			s_Best = l_Name
+			s_BestDistance = s_Distance
+		end
+	end
+	return s_Best
 end
 
 ---@param p_Objective string|nil "mcom N"

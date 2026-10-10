@@ -1365,7 +1365,8 @@ end
 
 ---Rush: whether the bot keeps going to its MCOM while shooting: by chance (decided now and then in StateAttacking),
 ---and always close to the MCOM unless the enemy is close as well. Attackers to arm it, defenders only while it is armed
----(to disarm it, else they fight where they are).
+---(to disarm it, else they fight where they are), and then always unless the enemy is close: the fuse is 25 s, they
+---stopped to fight on the way and hardly ever got there.
 ---@return boolean
 function Bot:ShouldPushWhileShooting()
 	if not Globals.IsRush or self.m_KnifeMode or self.m_Player.soldier == nil
@@ -1383,6 +1384,9 @@ function Bot:ShouldPushWhileShooting()
 	end
 	if self._PushWhileShooting then
 		return true
+	end
+	if self.m_Player.teamId == TeamId.Team2 then
+		return self._DistanceToPlayer > Registry.BOT.RUSH_PUSH_MIN_ENEMY_DISTANCE
 	end
 	return self._DistanceToPlayer > Registry.BOT.RUSH_PUSH_MIN_ENEMY_DISTANCE and
 		g_GameDirector:_GetDistanceFromObjective(self._Objective, self.m_Player.soldier.worldTransform.trans) <

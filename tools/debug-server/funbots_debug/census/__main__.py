@@ -465,7 +465,7 @@ def command_check(options) -> int:
             if options.quiet:
                 kill_bots(server)
             networks = json.loads(zones_file.read_text(encoding="utf-8"))
-            rays, meaning = check.rays(networks)
+            rays, meaning = check.rays(networks, junctions_only=options.junctions)
             hits: list[float] = []
             for start in range(0, len(rays), check.CHUNK):
                 answer = server.request("/api/command?wait=120", {"type": "rays", "args": {
@@ -474,8 +474,9 @@ def command_check(options) -> int:
                 if "hits" not in result:
                     raise RuntimeError(f"rays: {answer.get('error') or result.get('error') or answer}")
                 hits += result["hits"]
-            found = check.evaluate(networks, hits, meaning)
-            print(check.summary(networks, found))
+            vehicles = check.vehicles_of(server.request("/api/state"))
+            found = check.evaluate(networks, hits, meaning, rays, vehicles)
+            print(check.summary(networks, found) + (" (junctions only)" if options.junctions else ""))
             merged = check.merge(check.load_checks(census_file), found)
             target = check.checks_file(census_file)
             backup(name, "check", [target])
@@ -553,7 +554,7 @@ def command_lint(options) -> int:
     """Offline checks of the routes (lint.py). Exit code 1 if there are errors or warnings that aren't known."""
     names = options.maps or lint.all_maps(options.navzones, options.mapfiles)
     known = set() if options.all_findings else lint.load_known()
-    findings = lint.lint(names, options.navzones, options.mapfiles)
+    findings = lint.lint(names, options.navzones, options.mapfiles, CENSUS)
     shown = [f for f in findings if f.key not in known and (options.info or f.severity != "info")]
     for finding in shown:
         print(f"[{finding.severity}] {finding.key}")
@@ -621,6 +622,8 @@ def main() -> int:
     checks.add_argument("--census", type=Path, default=CENSUS, help="where the checks are saved (next to the census)")
     checks.add_argument("--no-quiet", dest="quiet", action="store_false",
                         help="check the level as it runs (default: a new round, the bots killed at once)")
+    checks.add_argument("--junctions", action="store_true",
+                        help="only the junctions with the paths (fast; after a cut that added junctions)")
     checks.set_defaults(handler=command_check)
 
     paths = commands.add_parser("navpaths", help="trim the paths at the mesh: the ways between its areas")

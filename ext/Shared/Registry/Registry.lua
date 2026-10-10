@@ -90,6 +90,9 @@ Registry = {
 		BOT_BOT_REVIVE_INTERVAL = 0.5,
 		-- Max checks per cycle.
 		BOT_BOT_MAX_CHECKS = 30,
+		-- Pairs of bots farther apart than this (m) are checked only in every second round over all pairs: the close ones
+		-- more often (a round took up to 5 s on crowded levels, half of the rays went to pairs farther than 75 m).
+		BOT_BOT_FAR_DISTANCE = 75.0,
 		-- Max Raycaststs Bot-Bot-Revive
 		BOT_BOT_REVIVE_MAX_RAYCASTS = 15,
 		-- Do all sight-checks (bot-bot, bot-player, player-revive) with server-side raycasts instead of sending
@@ -187,7 +190,12 @@ Registry = {
 		-- Collision avoidance: a jet breaks right (and the higher one climbs) if another aircraft would pass closer than
 		-- JET_AVOID_DISTANCE (m) within JET_AVOID_TIME (s). Without it, two jets attacking each other fly head-on into each other.
 		JET_AVOID_DISTANCE = 50.0,
-		JET_AVOID_TIME = 2.0,
+		JET_AVOID_TIME = 2.5,
+		-- Closing faster than JET_AVOID_HEAD_ON_SPEED (m/s, head-on): JET_AVOID_HEAD_ON_DISTANCE instead. Two jets attacking
+		-- each other steer at each other all the time, the straight-line prediction showed a miss until it was too late
+		-- (XP3_Valley: 5 head-on collisions in 10 minutes, closing with 190 m/s).
+		JET_AVOID_HEAD_ON_SPEED = 120.0,
+		JET_AVOID_HEAD_ON_DISTANCE = 150.0,
 		-- Ground avoidance: a jet that would get lower than JET_MIN_ALTITUDE (m above the objective) within
 		-- JET_PULL_OUT_TIME (s) at its current sink-rate levels its wings and pulls up, whatever it does.
 		JET_MIN_ALTITUDE = 120.0,
@@ -327,6 +335,9 @@ Registry = {
 		-- is closer than RUSH_PUSH_MIN_ENEMY_DISTANCE.
 		RUSH_PUSH_OBJECTIVE_DISTANCE = 40.0,
 		RUSH_PUSH_MIN_ENEMY_DISTANCE = 10.0,
+		-- Rush: defenders on foot up to this far (m) from an armed MCOM go there to disarm it, also from the other MCOM
+		-- (the fuse is 25 s: about the way a soldier sprints in that time).
+		RUSH_DEFEND_ARMED_DISTANCE = 120.0,
 		-- Seconds a bot keeps shooting at one target at least (on foot, in a vehicle). Below 2.5 in a vehicle the bots
 		-- switch targets too often.
 		MIN_TIME_SHOOT_AT_PLAYER = 0.7,

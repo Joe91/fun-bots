@@ -8,6 +8,8 @@ links and the junctions between both. No game needed: `python -m funbots_debug.c
 - dead-end (warning): a foot path with fewer than two ways out (junctions onto the mesh, links to other paths).
 - split-junctions (info): two junctions next to each other on a path whose mesh points are close straight but far
   over the mesh (NavRoutes:Step goes on from the second only at a cost, NO_ENTER_RANGE).
+- blocked-junction (warning): a junction the rays of the game found blocked (census/<map>.checks.json, check.py) is
+  still in the mesh: the cut found no free one for that end of the path (a wall all around), it needs work by hand.
 
 The findings in lint_known.json (next to this file) are known and accepted: only others fail the check.
 """
@@ -33,6 +35,8 @@ NO_ENTER_RANGE = 10.0
 SPLIT_DETOUR = 30.0
 # A loop closes over its gap only if it is this short (NodeCollection).
 LOOP_GAP = 30.0
+# As check.MATCH: a blocked junction of the checks is at this point and waypoint.
+CHECK_MATCH = 0.3
 OBJECTIVE_KINDS = ("capturepoint", "mcom")
 SPAWN_KINDS = ("base",)
 KNOWN = Path(__file__).with_name("lint_known.json")
@@ -100,7 +104,7 @@ def _field(graph: dict, sources, limit: float = math.inf) -> dict:
     return cost
 
 
-def lint_map(name: str, networks: dict, data: MapData) -> list[Finding]:
+def lint_map(name: str, networks: dict, data: MapData, checks: dict | None = None) -> list[Finding]:
     findings: list[Finding] = []
     graph = build_graph(networks, data)
     zones = [zone for zone in networks.get("zones") or [] if zone.get("inside")]
@@ -149,6 +153,17 @@ def lint_map(name: str, networks: dict, data: MapData) -> list[Finding]:
                 findings.append(Finding(name, "split-junctions", "info",
                                         f"path {index} points {point_a} and {point_b}: mesh points {mesh_a} and "
                                         f"{mesh_b} close, but not over the mesh"))
+
+    blocked = (checks or {}).get("blockedJunctions") or []
+    for attach in networks.get("attach") or [] if blocked else []:
+        if len(attach) < 5:
+            continue
+        point, waypoint = points[int(attach[2])], attach[4]
+        if any(math.dist(entry[:3], point[:3]) <= CHECK_MATCH and math.dist(entry[3:6], waypoint[:3]) <= CHECK_MATCH
+               for entry in blocked):
+            findings.append(Finding(name, "blocked-junction", "warning",
+                                    f"path {attach[0]} point {attach[1]} at ({waypoint[0]:.0f}, {waypoint[1]:.0f}, "
+                                    f"{waypoint[2]:.0f}): the way onto the mesh is blocked in the game"))
     return findings
 
 
@@ -158,11 +173,14 @@ def load_known(file: Path = KNOWN) -> set[str]:
     return set(json.loads(file.read_text(encoding="utf-8")).get("known") or [])
 
 
-def lint(names: list[str], navzones_dir: Path, mapfiles: Path) -> list[Finding]:
+def lint(names: list[str], navzones_dir: Path, mapfiles: Path, census_dir: Path | None = None) -> list[Finding]:
+    """census_dir: where the checks of the game are (census/<map>.checks.json), for blocked-junction."""
     findings = []
     for name in names:
         networks = json.loads((navzones_dir / f"{name}.json").read_text(encoding="utf-8"))
-        findings.extend(lint_map(name, networks, MapData.load(mapfiles / f"{name}.map")))
+        checks_file = census_dir / f"{name}.checks.json" if census_dir is not None else None
+        checks = json.loads(checks_file.read_text(encoding="utf-8")) if checks_file and checks_file.is_file() else None
+        findings.extend(lint_map(name, networks, MapData.load(mapfiles / f"{name}.map"), checks))
     return findings
 
 

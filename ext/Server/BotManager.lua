@@ -51,6 +51,8 @@ function BotManager:RegisterVars()
 
 	self._LastBotCheckIndex = 1
 	self._LastPlayerCheckIndex = 1
+	-- Rounds over all bot-pairs so far (far pairs only in every second one).
+	self._BotBotRound = 0
 	self._InitDone = false
 
 	-- update-timers
@@ -1604,6 +1606,8 @@ function BotManager:_CheckForBotBotAttack()
 	-- older one is fine. It is stored as numbers, so no engine object is kept alive. Returns nil without soldier.
 	local s_Now = m_Utilities:GetTime()
 	local s_MaxAge = Registry.GAME_RAYCASTING.BOT_BOT_INFO_MAX_AGE
+	local s_FarDistance = Registry.GAME_RAYCASTING.BOT_BOT_FAR_DISTANCE
+	local s_FarRound = self._BotBotRound % 2 == 0
 	local function _GetBotInfo(p_BotId)
 		local s_InfoBot = self:GetBotById(p_BotId)
 		if s_InfoBot == nil or s_InfoBot.m_Player == nil then
@@ -1674,7 +1678,8 @@ function BotManager:_CheckForBotBotAttack()
 							s_ChecksDone = s_ChecksDone + 1
 							local s_MaxDistance = math.max(s_BotInfo.AttackDistance, s_EnemyInfo.AttackDistance)
 
-							if s_Distance <= s_MaxDistance then
+							-- Far pairs only in every second round (BOT_BOT_FAR_DISTANCE).
+							if s_Distance <= s_MaxDistance and (s_Distance <= s_FarDistance or s_FarRound) then
 								s_RaycastEntries[#s_RaycastEntries + 1] = {
 									Bot1 = s_BotIdToCheck,
 									Bot2 = l_BotId,
@@ -1711,6 +1716,7 @@ function BotManager:_CheckForBotBotAttack()
 	self._LastBotCheckIndex = 1
 	self._ConnectionCheckState = {}
 	self._BotBotAttackList = {}
+	self._BotBotRound = self._BotBotRound + 1
 end
 
 function BotManager:_CheckForBotBotRevive()

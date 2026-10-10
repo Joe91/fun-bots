@@ -77,6 +77,30 @@ class CheckTest(unittest.TestCase):
         result = check.apply(network, found)
         self.assertEqual([entry[0] for entry in result["attach"]], [1])
 
+    def test_junctions_only(self):
+        network = _network()
+        rays, meaning = check.rays(network, junctions_only=True)
+        self.assertTrue(meaning)
+        self.assertEqual({what[0] for what in meaning}, {"junction"})
+        found = check.evaluate(network, [0.5] * len(meaning), meaning)
+        self.assertEqual(found["blockedJunctions"], [[0.0, 0.0, 0.0, 0.0, 0.0, 0.0]])
+        self.assertEqual(found["blockedEdges"], [])
+
+    def test_hit_on_a_parked_vehicle_does_not_block(self):
+        network = _network()
+        network["attach"].append([2, 1, 3, 3.0, [15.0, 0.0, 3.0], []])
+        rays, meaning = check.rays(network, junctions_only=True)
+        # All junction rays hit 1 m after their start.
+        hits = [1.0] * len(meaning)
+        blocked = check.evaluate(network, hits, meaning)["blockedJunctions"]
+        self.assertEqual(len(blocked), 2)
+        # A car next to the second junction (15, 0, 1): only the first one stays blocked; a TOW there counts.
+        car = check.vehicles_of({"vehicles": [{"pos": [15.0, 0.0, 1.5], "type": 3}]})
+        self.assertEqual(check.evaluate(network, hits, meaning, rays, car)["blockedJunctions"],
+                         [[0.0, 0.0, 0.0, 0.0, 0.0, 0.0]])
+        tow = check.vehicles_of({"vehicles": [{"pos": [15.0, 0.0, 1.5], "type": 9}]})
+        self.assertEqual(len(check.evaluate(network, hits, meaning, rays, tow)["blockedJunctions"]), 2)
+
     def test_loose_end_not_attached_where_the_checks_found_it_blocked(self):
         # A loose end 1 m beside point 3; the way from point 3 is blocked: the next closest point (2) instead. With 10
         # points in one part (navzones.MIN_PART).

@@ -118,7 +118,7 @@ SettingsDefinition = {
 			Value = Config.BotAimErrorSpread,
 			Description = "Difference between single bots: the best bot has (1 - x), the worst (1 + x) times the aim error",
 			Reference = Range(0.00, 1.00, 0.05),
-			Default = 0.6,
+			Default = 0.5,
 			UpdateFlag = UpdateFlag.None,
 			Category = "DIFFICULTY"
 		},
@@ -154,7 +154,7 @@ SettingsDefinition = {
 			Value = Config.ReactionTime,
 			Description = "Additional delay for the first shot in seconds, scaled by the reaction of each bot (0 to 1)",
 			Reference = Range(0.00, 2.00, 0.10),
-			Default = 0.3,
+			Default = 0.25,
 			UpdateFlag = UpdateFlag.None,
 			Category = "DIFFICULTY"
 		},

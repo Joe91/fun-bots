@@ -47,6 +47,8 @@ function VehicleJetControl:_GetEvasionPoint(p_Bot, p_Transform, p_Velocity)
 	local s_VelX, s_VelY, s_VelZ = p_Velocity.x, p_Velocity.y, p_Velocity.z
 	local s_OwnId = p_Bot.m_Player.id
 	local s_AvoidDistance = Registry.VEHICLES.JET_AVOID_DISTANCE
+	local s_HeadOnDistance = Registry.VEHICLES.JET_AVOID_HEAD_ON_DISTANCE
+	local s_HeadOnSpeed = Registry.VEHICLES.JET_AVOID_HEAD_ON_SPEED
 	local s_AvoidTime = Registry.VEHICLES.JET_AVOID_TIME
 	local s_Threat = nil
 	local s_ThreatTime = s_AvoidTime
@@ -61,8 +63,9 @@ function VehicleJetControl:_GetEvasionPoint(p_Bot, p_Transform, p_Velocity)
 				local s_OtherTrans = s_Other.transform.trans
 				local s_RX, s_RY, s_RZ = s_OtherTrans.x - s_X, s_OtherTrans.y - s_Y, s_OtherTrans.z - s_Z
 				-- Cheap pre-check: out of reach within the avoid-time even at 300 m/s closing speed.
-				local s_Reach = s_AvoidDistance + 300 * s_AvoidTime
-				if s_RX * s_RX + s_RY * s_RY + s_RZ * s_RZ < s_Reach * s_Reach then
+				local s_Reach = math.max(s_AvoidDistance, s_HeadOnDistance) + 300 * s_AvoidTime
+				local s_RangeSq = s_RX * s_RX + s_RY * s_RY + s_RZ * s_RZ
+				if s_RangeSq < s_Reach * s_Reach then
 					local s_OtherVel = PhysicsEntity(s_Other).velocity
 					local s_VX, s_VY, s_VZ = s_OtherVel.x - s_VelX, s_OtherVel.y - s_VelY, s_OtherVel.z - s_VelZ
 					local s_SpeedSq = s_VX * s_VX + s_VY * s_VY + s_VZ * s_VZ
@@ -71,7 +74,10 @@ function VehicleJetControl:_GetEvasionPoint(p_Bot, p_Transform, p_Velocity)
 						local s_Time = -(s_RX * s_VX + s_RY * s_VY + s_RZ * s_VZ) / s_SpeedSq
 						if s_Time > 0 and s_Time < s_ThreatTime then
 							local s_MX, s_MY, s_MZ = s_RX + s_VX * s_Time, s_RY + s_VY * s_Time, s_RZ + s_VZ * s_Time
-							if s_MX * s_MX + s_MY * s_MY + s_MZ * s_MZ < s_AvoidDistance * s_AvoidDistance then
+							-- Head-on (closing speed along the line between them): more room.
+							local s_Closing = -(s_RX * s_VX + s_RY * s_VY + s_RZ * s_VZ) / math.sqrt(math.max(s_RangeSq, 1.0))
+							local s_Limit = s_Closing > s_HeadOnSpeed and s_HeadOnDistance or s_AvoidDistance
+							if s_MX * s_MX + s_MY * s_MY + s_MZ * s_MZ < s_Limit * s_Limit then
 								s_ThreatTime = s_Time
 								-- Who climbs: the higher one, on the same height the one with the higher id.
 								s_Threat = s_RY < 0 or (s_RY == 0 and s_OwnId > l_Id)
@@ -197,6 +203,12 @@ function VehicleJetControl:UpdateYawJet(p_Bot, p_Attacking, p_DeltaTime)
 	end
 	local s_Transform = s_Vehicle.transform
 	local s_Input = p_Bot.m_Input
+	-- Attacking: the takeoff is over (no attacks during JET_TAKEOFF_TIME). UpdateMovementJet, which ends it otherwise,
+	-- doesn't run while attacking: the flag stayed set and turned off the evasion and the ground avoidance (XP3_Valley:
+	-- the first head-on pass after the takeoff ended in a collision).
+	if p_Attacking then
+		p_Bot._JetTakeoffActive = false
+	end
 
 	local s_Trans = s_Transform.trans
 	-- Once per call: it goes over all capture points.

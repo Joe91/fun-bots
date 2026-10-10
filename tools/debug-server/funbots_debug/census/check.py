@@ -42,6 +42,14 @@ GROUND_ABOVE = 1.6         # ...from this far above the straight line...
 GROUND_BELOW = 2.5         # ...to this far below it.
 LEDGE = 0.8                # More up or down between two of them: a ledge.
 CHUNK = 3000               # Rays per command.
+# Vehicles stand on their spawns while the check runs (the bots are killed): a hit this close (horizontal metres) to one
+# is no wall, the vehicle drives away (MP_001: the junctions of the roads with the mesh start at the vehicle-spawns, all
+# of them "blocked"). Not the stationary weapons (TOW, Kornet, AA): they stay. VehicleTypes of the mod.
+VEHICLE_REACH = 4.5
+AIRCRAFT_REACH = 9.0
+VEHICLE_HEIGHT = 4.0
+STATIONARY_TYPES = {8, 9}
+AIRCRAFT_TYPES = {4, 5, 13, 14, 17, 18}
 VERSION = 1
 
 
@@ -64,11 +72,13 @@ def load_checks(census_file: Path) -> dict | None:
         return None
 
 
-def rays(networks: dict) -> tuple[list[list[float]], list[tuple]]:
-    """The rays and what each one checks: ("edge", index) or ("up", point) / ("out", point) / ("back", point)."""
+def rays(networks: dict, junctions_only: bool = False) -> tuple[list[list[float]], list[tuple]]:
+    """The rays and what each one checks: ("edge", index) or ("up", point) / ("out", point) / ("back", point).
+    junctions_only: only the junctions (a few hundred rays instead of a hundred thousand): the ones a cut added after
+    the last full check (navzones._attach_loose) were never checked."""
     points = networks.get("points") or []
     result, meaning = [], []
-    for index, edge in enumerate(networks.get("edges") or []):
+    for index, edge in enumerate([] if junctions_only else networks.get("edges") or []):
         if _along_waypoints(edge):
             # Along waypoints a person walked: only the pieces from the points of the mesh to the first and from the
             # last waypoint (straight lines nobody walked, through the wall of a train next to its door).
@@ -109,7 +119,7 @@ def rays(networks: dict) -> tuple[list[list[float]], list[tuple]]:
                 end = [q[0], q[1] + height, q[2]]
                 result += [start + end, end + start]
                 meaning += [("junction", index, segment, height_index, 0), ("junction", index, segment, height_index, 1)]
-    for index, point in enumerate(points):
+    for index, point in enumerate([] if junctions_only else points):
         x, y, z = point[:3]
         result.append([x, y + 0.2, z, x, y + HEADROOM, z])
         meaning.append(("up", index))
@@ -122,8 +132,33 @@ def rays(networks: dict) -> tuple[list[list[float]], list[tuple]]:
     return result, meaning
 
 
-def evaluate(networks: dict, hits: list[float], meaning: list[tuple]) -> dict:
-    """The blocked connections and the bad points (positions, so they still match after a rebuild)."""
+def vehicles_of(state: dict) -> list[tuple[list[float], float]]:
+    """The vehicles of the state of the debug-server that a hit close to doesn't count: (position, reach)."""
+    result = []
+    for vehicle in state.get("vehicles") or []:
+        kind = vehicle.get("type")
+        if vehicle.get("pos") and kind not in STATIONARY_TYPES:
+            result.append((list(vehicle["pos"]), AIRCRAFT_REACH if kind in AIRCRAFT_TYPES else VEHICLE_REACH))
+    return result
+
+
+def _on_vehicle(ray: list[float], distance: float, vehicles: list[tuple[list[float], float]]) -> bool:
+    length = math.dist(ray[:3], ray[3:6])
+    if length <= 0:
+        return False
+    t = distance / length
+    x, y, z = (ray[i] + (ray[i + 3] - ray[i]) * t for i in range(3))
+    return any(math.hypot(x - pos[0], z - pos[2]) <= reach and abs(y - pos[1]) <= VEHICLE_HEIGHT
+               for pos, reach in vehicles)
+
+
+def evaluate(networks: dict, hits: list[float], meaning: list[tuple], rays: list[list[float]] | None = None,
+             vehicles: list[tuple[list[float], float]] | None = None) -> dict:
+    """The blocked connections and the bad points (positions, so they still match after a rebuild). rays and
+    vehicles (vehicles_of): hits on a parked vehicle don't count."""
+    if rays is not None and vehicles:
+        hits = [-1 if raw is not None and raw >= 0 and _on_vehicle(ray, raw, vehicles) else raw
+                for ray, raw in zip(rays, hits)]
     points = networks.get("points") or []
     edges = networks.get("edges") or []
     edge_hits: dict[tuple[int, int, int], set[int]] = {}

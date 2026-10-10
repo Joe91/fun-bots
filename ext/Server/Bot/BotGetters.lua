@@ -132,8 +132,8 @@ function Bot:GetFirstShotDelay(p_DistanceToTarget, p_ReducedTiming, p_AngleToTar
 		s_Delay = s_Delay * 0.6
 	end
 
-	-- Slower reaction on greater distances. 100 m = 0.5 extra seconda.
-	s_Delay = s_Delay + (p_DistanceToTarget * 0.005 * (1.0 + ((self.m_Reaction - 0.5) * 0.4))) -- +-20% depending on reaction-characteristic of bot
+	-- Slower reaction on greater distances. 100 m = 0.3 extra seconds (0.5 felt slow at medium distances).
+	s_Delay = s_Delay + (p_DistanceToTarget * 0.003 * (1.0 + ((self.m_Reaction - 0.5) * 0.4))) -- +-20% depending on reaction-characteristic of bot
 
 	-- Fitts' law: aiming at a target far off the crosshair takes longer, growing with log2 of the angle.
 	if p_AngleToTarget and p_AngleToTarget > 0.0 then

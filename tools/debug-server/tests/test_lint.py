@@ -61,6 +61,16 @@ class LintTest(unittest.TestCase):
         networks["attach"] = [[1, 1, 5, 0.0], [1, 3, 11, 0.0]]
         self.assertIn("split-junctions", [f.kind for f in lint.lint_map("X", networks, data)])
 
+    def test_blocked_junction(self):
+        networks = _networks()
+        data = MapData({1: _path(1, 10, 100)})
+        networks["attach"] = [[1, 1, 5, 0.0, [10.0, 0.0, 0.0], []], [1, 46, 6, 0.0, [100.0, 0.0, 0.0], []]]
+        self.assertNotIn("blocked-junction", [f.kind for f in lint.lint_map("X", networks, data)])
+        checks = {"blockedJunctions": [[100.0, 0.0, 0.0, 100.0, 0.0, 0.0]]}
+        found = [f for f in lint.lint_map("X", networks, data, checks) if f.kind == "blocked-junction"]
+        self.assertEqual(len(found), 1)
+        self.assertIn("path 1 point 46", found[0].message)
+
 
 if __name__ == "__main__":
     unittest.main()

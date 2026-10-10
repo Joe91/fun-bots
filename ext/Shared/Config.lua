@@ -14,10 +14,10 @@ Config = {
 	BotAimError = 6.0,					-- Aim error of an average bot at 25 m in milliradians (1 = 1 cm off per 10 m distance), smaller angle on greater distances: 0 = perfect aim (hard), 10 or more = easy 
 	BotSniperAimError = 3.0,			-- See BotAimError, only for Sniper-rifles 
 	BotSupportAimError = 8.0,			-- See BotAimError, only for LMGs 
-	BotAimErrorSpread = 0.6,			-- Difference between single bots: the best bot has (1 - x), the worst (1 + x) times the aim error 
+	BotAimErrorSpread = 0.5,			-- Difference between single bots: the best bot has (1 - x), the worst (1 + x) times the aim error 
 	BotRecoilControlBest = 0.9,			-- Share of the weapon recoil the best bot compensates (0 = none, 1 = all) 
 	BotRecoilControlWorst = 0.5,		-- Share of the weapon recoil the worst bot compensates (0 = none, 1 = all) 
-	ReactionTime = 0.3,					-- Additional delay for the first shot in seconds, scaled by the reaction of each bot (0 to 1) 
+	ReactionTime = 0.25,				-- Additional delay for the first shot in seconds, scaled by the reaction of each bot (0 to 1) 
 	DamageFactorAssault = 1.0,			-- Original Damage from bots gets multiplied by this 
 	DamageFactorCarabine = 1.0,			-- Original Damage from bots gets multiplied by this 
 	DamageFactorLMG = 1.0,				-- Original Damage from bots gets multiplied by this 

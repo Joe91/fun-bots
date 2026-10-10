@@ -1422,6 +1422,29 @@ function BotSpawner:_SpawnSingleWayBot(p_Player, p_UseRandomWay, p_ActiveWayInde
 
 	if s_Name ~= nil or s_IsRespawn then
 		---@cast s_Name -nil
+		-- Dynamic jet spawns on conquest maps that support it (XP5_002, XP5_004: jets that spawn in the air). Before the
+		-- spawns of the game: on these levels (with a mesh) the bots spawned there and never got a jet.
+		if self:CQMapSupportDynamicVehicleSpawnReinforncments(s_TeamId) and Config.UseAirVehicles then
+			local hasJet, spawnEntity = self:_CheckAndGetAvailableJetSpawn(s_TeamId)
+			if hasJet and spawnEntity then
+				m_Logger:Write("Found a jet spawn for team " .. s_TeamId)
+				local s_Bot = self:GetBot(p_ExistingBot, s_Name, s_TeamId, s_SquadId)
+				if s_Bot == nil then return end
+				m_BotCreator:SetAttributesToBot(s_Bot)
+				self:_SelectLoadout(s_Bot)
+
+				local spawnEvent = ServerPlayerEvent(
+					'Spawn', s_Bot.m_Player,
+					true, false, false, false, false, false,
+					s_Bot.m_Player.teamId
+				)
+				spawnEntity:FireEvent(spawnEvent)
+				self:_AddBotWithoutPath(s_Bot)
+				m_Logger:Write("Spawned bot " .. s_Bot.m_Player.name .. " in a jet")
+				return
+			end
+		end
+
 		if self:_UseGameSpawn() and
 			not (Globals.IsTdm and (self._DelayDirectSpawn > -(Registry.BOT_SPAWN.DELAY_DIRECT_SPAWN))) then -- workaround for TDM-Spawn-Behaviour
 			local s_Bot = self:GetBot(p_ExistingBot, s_Name, s_TeamId, s_SquadId)
@@ -1443,28 +1466,6 @@ function BotSpawner:_SpawnSingleWayBot(p_Player, p_UseRandomWay, p_ActiveWayInde
 			self:_TriggerSpawn(s_Bot, s_Vehicle)
 			self:_AddBotWithoutPath(s_Bot)
 			return
-		end
-
-		-- special handling for dynamic jet spawns on conquest maps that support it
-		if self:CQMapSupportDynamicVehicleSpawnReinforncments(s_TeamId) and Config.UseAirVehicles then
-			local hasJet, spawnEntity = self:_CheckAndGetAvailableJetSpawn(s_TeamId)
-			if hasJet and spawnEntity then
-				m_Logger:Write("Found a jet spawn for team " .. s_TeamId)
-				local s_Bot = self:GetBot(p_ExistingBot, s_Name, s_TeamId, s_SquadId)
-				if s_Bot == nil then return end
-				m_BotCreator:SetAttributesToBot(s_Bot)
-				self:_SelectLoadout(s_Bot)
-
-				local spawnEvent = ServerPlayerEvent(
-					'Spawn', s_Bot.m_Player,
-					true, false, false, false, false, false,
-					s_Bot.m_Player.teamId
-				)
-				spawnEntity:FireEvent(spawnEvent)
-				self:_AddBotWithoutPath(s_Bot)
-				m_Logger:Write("Spawned bot " .. s_Bot.m_Player.name .. " in a jet")
-				return
-			end
 		end
 
 		local s_Beacon = g_GameDirector:GetPlayerBeacon(s_Name)
@@ -1720,7 +1721,15 @@ end
 ---@return ControllableEntity?
 function BotSpawner:_GetSpecialSpawnEnity(p_Bot, p_TeamId)
 	if Globals.IsAirSuperiority or Globals.MapHasDynamiJetSpawns then
-		return "SpawnInJet", p_Bot.m_Player.controlledControllable
+		-- Spawned into a jet (_CheckAndGetAvailableJetSpawn). Not a bot the game spawned on foot (XP5_002 conquest: its
+		-- soldier was taken for the jet, the cast failed in every frame).
+		local s_Controllable = p_Bot.m_Player.controlledControllable
+		if s_Controllable ~= nil and not s_Controllable:Is('ServerSoldierEntity') then
+			return "SpawnInJet", s_Controllable
+		end
+		if Globals.IsAirSuperiority then
+			return nil
+		end
 	end
 	if Config.UseVehicles and self._DelayDirectSpawn <= 0.0 and #g_GameDirector:GetSpawnableVehicle(p_TeamId) > 0 then
 		return "SpawnInVehicle", g_GameDirector:GetSpawnableVehicle(p_TeamId)[1]
