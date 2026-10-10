@@ -43,6 +43,10 @@ local BLOCKED_PENALTY = 50.0
 local REMOVE_AFTER = 3
 -- Metres above or below an MCOM the bots walk around it (RandomPoint).
 local MCOM_FLOOR = 3.0
+-- A point of the zone of an MCOM whose way over the mesh to the floor of the MCOM is longer than this many times its
+-- distance to the MCOM (at least MCOM_DETOUR_MIN metres) is not part of the zone (_TrimMcomZone).
+local MCOM_DETOUR_FACTOR = 2.0
+local MCOM_DETOUR_MIN = 20.0
 -- Parts of the mesh with fewer points get no junctions (_LinkJunctions).
 local MIN_PART = 10
 -- Metres of a cell of the grid of the points (Closest).
@@ -409,6 +413,64 @@ local function _ZoneOn(p_Mesh, p_Data, p_Inside)
 	return s_Zone
 end
 
+---The zone of an MCOM is a circle: it also takes points of a floor far above or below that lead to the MCOM only over a
+---long way round (XP4_Quake MCOM 2: an upper floor 10 m above it, 78 m over the mesh). Bots there were in the zone and
+---walked around only where the mesh leads straight (_ZoneNewGoal): they stood up there and were sent to arm the MCOM from
+---there. Those points are left out: the bots go on to the zone over the mesh. Unchanged if no point is on the floor of
+---the MCOM.
+---@param p_Zone NavZone
+---@return integer points left out
+local function _TrimMcomZone(p_Zone)
+	local s_Points = p_Zone.Points
+	local s_Center = p_Zone.Center
+	local s_Costs = {}
+	local s_Heap = m_Heap.New()
+	for l_Index = 1, #p_Zone.Inside do
+		local l_Point = p_Zone.Inside[l_Index]
+		if math.abs(s_Points[l_Point].Y - s_Center.y) <= MCOM_FLOOR then
+			s_Costs[l_Point] = 0.0
+			m_Heap.Push(s_Heap, 0.0, l_Point)
+		end
+	end
+	if s_Heap.Size == 0 then
+		return 0
+	end
+	-- The longest way a point of the zone may have.
+	local s_Limit = math.max(MCOM_DETOUR_MIN, MCOM_DETOUR_FACTOR * p_Zone.Radius)
+	local s_Closed = {}
+	while s_Heap.Size > 0 do
+		local s_Cost, s_Current = m_Heap.Pop(s_Heap)
+		if not s_Closed[s_Current] then
+			s_Closed[s_Current] = true
+			local s_Neighbours = p_Zone.Neighbours[s_Current]
+			for l_Index = 1, #s_Neighbours do
+				local l_Edge = s_Neighbours[l_Index]
+				local s_New = s_Cost + l_Edge.Cost
+				if s_New <= s_Limit and s_New < (s_Costs[l_Edge.To] or math.huge) then
+					s_Costs[l_Edge.To] = s_New
+					m_Heap.Push(s_Heap, s_New, l_Edge.To)
+				end
+			end
+		end
+	end
+	local s_Inside = {}
+	local s_InsideSet = {}
+	for l_Index = 1, #p_Zone.Inside do
+		local l_Point = p_Zone.Inside[l_Index]
+		local s_DeltaX = s_Points[l_Point].X - s_Center.x
+		local s_DeltaZ = s_Points[l_Point].Z - s_Center.z
+		local s_Allowed = math.max(MCOM_DETOUR_MIN, MCOM_DETOUR_FACTOR * math.sqrt(s_DeltaX * s_DeltaX + s_DeltaZ * s_DeltaZ))
+		if (s_Costs[l_Point] or math.huge) <= s_Allowed then
+			s_Inside[#s_Inside + 1] = l_Point
+			s_InsideSet[l_Point] = true
+		end
+	end
+	local s_Dropped = #p_Zone.Inside - #s_Inside
+	p_Zone.Inside = s_Inside
+	p_Zone.InsideSet = s_InsideSet
+	return s_Dropped
+end
+
 ---@param p_Data table the mesh as in the table (version 2)
 function NavZones:_Build(p_Data)
 	self._Mesh = _ParseMesh(p_Data)
@@ -423,6 +485,12 @@ function NavZones:_Build(p_Data)
 	for l_Index = 1, #s_Zones do
 		local l_Data = s_Zones[l_Index]
 		local s_Zone = _ZoneOn(self._Mesh, l_Data, l_Data.inside)
+		if s_Zone.Kind == 'mcom' then
+			local s_Dropped = _TrimMcomZone(s_Zone)
+			if s_Dropped > 0 then
+				m_Logger:Write(s_Zone.Name .. ': ' .. s_Dropped .. ' points of another floor left out')
+			end
+		end
 		if self._VehicleMesh ~= nil then
 			s_Zone.Vehicle = _ZoneOn(self._VehicleMesh, l_Data, l_Data.vehicleInside)
 		end

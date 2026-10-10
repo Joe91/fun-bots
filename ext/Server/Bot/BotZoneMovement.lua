@@ -50,7 +50,9 @@ local ZONE_SUBOBJECTIVE_CYCLE = 1.0 -- Seconds between two checks whether the bo
 local ZONE_WAIT_VEHICLE = { 3.0, 8.0 } -- Seconds a vehicle stands at each point.
 local ZONE_GOAL_TRIES = 4        -- Random goals tried in a zone...
 local ZONE_DETOUR_FACTOR = 2.0   -- ...one whose way is at most this many times the straight distance...
-local ZONE_DETOUR_MIN = 40.0     -- ...or this many metres. None of them: the bot waits where it is.
+local ZONE_DETOUR_MIN = 40.0     -- ...or this many metres. None of them: the bot waits where it is...
+local ZONE_NO_GOAL_MAX = 3       -- ...this many times in a row, then it takes the closest of them anyway (XP4_Quake:
+                                 -- attackers on a floor above the MCOM, all goals a long way round, waited there).
 local ZONE_ARM_DISTANCE = 1.3    -- Horizontal metres to the MCOM the soldier walks up to before it interacts.
 local ZONE_ARM_APPROACH = 4.0    -- Seconds at most for that, then it interacts from where it is.
 local ZONE_ARM_TIME = 8.0        -- Seconds of interacting (arming takes about 6): then the bot gives up for now.
@@ -123,6 +125,7 @@ local ZONE_ENTER_HEIGHT = 3.0    -- the bot goes onto the mesh from.
 ---@field Entered number time the bot came onto the mesh (or onto another part of it, _ZoneRejoin)
 ---@field FallTime number time of the last fall off a way
 ---@field Trail integer[]|nil the last points it reached (Bot:_ZoneTrail)
+---@field NoGoals integer|nil times in a row no goal of the zone was close enough over the mesh (_ZoneNewGoal)
 
 ---Called when the bot reached a waypoint. Where the routes guide it (NavRoutes:Step, a level with a mesh): at a node of
 ---the paths it goes onto the mesh, switches over a link or turns to the way on. Else at a junction it walks the mesh
@@ -594,6 +597,10 @@ function Bot:_ZoneNewGoal()
 	local s_Goal = nil
 	local s_Route = nil
 	local s_From = s_State.Zone.Points[s_State.Point]
+	-- The closest of the goals that are too far, if none is close enough.
+	local s_Far = nil
+	local s_FarRoute = nil
+	local s_FarCost = math.huge
 	for _ = 1, ZONE_GOAL_TRIES do
 		local l_Goal = m_NavZones:RandomPoint(s_State.Zone, s_State.Point, s_Defend and not s_State.Vehicle)
 		if l_Goal == nil or s_From == nil then
@@ -605,6 +612,21 @@ function Bot:_ZoneNewGoal()
 			s_Goal = l_Goal
 			s_Route = l_Route
 			break
+		end
+		if l_Route ~= nil and l_Cost < s_FarCost then
+			s_Far = l_Goal
+			s_FarRoute = l_Route
+			s_FarCost = l_Cost
+		end
+	end
+	if s_Goal ~= nil then
+		s_State.NoGoals = 0
+	elseif s_Far ~= nil then
+		s_State.NoGoals = (s_State.NoGoals or 0) + 1
+		if s_State.NoGoals >= ZONE_NO_GOAL_MAX then
+			s_State.NoGoals = 0
+			s_Goal = s_Far
+			s_Route = s_FarRoute
 		end
 	end
 	self:_ZoneRouteTo(s_Goal, s_Route)
