@@ -317,6 +317,11 @@ function Bot:_EnterVehicleEntity(p_Entity, p_PlayerIsDriver)
 		return -2
 	end
 
+	-- Nothing for a bot to drive it on: it would stand there with its crew.
+	if not p_PlayerIsDriver and not g_GameDirector:HasVehicleWay(s_VehicleData, p_Entity) then
+		return -3
+	end
+
 	local s_MaxEntries = m_Vehicles:GetBotSeatCount(p_Entity, s_VehicleData, p_PlayerIsDriver)
 
 	for l_IndexOfSeat = 0, s_MaxEntries - 1 do

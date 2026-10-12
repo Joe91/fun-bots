@@ -263,6 +263,9 @@ function Bot:__init(p_Player)
 	self._VehicleStuckTime = 0.0
 	-- Where it got nowhere before it was respawned: not again close to there (BotSpawner).
 	self._RespawnAway = nil
+	-- Since when it waits instead of spawning where no way leads on (BotSpawner:_ConquestSpawn).
+	---@type number|nil
+	self._DeadEndSince = nil
 	self._FireCycleModifier = 1.0
 
 	-- Vehicle stuff.
@@ -818,9 +821,35 @@ function Bot:_UpdateRespawn(p_DeltaTime)
 	end
 end
 
+-- A land vehicle with no vehicle-path this close but the vehicle-network of a zone (VEHICLE_ZONE_START_RANGE) starts on
+-- that network: it leaves it at the junction towards its objective (_ZoneDecide). Else the driver steered straight to
+-- the closest waypoint (MP_013 CQL: a Vodnik parked at E, the waypoint 68 m away behind houses; the bases: the path
+-- 24 m from the vehicle spawns), got nowhere and everybody got out.
+local VEHICLE_PATH_NEAR = 10.0
+-- Closer to it than to the network by this many metres: the path (MP_018: the path 10 m from the vehicle spawns).
+local VEHICLE_PATH_PREFER = 5.0
+local VEHICLE_ZONE_START_RANGE = 20.0
+
 ---@param p_Position Vec3
 function Bot:FindVehiclePath(p_Position)
 	local s_Node = g_GameDirector:FindClosestPath(p_Position, true, true, self.m_ActiveVehicle.Terrain)
+
+	if Registry.BOT.USE_VEHICLE_ZONE_NETWORKS
+		and (self.m_ActiveVehicle.Terrain == VehicleTerrains.Land or self.m_ActiveVehicle.Terrain == VehicleTerrains.Amphibious)
+		and self.m_Player.controlledEntryId == 0 and self.m_Zone == nil then
+		local s_Zone, s_Point = m_NavZones:VehicleZoneAt(p_Position, VEHICLE_ZONE_START_RANGE, self._Objective)
+		local s_PathDistance = s_Node ~= nil and s_Node.Position:Distance(p_Position) or math.huge
+		if s_Zone ~= nil and s_Point ~= nil and (s_PathDistance > VEHICLE_PATH_NEAR
+				or s_PathDistance > s_Zone.Points[s_Point].Position:Distance(p_Position) + VEHICLE_PATH_PREFER) then
+			if s_Node ~= nil then
+				-- Where it goes on from when it leaves the network over a path.
+				self._PathIndex = s_Node.PathIndex
+				self._CurrentWayPoint = s_Node.PointIndex
+			end
+			self:_EnterZone(s_Zone, s_Point, true)
+			return
+		end
+	end
 
 	if s_Node ~= nil then
 		-- Switch to vehicle.

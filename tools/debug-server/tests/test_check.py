@@ -112,6 +112,23 @@ class CheckTest(unittest.TestCase):
         checks = {"blockedJunctions": [[15.0, 0.0, 0.0, 15.0, 0.0, 1.0]]}
         self.assertEqual(navzones._attach_loose(network, loose, checks)["attach"][0][2], 2)
 
+    def test_loose_end_attached_further_along_the_path(self):
+        # The end 12 m beside the mesh (in a house), the path 4 m on 3 m beside it (out of the window): the junction there.
+        points = [[float(index * 5), 0.0, 0.0, 2.0, 0, 0] for index in range(10)]
+        edges = [[index, index + 1, 5.0, []] for index in range(9)]
+        network = {"points": points, "edges": edges, "attach": [], "stats": {}}
+        loose = [[7, 1, [15.0, 0.0, 12.0], [[2, [15.0, 0.0, 3.0], 4.0], [3, [20.0, 0.0, 1.5], 11.8]]]]
+        self.assertEqual(navzones._attach_loose(network, loose)["attach"][0][:3], [7, 2, 3])
+        # The way from there blocked: the next waypoint.
+        checks = {"blockedJunctions": [[15.0, 0.0, 0.0, 15.0, 0.0, 3.0]]}
+        self.assertEqual(navzones._attach_loose(network, loose, checks)["attach"][0][:3], [7, 3, 4])
+        # The waypoint 4 m on is on a sill 1.5 m above the mesh: the next one.
+        loose = [[7, 1, [15.0, 0.0, 12.0], [[2, [15.0, 1.5, 3.0], 4.0], [3, [20.0, 0.0, 1.5], 11.8]]]]
+        self.assertEqual(navzones._attach_loose(network, loose)["attach"][0][:3], [7, 3, 4])
+        # Close to the end itself: the end.
+        loose = [[7, 1, [15.0, 0.0, 1.0], [[2, [15.0, 0.0, 0.5], 4.0]]]]
+        self.assertEqual(navzones._attach_loose(network, loose)["attach"][0][:3], [7, 1, 3])
+
 
 if __name__ == "__main__":
     unittest.main()

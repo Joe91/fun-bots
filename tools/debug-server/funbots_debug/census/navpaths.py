@@ -408,14 +408,25 @@ def thin_junctions(data: MapData, networks: dict) -> int:
 
 def loose_ends(data: MapData) -> list[list]:
     """The ends of the foot paths without a link: the mesh attaches them where it has no junction for them
-    (navzones.build(..., loose=...), up to navzones.LOOSE_RANGE away). [path, point, position]"""
+    (navzones.build(..., loose=...), up to navzones.LOOSE_RANGE away). [path, point, position, inward]: inward are the
+    waypoints after the end up to LOOSE_RANGE along the path, [point, position, metres along], where the junction may
+    be instead (the end in a house, the mesh in the alley behind its window)."""
     result = []
     for index, path in data.paths.items():
         if path.vehicles:
             continue
-        for node in {path.nodes[0].point: path.nodes[0], path.nodes[-1].point: path.nodes[-1]}.values():
-            if not node.links:
-                result.append([index, node.point, list(node.pos)])
+        nodes = path.nodes
+        for order in ({nodes[0].point: nodes, nodes[-1].point: list(reversed(nodes))}).values():
+            if order[0].links:
+                continue
+            inward = []
+            along = 0.0
+            for before, node in zip(order, order[1:-1]):
+                along += math.dist(before.pos, node.pos)
+                if along > LOOSE_RANGE or node.links:
+                    break
+                inward.append([node.point, list(node.pos), round(along, 2)])
+            result.append([index, order[0].point, list(order[0].pos), inward])
     return result
 
 

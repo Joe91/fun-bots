@@ -831,6 +831,11 @@ def spawn_positions(census: dict) -> list[list[float]]:
 
 LOOSE_RANGE = 15.0        # A loose end of a trimmed path (no junction, no link) is attached to the closest point of a
 LOOSE_FLOOR = 3.0         # usable part up to this far (horizontally) and this far above or below, also outside the areas.
+LOOSE_ALONG = 0.25        # A waypoint after the end instead (navpaths.loose_ends), if its way onto the mesh plus this
+                          # much per metre along the path is shorter. The path is cut back to it (navpaths.cut_loose),
+                          # one cut before keeps the stub: no route leads into it.
+LOOSE_STEP = 0.5          # Higher or lower than this, the way onto the mesh costs LOOSE_CLIMB metres per metre more (a
+LOOSE_CLIMB = 2.0         # window sill 1 m above the alley).
 
 
 def _attach_loose(network: dict, loose: list, checks: dict | None = None) -> dict:
@@ -860,19 +865,25 @@ def _attach_loose(network: dict, loose: list, checks: dict | None = None) -> dic
         sizes[find(index)] += 1
     attach = list(network.get("attach") or [])
     known = {(int(entry[0]), int(entry[1])) for entry in attach}
-    for path, point, pos in loose:
+    for path, point, pos, *rest in loose:
         if (int(path), int(point)) in known:
             continue
+        # The end itself, else a waypoint after it whose way onto the mesh is that much shorter (MP_011 path 13: the end
+        # in a house, 14 m through its wall; 4 m on, out of the window and off its sill, 5 m over the alley).
         best = None
-        for index, entry in enumerate(points):
-            if abs(entry[1] - pos[1]) > LOOSE_FLOOR or sizes[find(index)] < MIN_PART or is_blocked(entry, pos):
-                continue
-            horizontal = math.hypot(entry[0] - pos[0], entry[2] - pos[2])
-            if horizontal <= LOOSE_RANGE and (best is None or horizontal < best[0]):
-                best = (horizontal, index)
+        for candidate, cpos, along in [[point, pos, 0.0]] + (rest[0] if rest else []):
+            if (int(path), int(candidate)) in known:
+                break
+            for index, entry in enumerate(points):
+                if abs(entry[1] - cpos[1]) > LOOSE_FLOOR or sizes[find(index)] < MIN_PART or is_blocked(entry, cpos):
+                    continue
+                horizontal = math.hypot(entry[0] - cpos[0], entry[2] - cpos[2])
+                cost = horizontal + LOOSE_ALONG * along + LOOSE_CLIMB * max(0.0, abs(entry[1] - cpos[1]) - LOOSE_STEP)
+                if horizontal <= LOOSE_RANGE and (best is None or cost < best[0]):
+                    best = (cost, index, candidate, cpos)
         if best is not None:
-            distance = math.dist(points[best[1]][:3], pos)
-            attach.append([int(path), int(point), best[1], round(distance, 1), _round(pos), []])
+            distance = math.dist(points[best[1]][:3], best[3])
+            attach.append([int(path), int(best[2]), best[1], round(distance, 1), _round(best[3]), []])
     result = dict(network)
     result["attach"] = attach
     return result

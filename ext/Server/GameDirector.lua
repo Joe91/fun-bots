@@ -86,6 +86,8 @@ function GameDirector:RegisterVars()
 	self.m_McomTries = {}
 	-- Vehicles that got stuck with a bot driving ("vehicle <id>" -> { Position, Time }): no objective for a while.
 	self.m_StuckVehicles = {}
+	-- Whether there is a vehicle-path for a terrain (HasVehicleWay), with the paths it was found for.
+	self.m_VehicleWays = nil
 	self.m_EngineMcoms = nil
 
 	self.m_SpawnableStationaryAas = {}
@@ -878,6 +880,8 @@ function GameDirector:_CheckProgressOffMesh(p_Bot)
 		m_Logger:Write("teleport " .. p_Bot.m_Player.name .. " onto the mesh, it got stuck off the mesh")
 	elseif p_Bot._KillYourselfTimer > Registry.GAME_DIRECTOR.OFF_MESH_KILL_TIME then
 		p_Bot.m_DontRevive = true
+		-- Not the same spawn again (XP1_004 CAL: in the hangar of the carrier, 14 bots one after the other): at a mate.
+		p_Bot._RespawnAway = s_Here:Clone()
 		p_Bot:KillSoldier('off_mesh')
 		p_Bot._KillYourselfTimer = 0.0
 		m_Logger:Write("kill " .. p_Bot.m_Player.name .. ", it got stuck off the mesh")
@@ -1162,6 +1166,12 @@ function GameDirector:VehicleStuck(p_Bot, p_Source)
 		return
 	end
 	local s_Position = s_Vehicle.transform.trans
+	-- Called every frame until the driver is out (VehicleMovement): once.
+	local s_Known = self.m_StuckVehicles['vehicle ' .. tostring(s_Vehicle.instanceId)]
+	if s_Known ~= nil and SharedUtils:GetTime() - s_Known.Time < 3.0 then
+		p_Bot:ExitVehicle()
+		return
+	end
 	m_Logger:Write("vehicle of " .. p_Bot.m_Player.name .. " stuck, everybody out")
 	if m_DebugBridge.m_Enabled then
 		m_DebugBridge:Event('vehicle_stuck', { bot = p_Bot.m_Player.name, source = p_Source,
@@ -1388,7 +1398,17 @@ function GameDirector:GetSpawnableVehicle(p_TeamId)
 		end
 		spawnableVehiclesForTeamID = s_Stage
 	end
-	return spawnableVehiclesForTeamID
+	-- Only the ones a bot can get into (a seat it may take, aircraft only if allowed) and drive somewhere
+	-- (HasVehicleWay): spawned for the others it stood next to them (XP1_004: in the hangar of the carrier).
+	local s_Usable = {}
+	for l_Index = 1, #spawnableVehiclesForTeamID do
+		local l_Vehicle = spawnableVehiclesForTeamID[l_Index]
+		local s_Data = m_Vehicles:GetVehicleByEntity(l_Vehicle)
+		if s_Data == nil or (m_Vehicles:HasFreeBotSeat(l_Vehicle, s_Data) and self:HasVehicleWay(s_Data, l_Vehicle)) then
+			s_Usable[#s_Usable + 1] = l_Vehicle
+		end
+	end
+	return s_Usable
 end
 
 function GameDirector:GetMobileRespawnVehicles(p_TeamId)
@@ -2152,6 +2172,37 @@ function GameDirector:FindClosestPath(p_Trans, p_VehiclePath, p_DetailedSearch, 
 	return s_ClosestPathNode
 end
 
+---Whether a driver has anything to drive the vehicle on: a vehicle-path of its terrain (as Bot:FindVehiclePath looks for
+---one). Without (MP_007 rush has no vehicle-path at all) the bots sat in the tanks at their spawn until
+---_CheckVehicleProgress got them out, the next ones got in, again and again. Aircraft fly without, the stationary
+---weapons don't move, a player that drives it (p_Entity) needs none.
+---@param p_VehicleData VehicleDataInner
+---@param p_Entity ControllableEntity|nil
+---@return boolean
+function GameDirector:HasVehicleWay(p_VehicleData, p_Entity)
+	local s_Driver = p_Entity ~= nil and p_Entity:GetPlayerInEntry(0) or nil
+	local s_Terrain = p_VehicleData.Terrain
+	if (s_Driver ~= nil and not m_Utilities:isBot(s_Driver))
+		or s_Terrain == nil or s_Terrain == VehicleTerrains.Air or m_Vehicles:IsAirVehicle(p_VehicleData)
+		or m_Vehicles:IsVehicleType(p_VehicleData, VehicleTypes.StationaryAA)
+		or m_Vehicles:IsVehicleType(p_VehicleData, VehicleTypes.StationaryLauncher)
+		or m_Vehicles:IsVehicleType(p_VehicleData, VehicleTypes.Gadgets)
+		or m_Vehicles:IsVehicleType(p_VehicleData, VehicleTypes.MavBot) then
+		return true
+	end
+	-- Per terrain, anew when the paths are loaded anew.
+	local s_Paths = m_NodeCollection:GetPaths()
+	if self.m_VehicleWays == nil or self.m_VehicleWays.Paths ~= s_Paths then
+		self.m_VehicleWays = { Paths = s_Paths }
+	end
+	local s_Has = self.m_VehicleWays[s_Terrain]
+	if s_Has == nil then
+		s_Has = self:FindClosestPath(Vec3(0, 0, 0), true, false, s_Terrain) ~= nil
+		self.m_VehicleWays[s_Terrain] = s_Has
+	end
+	return s_Has
+end
+
 function GameDirector:GetPlayerBeacon(p_PlayerName)
 	local s_Beacon = self.m_Beacons[p_PlayerName]
 
@@ -2201,7 +2252,8 @@ function GameDirector:GetSpawnableBeaconOrMate(p_TeamId, p_SquadId, p_Stranded)
 					-- Check for free seats: one a bot may take (Bot:_EnterVehicleEntity). Any free seat let the bot spawn
 					-- here, fail to get in and be killed again (a ticket lost).
 					local s_VehicleData = m_Vehicles:GetVehicleByEntity(s_Vehicle)
-					if s_VehicleData ~= nil and m_Vehicles:HasFreeBotSeat(s_Vehicle, s_VehicleData) then
+					if s_VehicleData ~= nil and m_Vehicles:HasFreeBotSeat(s_Vehicle, s_VehicleData)
+						and self:HasVehicleWay(s_VehicleData, s_Vehicle) then
 						return 1, 1, false, s_Vehicle, nil
 					end
 				else
@@ -2239,6 +2291,52 @@ function GameDirector:IsStranded(p_Position, p_TeamId, p_Point)
 			and l_Objective.active and not l_Objective.destroyed
 			and (l_Objective.team ~= p_TeamId or Config.DefendObjectives)
 			and g_NavRoutes:Next(s_Point, l_Objective.name) ~= nil then
+			return false
+		end
+	end
+	return true
+end
+
+-- A spawn of the game with no point of the mesh this close and no path either leads nowhere (the hangar of a carrier).
+local DEAD_END_MESH_RANGE = 30.0
+local DEAD_END_PATH_RANGE = 50.0
+
+---No way leads on from here on foot: stranded (IsStranded), or neither the mesh nor a path close by (the hangar of the
+---carrier of XP1_004 conquest assault, the closest path 400 m away over the water; IsStranded needs a point of the mesh).
+---@param p_Position Vec3
+---@param p_TeamId TeamId|integer
+---@return boolean
+function GameDirector:LeadsNowhere(p_Position, p_TeamId)
+	if m_NavZones:GetMesh() == nil then
+		return false
+	end
+	if self:IsStranded(p_Position, p_TeamId) then
+		return true
+	end
+	local _, s_Visible, s_Closest = m_NavZones:ZoneAtVisible(p_Position, DEAD_END_MESH_RANGE, nil)
+	if s_Visible ~= nil or s_Closest ~= nil then
+		return false
+	end
+	local s_Node = self:FindClosestPath(p_Position, false, true, nil)
+	return s_Node == nil or s_Node.Position:Distance(p_Position) > DEAD_END_PATH_RANGE
+end
+
+---A spawn the bot would get nowhere from on foot: stranded (IsStranded), or neither the mesh nor a path close by (the
+---hangar of the carrier of XP1_004 conquest assault, the closest path 400 m away over the water) - and no squad mate
+---away from it to spawn at instead.
+---@param p_Position Vec3
+---@param p_TeamId TeamId|integer
+---@param p_SquadId SquadId|integer
+---@return boolean
+function GameDirector:IsDeadEndSpawn(p_Position, p_TeamId, p_SquadId)
+	if not self:LeadsNowhere(p_Position, p_TeamId) then
+		return false
+	end
+	local s_Mates = PlayerManager:GetPlayersBySquad(p_TeamId, p_SquadId)
+	for l_Index = 1, #s_Mates do
+		local l_Mate = s_Mates[l_Index]
+		if l_Mate.soldier ~= nil and l_Mate.isAllowedToSpawnOn
+			and l_Mate.soldier.worldTransform.trans:Distance(p_Position) > STRANDED_MATE_DISTANCE then
 			return false
 		end
 	end
@@ -3154,7 +3252,7 @@ function GameDirector:_RefreshVehicleEntities()
 			-- Only seats a bot may take (Bot:_EnterVehicleEntity): else the bots walk to it and don't get in. As many bots
 			-- as seats: driver and passengers (the driver waits for them, Config.VehicleWaitForPassengersTime).
 			s_Objective.seats = m_Vehicles:FreeBotSeats(s_Vehicle, s_Data)
-			s_Objective.active = s_Objective.seats > 0
+			s_Objective.active = s_Objective.seats > 0 and self:HasVehicleWay(s_Data, s_Vehicle)
 				and PhysicsEntity(s_Vehicle).velocity.magnitude < VEHICLE_PARKED_SPEED
 				-- A launcher (TOW, Kornet) only next to a capture point or MCOM: one deep in a base shoots at nothing and
 				-- keeps the bot out of the fight.

@@ -47,9 +47,11 @@ local BREACH_HEIGHTS = { 0.9, 1.5 } -- Heights of the rays: both blocked, a wall
 local BREACH_TIME = 2.5           -- Seconds of shooting at it.
 local BREACH_MAX = 2              -- Breaches on the way to one target...
 local BREACH_SPOT_MAX = 3         -- ...and at one spot of a wall by all bots: it doesn't break (a fence of a
-local BREACH_SPOT_SIZE = 1.0      -- GroupPhysicsEntity, MP_013), nobody shoots at it again. Metres of a spot.
+local BREACH_SPOT_SIZE = 1.5      -- GroupPhysicsEntity, MP_013), nobody shoots at it again. Metres around a spot.
+local BREACH_STILL_THERE = 0.75   -- After a breach, from where the bot shot (this close), the way is still blocked: it
+                                  -- doesn't break, nobody shoots there again (XP3_Shield: one bot 7 times at a fence).
 
--- Breaches per spot of a wall in this level, by all bots (_TryBreach).
+-- Breaches at the spots of walls in this level, by all bots (_TryBreach): { Position, Count }.
 local s_BreachSpots = {}
 local s_BreachLevel = nil
 local BREACH_AIM = 0.15           -- Radians off the wall at most: then it fires.
@@ -450,6 +452,43 @@ function Bot:_PathLeadsToObjective()
 	return table.has(s_Objectives, self._Objective)
 end
 
+---What blocks the way from p_From towards p_Target within BREACH_RANGE: the spot to shoot at if a wall bullets go
+---through (MfPenetrable) does at all BREACH_HEIGHTS, else nil; and whether anything is hit at any of them.
+---@param p_From Vec3
+---@param p_Target Vec3
+---@return Vec3|nil
+---@return boolean
+local function _BreachWall(p_From, p_Target)
+	local s_DeltaX = p_Target.x - p_From.x
+	local s_DeltaZ = p_Target.z - p_From.z
+	local s_Length = math.sqrt(s_DeltaX * s_DeltaX + s_DeltaZ * s_DeltaZ)
+	if s_Length < 0.5 then
+		return nil, false
+	end
+	local s_Range = math.min(BREACH_RANGE, s_Length)
+	local s_Flags = RayCastFlags.DontCheckCharacter | RayCastFlags.DontCheckRagdoll | RayCastFlags.DontCheckWater
+	---@cast s_Flags RayCastFlags
+	---@type MaterialFlags|integer
+	local s_NoMaterialFlags = 0
+	local s_Aim = nil
+	local s_Wall = true
+	local s_Any = false
+	for _, l_Height in ipairs(BREACH_HEIGHTS) do
+		local s_Start = Vec3(p_From.x, p_From.y + l_Height, p_From.z)
+		local s_End = Vec3(p_From.x + s_DeltaX / s_Length * s_Range, p_From.y + l_Height,
+			p_From.z + s_DeltaZ / s_Length * s_Range)
+		local s_Hit = RaycastManager:CollisionRaycast(s_Start, s_End, 1, s_NoMaterialFlags, s_Flags)[1]
+		s_Any = s_Any or s_Hit ~= nil
+		if s_Hit == nil or s_Hit.material == nil or not s_Hit.material:Is('MaterialContainerPair')
+			or (MaterialContainerPair(s_Hit.material).flagsAndIndex & MaterialFlags.MfPenetrable) == 0 then
+			s_Wall = false
+		elseif s_Aim == nil then
+			s_Aim = s_Hit.position:Clone()
+		end
+	end
+	return s_Wall and s_Aim or nil, s_Any
+end
+
 ---Starts a breach if something that can be shot away blocks the way towards the target, right in front of the bot.
 ---At most BREACH_MAX times per target (p_Key: the waypoint, the step on the mesh), and BREACH_SPOT_MAX times at one spot
 ---by all bots (the way isn't open after that: the bots give up the way instead, BotZoneMovement).
@@ -469,44 +508,33 @@ function Bot:_TryBreach(p_Target, p_Key)
 	if self._BreachCount >= BREACH_MAX then
 		return false
 	end
-	local s_From = s_Soldier.worldTransform.trans
-	local s_DeltaX = p_Target.x - s_From.x
-	local s_DeltaZ = p_Target.z - s_From.z
-	local s_Length = math.sqrt(s_DeltaX * s_DeltaX + s_DeltaZ * s_DeltaZ)
-	if s_Length < 0.5 then
+	local s_Aim = _BreachWall(s_Soldier.worldTransform.trans, p_Target)
+	if s_Aim == nil then
 		return false
 	end
-	local s_Range = math.min(BREACH_RANGE, s_Length)
-	local s_Flags = RayCastFlags.DontCheckCharacter | RayCastFlags.DontCheckRagdoll | RayCastFlags.DontCheckWater
-	---@cast s_Flags RayCastFlags
-	---@type MaterialFlags|integer
-	local s_NoMaterialFlags = 0
-	local s_Aim = nil
-	for _, l_Height in ipairs(BREACH_HEIGHTS) do
-		local s_Start = Vec3(s_From.x, s_From.y + l_Height, s_From.z)
-		local s_End = Vec3(s_From.x + s_DeltaX / s_Length * s_Range, s_From.y + l_Height,
-			s_From.z + s_DeltaZ / s_Length * s_Range)
-		local s_Hit = RaycastManager:CollisionRaycast(s_Start, s_End, 1, s_NoMaterialFlags, s_Flags)[1]
-		if s_Hit == nil or s_Hit.material == nil or not s_Hit.material:Is('MaterialContainerPair')
-			or (MaterialContainerPair(s_Hit.material).flagsAndIndex & MaterialFlags.MfPenetrable) == 0 then
-			return false
-		end
-		s_Aim = s_Aim or s_Hit.position:Clone()
-	end
-	---@cast s_Aim -nil
 	local s_Level = SharedUtils:GetLevelName()
 	if s_BreachLevel ~= s_Level then
 		s_BreachLevel = s_Level
 		s_BreachSpots = {}
 	end
-	local s_Spot = math.floor(s_Aim.x / BREACH_SPOT_SIZE) .. ':' .. math.floor(s_Aim.y / BREACH_SPOT_SIZE) .. ':'
-		.. math.floor(s_Aim.z / BREACH_SPOT_SIZE)
-	if (s_BreachSpots[s_Spot] or 0) >= BREACH_SPOT_MAX then
+	local s_Spot = nil
+	for _, l_Spot in ipairs(s_BreachSpots) do
+		if l_Spot.Position:Distance(s_Aim) <= BREACH_SPOT_SIZE then
+			s_Spot = l_Spot
+			break
+		end
+	end
+	if s_Spot == nil then
+		s_Spot = { Position = s_Aim, Count = 0 }
+		s_BreachSpots[#s_BreachSpots + 1] = s_Spot
+	end
+	if s_Spot.Count >= BREACH_SPOT_MAX then
 		return false
 	end
-	s_BreachSpots[s_Spot] = (s_BreachSpots[s_Spot] or 0) + 1
+	s_Spot.Count = s_Spot.Count + 1
 	self._BreachCount = self._BreachCount + 1
-	self._Breach = { Position = s_Aim, Time = BREACH_TIME, Fire = false }
+	self._Breach = { Position = s_Aim, Time = BREACH_TIME, Fire = false, Target = p_Target:Clone(), Spot = s_Spot,
+		From = s_Soldier.worldTransform.trans:Clone() }
 	m_Logger:Write(self.m_Player.name .. ' breaches at ' .. tostring(s_Aim))
 	if m_DebugBridge.m_Enabled then
 		m_DebugBridge:Event('breach', { bot = self.m_Id, pos = DebugBridge.Vec(s_Aim) })
@@ -527,6 +555,14 @@ function Bot:_UpdateBreach(p_DeltaTime)
 	s_Breach.Time = s_Breach.Time - p_DeltaTime
 	if s_Breach.Time <= 0.0 or s_Soldier == nil then
 		self._Breach = nil
+		-- Not open now (the wall still there, only holes shot into it, something else behind it): it doesn't break,
+		-- nobody shoots at it again. XP5_004: three breaches at the same spot of a wall.
+		if s_Soldier ~= nil and s_Soldier.worldTransform.trans:Distance(s_Breach.From) <= BREACH_STILL_THERE then
+			local _, s_Blocked = _BreachWall(s_Soldier.worldTransform.trans, s_Breach.Target)
+			if s_Blocked then
+				s_Breach.Spot.Count = BREACH_SPOT_MAX
+			end
+		end
 		self:_ResetObstacleSequence()
 		return false
 	end
@@ -990,6 +1026,8 @@ function Bot:UpdateNormalMovement(p_DeltaTime)
 			-- do the obstacle-handling
 			local s_Result = self:_ObstacleHandling(s_Velocity, s_DistanceFromTargetSquared, s_HeightDistance, p_DeltaTime, s_SoldierPos)
 			if s_Result == nil then
+				-- Not the same spawn again (GameDirector off_mesh): at a mate away from here.
+				self._RespawnAway = s_SoldierPos:Clone()
 				self:KillSoldier('path_obstacle')
 				m_Logger:Write(self.m_Player.name .. ' got stuck. Kill')
 				return

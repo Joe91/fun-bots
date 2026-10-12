@@ -126,6 +126,7 @@ local ZONE_ENTER_HEIGHT = 3.0    -- the bot goes onto the mesh from.
 ---@field FallTime number time of the last fall off a way
 ---@field Trail integer[]|nil the last points it reached (Bot:_ZoneTrail)
 ---@field NoGoals integer|nil times in a row no goal of the zone was close enough over the mesh (_ZoneNewGoal)
+---@field Transit integer|nil a vehicle across the network at the end of this path (_VehicleZoneTransit)
 
 ---Called when the bot reached a waypoint. Where the routes guide it (NavRoutes:Step, a level with a mesh): at a node of
 ---the paths it goes onto the mesh, switches over a link or turns to the way on. Else at a junction it walks the mesh
@@ -208,6 +209,10 @@ end
 
 -- A spawn-point of the game this far from a point of the mesh: the bot walks straight to it and starts on the mesh.
 local ZONE_SPAWN_RANGE = 30.0
+-- Neither the mesh nor a path that close to the spawn: onto the mesh up to this far (nobody saw the bot there yet).
+local ZONE_SPAWN_FAR_RANGE = 80.0
+-- Onto the mesh (TeleportToMesh): a point this close (horizontal metres) on any floor before one farther on its floor.
+local TELEPORT_NEAR = 8.0
 
 ---After a spawn at a spawn-point of the game (BotSpawner:_UseGameSpawn): on the mesh there (a base, a capture
 ---point) the bot starts on it, and goes where its objective is.
@@ -223,6 +228,15 @@ function Bot:TryEnterZoneAt(p_Position, p_Spawned)
 			m_Logger:Write(self.m_Player.name .. ' spawned out of sight of the mesh, put onto point ' .. s_Closest)
 			return self:TeleportToMesh(ZONE_SPAWN_RANGE)
 		end
+		-- Nothing close, no path either (an alternate spawn of a capture point 110 m from the flag, XP1_004: the bot walked
+		-- straight to a path 60 m away, got stuck and was killed 50 s later): onto the mesh farther away.
+		if p_Spawned and s_Closest == nil and self.m_Player.soldier ~= nil then
+			local s_Path = g_GameDirector:FindClosestPath(p_Position, false, true, nil)
+			if s_Path == nil or s_Path.Position:Distance(p_Position) > ZONE_SPAWN_RANGE then
+				m_Logger:Write(self.m_Player.name .. ' spawned far from the mesh and the paths, put onto the mesh')
+				return self:TeleportToMesh(ZONE_SPAWN_FAR_RANGE)
+			end
+		end
 		return false
 	end
 	self:_EnterZone(s_Zone, s_Point)
@@ -230,7 +244,8 @@ function Bot:TryEnterZoneAt(p_Position, p_Spawned)
 end
 
 ---A bot that doesn't get along off the mesh (GameDirector): onto the closest point of the mesh up to p_Range away, it
----goes on from there.
+---goes on from there. One close by first, also on another floor: in a pit (XP4_Quake, 3 m below the mesh 4 m away)
+---the closest point on its floor was 31 m away, beyond p_Range, and the bot was killed instead.
 ---@param p_Range number
 ---@return boolean true if the bot is on the mesh now
 function Bot:TeleportToMesh(p_Range)
@@ -239,8 +254,10 @@ function Bot:TeleportToMesh(p_Range)
 	if s_Soldier == nil or s_Mesh == nil or self.m_Zone ~= nil then
 		return false
 	end
-	local s_Point, s_Distance = m_NavZones:Closest(s_Mesh, s_Soldier.worldTransform.trans)
-	if s_Point == nil or s_Distance > p_Range then
+	local s_Position = s_Soldier.worldTransform.trans
+	local s_Point = m_NavZones:Closest(s_Mesh, s_Position, nil, math.min(TELEPORT_NEAR, p_Range))
+		or m_NavZones:Closest(s_Mesh, s_Position, nil, p_Range)
+	if s_Point == nil then
 		return false
 	end
 	local s_Transform = s_Soldier.worldTransform:Clone()
@@ -275,22 +292,58 @@ end
 ---@return boolean true if the vehicle is in the zone now
 function Bot:_CheckForVehicleZoneEntry(p_Point)
 	if not Registry.BOT.USE_VEHICLE_ZONE_NETWORKS or self._Objective == ''
-		or self.m_Zone ~= nil or self.m_ActiveVehicle == nil or self.m_ActiveVehicle.Terrain ~= VehicleTerrains.Land then
+		or self.m_Zone ~= nil or self.m_ActiveVehicle == nil
+		-- Amphibious ones as well (the GAZ-3937 Vodnik drives on land too).
+		or (self.m_ActiveVehicle.Terrain ~= VehicleTerrains.Land and self.m_ActiveVehicle.Terrain ~= VehicleTerrains.Amphibious) then
 		return false
 	end
 
 	local s_Zone = m_NavZones:GetZone(self._Objective)
 	if s_Zone == nil or s_Zone.Kind ~= 'capturepoint' or s_Zone.Vehicle == nil then
-		return false
+		return self:_VehicleZoneTransit(p_Point)
 	end
 	local s_Junction = m_NavZones:GetJunctionIn(s_Zone.Vehicle, p_Point)
 	if s_Junction == nil or s_Zone.Vehicle.Points[s_Junction.Point] == nil
 		or s_Zone.Vehicle.Points[s_Junction.Point].Position:Distance(s_Zone.Center) > s_Zone.Radius then
-		return false
+		return self:_VehicleZoneTransit(p_Point)
 	end
 
 	-- The zone on the vehicle-mesh (NavZones:_Build).
 	self:_EnterZone(s_Zone.Vehicle, s_Junction.Point, true, s_Junction)
+	return true
+end
+
+-- At the end of its path, the vehicle-network of a zone this close (horizontal metres) is driven across.
+local VEHICLE_TRANSIT_RANGE = 20.0
+
+---The vehicle-path ends here, in the zone of another capture point or a base (the roads end at the networks of the
+---zones, the old paths of a capture point end at it): across the vehicle-network of that zone, out at the junction
+---towards the objective (_ZoneDecide, _ZoneBestExit). Else the driver turned at the end and drove the path back, or
+---stood there until everybody got out (MP_018: path 25 of C, a Growler on its way to E; path 24 of A).
+---@param p_Point Waypoint reached
+---@return boolean true if the vehicle is on the network now
+function Bot:_VehicleZoneTransit(p_Point)
+	local s_Count = #(m_NodeCollection:Get(nil, p_Point.PathIndex) or {})
+	local s_AtEnd = (p_Point.PointIndex >= s_Count and not self._InvertPathDirection)
+		or (p_Point.PointIndex <= 1 and self._InvertPathDirection)
+	if not s_AtEnd or m_NodeCollection:Loops(p_Point.PathIndex)
+		or (p_Point.Data ~= nil and p_Point.Data.Links ~= nil and #p_Point.Data.Links > 0) then
+		return false
+	end
+	local s_Zone, s_Point = m_NavZones:VehicleZoneAt(p_Point.Position, VEHICLE_TRANSIT_RANGE, self._Objective)
+	if s_Zone == nil or s_Point == nil then
+		return false
+	end
+	local s_Junction = m_NavZones:GetJunctionIn(s_Zone, p_Point)
+	self:_EnterZone(s_Zone, s_Junction ~= nil and s_Junction.Point or s_Point, true, s_Junction)
+	if self.m_Zone ~= nil then
+		self.m_Zone.Transit = p_Point.PathIndex
+	end
+	m_Logger:Write(self.m_Player.name .. ' across the vehicle-network of ' .. s_Zone.Name)
+	if m_DebugBridge.m_Enabled then
+		m_DebugBridge:Event('vehicle_transit', { bot = self.m_Id, zone = s_Zone.Name, path = p_Point.PathIndex,
+			pos = DebugBridge.Vec(p_Point.Position) })
+	end
 	return true
 end
 
@@ -709,6 +762,7 @@ function Bot:_ZoneBestExit(p_Objective)
 	local s_Best = nil
 	local s_BestNavigation = false
 	local s_BestDistance = math.huge
+	local s_Fallback = nil
 
 	for l_Index = 1, #s_State.Zone.Junctions do
 		local l_Junction = s_State.Zone.Junctions[l_Index]
@@ -731,6 +785,11 @@ function Bot:_ZoneBestExit(p_Objective)
 			local s_Objectives = s_First.Data and s_First.Data.Objectives or {}
 			s_Usable = #s_Objectives == 0 or table.has(s_Objectives, p_Objective)
 		end
+		-- Across a network at the end of a path: not back onto that path (it leads back where the vehicle came from).
+		if s_Usable and s_State.Transit ~= nil and s_Waypoint ~= nil and s_Waypoint.PathIndex == s_State.Transit then
+			s_Fallback = s_Fallback or l_Junction
+			s_Usable = false
+		end
 		if s_Usable then
 			---@cast s_Waypoint Waypoint
 			local s_Distance = g_GameDirector:_GetDistanceFromObjective(p_Objective, s_Waypoint.Position)
@@ -741,7 +800,7 @@ function Bot:_ZoneBestExit(p_Objective)
 			end
 		end
 	end
-	return s_Best
+	return s_Best or s_Fallback
 end
 
 ---@param p_Junction NavZoneJunction

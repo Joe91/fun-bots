@@ -1,3 +1,6 @@
+---@type NodeCollection
+local m_NodeCollection = require('NodeCollection')
+
 -- For vehicles to block missiles this fires a flare or smoke.
 ---@param p_TimeDelay number
 function Bot:FireFlareSmoke(p_TimeDelay)
@@ -33,11 +36,19 @@ function Bot:_OnFootAgain()
 	local s_Node = g_GameDirector:FindClosestPath(self.m_Player.soldier.worldTransform.trans:Clone(), false, true, nil)
 
 	if s_Node ~= nil then
-		-- Switch to foot.
+		-- Switch to foot, towards the objective (as _LeaveZone). Not always forward: XP5_003, out of a vehicle 70 m from A,
+		-- the bot walked a road away from it for two minutes.
 		self._InvertPathDirection = false
 		self._PathIndex = s_Node.PathIndex
 		self._CurrentWayPoint = s_Node.PointIndex
 		self._LastWayDistance = 1000.0
+		if self._Objective ~= '' then
+			local s_Direction = g_NavRoutes ~= nil and g_NavRoutes:Direction(s_Node, self._Objective, self.m_RouteSeed) or nil
+			s_Direction = s_Direction or m_NodeCollection:ObjectiveDirection(s_Node, self._Objective, false)
+			if s_Direction then
+				self._InvertPathDirection = (s_Direction == 'Previous')
+			end
+		end
 	end
 	self._KillYourselfTimer = 0.0
 	-- Onto the mesh where it lands (UpdateNormalMovement): the closest waypoint from the air can be far off.

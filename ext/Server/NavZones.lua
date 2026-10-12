@@ -634,6 +634,49 @@ function NavZones:GetJunctionIn(p_Zone, p_Waypoint)
 	return p_Zone.ByWaypoint[p_Waypoint.ID]
 end
 
+---The vehicle-network of the zone a land vehicle stands in (a capture point, a base: where vehicles spawn), and its
+---point closest to p_Position up to p_Range (horizontal metres) away. The zone of p_Objective first. nil if none.
+---@param p_Position Vec3
+---@param p_Range number
+---@param p_Objective string|nil
+---@return NavZone|nil the vehicle-view of the zone
+---@return integer|nil
+function NavZones:VehicleZoneAt(p_Position, p_Range, p_Objective)
+	if self._VehicleMesh == nil then
+		return nil, nil
+	end
+	local s_Point = self:Closest(self._VehicleMesh, p_Position, nil, p_Range)
+	if s_Point == nil then
+		return nil, nil
+	end
+	local s_Found = nil
+	-- Else the zone closest to it whose network the point is on (a vehicle spawn at the edge of a capture point, the
+	-- point not in its area: MP_018 A).
+	local s_Near = nil
+	local s_NearDistance = math.huge
+	local s_Part = self._VehicleMesh.Part[s_Point]
+	for _, l_Zone in pairs(self._Zones) do
+		if l_Zone.Vehicle ~= nil and l_Zone.Vehicle.InsideSet[s_Point] then
+			if l_Zone.Name == p_Objective then
+				return l_Zone.Vehicle, s_Point
+			end
+			s_Found = s_Found or l_Zone.Vehicle
+		elseif l_Zone.Vehicle ~= nil and #l_Zone.Vehicle.Inside > 0
+			and self._VehicleMesh.Part[l_Zone.Vehicle.Inside[1]] == s_Part then
+			local s_Distance = l_Zone.Center:Distance(p_Position)
+			if s_Distance < s_NearDistance then
+				s_Near = l_Zone.Vehicle
+				s_NearDistance = s_Distance
+			end
+		end
+	end
+	s_Found = s_Found or s_Near
+	if s_Found == nil then
+		return nil, nil
+	end
+	return s_Found, s_Point
+end
+
 ---@return table<string, NavZone>
 function NavZones:GetZones()
 	return self._Zones

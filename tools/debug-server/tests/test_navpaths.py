@@ -182,7 +182,11 @@ class TrimTest(unittest.TestCase):
         result = navpaths.Result(data)
         networks = {"attach": [[1, 1, 0, 1.0, [-1, 0, 0], []], [1, 2, 0, 1.0, [1, 0, 0], []]]}
         # Every end without a link: the mesh attaches the ones it has no junction for.
-        self.assertEqual([entry[1] for entry in navpaths.loose_ends(data)], [1, len(walk.nodes)])
+        loose = navpaths.loose_ends(data)
+        self.assertEqual([entry[1] for entry in loose], [1, len(walk.nodes)])
+        # With the waypoints after each end up to navzones.LOOSE_RANGE along the path, from the end inwards.
+        self.assertEqual([entry[0] for entry in loose[1][3]][:2], [len(walk.nodes) - 1, len(walk.nodes) - 2])
+        self.assertTrue(all(entry[2] <= navpaths.LOOSE_RANGE for entry in loose[0][3] + loose[1][3]))
         self.assertEqual(navpaths.cut_loose(result, networks), 1)
         self.assertEqual(len(result.data.paths[1].nodes), 2)
         self.assertIn("Nav", result.data.paths[1].first.data)

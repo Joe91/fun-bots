@@ -41,6 +41,8 @@ function BotSpawner:RegisterVars()
 	self._KickPlayers = {}
 	---@type Bot[]
 	self._BotsWithoutPath = {}
+	-- Per team: times bots were let through to a vehicle at a spawn no way leads on from (_SeatLeft).
+	self._SeatClaims = {}
 	self._ResourceDataContainer = {}
 end
 
@@ -184,7 +186,22 @@ function BotSpawner:OnEngineUpdate(p_DeltaTime, p_SimulationDeltaTime)
 					local s_SpawnTransform = l_Bot.m_Player.soldier.worldTransform:Clone()
 					s_Entered = s_SpecialSpawn == "SpawnInMobileVehicle" and l_Bot:_EnterPassengerSeat(s_SpecialSpawnEntity)
 						or l_Bot:_EnterVehicleEntity(s_SpecialSpawnEntity, false)
+					-- Not into the first vehicle of the base (a jet bots may not fly, the seat taken meanwhile): the others.
+					if s_Entered ~= 0 and s_SpecialSpawn == "SpawnInVehicle" and l_Bot.m_Player.soldier ~= nil then
+						local s_Others = g_GameDirector:GetSpawnableVehicle(l_Bot.m_Player.teamId)
+						for l_Other = 1, #s_Others do
+							if s_Others[l_Other] ~= s_SpecialSpawnEntity and l_Bot:_EnterVehicleEntity(s_Others[l_Other], false) == 0 then
+								s_SpecialSpawnEntity = s_Others[l_Other]
+								s_Entered = 0
+								break
+							end
+						end
+					end
 					if s_Entered ~= 0 and l_Bot.m_Player.soldier ~= nil then
+						if m_DebugBridge.m_Enabled then
+							m_DebugBridge:Event('spawn_vehicle_failed', { bot = l_Bot.m_Id, code = s_Entered, kind = s_SpecialSpawn,
+								pos = DebugBridge.Vec(l_Bot.m_Player.soldier.worldTransform.trans) })
+						end
 						-- Didn't get in (the seat taken in the same frame): on foot where the game spawned it, like any other
 						-- spawn below, not dead (a ticket) and not on foot with a vehicle-path (MP_017: into the water
 						-- towards a boat path).
@@ -222,7 +239,7 @@ function BotSpawner:OnEngineUpdate(p_DeltaTime, p_SimulationDeltaTime)
 						l_Bot.m_Player.soldier:SetTransform(s_Transform)
 						s_Here = s_Forward:Clone()
 					end
-					local s_Stranded = g_GameDirector:IsStranded(s_Here, l_Bot.m_Player.teamId) and s_Here or nil
+					local s_Stranded = g_GameDirector:LeadsNowhere(s_Here, l_Bot.m_Player.teamId) and s_Here or nil
 					-- Respawned because it got nowhere (GameDirector:_CheckObjectiveProgress) and spawned close to that spot
 					-- again (a rush base behind a border that stays closed): on a mate away from there as well.
 					local s_Away = l_Bot._RespawnAway
@@ -986,6 +1003,8 @@ function BotSpawner:_SelectLoadout(p_Bot)
 	local s_BotKit = p_Bot.m_Kit
 
 	p_Bot:ResetSpawnVars()
+	-- Killed in a vehicle: on foot now (else it attacked as that vehicle, GetAttackPriority).
+	p_Bot.m_ActiveVehicle = nil
 	local s_Team = "US"
 
 	if p_Bot.m_Player.teamId % 2 == 0 then
@@ -1130,6 +1149,53 @@ function BotSpawner:_AirSuperioritySpawn(p_Bot)
 	end
 end
 
+-- Seconds a bot let through to a vehicle counts as on its way into it (_SeatLeft).
+local SEAT_CLAIM_TIME = 5.0
+
+---Whether the bot gets into a vehicle when it spawns (_GetSpecialSpawnEnity): more vehicles of the base than bots that
+---spawned a moment ago and aren't placed yet (_BotsWithoutPath) - at the start of the round all bots saw the same free
+---vehicle, a few got in, the others stood in the hangar of the carrier.
+---@param p_Bot Bot
+---@return boolean
+function BotSpawner:_SeatLeft(p_Bot)
+	local s_TeamId = p_Bot.m_Player.teamId
+	local s_Type, s_Entity = self:_GetSpecialSpawnEnity(p_Bot, s_TeamId)
+	if s_Entity == nil then
+		return false
+	end
+	-- Bots let through a moment ago (their soldier may not be there yet when the next one asks).
+	local s_Now = SharedUtils:GetTime()
+	local s_Claims = self._SeatClaims[s_TeamId] or {}
+	for l_Index = #s_Claims, 1, -1 do
+		if s_Now - s_Claims[l_Index] > SEAT_CLAIM_TIME then
+			table.remove(s_Claims, l_Index)
+		end
+	end
+	self._SeatClaims[s_TeamId] = s_Claims
+	local s_Pending = #s_Claims
+	for l_Index = 1, #self._BotsWithoutPath do
+		local l_Bot = self._BotsWithoutPath[l_Index]
+		-- Spawned, not placed yet (the bots waiting here are in the list as well, without a soldier).
+		if l_Bot ~= p_Bot and l_Bot.m_Player ~= nil and l_Bot.m_Player.teamId == s_TeamId and l_Bot.m_Player.soldier ~= nil then
+			s_Pending = s_Pending + 1
+		end
+	end
+	local s_Left = s_Pending == 0
+	if s_Type == "SpawnInVehicle" then
+		-- One bot each: the first one in takes the vehicle off the list (GameDirector:OnVehicleEnter).
+		s_Left = #g_GameDirector:GetSpawnableVehicle(s_TeamId) > s_Pending
+	end
+	if s_Left then
+		s_Claims[#s_Claims + 1] = s_Now
+	end
+	return s_Left
+end
+
+-- Seconds a bot waits at most instead of spawning where no way leads on (_ConquestSpawn): spawned there it only gets
+-- stuck, waiting it still spawns into a vehicle there or at a mate as soon as there is one. The limit only in case the
+-- spawn was taken for a dead end by mistake.
+local DEAD_END_WAIT_TIME = 180.0
+
 ---@param p_Bot Bot
 --TODO: handle spawn-logic here as well (unify it?)
 ---@param p_Near Vec3|nil the capture point (or HQ) closest to this position (the vehicle the bot spawns for)
@@ -1152,6 +1218,20 @@ function BotSpawner:_ConquestSpawn(p_Bot, p_Near)
 		m_Logger:Error("No valid spawn point found")
 		return
 	end
+
+	-- The only spawn leads nowhere (no capture point of the team, the HQ on a carrier): only into a vehicle there or at a
+	-- mate away from it. Else the bot waits (it tries again after its respawn delay): spawned it got stuck and was killed
+	-- 50 s later, one after the other (XP1_004 conquest assault). Not for ever: DEAD_END_WAIT_TIME at most.
+	if s_Reason == 'front' then
+		local s_Position = SpawnEntity(s_BestSpawnPoint).transform.trans
+		local s_Now = SharedUtils:GetTime()
+		if not self:_SeatLeft(p_Bot) and (p_Bot._DeadEndSince == nil or s_Now - p_Bot._DeadEndSince < DEAD_END_WAIT_TIME)
+			and g_GameDirector:IsDeadEndSpawn(s_Position, p_Bot.m_Player.teamId, p_Bot.m_Player.squadId) then
+			p_Bot._DeadEndSince = p_Bot._DeadEndSince or s_Now
+			return
+		end
+	end
+	p_Bot._DeadEndSince = nil
 
 	if m_DebugBridge.m_Enabled then
 		local s_Data = CharacterSpawnReferenceObjectData(s_BestSpawnPoint.data)
@@ -1654,6 +1734,8 @@ function BotSpawner:_SpawnBot(p_Bot, p_Transform, p_SetKit)
 
 	self:_SetBotWeapons(p_Bot, s_BotKit, s_Team, s_WriteNewKit)
 	p_Bot:ResetSpawnVars()
+	-- Killed in a vehicle: on foot now (else it attacked as that vehicle, GetAttackPriority).
+	p_Bot.m_ActiveVehicle = nil
 
 	-- Create kit and appearance.
 	if p_Bot.m_Player.selectedKit == nil then
@@ -1743,9 +1825,20 @@ function BotSpawner:_GetSpecialSpawnEnity(p_Bot, p_TeamId)
 	-- Into a transport helicopter or an AMTRAC of the team that is under way (the passengers get out at the objective,
 	-- Bot:_CheckShouldExitVehicleIfPassenger). The game spawns on a level with a mesh only lead here.
 	if Config.UseVehicles and Config.SpawnInMobileRespawnVehicles then
+		-- One with a free passenger seat that isn't stuck (MP_017: the AMTRAC wedged at the ship, 23 bots spawned for it in a
+		-- round, didn't get in and stood on the ship).
 		local s_Vehicles = g_GameDirector:GetMobileRespawnVehicles(p_TeamId)
-		if #s_Vehicles > 0 and m_Utilities:CheckProbability(self:_MobileSpawnProbability(p_TeamId)) then
-			return "SpawnInMobileVehicle", s_Vehicles[1]
+		local s_Usable = nil
+		for l_Index = 1, #s_Vehicles do
+			local l_Vehicle = s_Vehicles[l_Index]
+			if not g_GameDirector:IsStuckVehicle(l_Vehicle)
+				and #m_Vehicles:FreePassengerSeats(l_Vehicle, m_Vehicles:GetVehicleByEntity(l_Vehicle)) > 0 then
+				s_Usable = l_Vehicle
+				break
+			end
+		end
+		if s_Usable ~= nil and m_Utilities:CheckProbability(self:_MobileSpawnProbability(p_TeamId)) then
+			return "SpawnInMobileVehicle", s_Usable
 		end
 	end
 

@@ -121,6 +121,16 @@ end
 -- (MP_013: from the spawn over a path to another spawn and back, round and round).
 local SPREAD_MAX = 15.0
 
+---Whether a node with p_Rest left to the target is closer to it than the node the bot decides at (p_Here left): the
+---spread only chooses among those. A neighbour whose way leads back over this node seemed shorter with the spread on
+---the long stretch ahead (MP_013 CQL: from path 124 over a link onto path 129 and back, 75 s until the bot was killed).
+---@param p_Rest number
+---@param p_Here number|nil
+---@return boolean
+local function _Downhill(p_Rest, p_Here)
+	return p_Here == nil or p_Rest < p_Here
+end
+
 ---The metres of a stretch as the bot weighs them: with its spread, at most SPREAD_MAX more.
 ---@param p_Cost number
 ---@param p_Seed number|nil
@@ -934,6 +944,7 @@ function NavRoutes:Step(p_Waypoint, p_Objective, p_Seed, p_Came, p_NoEnter, p_Av
 	local s_PathCost = math.huge
 	local s_Back = nil
 	local s_BackCost = math.huge
+	local s_Here = s_Field.Node[s_Node]
 	for l_Index = 1, #s_Entry.Edges do
 		local l_Edge = s_Entry.Edges[l_Index]
 		local s_Rest = s_Field.Node[l_Edge.To]
@@ -947,7 +958,7 @@ function NavRoutes:Step(p_Waypoint, p_Objective, p_Seed, p_Came, p_NoEnter, p_Av
 				end
 			else
 				s_PathCost = math.min(s_PathCost, s_Plain)
-				if s_Cost < s_BestCost then
+				if s_Cost < s_BestCost and _Downhill(s_Rest, s_Here) then
 					s_Best = l_Edge
 					s_BestCost = s_Cost
 				end
@@ -994,10 +1005,11 @@ function NavRoutes:_NodeDirection(p_Node, p_Field, p_Seed, p_Came)
 	local s_Entry = self._Nodes[p_Node]
 	local s_Best = nil
 	local s_BestCost = math.huge
+	local s_Here = p_Field.Node[p_Node]
 	for l_Index = 1, #s_Entry.Edges do
 		local l_Edge = s_Entry.Edges[l_Index]
 		local s_Rest = p_Field.Node[l_Edge.To]
-		if l_Edge.Path ~= nil and l_Edge.To ~= p_Came and s_Rest ~= nil then
+		if l_Edge.Path ~= nil and l_Edge.To ~= p_Came and s_Rest ~= nil and _Downhill(s_Rest, s_Here) then
 			local s_Cost = _Spreaded(l_Edge.Cost, p_Seed, l_Edge.Path) + (l_Edge.Penalty or 0.0) + s_Rest
 			if s_Cost < s_BestCost then
 				s_Best = l_Edge.Direction
