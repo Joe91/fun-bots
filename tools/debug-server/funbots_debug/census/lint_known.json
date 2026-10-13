@@ -11,7 +11,7 @@
   },
   {
    "finding": "MP_017_RushLarge0: spawn-cut-off: no objective can be walked to from spawn us 2",
-   "todo": "Record water paths for the ship: no water path is closer than 615 m to the boat spawns, the RHIBs (-198..-204, 66, 562..577) wedge at (-212, 67, 553). With a RHIB from (-201, 66, 569) ashore, as MP_017_ConquestSmall0 path 31 (to (-148, 69, 222)) and path 41 (to (-331, 68, 323)) do (same level: copying those two paths works as well), as vehicle path 'water'. Also an amphibious path ('land' + 'water') with the AAV-7 from (-216, 66, 574) to road path 7 at (-178, 70, 224). Then `census navpaths MP_017_RushLarge0 --write --db ../../mod.db`."
+   "todo": "Nothing required (recorded 2026-10-13): the ship; RHIBs on water paths 71, 72, 73 from the boat spawns ashore (73 and 72 land at foot path 74, linked), the AAV on amphibious path 75 to road path 14."
   },
   {
    "finding": "MP_018_RushLarge0: spawn-cut-off: no objective can be walked to from spawn us 6",
