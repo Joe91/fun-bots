@@ -680,4 +680,7 @@ objective can be walked to from every other one (error), every spawn area reache
 and ships of some levels don't, by design), no foot path is a dead end (warning), no junction the checks of the game
 found blocked is left in the mesh (warning `blocked-junction`, census/<map>.checks.json), and with `--info` the
 junctions next to each other whose mesh points the mesh doesn't connect. The findings accepted as they are stand in
-`funbots_debug/census/lint_known.json` (`--write-known` writes the current ones); only others fail.
+`funbots_debug/census/lint_known.json` (`--write-known` writes the current ones, keeping what was written for them);
+only others fail. Each known finding says what to trace to fix it (`todo`, empty if nothing: a ship whose boats are the
+way), and `tasks` lists more things to trace that no check finds (a water path a ship lacks, an obstacle on a path).
+`census lint --todo` prints them by level, and the known findings that are gone (fixed: remove them from the file).

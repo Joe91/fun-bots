@@ -11,7 +11,9 @@ links and the junctions between both. No game needed: `python -m funbots_debug.c
 - blocked-junction (warning): a junction the rays of the game found blocked (census/<map>.checks.json, check.py) is
   still in the mesh: the cut found no free one for that end of the path (a wall all around), it needs work by hand.
 
-The findings in lint_known.json (next to this file) are known and accepted: only others fail the check.
+The findings in lint_known.json (next to this file) are known and accepted: only others fail the check. Each one says
+what to trace to fix it ("todo", empty if nothing: a ship whose boats are the way), and "tasks" lists more things to
+trace that no check finds (a water path a ship lacks, an obstacle on a path). `census lint --todo` lists them by level.
 """
 
 from __future__ import annotations
@@ -167,10 +169,57 @@ def lint_map(name: str, networks: dict, data: MapData, checks: dict | None = Non
     return findings
 
 
-def load_known(file: Path = KNOWN) -> set[str]:
-    if not file.is_file():
-        return set()
-    return set(json.loads(file.read_text(encoding="utf-8")).get("known") or [])
+def _load(file: Path) -> dict:
+    return json.loads(file.read_text(encoding="utf-8")) if file.is_file() else {}
+
+
+def load_known(file: Path = KNOWN) -> dict[str, str]:
+    """The known findings (their keys) with what to trace for each ("" if nothing). Plain keys are accepted too."""
+    known = {}
+    for entry in _load(file).get("known") or []:
+        if isinstance(entry, str):
+            known[entry] = ""
+        else:
+            known[entry["finding"]] = entry.get("todo") or ""
+    return known
+
+
+def load_tasks(file: Path = KNOWN) -> list[dict]:
+    """More things to trace no check finds: {"map", "todo"}."""
+    return list(_load(file).get("tasks") or [])
+
+
+def write_known(keys: list[str], file: Path = KNOWN) -> None:
+    """The findings as known, keeping the todos and tasks written so far."""
+    data = _load(file)
+    todos = load_known(file)
+    data["known"] = [{"finding": key, "todo": todos.get(key, "")} for key in sorted(keys)]
+    data.setdefault("tasks", [])
+    file.write_text(json.dumps(data, indent=1, ensure_ascii=False) + "\n", encoding="utf-8")
+
+
+def todo_list(findings: list[Finding], known: dict[str, str], tasks: list[dict]) -> list[str]:
+    """What to trace, by level: the todos of the known findings still found, the tasks, and the known findings that are
+    gone (fixed: to be removed from the file)."""
+    found = {finding.key for finding in findings}
+    by_map: dict[str, list[str]] = defaultdict(list)
+    # The same todo for several findings (stubs of one stairway) once, with their count.
+    counts: dict[tuple[str, str, str], int] = defaultdict(int)
+    for key, todo in sorted(known.items()):
+        name, _, rest = key.partition(": ")
+        if key not in found:
+            by_map[name].append(f"  [fixed] {rest} (remove it from lint_known.json)")
+        elif todo:
+            counts[(name, rest.split(":")[0], todo)] += 1
+    for (name, kind, todo), count in counts.items():
+        by_map[name].append(f"  [{kind}{f' x{count}' if count > 1 else ''}] {todo}")
+    for task in tasks:
+        by_map[task["map"]].append(f"  [task] {task['todo']}")
+    lines = []
+    for name in sorted(by_map):
+        lines.append(name)
+        lines.extend(by_map[name])
+    return lines
 
 
 def lint(names: list[str], navzones_dir: Path, mapfiles: Path, census_dir: Path | None = None) -> list[Finding]:

@@ -2220,14 +2220,16 @@ end
 ---@param p_TeamId TeamId|integer
 ---@param p_SquadId SquadId|integer
 ---@param p_Stranded Vec3|nil
-function GameDirector:GetSpawnableBeaconOrMate(p_TeamId, p_SquadId, p_Stranded)
+---@param p_Avoid Vec3|nil where the bot got nowhere before it was respawned (_RespawnAway): no mate close to there
+function GameDirector:GetSpawnableBeaconOrMate(p_TeamId, p_SquadId, p_Stranded, p_Avoid)
 	local s_SquadMates = PlayerManager:GetPlayersBySquad(p_TeamId, p_SquadId)
 	local s_Probability = p_Stranded ~= nil and 100 or Registry.BOT_SPAWN.PROBABILITY_SQUADMATE_SPAWN
 
 	---@param p_Position Vec3
 	---@return boolean
 	local function _Away(p_Position)
-		return p_Stranded == nil or p_Position:Distance(p_Stranded) > STRANDED_MATE_DISTANCE
+		return (p_Stranded == nil or p_Position:Distance(p_Stranded) > STRANDED_MATE_DISTANCE)
+			and (p_Avoid == nil or p_Position:Distance(p_Avoid) > STRANDED_MATE_DISTANCE)
 	end
 
 	for l_Index = 1, #s_SquadMates do
@@ -2241,7 +2243,10 @@ function GameDirector:GetSpawnableBeaconOrMate(p_TeamId, p_SquadId, p_Stranded)
 			end
 		end
 
-		if l_Player.soldier and l_Player.isAllowedToSpawnOn and _Away(l_Player.soldier.worldTransform.trans) then
+		-- Not at a bot that is stuck (the next one gets stuck with it).
+		local l_Bot = l_Player.soldier and g_BotManager:GetBotByName(l_Player.name)
+		if l_Player.soldier and l_Player.isAllowedToSpawnOn and _Away(l_Player.soldier.worldTransform.trans)
+			and not (l_Bot and l_Bot:IsStuck()) then
 			-- check for vehicle and spawn either on player or vehicle
 			if m_Utilities:CheckProbability(s_Probability) then
 				m_Logger:Write("spawn at squad-mate " .. l_Player.name)

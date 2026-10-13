@@ -553,8 +553,15 @@ def command_navpaths(options) -> int:
 def command_lint(options) -> int:
     """Offline checks of the routes (lint.py). Exit code 1 if there are errors or warnings that aren't known."""
     names = options.maps or lint.all_maps(options.navzones, options.mapfiles)
-    known = set() if options.all_findings else lint.load_known()
+    known = {} if options.all_findings else lint.load_known()
     findings = lint.lint(names, options.navzones, options.mapfiles, CENSUS)
+    if options.todo:
+        names_set = set(names)
+        tasks = [task for task in lint.load_tasks() if task["map"] in names_set]
+        for line in lint.todo_list(findings, {k: v for k, v in lint.load_known().items()
+                                               if k.split(": ")[0] in names_set}, tasks):
+            print(line)
+        return 0
     shown = [f for f in findings if f.key not in known and (options.info or f.severity != "info")]
     for finding in shown:
         print(f"[{finding.severity}] {finding.key}")
@@ -564,8 +571,8 @@ def command_lint(options) -> int:
           f"{len(findings) - len([f for f in findings if f.key not in known])} known; {len(new)} new errors/warnings")
     if options.write_known:
         keys = sorted(f.key for f in findings if f.severity != "info")
-        lint.KNOWN.write_text(json.dumps({"known": keys}, indent=1) + "\n", encoding="utf-8")
-        print(f"written {len(keys)} known findings to {lint.KNOWN}")
+        lint.write_known(keys)
+        print(f"written {len(keys)} known findings to {lint.KNOWN} (their todos kept)")
         return 0
     return 1 if new else 0
 
@@ -704,6 +711,8 @@ def main() -> int:
     lints.add_argument("--navzones", type=Path, default=NAVZONES, help="the networks (navzones/<map>.json)")
     lints.add_argument("--info", action="store_true", help="also list the infos (split junctions)")
     lints.add_argument("--all-findings", action="store_true", help="also list the known findings (lint_known.json)")
+    lints.add_argument("--todo", action="store_true",
+                       help="what to trace, by level: the todos of the known findings and the tasks (lint_known.json)")
     lints.add_argument("--write-known", action="store_true",
                        help="accept all errors and warnings as they are now (writes lint_known.json)")
     lints.set_defaults(handler=command_lint)

@@ -54,7 +54,16 @@ local ZONE_DETOUR_MIN = 40.0     -- ...or this many metres. None of them: the bo
 local ZONE_NO_GOAL_MAX = 3       -- ...this many times in a row, then it takes the closest of them anyway (XP4_Quake:
                                  -- attackers on a floor above the MCOM, all goals a long way round, waited there).
 local ZONE_ARM_DISTANCE = 1.3    -- Horizontal metres to the MCOM the soldier walks up to before it interacts.
-local ZONE_ARM_APPROACH = 4.0    -- Seconds at most for that, then it interacts from where it is.
+local ZONE_ARM_APPROACH = 4.0    -- Seconds at most for that, then it interacts from where it is...
+local ZONE_ARM_APPROACH_MAX = 15.0 -- ...unless it still gets closer (not ZONE_ARM_STALL seconds without), up to this.
+local ZONE_ARM_STALL = 1.5
+local ZONE_ARM_STALL_BREACH = 1.0 -- Seconds without getting closer: shoot at what is in the way, if it can be shot away,
+local ZONE_ARM_DETOUR_RANGE = 8.0 -- else, this close (horizontal metres) to the spot, walk round it (_ZoneArmDetour):
+local ZONE_ARM_DETOUR_OFFSETS = { 1.0, 1.5, 2.0, 2.5, 3.0, 3.5 } -- metres to the side of the way tried,
+local ZONE_ARM_DETOURS = 2       -- times at most for one action.
+local ZONE_ARM_VIA_REACH = 0.6   -- Horizontal metres to the spot beside that count as reached.
+local ZONE_ARM_RAY_HEIGHTS = { 0.4, 0.9, 1.4 } -- Rays above the feet for those ways, a hit this close to the MCOM is the
+local ZONE_ARM_RAY_TOLERANCE = 0.8 -- MCOM itself.
 local ZONE_ARM_TIME = 8.0        -- Seconds of interacting (arming takes about 6): then the bot gives up for now.
 local ZONE_ARM_PITCH = -0.6      -- The MCOM stands on the ground (no interaction of the engine known).
 local ZONE_ARM_EYE = 1.0         -- Metres above the feet the crouching soldier looks from...
@@ -122,6 +131,11 @@ local ZONE_ENTER_HEIGHT = 3.0    -- the bot goes onto the mesh from.
 ---@field Avoid integer|nil a dead end the bot got stuck at: not the start of the next route
 ---@field Action table|nil at the goal: get into the vehicle, arm or disarm the MCOM (GameDirector:GetActionTarget)
 ---@field ActionTime number seconds of the action so far
+---@field ActionBest number closest the soldier got to the spot to arm from (horizontal metres)
+---@field ActionStall number seconds without getting closer to it
+---@field ActionVia Vec3|nil a spot beside the way the soldier walks to first, round something (_ZoneArmDetour)
+---@field ActionDetours integer such ways tried for this action
+---@field ArmTime number seconds of interacting with the MCOM
 ---@field Entered number time the bot came onto the mesh (or onto another part of it, _ZoneRejoin)
 ---@field FallTime number time of the last fall off a way
 ---@field Trail integer[]|nil the last points it reached (Bot:_ZoneTrail)
@@ -377,6 +391,11 @@ function Bot:_EnterZone(p_Zone, p_Point, p_Vehicle, p_Junction)
 		Reverses = 0,
 		Action = nil,
 		ActionTime = 0.0,
+		ActionBest = math.huge,
+		ActionStall = 0.0,
+		ActionVia = nil,
+		ActionDetours = 0,
+		ArmTime = 0.0,
 		-- Just entered: on the way from the junction to its point, which may be farther than ZONE_RESNAP.
 		Entered = SharedUtils:GetTime(),
 		-- The junction it came onto the mesh at (from a path).
@@ -437,6 +456,11 @@ function Bot:_ZoneDecide(p_Rejoined)
 	s_State.SubObjective = nil
 	s_State.Action = nil
 	s_State.ActionTime = 0.0
+	s_State.ActionBest = math.huge
+	s_State.ActionStall = 0.0
+	s_State.ActionVia = nil
+	s_State.ActionDetours = 0
+	s_State.ArmTime = 0.0
 	if self._Objective == '' then
 		s_State.Zone = m_NavZones:ZoneAtPoint(s_State.Point, nil) or s_State.Zone
 		self:_ZoneNewGoal()
@@ -1141,6 +1165,7 @@ function Bot:UpdateZoneMovement(p_DeltaTime)
 		s_State.Step = s_State.Step + 1
 		s_State.Progress = math.huge
 		s_State.Stuck = 0.0
+		self._CrowdTime = 0.0
 		self._LastWayDistance = 1000.0
 		return true
 	end
@@ -1176,6 +1201,12 @@ function Bot:UpdateZoneMovement(p_DeltaTime)
 		s_State.Stuck = 0.0
 	else
 		s_State.Stuck = s_State.Stuck + p_DeltaTime
+	end
+
+	-- Another bot in the way (Bot:_CrowdHandling): step aside. The way is free, it doesn't count as stuck.
+	if self:_CrowdHandling(s_Position, s_Target.Position, p_DeltaTime, s_State.Stuck > ZONE_SIDESTEP_TIME) then
+		s_State.Stuck = math.max(0.0, s_State.Stuck - p_DeltaTime)
+		return true
 	end
 
 	-- A wall in the way that can be shot away (Bot:_TryBreach): that first, then on.
@@ -1352,9 +1383,49 @@ function Bot:_ZoneAction(p_DeltaTime)
 	local s_DeltaZ = s_Goal.z - s_Position.z
 	local s_Reach = s_Action.Stand ~= nil and 0.5 or ZONE_ARM_DISTANCE
 	local s_GoalDistance = math.sqrt(s_DeltaX * s_DeltaX + s_DeltaZ * s_DeltaZ)
-	if s_GoalDistance > s_Reach and s_State.ActionTime < ZONE_ARM_APPROACH then
+	-- On the way round something first (_ZoneArmDetour): to that spot, then on to the goal.
+	local s_Via = s_State.ActionVia
+	local s_WalkTo = s_Via or s_Goal
+	local s_WalkDistance = s_GoalDistance
+	if s_Via ~= nil then
+		s_WalkDistance = math.sqrt((s_Via.x - s_Position.x) ^ 2 + (s_Via.z - s_Position.z) ^ 2)
+		if s_WalkDistance < ZONE_ARM_VIA_REACH then
+			s_State.ActionVia = nil
+			s_State.ActionBest = math.huge
+			s_WalkTo = s_Goal
+			s_WalkDistance = s_GoalDistance
+		end
+	end
+	if s_WalkDistance < s_State.ActionBest - ZONE_MIN_PROGRESS then
+		s_State.ActionBest = s_WalkDistance
+		s_State.ActionStall = 0.0
+	else
+		s_State.ActionStall = s_State.ActionStall + p_DeltaTime
+	end
+	-- Longer while it gets closer: the spot can be farther than usual from the mesh (in a room the mesh doesn't reach).
+	if s_GoalDistance > s_Reach and s_State.ArmTime == 0.0 and (s_State.ActionTime < ZONE_ARM_APPROACH
+			or (s_State.ActionStall < ZONE_ARM_STALL and s_State.ActionTime < ZONE_ARM_APPROACH_MAX)) then
+		if s_State.ActionStall > ZONE_ARM_STALL_BREACH and s_Via == nil then
+			-- A door of glass, boards in the way (Subway MCOM 7: a ticket office): shoot it away (Bot:_TryBreach).
+			if self:_TryBreach(s_Goal, s_Action) then
+				s_State.ActionStall = 0.0
+				s_State.ActionBest = math.huge
+				return true
+			end
+			-- Something in the way that can't be shot away, the spot close (the selling desk in that ticket office): round
+			-- it, to a spot beside the bot with a free way to the goal.
+			if s_GoalDistance < ZONE_ARM_DETOUR_RANGE and s_State.ActionDetours < ZONE_ARM_DETOURS then
+				s_State.ActionDetours = s_State.ActionDetours + 1
+				s_State.ActionVia = self:_ZoneArmDetour(s_Position, s_Goal)
+				if s_State.ActionVia ~= nil then
+					s_State.ActionStall = 0.0
+					s_State.ActionBest = math.huge
+					return true
+				end
+			end
+		end
 		self.m_ActiveSpeedValue = BotMoveSpeeds.Slow
-		self._TargetPoint = { Position = s_Goal }
+		self._TargetPoint = { Position = s_WalkTo }
 		self._NextTargetPoint = nil
 		-- The spot is up a step (XP3_Desert MCOM 2 stands on a platform 0.5 m high the mesh doesn't cover, with an edge
 		-- the bot doesn't get over from the mesh; armed from below it doesn't work): jump up, and if that doesn't
@@ -1363,7 +1434,8 @@ function Bot:_ZoneAction(p_DeltaTime)
 			self:_SetInput(EntryInputActionEnum.EIAJump, 1)
 			self:_SetInput(EntryInputActionEnum.EIAQuicktimeJumpClimb, 1)
 		end
-		if s_State.ActionTime > ZONE_ARM_PLACE_TIME and s_GoalDistance < ZONE_ARM_PLACE_RANGE then
+		if (s_State.ActionTime > ZONE_ARM_PLACE_TIME or s_State.ActionStall > ZONE_ARM_STALL_BREACH)
+			and s_GoalDistance < ZONE_ARM_PLACE_RANGE then
 			local s_Transform = s_Soldier.worldTransform:Clone()
 			s_Transform.trans = Vec3(s_Goal.x, s_Goal.y + 0.05, s_Goal.z)
 			s_Soldier:SetTransform(s_Transform)
@@ -1396,7 +1468,8 @@ function Bot:_ZoneAction(p_DeltaTime)
 		s_Soldier:SetPose(CharacterPoseType.CharacterPoseType_Crouch, true, true)
 	end
 	self:_SetInput(EntryInputActionEnum.EIAInteract, 1)
-	if s_State.ActionTime > ZONE_ARM_APPROACH + ZONE_ARM_TIME then
+	s_State.ArmTime = s_State.ArmTime + p_DeltaTime
+	if s_State.ArmTime > ZONE_ARM_TIME then
 		-- Doesn't work from here: the MCOM itself again, the GameDirector may send the bot anew.
 		m_Logger:Write(self.m_Player.name .. ' could not interact with ' .. tostring(self._Objective))
 		local s_Parent = g_GameDirector:_GetObjectiveFromSubObj(self._Objective)
@@ -1406,6 +1479,59 @@ function Bot:_ZoneAction(p_DeltaTime)
 		self:SetObjective(s_Parent or '', self._ObjectiveMode)
 	end
 	return true
+end
+
+---Whether nothing is between both positions at ZONE_ARM_RAY_HEIGHTS above them (anything within p_Tolerance of p_To
+---doesn't count: the MCOM itself).
+---@param p_From Vec3
+---@param p_To Vec3
+---@param p_Tolerance number
+---@return boolean
+local function _ArmWayFree(p_From, p_To, p_Tolerance)
+	local s_Flags = RayCastFlags.DontCheckCharacter | RayCastFlags.DontCheckRagdoll | RayCastFlags.DontCheckWater
+	---@cast s_Flags RayCastFlags
+	---@type MaterialFlags|integer
+	local s_NoMaterialFlags = 0
+	for _, l_Height in ipairs(ZONE_ARM_RAY_HEIGHTS) do
+		local s_To = Vec3(p_To.x, p_To.y + l_Height, p_To.z)
+		local s_Hit = RaycastManager:CollisionRaycast(Vec3(p_From.x, p_From.y + l_Height, p_From.z), s_To, 1,
+			s_NoMaterialFlags, s_Flags)[1]
+		if s_Hit ~= nil and s_Hit.position:Distance(s_To) > p_Tolerance then
+			return false
+		end
+	end
+	return true
+end
+
+---A spot beside the soldier (across the way to the goal, closest first) it can walk to straight and from which the way
+---to the goal is free: round a desk, a counter in front of the MCOM.
+---@param p_Position Vec3
+---@param p_Goal Vec3
+---@return Vec3|nil
+function Bot:_ZoneArmDetour(p_Position, p_Goal)
+	local s_DeltaX = p_Goal.x - p_Position.x
+	local s_DeltaZ = p_Goal.z - p_Position.z
+	local s_Length = math.sqrt(s_DeltaX * s_DeltaX + s_DeltaZ * s_DeltaZ)
+	if s_Length < 0.1 then
+		return nil
+	end
+	local s_SideX = -s_DeltaZ / s_Length
+	local s_SideZ = s_DeltaX / s_Length
+	for _, l_Offset in ipairs(ZONE_ARM_DETOUR_OFFSETS) do
+		for _, l_Side in ipairs({ 1, -1 }) do
+			local s_Via = Vec3(p_Position.x + s_SideX * l_Offset * l_Side, p_Position.y,
+				p_Position.z + s_SideZ * l_Offset * l_Side)
+			if _ArmWayFree(p_Position, s_Via, 0.0) and _ArmWayFree(s_Via, p_Goal, ZONE_ARM_RAY_TOLERANCE) then
+				m_Logger:Write(self.m_Player.name .. ' walks round to arm ' .. tostring(self._Objective))
+				if m_DebugBridge.m_Enabled then
+					m_DebugBridge:Event('arm_detour', { bot = self.m_Id, pos = DebugBridge.Vec(p_Position),
+						via = DebugBridge.Vec(s_Via), goal = DebugBridge.Vec(p_Goal) })
+				end
+				return s_Via
+			end
+		end
+	end
+	return nil
 end
 
 ---Puts the bot onto the point (the next one of its route, behind an obstacle it doesn't get past) if it is close, and
@@ -1477,8 +1603,13 @@ function Bot:_ZoneGiveUpConnection(p_Position, p_Target)
 			break
 		end
 	end
+	-- Others in the way all the time (Bot:_CrowdHandling, given up after CROWD_MAX_TIME): the way itself may be free,
+	-- only this bot takes another one.
+	local s_Crowded = not s_State.Vehicle and self:_CrowdStep(p_Position, p_Target) ~= nil
 	local s_From = nil
-	if s_Next ~= nil and s_Next ~= s_State.Point then
+	if s_Crowded then
+		m_Logger:Write(self.m_Player.name .. ' crowded in the zone of ' .. s_State.Zone.Name)
+	elseif s_Next ~= nil and s_Next ~= s_State.Point then
 		s_From = s_State.Point
 	elseif s_Next ~= nil then
 		-- It didn't get back to its own point (pushed off, came onto the mesh beside it): the way there from the point it
@@ -1531,7 +1662,8 @@ function Bot:_ZoneGiveUpConnection(p_Position, p_Target)
 	-- Off a path onto the mesh, and the point of that junction can't be reached from its waypoint (a pillar, a corner
 	-- the census measured too open): all bots come onto the mesh elsewhere from now on.
 	local s_Entry = s_State.EntryJunction
-	if s_Entry ~= nil and s_Next == s_State.Point and s_State.Point == s_Entry.Point and not s_State.Vehicle then
+	if s_Entry ~= nil and s_Next == s_State.Point and s_State.Point == s_Entry.Point and not s_State.Vehicle
+		and not s_Crowded then
 		m_NavRoutes:BlockEntry(s_Entry)
 		s_State.EntryJunction = nil
 	end
@@ -1544,6 +1676,7 @@ function Bot:_ZoneGiveUpConnection(p_Position, p_Target)
 			pos = DebugBridge.Vec(p_Position),
 			target = DebugBridge.Vec(p_Target),
 			bot = self.m_Id,
+			crowded = s_Crowded or nil,
 		})
 	end
 

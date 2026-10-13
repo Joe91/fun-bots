@@ -1,27 +1,123 @@
 {
+ "about": "Known findings of `census lint` (accepted, only others fail) with what to trace for each (todo, empty: nothing to do), and more things to trace no check finds (tasks). `python -m funbots_debug.census lint --todo` lists them by level. After recording: `census navpaths <map> --write --db ../../mod.db`, then lint.",
  "known": [
-  "MP_007_RushLarge0: spawn-cut-off: no objective can be walked to from spawn ru 8",
-  "MP_017_ConquestSmall0: spawn-cut-off: no objective can be walked to from base us",
-  "MP_017_RushLarge0: spawn-cut-off: no objective can be walked to from spawn us 2",
-  "MP_018_RushLarge0: spawn-cut-off: no objective can be walked to from spawn us 6",
-  "XP1_002_ConquestLarge0: spawn-cut-off: no objective can be walked to from base us",
-  "XP1_002_ConquestSmall0: spawn-cut-off: no objective can be walked to from base us",
-  "XP1_003_ConquestAssaultSmall1: dead-end: foot path 11 (11 waypoints) has 1 ways out",
-  "XP1_003_ConquestAssaultSmall1: dead-end: foot path 13 (12 waypoints) has 1 ways out",
-  "XP1_003_ConquestAssaultSmall1: dead-end: foot path 15 (11 waypoints) has 1 ways out",
-  "XP1_003_ConquestAssaultSmall1: dead-end: foot path 16 (11 waypoints) has 1 ways out",
-  "XP1_003_ConquestAssaultSmall1: dead-end: foot path 17 (11 waypoints) has 1 ways out",
-  "XP1_003_ConquestAssaultSmall1: dead-end: foot path 18 (10 waypoints) has 1 ways out",
-  "XP1_003_ConquestAssaultSmall1: dead-end: foot path 2 (7 waypoints) has 1 ways out",
-  "XP1_003_ConquestAssaultSmall1: dead-end: foot path 3 (12 waypoints) has 1 ways out",
-  "XP1_003_ConquestAssaultSmall1: dead-end: foot path 6 (10 waypoints) has 1 ways out",
-  "XP1_003_RushLarge0: spawn-cut-off: no objective can be walked to from spawn 2",
-  "XP1_003_RushLarge0: spawn-cut-off: no objective can be walked to from spawn ru 4",
-  "XP1_003_RushLarge0: spawn-cut-off: no objective can be walked to from spawn us 1",
-  "XP1_004_ConquestAssaultLarge0: spawn-cut-off: no objective can be walked to from base us",
-  "XP1_004_ConquestAssaultSmall1: spawn-cut-off: no objective can be walked to from base us",
-  "XP1_004_RushLarge0: spawn-cut-off: no objective can be walked to from spawn us 1",
-  "XP3_Desert_RushLarge0: spawn-cut-off: no objective can be walked to from spawn us 1",
-  "XP5_002_RushLarge0: spawn-cut-off: no objective can be walked to from spawn us 1"
+  {
+   "finding": "MP_007_RushLarge0: spawn-cut-off: no objective can be walked to from spawn ru 8",
+   "todo": "Later Rush stage: `census record` stops at the stage-1 combat area. In the stage where spawn ru 8 is active, record a foot path by hand from the spawn (267, 178, -179) south to the mesh / end of path 25 at (270, 173, -258), about 80 m."
+  },
+  {
+   "finding": "MP_017_ConquestSmall0: spawn-cut-off: no objective can be walked to from base us",
+   "todo": "Nothing required: the ship; RHIBs (water paths 41, 31) and the AAV/LAV (path 40 down the ramp, then land path 32) take the bots ashore. Optional: link the last waypoint of path 40 (-218.8, 67.6, 574.7) to the first of path 32 (-212.1, 65.4, 579.8)."
+  },
+  {
+   "finding": "MP_017_RushLarge0: spawn-cut-off: no objective can be walked to from spawn us 2",
+   "todo": "Record water paths for the ship: no water path is closer than 615 m to the boat spawns, the RHIBs (-198..-204, 66, 562..577) wedge at (-212, 67, 553). With a RHIB from (-201, 66, 569) ashore, as MP_017_ConquestSmall0 path 31 (to (-148, 69, 222)) and path 41 (to (-331, 68, 323)) do (same level: copying those two paths works as well), as vehicle path 'water'. Also an amphibious path ('land' + 'water') with the AAV-7 from (-216, 66, 574) to road path 7 at (-178, 70, 224). Then `census navpaths MP_017_RushLarge0 --write --db ../../mod.db`."
+  },
+  {
+   "finding": "MP_018_RushLarge0: spawn-cut-off: no objective can be walked to from spawn us 6",
+   "todo": "Nothing required: the ship; RHIBs (water path 1) and LAV/AAV (amphibious paths 3, 5) take the bots ashore."
+  },
+  {
+   "finding": "XP1_002_ConquestLarge0: spawn-cut-off: no objective can be walked to from base us",
+   "todo": "Nothing required: the carrier; RHIBs (water paths 10, 70), jets and helicopters."
+  },
+  {
+   "finding": "XP1_002_ConquestSmall0: spawn-cut-off: no objective can be walked to from base us",
+   "todo": "Nothing required: the carrier; RHIBs (water paths 23, 24), jets and helicopters."
+  },
+  {
+   "finding": "XP1_003_ConquestAssaultSmall1: dead-end: foot path 11 (11 waypoints) has 1 ways out",
+   "todo": "Leave as is (not recut on 2026-10-13): the 9 stubs climb the stairs from (96, 98, -124) to the roof at (100.6, 105.1, -127). A recut gives their lower ends junctions to the mesh 5-12 m away and up to 3 m lower, the bots got stuck there (98 zone_stuck in 600 s). To use the roof: record one foot path from the foot of the stairs (94, 98, -125.5) up to (100.6, 105.1, -127) and on to the mesh, then recut; else delete the stubs (paths 2, 3, 6, 11, 13, 15, 16, 17, 18) in the node editor."
+  },
+  {
+   "finding": "XP1_003_ConquestAssaultSmall1: dead-end: foot path 13 (12 waypoints) has 1 ways out",
+   "todo": "Leave as is (not recut on 2026-10-13): the 9 stubs climb the stairs from (96, 98, -124) to the roof at (100.6, 105.1, -127). A recut gives their lower ends junctions to the mesh 5-12 m away and up to 3 m lower, the bots got stuck there (98 zone_stuck in 600 s). To use the roof: record one foot path from the foot of the stairs (94, 98, -125.5) up to (100.6, 105.1, -127) and on to the mesh, then recut; else delete the stubs (paths 2, 3, 6, 11, 13, 15, 16, 17, 18) in the node editor."
+  },
+  {
+   "finding": "XP1_003_ConquestAssaultSmall1: dead-end: foot path 15 (11 waypoints) has 1 ways out",
+   "todo": "Leave as is (not recut on 2026-10-13): the 9 stubs climb the stairs from (96, 98, -124) to the roof at (100.6, 105.1, -127). A recut gives their lower ends junctions to the mesh 5-12 m away and up to 3 m lower, the bots got stuck there (98 zone_stuck in 600 s). To use the roof: record one foot path from the foot of the stairs (94, 98, -125.5) up to (100.6, 105.1, -127) and on to the mesh, then recut; else delete the stubs (paths 2, 3, 6, 11, 13, 15, 16, 17, 18) in the node editor."
+  },
+  {
+   "finding": "XP1_003_ConquestAssaultSmall1: dead-end: foot path 16 (11 waypoints) has 1 ways out",
+   "todo": "Leave as is (not recut on 2026-10-13): the 9 stubs climb the stairs from (96, 98, -124) to the roof at (100.6, 105.1, -127). A recut gives their lower ends junctions to the mesh 5-12 m away and up to 3 m lower, the bots got stuck there (98 zone_stuck in 600 s). To use the roof: record one foot path from the foot of the stairs (94, 98, -125.5) up to (100.6, 105.1, -127) and on to the mesh, then recut; else delete the stubs (paths 2, 3, 6, 11, 13, 15, 16, 17, 18) in the node editor."
+  },
+  {
+   "finding": "XP1_003_ConquestAssaultSmall1: dead-end: foot path 17 (11 waypoints) has 1 ways out",
+   "todo": "Leave as is (not recut on 2026-10-13): the 9 stubs climb the stairs from (96, 98, -124) to the roof at (100.6, 105.1, -127). A recut gives their lower ends junctions to the mesh 5-12 m away and up to 3 m lower, the bots got stuck there (98 zone_stuck in 600 s). To use the roof: record one foot path from the foot of the stairs (94, 98, -125.5) up to (100.6, 105.1, -127) and on to the mesh, then recut; else delete the stubs (paths 2, 3, 6, 11, 13, 15, 16, 17, 18) in the node editor."
+  },
+  {
+   "finding": "XP1_003_ConquestAssaultSmall1: dead-end: foot path 18 (10 waypoints) has 1 ways out",
+   "todo": "Leave as is (not recut on 2026-10-13): the 9 stubs climb the stairs from (96, 98, -124) to the roof at (100.6, 105.1, -127). A recut gives their lower ends junctions to the mesh 5-12 m away and up to 3 m lower, the bots got stuck there (98 zone_stuck in 600 s). To use the roof: record one foot path from the foot of the stairs (94, 98, -125.5) up to (100.6, 105.1, -127) and on to the mesh, then recut; else delete the stubs (paths 2, 3, 6, 11, 13, 15, 16, 17, 18) in the node editor."
+  },
+  {
+   "finding": "XP1_003_ConquestAssaultSmall1: dead-end: foot path 2 (7 waypoints) has 1 ways out",
+   "todo": "Leave as is (not recut on 2026-10-13): the 9 stubs climb the stairs from (96, 98, -124) to the roof at (100.6, 105.1, -127). A recut gives their lower ends junctions to the mesh 5-12 m away and up to 3 m lower, the bots got stuck there (98 zone_stuck in 600 s). To use the roof: record one foot path from the foot of the stairs (94, 98, -125.5) up to (100.6, 105.1, -127) and on to the mesh, then recut; else delete the stubs (paths 2, 3, 6, 11, 13, 15, 16, 17, 18) in the node editor."
+  },
+  {
+   "finding": "XP1_003_ConquestAssaultSmall1: dead-end: foot path 3 (12 waypoints) has 1 ways out",
+   "todo": "Leave as is (not recut on 2026-10-13): the 9 stubs climb the stairs from (96, 98, -124) to the roof at (100.6, 105.1, -127). A recut gives their lower ends junctions to the mesh 5-12 m away and up to 3 m lower, the bots got stuck there (98 zone_stuck in 600 s). To use the roof: record one foot path from the foot of the stairs (94, 98, -125.5) up to (100.6, 105.1, -127) and on to the mesh, then recut; else delete the stubs (paths 2, 3, 6, 11, 13, 15, 16, 17, 18) in the node editor."
+  },
+  {
+   "finding": "XP1_003_ConquestAssaultSmall1: dead-end: foot path 6 (10 waypoints) has 1 ways out",
+   "todo": "Leave as is (not recut on 2026-10-13): the 9 stubs climb the stairs from (96, 98, -124) to the roof at (100.6, 105.1, -127). A recut gives their lower ends junctions to the mesh 5-12 m away and up to 3 m lower, the bots got stuck there (98 zone_stuck in 600 s). To use the roof: record one foot path from the foot of the stairs (94, 98, -125.5) up to (100.6, 105.1, -127) and on to the mesh, then recut; else delete the stubs (paths 2, 3, 6, 11, 13, 15, 16, 17, 18) in the node editor."
+  },
+  {
+   "finding": "XP1_003_RushLarge0: spawn-cut-off: no objective can be walked to from spawn 2",
+   "todo": "Later Rush stage (outside the stage-1 combat area). In that stage, record a foot path from the spawn (300, 79, -259) up the slope (12 m higher) to the mesh at (290, 91, -168.5), about 90 m."
+  },
+  {
+   "finding": "XP1_003_RushLarge0: spawn-cut-off: no objective can be walked to from spawn ru 4",
+   "todo": "Later Rush stage. In that stage, record a foot path from the spawn (234, 79, -265) up to path 23 waypoint 8 at (228, 93, -169) or the mesh at (258.5, 91, -169), about 100 m."
+  },
+  {
+   "finding": "XP1_003_RushLarge0: spawn-cut-off: no objective can be walked to from spawn us 1",
+   "todo": "Later Rush stage. In that stage, record a foot path from the spawn (343, 79, -259.5) up to path 14 waypoint 12 at (331, 91, -148), about 110 m."
+  },
+  {
+   "finding": "XP1_004_ConquestAssaultLarge0: spawn-cut-off: no objective can be walked to from base us",
+   "todo": "Nothing required: the carrier; RHIBs (water paths 31, 32), jets and helicopters."
+  },
+  {
+   "finding": "XP1_004_ConquestAssaultSmall1: spawn-cut-off: no objective can be walked to from base us",
+   "todo": "Nothing required: the carrier; RHIBs (water paths 31, 32), jets and helicopters."
+  },
+  {
+   "finding": "XP1_004_RushLarge0: spawn-cut-off: no objective can be walked to from spawn us 1",
+   "todo": "Nothing required: the helicopter spawn (AH-1Z at (-619, 117, -392)), 420 m from the mesh."
+  },
+  {
+   "finding": "XP3_Desert_RushLarge0: spawn-cut-off: no objective can be walked to from spawn us 1",
+   "todo": "Nothing required: the boats (water paths 9, 5) and the AAV (amphibious path 4) take the bots ashore; there is no way on foot."
+  },
+  {
+   "finding": "XP5_002_RushLarge0: spawn-cut-off: no objective can be walked to from spawn us 1",
+   "todo": "Road gap: road path 1 runs over the spawn area without a junction (waypoint 27 at (-2123, 71, -392) is 29 m from the spawn (-2136, 71, -366)). Record a short foot path from the edge of the spawn area to waypoint 27 and link its end to it (node editor); a path lying completely on the spawn area is trimmed away."
+  }
+ ],
+ "tasks": [
+  {
+   "map": "MP_Subway_RushLarge0",
+   "todo": "Optional (works at runtime since 2026-10-13): MCOM 7 stands in a ticket office (-219.9, 64.6, -531.5) behind two glass doors (south (-216.8, 65, -537.9), east (-210.4, 65, -529)) and a selling desk; the census measured it with the doors closed, the mesh doesn't reach in. The bots go to the mesh point at the east door, shoot the glass and walk round the desk (Bot:_ZoneAction, _ZoneArmDetour); armed and destroyed in the test. Leaving the office they are put out (zone_force). A helper foot path from the mesh at (-209.5, 65, -528.5) through the east door, along z -529.3 to (-216.7, 64.6, -529.6) and to the MCOM would make it smoother."
+  },
+  {
+   "map": "XP4_Parl_RushLarge0",
+   "todo": "Path 5 waypoints 40-41 (-458, 70.7, 254): debris across the path (z 254, x -461..-451, gaps < 0.5 m), up to 6 bots stuck there at once. Re-record that stretch (waypoints 38-43) through the free gap at x -467, or move the waypoints there in the node editor."
+  },
+  {
+   "map": "MP_013_ConquestLarge0",
+   "todo": "Vehicle path 92 (land) waypoints 182-187 around (-25.8, 218.9, 716.3): Vodniks of base ru get stuck there (vehicle_stuck). Re-record that stretch with a Vodnik."
+  },
+  {
+   "map": "MP_018_ConquestLarge0",
+   "todo": "Vehicle path 21 (land) waypoint 124 at (-466, 89.6, 200.8): the buggy gets stuck there (4x vehicle_stuck). Re-record that stretch with a buggy."
+  },
+  {
+   "map": "XP3_Valley_RushLarge0",
+   "todo": "Not recut on 2026-10-13: with the checks of the game from 2026-10-10 a recut cuts spawn ru 12 (-81, 126, -368) off (its mesh keeps 79 points, the way off at (-110, 123, -379) - (-115, 123, -371.5) - (-118.5, 122.3, -377) is blocked by the rays). Walk it in the game: if it is free, `census check XP3_Valley_RushLarge0` again; if not, record a foot path from spawn ru 12 to the mesh west of it. Then `census navpaths XP3_Valley_RushLarge0 --write --db ../../mod.db` and lint."
+  },
+  {
+   "map": "MP_012_ConquestLarge0",
+   "todo": "Not recut on 2026-10-13: with the checks of the game from 2026-10-10 the mesh point (-174.5, 126.6, 44.5) at the ends of paths 43 and 81 goes, and the cut attaches them to (-169, 130.6, 43.5), 3 m higher and 10-12 m away (the kind of junction bots got stuck at on XP1_003). Look at it in the game: record a foot path from (-172.7, 127.7, 47.3) to the mesh where it really leads (or `census check` again), then `census navpaths MP_012_ConquestLarge0 --write --db ../../mod.db` and lint."
+  }
  ]
 }

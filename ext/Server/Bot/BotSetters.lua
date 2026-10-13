@@ -267,6 +267,9 @@ function Bot:ResetSpawnVars()
 	self._NoProgressTimer = 0.0
 	self._ProgressNode = nil
 	self._ObstacleStartDistance = 0.0
+	self._CrowdTime = 0.0
+	self._CrowdStepTimer = 0.0
+	self._CrowdStrafe = nil
 	self._LastWayDistance = 1000.0
 	self._LastActionId = -1
 	self._ShootPlayer = nil

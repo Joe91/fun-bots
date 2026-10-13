@@ -227,6 +227,20 @@ function Bot:IsSeated()
 	return (s_Controllable ~= nil and not s_Controllable:Is('ServerSoldierEntity')) or self.m_Player.attachedControllable ~= nil
 end
 
+---Doesn't get along right now on foot: an obstacle on its path, another bot in the way, a way on the mesh it gets
+---nowhere on. No squad mate to spawn at (GameDirector:GetSpawnableBeaconOrMate): the crowd only grows (MP_017).
+---@return boolean
+function Bot:IsStuck()
+	if self._CrowdStepTimer > 0.0 then
+		return true
+	end
+	-- On the mesh the timers of the paths are left from before.
+	if self.m_Zone ~= nil then
+		return self.m_Zone.Stuck > 2.0
+	end
+	return self._ObstacleSequenceTimer ~= 0 or self._StuckTimer > 2.0
+end
+
 ---@return integer
 ---@return boolean
 function Bot:_GetWayIndex(p_Increment)

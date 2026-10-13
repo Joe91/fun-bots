@@ -410,12 +410,17 @@ def loose_ends(data: MapData) -> list[list]:
     """The ends of the foot paths without a link: the mesh attaches them where it has no junction for them
     (navzones.build(..., loose=...), up to navzones.LOOSE_RANGE away). [path, point, position, inward]: inward are the
     waypoints after the end up to LOOSE_RANGE along the path, [point, position, metres along], where the junction may
-    be instead (the end in a house, the mesh in the alley behind its window)."""
+    be instead (the end in a house, the mesh in the alley behind its window). Not past the middle of the path, nor
+    within PLACE_DISTANCE of its other end: on a short one the junction went next to the one of the other end, and one
+    of them was dropped as the twin of the other (thin_junctions): the path was a dead end (XP3_Valley rush path 56,
+    11 m)."""
     result = []
     for index, path in data.paths.items():
         if path.vehicles:
             continue
         nodes = path.nodes
+        length = sum(math.dist(a.pos, b.pos) for a, b in zip(nodes, nodes[1:]))
+        limit = min(LOOSE_RANGE, length / 2.0, length - PLACE_DISTANCE)
         for order in ({nodes[0].point: nodes, nodes[-1].point: list(reversed(nodes))}).values():
             if order[0].links:
                 continue
@@ -423,7 +428,7 @@ def loose_ends(data: MapData) -> list[list]:
             along = 0.0
             for before, node in zip(order, order[1:-1]):
                 along += math.dist(before.pos, node.pos)
-                if along > LOOSE_RANGE or node.links:
+                if along > limit or node.links:
                     break
                 inward.append([node.point, list(node.pos), round(along, 2)])
             result.append([index, order[0].point, list(order[0].pos), inward])

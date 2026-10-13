@@ -187,6 +187,12 @@ class TrimTest(unittest.TestCase):
         # With the waypoints after each end up to navzones.LOOSE_RANGE along the path, from the end inwards.
         self.assertEqual([entry[0] for entry in loose[1][3]][:2], [len(walk.nodes) - 1, len(walk.nodes) - 2])
         self.assertTrue(all(entry[2] <= navpaths.LOOSE_RANGE for entry in loose[0][3] + loose[1][3]))
+        # Inward only up to the middle of the path and not within PLACE_DISTANCE of its other end (else next to the
+        # junction of the other end): up to 2 m on a path of 12 m, up to 15 m (LOOSE_RANGE) on one of 30 m.
+        for length, most in ((12, 2.0), (30, 15.0)):
+            ends = navpaths.loose_ends(MapData({2: _path(2, _line(0, length, 10))}))
+            self.assertTrue(all(entry[2] <= most for end in ends for entry in end[3]))
+        self.assertTrue(navpaths.loose_ends(MapData({2: _path(2, _line(0, 30, 10))}))[0][3])
         self.assertEqual(navpaths.cut_loose(result, networks), 1)
         self.assertEqual(len(result.data.paths[1].nodes), 2)
         self.assertIn("Nav", result.data.paths[1].first.data)

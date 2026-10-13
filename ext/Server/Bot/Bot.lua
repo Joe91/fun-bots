@@ -199,6 +199,12 @@ function Bot:__init(p_Player)
 	self._ProgressBestDistance = 0.0
 	self._ProgressLastTime = 0.0
 	self._ObstacleStartDistance = 0.0
+	-- Another bot in the way (see Bot:_CrowdHandling): seconds of stepping aside for this target, the step running.
+	self._CrowdTime = 0.0
+	self._CrowdStepTimer = 0.0
+	self._CrowdStrafe = nil
+	self._CrowdStepStrafe = 0.0
+	self._CrowdCheckTime = 0.0
 
 	-- Advanced movement.
 	---@type BotAttackModes

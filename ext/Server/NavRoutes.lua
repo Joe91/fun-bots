@@ -505,20 +505,28 @@ local SIGHT_TOLERANCE = 0.8
 ---@param p_From Vec3
 ---@param p_To Vec3
 ---@return boolean
+---@return boolean true if blocked, but only by something bullets go through at both heights (a glass door, boards:
+---Bot:_TryBreach shoots it away)
 local function _InSight(p_From, p_To)
 	local s_Flags = RayCastFlags.DontCheckCharacter | RayCastFlags.DontCheckRagdoll | RayCastFlags.DontCheckWater
 	---@cast s_Flags RayCastFlags
 	---@type MaterialFlags|integer
 	local s_NoMaterialFlags = 0
+	local s_Free = true
+	local s_Breachable = true
 	for _, l_Height in ipairs(SIGHT_HEIGHTS) do
 		local s_To = Vec3(p_To.x, p_To.y + l_Height, p_To.z)
 		local s_Hit = RaycastManager:CollisionRaycast(Vec3(p_From.x, p_From.y + l_Height, p_From.z), s_To, 1,
 			s_NoMaterialFlags, s_Flags)[1]
 		if s_Hit ~= nil and s_Hit.position:Distance(s_To) > SIGHT_TOLERANCE then
-			return false
+			s_Free = false
+			if s_Hit.material == nil or not s_Hit.material:Is('MaterialContainerPair')
+				or (MaterialContainerPair(s_Hit.material).flagsAndIndex & MaterialFlags.MfPenetrable) == 0 then
+				s_Breachable = false
+			end
 		end
 	end
-	return true
+	return s_Free, not s_Free and s_Breachable
 end
 
 ---An objective that is gone for good (a vehicle destroyed or unspawned, "vehicle <id>"): its targets and fields go as
@@ -586,6 +594,7 @@ function NavRoutes:_ActionTarget(p_Objective, p_Action)
 	end
 	table.sort(s_Candidates, function(p_A, p_B) return p_A[2] < p_B[2] end)
 	local s_Points = {}
+	local s_Breachable = {}
 	for l_Index = 1, #s_Candidates do
 		if #s_Points >= ACTION_POINTS then
 			break
@@ -593,13 +602,21 @@ function NavRoutes:_ActionTarget(p_Objective, p_Action)
 		local l_Point = s_Candidates[l_Index][1]
 		-- An MCOM: only points the soldier walks up to it from straight (the closest one can be behind the wall of the
 		-- room it stands in, the bot ran against the wall).
-		if p_Action.Kind ~= 'mcom' or _InSight(s_Mesh.Points[l_Point].Position, s_From) then
+		local s_InSight, s_Breach = true, false
+		if p_Action.Kind == 'mcom' then
+			s_InSight, s_Breach = _InSight(s_Mesh.Points[l_Point].Position, s_From)
+		end
+		if s_InSight then
 			s_Points[#s_Points + 1] = l_Point
+		elseif s_Breach and #s_Breachable < ACTION_POINTS then
+			s_Breachable[#s_Breachable + 1] = l_Point
 		end
 	end
-	-- None in sight (an MCOM behind wooden walls, Subway MCOM 7): the closest ones anyway. A wrong way is better than none,
-	-- the bots shoot what can be shot away on the way (Bot:_TryBreach).
-	if #s_Points == 0 then
+	-- None in sight (an MCOM in a room behind glass doors, Subway MCOM 7): the ones with only something to shoot away in
+	-- between (Bot:_ZoneAction breaches it), else the closest ones anyway. A wrong way is better than none.
+	if #s_Points == 0 and #s_Breachable > 0 then
+		s_Points = s_Breachable
+	elseif #s_Points == 0 then
 		for l_Index = 1, math.min(ACTION_POINTS, #s_Candidates) do
 			s_Points[#s_Points + 1] = s_Candidates[l_Index][1]
 		end

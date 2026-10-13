@@ -37,6 +37,29 @@ local OBSTACLE_TELEPORT_RANGE = 10.0   -- Meters to the target at most for a tel
 local ZONE_SKIP_RANGE = 2.0            -- On the mesh a target counts as passed only this close (UpdateTargetMovement).
 local MESH_RETRY_TIME = 2.0            -- Seconds between tries onto the mesh in sight, off it and off a navigation path.
 local MESH_LEFT_TIME = 15.0            -- Not within this many seconds after the bot left the mesh (on purpose).
+-- Obstacles on a path some bots didn't get past (the waypoint skipped or teleported to after all tries): the next bots
+-- stuck there skip the tries (jump, strafe, knife) and go on like that at once (XP4_Parl path 5: debris across it).
+local OBSTACLE_SPOT_KNOWN = 2          -- Bots that needed all tries at a waypoint: it is a known obstacle.
+local OBSTACLE_TOWARDS_SPEED = 2.5     -- Horizontal m/s towards the target: the bot got along again. Pushed around by
+                                       -- others (any direction) it isn't.
+
+-- Waypoints with an obstacle on the way to them in this level, by all bots: waypoint -> bots that needed all tries
+-- (weak: the waypoints of a level loaded again are new tables).
+local s_ObstacleSpots = setmetatable({}, { __mode = 'k' })
+local s_ObstacleLevel = nil
+
+-- Crowding: another bot right ahead of one that doesn't get along (a door, narrow stairs, the same waypoint) is no
+-- obstacle of the level. The bot doesn't jump, knife or shoot at it, and doesn't give the way up for all bots
+-- (BotZoneMovement): it steps aside. Coming towards each other both step to their right and pass; one behind the
+-- other, the one behind steps away from the one ahead (which has nobody ahead and walks on).
+local CROWD_RANGE = 1.8        -- Horizontal metres to the other bot...
+local CROWD_HEIGHT = 1.5       -- ...up or down...
+local CROWD_AHEAD = 0.3        -- ...and ahead: the cosine of the angle off the way to the target (about 70 degrees).
+local CROWD_HEAD_ON = -0.5     -- The cosine between both ways below this: they come towards each other.
+local CROWD_CHECK_TIME = 0.25  -- Seconds a check holds.
+local CROWD_STEP_TIME = 0.8    -- Seconds of one step aside.
+local CROWD_MAX_TIME = 4.0     -- Seconds of stepping aside for one target at most: then the usual obstacle-handling
+                               -- (the other one is stuck at a wall itself).
 
 -- Breaching: a wall of the level right in front of a bot that doesn't get along, on the way to its target (boards over
 -- the doors of a train, a wooden fence: the paths were recorded after they were shot away, the census saw them whole).
@@ -438,7 +461,91 @@ function Bot:_ResetObstacleSequence()
 	self._LowSpeedTimer = 0.0
 	self._NoProgressTimer = 0.0
 	self._ProgressNode = nil
+	self._CrowdTime = 0.0
+	self._CrowdStepTimer = 0.0
 	self:_ResetActionFlag(BotActionFlags.MeleeActive)
+end
+
+---Another bot close ahead on the way from p_Position towards p_Target (CROWD_*), checked every CROWD_CHECK_TIME.
+---@param p_Position Vec3
+---@param p_Target Vec3
+---@return number|nil the strafe to step aside (1 right, -1 left), nil if nobody is in the way
+function Bot:_CrowdStep(p_Position, p_Target)
+	local s_Now = SharedUtils:GetTime()
+	if s_Now - self._CrowdCheckTime < CROWD_CHECK_TIME then
+		return self._CrowdStrafe
+	end
+	self._CrowdCheckTime = s_Now
+	self._CrowdStrafe = nil
+	local s_DirX = p_Target.x - p_Position.x
+	local s_DirZ = p_Target.z - p_Position.z
+	local s_Length = math.sqrt(s_DirX * s_DirX + s_DirZ * s_DirZ)
+	if s_Length < 0.1 then
+		return nil
+	end
+	s_DirX = s_DirX / s_Length
+	s_DirZ = s_DirZ / s_Length
+	local s_Closest = CROWD_RANGE
+	local s_Bots = g_BotManager:GetBots()
+	for l_Index = 1, #s_Bots do
+		local l_Bot = s_Bots[l_Index]
+		local l_Soldier = l_Bot ~= self and l_Bot.m_Player.soldier or nil
+		if l_Soldier ~= nil and not g_BotStates:IsInVehicleState(l_Bot.m_ActiveState) then
+			local l_Position = l_Soldier.worldTransform.trans
+			local l_DeltaX = l_Position.x - p_Position.x
+			local l_DeltaZ = l_Position.z - p_Position.z
+			local l_Distance = math.sqrt(l_DeltaX * l_DeltaX + l_DeltaZ * l_DeltaZ)
+			if l_Distance < s_Closest and math.abs(l_Position.y - p_Position.y) < CROWD_HEIGHT
+				and l_DeltaX * s_DirX + l_DeltaZ * s_DirZ > CROWD_AHEAD * l_Distance then
+				s_Closest = l_Distance
+				local l_Target = l_Bot._TargetPoint
+				local l_HeadOn = false
+				if type(l_Target) == 'table' and l_Target.Position ~= nil then
+					local l_WayX = l_Target.Position.x - l_Position.x
+					local l_WayZ = l_Target.Position.z - l_Position.z
+					local l_WayLength = math.sqrt(l_WayX * l_WayX + l_WayZ * l_WayZ)
+					l_HeadOn = l_WayLength > 0.1 and (l_WayX * s_DirX + l_WayZ * s_DirZ) / l_WayLength < CROWD_HEAD_ON
+				end
+				if l_HeadOn then
+					-- Both to their right: they pass each other.
+					self._CrowdStrafe = 1.0
+				else
+					-- Right of the way (looking along it) is (-z, x), as in BotZoneMovement: away from the other one.
+					self._CrowdStrafe = (l_DeltaX * -s_DirZ + l_DeltaZ * s_DirX) > 0 and -1.0 or 1.0
+				end
+			end
+		end
+	end
+	return self._CrowdStrafe
+end
+
+---Steps aside while another bot is in the way (CROWD_*): one step of CROWD_STEP_TIME once p_Stuck, CROWD_MAX_TIME per
+---target at most.
+---@param p_Position Vec3
+---@param p_Target Vec3
+---@param p_DeltaTime number
+---@param p_Stuck boolean the bot doesn't get along
+---@return boolean true while it steps aside (nothing else to do)
+function Bot:_CrowdHandling(p_Position, p_Target, p_DeltaTime, p_Stuck)
+	if self._CrowdStepTimer <= 0.0 then
+		if not p_Stuck or self._CrowdTime >= CROWD_MAX_TIME then
+			return false
+		end
+		local s_Strafe = self:_CrowdStep(p_Position, p_Target)
+		if s_Strafe == nil then
+			return false
+		end
+		self._CrowdStepTimer = CROWD_STEP_TIME
+		self._CrowdStepStrafe = s_Strafe
+		self._LowSpeedTimer = 0.0
+		self._NoProgressTimer = 0.0
+	end
+	self._CrowdStepTimer = self._CrowdStepTimer - p_DeltaTime
+	self._CrowdTime = self._CrowdTime + p_DeltaTime
+	self.m_ActiveSpeedValue = BotMoveSpeeds.Slow
+	self.m_YawOffset = 0.0
+	self:_SetInput(EntryInputActionEnum.EIAStrafe, self._CrowdStepStrafe)
+	return true
 end
 
 ---The path the bot walks is the way to its objective (a vehicle, a beacon): it stays on it.
@@ -609,11 +716,26 @@ function Bot:_ObstacleHandling(p_Velocity, p_DistanceSquared, p_HeightDistance, 
 	end
 
 	-- handling on standstill
-	if self._ObstacleSequenceTimer ~= 0 or self:_DetectObstacle(p_Velocity, p_DeltaTime, p_PlayerPos) then
-		-- A wall that can be shot away: that first.
-		if self._ObstacleSequenceTimer == 0
-			and self:_TryBreach(self._TargetPoint.Position, self._TargetPoint.Original or self._TargetPoint) then
-			return { s_SetTargetReached, s_IncrementNodes }
+	local s_Obstacle = self._ObstacleSequenceTimer ~= 0 or self:_DetectObstacle(p_Velocity, p_DeltaTime, p_PlayerPos)
+	-- Another bot in the way: step aside, that's all.
+	if self._ObstacleSequenceTimer == 0
+		and self:_CrowdHandling(p_PlayerPos, self._TargetPoint.Position, p_DeltaTime, s_Obstacle) then
+		return { s_SetTargetReached, s_IncrementNodes }
+	end
+	if s_Obstacle then
+		local s_Node = self._TargetPoint.Original or self._TargetPoint
+		---@cast s_Node -nil
+		local s_Known = false
+		if self._ObstacleSequenceTimer == 0 then
+			-- A wall that can be shot away: that first.
+			if self:_TryBreach(self._TargetPoint.Position, s_Node) then
+				return { s_SetTargetReached, s_IncrementNodes }
+			end
+			-- Others needed all tries here already: on at once.
+			if s_ObstacleLevel == SharedUtils:GetLevelName() and (s_ObstacleSpots[s_Node] or 0) >= OBSTACLE_SPOT_KNOWN then
+				self._ObstacleRetryCounter = 2
+				s_Known = true
+			end
 		end
 		-- Try to get around obstacle.
 		self.m_ActiveSpeedValue = BotMoveSpeeds.Normal                  -- Always try to stand.
@@ -677,15 +799,33 @@ function Bot:_ObstacleHandling(p_Velocity, p_DistanceSquared, p_HeightDistance, 
 		self._ObstacleSequenceTimer = self._ObstacleSequenceTimer + p_DeltaTime
 		self._StuckTimer = self._StuckTimer + p_DeltaTime
 
-		if p_Velocity.magnitude > 3.5 and math.abs(p_Velocity.y) < 0.5 then -- more than full strafe
+		-- Running towards the target again (more than a full strafe): got along. Not when only pushed around by others: it
+		-- counted the waypoint as reached, and the bots in a crowd skipped through their paths without moving.
+		local s_ToTargetX = self._TargetPoint.Position.x - p_PlayerPos.x
+		local s_ToTargetZ = self._TargetPoint.Position.z - p_PlayerPos.z
+		local s_ToTarget = math.sqrt(s_ToTargetX * s_ToTargetX + s_ToTargetZ * s_ToTargetZ)
+		if s_ToTarget > 0.1 and math.abs(p_Velocity.y) < 0.5
+			and (p_Velocity.x * s_ToTargetX + p_Velocity.z * s_ToTargetZ) / s_ToTarget > OBSTACLE_TOWARDS_SPEED then
 			self:_ResetObstacleSequence()
 			self._StuckTimer = 0.0
 			self._ObstacleRetryCounter = 0
-			s_SetTargetReached = true
 			return { s_SetTargetReached, s_IncrementNodes }
 		end
 
 		if self._ObstacleRetryCounter >= 2 then -- Try next waypoint.
+			-- All tries failed (not too high up, then nothing was tried): a known obstacle for the next bots.
+			if not s_Known and self._ObstacleRetryCounter == 2 and s_Node.PathIndex ~= nil then
+				local s_Level = SharedUtils:GetLevelName()
+				if s_ObstacleLevel ~= s_Level then
+					s_ObstacleLevel = s_Level
+					s_ObstacleSpots = setmetatable({}, { __mode = 'k' })
+				end
+				s_ObstacleSpots[s_Node] = (s_ObstacleSpots[s_Node] or 0) + 1
+				if s_ObstacleSpots[s_Node] == OBSTACLE_SPOT_KNOWN and m_DebugBridge.m_Enabled then
+					m_DebugBridge:Event('obstacle_known', { bot = self.m_Id, path = s_Node.PathIndex, point = s_Node.PointIndex,
+						pos = DebugBridge.Vec(s_Node.Position) })
+				end
+			end
 			self._ObstacleRetryCounter = 0
 			-- Fresh start for the next target. The stuck-timer keeps running, it resets only on a reached waypoint.
 			self:_ResetObstacleSequence()

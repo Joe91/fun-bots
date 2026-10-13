@@ -71,6 +71,28 @@ class LintTest(unittest.TestCase):
         self.assertEqual(len(found), 1)
         self.assertIn("path 1 point 46", found[0].message)
 
+    def test_known_todos(self):
+        import json
+        import tempfile
+        with tempfile.TemporaryDirectory() as folder:
+            file = Path(folder) / "known.json"
+            file.write_text(json.dumps({"known": ["M: spawn-cut-off: from s1", {"finding": "M: dead-end: path 2",
+                                                                                "todo": "delete it"},
+                                                  {"finding": "M: dead-end: path 3", "todo": "delete it"}],
+                                        "tasks": [{"map": "N", "todo": "record a water path"}]}), encoding="utf-8")
+            known = lint.load_known(file)
+            self.assertEqual(known["M: spawn-cut-off: from s1"], "")
+            found = [lint.Finding("M", "dead-end", "warning", "path 2"), lint.Finding("M", "dead-end", "warning", "path 3")]
+            lines = lint.todo_list(found, known, lint.load_tasks(file))
+            self.assertIn("  [fixed] spawn-cut-off: from s1 (remove it from lint_known.json)", lines)
+            self.assertIn("  [dead-end x2] delete it", lines)
+            self.assertIn("  [task] record a water path", lines)
+            # Written anew: the todos stay, the tasks as well.
+            lint.write_known(["M: dead-end: path 2"], file)
+            data = json.loads(file.read_text(encoding="utf-8"))
+            self.assertEqual(data["known"], [{"finding": "M: dead-end: path 2", "todo": "delete it"}])
+            self.assertEqual(len(data["tasks"]), 1)
+
 
 if __name__ == "__main__":
     unittest.main()

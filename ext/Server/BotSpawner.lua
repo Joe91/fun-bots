@@ -247,7 +247,8 @@ function BotSpawner:OnEngineUpdate(p_DeltaTime, p_SimulationDeltaTime)
 					if s_Stranded == nil and s_Away ~= nil and s_Here:Distance(s_Away) < 100.0 then
 						s_Stranded = s_Away
 					end
-					s_PathIndex, s_IndexOnPath, s_InvertDirection, s_SpawnEntity, s_SpawnPosition = g_GameDirector:GetSpawnableBeaconOrMate(l_Bot.m_Player.teamId, l_Bot.m_Player.squadId, s_Stranded)
+					-- Not at a mate where it got nowhere either (spawned far from there: a mate stuck at that spot).
+					s_PathIndex, s_IndexOnPath, s_InvertDirection, s_SpawnEntity, s_SpawnPosition = g_GameDirector:GetSpawnableBeaconOrMate(l_Bot.m_Player.teamId, l_Bot.m_Player.squadId, s_Stranded, s_Away)
 				end
 				if s_PathIndex then
 					-- spawn at mate or beacon. Done here: the closest-path code below must not
