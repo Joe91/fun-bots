@@ -174,6 +174,18 @@ class TrimTest(unittest.TestCase):
         self.assertEqual([entries[index]["nav"] for index in (1, 2, 3)], [True, False, False])
 
 
+    def test_short_connector_kept(self):
+        # 4 m from the mesh of a spawn (junction at its first waypoint) to a road (link at its last): a way, not a stub.
+        road = _path(1, _line(0, 40, 10))
+        road.nodes[0].data["Vehicles"] = ["land"]
+        connector = _path(2, [(20, 6), (20, 8), (20, 10)])
+        connector.nodes[-1].set_links([(1, 11)])
+        data = MapData({1: road, 2: connector})
+        result = navpaths.Result(data)
+        networks = {"attach": [[2, 1, 0, 1.0, [20, 0, 6], []]]}
+        self.assertEqual(navpaths.prune_unattached(result, networks), 0)
+        self.assertIn(2, result.data.paths)
+
     def test_loose_end_cut_back(self):
         # Out of a and back in at x=-1 (two junctions next to each other), then on to x=50 into nothing.
         walk = _path(1, [(-1, 0), (1, 0)] + _line(4, 50, 30))

@@ -2,10 +2,6 @@
  "about": "Known findings of `census lint` (accepted, only others fail) with what to trace for each (todo, empty: nothing to do), and more things to trace no check finds (tasks). `python -m funbots_debug.census lint --todo` lists them by level. After recording: `census navpaths <map> --write --db ../../mod.db`, then lint.",
  "known": [
   {
-   "finding": "MP_007_RushLarge0: spawn-cut-off: no objective can be walked to from spawn ru 8",
-   "todo": "Later Rush stage: `census record` stops at the stage-1 combat area. In the stage where spawn ru 8 is active, record a foot path by hand from the spawn (267, 178, -179) south to the mesh / end of path 25 at (270, 173, -258), about 80 m."
-  },
-  {
    "finding": "MP_017_ConquestSmall0: spawn-cut-off: no objective can be walked to from base us",
    "todo": "Nothing required: the ship; RHIBs (water paths 41, 31) and the AAV/LAV (path 40 down the ramp, then land path 32) take the bots ashore. Optional: link the last waypoint of path 40 (-218.8, 67.6, 574.7) to the first of path 32 (-212.1, 65.4, 579.8)."
   },
@@ -63,15 +59,15 @@
   },
   {
    "finding": "XP1_003_RushLarge0: spawn-cut-off: no objective can be walked to from spawn 2",
-   "todo": "Later Rush stage (outside the stage-1 combat area). In that stage, record a foot path from the spawn (300, 79, -259) up the slope (12 m higher) to the mesh at (290, 91, -168.5), about 90 m."
+   "todo": "Nothing required: a spawn of the round end. Its spawn entities 183 m up at (299..344, 262, -259) and (234, 262, -268) are off during all three stages and on once the round is over (seen 2026-10-13); the recorder bot is outside the combat area there in stage 2."
   },
   {
    "finding": "XP1_003_RushLarge0: spawn-cut-off: no objective can be walked to from spawn ru 4",
-   "todo": "Later Rush stage. In that stage, record a foot path from the spawn (234, 79, -265) up to path 23 waypoint 8 at (228, 93, -169) or the mesh at (258.5, 91, -169), about 100 m."
+   "todo": "Nothing required: a spawn of the round end. Its spawn entities 183 m up at (299..344, 262, -259) and (234, 262, -268) are off during all three stages and on once the round is over (seen 2026-10-13); the recorder bot is outside the combat area there in stage 2."
   },
   {
    "finding": "XP1_003_RushLarge0: spawn-cut-off: no objective can be walked to from spawn us 1",
-   "todo": "Later Rush stage. In that stage, record a foot path from the spawn (343, 79, -259.5) up to path 14 waypoint 12 at (331, 91, -148), about 110 m."
+   "todo": "Nothing required: a spawn of the round end. Its spawn entities 183 m up at (299..344, 262, -259) and (234, 262, -268) are off during all three stages and on once the round is over (seen 2026-10-13); the recorder bot is outside the combat area there in stage 2."
   },
   {
    "finding": "XP1_004_ConquestAssaultLarge0: spawn-cut-off: no objective can be walked to from base us",
@@ -88,10 +84,6 @@
   {
    "finding": "XP3_Desert_RushLarge0: spawn-cut-off: no objective can be walked to from spawn us 1",
    "todo": "Nothing required: the boats (water paths 9, 5) and the AAV (amphibious path 4) take the bots ashore; there is no way on foot."
-  },
-  {
-   "finding": "XP5_002_RushLarge0: spawn-cut-off: no objective can be walked to from spawn us 1",
-   "todo": "Road gap: road path 1 runs over the spawn area without a junction (waypoint 27 at (-2123, 71, -392) is 29 m from the spawn (-2136, 71, -366)). Record a short foot path from the edge of the spawn area to waypoint 27 and link its end to it (node editor); a path lying completely on the spawn area is trimmed away."
   }
  ],
  "tasks": [
@@ -110,10 +102,6 @@
   {
    "map": "MP_018_ConquestLarge0",
    "todo": "Vehicle path 21 (land) waypoint 124 at (-466, 89.6, 200.8): the buggy gets stuck there (4x vehicle_stuck). Re-record that stretch with a buggy."
-  },
-  {
-   "map": "XP3_Valley_RushLarge0",
-   "todo": "Not recut on 2026-10-13: with the checks of the game from 2026-10-10 a recut cuts spawn ru 12 (-81, 126, -368) off (its mesh keeps 79 points, the way off at (-110, 123, -379) - (-115, 123, -371.5) - (-118.5, 122.3, -377) is blocked by the rays). Walk it in the game: if it is free, `census check XP3_Valley_RushLarge0` again; if not, record a foot path from spawn ru 12 to the mesh west of it. Then `census navpaths XP3_Valley_RushLarge0 --write --db ../../mod.db` and lint."
   },
   {
    "map": "MP_012_ConquestLarge0",

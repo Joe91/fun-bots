@@ -497,7 +497,13 @@ def _prune(paths: dict[int, PathData], ends: dict[int, set[int]], result: Result
                 continue  # A vehicle path, or one that was cut already.
             linked = {node.point for node in paths[number].nodes
                       if any(target in alive for target, _ in node.links)}
-            if _places(paths[number], ends[number] | linked) < 2:
+            points = ends[number] | linked
+            # Connected at both its ends: a way between them however short (a few metres from the mesh of a spawn to a
+            # road, XP5_002 rush: as one place it was dropped with every cut). Two ends on the same mesh: a shortcut,
+            # prune_unattached drops those.
+            nodes = paths[number].nodes
+            both_ends = len(nodes) > 1 and nodes[0].point in points and nodes[-1].point in points
+            if not both_ends and _places(paths[number], points) < 2:
                 alive.discard(number)
                 result.dead_ends += 1
                 changed = True
