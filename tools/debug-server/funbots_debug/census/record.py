@@ -179,13 +179,16 @@ def _key(x: float, y: float, z: float, cell: float = CELL) -> tuple[int, int, in
 class Planner:
     """A* over the cells, the rays asked for in batches (BATCH cells at once)."""
 
-    def __init__(self, rays: Rays, gap: Gap, shapes: list | None = None, profile: Profile = FOOT):
+    def __init__(self, rays: Rays, gap: Gap, shapes: list | None = None, profile: Profile = FOOT,
+                 margin: float = MARGIN):
         self.rays = rays
         self.gap = gap
         self.profile = profile
         xs = [p[0] for p in gap.best] + [gap.best[0][0]]
         zs = [p[2] for p in gap.best]
-        self.box = (min(xs) - MARGIN, max(xs) + MARGIN, min(zs) - MARGIN, max(zs) + MARGIN)
+        self.box = (min(xs) - margin, max(xs) + margin, min(zs) - margin, max(zs) + margin)
+        # A wider box has more cells to look at.
+        self.max_expansions = int(MAX_EXPANSIONS * max(1.0, margin / MARGIN) ** 2)
         # Only in the combat-areas the spawn is in (MP_003, MP_007: the bot left it and was killed).
         start = gap.best[0]
         self.shapes = [shape for shape in shapes or [] if _in_polygon(start[0], start[2], shape)]
@@ -281,7 +284,7 @@ class Planner:
             heapq.heappush(heap, (self._heuristic(start), key))
         closed = set()
         expansions = 0
-        while heap and expansions < MAX_EXPANSIONS:
+        while heap and expansions < self.max_expansions:
             batch = []
             while heap and len(batch) < BATCH:
                 _, key = heapq.heappop(heap)
@@ -413,6 +416,36 @@ def walk(server, points: list[list[float]], timeout: float = 240.0, vehicle: int
     return answer.get("result") or {}
 
 
+def mesh_outside(networks: dict, start: list[float], min_part: int = 50) -> list[list[float]]:
+    """The points of the mesh not on the part (connected points) closest to start, of parts with at least min_part
+    points: where a way from an island of the mesh (an upper floor without stairs in it) has to lead."""
+    points = networks.get("points") or []
+    if not points:
+        return []
+    neighbours: dict[int, list[int]] = {}
+    for edge in networks.get("edges") or []:
+        neighbours.setdefault(edge[0], []).append(edge[1])
+        neighbours.setdefault(edge[1], []).append(edge[0])
+    part = [-1] * len(points)
+    sizes = []
+    for first in range(len(points)):
+        if part[first] >= 0:
+            continue
+        part[first] = len(sizes)
+        todo, size = [first], 0
+        while todo:
+            index = todo.pop()
+            size += 1
+            for other in neighbours.get(index, []):
+                if part[other] < 0:
+                    part[other] = part[first]
+                    todo.append(other)
+        sizes.append(size)
+    own = part[min(range(len(points)), key=lambda index: math.dist(points[index][:3], start))]
+    return [list(points[index][:3]) for index in range(len(points))
+            if part[index] != own and sizes[part[index]] >= min_part]
+
+
 def link_of(gap: Gap, end: list[float]) -> tuple[int, int] | None:
     """The waypoint the way ends at (path, point), if it ends at a path and not at the mesh."""
     for position, node in gap.waypoints.items():
@@ -422,11 +455,11 @@ def link_of(gap: Gap, end: list[float]) -> tuple[int, int] | None:
 
 
 def record_gap(server, gap: Gap, log=print, shapes: list | None = None, profile: Profile = FOOT,
-               vehicle: int | None = None) -> list[list[float]] | None:
+               vehicle: int | None = None, margin: float = MARGIN) -> list[list[float]] | None:
     """Plans, walks (drives: vehicle) and replans the way of one gap. The way the bot walked, or None. shapes:
-    area_shapes."""
+    area_shapes. margin: how far the way may go beyond the box around start and goal."""
     rays = Rays(server)
-    planner = Planner(rays, gap, shapes, profile)
+    planner = Planner(rays, gap, shapes, profile, margin)
     # From the spawn points closest to the goal.
     starts = sorted(gap.starts, key=lambda s: math.dist(s, gap.best[1]))[:6]
     for attempt in range(1, TRIES + 1):
@@ -443,7 +476,7 @@ def record_gap(server, gap: Gap, log=print, shapes: list | None = None, profile:
         if status == "done":
             # The points it walked: the trail itself starts with the turn after it was put there.
             return points
-        if status not in ("stuck", "border") or not result.get("pos"):
+        if status not in ("stuck", "border", "missed") or not result.get("pos"):
             return None
         blocked = planner.block_near(result["pos"], BORDER_RADIUS if status == "border" else None)
         log(f"    {status} at {[round(c, 1) for c in result['pos']]}: {blocked} cells blocked")

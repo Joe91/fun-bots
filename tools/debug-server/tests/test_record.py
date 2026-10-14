@@ -61,6 +61,13 @@ class RecordTest(unittest.TestCase):
         self.assertEqual(data.paths[linked].nodes[-1].links, [(1, 1)])
         self.assertEqual(data.paths[linked].nodes[0].links, [])
 
+    def test_mesh_outside(self):
+        # An island of 2 points up at y 10, the ground of 3 points (min_part 3), a speck of 1 point.
+        points = [[0, 10, 0], [2, 10, 0], [0, 0, 0], [5, 0, 0], [10, 0, 0], [50, 0, 50]]
+        networks = {"points": points, "edges": [[0, 1, 2, []], [2, 3, 5, []], [3, 4, 5, []]]}
+        goals = record.mesh_outside(networks, [1, 10, 0], min_part=3)
+        self.assertEqual(goals, [[0, 0, 0], [5, 0, 0], [10, 0, 0]])
+
     def test_replace_stretch(self):
         nodes = [Node(1, n, (float(n * 10), 0.0, 0.0), 0x203 if n == 1 else 3, {"Vehicles": ["land"]} if n == 1 else {})
                  for n in range(1, 7)]

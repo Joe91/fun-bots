@@ -8,7 +8,7 @@ BotWalker = class('BotWalker')
 -- stuck. Runs as task of the DebugBridge, answers the command at the end.
 --   walk       { points = { {x, y, z}, ... }, bot?, team?, speed? = "normal"|"sprint"|"slow", place? = true,
 --                stuck? = 6, timeout? = 180 }
---              -> { status = "done"|"stuck"|"border"|"dead"|"timeout"|"stopped", reached, bot, pos, time,
+--              -> { status = "done"|"missed"|"stuck"|"border"|"dead"|"timeout"|"stopped", reached, bot, pos, time,
 --                   trail = { {x, y, z}, ... } }
 --   drive      { points, vehicle = instanceId, bot?, team?, speed?, place? = true, stuck? = 8, timeout? = 240 }
 --              a bot drives the vehicle along the points (VehicleMovement:_UpdateRemoteDrive), answer as walk, status
@@ -17,7 +17,9 @@ BotWalker = class('BotWalker')
 -- bot: the id of the bot (default: a bot on foot, of the team if given). place: put it (the vehicle) onto the first
 -- point first, facing the second.
 -- reached: how many points it got to. trail: where it walked, every TRAIL_STEP metres. stuck: seconds without moving
--- STUCK_DISTANCE metres. border: it left the combat-area (the game kills it after 10 s), stopped where it did.
+-- STUCK_DISTANCE metres. border: it left the combat-area (the game kills it after 10 s), stopped where it did. missed:
+-- it went through all points, but ended farther than END_RANGE from the last one (it skips points it doesn't get to:
+-- on stairs the bot ended a floor too high, XP1_003).
 
 ---@type BotManager
 local m_BotManager = require('BotManager')
@@ -33,6 +35,8 @@ local EXIT_TIMEOUT = 10.0 -- Seconds a bot in a vehicle gets to get out before i
 local ENTER_TIMEOUT = 10.0 -- Seconds to get the driver's seat (its driver gets out first).
 local PLACE_LIFT = 0.5 -- A vehicle is put this far above the first point (it drops onto the ground).
 local STUCK_DISTANCE = 1.0
+local END_RANGE = 2.0
+local END_RANGE_VEHICLE = 6.0
 local SPEEDS = { normal = BotMoveSpeeds.Normal, sprint = BotMoveSpeeds.Sprint, slow = BotMoveSpeeds.SlowCrouch }
 
 ---@class BotWalkerTask
@@ -47,6 +51,7 @@ local SPEEDS = { normal = BotMoveSpeeds.Normal, sprint = BotMoveSpeeds.Sprint, s
 ---@field Trail table[] where it walked
 ---@field Last Vec3 the last point of the trail
 ---@field Points table[] the points, until it starts
+---@field End Vec3 the last point
 ---@field Place boolean
 ---@field ExitSince number|nil since when it gets out of its vehicle
 ---@field Vehicle ControllableEntity|nil the vehicle it drives (command drive)
@@ -142,6 +147,7 @@ function BotWalker:Start(p_Bridge, p_CommandId, p_Args, p_Drive)
 		Timeout = tonumber(p_Args.timeout) or (p_Drive and 240.0 or 180.0),
 		Stuck = tonumber(p_Args.stuck) or (p_Drive and 8.0 or 6.0),
 		Vehicle = s_Vehicle,
+		End = s_Points[#s_Points].Position,
 	}, BotWalkerTask))
 	return { bot = s_Bot.m_Id, points = #s_Points }
 end
@@ -303,7 +309,8 @@ function BotWalkerTask:Update(p_Bridge)
 		self.Trail[#self.Trail + 1] = _Vec(s_Here)
 	end
 	if #s_Bot._FollowWayPoints == 0 then
-		self:_Finish(p_Bridge, 'done', s_Here)
+		local s_Range = self.Vehicle ~= nil and END_RANGE_VEHICLE or END_RANGE
+		self:_Finish(p_Bridge, s_Here:Distance(self.End) <= s_Range and 'done' or 'missed', s_Here)
 		return true
 	end
 	-- Out of the combat-area (GameDirector:OnCombatArea): no way there.

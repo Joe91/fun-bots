@@ -665,17 +665,26 @@ def command_trace(options) -> int:
             return 2
         label = f"path {path} {first}-{last}"
     else:
-        if not options.start or not options.to:
-            print("--replace PATH:A-B or --from X,Y,Z --to X,Y,Z", file=sys.stderr)
+        if not options.start:
+            print("--replace PATH:A-B or --from X,Y,Z [--to X,Y,Z]", file=sys.stderr)
             return 2
         start, goal = options.start, options.to
         # Ends at a waypoint: linked to it.
-        ends = [(math.dist(node.pos, goal), (node.path, node.point)) for p in data.paths.values() for node in p.nodes]
+        ends = [(math.dist(node.pos, goal), (node.path, node.point)) for p in data.paths.values() for node in p.nodes
+                if goal is not None]
         near = min(ends, default=None)
         link = near[1] if near and near[0] <= 0.5 else None
-        label = f"from {start} to {goal}"
+        label = f"from {start} to {goal or 'the mesh'}"
     profile = record.VEHICLE if options.vehicle else record.FOOT
-    gap = record.Gap(label, [start], [goal], (start, goal))
+    if goal is None:
+        # Off an island of the mesh: to any point of the other parts.
+        goals = record.mesh_outside(json.loads((options.navzones / f"{name}.json").read_text(encoding="utf-8")), start)
+        if not goals:
+            print(f"{name}: no other part of the mesh", file=sys.stderr)
+            return 1
+        gap = record.Gap(label, [start], goals, (start, min(goals, key=lambda g: math.dist(g, start))))
+    else:
+        gap = record.Gap(label, [start], [goal], (start, goal))
     switch_level(server, level, mode)
     settings = quiet_bots(server)
     try:
@@ -690,9 +699,9 @@ def command_trace(options) -> int:
                 return 1
             vehicle = found["id"]
             print(f"  {found['name']} {vehicle} at {[round(c) for c in found['pos']]}", flush=True)
-        print(f"  {label}: {math.dist(start, goal):.0f} m", flush=True)
+        print(f"  {label}: {math.dist(*gap.best):.0f} m, margin {options.margin:.0f} m", flush=True)
         way = record.record_gap(server, gap, log=lambda message: print(message, flush=True), profile=profile,
-                                vehicle=vehicle)
+                                vehicle=vehicle, margin=options.margin)
     finally:
         restore_bots(server, settings)
     if not way:
@@ -802,7 +811,11 @@ def main() -> int:
     traces.add_argument("--replace", metavar="PATH:A-B", help="the waypoints between A and B of the path, new (walked or "
                         "driven from A to B, B < A: against the path)")
     traces.add_argument("--from", dest="start", type=_position, metavar="X,Y,Z", help="a new foot path from here...")
-    traces.add_argument("--to", type=_position, metavar="X,Y,Z", help="...to here (a waypoint there: linked)")
+    traces.add_argument("--to", type=_position, metavar="X,Y,Z",
+                        help="...to here (a waypoint there: linked); without: to the mesh off the island of --from")
+    traces.add_argument("--margin", type=float, default=record.MARGIN,
+                        help="how far the way may go round, beyond the box around start and goal (metres)")
+    traces.add_argument("--navzones", type=Path, default=NAVZONES)
     traces.add_argument("--vehicle", help="driven in a vehicle of the level (part of its name, or its instance id)")
     traces.add_argument("--dry-run", action="store_true", help="plan and walk, don't write")
     traces.add_argument("--server", default="http://127.0.0.1:8765", help="address of the debug-server")

@@ -255,6 +255,7 @@ function Bot:ResetSpawnVars()
 	self._ChopperStartHeight = nil
 	self._ChopperGround = nil
 	self._ChopperProbeTime = 0.0
+	self._ChopperRecoverTime = 0.0
 	self._PassengerExitTime = nil
 	self._LeftVehicle = nil
 	self._LeftVehicleUntil = 0.0

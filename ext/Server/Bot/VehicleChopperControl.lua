@@ -28,6 +28,19 @@ local CHOPPER_TILT_CLIMBING = -0.12 -- = 7 degrees
 -- each other (XP3_Alborz: Ka-60 and Mi28 over D).
 local CHOPPER_SPREAD = 35.0
 local GOLDEN_ANGLE = 2.39996
+-- Attacking, the nose follows the aim only this far down / up: diving at a target below (-40 to -70 degrees) the
+-- choppers flew into the ground, nose up at +25 degrees one stalled.
+local CHOPPER_ATTACK_TILT_MIN = -0.6 -- = -34 degrees
+local CHOPPER_ATTACK_TILT_MAX = 0.35 -- = 20 degrees
+-- Attacking closer than this above the ground ahead, or sinking faster: the pilot levels out and climbs for
+-- CHOPPER_RECOVER_TIME seconds to CHOPPER_RECOVER_CLEARANCE above the ground (the gunner shoots on). The height target
+-- of the movement stays as it was while attacking (XP3_Alborz: sank 10 m/s into the slope below its target).
+local CHOPPER_ATTACK_CLEARANCE = 25.0
+local CHOPPER_ATTACK_SINK = 10.0
+local CHOPPER_ATTACK_LOOKAHEAD = 100.0
+local CHOPPER_RECOVER_TIME = 2.5
+local CHOPPER_RECOVER_CLEARANCE = 40.0
+local CHOPPER_RECOVER_TILT = 0.05
 
 function VehicleChopperControl:__init()
 	-- Nothing to do.
@@ -194,6 +207,27 @@ function VehicleChopperControl:UpdateYawChopperPilot(p_Bot, p_Attacking, p_Delta
 	local s_Height = s_VehiclePos.y
 	local s_Delta_Height = p_Bot._TargetPoint.Position.y - s_Height
 
+	-- Attacking low over the ground or sinking fast: level out and climb a while.
+	local s_Ground = nil
+	if p_Attacking then
+		local s_Forward = s_Transform.forward
+		s_Ground = self:_GroundAhead(p_DeltaTime, p_Bot, s_VehiclePos, s_Forward.x * CHOPPER_ATTACK_LOOKAHEAD,
+			s_Forward.z * CHOPPER_ATTACK_LOOKAHEAD, CHOPPER_ATTACK_LOOKAHEAD * math.sqrt(s_Forward.x ^ 2 + s_Forward.z ^ 2))
+		if (s_Ground ~= nil and s_Height - s_Ground < CHOPPER_ATTACK_CLEARANCE)
+			or PhysicsEntity(s_Vehicle).velocity.y < -CHOPPER_ATTACK_SINK then
+			p_Bot._ChopperRecoverTime = CHOPPER_RECOVER_TIME
+		end
+	end
+	local s_Recovering = p_Bot._ChopperRecoverTime > 0.0
+	if s_Recovering then
+		p_Bot._ChopperRecoverTime = p_Bot._ChopperRecoverTime - p_DeltaTime
+		s_Ground = s_Ground or p_Bot._ChopperGround
+		if s_Ground ~= nil then
+			s_Delta_Height = math.max(s_Delta_Height, s_Ground + CHOPPER_RECOVER_CLEARANCE - s_Height)
+		end
+		s_Delta_Height = math.max(s_Delta_Height, CHOPPER_CLIMB_FIRST)
+	end
+
 	local s_Output_Throttle = p_Bot._Pid_Drv_Height:Update(s_Delta_Height, p_DeltaTime, s_Height)
 	if s_Output_Throttle > 0 then
 		s_Input:SetLevel(EntryInputActionEnum.EIAThrottle, s_Output_Throttle)
@@ -206,8 +240,10 @@ function VehicleChopperControl:UpdateYawChopperPilot(p_Bot, p_Attacking, p_Delta
 	-- FORWARD: fly with a constant forward tilt (scaling it by the distance between points didn't work well). Far below
 	-- the height it has to be at (a slope ahead, just took off): mostly up first.
 	local s_Target_Tilt = s_Delta_Height > CHOPPER_CLIMB_FIRST and CHOPPER_TILT_CLIMBING or CHOPPER_TILT
-	if p_Attacking then
-		s_Target_Tilt = p_Bot._TargetPitch
+	if s_Recovering then
+		s_Target_Tilt = CHOPPER_RECOVER_TILT
+	elseif p_Attacking then
+		s_Target_Tilt = math.max(CHOPPER_ATTACK_TILT_MIN, math.min(CHOPPER_ATTACK_TILT_MAX, p_Bot._TargetPitch))
 	end
 
 	local s_Delta_Tilt = s_Target_Tilt - s_Current_Pitch
