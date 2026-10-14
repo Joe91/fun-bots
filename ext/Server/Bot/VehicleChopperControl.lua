@@ -10,6 +10,24 @@ local m_Utilities = require('__shared/Utilities')
 -- height it took off at, then it goes down to the target.
 local CHOPPER_DESCEND_RANGE = 150.0
 local CHOPPER_MIN_CLIMB = 40.0
+-- The chopper keeps CHOPPER_CLEARANCE metres above the highest ground under its way the next CHOPPER_LOOKAHEAD metres
+-- (towards its target), looked for with rays every CHOPPER_PROBE_INTERVAL seconds. Without, it flew into the slopes it
+-- climbed too slowly for (XP3_Alborz: the Mi28 twice at the same spot 230 m from its pad, MP_013: Z-11w).
+local CHOPPER_CLEARANCE = 30.0
+local CHOPPER_LOOKAHEAD = { 25.0, 60.0, 100.0, 150.0 }
+-- Not closer to the chopper than this: the ray hit the chopper itself, it climbed and climbed (1500 m on XP3_Alborz).
+local CHOPPER_PROBE_MIN = 12.0
+local CHOPPER_PROBE_INTERVAL = 0.5
+local CHOPPER_PROBE_ABOVE = 300.0
+local CHOPPER_PROBE_DEPTH = 600.0
+-- Further below its target height than this, the chopper climbs before it flies on (little forward tilt).
+local CHOPPER_CLIMB_FIRST = 25.0
+local CHOPPER_TILT = -0.35 -- = 20 degrees
+local CHOPPER_TILT_CLIMBING = -0.12 -- = 7 degrees
+-- Each chopper flies to its own spot this far around the target point (by its id): to the same point they flew into
+-- each other (XP3_Alborz: Ka-60 and Mi28 over D).
+local CHOPPER_SPREAD = 35.0
+local GOLDEN_ANGLE = 2.39996
 
 function VehicleChopperControl:__init()
 	-- Nothing to do.
@@ -42,16 +60,19 @@ function VehicleChopperControl:UpdateMovementChopper(p_DeltaTime, p_Bot)
 		if p_Bot._ChopperStartHeight == nil then
 			p_Bot._ChopperStartHeight = s_Position.y
 		end
+		local s_Angle = p_Bot.m_Id * GOLDEN_ANGLE
+		s_TargetPoint.x = s_TargetPoint.x + math.cos(s_Angle) * CHOPPER_SPREAD
+		s_TargetPoint.z = s_TargetPoint.z + math.sin(s_Angle) * CHOPPER_SPREAD
 		local s_DeltaX = s_TargetPoint.x - s_Position.x
 		local s_DeltaZ = s_TargetPoint.z - s_Position.z
-		if math.sqrt(s_DeltaX * s_DeltaX + s_DeltaZ * s_DeltaZ) > CHOPPER_DESCEND_RANGE then
+		local s_Distance = math.sqrt(s_DeltaX * s_DeltaX + s_DeltaZ * s_DeltaZ)
+		if s_Distance > CHOPPER_DESCEND_RANGE then
 			s_TargetPoint.y = math.max(s_TargetPoint.y, p_Bot._ChopperStartHeight + CHOPPER_MIN_CLIMB)
 		end
-	end
-	if (p_Bot.m_Player.teamId % 2) == 1 then
-		s_TargetPoint.z = s_TargetPoint.z + 20
-	else
-		s_TargetPoint.z = s_TargetPoint.z - 20
+		local s_Ground = self:_GroundAhead(p_DeltaTime, p_Bot, s_Position, s_DeltaX, s_DeltaZ, s_Distance)
+		if s_Ground ~= nil then
+			s_TargetPoint.y = math.max(s_TargetPoint.y, s_Ground + CHOPPER_CLEARANCE)
+		end
 	end
 
 	-- don't move along paths with planes
@@ -59,6 +80,41 @@ function VehicleChopperControl:UpdateMovementChopper(p_DeltaTime, p_Bot)
 		Position = s_TargetPoint,
 	}
 	p_Bot._TargetPoint = s_Waypoint
+end
+
+---The highest ground under the way of the chopper the next CHOPPER_LOOKAHEAD metres towards its target, looked for every
+---CHOPPER_PROBE_INTERVAL seconds. nil without a hit (or right above the target).
+---@param p_DeltaTime number
+---@param p_Bot Bot
+---@param p_Position Vec3
+---@param p_DeltaX number towards the target
+---@param p_DeltaZ number
+---@param p_Distance number to the target (horizontal)
+---@return number|nil
+function VehicleChopperControl:_GroundAhead(p_DeltaTime, p_Bot, p_Position, p_DeltaX, p_DeltaZ, p_Distance)
+	p_Bot._ChopperProbeTime = p_Bot._ChopperProbeTime - p_DeltaTime
+	if p_Bot._ChopperProbeTime > 0.0 then
+		return p_Bot._ChopperGround
+	end
+	p_Bot._ChopperProbeTime = CHOPPER_PROBE_INTERVAL
+	local s_Flags = RayCastFlags.DontCheckCharacter | RayCastFlags.DontCheckRagdoll | RayCastFlags.DontCheckWater
+	---@cast s_Flags RayCastFlags
+	local s_Highest = nil
+	for l_Index = 1, #CHOPPER_LOOKAHEAD do
+		local l_Ahead = math.min(CHOPPER_LOOKAHEAD[l_Index], p_Distance)
+		if l_Ahead < CHOPPER_PROBE_MIN then
+			break
+		end
+		local s_X = p_Position.x + (p_Distance > 0.0 and p_DeltaX / p_Distance * l_Ahead or 0.0)
+		local s_Z = p_Position.z + (p_Distance > 0.0 and p_DeltaZ / p_Distance * l_Ahead or 0.0)
+		local s_Hit = RaycastManager:CollisionRaycast(Vec3(s_X, p_Position.y + CHOPPER_PROBE_ABOVE, s_Z),
+			Vec3(s_X, p_Position.y - CHOPPER_PROBE_DEPTH, s_Z), 1, 0, s_Flags)[1]
+		if s_Hit ~= nil and (s_Highest == nil or s_Hit.position.y > s_Highest) then
+			s_Highest = s_Hit.position.y
+		end
+	end
+	p_Bot._ChopperGround = s_Highest
+	return s_Highest
 end
 
 function VehicleChopperControl:UpdateTargetMovementChopper(p_Bot)
@@ -147,8 +203,9 @@ function VehicleChopperControl:UpdateYawChopperPilot(p_Bot, p_Attacking, p_Delta
 		s_Input:SetLevel(EntryInputActionEnum.EIABrake, 0.0)
 	end
 
-	-- FORWARD: fly with a constant forward tilt (scaling it by the distance between points didn't work well).
-	local s_Target_Tilt = -0.35 -- = 20°
+	-- FORWARD: fly with a constant forward tilt (scaling it by the distance between points didn't work well). Far below
+	-- the height it has to be at (a slope ahead, just took off): mostly up first.
+	local s_Target_Tilt = s_Delta_Height > CHOPPER_CLIMB_FIRST and CHOPPER_TILT_CLIMBING or CHOPPER_TILT
 	if p_Attacking then
 		s_Target_Tilt = p_Bot._TargetPitch
 	end

@@ -89,6 +89,11 @@ function VehicleMovement:UpdateNormalMovementVehicle(p_DeltaTime, p_Bot)
 		p_Bot._VehicleTakeoffTimer = p_Bot._VehicleTakeoffTimer - p_DeltaTime
 	end
 
+	if p_Bot._RemoteWalk ~= nil then
+		self:_UpdateRemoteDrive(p_Bot)
+		return
+	end
+
 	-- In the zone of the objective the vehicle drives the vehicle-network of the zone.
 	if p_Bot.m_Zone ~= nil and p_Bot.m_Zone.Vehicle and self:_UpdateZoneMovementVehicle(p_DeltaTime, p_Bot) then
 		return
@@ -132,8 +137,13 @@ function VehicleMovement:UpdateNormalMovementVehicle(p_DeltaTime, p_Bot)
 		if p_Bot._ActiveAction == BotActionFlags.OtherActionActive then
 			if s_Point.Data ~= nil and s_Point.Data.Action ~= nil then
 				if s_Point.Data.Action.type == 'exit' and not s_Driven then
-					-- Not driven anywhere yet: drive on.
+					-- Not driven anywhere yet: drive on, past the point (at the end of the path it turns round). Else the next
+					-- point at the end of a path was this one again, the action came again and again: XP5_003, dirt bikes
+					-- taken at A circled the end of their path there until they counted as stuck.
 					p_Bot:_ResetActionFlag(BotActionFlags.OtherActionActive)
+					p_Bot._CurrentWayPoint = s_ActivePointIndex + (p_Bot._InvertPathDirection and -1 or 1)
+					p_Bot._LastWayDistance = 1000.0
+					return
 				elseif s_Point.Data.Action.type == 'exit' then
 					p_Bot:_ResetActionFlag(BotActionFlags.OtherActionActive)
 					local s_OnlyPassengers = false
@@ -390,6 +400,37 @@ function VehicleMovement:UpdateNormalMovementVehicle(p_DeltaTime, p_Bot)
 			end
 		end
 	end
+end
+
+-- A point of a remote drive closer than this (horizontally) is reached.
+local REMOTE_DRIVE_REACHED = 4.0
+
+---Driven by the debug-server (Debug/BotWalker.lua, command drive): along the points it was given, to the last one. No
+---obstacle handling: where the vehicle gets stuck is the answer.
+---@param p_Bot Bot
+function VehicleMovement:_UpdateRemoteDrive(p_Bot)
+	local s_Vehicle = p_Bot.m_Player.controlledControllable
+	if s_Vehicle == nil then
+		return
+	end
+	local s_Here = s_Vehicle.transform.trans
+	local s_Points = p_Bot._FollowWayPoints
+	while #s_Points > 0 do
+		local s_Position = s_Points[1].Position
+		if (s_Position.x - s_Here.x) ^ 2 + (s_Position.z - s_Here.z) ^ 2 > REMOTE_DRIVE_REACHED ^ 2 then
+			break
+		end
+		table.remove(s_Points, 1)
+	end
+	if #s_Points == 0 then
+		p_Bot._TargetPoint = nil
+		p_Bot._NextTargetPoint = nil
+		p_Bot.m_ActiveSpeedValue = BotMoveSpeeds.NoMovement
+		return
+	end
+	p_Bot._TargetPoint = s_Points[1]
+	p_Bot._NextTargetPoint = s_Points[2]
+	p_Bot.m_ActiveSpeedValue = s_Points[1].SpeedMode
 end
 
 ---Driving in the zone of the objective, on its vehicle-network: from point to point, standing a moment at each. A

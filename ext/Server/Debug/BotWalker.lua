@@ -10,8 +10,12 @@ BotWalker = class('BotWalker')
 --                stuck? = 6, timeout? = 180 }
 --              -> { status = "done"|"stuck"|"border"|"dead"|"timeout"|"stopped", reached, bot, pos, time,
 --                   trail = { {x, y, z}, ... } }
+--   drive      { points, vehicle = instanceId, bot?, team?, speed?, place? = true, stuck? = 8, timeout? = 240 }
+--              a bot drives the vehicle along the points (VehicleMovement:_UpdateRemoteDrive), answer as walk, status
+--              also "exited" (it is out of the vehicle)
 --   walk_stop  {}
--- bot: the id of the bot (default: a bot on foot, of the team if given). place: put it onto the first point first.
+-- bot: the id of the bot (default: a bot on foot, of the team if given). place: put it (the vehicle) onto the first
+-- point first, facing the second.
 -- reached: how many points it got to. trail: where it walked, every TRAIL_STEP metres. stuck: seconds without moving
 -- STUCK_DISTANCE metres. border: it left the combat-area (the game kills it after 10 s), stopped where it did.
 
@@ -19,11 +23,15 @@ BotWalker = class('BotWalker')
 local m_BotManager = require('BotManager')
 ---@type Utilities
 local m_Utilities = require('__shared/Utilities')
+---@type Vehicles
+local m_Vehicles = require('Vehicles')
 
 local _Vec = DebugBridge.Vec
 
 local TRAIL_STEP = 0.5
 local EXIT_TIMEOUT = 10.0 -- Seconds a bot in a vehicle gets to get out before it walks.
+local ENTER_TIMEOUT = 10.0 -- Seconds to get the driver's seat (its driver gets out first).
+local PLACE_LIFT = 0.5 -- A vehicle is put this far above the first point (it drops onto the ground).
 local STUCK_DISTANCE = 1.0
 local SPEEDS = { normal = BotMoveSpeeds.Normal, sprint = BotMoveSpeeds.Sprint, slow = BotMoveSpeeds.SlowCrouch }
 
@@ -41,6 +49,8 @@ local SPEEDS = { normal = BotMoveSpeeds.Normal, sprint = BotMoveSpeeds.Sprint, s
 ---@field Points table[] the points, until it starts
 ---@field Place boolean
 ---@field ExitSince number|nil since when it gets out of its vehicle
+---@field Vehicle ControllableEntity|nil the vehicle it drives (command drive)
+---@field EnterSince number|nil since when it gets into it
 local BotWalkerTask = {}
 BotWalkerTask.__index = BotWalkerTask
 
@@ -77,13 +87,36 @@ local function _PickBot(p_Id, p_Team)
 	return s_InVehicle
 end
 
+---@param p_Id integer
+---@return ControllableEntity|nil
+local function _FindVehicle(p_Id)
+	local s_Iterator = EntityManager:GetIterator('ServerVehicleEntity')
+	local s_Entity = s_Iterator:Next()
+	while s_Entity ~= nil do
+		if s_Entity.instanceId == p_Id then
+			return ControllableEntity(s_Entity)
+		end
+		s_Entity = s_Iterator:Next()
+	end
+	return nil
+end
+
 ---@param p_Bridge DebugBridge
 ---@param p_CommandId integer
 ---@param p_Args table
-function BotWalker:Start(p_Bridge, p_CommandId, p_Args)
+---@param p_Drive boolean|nil command drive (else walk)
+function BotWalker:Start(p_Bridge, p_CommandId, p_Args, p_Drive)
 	p_Bridge:AbortTasks(function(p_Task)
 		return getmetatable(p_Task) == BotWalkerTask
 	end, 'stopped')
+
+	local s_Vehicle = nil
+	if p_Drive then
+		s_Vehicle = _FindVehicle(tonumber(p_Args.vehicle) or -1)
+		if s_Vehicle == nil then
+			error('no vehicle ' .. tostring(p_Args.vehicle))
+		end
+	end
 
 	local s_Raw = type(p_Args.points) == 'table' and p_Args.points or {}
 	if #s_Raw == 0 then
@@ -106,8 +139,9 @@ function BotWalker:Start(p_Bridge, p_CommandId, p_Args)
 		Total = #s_Points,
 		Points = s_Points,
 		Place = p_Args.place ~= false,
-		Timeout = tonumber(p_Args.timeout) or 180.0,
-		Stuck = tonumber(p_Args.stuck) or 6.0,
+		Timeout = tonumber(p_Args.timeout) or (p_Drive and 240.0 or 180.0),
+		Stuck = tonumber(p_Args.stuck) or (p_Drive and 8.0 or 6.0),
+		Vehicle = s_Vehicle,
 	}, BotWalkerTask))
 	return { bot = s_Bot.m_Id, points = #s_Points }
 end
@@ -119,11 +153,71 @@ function BotWalker:Stop(p_Bridge)
 	end, 'stopped')
 end
 
----Out of its vehicle, onto the first point, and off.
+---Where the bot is: its vehicle when it drives.
+---@return Vec3
+function BotWalkerTask:_Position()
+	if self.Vehicle ~= nil then
+		return self.Vehicle.transform.trans
+	end
+	return self.Bot.m_Player.soldier.worldTransform.trans
+end
+
+---Command drive: the vehicle onto the first point, the bot into its driver's seat (whoever sits there gets out).
+---@return boolean seated (false: not yet)
+function BotWalkerTask:_Seat()
+	local s_Bot = self.Bot
+	local s_Vehicle = self.Vehicle --[[@as ControllableEntity]]
+	if s_Bot.m_Player.controlledControllable ~= nil and s_Bot.m_Player.controlledControllable.instanceId == s_Vehicle.instanceId
+		and s_Bot.m_Player.controlledEntryId == 0 then
+		return true
+	end
+	if self.EnterSince == nil then
+		self.EnterSince = m_Utilities:GetTime()
+	elseif m_Utilities:GetTime() - self.EnterSince > ENTER_TIMEOUT then
+		error('the bot did not get into the vehicle')
+	end
+	if _InVehicle(s_Bot.m_Player) then
+		s_Bot:ExitVehicle()
+		return false
+	end
+	local s_Driver = s_Vehicle:GetPlayerInEntry(0)
+	if s_Driver ~= nil then
+		local s_Other = m_BotManager:GetBotById(s_Driver.id)
+		if s_Other == nil then
+			error('a player drives the vehicle')
+		end
+		s_Other:ExitVehicle()
+		return false
+	end
+	if self.Place then
+		local s_Transform = s_Vehicle.transform:Clone()
+		s_Transform.trans = self.Points[1].Position + Vec3(0.0, PLACE_LIFT, 0.0)
+		if self.Points[2] ~= nil then
+			s_Transform:LookAtTransform(s_Transform.trans, self.Points[2].Position + Vec3(0.0, PLACE_LIFT, 0.0))
+		end
+		s_Vehicle.transform = s_Transform
+	end
+	s_Bot.m_Player:EnterVehicle(s_Vehicle, 0)
+	if not s_Bot:IsSeated() then
+		return false
+	end
+	s_Bot.m_ActiveVehicle = m_Vehicles:GetVehicleByEntity(s_Vehicle) --[[@as VehicleDataInner]]
+	s_Bot._ActiveVehicleWeaponSlot = 0
+	s_Bot:UpdateVehicleMovableId()
+	s_Bot._VehicleWaitTimer = 0.0
+	s_Bot:SetState(g_BotStates.States.InVehicleMoving)
+	return true
+end
+
+---Out of its vehicle (into the one to drive), onto the first point, and off.
 ---@return boolean started (false: still getting out)
 function BotWalkerTask:_Begin()
 	local s_Bot = self.Bot
-	if _InVehicle(s_Bot.m_Player) then
+	if self.Vehicle ~= nil then
+		if not self:_Seat() then
+			return false
+		end
+	elseif _InVehicle(s_Bot.m_Player) then
 		if self.ExitSince == nil then
 			self.ExitSince = m_Utilities:GetTime()
 			s_Bot:ExitVehicle()
@@ -133,7 +227,7 @@ function BotWalkerTask:_Begin()
 		return false
 	end
 	local s_Soldier = s_Bot.m_Player.soldier
-	if self.Place then
+	if self.Place and self.Vehicle == nil then
 		local s_Transform = s_Soldier.worldTransform:Clone()
 		s_Transform.trans = self.Points[1].Position:Clone()
 		s_Soldier:SetTransform(s_Transform)
@@ -148,11 +242,11 @@ function BotWalkerTask:_Begin()
 	s_Bot._ShootWayPoints = {}
 	s_Bot.m_Zone = nil
 	s_Bot.m_Border = nil
-	s_Bot._RemoteWalk = { CommandId = self.CommandId }
+	s_Bot._RemoteWalk = { CommandId = self.CommandId, Drive = self.Vehicle ~= nil }
 	s_Bot._FollowWayPoints = self.Points
 	self.Points = nil
 	local s_Now = m_Utilities:GetTime()
-	local s_Here = s_Soldier.worldTransform.trans:Clone()
+	local s_Here = self:_Position():Clone()
 	self.Started = s_Now
 	self.Anchor = s_Here
 	self.AnchorTime = s_Now
@@ -197,8 +291,13 @@ function BotWalkerTask:Update(p_Bridge)
 		self:_Finish(p_Bridge, s_Soldier == nil and 'dead' or 'stopped', nil)
 		return true
 	end
+	if self.Vehicle ~= nil and (s_Bot.m_Player.controlledControllable == nil
+		or s_Bot.m_Player.controlledControllable.instanceId ~= self.Vehicle.instanceId) then
+		self:_Finish(p_Bridge, 'exited', s_Soldier.worldTransform.trans)
+		return true
+	end
 	local s_Now = m_Utilities:GetTime()
-	local s_Here = s_Soldier.worldTransform.trans
+	local s_Here = self:_Position()
 	if s_Here:Distance(self.Last) >= TRAIL_STEP then
 		self.Last = s_Here:Clone()
 		self.Trail[#self.Trail + 1] = _Vec(s_Here)

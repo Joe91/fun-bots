@@ -626,6 +626,97 @@ def command_record(options) -> int:
     return status
 
 
+def _position(text: str) -> list[float]:
+    values = [float(value) for value in text.replace(" ", "").split(",")]
+    if len(values) != 3:
+        raise argparse.ArgumentTypeError(f"x,y,z expected: {text}")
+    return values
+
+
+def _pick_vehicle(server: Server, name: str, near: list[float]) -> dict | None:
+    """The vehicle of the level to drive: of that name (part of it, or its instance id), empty, the closest one."""
+    vehicles = server.request("/api/state").get("vehicles") or []
+    fitting = [v for v in vehicles if (name.isdigit() and v.get("id") == int(name))
+               or (not name.isdigit() and name.lower() in str(v.get("name")).lower())]
+    fitting.sort(key=lambda v: (bool(v.get("occupants")), math.dist(v.get("pos") or near, near)))
+    return fitting[0] if fitting else None
+
+
+def command_trace(options) -> int:
+    """Traces one way with a bot (record.py): a stretch of a path again (--replace PATH:A-B, walked; driven with
+    --vehicle), or a new foot path (--from, --to). Planned with the rays of the game, replanned where the bot gets
+    stuck. The waypoints go into mapfiles/<map>.map (cut: `navpaths --write`) and census/recorded/<map>.json."""
+    server = Server(options.server)
+    name = Path(options.map).name.split(".")[0]
+    level, _, mode = name.rpartition("_")
+    map_file = options.mapfiles / f"{name}.map"
+    data = MapData.load(map_file)
+    link = None
+    if options.replace:
+        path_text, _, stretch = options.replace.partition(":")
+        path, (first, last) = int(path_text), (int(value) for value in stretch.split("-"))
+        entry = data.paths.get(path)
+        if entry is None or first == last or not 1 <= min(first, last) <= max(first, last) <= len(entry.nodes):
+            print(f"{name}: path {path} has no waypoints {first}-{last}", file=sys.stderr)
+            return 2
+        start, goal = list(entry.nodes[first - 1].pos), list(entry.nodes[last - 1].pos)
+        if entry.vehicles and not options.vehicle and not set(entry.vehicles) <= {"foot"}:
+            print(f"{name}: path {path} is a vehicle path ({', '.join(entry.vehicles)}): --vehicle NAME", file=sys.stderr)
+            return 2
+        label = f"path {path} {first}-{last}"
+    else:
+        if not options.start or not options.to:
+            print("--replace PATH:A-B or --from X,Y,Z --to X,Y,Z", file=sys.stderr)
+            return 2
+        start, goal = options.start, options.to
+        # Ends at a waypoint: linked to it.
+        ends = [(math.dist(node.pos, goal), (node.path, node.point)) for p in data.paths.values() for node in p.nodes]
+        near = min(ends, default=None)
+        link = near[1] if near and near[0] <= 0.5 else None
+        label = f"from {start} to {goal}"
+    profile = record.VEHICLE if options.vehicle else record.FOOT
+    gap = record.Gap(label, [start], [goal], (start, goal))
+    switch_level(server, level, mode)
+    settings = quiet_bots(server)
+    try:
+        end = time.monotonic() + QUIET_SPAWN_TIMEOUT
+        while not _bots_alive(server) and time.monotonic() < end:
+            time.sleep(2)
+        vehicle = None
+        if options.vehicle:
+            found = _pick_vehicle(server, options.vehicle, start)
+            if found is None:
+                print(f"{name}: no vehicle {options.vehicle} in the level", file=sys.stderr)
+                return 1
+            vehicle = found["id"]
+            print(f"  {found['name']} {vehicle} at {[round(c) for c in found['pos']]}", flush=True)
+        print(f"  {label}: {math.dist(start, goal):.0f} m", flush=True)
+        way = record.record_gap(server, gap, log=lambda message: print(message, flush=True), profile=profile,
+                                vehicle=vehicle)
+    finally:
+        restore_bots(server, settings)
+    if not way:
+        print(f"  {label}: no way found", file=sys.stderr)
+        return 1
+    print(f"  {label}: way of {len(way)} points")
+    if options.dry_run:
+        for point in way:
+            print("   ", [round(c, 2) for c in point])
+        return 0
+    if options.replace:
+        # B < A: walked (driven) from A down to B, the waypoints in the order of the path.
+        low, high, ordered = (first, last, way) if first < last else (last, first, way[::-1])
+        for message in record.replace_stretch(data, path, low, high, ordered):
+            print(f"  dropped {message}")
+        entry_out = {"spawn": label, "points": way, "path": path}
+    else:
+        entry_out = {"spawn": label, "points": way, "link": link, "path": record.add_path(data, way, link)}
+    data.save(map_file)
+    print(f"  {map_file} written, recorded in {record.save_recorded(name, [entry_out])}; "
+          f"cut: census navpaths {name} --write --db ../../mod.db")
+    return 0
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(prog="python -m funbots_debug.census", description=__doc__,
                                      formatter_class=argparse.RawDescriptionHelpFormatter)
@@ -705,6 +796,18 @@ def main() -> int:
     records.add_argument("--mapfiles", type=Path, default=MAPFILES)
     records.add_argument("--census", type=Path, default=CENSUS, help="the censuses (combat-areas)")
     records.set_defaults(handler=command_record)
+
+    traces = commands.add_parser("trace", help="trace one way with a bot: a stretch of a path again, or a new foot path")
+    traces.add_argument("map", help="<Level>_<Mode>, e.g. XP4_Parl_RushLarge0")
+    traces.add_argument("--replace", metavar="PATH:A-B", help="the waypoints between A and B of the path, new (walked or "
+                        "driven from A to B, B < A: against the path)")
+    traces.add_argument("--from", dest="start", type=_position, metavar="X,Y,Z", help="a new foot path from here...")
+    traces.add_argument("--to", type=_position, metavar="X,Y,Z", help="...to here (a waypoint there: linked)")
+    traces.add_argument("--vehicle", help="driven in a vehicle of the level (part of its name, or its instance id)")
+    traces.add_argument("--dry-run", action="store_true", help="plan and walk, don't write")
+    traces.add_argument("--server", default="http://127.0.0.1:8765", help="address of the debug-server")
+    traces.add_argument("--mapfiles", type=Path, default=MAPFILES)
+    traces.set_defaults(handler=command_trace)
 
     lints.add_argument("maps", nargs="*", help="<Level>_<Mode> (default: all with a mesh)")
     lints.add_argument("--mapfiles", type=Path, default=MAPFILES)

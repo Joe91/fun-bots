@@ -61,6 +61,29 @@ class RecordTest(unittest.TestCase):
         self.assertEqual(data.paths[linked].nodes[-1].links, [(1, 1)])
         self.assertEqual(data.paths[linked].nodes[0].links, [])
 
+    def test_replace_stretch(self):
+        nodes = [Node(1, n, (float(n * 10), 0.0, 0.0), 0x203 if n == 1 else 3, {"Vehicles": ["land"]} if n == 1 else {})
+                 for n in range(1, 7)]
+        nodes[4].set_links([(2, 1)])
+        other = [Node(2, 1, (50.0, 0.0, 5.0), 3, {}), Node(2, 2, (30.0, 0.0, 5.0), 3, {})]
+        other[0].set_links([(1, 5)])
+        other[1].set_links([(1, 3)])
+        data = MapData({1: PathData(1, nodes), 2: PathData(2, other)})
+        # Waypoints 3 and 4 (30, 40) replaced by three points round something; 2 and 5 stay.
+        dropped = record.replace_stretch(data, 1, 2, 5, [[20.0, 0.0, 0.0], [25.0, 0.0, 4.0], [35.0, 0.0, 6.0],
+                                                         [45.0, 0.0, 4.0], [50.0, 0.0, 0.0]])
+        path = data.paths[1]
+        self.assertEqual([node.pos[0] for node in path.nodes], [10.0, 20.0, 25.0, 35.0, 45.0, 50.0, 60.0])
+        self.assertEqual([node.point for node in path.nodes], list(range(1, 8)))
+        self.assertEqual(path.nodes[2].input, 3)
+        self.assertEqual(path.nodes[2].data, {})
+        self.assertEqual(path.vehicles, ["land"])
+        # The link of the old waypoint 5 moved with it to 6, the one to the old 3 is gone.
+        self.assertEqual(data.paths[2].nodes[0].links, [(1, 6)])
+        self.assertEqual(data.paths[2].nodes[1].links, [])
+        self.assertEqual(path.nodes[5].links, [(2, 1)])
+        self.assertEqual(dropped, ["link of 2:2 to 1:3"])
+
 
 if __name__ == "__main__":
     unittest.main()

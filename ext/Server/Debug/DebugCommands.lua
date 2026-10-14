@@ -25,7 +25,8 @@ DebugCommands = class('DebugCommands')
 --   chat            { message, player }         a chat-command, as the player with that id or (no player) as
 --                                               ChatCommands.CONSOLE with all permissions -> { lines }
 --   walk            see BotWalker               a bot walks given points, answers where it got (stuck)
---   walk_stop       {}                          stops it
+--   drive           see BotWalker               a bot drives a vehicle along given points, answers as walk
+--   walk_stop       {}                          stops it (also drive)
 
 ---@type DebugBridge
 local m_DebugBridge = require('Debug/DebugBridge')
@@ -144,6 +145,7 @@ function DebugCommands:__init()
 	m_DebugBridge:RegisterCommand('entities', self.Entities)
 	m_DebugBridge:RegisterCommand('zone_probe', self.ZoneProbe)
 	m_DebugBridge:RegisterCommand('walk', self.Walk)
+	m_DebugBridge:RegisterCommand('drive', self.Drive)
 	m_DebugBridge:RegisterCommand('walk_stop', self.WalkStop)
 	m_DebugBridge:RegisterCommand('navzones_apply', self.NavZonesApply)
 	m_DebugBridge:RegisterCommand('rcon', self.Rcon)
@@ -524,6 +526,12 @@ end
 ---A bot walks the given points (BotWalker.lua), the answer comes when it got there or got stuck.
 function DebugCommands.Walk(p_Args, p_Bridge, p_Command)
 	m_BotWalker:Start(p_Bridge, p_Command.id, p_Args)
+	return DebugBridge.ASYNC
+end
+
+---A bot drives a vehicle along the given points (BotWalker.lua).
+function DebugCommands.Drive(p_Args, p_Bridge, p_Command)
+	m_BotWalker:Start(p_Bridge, p_Command.id, p_Args, true)
 	return DebugBridge.ASYNC
 end
 

@@ -35,6 +35,14 @@ local function _IsEntityValid(p_Entity)
 	return s_Ok and s_HasData
 end
 
+---Whether the spawn of the game is on (a spawn of a capture point only while its team holds it).
+---@param p_Entity Entity
+---@return boolean
+local function _SpawnOn(p_Entity)
+	local s_Ok, s_On = pcall(function() return SpawnEntity(p_Entity).enabled end)
+	return s_Ok and s_On == true
+end
+
 -- Removes destroyed entities from a list in place and returns it.
 local function _PruneInvalidEntities(p_List)
 	if p_List == nil then
@@ -97,6 +105,8 @@ function GameDirector:RegisterVars()
 	self.m_StationaryAaTeams = {}
 	-- Levels with a mesh: team of the vehicle-spawn of the engine each vehicle spawned at, by instanceId.
 	self.m_VehicleSpawnTeams = {}
+	-- Vehicles of the base away from the HQ: the spawn of the game that puts soldiers into it, by instanceId.
+	self.m_SpawnInVehicle = {}
 	self.m_SpawnableVehicles = {}
 	self.m_MobileRespawnVehicles = {}
 	self.m_AvailableVehicles = {}
@@ -185,6 +195,7 @@ function GameDirector:OnRoundOver(p_RoundTime, p_WinningTeam)
 		self.m_AvailableVehicles[l_Team] = {}
 	end
 	self.m_StationaryAaTeams = {}
+	self.m_SpawnInVehicle = {}
 	self.m_Gunship = nil
 	self.m_GunshipReservedEntry = nil
 end
@@ -1092,7 +1103,7 @@ function GameDirector:_CheckVehicleProgress(p_Bot)
 	-- A launcher (TOW, Kornet) never moves: it is of use while it has a target, without one for VEHICLE_PROGRESS_TIME
 	-- the bot gets out, also next to its objective.
 	local s_Launcher = s_Driver and m_Vehicles:IsVehicleType(p_Bot.m_ActiveVehicle, VehicleTypes.StationaryLauncher)
-	if p_Bot.m_Player.soldier == nil or not (s_Passenger or (s_Driver and s_Vehicle ~= nil))
+	if p_Bot.m_Player.soldier == nil or not (s_Passenger or (s_Driver and s_Vehicle ~= nil)) or p_Bot._RemoteWalk ~= nil
 		or (s_Driver and p_Bot._VehicleWaitTimer > 0.0) or (s_Passenger and p_Bot._ShootPlayer ~= nil)
 		or (s_Launcher and p_Bot._ShootPlayer ~= nil) then
 		p_Bot._VehicleAnchor = nil
@@ -1421,7 +1432,9 @@ function GameDirector:GetSpawnableVehicle(p_TeamId)
 	for l_Index = 1, #spawnableVehiclesForTeamID do
 		local l_Vehicle = spawnableVehiclesForTeamID[l_Index]
 		local s_Data = m_Vehicles:GetVehicleByEntity(l_Vehicle)
-		if s_Data == nil or (m_Vehicles:HasFreeBotSeat(l_Vehicle, s_Data) and self:HasVehicleWay(s_Data, l_Vehicle)) then
+		local s_Spawn = self.m_SpawnInVehicle[l_Vehicle.instanceId]
+		if (s_Spawn == nil or _SpawnOn(s_Spawn))
+			and (s_Data == nil or (m_Vehicles:HasFreeBotSeat(l_Vehicle, s_Data) and self:HasVehicleWay(s_Data, l_Vehicle))) then
 			s_Usable[#s_Usable + 1] = l_Vehicle
 		end
 	end
@@ -1652,6 +1665,16 @@ function GameDirector:OnVehicleSpawnDone(p_Entity)
 			and not m_Vehicles:IsVehicleType(s_VehicleData, VehicleTypes.MavBot)
 			and not m_Vehicles:IsGunship(s_VehicleData) then
 			local s_InBase = self:_IsInBase(s_Position, s_Team)
+			if not s_InBase then
+				local s_Spawn = self:_SpawnInVehicle(s_Position, s_Team)
+				self.m_SpawnInVehicle[p_Entity.instanceId] = s_Spawn
+				s_InBase = s_Spawn ~= nil
+			end
+			if m_DebugBridge.m_Enabled then
+				m_DebugBridge:Event('vehicle_registered', { vehicle = s_VehicleData.Name, id = p_Entity.instanceId, team = s_Team,
+					inBase = s_InBase, spawnIn = self.m_SpawnInVehicle[p_Entity.instanceId] ~= nil,
+					pos = { s_Position.x, s_Position.y, s_Position.z } })
+			end
 			m_Logger:Write("Vehicle spawned: " .. s_VehicleData.Name .. ", team " .. tostring(s_Team) .. ", in base: "
 				.. tostring(s_InBase))
 			self:AddEntityToVehicleCollection(s_InBase and self.m_SpawnableVehicles or self.m_AvailableVehicles,
@@ -3123,6 +3146,39 @@ function GameDirector:_VehicleSpawnTeam(p_Position)
 		s_Entity = s_Iterator:Next()
 	end
 	return s_Best
+end
+
+---The spawn of the game that puts soldiers of the team right into the vehicle at the position: a soldier spawn with the
+---vehicle-spawn on its bus (XP3_Alborz: the helicopters on their pads 130-700 m from the HQ, no bot ever got to them on
+---foot). The vehicle is one of the base then, bots spawn into it while that spawn is on (GetSpawnableVehicle: not while
+---the level loads, at a capture point only while the team holds it, XP5 dirt bikes).
+---@param p_Position Vec3
+---@param p_Team TeamId|integer
+---@return Entity|nil
+function GameDirector:_SpawnInVehicle(p_Position, p_Team)
+	local s_Iterator = EntityManager:GetIterator('ServerCharacterSpawnEntity')
+	local s_Entity = s_Iterator:Next()
+	while s_Entity ~= nil do
+		local s_Team = SpawnEntity(s_Entity).teamId
+		if s_Entity.data ~= nil and s_Entity.data:Is('CharacterSpawnReferenceObjectData') then
+			local s_DataTeam = CharacterSpawnReferenceObjectData(s_Entity.data).team
+			if s_DataTeam == TeamId.Team1 or s_DataTeam == TeamId.Team2 then
+				s_Team = s_DataTeam
+			end
+		end
+		local s_Bus = s_Entity.bus
+		if s_Team == p_Team and s_Bus ~= nil then
+			for l_Index = 1, #s_Bus.entities do
+				local l_Entity = s_Bus.entities[l_Index]
+				if l_Entity:Is('ServerVehicleSpawnEntity')
+					and SpawnEntity(l_Entity).transform.trans:Distance(p_Position) <= VEHICLE_SPAWN_RANGE then
+					return s_Entity
+				end
+			end
+		end
+		s_Entity = s_Iterator:Next()
+	end
+	return nil
 end
 
 ---Whether the position is in a base of the team: an HQ of the team within VEHICLE_HQ_RANGE, without HQs (rush) a spawn

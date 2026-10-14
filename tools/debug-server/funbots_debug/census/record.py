@@ -11,6 +11,9 @@
    and the way is planned again (TRIES times).
 4. The points it walked to the end are the path.
 
+The same for any stretch (`census trace`): a new foot path from a point to the network, or a stretch of a path walked
+or driven again (a vehicle path with a vehicle of the level, command "drive": VEHICLE planning, wider and flatter).
+
 The paths are written into mapfiles/<map>.map (as recorded in the game, `census navpaths` trims them at the mesh) and
 census/recorded/<map>.json.
 
@@ -56,6 +59,35 @@ RAY_CHUNK = 3000
 RAY_FLAGS = ["DontCheckCharacter", "DontCheckRagdoll", "DontCheckWater", "CheckDetailMesh"]
 NEIGHBOURS = [(dx, dz) for dx in (-1, 0, 1) for dz in (-1, 0, 1) if dx or dz]
 RECORDED = Path(__file__).resolve().parents[2] / "census" / "recorded"
+
+
+@dataclass(frozen=True)
+class Profile:
+    """What a way has to be like: for a soldier (FOOT, the constants above) or a vehicle (VEHICLE)."""
+    cell: float = CELL
+    step_up: float = STEP_UP
+    step_down: float = STEP_DOWN
+    ground_above: float = GROUND_ABOVE
+    ground_below: float = GROUND_BELOW
+    wall_heights: tuple = WALL_HEIGHTS
+    headroom: float = HEADROOM
+    wall_cost: float = WALL_COST
+    side: float = SIDE
+    width: float = 0.0           # Walls are also looked for this far to both sides of a step (the body of a vehicle).
+    sample: float = SAMPLE
+    spacing: float = SPACING
+    piece_max: float = PIECE_MAX
+    goal_range: float = GOAL_RANGE
+    goal_height: float = GOAL_HEIGHT
+    block_radius: float = BLOCK_RADIUS
+
+
+FOOT = Profile()
+# Jeeps and tanks: a slope of up to about 25 degrees, no kerbs, 3 m wide with room above; waypoints as far apart as on
+# the vehicle paths recorded by players.
+VEHICLE = Profile(cell=2.5, step_up=0.6, step_down=0.6, ground_above=1.6, wall_heights=(0.7, 1.6), headroom=3.0,
+                  wall_cost=2.0, side=1.6, width=1.5, sample=1.0, spacing=4.0, piece_max=40.0, goal_range=4.0,
+                  goal_height=2.0, block_radius=4.0)
 
 
 @dataclass
@@ -140,16 +172,17 @@ class Rays:
         return hits
 
 
-def _key(x: float, y: float, z: float) -> tuple[int, int, int]:
-    return round(x / CELL), round(z / CELL), round(y / 2.0)
+def _key(x: float, y: float, z: float, cell: float = CELL) -> tuple[int, int, int]:
+    return round(x / cell), round(z / cell), round(y / 2.0)
 
 
 class Planner:
     """A* over the cells, the rays asked for in batches (BATCH cells at once)."""
 
-    def __init__(self, rays: Rays, gap: Gap, shapes: list | None = None):
+    def __init__(self, rays: Rays, gap: Gap, shapes: list | None = None, profile: Profile = FOOT):
         self.rays = rays
         self.gap = gap
+        self.profile = profile
         xs = [p[0] for p in gap.best] + [gap.best[0][0]]
         zs = [p[2] for p in gap.best]
         self.box = (min(xs) - MARGIN, max(xs) + MARGIN, min(zs) - MARGIN, max(zs) + MARGIN)
@@ -168,8 +201,12 @@ class Planner:
         return self.box[0] <= x <= self.box[1] and self.box[2] <= z <= self.box[3] and \
             (not self.shapes or any(_in_polygon(x, z, shape) for shape in self.shapes))
 
+    def _key(self, pos) -> tuple[int, int, int]:
+        return _key(*pos, cell=self.profile.cell)
+
     def _goal(self, pos) -> bool:
-        return any(math.hypot(pos[0] - g[0], pos[2] - g[2]) <= GOAL_RANGE and abs(pos[1] - g[1]) <= GOAL_HEIGHT
+        p = self.profile
+        return any(math.hypot(pos[0] - g[0], pos[2] - g[2]) <= p.goal_range and abs(pos[1] - g[1]) <= p.goal_height
                    for g in self.goals)
 
     def _heuristic(self, pos) -> float:
@@ -180,18 +217,19 @@ class Planner:
         todo = [(key, pos) for key, pos in cells if key not in self.cache]
         if not todo:
             return
+        p = self.profile
         # The ground at the neighbour and in the middle (from twice the height at the neighbour: stairs rise more than
         # a step from cell to cell, a ledge rises all at once).
         ground_rays, ground_meaning = [], []
         for key, pos in todo:
             x, y, z = pos
             for dx, dz in NEIGHBOURS:
-                nx, nz = (key[0] + dx) * CELL, (key[1] + dz) * CELL
+                nx, nz = (key[0] + dx) * p.cell, (key[1] + dz) * p.cell
                 if not self._inside(nx, nz):
                     continue
                 mx, mz = (x + nx) / 2, (z + nz) / 2
-                ground_rays.append([mx, y + GROUND_ABOVE, mz, mx, y - GROUND_BELOW, mz])
-                ground_rays.append([nx, y + 2 * GROUND_ABOVE, nz, nx, y - GROUND_BELOW, nz])
+                ground_rays.append([mx, y + p.ground_above, mz, mx, y - p.ground_below, mz])
+                ground_rays.append([nx, y + 2 * p.ground_above, nz, nx, y - p.ground_below, nz])
                 ground_meaning.append((key, pos, nx, nz))
         hits = self.rays.cast(ground_rays)
         candidates = []
@@ -200,9 +238,9 @@ class Planner:
             if middle is None or end is None:
                 candidates.append((key, pos, None))
                 continue
-            my = pos[1] + GROUND_ABOVE - middle
-            ny = pos[1] + 2 * GROUND_ABOVE - end
-            if my - pos[1] > STEP_UP or ny - my > STEP_UP or pos[1] - my > STEP_DOWN or my - ny > STEP_DOWN:
+            my = pos[1] + p.ground_above - middle
+            ny = pos[1] + 2 * p.ground_above - end
+            if my - pos[1] > p.step_up or ny - my > p.step_up or pos[1] - my > p.step_down or my - ny > p.step_down:
                 candidates.append((key, pos, None))
                 continue
             candidates.append((key, pos, [nx, ny, nz]))
@@ -210,10 +248,13 @@ class Planner:
         for index, (key, pos, npos) in enumerate(candidates):
             if npos is None:
                 continue
-            for height in WALL_HEIGHTS:
-                wall_rays.append([pos[0], pos[1] + height, pos[2], npos[0], npos[1] + height, npos[2]])
-                wall_meaning.append(index)
-            wall_rays.append([npos[0], npos[1] + 0.2, npos[2], npos[0], npos[1] + HEADROOM, npos[2]])
+            sx, sz = _side(pos, npos, p.width)
+            for height in p.wall_heights:
+                for offset in ((0.0, 1.0, -1.0) if p.width else (0.0,)):
+                    wall_rays.append([pos[0] + sx * offset, pos[1] + height, pos[2] + sz * offset,
+                                      npos[0] + sx * offset, npos[1] + height, npos[2] + sz * offset])
+                    wall_meaning.append(index)
+            wall_rays.append([npos[0], npos[1] + 0.2, npos[2], npos[0], npos[1] + p.headroom, npos[2]])
             wall_meaning.append(index)
         blocked_index = {index for index, hit in zip(wall_meaning, self.rays.cast(wall_rays)) if hit is not None}
         result: dict[tuple[int, int, int], tuple[list, int]] = {key: ([], 0) for key, _ in todo}
@@ -222,7 +263,7 @@ class Planner:
             if npos is None or index in blocked_index:
                 result[key] = (neighbours, walls + 1)
                 continue
-            neighbours.append((_key(*npos), npos, math.dist(pos, npos)))
+            neighbours.append((self._key(npos), npos, math.dist(pos, npos)))
         self.cache.update(result)
 
     def plan(self, starts: list[list[float]]) -> list[list[float]] | None:
@@ -232,7 +273,7 @@ class Planner:
         came: dict = {}
         positions: dict = {}
         for start in starts:
-            key = _key(*start)
+            key = self._key(start)
             if key in self.blocked:
                 continue
             cost[key] = 0.0
@@ -264,7 +305,7 @@ class Planner:
             self._expand(batch)
             for key, pos in batch:
                 neighbours, walls = self.cache[key]
-                factor = 1.0 + WALL_COST * walls / len(NEIGHBOURS)
+                factor = 1.0 + self.profile.wall_cost * walls / len(NEIGHBOURS)
                 for nkey, npos, metres in neighbours:
                     if nkey in self.blocked or nkey in closed:
                         continue
@@ -276,31 +317,41 @@ class Planner:
                         heapq.heappush(heap, (new + self._heuristic(npos), nkey))
         return None
 
-    def block_near(self, pos: list[float], radius: float = BLOCK_RADIUS) -> int:
+    def block_near(self, pos: list[float], radius: float | None = None) -> int:
+        radius = self.profile.block_radius if radius is None else radius
         count = 0
         for key in list(self.cache) + list(self.blocked):
-            x, z = key[0] * CELL, key[1] * CELL
+            x, z = key[0] * self.profile.cell, key[1] * self.profile.cell
             if math.hypot(x - pos[0], z - pos[2]) <= radius and abs(key[2] * 2.0 - pos[1]) <= 2.5:
                 if key not in self.blocked:
                     self.blocked.add(key)
                     count += 1
-        self.blocked.add(_key(*pos))
+        self.blocked.add(self._key(pos))
         return count
 
 
-def _clear(rays: Rays, a: list[float], b: list[float]) -> bool:
-    """Whether a soldier walks straight from a to b: ground all along (no step, no hole), nothing in the way, room to
-    the sides."""
+def _side(a: list[float], b: list[float], distance: float) -> tuple[float, float]:
+    """The horizontal vector of the length distance square to the way from a to b."""
     length = math.hypot(b[0] - a[0], b[2] - a[2])
-    samples = max(1, math.ceil(length / SAMPLE))
+    if length <= 0 or not distance:
+        return 0.0, 0.0
+    return -(b[2] - a[2]) / length * distance, (b[0] - a[0]) / length * distance
+
+
+def _clear(rays: Rays, a: list[float], b: list[float], profile: Profile = FOOT) -> bool:
+    """Whether a soldier (a vehicle) gets straight from a to b: ground all along (no step, no hole), nothing in the
+    way, room to the sides."""
+    p = profile
+    length = math.hypot(b[0] - a[0], b[2] - a[2])
+    samples = max(1, math.ceil(length / p.sample))
     ground_rays = []
     for index in range(samples + 1):
         t = index / samples
         x, y, z = a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t, a[2] + (b[2] - a[2]) * t
-        ground_rays.append([x, y + GROUND_ABOVE, z, x, y - GROUND_BELOW, z])
-    side_x, side_z = (-(b[2] - a[2]) / length * SIDE, (b[0] - a[0]) / length * SIDE) if length > 0 else (0.0, 0.0)
+        ground_rays.append([x, y + p.ground_above, z, x, y - p.ground_below, z])
+    side_x, side_z = _side(a, b, p.side)
     wall_rays = []
-    for height in WALL_HEIGHTS:
+    for height in p.wall_heights:
         for offset in (0.0, 1.0, -1.0):
             wall_rays.append([a[0] + side_x * offset, a[1] + height, a[2] + side_z * offset,
                               b[0] + side_x * offset, b[1] + height, b[2] + side_z * offset])
@@ -310,17 +361,18 @@ def _clear(rays: Rays, a: list[float], b: list[float]) -> bool:
         return False
     heights = [ray[1] - hit for ray, hit in zip(ground_rays, grounds)]
     # Samples every SAMPLE metres: half a cell, as the planner checks.
-    return all(-STEP_DOWN <= h2 - h1 <= STEP_UP for h1, h2 in zip(heights, heights[1:]))
+    return all(-p.step_down <= h2 - h1 <= p.step_up for h1, h2 in zip(heights, heights[1:]))
 
 
-def smooth(rays: Rays, cells: list[list[float]]) -> list[list[float]]:
+def smooth(rays: Rays, cells: list[list[float]], profile: Profile = FOOT) -> list[list[float]]:
     """The cells joined to straight pieces where that is clear (greedy, the farthest cell first)."""
     result = [cells[0]]
     index = 0
     while index < len(cells) - 1:
         reach = index + 1
         for other in range(len(cells) - 1, index + 1, -1):
-            if math.dist(cells[index], cells[other]) <= PIECE_MAX and _clear(rays, cells[index], cells[other]):
+            if math.dist(cells[index], cells[other]) <= profile.piece_max and \
+                    _clear(rays, cells[index], cells[other], profile):
                 reach = other
                 break
         result.append(cells[reach])
@@ -349,9 +401,13 @@ def resample(points: list[list[float]], spacing: float = SPACING) -> list[list[f
     return result
 
 
-def walk(server, points: list[list[float]], timeout: float = 240.0) -> dict:
-    answer = server.request("/api/command?wait=" + str(int(timeout) + 30), {"type": "walk", "args": {
-        "points": points, "speed": "normal", "stuck": 6, "timeout": timeout}}, timeout=timeout + 40)
+def walk(server, points: list[list[float]], timeout: float = 240.0, vehicle: int | None = None) -> dict:
+    """A bot walks the points, or drives them in the vehicle (its instance id)."""
+    args = {"points": points, "speed": "normal", "stuck": 6, "timeout": timeout}
+    if vehicle is not None:
+        args.update(vehicle=vehicle, stuck=10)
+    answer = server.request("/api/command?wait=" + str(int(timeout) + 30), {
+        "type": "walk" if vehicle is None else "drive", "args": args}, timeout=timeout + 40)
     if answer.get("status") != "ok":
         raise RuntimeError(f"walk: {answer.get('error') or answer.get('status')}")
     return answer.get("result") or {}
@@ -365,10 +421,12 @@ def link_of(gap: Gap, end: list[float]) -> tuple[int, int] | None:
     return None
 
 
-def record_gap(server, gap: Gap, log=print, shapes: list | None = None) -> list[list[float]] | None:
-    """Plans, walks and replans the way of one gap. The way the bot walked, or None. shapes: area_shapes."""
+def record_gap(server, gap: Gap, log=print, shapes: list | None = None, profile: Profile = FOOT,
+               vehicle: int | None = None) -> list[list[float]] | None:
+    """Plans, walks (drives: vehicle) and replans the way of one gap. The way the bot walked, or None. shapes:
+    area_shapes."""
     rays = Rays(server)
-    planner = Planner(rays, gap, shapes)
+    planner = Planner(rays, gap, shapes, profile)
     # From the spawn points closest to the goal.
     starts = sorted(gap.starts, key=lambda s: math.dist(s, gap.best[1]))[:6]
     for attempt in range(1, TRIES + 1):
@@ -376,9 +434,10 @@ def record_gap(server, gap: Gap, log=print, shapes: list | None = None) -> list[
         if cells is None:
             log(f"    try {attempt}: no way found ({len(planner.cache)} cells, {rays.count} rays)")
             return None
-        points = resample(smooth(rays, cells))
-        log(f"    try {attempt}: {len(cells)} cells -> {len(points)} points, {rays.count} rays; walking")
-        result = walk(server, points)
+        points = resample(smooth(rays, cells, profile), profile.spacing)
+        log(f"    try {attempt}: {len(cells)} cells -> {len(points)} points, {rays.count} rays; "
+            f"{'walking' if vehicle is None else 'driving'}")
+        result = walk(server, points, vehicle=vehicle)
         status = result.get("status")
         log(f"    walked: {status}, {result.get('reached')}/{len(points)} points in {result.get('time')} s")
         if status == "done":
@@ -386,7 +445,7 @@ def record_gap(server, gap: Gap, log=print, shapes: list | None = None) -> list[
             return points
         if status not in ("stuck", "border") or not result.get("pos"):
             return None
-        blocked = planner.block_near(result["pos"], BORDER_RADIUS if status == "border" else BLOCK_RADIUS)
+        blocked = planner.block_near(result["pos"], BORDER_RADIUS if status == "border" else None)
         log(f"    {status} at {[round(c, 1) for c in result['pos']]}: {blocked} cells blocked")
     return None
 
@@ -403,6 +462,47 @@ def add_path(data: MapData, points: list[list[float]], link: tuple[int, int] | l
     path.loops = False
     data.paths[index] = path
     return index
+
+
+# Data of a waypoint that stays with it and is not copied to new waypoints of a stretch.
+_OWN_DATA = ("Links", "LinkMode", "Action", "Objectives", "Vehicles", "Nav")
+
+
+def replace_stretch(data: MapData, path: int, first: int, last: int, points: list[list[float]]) -> list[str]:
+    """The waypoints between first and last of the path (both stay) replaced by the points (the way from first to
+    last without its ends). Links to later waypoints of the path are renumbered, links to the replaced ones dropped.
+    Returns what was dropped (to tell)."""
+    entry = data.paths[path]
+    if not 1 <= first < last <= len(entry.nodes):
+        raise ValueError(f"path {path} has no waypoints {first}-{last}")
+    model = entry.nodes[first] if last - first > 1 else entry.nodes[first - 1]
+    template = {key: value for key, value in model.data.items() if key not in _OWN_DATA}
+    # The speed of the stretch (bits 0-7), not the loop option of a first waypoint.
+    template_input = model.input & 0xFF
+    inner = [p for p in points if math.dist(p, entry.nodes[first - 1].pos) > 0.3
+             and math.dist(p, entry.nodes[last - 1].pos) > 0.3]
+    dropped = []
+    for node in entry.nodes[first:last - 1]:
+        for link in node.links:
+            dropped.append(f"link of {path}:{node.point} to {link[0]}:{link[1]}")
+    delta = len(inner) - (last - first - 1)
+    new_nodes = [Node(path, 0, (p[0], p[1], p[2]), template_input, json.loads(json.dumps(template))) for p in inner]
+    entry.nodes = entry.nodes[:first] + new_nodes + entry.nodes[last - 1:]
+    for number, node in enumerate(entry.nodes, start=1):
+        node.point = number
+    for other in data.paths.values():
+        for node in other.nodes:
+            links = node.links
+            if not any(link[0] == path for link in links):
+                continue
+            kept = []
+            for link_path, link_point in links:
+                if link_path == path and first < link_point < last:
+                    dropped.append(f"link of {other.index}:{node.point} to {path}:{link_point}")
+                    continue
+                kept.append((link_path, link_point + delta if link_path == path and link_point >= last else link_point))
+            node.set_links(kept)
+    return dropped
 
 
 def save_recorded(name: str, entries: list[dict], directory: Path = RECORDED) -> Path:

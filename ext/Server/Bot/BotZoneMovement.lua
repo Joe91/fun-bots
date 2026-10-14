@@ -885,6 +885,36 @@ function Bot:_ZoneRouteToExit(p_Junction)
 	s_State.Targets[#s_State.Targets + 1] = { Position = p_Junction.Waypoint.Position, Flags = 0 }
 end
 
+-- Waypoints looked at each way along a vehicle-path for the one closest to the objective (_VehicleDirectionTo).
+local VEHICLE_DIRECTION_LOOKAHEAD = 60
+
+---The way along the path of the waypoint that gets closer to the objective: the one with the waypoint closest to it
+---within VEHICLE_DIRECTION_LOOKAHEAD. For vehicle-paths without objectives (ObjectiveDirection finds nothing): XP5_003,
+---vehicles that left the network of the US base onto path 58 drove it back into the base, out again, round and round.
+---@param p_Waypoint Waypoint
+---@param p_Objective string
+---@return string|nil 'Next' or 'Previous'
+function Bot:_VehicleDirectionTo(p_Waypoint, p_Objective)
+	local s_Best = { Next = math.huge, Previous = math.huge }
+	for l_Direction, _ in pairs(s_Best) do
+		local s_Waypoint = p_Waypoint
+		for _ = 1, VEHICLE_DIRECTION_LOOKAHEAD do
+			s_Waypoint = s_Waypoint[l_Direction]
+			if s_Waypoint == nil or s_Waypoint.PathIndex ~= p_Waypoint.PathIndex then
+				break
+			end
+			local s_Distance = g_GameDirector:_GetDistanceFromObjective(p_Objective, s_Waypoint.Position)
+			if s_Distance < s_Best[l_Direction] then
+				s_Best[l_Direction] = s_Distance
+			end
+		end
+	end
+	if s_Best.Next == s_Best.Previous then
+		return nil
+	end
+	return s_Best.Next < s_Best.Previous and 'Next' or 'Previous'
+end
+
 ---Back to the waypoints: on the path of the junction (or the closest path), heading for the objective.
 ---@param p_Junction NavZoneJunction|nil
 function Bot:_LeaveZone(p_Junction)
@@ -921,6 +951,9 @@ function Bot:_LeaveZone(p_Junction)
 			end
 			s_Direction = s_Direction
 				or m_NodeCollection:ObjectiveDirection(s_Waypoint, self._Objective, s_State ~= nil and s_State.Vehicle)
+			if s_Direction == nil and s_State ~= nil and s_State.Vehicle then
+				s_Direction = self:_VehicleDirectionTo(s_Waypoint, self._Objective)
+			end
 			if s_Direction then
 				self._InvertPathDirection = (s_Direction == 'Previous')
 			end

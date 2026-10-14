@@ -590,6 +590,20 @@ file as a recorded path (walked back and forth, linked to the waypoint it ends a
 at the mesh. Spawns that reach each other get one way (three parallel ones from neighbouring spawns made a ring the bots
 walked round in). Spawns of a later rush stage are outside of the combat-area of the first one: not recorded.
 
+Any other stretch the same way, `census trace`: a stretch of a path walked again (debris across it, a wall the bots get
+stuck at), driven again with a vehicle of the level, or a new foot path from a point to a point:
+```
+python -m funbots_debug.census trace XP4_Parl_RushLarge0 --replace 5:36-45 [--dry-run]
+python -m funbots_debug.census trace MP_013_ConquestLarge0 --replace 92:194-174 --vehicle Vodnik   # B < A: against the path
+python -m funbots_debug.census trace MAP --from X,Y,Z --to X,Y,Z      # a new foot path, linked if --to is a waypoint
+```
+`--replace` keeps waypoints A and B and puts the way walked between them instead of the waypoints there (links to later
+waypoints of the path are renumbered). With `--vehicle` (part of the name, or the instance id from the state) the way is
+planned for a vehicle (cells of 2.5 m, 3 m wide, no kerbs, slopes up to about 25 degrees, points every 4 m) and a bot
+drives it (command `drive` of the mod: it is put into that vehicle on the first point and steers to the points, no
+obstacle handling - where the vehicle stops is where it got stuck). Then cut with `navpaths --write` as above. A path
+as it is can be walked or driven with the commands `walk` / `drive` as well (points straight from the waypoint-file).
+
 ### Paths: trimmed at the mesh
 
 In the areas of the mesh the bots walk the mesh, between them the recorded paths (as released, with their links: the
