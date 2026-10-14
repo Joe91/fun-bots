@@ -58,6 +58,8 @@ local DRIVER_DEFEND_PENALTY = 1000.0
 local STRANDED_MATE_DISTANCE = 60.0
 -- Seconds a bot without an objective waits where no way leads on before it respawns at a mate (_CheckStranded).
 local STRANDED_TIME = 30.0
+-- Rush: defenders that go to an armed MCOM, the closest ones (_ArmedDefenders).
+local ARMED_DEFENDERS = 5
 
 function GameDirector:__init()
 	self:RegisterVars()
@@ -397,13 +399,22 @@ function GameDirector:OnEngineUpdate(p_DeltaTime)
 		end
 	end
 
+	local s_ArmedDefenders = s_ArmedMcoms ~= nil and self:_ArmedDefenders(s_BotsByTeam[TeamId.Team2] or {}, s_ArmedMcoms)
+		or nil
+
 	for l_BotTeam = 1, Globals.NrOfTeams do
 		local l_Bots = s_BotsByTeam[l_BotTeam] or {}
 		for l_Index0 = 1, #l_Bots do
 			local l_Bot = l_Bots[l_Index0]
 			local s_BotObjective = l_Bot:GetObjective()
-			if s_ArmedMcoms ~= nil and l_BotTeam == TeamId.Team2 then
-				local s_Armed = self:_ArmedMcomToDefend(l_Bot, s_ArmedMcoms)
+			if s_ArmedDefenders ~= nil and l_BotTeam == TeamId.Team2 then
+				---@type string|nil
+				local s_Armed = s_ArmedDefenders[l_Bot]
+				local s_Current = s_BotObjective ~= nil and s_BotObjective ~= ''
+					and (self:_GetObjectiveFromSubObj(s_BotObjective) or s_BotObjective) or nil
+				if s_Armed == s_Current then
+					s_Armed = nil
+				end
 				if s_Armed ~= nil then
 					l_Bot:SetObjective(s_Armed, BotObjectiveModes.Attack)
 					s_BotObjective = s_Armed
@@ -566,7 +577,7 @@ function GameDirector:OnEngineUpdate(p_DeltaTime)
 
 				if s_ObjectiveMode ~= BotObjectiveModes.Defend then
 					if s_Objective.team ~= l_BotTeam then
-						-- Not from an armed MCOM of the defenders (_ArmedMcomToDefend sends them there): back and forth.
+						-- Not from an armed MCOM of the defenders (_ArmedDefenders sends them there): back and forth.
 						if s_Objective.assigned[l_BotTeam] > s_MaxAssignsAttack[l_BotTeam]
 							and not (l_BotTeam == TeamId.Team2 and s_Objective.isAttacked and Globals.IsRush) then
 							s_Objective.assigned[l_BotTeam] = s_Objective.assigned[l_BotTeam] - 1
@@ -1259,35 +1270,41 @@ function GameDirector:OnMcomDestroyedBy(p_Player)
 	end
 end
 
----Rush: the armed MCOM a defender on foot goes to (the closest one in reach that a way leads to), nil if it should keep
----its objective (already there, too far, in a vehicle).
----@param p_Bot Bot
+---Rush: which defenders go to an armed MCOM (bot -> "mcom N"): per armed MCOM the ARMED_DEFENDERS closest ones on
+---foot within RUSH_DEFEND_ARMED_DISTANCE that a way leads there from, each to the closest armed MCOM it is one of them
+---for; the others keep their MCOM. All of them went (MP_007: the nine at MCOM 2 left for MCOM 1, 55 m away, and MCOM 2
+---was armed two seconds later with nobody there), and one with an armed MCOM as objective kept it while the other one
+---was closer.
+---@param p_Bots Bot[] the defenders
 ---@param p_ArmedMcoms string[]
----@return string|nil
-function GameDirector:_ArmedMcomToDefend(p_Bot, p_ArmedMcoms)
-	local s_Soldier = p_Bot.m_Player.soldier
-	if s_Soldier == nil or not g_BotStates:IsSoldierState(p_Bot.m_ActiveState) then
-		return nil
-	end
-	local s_Current = p_Bot:GetObjective()
-	if s_Current ~= nil and s_Current ~= '' then
-		s_Current = self:_GetObjectiveFromSubObj(s_Current) or s_Current
-	end
-	local s_Position = s_Soldier.worldTransform.trans
-	local s_Best = nil
-	local s_BestDistance = Registry.BOT.RUSH_DEFEND_ARMED_DISTANCE
-	for l_Index = 1, #p_ArmedMcoms do
-		local l_Name = p_ArmedMcoms[l_Index]
-		if l_Name == s_Current then
-			return nil
-		end
-		local s_Distance = self:_GetDistanceFromObjective(l_Name, s_Position)
-		if s_Distance < s_BestDistance and self:_CanReach(p_Bot, l_Name) then
-			s_Best = l_Name
-			s_BestDistance = s_Distance
+---@return table<Bot, string>
+function GameDirector:_ArmedDefenders(p_Bots, p_ArmedMcoms)
+	local s_Choices = {}
+	for l_Index = 1, #p_Bots do
+		local l_Bot = p_Bots[l_Index]
+		local s_Soldier = l_Bot.m_Player.soldier
+		if s_Soldier ~= nil and g_BotStates:IsSoldierState(l_Bot.m_ActiveState) then
+			local s_Position = s_Soldier.worldTransform.trans
+			for l_Mcom = 1, #p_ArmedMcoms do
+				local s_Distance = self:_GetDistanceFromObjective(p_ArmedMcoms[l_Mcom], s_Position)
+				if s_Distance < Registry.BOT.RUSH_DEFEND_ARMED_DISTANCE then
+					s_Choices[#s_Choices + 1] = { Bot = l_Bot, Mcom = p_ArmedMcoms[l_Mcom], Distance = s_Distance }
+				end
+			end
 		end
 	end
-	return s_Best
+	table.sort(s_Choices, function(p_A, p_B) return p_A.Distance < p_B.Distance end)
+	local s_Result = {}
+	local s_Count = {}
+	for l_Index = 1, #s_Choices do
+		local l_Choice = s_Choices[l_Index]
+		if s_Result[l_Choice.Bot] == nil and (s_Count[l_Choice.Mcom] or 0) < ARMED_DEFENDERS
+			and self:_CanReach(l_Choice.Bot, l_Choice.Mcom) then
+			s_Result[l_Choice.Bot] = l_Choice.Mcom
+			s_Count[l_Choice.Mcom] = (s_Count[l_Choice.Mcom] or 0) + 1
+		end
+	end
+	return s_Result
 end
 
 ---@param p_Objective string|nil "mcom N"

@@ -46,6 +46,8 @@ local ZONE_GIVE_UP_PATH = 50.0   -- Leaving after ZONE_MAX_FAILS onto the closes
                                  -- there straight (MP_017: 350 m, through the water), it tries from another point.
 local ZONE_WAIT_ATTACK = { 1.0, 3.0 } -- Seconds at each point while capturing.
 local ZONE_WAIT_DEFEND = { 5.0, 12.0 } -- Seconds at each point while defending.
+local ZONE_DEFEND_COST_PER_COVER = 10.0 -- Rush defenders: metres over the mesh to the spot to disarm the MCOM that weigh
+local ZONE_DEFEND_TAKEN = 2.0    -- as much as one side of cover; a point a teammate goes to costs this much cover.
 local ZONE_SUBOBJECTIVE_CYCLE = 1.0 -- Seconds between two checks whether the bot shall arm / disarm the MCOM.
 local ZONE_WAIT_VEHICLE = { 3.0, 8.0 } -- Seconds a vehicle stands at each point.
 local ZONE_GOAL_TRIES = 4        -- Random goals tried in a zone...
@@ -62,6 +64,10 @@ local ZONE_ARM_DETOUR_RANGE = 8.0 -- else, this close (horizontal metres) to the
 local ZONE_ARM_DETOUR_OFFSETS = { 1.0, 1.5, 2.0, 2.5, 3.0, 3.5 } -- metres to the side of the way tried,
 local ZONE_ARM_DETOURS = 2       -- times at most for one action.
 local ZONE_ARM_VIA_REACH = 0.6   -- Horizontal metres to the spot beside that count as reached.
+local ZONE_ARM_DIRECT_RANGE = 15.0 -- This close (horizontal metres) and level (ZONE_ARM_DIRECT_HEIGHT) with nothing in
+local ZONE_ARM_DIRECT_HEIGHT = 1.5 -- between, the soldier goes straight to the spot to arm or disarm (_ZoneArmDirect):
+                                   -- the points next to the spot can be a long way round (MP_007 MCOM 1, 1 m up from
+                                   -- where the defenders stand: from 12 m away to 96 m away). A step it jumps up.
 local ZONE_ARM_RAY_HEIGHTS = { 0.4, 0.9, 1.4 } -- Rays above the feet for those ways, a hit this close to the MCOM is the
 local ZONE_ARM_RAY_TOLERANCE = 0.8 -- MCOM itself.
 local ZONE_ARM_TIME = 8.0        -- Seconds of interacting (arming takes about 6): then the bot gives up for now.
@@ -489,7 +495,15 @@ function Bot:_ZoneDecide(p_Rejoined)
 		-- Into the vehicle, arm the MCOM: to the point next to it, then do it there (_ZoneAction).
 		s_State.Zone = s_Next.Zone or s_State.Zone
 		s_State.Action = s_Next.Action
-		self:_ZoneRouteTo(s_Next.Point)
+		-- Next to the MCOM already (a defender beside it when it gets armed): straight to it, not round over the points
+		-- next to the spot (MP_017 MCOM 2: from 2 m away round the building, shot on the way).
+		if not s_State.Vehicle and s_Next.Action.Kind == 'mcom' and self:_ZoneArmDirect(s_Next.Action) then
+			self:_ZoneRouteTo(nil)
+			-- Not back to its point of the mesh first either.
+			s_State.Targets = {}
+		else
+			self:_ZoneRouteTo(s_Next.Point)
+		end
 		s_State.Wait = 0.0
 		return
 	end
@@ -658,6 +672,36 @@ function Bot:_ZoneDefends(p_State)
 		or (Globals.IsRush and self.m_Player.teamId == TeamId.Team2 and p_State.Zone.Kind == 'mcom' and not p_State.Vehicle)
 end
 
+---Rush: where a defender holds its MCOM. Cover alone sent them all to the same few points, 20 m from the MCOM behind a
+---wall (MP_007 MCOM 2: eight defenders on two points, the way to disarm it 60 m round): also close to it over the mesh,
+---and not where teammates go already.
+---@param p_State BotZoneState
+---@return (fun(p_Point: integer): number|nil)|nil
+function Bot:_ZoneDefendScore(p_State)
+	if not Globals.IsRush or p_State.Zone.Kind ~= 'mcom' then
+		return nil
+	end
+	local s_Interact = g_GameDirector:_GetSubObjectiveFromObj(p_State.Zone.Name)
+	if s_Interact == nil or not m_NavRoutes:Knows(s_Interact) then
+		return nil
+	end
+	local s_Taken = {}
+	local s_Mates = g_BotManager:GetBots(self.m_Player.teamId) or {}
+	for l_Index = 1, #s_Mates do
+		local l_Zone = s_Mates[l_Index] ~= self and s_Mates[l_Index].m_Zone or nil
+		if l_Zone ~= nil and l_Zone.Goal ~= nil then
+			s_Taken[l_Zone.Goal] = (s_Taken[l_Zone.Goal] or 0) + 1
+		end
+	end
+	return function(p_Point)
+		local s_Cost = m_NavRoutes:MeshCost(p_Point, s_Interact)
+		if s_Cost == nil then
+			return nil
+		end
+		return -s_Cost / ZONE_DEFEND_COST_PER_COVER - (s_Taken[p_Point] or 0) * ZONE_DEFEND_TAKEN
+	end
+end
+
 ---Walks to the next point of the zone (not the one the bot is at).
 function Bot:_ZoneNewGoal()
 	local s_State = self.m_Zone
@@ -678,8 +722,9 @@ function Bot:_ZoneNewGoal()
 	local s_Far = nil
 	local s_FarRoute = nil
 	local s_FarCost = math.huge
+	local s_Score = s_Defend and not s_State.Vehicle and self:_ZoneDefendScore(s_State) or nil
 	for _ = 1, ZONE_GOAL_TRIES do
-		local l_Goal = m_NavZones:RandomPoint(s_State.Zone, s_State.Point, s_Defend and not s_State.Vehicle)
+		local l_Goal = m_NavZones:RandomPoint(s_State.Zone, s_State.Point, s_Defend and not s_State.Vehicle, s_Score)
 		if l_Goal == nil or s_From == nil then
 			break
 		end
@@ -1112,8 +1157,9 @@ function Bot:UpdateZoneMovement(p_DeltaTime)
 	if s_Target.Flags & NavZoneFlags.Crouch ~= 0 then
 		self.m_ActiveSpeedValue = BotMoveSpeeds.SlowCrouch
 		self._ZoneSpeedReason = 'crouch'
-	elseif s_Narrow or (s_State.Exit == nil and s_Target.Flags & NavZoneFlags.InZone ~= 0) then
-		-- Walking around in the zone. On the way out (to the next objective, to arm or disarm) the bot runs.
+	elseif s_Narrow or (s_State.Exit == nil and s_State.Action == nil and s_Target.Flags & NavZoneFlags.InZone ~= 0) then
+		-- Walking around in the zone. On the way out (to the next objective) and to arm or disarm the bot runs: the fuse is
+		-- 25 s (MP_013: 23 m in 18 s walking to disarm).
 		self.m_ActiveSpeedValue = BotMoveSpeeds.Normal
 		self._ZoneSpeedReason = s_Narrow and ((s_TargetPoint ~= nil and s_TargetPoint.Clearance < ZONE_NARROW)
 			and 'narrow' or 'steep') or 'zone'
@@ -1501,6 +1547,24 @@ local function _ArmWayFree(p_From, p_To, p_Tolerance)
 		end
 	end
 	return true
+end
+
+---Whether the soldier can walk straight to the spot to arm or disarm the MCOM from where it is: close, about level
+---and nothing in between (ZONE_ARM_DIRECT_*).
+---@param p_Action table
+---@return boolean
+function Bot:_ZoneArmDirect(p_Action)
+	local s_Soldier = self.m_Player.soldier
+	local s_Goal = p_Action.Stand or p_Action.Position
+	if s_Soldier == nil or s_Goal == nil then
+		return false
+	end
+	local s_Here = s_Soldier.worldTransform.trans
+	local s_DeltaX = s_Goal.x - s_Here.x
+	local s_DeltaZ = s_Goal.z - s_Here.z
+	return s_DeltaX * s_DeltaX + s_DeltaZ * s_DeltaZ <= ZONE_ARM_DIRECT_RANGE * ZONE_ARM_DIRECT_RANGE
+		and math.abs(s_Goal.y - s_Here.y) <= ZONE_ARM_DIRECT_HEIGHT
+		and _ArmWayFree(s_Here, s_Goal, ZONE_ARM_RAY_TOLERANCE)
 end
 
 ---A spot beside the soldier (across the way to the goal, closest first) it can walk to straight and from which the way

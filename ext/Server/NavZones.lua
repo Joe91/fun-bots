@@ -1101,12 +1101,13 @@ function NavZones:Positions(p_Zone, p_Route)
 end
 
 ---A random point in the zone that can be reached from p_From, other than p_From. With p_Cover the ones with more cover
----are taken more often.
+---are taken more often; p_Score adds to that (nil: not that point, unless no try finds another).
 ---@param p_Zone NavZone
 ---@param p_From integer|nil
 ---@param p_Cover boolean
+---@param p_Score? fun(p_Point: integer): number|nil
 ---@return integer|nil
-function NavZones:RandomPoint(p_Zone, p_From, p_Cover)
+function NavZones:RandomPoint(p_Zone, p_From, p_Cover, p_Score)
 	local s_Part = p_From and p_Zone.Part[p_From]
 	local s_Candidates = {}
 	-- An MCOM: on its floor (the zone reaches to floors far below or above, a long way round).
@@ -1138,17 +1139,26 @@ function NavZones:RandomPoint(p_Zone, p_From, p_Cover)
 	local s_Best = nil
 	local s_BestScore = -1
 	-- Best of a few random tries: cover wins when defending.
+	local s_Fallback = nil
 	for _ = 1, p_Cover and 6 or 1 do
 		local s_Index = s_Candidates[MathUtils:GetRandomInt(1, #s_Candidates)]
-		if s_Index ~= s_Not then
-			local s_Score = p_Cover and p_Zone.Points[s_Index].Cover or 0
-			if s_Score > s_BestScore then
+		---@type number|nil
+		local s_Extra = 0.0
+		if p_Score ~= nil and s_Index ~= s_Not then
+			s_Extra = p_Score(s_Index)
+			if s_Extra == nil then
+				s_Fallback = s_Fallback or s_Index
+			end
+		end
+		if s_Index ~= s_Not and s_Extra ~= nil then
+			local s_Score = (p_Cover and p_Zone.Points[s_Index].Cover or 0) + s_Extra
+			if s_Best == nil or s_Score > s_BestScore then
 				s_BestScore = s_Score
 				s_Best = s_Index
 			end
 		end
 	end
-	return s_Best
+	return s_Best or s_Fallback
 end
 
 if g_NavZones == nil then

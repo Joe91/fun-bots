@@ -629,6 +629,19 @@ function NavRoutes:_ActionTarget(p_Objective, p_Action)
 	return s_Target or nil
 end
 
+---Metres over the mesh alone from the point to the objective (its target points), nil where the mesh doesn't lead
+---there.
+---@param p_Point integer
+---@param p_Objective string
+---@return number|nil
+function NavRoutes:MeshCost(p_Point, p_Objective)
+	local s_Target = self:Target(p_Objective)
+	if s_Target == nil then
+		return nil
+	end
+	return self:_MeshField(s_Target)[p_Point]
+end
+
 ---Whether bots get to the objective over the mesh and the paths (Target).
 ---@param p_Objective string|nil
 ---@return boolean
