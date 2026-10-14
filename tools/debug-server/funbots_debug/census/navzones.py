@@ -537,6 +537,24 @@ def _ladder(positions: list) -> bool:
     return False
 
 
+DROP_RISE = 1.5            # From one waypoint to the next this much down (up), steeper than DROP_SLOPE (about 50 degrees,
+DROP_SLOPE = 1.2           # stairs have 30 to 40): the person jumped down there, the way leads down only (XP1_003 rush:
+                           # off the deck at MCOM 6, 7 m; the bots that took it up stood at the wall).
+
+
+def _drop(positions: list) -> int | None:
+    """0: no drop along the waypoints, 1: drops down in their order (a one-way connection from the first to the last),
+    -1: against it, None: drops both ways (no way at all)."""
+    ways = set()
+    for start, end in zip(positions, positions[1:]):
+        rise = end[1] - start[1]
+        if abs(rise) >= DROP_RISE and abs(rise) > DROP_SLOPE * math.hypot(end[0] - start[0], end[2] - start[2]):
+            ways.add(1 if rise < 0 else -1)
+    if len(ways) > 1:
+        return None
+    return ways.pop() if ways else 0
+
+
 # Paths of the census from this number on were recorded since the last cut (navpaths.recorded_nodes).
 RECORDED_OFFSET = 100000
 
@@ -586,6 +604,8 @@ def _trace_edges(grid: _Area, owner: dict[Surface, int], points: list[Surface], 
             if last is not None and point - last[0] <= 40 and (find(last[1]) != find(network) or recorded) \
                     and all(index in positions for index in range(last[0], point + 1)) \
                     and not _ladder([positions[index] for index in range(last[0], point + 1)]) \
+                    and _drop([positions[index] for index in range(last[0], point + 1)]) is not None \
+                    and not (pair in grid_edges and _drop([positions[index] for index in range(last[0], point + 1)])) \
                     and not any(_blocked(nodes, path, index) for index in range(last[0], point)):
                 corners = [_round(positions[index]) for index in range(last[0], point + 1) if index in positions]
                 way = [points_pos for points_pos in [grid.pos(points[last[1]])] + corners + [grid.pos(points[network])]]
@@ -594,7 +614,10 @@ def _trace_edges(grid: _Area, owner: dict[Surface, int], points: list[Surface], 
                 # (counted from 0) where the person jumped (the extra-mode of the waypoint): the bots jump there too.
                 jumps = [number for number, index in enumerate(range(last[0], point + 1))
                          if _jumps(nodes, path, index)]
-                entry = [last[1], network, round(length, 1), corners, 1] + ([jumps] if jumps else [])
+                # 7th: one way only (_drop), 1 from the first point to the second, -1 back.
+                one_way = _drop([positions[index] for index in range(last[0], point + 1)])
+                entry = [last[1], network, round(length, 1), corners, 1] + ([jumps] if jumps or one_way else []) \
+                    + ([one_way] if one_way else [])
                 if pair in grid_edges:
                     # The connection of the grid takes the way the person walked (both directions in the game).
                     grid_edges[pair][:] = entry

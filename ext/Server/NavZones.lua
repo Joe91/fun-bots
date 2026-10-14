@@ -8,8 +8,11 @@ NavZones = class('NavZones')
 -- (tools/debug-server/funbots_debug/census/navzones.py) and saved in the table <map>_navzones of mod.db, in one row
 -- (name "@mesh", data: JSON):
 --   points  { { x, y, z, clearance, cover, flags } }  flags: 1 = in a zone, 2 = indoors, 4 = crouch
---   edges   { { a, b, length, { corner, ... }, along, { jump, ... } } }  a, b count from 0, corners { x, y, z } between
---           a and b; along waypoints (1): jumps are the corners (from 0) where the soldier who recorded them jumped
+--   edges   { { a, b, length, { corner, ... }, along, { jump, ... }, one way } }  a, b count from 0, corners { x, y, z }
+--           between a and b; along waypoints (1): jumps are the corners (from 0) where the soldier who recorded them
+--           jumped; one way (a jump down): 1 only from a to b, -1 only from b to a
+--           (Neighbours: OneWay on the entry of the way it leads, Against on the other; searches from a point skip Against,
+--           the ones out from a target - the costs to get there - skip OneWay)
 --   attach  { { path, point, mesh-point, distance, { x, y, z }, { corner, ... } } }  junctions with the waypoints
 --   vehicle { points, edges, attach }                 the mesh of the land vehicles (wide and open ground)
 --   zones   { { name, kind, center, radius, inside = { points }, vehicleInside = { vehicle-points } } }
@@ -81,7 +84,7 @@ local GRID_MAX_RINGS = 16
 ---@field Center Vec3
 ---@field Radius number
 ---@field Points NavZonePoint[]
----@field Neighbours table<integer, { To: integer, Cost: number, Corners: Vec3[], Jumps: table<integer, boolean>|nil, Penalty: number, Removed: boolean|nil }[]>
+---@field Neighbours table<integer, { To: integer, Cost: number, Corners: Vec3[], Jumps: table<integer, boolean>|nil, Penalty: number, Removed: boolean|nil, OneWay: boolean|nil, Against: boolean|nil }[]>
 ---@field Inside integer[] the points in the zone (the mesh itself: none)
 ---@field InsideSet table<integer, boolean>
 ---@field Junctions NavZoneJunction[]
@@ -353,9 +356,13 @@ local function _ParseMesh(p_Data)
 				end
 			end
 			local s_Cost = tonumber(l_Edge[3]) or s_Mesh.Points[s_A].Position:Distance(s_Mesh.Points[s_B].Position)
-			table.insert(s_Mesh.Neighbours[s_A], { To = s_B, Cost = s_Cost, Corners = s_Corners, Jumps = s_Jumps, Penalty = 0.0 })
+			-- A jump down: one way only.
+			local s_OneWay = tonumber(l_Edge[7]) or 0
+			table.insert(s_Mesh.Neighbours[s_A], { To = s_B, Cost = s_Cost, Corners = s_Corners, Jumps = s_Jumps, Penalty = 0.0,
+				OneWay = s_OneWay == 1 or nil, Against = s_OneWay == -1 or nil })
 			table.insert(s_Mesh.Neighbours[s_B],
-				{ To = s_A, Cost = s_Cost, Corners = s_Reversed, Jumps = s_JumpsReversed, Penalty = 0.0 })
+				{ To = s_A, Cost = s_Cost, Corners = s_Reversed, Jumps = s_JumpsReversed, Penalty = 0.0,
+					OneWay = s_OneWay == -1 or nil, Against = s_OneWay == 1 or nil })
 		end
 	end
 
@@ -823,7 +830,7 @@ end
 function NavZones:IsBlockedIn(p_Zone, p_Point)
 	local s_Neighbours = p_Zone.Neighbours[p_Point] or {}
 	for l_Index = 1, #s_Neighbours do
-		if s_Neighbours[l_Index].Penalty <= 0.0 then
+		if s_Neighbours[l_Index].Penalty <= 0.0 and not s_Neighbours[l_Index].Against then
 			return false
 		end
 	end
@@ -1049,7 +1056,7 @@ function NavZones:Route(p_Zone, p_From, p_To, p_Seed)
 			for l_Index = 1, #s_Neighbours do
 				local l_Edge = s_Neighbours[l_Index]
 				local s_To = l_Edge.To
-				if not l_Edge.Removed and not s_Closed[s_To] then
+				if not l_Edge.Removed and not l_Edge.Against and not s_Closed[s_To] then
 					local s_Point = s_Points[s_To]
 					local s_Step = l_Edge.Cost
 					if p_Seed ~= nil then

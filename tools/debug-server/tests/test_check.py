@@ -130,5 +130,14 @@ class CheckTest(unittest.TestCase):
         self.assertEqual(navzones._attach_loose(network, loose)["attach"][0][:3], [7, 1, 3])
 
 
+    def test_drop(self):
+        # Stairs (35 degrees): no drop. Off a deck 4 m down over 1.5 m: one way down, in the order of the waypoints.
+        stairs = [[0, 0, 0], [1, 0.7, 0], [2, 1.4, 0], [3, 2.1, 0]]
+        self.assertEqual(navzones._drop(stairs), 0)
+        deck = [[0, 7, 0], [1, 7, 0], [2.5, 3, 0], [4, 3, 0]]
+        self.assertEqual(navzones._drop(deck), 1)
+        self.assertEqual(navzones._drop(deck[::-1]), -1)
+        self.assertIsNone(navzones._drop(deck + [[5.5, 7, 0]]))
+
 if __name__ == "__main__":
     unittest.main()

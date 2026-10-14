@@ -416,7 +416,7 @@ function NavRoutes:_MeshDistance(p_From, p_To, p_Limit)
 			for l_Index = 1, #s_Neighbours do
 				local l_Edge = s_Neighbours[l_Index]
 				local s_Next = s_Distance + l_Edge.Cost
-				if not l_Edge.Removed and s_Next < (s_Cost[l_Edge.To] or math.huge) then
+				if not l_Edge.Removed and not l_Edge.Against and s_Next < (s_Cost[l_Edge.To] or math.huge) then
 					s_Cost[l_Edge.To] = s_Next
 					m_Heap.Push(s_Heap, s_Next, l_Edge.To)
 				end
@@ -698,7 +698,7 @@ function NavRoutes:_MeshField(p_Target)
 			for l_Index = 1, #s_Neighbours do
 				local l_Edge = s_Neighbours[l_Index]
 				local s_Next = s_Distance + l_Edge.Cost
-				if not l_Edge.Removed and s_Next < (s_Cost[l_Edge.To] or math.huge) then
+				if not l_Edge.Removed and not l_Edge.OneWay and s_Next < (s_Cost[l_Edge.To] or math.huge) then
 					s_Cost[l_Edge.To] = s_Next
 					m_Heap.Push(s_Heap, s_Next, l_Edge.To)
 				end
@@ -752,7 +752,8 @@ function NavRoutes:_Field(p_Target)
 				for l_Index = 1, #s_Neighbours do
 					local l_Edge = s_Neighbours[l_Index]
 					local s_Next = s_Cost + l_Edge.Cost + l_Edge.Penalty
-					if not l_Edge.Removed and s_Next < (s_MeshCost[l_Edge.To] or math.huge) then
+					-- The costs to get to the target: not up a jump down (OneWay: only from here to there).
+					if not l_Edge.Removed and not l_Edge.OneWay and s_Next < (s_MeshCost[l_Edge.To] or math.huge) then
 						s_MeshCost[l_Edge.To] = s_Next
 						m_Heap.Push(s_Heap, s_Next, l_Edge.To)
 					end
@@ -829,7 +830,7 @@ function NavRoutes:_JunctionCosts(p_Point)
 			for l_Index = 1, #s_Neighbours do
 				local l_Edge = s_Neighbours[l_Index]
 				local s_Next = s_Distance + l_Edge.Cost + l_Edge.Penalty
-				if not l_Edge.Removed and s_Next < (s_Cost[l_Edge.To] or math.huge) then
+				if not l_Edge.Removed and not l_Edge.Against and s_Next < (s_Cost[l_Edge.To] or math.huge) then
 					s_Cost[l_Edge.To] = s_Next
 					m_Heap.Push(s_Heap, s_Next, l_Edge.To)
 				end

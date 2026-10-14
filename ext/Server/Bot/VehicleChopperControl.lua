@@ -41,6 +41,9 @@ local CHOPPER_ATTACK_LOOKAHEAD = 100.0
 local CHOPPER_RECOVER_TIME = 2.5
 local CHOPPER_RECOVER_CLEARANCE = 40.0
 local CHOPPER_RECOVER_TILT = 0.05
+-- Also not attacking: nose further down than this (hit by a rocket, XP3_Alborz: -50 to -76 degrees after a hit, the
+-- chopper fell 60 m/s) or sinking faster than CHOPPER_ATTACK_SINK - level out and climb.
+local CHOPPER_NOSE_DOWN_MAX = -0.7 -- = -40 degrees
 
 function VehicleChopperControl:__init()
 	-- Nothing to do.
@@ -207,16 +210,23 @@ function VehicleChopperControl:UpdateYawChopperPilot(p_Bot, p_Attacking, p_Delta
 	local s_Height = s_VehiclePos.y
 	local s_Delta_Height = p_Bot._TargetPoint.Position.y - s_Height
 
-	-- Attacking low over the ground or sinking fast: level out and climb a while.
+	-- Attacking low over the ground, sinking fast or nose far down (also after a hit): level out and climb a while.
 	local s_Ground = nil
 	if p_Attacking then
 		local s_Forward = s_Transform.forward
 		s_Ground = self:_GroundAhead(p_DeltaTime, p_Bot, s_VehiclePos, s_Forward.x * CHOPPER_ATTACK_LOOKAHEAD,
 			s_Forward.z * CHOPPER_ATTACK_LOOKAHEAD, CHOPPER_ATTACK_LOOKAHEAD * math.sqrt(s_Forward.x ^ 2 + s_Forward.z ^ 2))
-		if (s_Ground ~= nil and s_Height - s_Ground < CHOPPER_ATTACK_CLEARANCE)
-			or PhysicsEntity(s_Vehicle).velocity.y < -CHOPPER_ATTACK_SINK then
+		if s_Ground ~= nil and s_Height - s_Ground < CHOPPER_ATTACK_CLEARANCE then
 			p_Bot._ChopperRecoverTime = CHOPPER_RECOVER_TIME
 		end
+		-- The height target of the movement is from before the attack: at least CHOPPER_RECOVER_CLEARANCE above the
+		-- ground ahead (XP3_Alborz: a damaged AH1Z, nose up, sank 3 m/s into the ground while it shot).
+		if s_Ground ~= nil then
+			s_Delta_Height = math.max(s_Delta_Height, s_Ground + CHOPPER_RECOVER_CLEARANCE - s_Height)
+		end
+	end
+	if s_Current_Pitch < CHOPPER_NOSE_DOWN_MAX or PhysicsEntity(s_Vehicle).velocity.y < -CHOPPER_ATTACK_SINK then
+		p_Bot._ChopperRecoverTime = CHOPPER_RECOVER_TIME
 	end
 	local s_Recovering = p_Bot._ChopperRecoverTime > 0.0
 	if s_Recovering then

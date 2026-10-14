@@ -34,6 +34,10 @@ function Bot:_OnFootAgain()
 	self._ChopperGround = nil
 	self._ChopperRecoverTime = 0.0
 	self._VehicleStart = nil
+	-- The zone it had in the vehicle (the vehicle-network of a zone, or where it got in) is no way on foot: onto the
+	-- mesh where it lands (_MeshAfterExit). MP_001: two bots out of a LAV-25 tried for 50 s to get to a point of the
+	-- vehicle-network of the base 50 m away.
+	self.m_Zone = nil
 	self:SetState(g_BotStates.States.Moving)
 	local s_Node = g_GameDirector:FindClosestPath(self.m_Player.soldier.worldTransform.trans:Clone(), false, true, nil)
 

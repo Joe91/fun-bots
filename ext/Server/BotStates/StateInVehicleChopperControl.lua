@@ -74,6 +74,13 @@ function StateInVehicleChopperControl:UpdateSlow(p_Bot, p_DeltaTime)
 	if p_Bot.m_Player.soldier == nil then
 		return
 	end
+	-- A gunner got in (or out) after the pilot: with a gunner the pilot of an attack chopper only flies
+	-- (Config.ChopperDriversAttack). Set only when the pilot got in, the pilot spawned first attacked anyway (half of
+	-- the time with a gunner on board, diving at the targets).
+	p_Bot:UpdateDontAttackFlag()
+	if p_Bot._DontAttackPlayers and p_Bot._ShootPlayer ~= nil then
+		p_Bot:AbortAttack()
+	end
 	local s_IsAttacking = p_Bot._ShootPlayer ~= nil
 	p_Bot:_CheckForVehicleActions(p_DeltaTime, true)
 	if not s_IsAttacking then

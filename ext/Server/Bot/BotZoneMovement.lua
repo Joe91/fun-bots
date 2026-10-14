@@ -1093,6 +1093,13 @@ function Bot:UpdateZoneMovement(p_DeltaTime)
 	if s_State == nil or s_Soldier == nil then
 		return false
 	end
+	-- On foot with the vehicle-network of its vehicle (destroyed under it, _OnFootAgain wasn't called): onto the mesh
+	-- where it lands.
+	if s_State.Vehicle then
+		self.m_Zone = nil
+		self._MeshAfterExit = true
+		return false
+	end
 
 	-- After a fight: back on the network from where the bot is now.
 	if #self._ShootWayPoints > 0 then
