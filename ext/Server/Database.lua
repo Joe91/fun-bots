@@ -96,13 +96,6 @@ function Database:Single(p_Query)
 	return s_Results[1]
 end
 
--- This is unused.
-function Database:Count(p_Query, p_Parameters)
-	local s_Results = self:Query(p_Query, p_Parameters)
-
-	return #s_Results
-end
-
 function Database:Fetch(p_Query)
 	return self:Query(p_Query)
 end

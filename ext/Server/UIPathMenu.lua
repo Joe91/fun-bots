@@ -14,7 +14,6 @@ local m_NodeEditor = require('NodeEditor')
 local m_PermissionManager = require('PermissionManager')
 
 function FunBotUIPathMenu:__init()
-	-- To-do: remove? Unused.
 	self.m_NavigationPath = {}
 	self.m_InPathMenu = false
 

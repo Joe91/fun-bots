@@ -471,33 +471,6 @@ function NodeCollection:Update(p_Waypoint, p_Data)
 	m_Utilities:mergeKeys(p_Waypoint, p_Data)
 end
 
----@param p_Data any
----@return boolean
----@return string
-function NodeCollection:UpdateMetadata(p_Data)
-	m_Logger:Write('[A] NodeCollection:UpdateMetadata -> p_Data: ' .. m_Utilities:dump(p_Data, true))
-
-	local s_Selection = self:GetSelected()
-
-	if #s_Selection < 1 then
-		return false, 'Must select one or more waypoints'
-	end
-
-	if type(p_Data) == 'string' then
-		p_Data = json.decode(p_Data) or {}
-	end
-
-	m_Logger:Write('[B] NodeCollection:UpdateMetadata -> p_Data: ' .. m_Utilities:dump(p_Data, true))
-
-	for i = 1, #s_Selection do
-		self:Update(s_Selection[i], {
-			Data = m_Utilities:mergeKeys(s_Selection[i].Data, p_Data)
-		})
-	end
-
-	return true, 'Success'
-end
-
 function NodeCollection:SetInput(p_Speed, p_Extra, p_Option)
 	p_Speed = tonumber(p_Speed) or 3
 	p_Extra = tonumber(p_Extra) or 0
@@ -1870,56 +1843,6 @@ function NodeCollection:FindAll(p_Vec3Position, p_Tolerance)
 	end
 
 	return s_WaypointsFound
-end
-
--- To-do: Not used any more - Remove?
-function NodeCollection:FindAlongTrace(p_Vec3Start, p_Vec3End, p_Granularity, p_Tolerance)
-	if p_Granularity == nil then
-		p_Granularity = 0.25
-	end
-
-	if p_Tolerance == nil then
-		p_Tolerance = 0.2
-	end
-
-	self:Log('NodeCollection:FindAlongTrace - p_Granularity: ' .. tostring(p_Granularity))
-	self:Log('NodeCollection:FindAlongTrace - p_Tolerance: ' .. tostring(p_Tolerance))
-
-	local s_Distance = math.min(math.max(p_Vec3Start:Distance(p_Vec3End), 0.05), 10)
-
-	-- Instead of searching a possible 3k or more nodes, we grab only those that would be in range.
-	-- Shift the search area forward by 1/2 distance and also 1/2 the radius needed.
-	local s_SearchAreaPos = p_Vec3Start + ((p_Vec3End - p_Vec3Start) * 0.4) -- Not exactly half ahead.
-	local s_SearchAreaSize = (s_Distance * 0.6)                          -- Little bit bigger than half for searching.
-
-	local s_SearchWaypoints = self:FindAll(s_SearchAreaPos, s_SearchAreaSize)
-	local s_TestPos = p_Vec3Start:Clone()
-
-	self:Log('distance: ' .. tostring(s_Distance))
-	self:Log('searchWaypoints: ' .. tostring(#s_SearchWaypoints))
-
-	if #s_SearchWaypoints == 1 then
-		return s_SearchWaypoints[1]
-	end
-
-	local s_Heading = p_Vec3End - p_Vec3Start
-	local s_Direction = s_Heading / s_Heading.magnitude
-
-	while #s_SearchWaypoints > 0 and s_Distance > p_Granularity and s_Distance > 0 do
-		for l_Index = 1, #s_SearchWaypoints do
-			local l_Waypoint = s_SearchWaypoints[l_Index]
-			if l_Waypoint ~= nil and l_Waypoint.Position ~= nil and
-				l_Waypoint.Position:Distance(s_TestPos) <= p_Tolerance then
-				self:Log('NodeCollection:FindAlongTrace -> Found: ' .. l_Waypoint.ID)
-				return l_Waypoint
-			end
-		end
-
-		s_TestPos = s_TestPos + (s_Direction * p_Granularity)
-		s_Distance = s_TestPos:Distance(p_Vec3End)
-	end
-
-	return nil
 end
 
 function NodeCollection:Log(...)
