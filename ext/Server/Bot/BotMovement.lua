@@ -1033,6 +1033,14 @@ function Bot:UpdateNormalMovement(p_DeltaTime)
 		-- get all nodes
 		s_Point = m_NodeCollection:Get(s_ActivePointIndex, self._PathIndex)
 		if s_Point == nil then
+			-- No path (a level the mesh covers whole has none): onto the mesh, now and then.
+			if self.m_Zone == nil and m_NavRoutes:IsActive() then
+				self._MeshRetryTimer = self._MeshRetryTimer + p_DeltaTime
+				if self._MeshRetryTimer >= MESH_RETRY_TIME then
+					self._MeshRetryTimer = 0.0
+					self:TryEnterZoneAt(self.m_Player.soldier.worldTransform.trans:Clone(), true)
+				end
+			end
 			return
 		end
 		if not self._InvertPathDirection then

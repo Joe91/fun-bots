@@ -130,7 +130,7 @@ class Result:
 def uses_objectives(mode: str) -> bool:
     """Whether the bots play objectives in this game mode (Globals.IsConquest / IsRush in ext/Server/__init__.lua)."""
     return any(part in mode for part in ("Conquest", "TankSuperiority", "CaptureTheFlag", "BFLAG", "AirSuperiority",
-                                         "Rush"))
+                                         "Domination", "Rush"))
 
 
 # --- anchors -------------------------------------------------------------------------------------------------------

@@ -44,6 +44,8 @@ function BotSpawner:RegisterVars()
 	-- Per team: times bots were let through to a vehicle at a spawn no way leads on from (_SeatLeft).
 	self._SeatClaims = {}
 	self._ResourceDataContainer = {}
+	-- "No paths found" was logged in this level (SpawnWayBots).
+	self._NoPathsWarned = false
 end
 
 function BotSpawner:GetResourceDataContainer(p_ResourceName)
@@ -295,8 +297,13 @@ function BotSpawner:OnEngineUpdate(p_DeltaTime, p_SimulationDeltaTime)
 					s_Link = { s_Node.PathIndex, s_Node.PointIndex }
 				end
 
-				if s_Link then
-					l_Bot:SetVarsWay(nil, true, s_Link[1], s_Link[2], false)
+				-- No path at all (a level the mesh covers whole): onto the mesh only.
+				if s_Link or m_NavZones:GetMesh() ~= nil then
+					if s_Link then
+						l_Bot:SetVarsWay(nil, true, s_Link[1], s_Link[2], false)
+					else
+						l_Bot:SetVarsWay(nil, true, 0, 1, false)
+					end
 					table.remove(self._BotsWithoutPath, l_Index)
 					-- On the network of a zone (base, capture point) the bot starts there (BotZoneMovement).
 					l_Bot:TryEnterZoneAt(s_Position, true)
@@ -907,8 +914,14 @@ end
 ---@param p_IndexOnPath? integer
 ---@param p_TeamId? TeamId|integer
 function BotSpawner:SpawnWayBots(p_Amount, p_UseRandomWay, p_ActiveWayIndex, p_IndexOnPath, p_TeamId)
-	if m_NodeCollection:GetNrOfPaths() <= 0 then
-		m_Logger:Warning("No paths found. Can't spawn way-bots.")
+	-- A level the mesh covers whole needs no paths (the cut drops them all, XP2_Office Domination): the bots spawn at the
+	-- spawns of the game and start on the mesh.
+	if m_NodeCollection:GetNrOfPaths() <= 0 and not (m_NavZones:GetMesh() ~= nil and self:_UseGameSpawn()) then
+		-- Once per level: this is asked every update (XP5_001 CTF: every 2 s).
+		if not self._NoPathsWarned then
+			self._NoPathsWarned = true
+			m_Logger:Warning("No paths found. Can't spawn way-bots.")
+		end
 		return
 	end
 
@@ -994,11 +1007,7 @@ end
 
 ---@param p_Bot Bot
 function BotSpawner:_SelectLoadout(p_Bot)
-	local s_WriteNewKit = self:_ApplyKitLimit(p_Bot)
-
-	if p_Bot.m_ActiveWeapon == nil then
-		s_WriteNewKit = true
-	end
+	local s_WriteNewKit = self:_NeedsNewWeapons(p_Bot)
 
 	local s_BotColor = p_Bot.m_Color
 	local s_BotKit = p_Bot.m_Kit
@@ -1718,11 +1727,7 @@ end
 ---@param p_Transform LinearTransform
 ---@param p_SetKit boolean
 function BotSpawner:_SpawnBot(p_Bot, p_Transform, p_SetKit)
-	local s_WriteNewKit = self:_ApplyKitLimit(p_Bot)
-
-	if p_Bot.m_ActiveWeapon == nil then
-		s_WriteNewKit = true
-	end
+	local s_WriteNewKit = self:_NeedsNewWeapons(p_Bot)
 
 	local s_BotColor = p_Bot.m_Color
 	local s_BotKit = p_Bot.m_Kit
@@ -2360,6 +2365,20 @@ function BotSpawner:_GetSpawnBotKit(p_TeamId, p_Kit, p_ExcludeBot, p_FallbackKit
 	end
 
 	return s_BotKit
+end
+
+---Whether the (re)spawning bot gets new weapons: its kit changed (_ApplyKitLimit), it has none yet, or it still has the
+---weapon of a GunMaster round (UpdateGmWeapon: no gadgets, no unlock of its own). The bots stay from level to level:
+---those of a GunMaster round kept that weapon in the next mode.
+---@param p_Bot Bot
+---@return boolean
+function BotSpawner:_NeedsNewWeapons(p_Bot)
+	local s_New = self:_ApplyKitLimit(p_Bot) or p_Bot.m_ActiveWeapon == nil
+	if not Globals.IsGm and p_Bot.m_ActiveGmWeaponName ~= nil then
+		p_Bot.m_ActiveGmWeaponName = nil
+		s_New = true
+	end
+	return s_New
 end
 
 ---Applies the kit-limits to a (re)spawning bot: it gets the kit of its name as long as the limits allow it, so it

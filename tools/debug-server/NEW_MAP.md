@@ -7,8 +7,8 @@ person has to do is record paths between the areas of the level; the **Maps** ta
 
 | Mode | Needed | Made by |
 |---|---|---|
-| Conquest (all layouts), Rush, Squad Rush, Tank Superiority | paths between the areas (no names), the mesh with its zones | census and trim |
-| Team / Squad Deathmatch, Gun Master, Scavenger, Domination | paths only; the bots walk them and switch at links at random | recording, labels (links) |
+| Conquest (all layouts), Rush, Squad Rush, Tank Superiority, Domination | paths between the areas (no names), the mesh with its zones | census and trim |
+| Team / Squad Deathmatch, Gun Master, Scavenger | paths only; the bots walk them and switch at links at random | recording, labels (links) |
 | Air Superiority | nothing: the bots spawn in jets | – |
 | Capture the Flag | not supported yet | – |
 

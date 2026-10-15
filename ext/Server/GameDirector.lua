@@ -3803,14 +3803,15 @@ function GameDirector:_EngineCapturePoints()
 	return s_Result
 end
 
----The objective of a capture point from its name in the engine: "ID_H_US_A" -> "a". nil for the HQs and other names.
+---The objective of a capture point from its name in the engine: "ID_H_US_A" -> "a", Domination "A" -> "a". nil for the
+---HQs and other names.
 ---@param p_Name string|nil
 ---@return string|nil
 function GameDirector:_EngineObjective(p_Name)
 	if p_Name == nil or string.sub(p_Name, -2) == 'HQ' then
 		return nil
 	end
-	local s_Letter = p_Name:match('_(%a)$')
+	local s_Letter = p_Name:match('_(%a)$') or p_Name:match('^(%a)$')
 	return s_Letter ~= nil and s_Letter:lower() or nil
 end
 

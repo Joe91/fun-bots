@@ -52,8 +52,11 @@ CENSUS = DEBUG_SERVER / "census"
 STEPS = ("export", "label", "import", "census", "cut", "check", "report")
 # Modes whose bots go for objectives: they need the census, the mesh and the cut. The others only walk the paths.
 MESH_MODES = ("ConquestLarge0", "ConquestSmall0", "ConquestAssaultLarge0", "ConquestAssaultSmall0",
-              "ConquestAssaultSmall1", "RushLarge0", "SquadRush0", "TankSuperiority0")
-PATH_MODES = ("TeamDeathMatch0", "TeamDeathMatchC0", "SquadDeathMatch0", "GunMaster0", "Scavenger0", "Domination0")
+              "ConquestAssaultSmall1", "RushLarge0", "SquadRush0", "TankSuperiority0", "Domination0")
+PATH_MODES = ("TeamDeathMatch0", "TeamDeathMatchC0", "SquadDeathMatch0", "GunMaster0", "Scavenger0")
+# Close Quarters levels: their floors and walls are detail-meshes, the rays of the census see them only with
+# --detail-mesh (XP2_Office Domination: 325 points without, 522 with), and they have more floors per cell.
+DETAIL_MESH_PREFIXES = ("XP2_",)
 LOG_LINES = 400  # lines of output kept per job
 STATUS_TTL = 20.0  # seconds the state of the levels is reused (reading mod.db takes a moment)
 
@@ -399,6 +402,8 @@ class MapWorkbench:
         if job.step == "census":
             command = [sys.executable, "-u", "-m", "funbots_debug.census", "run", "--server", self.server_url,
                        "--map", f"{level} {mode}", "--apply"]
+            if level.startswith(DETAIL_MESH_PREFIXES):
+                command += ["--detail-mesh", "--area-layers", "6"]
             if self.restart_command:
                 command += ["--restart-command", self.restart_command]
             return self._command(job, command)

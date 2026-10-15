@@ -655,9 +655,9 @@ function FunBotServer:OnLevelLoaded(p_LevelName, p_GameMode, p_Round, p_RoundsPe
 	self:RegisterInputRestrictionEventCallbacks()
 	self:SetGameMode(p_GameMode, p_LevelName)
 	-- Spawns of the game in these modes (conquest and rush on a level with a mesh as well, BotSpawner:_UseGameSpawn),
-	-- else on the waypoints.
+	-- else on the waypoints. Domination: on the waypoints half of the bots spawned next to an enemy (XP2_Office).
 	Globals.UseGameSpawn = Registry.BOT_SPAWN.GAME_SPAWNS_EVERYWHERE or Globals.IsTdm or Globals.IsSdm or Globals.IsGm
-		or Globals.IsAirSuperiority
+		or Globals.IsAirSuperiority or Globals.IsDomination
 	self:SetMaxBotsPerTeam(p_GameMode)
 	if Registry.COMMON.DESTROY_OBSTACLES_ON_START then
 		self:DestroyObstacles(p_LevelName, p_GameMode)
@@ -1268,7 +1268,9 @@ function FunBotServer:SetGameMode(p_GameMode, p_LevelName)
 		p_GameMode == 'CaptureTheFlag0' or
 		p_GameMode == 'BFLAG0' or
 		p_GameMode == 'BFLAG' or
-		p_GameMode == 'AirSuperiority0' then
+		p_GameMode == 'AirSuperiority0' or
+		-- Capture points as in conquest (A, B, C), the spawns of the game as in deathmatch (BotSpawner:_TriggerSpawn).
+		p_GameMode == 'Domination0' then
 		Globals.IsConquest = true
 	else
 		Globals.IsConquest = false
