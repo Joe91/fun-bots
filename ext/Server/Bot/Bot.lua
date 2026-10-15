@@ -249,9 +249,10 @@ function Bot:__init(p_Player)
 	-- Seconds the bot runs after the target of an action, and until when it uses no C4 (StateAttacking).
 	self._ChaseTime = 0.0
 	self._ChopperStartHeight = nil
-	-- Highest ground under the way of the chopper ahead (VehicleChopperControl), and when it was looked for.
-	self._ChopperGround = nil
-	self._ChopperProbeTime = 0.0
+	-- Highest ground under the way of the chopper ahead (VehicleChopperControl), for a jet the ground its way hits
+	-- (VehicleJetControl), and when it was looked for.
+	self._GroundAhead = nil
+	self._GroundProbeTime = 0.0
 	-- Seconds the chopper still levels out and climbs (attacking too low, VehicleChopperControl).
 	self._ChopperRecoverTime = 0.0
 	self._PassengerExitTime = nil

@@ -10,29 +10,36 @@ local m_Utilities = require('__shared/Utilities')
 local m_AirTargets = require('AirTargets')
 ---@type VehicleAttacking
 local m_VehicleAttacking = require('Bot/VehicleAttacking')
+---@type VehicleChopperControl
+local m_ChopperControl = require('Bot/VehicleChopperControl')
 
 function VehicleJetControl:__init()
 	-- Nothing to do.
 end
 
+-- Ground under the way of a jet (VehicleChopperControl:GroundAhead), metres ahead, at most JET_PROBE_TIME seconds.
+local JET_LOOKAHEAD = { 150.0, 300.0, 450.0 }
+local JET_PROBE_TIME = 5.0
+
 ---Where a jet flies when it doesn't attack: above the active objective, offset by team.
 ---@param p_Bot Bot
 ---@param p_Position? Vec3 where the jet is (nil: read from its vehicle)
 ---@return Vec3
+---@return number objectiveHeight the ground for the ground avoidance
 function VehicleJetControl:_GetPatrolPosition(p_Bot, p_Position)
 	if p_Position == nil then
 		p_Position = p_Bot.m_Player.controlledControllable and p_Bot.m_Player.controlledControllable.transform.trans
 	end
 	local s_TargetPosition = g_GameDirector:GetActiveTargetPointPosition(p_Bot.m_Player.teamId, p_Position):Clone()
-	if not Globals.IsAirSuperiority then
-		s_TargetPosition.y = s_TargetPosition.y + Registry.VEHICLES.JET_TARGET_HEIGHT
-	end
+	local s_ObjectiveHeight = s_TargetPosition.y
+	s_TargetPosition.y = s_ObjectiveHeight + (Globals.IsAirSuperiority and Registry.VEHICLES.JET_TARGET_HEIGHT_AIR_SUPERIORITY
+		or Registry.VEHICLES.JET_TARGET_HEIGHT)
 	if (p_Bot.m_Player.teamId % 2) == 1 then
 		s_TargetPosition.z = s_TargetPosition.z + 100
 	else
 		s_TargetPosition.z = s_TargetPosition.z - 100
 	end
-	return s_TargetPosition
+	return s_TargetPosition, s_ObjectiveHeight
 end
 
 ---Another aircraft that would pass closer than JET_AVOID_DISTANCE within JET_AVOID_TIME: the point to break to (to
@@ -93,11 +100,12 @@ function VehicleJetControl:_GetEvasionPoint(p_Bot, p_Transform, p_Velocity)
 		return nil
 	end
 
+	-- From the heading, not the nose: above the nose, the higher jet of a dogfight pulled up further with every update,
+	-- up to vertical, and stalled (XP5_002 air superiority).
 	local s_Forward = p_Transform.forward
 	local s_Left = p_Transform.left
 	local s_Vertical = s_Threat and 60 or -60
-	return Vec3(s_X + s_Forward.x * 150 - s_Left.x * 150, s_Y + s_Forward.y * 150 + s_Vertical,
-		s_Z + s_Forward.z * 150 - s_Left.z * 150)
+	return Vec3(s_X + s_Forward.x * 150 - s_Left.x * 150, s_Y + s_Vertical, s_Z + s_Forward.z * 150 - s_Left.z * 150)
 end
 
 ---@param p_DeltaTime number
@@ -187,11 +195,6 @@ function VehicleJetControl:UpdateMovementJet(p_DeltaTime, p_Bot)
 	p_Bot._TargetPoint = s_Waypoint
 end
 
--- Function to calculate the yaw and pitch deviation relative to the orientation of a reference object
-function VehicleJetControl:CalculateDeviationRelativeToOrientation(p_Transform, targetPoint)
-	return m_Utilities:GetDeviationToTarget(p_Transform, targetPoint)
-end
-
 ---@param p_Bot Bot
 ---@param p_Attacking boolean
 ---@param p_DeltaTime number
@@ -212,9 +215,13 @@ function VehicleJetControl:UpdateYawJet(p_Bot, p_Attacking, p_DeltaTime)
 
 	local s_Trans = s_Transform.trans
 	-- Once per call: it goes over all capture points.
-	local s_PatrolHeight = self:_GetPatrolPosition(p_Bot, s_Trans).y
+	local s_PatrolPosition, s_GroundHeight = self:_GetPatrolPosition(p_Bot, s_Trans)
+	local s_PatrolHeight = s_PatrolPosition.y
+	local s_Velocity = PhysicsEntity(s_Vehicle).velocity
+	local s_Speed = s_Velocity.magnitude
 
 	local s_DeltaYaw, s_DeltaPitch = 0, 0
+	local s_FlyTo = nil -- Not attacking: where it flies to.
 	if p_Attacking then
 		-- Aim with the gun, not with the center of the jet: from the muzzle, corrected by the angle of the gun.
 		local s_EntryId = p_Bot.m_Player.controlledEntryId
@@ -235,24 +242,24 @@ function VehicleJetControl:UpdateYawJet(p_Bot, p_Attacking, p_DeltaTime)
 
 		-- Stay in a band around the patrol-height. Not _TargetPoint: UpdateMovementJet doesn't run while attacking, it
 		-- still held an old point (often the climb-point right above the jet), so jets climbed higher with every attack.
+		-- And not steeper than 45° up: chasing a target upwards the jets pulled up to vertical and stalled (see below).
 		local s_Height = s_Trans.y
-		if s_Height > s_PatrolHeight + 120 or s_Height < s_PatrolHeight - 75 then
+		if s_Height > s_PatrolHeight + 120 or s_Height < s_PatrolHeight - 75 or s_Transform.forward.y > 0.7 then
 			p_Bot._JetTakeoffActive = false
 			p_Bot:AbortAttack()
 		end
 	else
-		s_DeltaYaw, s_DeltaPitch = self:CalculateDeviationRelativeToOrientation(s_Transform, p_Bot._TargetPoint.Position)
+		s_FlyTo = p_Bot._TargetPoint.Position
 	end
 
 	-- Break away from aircraft on collision course, before anything else. No shots meanwhile.
 	-- Not while taking off: the jets parked next to the runway count as aircraft too, the jets broke right on the runway.
-	local s_Velocity = PhysicsEntity(s_Vehicle).velocity
 	local s_Evasion = nil
 	if not p_Bot._JetTakeoffActive then
 		s_Evasion = self:_GetEvasionPoint(p_Bot, s_Transform, s_Velocity)
 	end
 	if s_Evasion ~= nil then
-		s_DeltaYaw, s_DeltaPitch = self:CalculateDeviationRelativeToOrientation(s_Transform, s_Evasion)
+		s_FlyTo = s_Evasion
 		if p_Attacking then
 			-- The pass is over: extend (see UpdateMovementJet), then a new run with enough distance to aim.
 			p_Bot:AbortAttack()
@@ -262,10 +269,17 @@ function VehicleJetControl:UpdateYawJet(p_Bot, p_Attacking, p_DeltaTime)
 
 	-- Ground avoidance, above everything else (not while taking off). Diving after ground-targets, often rolled over,
 	-- the jets pulled "up" through a split-S into the ground. Roll upright first (bank-angle: 0 level, > 0 banked
-	-- right, +-pi inverted), pull up once the jet isn't upside down any more.
-	local s_GroundHeight = s_PatrolHeight
-	if not Globals.IsAirSuperiority then
-		s_GroundHeight = s_GroundHeight - Registry.VEHICLES.JET_TARGET_HEIGHT
+	-- right, +-pi inverted), pull up once the jet isn't upside down any more, up to a climb of 25°: further it zoomed
+	-- up to vertical while still below (air superiority spawns in the air, below it) and stalled.
+	-- The ground: the objective, or hills higher than that under the way ahead (the edge of XP5_001: the jets flew
+	-- into them).
+	if not p_Bot._JetTakeoffActive then
+		local s_AheadX, s_AheadZ = s_Velocity.x * JET_PROBE_TIME, s_Velocity.z * JET_PROBE_TIME
+		local s_Ahead = m_ChopperControl:GroundAhead(p_DeltaTime, p_Bot, s_Trans, s_AheadX, s_AheadZ,
+			math.sqrt(s_AheadX * s_AheadX + s_AheadZ * s_AheadZ), JET_LOOKAHEAD)
+		if s_Ahead ~= nil and s_Ahead > s_GroundHeight then
+			s_GroundHeight = s_Ahead
+		end
 	end
 	if not p_Bot._JetTakeoffActive and s_Trans.y + math.min(s_Velocity.y, 0.0) * Registry.VEHICLES.JET_PULL_OUT_TIME
 		< s_GroundHeight + Registry.VEHICLES.JET_MIN_ALTITUDE then
@@ -275,7 +289,8 @@ function VehicleJetControl:UpdateYawJet(p_Bot, p_Attacking, p_DeltaTime)
 		local s_Bank = math.atan(s_Transform.left.y, s_Transform.up.y)
 		s_Input:SetLevel(EntryInputActionEnum.EIARoll, math.max(-1.0, math.min(1.0, -2 * s_Bank)))
 		-- Nose up is a negative pitch-input (as 3 * deltaPitch below: a target above gives a negative deviation).
-		s_Input:SetLevel(EntryInputActionEnum.EIAPitch, math.abs(s_Bank) < 1.2 and -1.0 or 0.0)
+		s_Input:SetLevel(EntryInputActionEnum.EIAPitch,
+			(math.abs(s_Bank) < 1.2 and s_Transform.forward.y < 0.4) and -1.0 or 0.0)
 		s_Input:SetLevel(EntryInputActionEnum.EIAYaw, 0.0)
 		s_Input:SetLevel(EntryInputActionEnum.EIAThrottle, 1.0)
 		s_Input:SetLevel(EntryInputActionEnum.EIABrake, 0.0)
@@ -283,25 +298,39 @@ function VehicleJetControl:UpdateYawJet(p_Bot, p_Attacking, p_DeltaTime)
 		return
 	end
 
-	-- Roll
-	s_Input:SetLevel(EntryInputActionEnum.EIARoll, -3 * s_DeltaYaw) -- Roll into the turn.
-
-	-- TILT and YAW
 	-- No backwards in planes. s_DeltaYaw > 0 → target on the left → negative yaw-input (same convention as chopper / ground).
 	if p_Attacking then
-		-- The lead-point moves all the time (both jets fly fast), with P only the nose lagged behind it and swung across
-		-- it. The I-part removes the lag, the D-part damps. The rudder does the fine corrections, rolling is too coarse.
+		-- Roll into the turn. The lead-point moves all the time (both jets fly fast), with P only the nose lagged behind
+		-- it and swung across it. The I-part removes the lag, the D-part damps. The rudder does the fine corrections.
+		s_Input:SetLevel(EntryInputActionEnum.EIARoll, -3 * s_DeltaYaw)
 		s_Input:SetLevel(EntryInputActionEnum.EIAPitch, p_Bot._Pid_Jet_Pitch:Update(s_DeltaPitch, p_DeltaTime))
 		s_Input:SetLevel(EntryInputActionEnum.EIAYaw, p_Bot._Pid_Jet_Yaw:Update(-s_DeltaYaw, p_DeltaTime))
 	else
-		s_Input:SetLevel(EntryInputActionEnum.EIAPitch, 3 * s_DeltaPitch)
-		s_Input:SetLevel(EntryInputActionEnum.EIAYaw, math.max(-1.0, math.min(1.0, -s_DeltaYaw)))
+		-- Heading and climb-angle to the point, whatever the roll of the jet: bank into the turn (up to 75°), hold the
+		-- climb-angle (-30° .. +25°). Steered by the deviations of the nose (as attacking), the jets looped over the top
+		-- towards points behind them and got slow there. Below ~55 m/s a jet doesn't turn at all: they hung nose-up, at
+		-- the ceiling of the level (no thrust above it, XP5_002: ~750 m) for minutes.
+		local s_Forward = s_Transform.forward
+		local s_DirX, s_DirZ = s_FlyTo.x - s_Trans.x, s_FlyTo.z - s_Trans.z
+		-- > 0: the point is on the left (the left of the heading is (forward.z, -forward.x)), +-pi behind.
+		local s_Heading = math.atan(s_DirX * s_Forward.z - s_DirZ * s_Forward.x, s_DirX * s_Forward.x + s_DirZ * s_Forward.z)
+		local s_Climb = math.max(-0.5, math.min(0.45, math.atan(s_FlyTo.y - s_Trans.y, math.sqrt(s_DirX * s_DirX + s_DirZ * s_DirZ))))
+		local s_Bank = math.atan(s_Transform.left.y, s_Transform.up.y) -- > 0 banked right.
+		local s_WantedBank = -math.max(-1.3, math.min(1.3, 2 * s_Heading))
+		s_Input:SetLevel(EntryInputActionEnum.EIARoll, math.max(-1.0, math.min(1.0, 2 * (s_WantedBank - s_Bank))))
+		-- Nose up is negative. Banked, pulling turns: pull by the bank (a wide turn carried the jets into the hills at
+		-- the edge of XP5_001), the climb-angle corrected by the bank.
+		local s_Pitch = -3 * (s_Climb - math.asin(math.max(-1.0, math.min(1.0, s_Forward.y)))) * math.cos(s_Bank)
+		if math.abs(s_Bank) < 1.4 then
+			s_Pitch = s_Pitch - math.abs(math.sin(s_Bank))
+		end
+		s_Input:SetLevel(EntryInputActionEnum.EIAPitch, math.max(-1.0, math.min(1.0, s_Pitch)))
+		s_Input:SetLevel(EntryInputActionEnum.EIAYaw, math.max(-1.0, math.min(1.0, -s_Heading)))
 	end
 
 	-- Throttle.
 	-- Target velocity == 313 km/h → 86.9444 m/s. Full throttle while extending after an attack: more distance.
-	local s_Delta_Speed = 86.9444 - s_Velocity.magnitude
-	local s_Output_Throttle = p_Bot._Pid_Drv_Throttle:Update(s_Delta_Speed, p_DeltaTime)
+	local s_Output_Throttle = p_Bot._Pid_Drv_Throttle:Update(86.9444 - s_Speed, p_DeltaTime)
 	if p_Bot._JetAbortAttackActive and not p_Attacking then
 		s_Input:SetLevel(EntryInputActionEnum.EIAThrottle, 1.0)
 		s_Input:SetLevel(EntryInputActionEnum.EIABrake, 0.0)

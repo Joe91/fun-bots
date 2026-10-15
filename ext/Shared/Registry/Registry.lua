@@ -168,8 +168,12 @@ Registry = {
 		-- After an attack a jet extends (flies straight away) for that time, but not further than this (m, horizontal)
 		-- from its patrol-point above the objective. Else the jets flew out of the map.
 		JET_EXTEND_MAX_DISTANCE = 600.0,
-		-- Target height for jets.
+		-- Target height for jets (m above the objective).
 		JET_TARGET_HEIGHT = 350,
+		-- The same in air superiority. Its flags are spheres of ~290 m around the flag in the air: fly in the upper half,
+		-- above JET_MIN_ALTITUDE. At the flag itself (below the minimum altitude) the jets zoomed up and stalled, and
+		-- the height-band of the attack aborted every attack. Not higher: the ceiling of the level (XP5_002: ~750 m).
+		JET_TARGET_HEIGHT_AIR_SUPERIORITY = 150,
 		-- Seconds between target-scans of a jet that is not attacking (while attacking: BOT.VEHICLE_FIRE_MODE_DURATION).
 		JET_TARGET_SCAN_INTERVAL = 1.0,
 		-- Target-selection of jets: metres added to the distance per radian the target is away from the nose.

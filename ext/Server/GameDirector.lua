@@ -1292,16 +1292,31 @@ end
 -- RUSH Events.
 -- =============================================
 
----Rush: a bot left the combat area (p_Left) or came back into it. The area of the next stage opens only a while after
+-- Seconds a jet that left the combat area flies back without looking for targets (OnCombatArea).
+local JET_RETURN_TIME = 10.0
+
+---A bot left the combat area (p_Left) or came back into it. Rush: the area of the next stage opens only a while after
 ---the last one fell, the bots already go there: they turn back and wait at the border (Bot:OnCombatAreaLeft).
 ---@param p_Player Player
 ---@param p_Left boolean
 function GameDirector:OnCombatArea(p_Player, p_Left)
-	if not Globals.IsRush or not m_Utilities:isBot(p_Player) then
+	if not m_Utilities:isBot(p_Player) then
 		return
 	end
 	local s_Bot = g_BotManager:GetBotById(p_Player.id)
 	if s_Bot == nil then
+		return
+	end
+	-- A jet chasing a target or extending after an attack: straight back to its patrol-point, no new target for a
+	-- while (the timer of the takeoff). Out there they died (XP5_001 air superiority: 7-9 jets per round).
+	if p_Left and s_Bot.m_Player.controlledEntryId == 0
+		and m_Vehicles:IsVehicleType(s_Bot.m_ActiveVehicle, VehicleTypes.Plane) then
+		s_Bot:AbortAttack()
+		s_Bot._JetAbortAttackActive = false
+		s_Bot._VehicleTakeoffTimer = JET_RETURN_TIME
+		return
+	end
+	if not Globals.IsRush then
 		return
 	end
 	if p_Left then
