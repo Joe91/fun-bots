@@ -12,7 +12,6 @@ local m_Console = require('Commands/Console')
 function PermissionManager:__init()
 	self.m_Permissions = {}
 	self.m_Guid_Players = {}
-	self.m_Names_Players = {}
 	self.m_Events = {
 		ModuleLoaded = Events:Subscribe('Extension:Loaded', self, self.__boot)
 	}

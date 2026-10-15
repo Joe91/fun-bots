@@ -2204,7 +2204,6 @@ function BotSpawner:_GetCustomization(p_Bot, p_Kit)
 	p_SoldierCustomization.removeAllExistingWeapons = false
 
 	if Globals.IsGm then
-		p_Bot.m_LastWeapon = nil
 		return p_SoldierCustomization
 	end
 

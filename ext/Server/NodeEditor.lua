@@ -37,7 +37,6 @@ function NodeEditor:RegisterVars()
 
 	self.m_NodeOperation = ''
 
-	self.m_NodeSendUpdateTimer = 0
 end
 
 function NodeEditor:RegisterCustomEvents()
@@ -197,8 +196,6 @@ end
 
 ---@param p_Player Player
 function NodeEditor:OnExitVehicle(p_Player, p_Args)
-	self.m_CommoRoseActive = false
-
 	if not p_Player.soldier then
 		self:Log(p_Player, 'Player must be alive')
 		return
@@ -235,8 +232,6 @@ end
 ---@param p_Player Player
 ---@param p_Args table
 function NodeEditor:OnCustomAction(p_Player, p_Args)
-	self.m_CommoRoseActive = false
-
 	if not p_Player.soldier then
 		self:Log(p_Player, 'Player must be alive')
 		return

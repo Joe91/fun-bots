@@ -16,7 +16,6 @@ local m_Logger = Logger("PathSwitcher", Debug.Server.PATH)
 local m_Utilities = require('__shared/Utilities')
 
 function PathSwitcher:__init()
-	self.m_DummyData = 0
 end
 
 function PathSwitcher:GetPriorityOfPath(p_Node, p_TargetObjective)

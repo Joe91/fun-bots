@@ -31,10 +31,8 @@ function NodeCollection:InitVars()
 	self._WaypointsByPathIndex = {}
 
 	self._InfoNode = {}
-	self._SpawnPointLevelName = ''
 
 	self._SelectedWaypoints = {}
-	self._HiddenPaths = {}
 
 	self._Objectives = {}
 
@@ -54,7 +52,6 @@ function NodeCollection:InitVars()
 	self._LoadWaypointCount = 0
 	self._LoadFirstWaypoint = nil
 	self._LoadLastWaypoint = nil
-	self._LoadLastFirstNode = nil
 	self._LoadLastPathindex = -1
 
 	self._PrintDiagOnInvalidPointindex = false
@@ -109,10 +106,6 @@ end
 ---@param p_Waypoint Waypoint
 ---@return Waypoint
 function NodeCollection:Register(p_Waypoint)
-	if self._HiddenPaths[p_Waypoint.PathIndex] == nil then
-		self._HiddenPaths[p_Waypoint.PathIndex] = false
-	end
-
 	if self._WaypointsByPathIndex[p_Waypoint.PathIndex] == nil then
 		self._WaypointsByPathIndex[p_Waypoint.PathIndex] = {}
 	end
@@ -1167,22 +1160,6 @@ end
 -----------------------------
 -- Paths.
 
-function NodeCollection:ShowPath(p_PathIndex)
-	self._HiddenPaths[p_PathIndex] = false
-end
-
-function NodeCollection:HidePath(p_PathIndex)
-	self._HiddenPaths[p_PathIndex] = true
-end
-
-function NodeCollection:IsPathVisible(p_PathIndex)
-	return self._HiddenPaths[p_PathIndex] == nil or self._HiddenPaths[p_PathIndex] == false
-end
-
-function NodeCollection:GetHiddenPaths()
-	return self._HiddenPaths
-end
-
 function NodeCollection:IsMapAvailable(p_LevelName, p_GameMode)
 	local s_TableName
 	if p_GameMode ~= nil and p_LevelName ~= nil then
@@ -1344,9 +1321,6 @@ function NodeCollection:ProcessAllDataToLoad()
 				end
 
 				s_Waypoint = self:Create(s_Waypoint, true)
-				if s_Waypoint.PointIndex == 1 then
-					self._LoadLastFirstNode = s_Waypoint
-				end
 				self._LoadLastWaypoint = s_Waypoint
 			end
 			self._LoadWaypointCount = self._LoadWaypointCount + 1
@@ -1862,8 +1836,7 @@ function NodeCollection:Find(p_Vec3Position, p_Tolerance)
 	local s_ClosestWaypointDist = p_Tolerance
 
 	for _, l_Waypoint in pairs(self._WaypointsByID) do
-		if l_Waypoint ~= nil and l_Waypoint.Position ~= nil and
-			self:IsPathVisible(l_Waypoint.PathIndex) then
+		if l_Waypoint ~= nil and l_Waypoint.Position ~= nil then
 			if self:InRange(l_Waypoint, p_Vec3Position, p_Tolerance) then -- Faster check.
 				local s_Distance = l_Waypoint.Position:Distance(p_Vec3Position) -- Then do slower maths.
 
@@ -1890,7 +1863,7 @@ function NodeCollection:FindAll(p_Vec3Position, p_Tolerance)
 	local s_WaypointsFound = {}
 
 	for _, l_Waypoint in pairs(self._WaypointsByID) do
-		if l_Waypoint ~= nil and l_Waypoint.Position ~= nil and self:IsPathVisible(l_Waypoint.PathIndex) and
+		if l_Waypoint ~= nil and l_Waypoint.Position ~= nil and
 			self:InRange(l_Waypoint, p_Vec3Position, p_Tolerance) then
 			s_WaypointsFound[#s_WaypointsFound + 1] = l_Waypoint
 		end
@@ -1935,7 +1908,7 @@ function NodeCollection:FindAlongTrace(p_Vec3Start, p_Vec3End, p_Granularity, p_
 	while #s_SearchWaypoints > 0 and s_Distance > p_Granularity and s_Distance > 0 do
 		for l_Index = 1, #s_SearchWaypoints do
 			local l_Waypoint = s_SearchWaypoints[l_Index]
-			if l_Waypoint ~= nil and self:IsPathVisible(l_Waypoint.PathIndex) and l_Waypoint.Position ~= nil and
+			if l_Waypoint ~= nil and l_Waypoint.Position ~= nil and
 				l_Waypoint.Position:Distance(s_TestPos) <= p_Tolerance then
 				self:Log('NodeCollection:FindAlongTrace -> Found: ' .. l_Waypoint.ID)
 				return l_Waypoint

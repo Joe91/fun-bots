@@ -370,18 +370,6 @@ function table:has(p_Value)
 	return false
 end
 
----@param p_Value string
----@return boolean
-function string:isLower(p_Value)
-	return p_Value:lower() == p_Value
-end
-
----@param p_Value string
----@return boolean
-function string:isDigit(p_Value)
-	return tonumber(p_Value) ~= nil
-end
-
 ---@param p_Str string
 ---@param p_Sep string
 ---@return table<string>

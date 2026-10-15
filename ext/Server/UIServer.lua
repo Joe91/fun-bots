@@ -497,23 +497,6 @@ function FunBotUIServer:_onUIRequestCommoRoseShow(p_Player, p_Data)
 	})
 end
 
-function FunBotUIServer:_onUIRequestCommoRoseHide(p_Player, p_Data)
-	if Config.DisableUserInterface == true then
-		return
-	end
-
-	if PermissionManager:HasPermission(p_Player, 'UserInterface.WaypointEditor') == false then
-		ChatManager:SendMessage('You have no permissions for this action.', p_Player)
-		return
-	end
-
-	if Debug.Server.UI then
-		print(p_Player.name .. ' requesting hide CommoRose.')
-	end
-
-	NetEvents:SendTo('UI_CommoRose', p_Player, 'false')
-end
-
 function FunBotUIServer:_onUIRequestOpen(p_Player, p_Data)
 	if Config.DisableUserInterface == true then
 		return

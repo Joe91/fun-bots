@@ -43,13 +43,6 @@ function Logger:Write(p_Message)
 	end
 end
 
----@param p_Table table
-function Logger:WriteTable(p_Table)
-	for l_Key, l_Value in pairs(p_Table) do
-		self:Write(tostring(l_Key) .. " - " .. tostring(l_Value))
-	end
-end
-
 function Logger:Warning(p_Message)
 	if self.m_ClassName == nil then
 		return
