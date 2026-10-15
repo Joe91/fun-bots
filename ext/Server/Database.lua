@@ -138,14 +138,21 @@ function Database:ExecuteBatch()
 		return
 	end
 
-	self:Query('DELETE FROM `FB_Settings`')
-	self:Query(m_Batched .. m_Batches:join(', '))
+	-- In one transaction: a failed insert left FB_Settings empty.
+	local s_Insert = m_Batched .. m_Batches:join(', ')
 	m_Batched = ''
 	m_Batches:clear()
-
-	if self:GetError() ~= '' then
-		m_Logger:Error(self:GetError())
+	SQL:Open()
+	local s_Done = SQL:Query('BEGIN TRANSACTION')
+		and SQL:Query('DELETE FROM `FB_Settings`')
+		and SQL:Query(s_Insert)
+		and SQL:Query('COMMIT')
+	if not s_Done then
+		self.m_LastError = 'Failed to execute query: ' .. self:GetError()
+		m_Logger:Error(self.m_LastError)
+		SQL:Query('ROLLBACK')
 	end
+	SQL:Close()
 end
 
 function Database:BatchQuery(p_TableName, p_Parameters, p_Where)
