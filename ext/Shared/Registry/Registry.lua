@@ -328,13 +328,18 @@ Registry = {
 		PASSENGER_EXIT_DISTANCE = 50,
 		-- Probability to stop in while shooting
 		PROBABILITY_STOP_TO_SHOOT = 35,
-		-- Rush: probability (%) that an attacker keeps going to its MCOM while shooting, instead of fighting where they
-		-- are. Else the respawned defenders are back before the attackers reach the MCOM.
+		-- Rush: probability (%) that an attacker (a defender on the way to its MCOM) keeps going to its MCOM while
+		-- shooting, instead of fighting where they are. Else the respawned defenders are back before the attackers reach
+		-- the MCOM.
 		RUSH_PUSH_PROBABILITY = 50,
 		-- Rush: closer than this (metres) to its MCOM an attacker always keeps going while shooting, unless the enemy
 		-- is closer than RUSH_PUSH_MIN_ENEMY_DISTANCE.
 		RUSH_PUSH_OBJECTIVE_DISTANCE = 40.0,
 		RUSH_PUSH_MIN_ENEMY_DISTANCE = 10.0,
+		-- Rush: farther than this (metres) from its MCOM a defender keeps going there while shooting, by the same chance.
+		RUSH_DEFEND_PUSH_DISTANCE = 30.0,
+		-- Rush: farther than this (horizontal metres) from its MCOM a defender sprints in its zone instead of walking.
+		RUSH_DEFEND_SPRINT_DISTANCE = 25.0,
 		-- Rush: defenders on foot up to this far (m) from an armed MCOM go there to disarm it, also from the other MCOM
 		-- (the fuse is 25 s: about the way a soldier sprints in that time).
 		RUSH_DEFEND_ARMED_DISTANCE = 120.0,

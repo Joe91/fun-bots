@@ -277,12 +277,13 @@ function Bot:TeleportToMesh(p_Range)
 	local s_Position = s_Soldier.worldTransform.trans
 	local s_Point = m_NavZones:Closest(s_Mesh, s_Position, nil, math.min(TELEPORT_NEAR, p_Range))
 		or m_NavZones:Closest(s_Mesh, s_Position, nil, p_Range)
-	if s_Point == nil then
+	if s_Point == nil or m_NavZones:IsDeadly(s_Point) then
 		return false
 	end
 	local s_Transform = s_Soldier.worldTransform:Clone()
 	s_Transform.trans = s_Mesh.Points[s_Point].Position:Clone()
 	s_Soldier:SetTransform(s_Transform)
+	self._PutOnto = { Point = s_Point, Time = SharedUtils:GetTime() }
 	self:_EnterZone(m_NavZones:ZoneAtPoint(s_Point, self._Objective) or s_Mesh, s_Point)
 	return self.m_Zone ~= nil
 end
@@ -468,7 +469,9 @@ function Bot:_ZoneDecide(p_Rejoined)
 	s_State.ActionDetours = 0
 	s_State.ArmTime = 0.0
 	if self._Objective == '' then
-		s_State.Zone = m_NavZones:ZoneAtPoint(s_State.Point, nil) or s_State.Zone
+		-- A deathmatch: over the whole mesh (Bot:_ZoneRoam), not in the zone it happens to be in.
+		s_State.Zone = (self:_ZoneRoams() and m_NavZones:GetMesh()) or m_NavZones:ZoneAtPoint(s_State.Point, nil)
+			or s_State.Zone
 		self:_ZoneNewGoal()
 		return
 	end
@@ -586,6 +589,10 @@ function Bot:_ZoneRejoin()
 	return true
 end
 
+-- Seconds a result of _ZoneRejoinPoint holds for the same point and objective: the GameDirector asks for every objective
+-- it considers, every cycle (Bot:CanReach).
+local ZONE_REJOIN_CACHE_TIME = 3.0
+
 ---The closest point of another part of the mesh (ZONE_REJOIN_RANGE, at least ZONE_REJOIN_MIN_PART points) from which
 ---a route leads to the objective (_ZoneRejoin). nil if there is none.
 ---@param p_Objective string
@@ -597,15 +604,30 @@ function Bot:_ZoneRejoinPoint(p_Objective)
 	if s_State == nil or s_Mesh == nil or s_Current == nil then
 		return nil
 	end
+	local s_Now = SharedUtils:GetTime()
+	local s_Cache = self._RejoinCache
+	if s_Cache ~= nil and s_Cache.Point == s_State.Point and s_Cache.Objective == p_Objective
+		and s_Now - s_Cache.Time < ZONE_REJOIN_CACHE_TIME then
+		return s_Cache.Result
+	end
 	local s_Part = s_Mesh.Part[s_State.Point]
-	local s_From = s_Current.Position
+	local s_FromX, s_FromY, s_FromZ = s_Current.X, s_Current.Y, s_Current.Z
+	-- The points of the grid around it (not all of the mesh: plain coordinates, an access of a Vec3 is an engine call).
+	local s_Around = m_NavZones:PointsAround(s_Mesh, s_Current.Position, ZONE_REJOIN_FAR)
 	local s_Candidates = {}
-	for l_Index = 1, #s_Mesh.Points do
+	local s_Far = {}
+	for l_Entry = 1, #s_Around do
+		local l_Index = s_Around[l_Entry]
 		-- Not onto an island of the mesh (a point behind a wall the checks cut off).
 		if s_Mesh.Part[l_Index] ~= s_Part and (s_Mesh.PartSize[s_Mesh.Part[l_Index]] or 0) >= ZONE_REJOIN_MIN_PART then
-			local s_Distance = s_Mesh.Points[l_Index].Position:Distance(s_From)
+			local l_Point = s_Mesh.Points[l_Index]
+			local s_DeltaX, s_DeltaY, s_DeltaZ = l_Point.X - s_FromX, l_Point.Y - s_FromY, l_Point.Z - s_FromZ
+			local s_Flat = math.sqrt(s_DeltaX * s_DeltaX + s_DeltaZ * s_DeltaZ)
+			local s_Distance = math.sqrt(s_Flat * s_Flat + s_DeltaY * s_DeltaY)
 			if s_Distance <= ZONE_REJOIN_RANGE then
 				s_Candidates[#s_Candidates + 1] = { l_Index, s_Distance }
+			elseif s_Flat <= ZONE_REJOIN_FAR and math.abs(s_DeltaY) <= ZONE_REJOIN_SLOPE * s_Flat + ZONE_REJOIN_STEP then
+				s_Far[#s_Far + 1] = { l_Index, s_Flat }
 			end
 		end
 	end
@@ -613,20 +635,10 @@ function Bot:_ZoneRejoinPoint(p_Objective)
 	-- open ground (not down a cliff or a roof: at most ZONE_REJOIN_SLOPE metres up or down per metre, plus a step).
 	-- Not to the shore from a ship or a carrier: those are farther, the boats are the way there.
 	if #s_Candidates == 0 then
-		for l_Index = 1, #s_Mesh.Points do
-			if s_Mesh.Part[l_Index] ~= s_Part and (s_Mesh.PartSize[s_Mesh.Part[l_Index]] or 0) >= ZONE_REJOIN_MIN_PART then
-				local s_Position = s_Mesh.Points[l_Index].Position
-				local s_DeltaX = s_Position.x - s_From.x
-				local s_DeltaZ = s_Position.z - s_From.z
-				local s_Distance = math.sqrt(s_DeltaX * s_DeltaX + s_DeltaZ * s_DeltaZ)
-				if s_Distance <= ZONE_REJOIN_FAR
-					and math.abs(s_Position.y - s_From.y) <= ZONE_REJOIN_SLOPE * s_Distance + ZONE_REJOIN_STEP then
-					s_Candidates[#s_Candidates + 1] = { l_Index, s_Distance }
-				end
-			end
-		end
+		s_Candidates = s_Far
 	end
 	table.sort(s_Candidates, function(p_A, p_B) return p_A[2] < p_B[2] end)
+	local s_Result = nil
 	local s_Tried = {}
 	for l_Index = 1, #s_Candidates do
 		local l_Point = s_Candidates[l_Index][1]
@@ -634,11 +646,13 @@ function Bot:_ZoneRejoinPoint(p_Objective)
 		if not s_Tried[l_Part] then
 			s_Tried[l_Part] = true
 			if m_NavRoutes:Next(l_Point, p_Objective, self.m_RouteSeed, self.m_Player.teamId) ~= nil then
-				return l_Point
+				s_Result = l_Point
+				break
 			end
 		end
 	end
-	return nil
+	self._RejoinCache = { Point = s_State.Point, Objective = p_Objective, Time = s_Now, Result = s_Result }
+	return s_Result
 end
 
 ---The point of the bot is where it last reached one. It may be far away by now (it fought, pushed forward while
@@ -707,8 +721,13 @@ function Bot:_ZoneNewGoal()
 	local s_State = self.m_Zone
 	---@cast s_State -nil
 	self:_ZoneResnap()
-	-- On the mesh outside of the zones there is nothing to walk around in.
+	-- On the mesh outside of the zones there is nothing to walk around in: the bot waits for its objective. In a
+	-- deathmatch there is none: it roams the level.
 	if s_State.Zone.Kind == 'mesh' then
+		if self:_ZoneRoams() then
+			self:_ZoneRoam()
+			return
+		end
 		self:_ZoneRouteTo(nil)
 		return
 	end
@@ -754,6 +773,67 @@ function Bot:_ZoneNewGoal()
 	self:_ZoneRouteTo(s_Goal, s_Route)
 	local s_Wait = s_State.Vehicle and ZONE_WAIT_VEHICLE or (s_Defend and ZONE_WAIT_DEFEND or ZONE_WAIT_ATTACK)
 	s_State.Wait = MathUtils:GetRandom(s_Wait[1], s_Wait[2])
+end
+
+-- Deathmatch modes on a mesh (Bot:_ZoneRoam): a new goal at least this far away (horizontal metres), found in this many
+-- tries; with this probability (%) it is the point next to an enemy (where the fight is), else any point.
+local ZONE_ROAM_MIN = 25.0
+local ZONE_ROAM_TRIES = 6
+local ZONE_ROAM_HUNT = 40
+
+---Whether the bot roams the mesh: no objective in a deathmatch mode (TDM, SDM, GunMaster, Scavenger).
+---@return boolean
+function Bot:_ZoneRoams()
+	return self._Objective == '' and (Globals.IsTdm or Globals.IsSdm or Globals.IsGm or Globals.IsScavenger)
+end
+
+---A deathmatch on a mesh: the bot walks to a point of the level, waits a moment there, then the next one. Now and then
+---the one next to an enemy (where the fight is). Without objectives it stood where it came onto the mesh.
+function Bot:_ZoneRoam()
+	local s_State = self.m_Zone
+	---@cast s_State -nil
+	local s_Mesh = s_State.Zone
+	local s_From = s_Mesh.Points[s_State.Point]
+	local s_Goal = nil
+	local s_Route = nil
+	if s_From ~= nil and #s_Mesh.Points > 0 then
+		local s_Part = s_Mesh.Part[s_State.Point]
+		local s_Enemy = MathUtils:GetRandomInt(1, 100) <= ZONE_ROAM_HUNT and self:_ZoneRoamEnemy() or nil
+		for _ = 1, ZONE_ROAM_TRIES do
+			local l_Point = s_Enemy ~= nil and m_NavZones:Closest(s_Mesh, s_Enemy)
+				or MathUtils:GetRandomInt(1, #s_Mesh.Points)
+			s_Enemy = nil
+			local l_Target = l_Point and s_Mesh.Points[l_Point]
+			if l_Target ~= nil and s_Mesh.Part[l_Point] == s_Part and not m_NavZones:IsDeadly(l_Point)
+				and (l_Target.X - s_From.X) ^ 2 + (l_Target.Z - s_From.Z) ^ 2 >= ZONE_ROAM_MIN * ZONE_ROAM_MIN then
+				local l_Route = m_NavZones:Route(s_Mesh, s_State.Point, l_Point, self.m_RouteSeed)
+				if l_Route ~= nil then
+					s_Goal = l_Point
+					s_Route = l_Route
+					break
+				end
+			end
+		end
+	end
+	self:_ZoneRouteTo(s_Goal, s_Route)
+	s_State.Wait = MathUtils:GetRandom(ZONE_WAIT_ATTACK[1], ZONE_WAIT_ATTACK[2])
+end
+
+---The position of a random enemy soldier (alive, on foot or in a vehicle), nil if there is none.
+---@return Vec3|nil
+function Bot:_ZoneRoamEnemy()
+	local s_Enemies = {}
+	local s_Players = PlayerManager:GetPlayers()
+	for l_Index = 1, #s_Players do
+		local l_Player = s_Players[l_Index]
+		if l_Player.teamId ~= self.m_Player.teamId and l_Player.teamId ~= TeamId.TeamNeutral and l_Player.soldier ~= nil then
+			s_Enemies[#s_Enemies + 1] = l_Player
+		end
+	end
+	if #s_Enemies == 0 then
+		return nil
+	end
+	return s_Enemies[MathUtils:GetRandomInt(1, #s_Enemies)].soldier.worldTransform.trans:Clone()
 end
 
 ---@param p_Goal integer|nil
@@ -1144,7 +1224,7 @@ function Bot:UpdateZoneMovement(p_DeltaTime)
 
 		-- In a base the bot only waits for its objective, on the mesh outside of the zones as well. At the border of the
 		-- combat area until it tries again (UpdateBorder).
-		if s_State.Zone.Kind == 'base' or s_State.Zone.Kind == 'mesh' or self.m_Border ~= nil then
+		if s_State.Zone.Kind == 'base' or (s_State.Zone.Kind == 'mesh' and not self:_ZoneRoams()) or self.m_Border ~= nil then
 			s_State.Waiting = true
 			self:LookAround(p_DeltaTime)
 			return true
@@ -1193,11 +1273,17 @@ function Bot:UpdateZoneMovement(p_DeltaTime)
 	local s_Distance = math.sqrt(s_DeltaX * s_DeltaX + s_DeltaZ * s_DeltaZ)
 	local s_Narrow = (s_TargetPoint ~= nil and s_TargetPoint.Clearance < ZONE_NARROW)
 		or (s_Distance < ZONE_STEEP_RANGE and math.abs(s_Target.Position.y - s_Position.y) > ZONE_STEEP)
+	-- Rush: a defender still far from its MCOM runs to it (walked the last 50 m in the zone, the attackers were there
+	-- first).
+	local s_Center = s_State.Zone.Center
+	local s_ToMcom = s_State.Zone.Kind == 'mcom' and self:_ZoneDefends(s_State)
+		and (s_Center.x - s_Position.x) ^ 2 + (s_Center.z - s_Position.z) ^ 2 > Registry.BOT.RUSH_DEFEND_SPRINT_DISTANCE ^ 2
 	-- The reason only for the debug-snapshot (DebugSnapshots).
 	if s_Target.Flags & NavZoneFlags.Crouch ~= 0 then
 		self.m_ActiveSpeedValue = BotMoveSpeeds.SlowCrouch
 		self._ZoneSpeedReason = 'crouch'
-	elseif s_Narrow or (s_State.Exit == nil and s_State.Action == nil and s_Target.Flags & NavZoneFlags.InZone ~= 0) then
+	elseif s_Narrow or (s_State.Exit == nil and s_State.Action == nil and s_Target.Flags & NavZoneFlags.InZone ~= 0
+			and not s_ToMcom) then
 		-- Walking around in the zone. On the way out (to the next objective) and to arm or disarm the bot runs: the fuse is
 		-- 25 s (MP_013: 23 m in 18 s walking to disarm).
 		self.m_ActiveSpeedValue = BotMoveSpeeds.Normal
@@ -1656,7 +1742,7 @@ function Bot:_ZoneForceAcross(p_Position, p_Point, p_Range, p_Height)
 	local s_DeltaZ = s_Target.Z - p_Position.z
 	local s_Range = p_Range or ZONE_FORCE_RANGE
 	if s_DeltaX * s_DeltaX + s_DeltaZ * s_DeltaZ > s_Range * s_Range
-		or math.abs(s_Target.Y - p_Position.y) > (p_Height or ZONE_FORCE_HEIGHT) then
+		or math.abs(s_Target.Y - p_Position.y) > (p_Height or ZONE_FORCE_HEIGHT) or m_NavZones:IsDeadly(p_Point) then
 		return false
 	end
 	m_Logger:Write(self.m_Player.name .. ' put across the blocked way to point ' .. p_Point)
@@ -1672,6 +1758,7 @@ function Bot:_ZoneForceAcross(p_Position, p_Point, p_Range, p_Height)
 	local s_Transform = s_Soldier.worldTransform:Clone()
 	s_Transform.trans = s_Target.Position:Clone()
 	s_Soldier:SetTransform(s_Transform)
+	self._PutOnto = { Point = p_Point, Time = SharedUtils:GetTime() }
 	s_State.Point = p_Point
 	s_State.Avoid = nil
 	s_State.Fails = 0
@@ -1679,6 +1766,25 @@ function Bot:_ZoneForceAcross(p_Position, p_Point, p_Range, p_Height)
 	s_State.Progress = math.huge
 	self:_ZoneReplan(false)
 	return true
+end
+
+-- Seconds after the bot was put onto a point in which a death without a killer is the point's (OnDiedAfterPut).
+local PUT_DEADLY_TIME = 5.0
+
+---The bot died without a killer: put onto a point of the mesh just before (_ZoneForceAcross, TeleportToMesh), it didn't
+---fit there and the game killed it. Nobody is put onto that point again (NavZones:MarkDeadly).
+function Bot:OnDiedAfterPut()
+	local s_Put = self._PutOnto
+	self._PutOnto = nil
+	if s_Put == nil or SharedUtils:GetTime() - s_Put.Time > PUT_DEADLY_TIME then
+		return
+	end
+	m_NavZones:MarkDeadly(s_Put.Point)
+	if m_DebugBridge.m_Enabled then
+		local s_Point = m_NavZones:GetMesh() and m_NavZones:GetMesh().Points[s_Put.Point]
+		m_DebugBridge:Event('deadly_point', { bot = self.m_Id, point = s_Put.Point - 1,
+			pos = s_Point and DebugBridge.Vec(s_Point.Position) or nil })
+	end
 end
 
 ---The bot doesn't get along to the next point: all bots avoid this connection from now on, the bot takes another
@@ -1750,7 +1856,12 @@ function Bot:_ZoneGiveUpConnection(p_Position, p_Target)
 				s_Trapped = false
 			end
 		end
-		if s_Trapped then
+		if s_Trapped and s_Next == nil and s_State.Exit ~= nil and s_State.ExitFails < ZONE_MAX_FAILS then
+			-- At the exit itself, its waypoint out of reach (a vehicle parked on the start of a road, XP3_Desert base ru):
+			-- another exit below. Put back onto its point it took the same exit again, until it was killed.
+			self.m_ZoneTrap = nil
+			s_State.Fails = ZONE_MAX_FAILS
+		elseif s_Trapped then
 			self.m_ZoneTrap = nil
 			if (s_Next ~= nil and self:_ZoneForceAcross(p_Position, s_Next))
 				or self:_ZoneForceAcross(p_Position, s_State.Point, ZONE_TRAP_BACK_RANGE, ZONE_TRAP_BACK_HEIGHT) then

@@ -255,6 +255,10 @@ function Bot:__init(p_Player)
 	-- Seconds the chopper still levels out and climbs (attacking too low, VehicleChopperControl).
 	self._ChopperRecoverTime = 0.0
 	self._PassengerExitTime = nil
+	-- The point of the mesh the bot was put onto last, and when (Bot:OnDiedAfterPut).
+	self._PutOnto = nil
+	-- The last answer of _ZoneRejoinPoint: { Point, Objective, Time, Result }.
+	self._RejoinCache = nil
 	-- The vehicle the bot got out of or didn't get to ("vehicle <id>"): it isn't sent to it again until then.
 	self._LeftVehicle = nil
 	self._LeftVehicleUntil = 0.0
@@ -516,6 +520,7 @@ function Bot:_CheckForVehicleActions(p_DeltaTime, p_AttackActive)
 			local s_ShootPlayerId = self._ShootPlayerId
 			self.m_Player:EnterVehicle(s_VehicleEntity, s_DesiredSeat)
 			self:UpdateVehicleMovableId()
+			self:_DriveOnAfterSeatChange(s_VehicleEntity)
 			self._ShootPlayer = s_ShootPlayer
 			self._ShootPlayerId = s_ShootPlayerId
 		end
@@ -533,6 +538,7 @@ function Bot:_CheckForVehicleActions(p_DeltaTime, p_AttackActive)
 						self:AbortAttack()
 						self.m_Player:EnterVehicle(s_VehicleEntity, l_SeatIndex)
 						self:UpdateVehicleMovableId()
+						self:_DriveOnAfterSeatChange(s_VehicleEntity)
 						break
 					end
 				end
@@ -554,6 +560,16 @@ function Bot:_CheckForVehicleActions(p_DeltaTime, p_AttackActive)
 				end
 			end
 		end
+	end
+end
+
+---Into the driver seat by a seat change (back from the gunner seat of artillery or light AA, a gunner into the free
+---driver seat): UpdateVehicleMovableId reset the way (the vehicle-network of a zone, ResetSpawnVars), the driver finds it
+---from where the vehicle stands, as when it got in. Else it drove the path it had before, maybe far away.
+---@param p_VehicleEntity ControllableEntity
+function Bot:_DriveOnAfterSeatChange(p_VehicleEntity)
+	if self.m_Player.controlledEntryId == 0 and self.m_ActiveVehicle ~= nil then
+		self:FindVehiclePath(p_VehicleEntity.transform.trans:Clone())
 	end
 end
 

@@ -59,6 +59,8 @@ local FIELD_REFRESH = 5.0
 ---@field Action table|nil something to do there, without a path (GameDirector:GetActionTarget): get into a vehicle,
 ---arm an MCOM. The points are the ones next to it.
 ---@field Topology integer|nil NavZones:GetTopology when the points next to the action were chosen
+---@field Position Vec3|nil where the action was then (a vehicle that moved: chosen anew)
+---@field Miss boolean|nil _ActionTarget found no point next to it (kept as well, until it moved)
 
 ---@class NavEdge
 ---@field To integer the node
@@ -176,7 +178,7 @@ function NavRoutes:Clear()
 	self._DecayTime = nil
 	---objective -> its target (false: none), see Target
 	self._Targets = {}
-	---objective -> its target next to a vehicle or an MCOM (false: none on the mesh), see _ActionTarget
+	---objective -> its target next to a vehicle or an MCOM (Miss: none on the mesh), see _ActionTarget
 	self._ActionTargets = {}
 	---target -> { Topology, Penalties, MeshPenalties, Time, Mesh = point -> metres, Node = node -> metres }
 	self._Fields = {}
@@ -551,9 +553,14 @@ end
 ---@return NavTarget|nil
 function NavRoutes:_ActionTarget(p_Objective, p_Action)
 	local s_Known = self._ActionTargets[p_Objective]
-	-- Anew when connections were removed as well: a point next to it can be cut off now.
-	if s_Known and s_Known.Action ~= nil and s_Known.Topology == m_NavZones:GetTopology()
-		and s_Known.Action.Position:Distance(p_Action.Position) < ACTION_MOVED then
+	-- Anew when connections were removed as well: a point next to it can be cut off now. Also a search that found
+	-- nothing is kept (a vehicle away from the mesh, which only covers the objectives and spawns): before, it ran again
+	-- on every call, over all points of the mesh.
+	if s_Known and s_Known.Topology == m_NavZones:GetTopology()
+		and s_Known.Position:Distance(p_Action.Position) < ACTION_MOVED then
+		if s_Known.Miss then
+			return nil
+		end
 		s_Known.Action = p_Action
 		return s_Known
 	end
@@ -565,22 +572,24 @@ function NavRoutes:_ActionTarget(p_Objective, p_Action)
 	local s_Mesh = m_NavZones:GetMesh()
 	---@cast s_Mesh -nil
 	local s_From = p_Action.Stand or p_Action.Position
+	local s_FromX, s_FromY, s_FromZ = s_From.x, s_From.y, s_From.z
 	local s_Candidates = {}
-	local s_Pool = p_Action.Zone ~= nil and p_Action.Zone.Inside or nil
-	local s_Count = s_Pool ~= nil and #s_Pool or #s_Mesh.Points
 	-- An MCOM in a room the mesh doesn't reach into (behind walls): the points up to ACTION_RANGE_MCOM_FAR then.
 	local s_Ranges = p_Action.Kind == 'mcom' and { ACTION_RANGE_MCOM, ACTION_RANGE_MCOM_FAR } or { ACTION_RANGE }
+	-- The points of the zone of the MCOM, else the ones in the cells of the grid around the vehicle.
+	local s_Pool = p_Action.Zone ~= nil and p_Action.Zone.Inside
+		or m_NavZones:PointsAround(s_Mesh, s_From, s_Ranges[#s_Ranges])
 	for _, l_Range in ipairs(s_Ranges) do
-		for l_Index = 1, s_Count do
-			local l_Point = s_Pool ~= nil and s_Pool[l_Index] or l_Index
-			local s_Position = s_Mesh.Points[l_Point].Position
-			local s_DeltaX = s_Position.x - s_From.x
-			local s_DeltaZ = s_Position.z - s_From.z
+		for l_Index = 1, #s_Pool do
+			local l_Point = s_Pool[l_Index]
+			local s_MeshPoint = s_Mesh.Points[l_Point]
+			local s_DeltaX = s_MeshPoint.X - s_FromX
+			local s_DeltaZ = s_MeshPoint.Z - s_FromZ
 			local s_Distance = math.sqrt(s_DeltaX * s_DeltaX + s_DeltaZ * s_DeltaZ)
 			-- Not on an island of the mesh (a point in a room the bots can't get into over the mesh).
 			-- On the floor of the vehicle or the MCOM: for an MCOM not above it (a floor or rubble over it, the soldier
 			-- interacted from up there in vain, XP4_Rubble MCOM 2).
-			local s_Height = s_Position.y - s_From.y
+			local s_Height = s_MeshPoint.Y - s_FromY
 			local s_OnFloor = p_Action.Kind == 'mcom' and s_Height <= ACTION_MCOM_ABOVE and s_Height >= -ACTION_MCOM_BELOW
 				or p_Action.Kind ~= 'mcom' and math.abs(s_Height) <= ACTION_FLOOR
 			if s_Distance <= l_Range and s_OnFloor
@@ -621,12 +630,13 @@ function NavRoutes:_ActionTarget(p_Objective, p_Action)
 			s_Points[#s_Points + 1] = s_Candidates[l_Index][1]
 		end
 	end
-	local s_Target = false
+	local s_Target = { Miss = true, Topology = m_NavZones:GetTopology(), Position = p_Action.Position:Clone() }
 	if #s_Points > 0 then
-		s_Target = { Zone = p_Action.Zone, Points = s_Points, Action = p_Action, Topology = m_NavZones:GetTopology() }
+		s_Target = { Zone = p_Action.Zone, Points = s_Points, Action = p_Action, Topology = s_Target.Topology,
+			Position = s_Target.Position }
 	end
 	self._ActionTargets[p_Objective] = s_Target
-	return s_Target or nil
+	return not s_Target.Miss and s_Target or nil
 end
 
 ---Metres over the mesh alone from the point to the objective (its target points), nil where the mesh doesn't lead

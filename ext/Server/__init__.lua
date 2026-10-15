@@ -779,6 +779,13 @@ function FunBotServer:OnPlayerKilled(p_Player, p_Inflictor, p_Position, p_Weapon
 		m_NavZones:OnDamageAreaDeath(p_Position)
 	end
 	self.m_OutsideCombatArea[p_Player.id] = nil
+	-- Without a killer right after the mod put the bot onto a point of the mesh: nobody is put there again.
+	if p_Inflictor == nil then
+		local s_Bot = m_BotManager:GetBotById(p_Player.id)
+		if s_Bot ~= nil then
+			s_Bot:OnDiedAfterPut()
+		end
+	end
 end
 
 ---VEXT Server Player:Chat Event

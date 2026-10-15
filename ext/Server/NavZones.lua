@@ -119,6 +119,8 @@ function NavZones:Clear()
 	self._Count = 0
 	-- Where players died in a damage area (electrified rails, fire): { Vec3 } (OnDamageAreaDeath).
 	self._HazardDeaths = {}
+	-- Points a bot was put onto and died at right after, without a killer (MarkDeadly): point -> true.
+	self._DeadlyPoints = {}
 	-- Counts up whenever the mesh or its junctions change (NavRoutes builds its graph anew then).
 	self._Version = (self._Version or 0) + 1
 	-- Counts up whenever connections are removed as well (NavRoutes measures the ways anew then).
@@ -142,6 +144,18 @@ function NavZones:OnLoadFinished()
 	end
 
 	local s_Exists = SQL:Query("select name from sqlite_master where type='table' and name='" .. s_Table .. "'")
+	-- A deathmatch mode without a mesh of its own: the one of Domination on the level, if any. It covers the whole level
+	-- (the close quarters of XP2, where TDM, SDM and GunMaster are played as well); its zones are no objectives there
+	-- (GameDirector:_InitObjectives), the bots roam it (Bot:_ZoneRoam). Not the mesh of conquest: it only covers the
+	-- areas of the flags.
+	if (not s_Exists or #s_Exists == 0) and (Globals.IsTdm or Globals.IsSdm or Globals.IsGm or Globals.IsScavenger) then
+		local s_Domination = tostring(Globals.LevelName) .. '_Domination0_navzones'
+		local s_Other = SQL:Query("select name from sqlite_master where type='table' and name='" .. s_Domination .. "'")
+		if s_Other and #s_Other > 0 then
+			s_Table = s_Domination
+			s_Exists = s_Other
+		end
+	end
 	if s_Exists and #s_Exists > 0 then
 		local s_Rows = SQL:Query('SELECT name, data FROM ' .. s_Table) or {}
 		for l_Index = 1, #s_Rows do
@@ -684,6 +698,16 @@ function NavZones:VehicleZoneAt(p_Position, p_Range, p_Objective)
 	return s_Found, s_Point
 end
 
+---The points of the zone's mesh up to about p_Range metres around the position (horizontally; the cells of the grid,
+---some are farther away): the searches near a position don't go over all points.
+---@param p_Zone NavZone
+---@param p_Position Vec3
+---@param p_Range number
+---@return integer[]
+function NavZones:PointsAround(p_Zone, p_Position, p_Range)
+	return _PointsAround(p_Zone.Grid, p_Position, p_Range)
+end
+
 ---@return table<string, NavZone>
 function NavZones:GetZones()
 	return self._Zones
@@ -864,10 +888,6 @@ local function _ConnectedWithout(p_Mesh, p_A, p_B)
 	return false
 end
 
----A bot got stuck between the two points: all bots avoid the connection from now on (until the level ends).
----@param p_Zone NavZone
----@param p_A integer
----@param p_B integer
 ---How many points can be reached from p_Start without the connection p_A - p_B, counted up to p_Limit.
 ---@param p_Mesh NavZone
 ---@param p_Start integer
@@ -896,6 +916,10 @@ local function _SizeWithout(p_Mesh, p_Start, p_A, p_B, p_Limit)
 	return s_Count
 end
 
+---A bot got stuck between the two points: all bots avoid the connection from now on (until the level ends).
+---@param p_Zone NavZone
+---@param p_A integer
+---@param p_B integer
 function NavZones:BlockEdge(p_Zone, p_A, p_B)
 	local s_Remove = nil
 	for _, l_Pair in ipairs({ { p_A, p_B }, { p_B, p_A } }) do
@@ -996,6 +1020,23 @@ function NavZones:OnDamageAreaDeath(p_Position)
 		_ComputeParts(s_Mesh)
 		m_Logger:Write('hazard at ' .. tostring(p_Position) .. ': ' .. s_Removed .. ' connections removed')
 	end
+end
+
+---A bot put onto the point (Bot:_ZoneForceAcross, TeleportToMesh) died there right after, without a killer: the soldier
+---doesn't fit there, the game kills it (XP2_Factory Domination: 22 deaths at one point in 600 s). Nobody is put there
+---again until the level ends; walking over it is fine.
+---@param p_Point integer
+function NavZones:MarkDeadly(p_Point)
+	if not self._DeadlyPoints[p_Point] then
+		self._DeadlyPoints[p_Point] = true
+		m_Logger:Write('point ' .. p_Point .. ': bots put there die, nobody is put there again')
+	end
+end
+
+---@param p_Point integer|nil
+---@return boolean
+function NavZones:IsDeadly(p_Point)
+	return p_Point ~= nil and self._DeadlyPoints[p_Point] == true
 end
 
 -- Metres of the regions a bot avoids more or less (NavZones:Route with a seed).

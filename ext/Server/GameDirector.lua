@@ -43,6 +43,23 @@ local function _SpawnOn(p_Entity)
 	return s_Ok and s_On == true
 end
 
+---The team a soldier spawn of the game puts its soldiers into: the team of its data (HQs, bases), else the one the
+---spawn has now (a capture point: whoever holds it).
+---@param p_Entity Entity
+---@return TeamId|integer|nil
+local function _SpawnTeam(p_Entity)
+	local s_Ok, s_Team = pcall(function()
+		if p_Entity.data ~= nil and p_Entity.data:Is('CharacterSpawnReferenceObjectData') then
+			local s_DataTeam = CharacterSpawnReferenceObjectData(p_Entity.data).team
+			if s_DataTeam == TeamId.Team1 or s_DataTeam == TeamId.Team2 then
+				return s_DataTeam
+			end
+		end
+		return SpawnEntity(p_Entity).teamId
+	end)
+	return s_Ok and s_Team or nil
+end
+
 -- Removes destroyed entities from a list in place and returns it.
 local function _PruneInvalidEntities(p_List)
 	if p_List == nil then
@@ -817,7 +834,11 @@ end
 ---@param p_Bot Bot
 function GameDirector:_CheckProgressOffMesh(p_Bot)
 	local s_Soldier = p_Bot.m_Player.soldier
-	if s_Soldier == nil or p_Bot.m_Zone ~= nil or m_NavZones:GetMesh() == nil or g_NavRoutes == nil
+	if m_NavZones:GetMesh() == nil then
+		self:_CheckStandingStill(p_Bot)
+		return
+	end
+	if s_Soldier == nil or p_Bot.m_Zone ~= nil or g_NavRoutes == nil
 		or p_Bot.m_Border ~= nil -- Waits at the border of the combat area.
 		or g_BotStates:IsInVehicleState(p_Bot.m_ActiveState) or g_BotStates:IsStaticState(p_Bot.m_ActiveState)
 		-- A passenger on an outside seat (XP3_Shield: on a jeep, the driver takes another way than its path).
@@ -910,11 +931,6 @@ function GameDirector:_CheckProgressOffMesh(p_Bot)
 	end
 end
 
----The last resort for anything the mesh, the paths and the other checks don't catch (a way that leads out of the
----combat area again and again, a loop, an area the bot can't leave): a bot on foot that doesn't get
----OBJECTIVE_PROGRESS_MIN metres closer to its objective for OBJECTIVE_PROGRESS_TIME seconds respawns. Not close to the
----objective (it holds it, walks around in its zone), not while it fights, waits, sits in a vehicle or does an action.
----@param p_Bot Bot
 ---A bot on the mesh without an objective, where no way leads to any objective nor to a vehicle (a beach of MP_018 the
 ---mesh of the spawn doesn't connect to the rest, all its mates spawned there at the start): after STRANDED_TIME it
 ---respawns at a squad mate away from there (BotSpawner, _RespawnAway).
@@ -965,6 +981,65 @@ function GameDirector:_CheckStranded(p_Bot)
 	end
 end
 
+---Levels without a mesh (the deathmatch modes): a bot on foot that doesn't get OFF_MESH_MIN_PROGRESS metres away from
+---where it was for OFF_MESH_TELEPORT_TIME seconds (not while it fights or waits) is put onto the waypoint it walks to,
+---if that is close (TeleportIfStuck); after OFF_MESH_KILL_TIME it respawns. XP4_Parl SDM: a bot 20 m beside its path
+---behind a wall skipped back and forth over its waypoints for 198 s: sliding along the wall towards each next one counted
+---as progress for the obstacle handling, its stuck-timer never ran out.
+---@param p_Bot Bot
+function GameDirector:_CheckStandingStill(p_Bot)
+	local s_Soldier = p_Bot.m_Player.soldier
+	if s_Soldier == nil or g_BotStates:IsInVehicleState(p_Bot.m_ActiveState) or g_BotStates:IsStaticState(p_Bot.m_ActiveState)
+		or g_BotStates:IsOnVehicleState(p_Bot.m_ActiveState) or p_Bot._FollowTargetPlayer ~= nil or p_Bot._RemoteWalk ~= nil
+		or p_Bot._ActiveAction == BotActionFlags.OtherActionActive then
+		p_Bot._KillYourselfTimer = 0.0
+		p_Bot._OffMeshMoved = nil
+		return
+	end
+	local s_Here = s_Soldier.worldTransform.trans
+	local s_Registry = Registry.GAME_DIRECTOR
+	if p_Bot._OffMeshMoved == nil or s_Here:Distance(p_Bot._OffMeshMoved) >= s_Registry.OFF_MESH_MIN_PROGRESS then
+		p_Bot._OffMeshMoved = s_Here:Clone()
+		p_Bot._KillYourselfTimer = 0.0
+		p_Bot._StillTeleported = false
+		return
+	end
+	if p_Bot._ShootPlayer ~= nil or p_Bot._WayWaitTimer > 0.0 then
+		return
+	end
+	p_Bot._KillYourselfTimer = p_Bot._KillYourselfTimer + s_Registry.UPDATE_OBJECTIVES_CYCLE
+	if p_Bot._KillYourselfTimer > s_Registry.OFF_MESH_KILL_TIME then
+		m_Logger:Write("respawn " .. p_Bot.m_Player.name .. ", it didn't get away from one spot")
+		p_Bot._RespawnAway = s_Here:Clone()
+		p_Bot.m_DontRevive = true
+		p_Bot:KillSoldier('standing_still')
+		p_Bot._KillYourselfTimer = 0.0
+		p_Bot._OffMeshMoved = nil
+		return
+	end
+	if Config.TeleportIfStuck and p_Bot._KillYourselfTimer > s_Registry.OFF_MESH_TELEPORT_TIME
+		and not p_Bot._StillTeleported then
+		local s_Waypoint = m_NodeCollection:Get(p_Bot._CurrentWayPoint, p_Bot._PathIndex)
+		if s_Waypoint ~= nil and s_Waypoint.Position:Distance(s_Here) <= s_Registry.OFF_MESH_TELEPORT_RANGE then
+			-- Once per spot: put there and still not getting along, it respawns.
+			p_Bot._StillTeleported = true
+			local s_Transform = s_Soldier.worldTransform:Clone()
+			s_Transform.trans = s_Waypoint.Position:Clone()
+			s_Soldier:SetTransform(s_Transform)
+			m_Logger:Write("put " .. p_Bot.m_Player.name .. " onto its waypoint, it didn't get away from one spot")
+			if m_DebugBridge.m_Enabled then
+				m_DebugBridge:Event('standing_still', { bot = p_Bot.m_Player.name, path = p_Bot._PathIndex,
+					point = p_Bot._CurrentWayPoint, pos = { s_Here.x, s_Here.y, s_Here.z } })
+			end
+		end
+	end
+end
+
+---The last resort for anything the mesh, the paths and the other checks don't catch (a way that leads out of the
+---combat area again and again, a loop, an area the bot can't leave): a bot on foot that doesn't get
+---OBJECTIVE_PROGRESS_MIN metres closer to its objective for OBJECTIVE_PROGRESS_TIME seconds respawns. Not close to the
+---objective (it holds it, walks around in its zone), not while it fights, waits, sits in a vehicle or does an action.
+---@param p_Bot Bot
 function GameDirector:_CheckObjectiveProgress(p_Bot)
 	local s_Soldier = p_Bot.m_Player.soldier
 	local s_Objective = p_Bot:GetObjective()
@@ -1433,7 +1508,8 @@ function GameDirector:GetSpawnableVehicle(p_TeamId)
 		local l_Vehicle = spawnableVehiclesForTeamID[l_Index]
 		local s_Data = m_Vehicles:GetVehicleByEntity(l_Vehicle)
 		local s_Spawn = self.m_SpawnInVehicle[l_Vehicle.instanceId]
-		if (s_Spawn == nil or _SpawnOn(s_Spawn))
+		-- Its spawn on, and still of this team (a capture point the enemy took meanwhile: its vehicles stay in this list).
+		if (s_Spawn == nil or (_SpawnOn(s_Spawn) and _SpawnTeam(s_Spawn) == p_TeamId))
 			and (s_Data == nil or (m_Vehicles:HasFreeBotSeat(l_Vehicle, s_Data) and self:HasVehicleWay(s_Data, l_Vehicle))) then
 			s_Usable[#s_Usable + 1] = l_Vehicle
 		end
@@ -2319,7 +2395,8 @@ end
 ---@param p_Point integer|nil the point of the mesh the bot is at, if known (else the one in sight of the position)
 ---@return boolean
 function GameDirector:IsStranded(p_Position, p_TeamId, p_Point)
-	if m_NavZones:GetMesh() == nil or g_NavRoutes == nil then
+	-- A deathmatch has no objectives to get to: its bots roam the mesh (Bot:_ZoneRoam).
+	if m_NavZones:GetMesh() == nil or g_NavRoutes == nil or not (Globals.IsConquest or Globals.IsRush) then
 		return false
 	end
 	local s_Point = p_Point
@@ -2680,8 +2757,11 @@ function GameDirector:_InitObjectives()
 	-- Every zone of the mesh (capture points, MCOMs, bases): the paths are trimmed at them and have no names. Not the
 	-- spawns of the game (the bots only start there) and not the hubs (where paths meet). An MCOM also gets its
 	-- "mcom N interact" (arm or disarm it): the bots do that on the mesh, no path needed (BotZoneMovement).
+	-- Only in the modes with objectives: a deathmatch on the mesh of another mode of the level (TDM on the one of
+	-- Domination) would send its bots to the capture points of that mode, they roam the mesh instead (Bot:_ZoneRoam).
+	local s_ZoneObjectives = Globals.IsConquest or Globals.IsRush
 	for l_Name, l_Zone in pairs(m_NavZones:GetZones()) do
-		if l_Name:lower():sub(1, 6) ~= 'spawn ' and l_Zone.Kind ~= 'hub' then
+		if s_ZoneObjectives and l_Name:lower():sub(1, 6) ~= 'spawn ' and l_Zone.Kind ~= 'hub' then
 			m_NodeCollection:AddKnownObjective(l_Name)
 			if l_Zone.Kind == 'mcom' then
 				m_NodeCollection:AddKnownObjective(l_Name .. ' interact')
@@ -3159,13 +3239,7 @@ function GameDirector:_SpawnInVehicle(p_Position, p_Team)
 	local s_Iterator = EntityManager:GetIterator('ServerCharacterSpawnEntity')
 	local s_Entity = s_Iterator:Next()
 	while s_Entity ~= nil do
-		local s_Team = SpawnEntity(s_Entity).teamId
-		if s_Entity.data ~= nil and s_Entity.data:Is('CharacterSpawnReferenceObjectData') then
-			local s_DataTeam = CharacterSpawnReferenceObjectData(s_Entity.data).team
-			if s_DataTeam == TeamId.Team1 or s_DataTeam == TeamId.Team2 then
-				s_Team = s_DataTeam
-			end
-		end
+		local s_Team = _SpawnTeam(s_Entity)
 		local s_Bus = s_Entity.bus
 		if s_Team == p_Team and s_Bus ~= nil then
 			for l_Index = 1, #s_Bus.entities do
