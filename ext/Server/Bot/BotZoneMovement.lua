@@ -182,7 +182,8 @@ function Bot:_CheckForZoneEntry(p_Point)
 		else
 			s_Avoid = self:_BackOntoLeftPart(s_Waypoint)
 		end
-		local s_Step = m_NavRoutes:Step(s_Waypoint, self._Objective, self.m_RouteSeed, self._NavCame, s_NoEnter, s_Avoid)
+		local s_Step = m_NavRoutes:Step(s_Waypoint, self._Objective, self.m_RouteSeed, self._NavCame, s_NoEnter, s_Avoid,
+			self.m_Player.teamId)
 		if s_Step == nil then
 			return false
 		end
@@ -806,7 +807,8 @@ function Bot:_ZoneRoam()
 			local l_Target = l_Point and s_Mesh.Points[l_Point]
 			if l_Target ~= nil and s_Mesh.Part[l_Point] == s_Part and not m_NavZones:IsDeadly(l_Point)
 				and (l_Target.X - s_From.X) ^ 2 + (l_Target.Z - s_From.Z) ^ 2 >= ZONE_ROAM_MIN * ZONE_ROAM_MIN then
-				local l_Route = m_NavZones:Route(s_Mesh, s_State.Point, l_Point, self.m_RouteSeed)
+				local l_Route = m_NavZones:Route(s_Mesh, s_State.Point, l_Point, self.m_RouteSeed,
+					m_NavRoutes:Danger(self.m_RouteSeed, self.m_Player.teamId))
 				if l_Route ~= nil then
 					s_Goal = l_Point
 					s_Route = l_Route
@@ -848,7 +850,9 @@ function Bot:_ZoneRouteTo(p_Goal, p_Route)
 	s_State.Progress = math.huge
 	s_State.Stuck = 0.0
 	if p_Goal ~= nil then
-		local s_Route = p_Route or m_NavZones:Route(s_State.Zone, s_State.Point, p_Goal, self.m_RouteSeed)
+		-- Away from where its team was killed lately (not in a vehicle: the danger is on the mesh of the soldiers).
+		local s_Danger = not s_State.Vehicle and m_NavRoutes:Danger(self.m_RouteSeed, self.m_Player.teamId) or nil
+		local s_Route = p_Route or m_NavZones:Route(s_State.Zone, s_State.Point, p_Goal, self.m_RouteSeed, s_Danger)
 		if s_Route ~= nil then
 			s_State.Targets = m_NavZones:Positions(s_State.Zone, s_Route)
 		end
@@ -1027,7 +1031,7 @@ function Bot:_LeaveZone(p_Junction)
 		if self._Objective ~= '' then
 			local s_Direction = nil
 			if s_State == nil or not s_State.Vehicle then
-				s_Direction = m_NavRoutes:Direction(s_Waypoint, self._Objective, self.m_RouteSeed)
+				s_Direction = m_NavRoutes:Direction(s_Waypoint, self._Objective, self.m_RouteSeed, self.m_Player.teamId)
 			end
 			s_Direction = s_Direction
 				or m_NodeCollection:ObjectiveDirection(s_Waypoint, self._Objective, s_State ~= nil and s_State.Vehicle)

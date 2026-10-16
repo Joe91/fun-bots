@@ -121,6 +121,11 @@ function NavZones:Clear()
 	self._HazardDeaths = {}
 	-- Points a bot was put onto and died at right after, without a killer (MarkDeadly): point -> true.
 	self._DeadlyPoints = {}
+	-- Where soldiers of each team were killed lately (OnKilled): team -> point -> metres the ways there cost more.
+	self._Danger = {}
+	self._DangerTime = nil
+	-- Counts up whenever the danger changed (NavRoutes measures the ways of the team anew then).
+	self._DangerVersion = (self._DangerVersion or 0) + 1
 	-- Counts up whenever the mesh or its junctions change (NavRoutes builds its graph anew then).
 	self._Version = (self._Version or 0) + 1
 	-- Counts up whenever connections are removed as well (NavRoutes measures the ways anew then).
@@ -1039,6 +1044,90 @@ function NavZones:IsDeadly(p_Point)
 	return p_Point ~= nil and self._DeadlyPoints[p_Point] == true
 end
 
+-- Where soldiers of a team were killed lately the ways cost the team more (GetDanger): it takes the other staircase, the
+-- other street, also a longer one (Subway MCOM 8: all attackers came down over one landing, 150 per round died there,
+-- the ways round over paths 34-36 were 3-30 % longer and nobody took them). Each kill adds DANGER_PER_DEATH metres to
+-- the points up to DANGER_RANGE around it on its floor (DANGER_FLOOR up or down: stairs), at most DANGER_MAX per point.
+-- Half of it is gone after DANGER_HALF_LIFE seconds (in steps of DANGER_DECAY_STEP), below DANGER_MIN it is dropped.
+local DANGER_RANGE = 6.0
+local DANGER_FLOOR = 2.5
+local DANGER_PER_DEATH = 15.0
+local DANGER_MAX = 50.0
+local DANGER_HALF_LIFE = 60.0
+local DANGER_DECAY_STEP = 5.0
+local DANGER_MIN = 2.0
+
+---A soldier of the team was killed there by the enemy (on foot): the ways there cost the team more for a while.
+---@param p_Team TeamId|integer
+---@param p_Position Vec3
+function NavZones:OnKilled(p_Team, p_Position)
+	local s_Mesh = self._Mesh
+	if s_Mesh == nil or p_Position == nil then
+		return
+	end
+	self:_DecayDanger()
+	local s_Danger = self._Danger[p_Team]
+	if s_Danger == nil then
+		s_Danger = {}
+		self._Danger[p_Team] = s_Danger
+	end
+	local s_Around = _PointsAround(s_Mesh.Grid, p_Position, DANGER_RANGE)
+	for l_Index = 1, #s_Around do
+		local l_Point = s_Around[l_Index]
+		local s_Position = s_Mesh.Points[l_Point].Position
+		local s_DeltaX = s_Position.x - p_Position.x
+		local s_DeltaZ = s_Position.z - p_Position.z
+		if s_DeltaX * s_DeltaX + s_DeltaZ * s_DeltaZ <= DANGER_RANGE * DANGER_RANGE
+			and math.abs(s_Position.y - p_Position.y) <= DANGER_FLOOR then
+			s_Danger[l_Point] = math.min((s_Danger[l_Point] or 0.0) + DANGER_PER_DEATH, DANGER_MAX)
+		end
+	end
+	self._DangerVersion = self._DangerVersion + 1
+end
+
+---The metres the ways over each point cost the team more: its soldiers were killed there lately (OnKilled). nil: none.
+---@param p_Team TeamId|integer|nil
+---@return table<integer, number>|nil
+function NavZones:GetDanger(p_Team)
+	self:_DecayDanger()
+	local s_Danger = p_Team ~= nil and self._Danger[p_Team] or nil
+	if s_Danger == nil or next(s_Danger) == nil then
+		return nil
+	end
+	return s_Danger
+end
+
+---@return integer
+function NavZones:GetDangerVersion()
+	return self._DangerVersion
+end
+
+---Lets the danger fade (DANGER_HALF_LIFE).
+function NavZones:_DecayDanger()
+	local s_Now = SharedUtils:GetTime()
+	if self._DangerTime == nil or s_Now < self._DangerTime then
+		self._DangerTime = s_Now
+		return
+	end
+	local s_Elapsed = s_Now - self._DangerTime
+	if s_Elapsed < DANGER_DECAY_STEP then
+		return
+	end
+	self._DangerTime = s_Now
+	local s_Factor = 0.5 ^ (s_Elapsed / DANGER_HALF_LIFE)
+	local s_Changed = false
+	for _, l_Danger in pairs(self._Danger) do
+		for l_Point, l_Metres in pairs(l_Danger) do
+			local s_Metres = l_Metres * s_Factor
+			l_Danger[l_Point] = s_Metres >= DANGER_MIN and s_Metres or nil
+			s_Changed = true
+		end
+	end
+	if s_Changed then
+		self._DangerVersion = self._DangerVersion + 1
+	end
+end
+
 -- Metres of the regions a bot avoids more or less (NavZones:Route with a seed).
 local SPREAD_REGION = 30.0
 
@@ -1059,9 +1148,10 @@ end
 ---@param p_From integer
 ---@param p_To integer
 ---@param p_Seed? number the bot's: its own way among similar ones (_RegionSpread), nil: the shortest
+---@param p_Danger? table<integer, number> metres added per point (GetDanger: where its team was killed lately)
 ---@return integer[]|nil points from p_From to p_To
 ---@return number cost of the way (with the spread)
-function NavZones:Route(p_Zone, p_From, p_To, p_Seed)
+function NavZones:Route(p_Zone, p_From, p_To, p_Seed, p_Danger)
 	if p_From == p_To then
 		return { p_From }, 0.0
 	end
@@ -1104,6 +1194,9 @@ function NavZones:Route(p_Zone, p_From, p_To, p_Seed)
 						s_Step = s_Step * _RegionSpread(p_Seed, s_Point.X, s_Point.Z)
 					end
 					local s_Cost = s_CurrentCost + s_Step + l_Edge.Penalty
+					if p_Danger ~= nil then
+						s_Cost = s_Cost + (p_Danger[s_To] or 0.0)
+					end
 					if s_Cost < (s_Costs[s_To] or math.huge) then
 						s_Costs[s_To] = s_Cost
 						s_Came[s_To] = s_Current

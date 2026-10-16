@@ -779,6 +779,12 @@ function FunBotServer:OnPlayerKilled(p_Player, p_Inflictor, p_Position, p_Weapon
 		m_NavZones:OnDamageAreaDeath(p_Position)
 	end
 	self.m_OutsideCombatArea[p_Player.id] = nil
+	-- Killed by the enemy on foot: the ways there cost its team more for a while, the bots take other ways.
+	local s_Controllable = p_Player.controlledControllable
+	if p_Inflictor ~= nil and p_Inflictor.teamId ~= p_Player.teamId and p_Player.attachedControllable == nil
+		and (s_Controllable == nil or s_Controllable:Is('ServerSoldierEntity')) then
+		m_NavZones:OnKilled(p_Player.teamId, p_Position)
+	end
 	-- Without a killer right after the mod put the bot onto a point of the mesh: nobody is put there again.
 	if p_Inflictor == nil then
 		local s_Bot = m_BotManager:GetBotById(p_Player.id)
