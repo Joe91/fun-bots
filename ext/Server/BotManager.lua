@@ -42,7 +42,6 @@ function BotManager:RegisterVars()
 	---@type integer[]
 	---`BotId[]`
 	self._BotBotAttackList = {}
-	self._BotBotReviveList = {}
 	self._RaycastsPerActivePlayer = 0
 
 	---@type table<integer, boolean>
@@ -89,7 +88,6 @@ function BotManager:OnLevelDestroy()
 	self._DestroyBotsTimer = 0.0
 	self._BotsToDestroy = {}
 	self._BotBotAttackList = {}
-	self._BotBotReviveList = {}
 	self._RaycastsPerActivePlayer = 0
 	self._ConnectionCheckState = {}
 	self._LastBotCheckIndex = 1

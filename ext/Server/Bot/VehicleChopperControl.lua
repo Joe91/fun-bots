@@ -85,7 +85,7 @@ function VehicleChopperControl:UpdateMovementChopper(p_DeltaTime, p_Bot)
 		if s_Distance > CHOPPER_DESCEND_RANGE then
 			s_TargetPoint.y = math.max(s_TargetPoint.y, p_Bot._ChopperStartHeight + CHOPPER_MIN_CLIMB)
 		end
-		local s_Ground = self:_GroundAhead(p_DeltaTime, p_Bot, s_Position, s_DeltaX, s_DeltaZ, s_Distance)
+		local s_Ground = self:GroundAhead(p_DeltaTime, p_Bot, s_Position, s_DeltaX, s_DeltaZ, s_Distance)
 		if s_Ground ~= nil then
 			s_TargetPoint.y = math.max(s_TargetPoint.y, s_Ground + CHOPPER_CLEARANCE)
 		end
@@ -99,25 +99,27 @@ function VehicleChopperControl:UpdateMovementChopper(p_DeltaTime, p_Bot)
 end
 
 ---The highest ground under the way of the chopper the next CHOPPER_LOOKAHEAD metres towards its target, looked for every
----CHOPPER_PROBE_INTERVAL seconds. nil without a hit (or right above the target).
+---CHOPPER_PROBE_INTERVAL seconds. nil without a hit (or right above the target). Jets look farther (p_Lookahead).
 ---@param p_DeltaTime number
 ---@param p_Bot Bot
 ---@param p_Position Vec3
 ---@param p_DeltaX number towards the target
 ---@param p_DeltaZ number
 ---@param p_Distance number to the target (horizontal)
+---@param p_Lookahead? number[] metres ahead (default CHOPPER_LOOKAHEAD)
 ---@return number|nil
-function VehicleChopperControl:_GroundAhead(p_DeltaTime, p_Bot, p_Position, p_DeltaX, p_DeltaZ, p_Distance)
-	p_Bot._ChopperProbeTime = p_Bot._ChopperProbeTime - p_DeltaTime
-	if p_Bot._ChopperProbeTime > 0.0 then
-		return p_Bot._ChopperGround
+function VehicleChopperControl:GroundAhead(p_DeltaTime, p_Bot, p_Position, p_DeltaX, p_DeltaZ, p_Distance, p_Lookahead)
+	p_Bot._GroundProbeTime = p_Bot._GroundProbeTime - p_DeltaTime
+	if p_Bot._GroundProbeTime > 0.0 then
+		return p_Bot._GroundAhead
 	end
-	p_Bot._ChopperProbeTime = CHOPPER_PROBE_INTERVAL
+	p_Bot._GroundProbeTime = CHOPPER_PROBE_INTERVAL
 	local s_Flags = RayCastFlags.DontCheckCharacter | RayCastFlags.DontCheckRagdoll | RayCastFlags.DontCheckWater
 	---@cast s_Flags RayCastFlags
 	local s_Highest = nil
-	for l_Index = 1, #CHOPPER_LOOKAHEAD do
-		local l_Ahead = math.min(CHOPPER_LOOKAHEAD[l_Index], p_Distance)
+	local s_Lookahead = p_Lookahead or CHOPPER_LOOKAHEAD
+	for l_Index = 1, #s_Lookahead do
+		local l_Ahead = math.min(s_Lookahead[l_Index], p_Distance)
 		if l_Ahead < CHOPPER_PROBE_MIN then
 			break
 		end
@@ -129,7 +131,7 @@ function VehicleChopperControl:_GroundAhead(p_DeltaTime, p_Bot, p_Position, p_De
 			s_Highest = s_Hit.position.y
 		end
 	end
-	p_Bot._ChopperGround = s_Highest
+	p_Bot._GroundAhead = s_Highest
 	return s_Highest
 end
 
@@ -214,7 +216,7 @@ function VehicleChopperControl:UpdateYawChopperPilot(p_Bot, p_Attacking, p_Delta
 	local s_Ground = nil
 	if p_Attacking then
 		local s_Forward = s_Transform.forward
-		s_Ground = self:_GroundAhead(p_DeltaTime, p_Bot, s_VehiclePos, s_Forward.x * CHOPPER_ATTACK_LOOKAHEAD,
+		s_Ground = self:GroundAhead(p_DeltaTime, p_Bot, s_VehiclePos, s_Forward.x * CHOPPER_ATTACK_LOOKAHEAD,
 			s_Forward.z * CHOPPER_ATTACK_LOOKAHEAD, CHOPPER_ATTACK_LOOKAHEAD * math.sqrt(s_Forward.x ^ 2 + s_Forward.z ^ 2))
 		if s_Ground ~= nil and s_Height - s_Ground < CHOPPER_ATTACK_CLEARANCE then
 			p_Bot._ChopperRecoverTime = CHOPPER_RECOVER_TIME
@@ -231,7 +233,7 @@ function VehicleChopperControl:UpdateYawChopperPilot(p_Bot, p_Attacking, p_Delta
 	local s_Recovering = p_Bot._ChopperRecoverTime > 0.0
 	if s_Recovering then
 		p_Bot._ChopperRecoverTime = p_Bot._ChopperRecoverTime - p_DeltaTime
-		s_Ground = s_Ground or p_Bot._ChopperGround
+		s_Ground = s_Ground or p_Bot._GroundAhead
 		if s_Ground ~= nil then
 			s_Delta_Height = math.max(s_Delta_Height, s_Ground + CHOPPER_RECOVER_CLEARANCE - s_Height)
 		end

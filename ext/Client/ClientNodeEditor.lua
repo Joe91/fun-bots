@@ -749,10 +749,6 @@ function ClientNodeEditor:_onSetSpawnPath(p_Args)
 	NetEvents:SendLocal('NodeEditor:AddSpawnPath', p_Args)
 end
 
-function ClientNodeEditor:_onRemoveData()
-	NetEvents:SendLocal('NodeEditor:RemoveData')
-end
-
 -- ============================================
 -- Events
 -- ============================================

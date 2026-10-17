@@ -31,10 +31,8 @@ function NodeCollection:InitVars()
 	self._WaypointsByPathIndex = {}
 
 	self._InfoNode = {}
-	self._SpawnPointLevelName = ''
 
 	self._SelectedWaypoints = {}
-	self._HiddenPaths = {}
 
 	self._Objectives = {}
 
@@ -54,7 +52,6 @@ function NodeCollection:InitVars()
 	self._LoadWaypointCount = 0
 	self._LoadFirstWaypoint = nil
 	self._LoadLastWaypoint = nil
-	self._LoadLastFirstNode = nil
 	self._LoadLastPathindex = -1
 
 	self._PrintDiagOnInvalidPointindex = false
@@ -109,10 +106,6 @@ end
 ---@param p_Waypoint Waypoint
 ---@return Waypoint
 function NodeCollection:Register(p_Waypoint)
-	if self._HiddenPaths[p_Waypoint.PathIndex] == nil then
-		self._HiddenPaths[p_Waypoint.PathIndex] = false
-	end
-
 	if self._WaypointsByPathIndex[p_Waypoint.PathIndex] == nil then
 		self._WaypointsByPathIndex[p_Waypoint.PathIndex] = {}
 	end
@@ -476,33 +469,6 @@ end
 ---@param p_Data any
 function NodeCollection:Update(p_Waypoint, p_Data)
 	m_Utilities:mergeKeys(p_Waypoint, p_Data)
-end
-
----@param p_Data any
----@return boolean
----@return string
-function NodeCollection:UpdateMetadata(p_Data)
-	m_Logger:Write('[A] NodeCollection:UpdateMetadata -> p_Data: ' .. m_Utilities:dump(p_Data, true))
-
-	local s_Selection = self:GetSelected()
-
-	if #s_Selection < 1 then
-		return false, 'Must select one or more waypoints'
-	end
-
-	if type(p_Data) == 'string' then
-		p_Data = json.decode(p_Data) or {}
-	end
-
-	m_Logger:Write('[B] NodeCollection:UpdateMetadata -> p_Data: ' .. m_Utilities:dump(p_Data, true))
-
-	for i = 1, #s_Selection do
-		self:Update(s_Selection[i], {
-			Data = m_Utilities:mergeKeys(s_Selection[i].Data, p_Data)
-		})
-	end
-
-	return true, 'Success'
 end
 
 function NodeCollection:SetInput(p_Speed, p_Extra, p_Option)
@@ -1167,22 +1133,6 @@ end
 -----------------------------
 -- Paths.
 
-function NodeCollection:ShowPath(p_PathIndex)
-	self._HiddenPaths[p_PathIndex] = false
-end
-
-function NodeCollection:HidePath(p_PathIndex)
-	self._HiddenPaths[p_PathIndex] = true
-end
-
-function NodeCollection:IsPathVisible(p_PathIndex)
-	return self._HiddenPaths[p_PathIndex] == nil or self._HiddenPaths[p_PathIndex] == false
-end
-
-function NodeCollection:GetHiddenPaths()
-	return self._HiddenPaths
-end
-
 function NodeCollection:IsMapAvailable(p_LevelName, p_GameMode)
 	local s_TableName
 	if p_GameMode ~= nil and p_LevelName ~= nil then
@@ -1344,9 +1294,6 @@ function NodeCollection:ProcessAllDataToLoad()
 				end
 
 				s_Waypoint = self:Create(s_Waypoint, true)
-				if s_Waypoint.PointIndex == 1 then
-					self._LoadLastFirstNode = s_Waypoint
-				end
 				self._LoadLastWaypoint = s_Waypoint
 			end
 			self._LoadWaypointCount = self._LoadWaypointCount + 1
@@ -1862,8 +1809,7 @@ function NodeCollection:Find(p_Vec3Position, p_Tolerance)
 	local s_ClosestWaypointDist = p_Tolerance
 
 	for _, l_Waypoint in pairs(self._WaypointsByID) do
-		if l_Waypoint ~= nil and l_Waypoint.Position ~= nil and
-			self:IsPathVisible(l_Waypoint.PathIndex) then
+		if l_Waypoint ~= nil and l_Waypoint.Position ~= nil then
 			if self:InRange(l_Waypoint, p_Vec3Position, p_Tolerance) then -- Faster check.
 				local s_Distance = l_Waypoint.Position:Distance(p_Vec3Position) -- Then do slower maths.
 
@@ -1890,63 +1836,13 @@ function NodeCollection:FindAll(p_Vec3Position, p_Tolerance)
 	local s_WaypointsFound = {}
 
 	for _, l_Waypoint in pairs(self._WaypointsByID) do
-		if l_Waypoint ~= nil and l_Waypoint.Position ~= nil and self:IsPathVisible(l_Waypoint.PathIndex) and
+		if l_Waypoint ~= nil and l_Waypoint.Position ~= nil and
 			self:InRange(l_Waypoint, p_Vec3Position, p_Tolerance) then
 			s_WaypointsFound[#s_WaypointsFound + 1] = l_Waypoint
 		end
 	end
 
 	return s_WaypointsFound
-end
-
--- To-do: Not used any more - Remove?
-function NodeCollection:FindAlongTrace(p_Vec3Start, p_Vec3End, p_Granularity, p_Tolerance)
-	if p_Granularity == nil then
-		p_Granularity = 0.25
-	end
-
-	if p_Tolerance == nil then
-		p_Tolerance = 0.2
-	end
-
-	self:Log('NodeCollection:FindAlongTrace - p_Granularity: ' .. tostring(p_Granularity))
-	self:Log('NodeCollection:FindAlongTrace - p_Tolerance: ' .. tostring(p_Tolerance))
-
-	local s_Distance = math.min(math.max(p_Vec3Start:Distance(p_Vec3End), 0.05), 10)
-
-	-- Instead of searching a possible 3k or more nodes, we grab only those that would be in range.
-	-- Shift the search area forward by 1/2 distance and also 1/2 the radius needed.
-	local s_SearchAreaPos = p_Vec3Start + ((p_Vec3End - p_Vec3Start) * 0.4) -- Not exactly half ahead.
-	local s_SearchAreaSize = (s_Distance * 0.6)                          -- Little bit bigger than half for searching.
-
-	local s_SearchWaypoints = self:FindAll(s_SearchAreaPos, s_SearchAreaSize)
-	local s_TestPos = p_Vec3Start:Clone()
-
-	self:Log('distance: ' .. tostring(s_Distance))
-	self:Log('searchWaypoints: ' .. tostring(#s_SearchWaypoints))
-
-	if #s_SearchWaypoints == 1 then
-		return s_SearchWaypoints[1]
-	end
-
-	local s_Heading = p_Vec3End - p_Vec3Start
-	local s_Direction = s_Heading / s_Heading.magnitude
-
-	while #s_SearchWaypoints > 0 and s_Distance > p_Granularity and s_Distance > 0 do
-		for l_Index = 1, #s_SearchWaypoints do
-			local l_Waypoint = s_SearchWaypoints[l_Index]
-			if l_Waypoint ~= nil and self:IsPathVisible(l_Waypoint.PathIndex) and l_Waypoint.Position ~= nil and
-				l_Waypoint.Position:Distance(s_TestPos) <= p_Tolerance then
-				self:Log('NodeCollection:FindAlongTrace -> Found: ' .. l_Waypoint.ID)
-				return l_Waypoint
-			end
-		end
-
-		s_TestPos = s_TestPos + (s_Direction * p_Granularity)
-		s_Distance = s_TestPos:Distance(p_Vec3End)
-	end
-
-	return nil
 end
 
 function NodeCollection:Log(...)

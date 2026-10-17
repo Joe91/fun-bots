@@ -1565,23 +1565,29 @@ function Bot:UpdateShootMovement(p_DeltaTime)
 end
 
 ---Rush: whether the bot keeps going to its MCOM while shooting: by chance (decided now and then in StateAttacking),
----and always close to the MCOM unless the enemy is close as well. Attackers to arm it, defenders only while it is armed
----(to disarm it, else they fight where they are), and then always unless the enemy is close: the fuse is 25 s, they
----stopped to fight on the way and hardly ever got there.
+---and always close to the MCOM unless the enemy is close as well. Attackers to arm it. Defenders while it is armed (to
+---disarm it), then always unless the enemy is close: the fuse is 25 s, they stopped to fight on the way and hardly ever
+---got there. Else defenders by chance on the way to it, unless the enemy is close; at the MCOM they fight where they
+---are (the one far from their spawn had hardly a defender: they stopped at each attacker on the way).
 ---@return boolean
 function Bot:ShouldPushWhileShooting()
 	if not Globals.IsRush or self.m_KnifeMode or self.m_Player.soldier == nil
 		or self._Objective:lower():sub(1, 4) ~= 'mcom' then
 		return false
 	end
-	if self.m_Player.teamId ~= TeamId.Team1 and (self.m_Player.teamId ~= TeamId.Team2
-		or not g_GameDirector:IsMcomArmed(g_GameDirector:_GetObjectiveFromSubObj(self._Objective) or self._Objective)) then
+	if self.m_Player.teamId ~= TeamId.Team1 and self.m_Player.teamId ~= TeamId.Team2 then
 		return false
 	end
 	local s_Weapon = self.m_ActiveWeapon
 	if s_Weapon == nil or s_Weapon.type == WeaponTypes.Sniper or s_Weapon.type == WeaponTypes.MissileAir or
 		s_Weapon.type == WeaponTypes.MissileLand then
 		return false
+	end
+	if self.m_Player.teamId == TeamId.Team2
+		and not g_GameDirector:IsMcomArmed(g_GameDirector:_GetObjectiveFromSubObj(self._Objective) or self._Objective) then
+		return self._PushWhileShooting and self._DistanceToPlayer > Registry.BOT.RUSH_PUSH_MIN_ENEMY_DISTANCE and
+			g_GameDirector:_GetDistanceFromObjective(self._Objective, self.m_Player.soldier.worldTransform.trans) >
+			Registry.BOT.RUSH_DEFEND_PUSH_DISTANCE
 	end
 	if self._PushWhileShooting then
 		return true

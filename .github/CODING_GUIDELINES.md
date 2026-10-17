@@ -44,7 +44,7 @@ local m_Logger = Logger("BotManager", Debug.Server.BOT)
 m_Logger:Write("message")
 ```
 
-It prefixes the class name and can be switched on or off per module in [Debug.lua](../ext/Shared/Debug.lua). Methods: `Write`, `WriteTable`, `Warning`, `Error`. Leave debug logging off when you push.
+It prefixes the class name and can be switched on or off per module in [Debug.lua](../ext/Shared/Debug.lua). Methods: `Write`, `Warning`, `Error`. Leave debug logging off when you push.
 
 ### Engine objects and player references
 

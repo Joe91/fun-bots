@@ -21,11 +21,6 @@ local BotManager = require('BotManager')
 local BotSpawner = require('BotSpawner')
 
 function FunBotUIServer:__init()
-	-- To-do: remove? Unused.
-	self.m_NavigationPath = {}
-	self.m_InPathMenu = false
-
-
 	if Config.DisableUserInterface ~= true then
 		NetEvents:Subscribe('UI_Request_Open', self, self._onUIRequestOpen)
 		NetEvents:Subscribe('UI_Request_Save_Settings', self, self._onUIRequestSaveSettings)
@@ -495,23 +490,6 @@ function FunBotUIServer:_onUIRequestCommoRoseShow(p_Player, p_Data)
 			Label = Language:I18N('Stop Following')
 		}
 	})
-end
-
-function FunBotUIServer:_onUIRequestCommoRoseHide(p_Player, p_Data)
-	if Config.DisableUserInterface == true then
-		return
-	end
-
-	if PermissionManager:HasPermission(p_Player, 'UserInterface.WaypointEditor') == false then
-		ChatManager:SendMessage('You have no permissions for this action.', p_Player)
-		return
-	end
-
-	if Debug.Server.UI then
-		print(p_Player.name .. ' requesting hide CommoRose.')
-	end
-
-	NetEvents:SendTo('UI_CommoRose', p_Player, 'false')
 end
 
 function FunBotUIServer:_onUIRequestOpen(p_Player, p_Data)

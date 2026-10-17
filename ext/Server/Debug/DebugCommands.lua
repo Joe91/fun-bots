@@ -27,6 +27,8 @@ DebugCommands = class('DebugCommands')
 --   walk            see BotWalker               a bot walks given points, answers where it got (stuck)
 --   drive           see BotWalker               a bot drives a vehicle along given points, answers as walk
 --   walk_stop       {}                          stops it (also drive)
+--   tdm_bots        { on }                      bots in TDM without a real player (DebugCommands.TdmBots)
+--   registry        { section, key, value }     a value of the Registry at runtime (A/B tests), -> { value }
 
 ---@type DebugBridge
 local m_DebugBridge = require('Debug/DebugBridge')
@@ -150,6 +152,15 @@ function DebugCommands:__init()
 	m_DebugBridge:RegisterCommand('navzones_apply', self.NavZonesApply)
 	m_DebugBridge:RegisterCommand('rcon', self.Rcon)
 	m_DebugBridge:RegisterCommand('chat', self.Chat)
+	m_DebugBridge:RegisterCommand('tdm_bots', self.TdmBots)
+	m_DebugBridge:RegisterCommand('registry', self.Registry)
+end
+
+---TDM without a real player: bots anyway (BotSpawner:UpdateBotAmountAndTeam leaves them out there, a crash of the
+---game-server once). For tests on a server that may crash: { on = true|false }.
+function DebugCommands.TdmBots(p_Args, p_Bridge)
+	p_Bridge.m_TdmBots = p_Args.on ~= false
+	return { on = p_Bridge.m_TdmBots }
 end
 
 function DebugCommands.Ping()
@@ -170,6 +181,23 @@ function DebugCommands.Interval(p_Args, p_Bridge)
 	end
 	p_Bridge:SetInterval(s_Seconds)
 	return { seconds = s_Seconds }
+end
+
+---A value of the Registry at runtime, until the mod is loaded again: two servers with the same mod play the same
+---level with and without a change (A/B). { section, key, value } sets Registry[section][key] (a number or a boolean,
+---as it is), without value it only reads it.
+function DebugCommands.Registry(p_Args)
+	local s_Section = Registry[p_Args.section]
+	if type(s_Section) ~= 'table' or s_Section[p_Args.key] == nil then
+		error('no Registry.' .. tostring(p_Args.section) .. '.' .. tostring(p_Args.key))
+	end
+	if p_Args.value ~= nil then
+		if type(p_Args.value) ~= type(s_Section[p_Args.key]) then
+			error('Registry.' .. p_Args.section .. '.' .. p_Args.key .. ' is a ' .. type(s_Section[p_Args.key]))
+		end
+		s_Section[p_Args.key] = p_Args.value
+	end
+	return { value = s_Section[p_Args.key] }
 end
 
 function DebugCommands.ServerRaycasts(p_Args)

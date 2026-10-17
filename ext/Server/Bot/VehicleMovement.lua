@@ -673,11 +673,6 @@ function VehicleMovement:UpdateVehicleLookAround(p_Bot, p_DeltaTime)
 	end
 end
 
--- Function to calculate the yaw and pitch deviation relative to the orientation of a reference object
-function VehicleMovement:CalculateDeviationRelativeToOrientation(p_Transform, targetPoint)
-	return m_Utilities:GetDeviationToTarget(p_Transform, targetPoint)
-end
-
 function VehicleMovement:rotate_vector(v, axis, angle)
 	local cos_theta = math.cos(angle)
 	local sin_theta = math.sin(angle)
@@ -726,10 +721,10 @@ function VehicleMovement:UpdateYawVehicle(p_Bot, p_Attacking, p_IsStationaryLaun
 
 		local s_Direction = Vec3.zero
 		if p_Attacking then
-			s_DeltaYaw, s_DeltaPitch = self:CalculateDeviationRelativeToOrientation(s_LinearTransformNew, p_Bot._AttackPosition)
+			s_DeltaYaw, s_DeltaPitch = m_Utilities:GetDeviationToTarget(s_LinearTransformNew, p_Bot._AttackPosition)
 			s_Direction = p_Bot._AttackPosition - s_LinearTransformNew.trans
 		elseif p_Bot._TargetPoint then
-			s_DeltaYaw, s_DeltaPitch = self:CalculateDeviationRelativeToOrientation(s_LinearTransformNew, p_Bot._TargetPoint.Position)
+			s_DeltaYaw, s_DeltaPitch = m_Utilities:GetDeviationToTarget(s_LinearTransformNew, p_Bot._TargetPoint.Position)
 			s_Direction = p_Bot._TargetPoint.Position - s_LinearTransformNew.trans
 		end
 

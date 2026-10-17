@@ -12,20 +12,24 @@ This is the changelog for release **V3.6.0**. Don't forget to [join us on Discor
 ### New features / improvements
 * **New navigation:** on Conquest and Rush the bots walk a navigation mesh at the objectives and spawns and use the
   paths only between them. Routes are found over both, bots spread over different ways and learn spots where they get
-  stuck (other ways, shooting through penetrable walls, getting back onto the mesh)
+  stuck (other ways, shooting through penetrable walls, getting back onto the mesh). They take other ways around spots
+  where their team was just killed, and step aside for teammates in narrow places
 * **Spawning:** bots use the spawn points of the game on Conquest and Rush, spawn next to free vehicles and in transport
   helicopters and AMTRACs (passengers jump out at the objective)
-* **Rush:** MCOMs are found and armed/disarmed without recorded paths, defenders hold their MCOMs, bots wait at the
-  border of the combat area
+* **Rush:** MCOMs are found and armed/disarmed without recorded paths, defenders hold their MCOMs and hurry to armed
+  ones to disarm them, bots wait at the border of the combat area
+* **Domination:** supported on all four XP2 maps (with a navigation mesh); Team Deathmatch, Squad Deathmatch and Gun
+  Master use it there as well
 * **Vehicles:** vehicles and their teams are found automatically, smoother air-vehicle control and aiming (choppers,
-  jets, PID controllers, world compensation for vehicle guns), bots leave stuck or flipped vehicles
+  jets, PID controllers, world compensation for vehicle guns), bots leave stuck or flipped vehicles. Jets no longer
+  hang nose-up at the ceiling of the level and score kills in Air Superiority
 * **Aiming and combat:** reworked, more human aim error (new settings "Bot Aim Error", "... of Snipers / Support",
   "... Spread"; old "Aim Worsening" values are not taken over), grenades at the last known position of a target,
   improved look-around, better hit detection on vehicles
 * **Optional server-side raycasts:** bots fight each other without any client ("!serverraycasts on")
 * **Debug-server** (tools/debug-server): live map, recordings and analyzers in the browser, RCON/chat console, and a
   *Maps* tab that makes the mesh of a level and cuts its paths (see tools/debug-server/NEW_MAP.md); every step keeps a
-  backup of what it overwrites
+  backup of what it overwrites. A bot can record the missing way from a cut-off spawn
 * **Performance:** much less garbage collection, faster route and mesh searches
 * Web UI: values can be typed directly, changed values are marked and can be reset
 * Node editor: better performance, shows the mesh, more info on selected nodes
@@ -34,7 +38,8 @@ This is the changelog for release **V3.6.0**. Don't forget to [join us on Discor
 
 ### Bug fixes
 * Settings: "Save temporarily", "config.saveall"/"config.restore", RCON/console values, invalid defaults and quotes in
-  values fixed; importing traces no longer wipes settings, permissions or saved traces
+  values fixed; importing traces no longer wipes settings, permissions or saved traces; a failed save no longer loses
+  all settings
 * Chat commands fixed (!spawnway, !spawnbots, !setbotkit, !setbotcolor, !permissions, !stop, !stopall, !kickplayer,
   !kick), !dbg needs permission
 * Vehicles: mobile artillery and light AA attack again, no firing from seats without weapon, failed vehicle spawns no
@@ -42,9 +47,13 @@ This is the changelog for release **V3.6.0**. Don't forget to [join us on Discor
 * Objectives: "Defend objective" of the comm-rose, defending bots hold their position, objectives with an empty team 1
 * Spawning and team balance: dead bots no longer moved or counted, beacon/squad spawns no longer overwritten
 * Errors with destroyed vehicles, beacons and players on round switch, crashes on Scavenger and GunMaster
+* Bots kept the Gun Master weapons in the next level (no kills in Squad Deathmatch after Gun Master)
+* Choppers crashing during an attack
 * Many more small fixes
 
 ### Updated maps
 * All Conquest and Rush maps: navigation mesh at the objectives and spawns, paths cut at it
 * New paths on MP_013 Rush; XP4_FD_ConquestLarge (by ThyKingdomCome), MP_007_ConquestLarge, MP_001_ConquestLarge,
   XP3_Desert_ConquestLarge
+* Domination: navigation meshes for XP2_Office, XP2_Palace, XP2_Skybar and XP2_Factory
+* Junctions re-checked on all maps; recorded ways from cut-off spawns on 11 maps; MP_017 Rush fixed

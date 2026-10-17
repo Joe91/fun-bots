@@ -7,7 +7,7 @@ std = "lua54"
 read_globals = { "class", "json" }
 globals = {
 	"requireExists",
-	string = { fields = { "split", "starts", "isLower", "isDigit" } },
+	string = { fields = { "split", "starts" } },
 	table = { fields = { "has" } },
 }
 

@@ -8,10 +8,6 @@ function UISettings:__init()
 	self._properties = ArrayMap()
 end
 
-function UISettings:getProperties()
-	return self._properties
-end
-
 function UISettings:add(p_Category, p_Types, p_Name, p_Title, p_Value, p_Default, p_Description)
 	self._properties:add({
 		category = p_Category,

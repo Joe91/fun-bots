@@ -81,41 +81,6 @@ function EbxEditUtils:GetWritableContainer(p_Instance, p_ContainerPath)
 	return s_WorkingInstance, false
 end
 
--- Returns three values <workingInstance>,<propertyName>,<valid>
--- <workingInstance>: The found instance as a typed object and made writable.
--- <propertyName>: The property name that works.
--- <valid>: The given values were valid.
-function EbxEditUtils:GetWritableProperty(p_Instance, p_PropertyPath)
-	local s_PropertyName = nil
-	local s_WorkingInstance = self:GetWritableInstance(p_Instance)
-	local s_WorkingPath = self:GetValidPath(p_PropertyPath)
-	local s_Valid = false
-
-	for i = 1, #s_WorkingPath do
-		s_WorkingInstance, s_PropertyName, s_Valid = self:CheckInstancePropertyExists(s_WorkingInstance, s_WorkingPath[i])
-
-		if not s_Valid then
-			return s_WorkingInstance, s_PropertyName, s_Valid
-		else
-			-- We've reached a value
-			if type(s_WorkingInstance[s_PropertyName]) == 'string' or
-				type(s_WorkingInstance[s_PropertyName]) == 'number' or
-				type(s_WorkingInstance[s_PropertyName]) == 'boolean' or
-				type(s_WorkingInstance[s_PropertyName]) == 'nil' then
-				if s_WorkingInstance.MakeWritable ~= nil then
-					s_WorkingInstance:MakeWritable()
-				end
-
-				return s_WorkingInstance, s_PropertyName, true
-			end
-
-			s_WorkingInstance = s_WorkingInstance[s_PropertyName]
-		end
-	end
-
-	return s_WorkingInstance, s_PropertyName, false
-end
-
 function EbxEditUtils:CheckInstancePropertyExists(p_Instance, p_PropertyName)
 	if p_Instance == nil or p_PropertyName == nil then
 		return p_Instance, p_PropertyName, false
@@ -145,58 +110,6 @@ function EbxEditUtils:CheckInstancePropertyExists(p_Instance, p_PropertyName)
 	end
 
 	return p_Instance, p_PropertyName, false
-end
-
--- Returns two values <value>,<status>
--- <value>: The validated value, with default applied if necessary.
--- <status>: Boolean true if valid, string with message if failed.
-function EbxEditUtils:ValidateValue(p_ArgValue, p_ArgParams)
-	local s_DefaultValue = p_ArgParams.Default
-
-	if p_ArgValue == nil and p_ArgParams.IsOptional then
-		return s_DefaultValue, true
-	elseif p_ArgParams.Type == 'number' or p_ArgParams.Type == 'float' then
-		if p_ArgValue ~= nil and tonumber(p_ArgValue) == nil then
-			return s_DefaultValue, 'Must be a **' .. p_ArgParams.Type .. '**'
-		end
-	elseif p_ArgParams.Type == 'boolean' then
-		if p_ArgValue ~= nil then -- Sorry, this is ugly.
-			if p_ArgValue == '1' or p_ArgValue == '0' or
-				string.lower(p_ArgValue) == 'true' or string.lower(p_ArgValue) == 'false' or
-				string.lower(p_ArgValue) == 'y' or string.lower(p_ArgValue) == 'n' then
-				-- The value still needs to be a string, but let's normalize it.
-				local s_BoolToString = tostring((
-					p_ArgValue == '1' or string.lower(p_ArgValue) == 'true' or string.lower(p_ArgValue) == 'y'))
-				return (s_BoolToString == 'true'), true
-			end
-		end
-
-		return s_DefaultValue, 'Not a valid **boolean**, use 1/0, true/false, or y/n'
-	elseif p_ArgParams.Type == 'choices' then
-		for i = 1, #p_ArgParams.Choices do
-			if p_ArgValue ~= nil and p_ArgValue == p_ArgParams.Choices[i] then
-				return p_ArgValue, true
-			end
-		end
-
-		local s_Choices = ''
-
-		for i = 1, p_ArgParams.Choices do
-			if string.len(s_Choices) > 0 then
-				s_Choices = s_Choices .. ', '
-			end
-
-			s_Choices = s_Choices .. '*' .. p_ArgParams.Choices[i] .. '*'
-		end
-
-		return s_DefaultValue, 'Not a valid **choice**, use: [' .. s_Choices .. ']'
-	elseif p_ArgParams.Type == 'string' then
-		if p_ArgValue == nil then
-			return s_DefaultValue, 'Must be a **string**'
-		end
-	end
-
-	return p_ArgValue, true
 end
 
 function EbxEditUtils:GetValidPath(p_PropertyPath)
@@ -272,40 +185,6 @@ end
 
 function EbxEditUtils:StringIsDigit(p_Str)
 	return tonumber(p_Str) ~= nil
-end
-
-function EbxEditUtils:getModuleState()
-	if SharedUtils:IsClientModule() and SharedUtils:IsServerModule() then
-		return 'Shared'
-	elseif SharedUtils:IsClientModule() and not SharedUtils:IsServerModule() then
-		return 'Client'
-	elseif not SharedUtils:IsClientModule() and SharedUtils:IsServerModule() then
-		return 'Server'
-	end
-
-	return 'Unkown'
-end
-
-function EbxEditUtils:dump(p)
-	if p == nil then
-		if Debug.Shared.EBX then
-			print("nil")
-		end
-	end
-
-	if type(p) == 'table' then
-		local s = '{ '
-
-		for k, v in pairs(p) do
-			if type(k) ~= 'number' then k = '"' .. k .. '"' end
-
-			s = s .. '[' .. k .. '] = ' .. self:dump(v) .. ','
-		end
-
-		return s .. '} '
-	else
-		return tostring(p)
-	end
 end
 
 if g_EbxEditUtils == nil then

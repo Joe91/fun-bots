@@ -59,6 +59,8 @@ local FIELD_REFRESH = 5.0
 ---@field Action table|nil something to do there, without a path (GameDirector:GetActionTarget): get into a vehicle,
 ---arm an MCOM. The points are the ones next to it.
 ---@field Topology integer|nil NavZones:GetTopology when the points next to the action were chosen
+---@field Position Vec3|nil where the action was then (a vehicle that moved: chosen anew)
+---@field Miss boolean|nil _ActionTarget found no point next to it (kept as well, until it moved)
 
 ---@class NavEdge
 ---@field To integer the node
@@ -176,12 +178,15 @@ function NavRoutes:Clear()
 	self._DecayTime = nil
 	---objective -> its target (false: none), see Target
 	self._Targets = {}
-	---objective -> its target next to a vehicle or an MCOM (false: none on the mesh), see _ActionTarget
+	---objective -> its target next to a vehicle or an MCOM (Miss: none on the mesh), see _ActionTarget
 	self._ActionTargets = {}
 	---target -> { Topology, Penalties, MeshPenalties, Time, Mesh = point -> metres, Node = node -> metres }
 	self._Fields = {}
 	---target -> { Topology, Cost = point -> metres over the mesh alone }
 	self._MeshFields = {}
+	---team -> { Fields = target -> field, MeshFields = target -> field }: the same with the danger of the team (where
+	---its soldiers were killed lately, NavZones:GetDanger), for the bots that avoid it (_Cautious)
+	self._TeamFields = {}
 	---point -> the metres over the mesh to the junction-nodes in its part (_JunctionCosts)
 	self._JunctionCostCache = {}
 	self._JunctionCostCount = 0
@@ -537,10 +542,20 @@ function NavRoutes:Forget(p_Objective)
 	for _, l_Cache in ipairs({ self._Targets, self._ActionTargets }) do
 		local s_Known = l_Cache[p_Objective]
 		if s_Known then
-			self._Fields[s_Known] = nil
-			self._MeshFields[s_Known] = nil
+			self:_ForgetFields(s_Known)
 		end
 		l_Cache[p_Objective] = nil
+	end
+end
+
+---Drops the fields of the target (also those of the teams).
+---@param p_Target NavTarget
+function NavRoutes:_ForgetFields(p_Target)
+	self._Fields[p_Target] = nil
+	self._MeshFields[p_Target] = nil
+	for _, l_Team in pairs(self._TeamFields) do
+		l_Team.Fields[p_Target] = nil
+		l_Team.MeshFields[p_Target] = nil
 	end
 end
 
@@ -551,36 +566,42 @@ end
 ---@return NavTarget|nil
 function NavRoutes:_ActionTarget(p_Objective, p_Action)
 	local s_Known = self._ActionTargets[p_Objective]
-	-- Anew when connections were removed as well: a point next to it can be cut off now.
-	if s_Known and s_Known.Action ~= nil and s_Known.Topology == m_NavZones:GetTopology()
-		and s_Known.Action.Position:Distance(p_Action.Position) < ACTION_MOVED then
+	-- Anew when connections were removed as well: a point next to it can be cut off now. Also a search that found
+	-- nothing is kept (a vehicle away from the mesh, which only covers the objectives and spawns): before, it ran again
+	-- on every call, over all points of the mesh.
+	if s_Known and s_Known.Topology == m_NavZones:GetTopology()
+		and s_Known.Position:Distance(p_Action.Position) < ACTION_MOVED then
+		if s_Known.Miss then
+			return nil
+		end
 		s_Known.Action = p_Action
 		return s_Known
 	end
 	if s_Known then
-		self._Fields[s_Known] = nil
-		self._MeshFields[s_Known] = nil
+		self:_ForgetFields(s_Known)
 	end
 
 	local s_Mesh = m_NavZones:GetMesh()
 	---@cast s_Mesh -nil
 	local s_From = p_Action.Stand or p_Action.Position
+	local s_FromX, s_FromY, s_FromZ = s_From.x, s_From.y, s_From.z
 	local s_Candidates = {}
-	local s_Pool = p_Action.Zone ~= nil and p_Action.Zone.Inside or nil
-	local s_Count = s_Pool ~= nil and #s_Pool or #s_Mesh.Points
 	-- An MCOM in a room the mesh doesn't reach into (behind walls): the points up to ACTION_RANGE_MCOM_FAR then.
 	local s_Ranges = p_Action.Kind == 'mcom' and { ACTION_RANGE_MCOM, ACTION_RANGE_MCOM_FAR } or { ACTION_RANGE }
+	-- The points of the zone of the MCOM, else the ones in the cells of the grid around the vehicle.
+	local s_Pool = p_Action.Zone ~= nil and p_Action.Zone.Inside
+		or m_NavZones:PointsAround(s_Mesh, s_From, s_Ranges[#s_Ranges])
 	for _, l_Range in ipairs(s_Ranges) do
-		for l_Index = 1, s_Count do
-			local l_Point = s_Pool ~= nil and s_Pool[l_Index] or l_Index
-			local s_Position = s_Mesh.Points[l_Point].Position
-			local s_DeltaX = s_Position.x - s_From.x
-			local s_DeltaZ = s_Position.z - s_From.z
+		for l_Index = 1, #s_Pool do
+			local l_Point = s_Pool[l_Index]
+			local s_MeshPoint = s_Mesh.Points[l_Point]
+			local s_DeltaX = s_MeshPoint.X - s_FromX
+			local s_DeltaZ = s_MeshPoint.Z - s_FromZ
 			local s_Distance = math.sqrt(s_DeltaX * s_DeltaX + s_DeltaZ * s_DeltaZ)
 			-- Not on an island of the mesh (a point in a room the bots can't get into over the mesh).
 			-- On the floor of the vehicle or the MCOM: for an MCOM not above it (a floor or rubble over it, the soldier
 			-- interacted from up there in vain, XP4_Rubble MCOM 2).
-			local s_Height = s_Position.y - s_From.y
+			local s_Height = s_MeshPoint.Y - s_FromY
 			local s_OnFloor = p_Action.Kind == 'mcom' and s_Height <= ACTION_MCOM_ABOVE and s_Height >= -ACTION_MCOM_BELOW
 				or p_Action.Kind ~= 'mcom' and math.abs(s_Height) <= ACTION_FLOOR
 			if s_Distance <= l_Range and s_OnFloor
@@ -621,12 +642,13 @@ function NavRoutes:_ActionTarget(p_Objective, p_Action)
 			s_Points[#s_Points + 1] = s_Candidates[l_Index][1]
 		end
 	end
-	local s_Target = false
+	local s_Target = { Miss = true, Topology = m_NavZones:GetTopology(), Position = p_Action.Position:Clone() }
 	if #s_Points > 0 then
-		s_Target = { Zone = p_Action.Zone, Points = s_Points, Action = p_Action, Topology = m_NavZones:GetTopology() }
+		s_Target = { Zone = p_Action.Zone, Points = s_Points, Action = p_Action, Topology = s_Target.Topology,
+			Position = s_Target.Position }
 	end
 	self._ActionTargets[p_Objective] = s_Target
-	return s_Target or nil
+	return not s_Target.Miss and s_Target or nil
 end
 
 ---Metres over the mesh alone from the point to the objective (its target points), nil where the mesh doesn't lead
@@ -672,14 +694,57 @@ local function _TargetIn(p_Target, p_Part, p_Position)
 	return s_Best, s_BestDistance
 end
 
+-- Share of the bots (per life, by their seed) that avoid where their team was killed lately (NavZones:GetDanger): the
+-- others still take the shortest way, the attack goes on there as well.
+local CAUTIOUS_SHARE = 0.75
+
+---The danger the bot weighs on its way: the metres per point of the mesh where its team was killed lately
+---(NavZones:GetDanger), for CAUTIOUS_SHARE of the lives. nil: none, the shortest way.
+---@param p_Seed number|nil
+---@param p_Team TeamId|integer|nil
+---@return table<integer, number>|nil
+function NavRoutes:Danger(p_Seed, p_Team)
+	if p_Seed == nil or p_Team == nil then
+		return nil
+	end
+	local s_Hash = math.sin(p_Seed * 91.3458 + 17.17) * 47453.5453
+	if s_Hash - math.floor(s_Hash) >= CAUTIOUS_SHARE then
+		return nil
+	end
+	return m_NavZones:GetDanger(p_Team)
+end
+
+---The caches of the fields: those of the team while its bot weighs the danger (p_Danger), else the plain ones.
+---@param p_Team TeamId|integer|nil
+---@param p_Danger table<integer, number>|nil
+---@return table fields, table mesh fields
+function NavRoutes:_Caches(p_Team, p_Danger)
+	if p_Danger == nil or p_Team == nil then
+		return self._Fields, self._MeshFields
+	end
+	local s_Team = self._TeamFields[p_Team]
+	if s_Team == nil then
+		s_Team = { Fields = {}, MeshFields = {} }
+		self._TeamFields[p_Team] = s_Team
+	end
+	return s_Team.Fields, s_Team.MeshFields
+end
+
 ---The metres over the mesh alone from every point to the target (the closest of its points), nil where the mesh
----doesn't lead there. Anew when connections were removed.
+---doesn't lead there. Anew when connections were removed; with the danger of the team (p_Danger, its points cost more)
+---also when that changed, at most every FIELD_REFRESH seconds.
 ---@param p_Target NavTarget
+---@param p_Team? TeamId|integer
+---@param p_Danger? table<integer, number> NavRoutes:Danger of the bot
 ---@return table<integer, number>
-function NavRoutes:_MeshField(p_Target)
+function NavRoutes:_MeshField(p_Target, p_Team, p_Danger)
 	local s_Topology = m_NavZones:GetTopology()
-	local s_Known = self._MeshFields[p_Target]
-	if s_Known ~= nil and s_Known.Topology == s_Topology then
+	local _, s_Cache = self:_Caches(p_Team, p_Danger)
+	local s_DangerVersion = p_Danger ~= nil and m_NavZones:GetDangerVersion() or nil
+	local s_Now = SharedUtils:GetTime()
+	local s_Known = s_Cache[p_Target]
+	if s_Known ~= nil and s_Known.Topology == s_Topology
+		and (s_Known.Danger == s_DangerVersion or s_Now - s_Known.Time < FIELD_REFRESH) then
 		return s_Known.Cost
 	end
 	local s_Mesh = m_NavZones:GetMesh()
@@ -697,7 +762,7 @@ function NavRoutes:_MeshField(p_Target)
 			local s_Neighbours = s_Mesh.Neighbours[s_Current]
 			for l_Index = 1, #s_Neighbours do
 				local l_Edge = s_Neighbours[l_Index]
-				local s_Next = s_Distance + l_Edge.Cost
+				local s_Next = s_Distance + l_Edge.Cost + (p_Danger ~= nil and p_Danger[l_Edge.To] or 0.0)
 				if not l_Edge.Removed and not l_Edge.OneWay and s_Next < (s_Cost[l_Edge.To] or math.huge) then
 					s_Cost[l_Edge.To] = s_Next
 					m_Heap.Push(s_Heap, s_Next, l_Edge.To)
@@ -705,23 +770,27 @@ function NavRoutes:_MeshField(p_Target)
 			end
 		end
 	end
-	self._MeshFields[p_Target] = { Topology = s_Topology, Cost = s_Cost }
+	s_Cache[p_Target] = { Topology = s_Topology, Danger = s_DangerVersion, Time = s_Now, Cost = s_Cost }
 	return s_Cost
 end
 
 ---The metres from every point of the mesh and every node of the paths to the target, over both (given-up connections
 ---and exits cost more, removed connections don't lead on). Anew when that changed, at most every FIELD_REFRESH seconds.
----Mesh: point -> metres, Node: node -> metres.
+---Mesh: point -> metres, Node: node -> metres. With the danger of the team (p_Danger): its points of the mesh cost more.
 ---@param p_Target NavTarget
+---@param p_Team? TeamId|integer
+---@param p_Danger? table<integer, number> NavRoutes:Danger of the bot
 ---@return { Mesh: table<integer, number>, Node: table<integer, number> }
-function NavRoutes:_Field(p_Target)
+function NavRoutes:_Field(p_Target, p_Team, p_Danger)
 	self:_Decay()
 	local s_Topology = m_NavZones:GetTopology()
 	local s_Now = SharedUtils:GetTime()
 	local s_MeshPenalties = m_NavZones:GetPenalties()
-	local s_Known = self._Fields[p_Target]
+	local s_Cache = self:_Caches(p_Team, p_Danger)
+	local s_DangerVersion = p_Danger ~= nil and m_NavZones:GetDangerVersion() or nil
+	local s_Known = s_Cache[p_Target]
 	if s_Known ~= nil and ((s_Known.Topology == s_Topology and s_Known.Penalties == self._PenaltyVersion
-				and s_Known.MeshPenalties == s_MeshPenalties)
+				and s_Known.MeshPenalties == s_MeshPenalties and s_Known.Danger == s_DangerVersion)
 			or s_Now - s_Known.Time < FIELD_REFRESH) then
 		return s_Known
 	end
@@ -751,7 +820,7 @@ function NavRoutes:_Field(p_Target)
 				local s_Neighbours = s_Mesh.Neighbours[s_Id]
 				for l_Index = 1, #s_Neighbours do
 					local l_Edge = s_Neighbours[l_Index]
-					local s_Next = s_Cost + l_Edge.Cost + l_Edge.Penalty
+					local s_Next = s_Cost + l_Edge.Cost + l_Edge.Penalty + (p_Danger ~= nil and p_Danger[l_Edge.To] or 0.0)
 					-- The costs to get to the target: not up a jump down (OneWay: only from here to there).
 					if not l_Edge.Removed and not l_Edge.OneWay and s_Next < (s_MeshCost[l_Edge.To] or math.huge) then
 						s_MeshCost[l_Edge.To] = s_Next
@@ -781,6 +850,7 @@ function NavRoutes:_Field(p_Target)
 				local s_Junction = s_NodeEntry.Junction
 				if s_Junction ~= nil then
 					local s_Next = s_Cost + s_NodeEntry.JunctionCost + MESH_CROSSING + (self._Penalty[s_Junction] or 0.0)
+						+ (p_Danger ~= nil and p_Danger[s_Junction.Point] or 0.0)
 					if s_Next < (s_MeshCost[s_Junction.Point] or math.huge) then
 						s_MeshCost[s_Junction.Point] = s_Next
 						m_Heap.Push(s_Heap, s_Next, s_Junction.Point)
@@ -791,8 +861,8 @@ function NavRoutes:_Field(p_Target)
 	end
 
 	local s_Field = { Topology = s_Topology, Penalties = self._PenaltyVersion, MeshPenalties = s_MeshPenalties,
-		Time = s_Now, Mesh = s_MeshCost, Node = s_NodeCost }
-	self._Fields[p_Target] = s_Field
+		Danger = s_DangerVersion, Time = s_Now, Mesh = s_MeshCost, Node = s_NodeCost }
+	s_Cache[p_Target] = s_Field
 	return s_Field
 end
 
@@ -888,7 +958,8 @@ function NavRoutes:Next(p_Point, p_Objective, p_Seed, p_Team, p_Avoid, p_Used)
 	if s_Target == nil or s_Mesh == nil or s_Mesh.Points[p_Point] == nil then
 		return nil
 	end
-	local s_Field = self:_Field(s_Target)
+	local s_Danger = self:Danger(p_Seed, p_Team)
+	local s_Field = self:_Field(s_Target, p_Team, s_Danger)
 	if s_Field.Mesh[p_Point] == nil then
 		return nil
 	end
@@ -926,7 +997,7 @@ function NavRoutes:Next(p_Point, p_Objective, p_Seed, p_Team, p_Avoid, p_Used)
 	local s_Action = s_Target.Action
 	local s_Towards = s_Action ~= nil and (s_Action.Stand or s_Action.Position) or s_Mesh.Points[p_Point].Position
 	local s_Found = _TargetIn(s_Target, s_Mesh.Part[p_Point], s_Towards)
-	local s_MeshCost = self:_MeshField(s_Target)[p_Point]
+	local s_MeshCost = self:_MeshField(s_Target, p_Team, s_Danger)[p_Point]
 	if s_Found ~= nil and s_MeshCost ~= nil and (s_Exit == nil or _Spreaded(s_MeshCost, p_Seed, 0) <= s_ExitCost) then
 		if s_Target.Action ~= nil then
 			return { Zone = s_Target.Zone or m_NavZones:ZoneAtPoint(s_Found, nil), Point = s_Found, Action = s_Target.Action }
@@ -955,8 +1026,9 @@ end
 ---@param p_NoEnter? integer a point of the mesh
 ---@param p_Avoid? boolean onto the mesh at this node only if clearly shorter, or instead of turning back
 ---(Bot:_BackOntoLeftPart)
+---@param p_Team? TeamId|integer the bot's: away from where its team was killed lately (Danger)
 ---@return { Node: integer, Enter: NavZoneJunction|nil, Switch: Waypoint|nil, Direction: string|nil }|nil
-function NavRoutes:Step(p_Waypoint, p_Objective, p_Seed, p_Came, p_NoEnter, p_Avoid)
+function NavRoutes:Step(p_Waypoint, p_Objective, p_Seed, p_Came, p_NoEnter, p_Avoid, p_Team)
 	self:_Ensure()
 	local s_Node = p_Waypoint ~= nil and self._NodeOf[p_Waypoint.ID] or nil
 	local s_Target = s_Node ~= nil and self:Target(p_Objective) or nil
@@ -964,7 +1036,7 @@ function NavRoutes:Step(p_Waypoint, p_Objective, p_Seed, p_Came, p_NoEnter, p_Av
 		return nil
 	end
 	---@cast s_Node -nil
-	local s_Field = self:_Field(s_Target)
+	local s_Field = self:_Field(s_Target, p_Team, self:Danger(p_Seed, p_Team))
 	local s_Entry = self._Nodes[s_Node]
 
 	local s_Best = nil
@@ -1056,8 +1128,9 @@ end
 ---@param p_Waypoint Waypoint
 ---@param p_Objective string
 ---@param p_Seed? number
+---@param p_Team? TeamId|integer the bot's: away from where its team was killed lately (Danger)
 ---@return string|nil
-function NavRoutes:Direction(p_Waypoint, p_Objective, p_Seed)
+function NavRoutes:Direction(p_Waypoint, p_Objective, p_Seed, p_Team)
 	self:_Ensure()
 	local s_Around = p_Waypoint ~= nil and self._Around[p_Waypoint.PathIndex] or nil
 	local s_Target = s_Around ~= nil and self:Target(p_Objective) or nil
@@ -1065,7 +1138,7 @@ function NavRoutes:Direction(p_Waypoint, p_Objective, p_Seed)
 		return nil
 	end
 	---@cast s_Around -nil
-	local s_Field = self:_Field(s_Target)
+	local s_Field = self:_Field(s_Target, p_Team, self:Danger(p_Seed, p_Team))
 	local s_Index = p_Waypoint.PointIndex
 	local s_Node = self._NodeOf[p_Waypoint.ID]
 	if s_Node ~= nil then

@@ -168,8 +168,12 @@ Registry = {
 		-- After an attack a jet extends (flies straight away) for that time, but not further than this (m, horizontal)
 		-- from its patrol-point above the objective. Else the jets flew out of the map.
 		JET_EXTEND_MAX_DISTANCE = 600.0,
-		-- Target height for jets.
+		-- Target height for jets (m above the objective).
 		JET_TARGET_HEIGHT = 350,
+		-- The same in air superiority. Its flags are spheres of ~290 m around the flag in the air: fly in the upper half,
+		-- above JET_MIN_ALTITUDE. At the flag itself (below the minimum altitude) the jets zoomed up and stalled, and
+		-- the height-band of the attack aborted every attack. Not higher: the ceiling of the level (XP5_002: ~750 m).
+		JET_TARGET_HEIGHT_AIR_SUPERIORITY = 150,
 		-- Seconds between target-scans of a jet that is not attacking (while attacking: BOT.VEHICLE_FIRE_MODE_DURATION).
 		JET_TARGET_SCAN_INTERVAL = 1.0,
 		-- Target-selection of jets: metres added to the distance per radian the target is away from the nose.
@@ -328,16 +332,24 @@ Registry = {
 		PASSENGER_EXIT_DISTANCE = 50,
 		-- Probability to stop in while shooting
 		PROBABILITY_STOP_TO_SHOOT = 35,
-		-- Rush: probability (%) that an attacker keeps going to its MCOM while shooting, instead of fighting where they
-		-- are. Else the respawned defenders are back before the attackers reach the MCOM.
+		-- Rush: probability (%) that an attacker (a defender on the way to its MCOM) keeps going to its MCOM while
+		-- shooting, instead of fighting where they are. Else the respawned defenders are back before the attackers reach
+		-- the MCOM.
 		RUSH_PUSH_PROBABILITY = 50,
 		-- Rush: closer than this (metres) to its MCOM an attacker always keeps going while shooting, unless the enemy
 		-- is closer than RUSH_PUSH_MIN_ENEMY_DISTANCE.
 		RUSH_PUSH_OBJECTIVE_DISTANCE = 40.0,
 		RUSH_PUSH_MIN_ENEMY_DISTANCE = 10.0,
+		-- Rush: farther than this (metres) from its MCOM a defender keeps going there while shooting, by the same chance.
+		RUSH_DEFEND_PUSH_DISTANCE = 30.0,
+		-- Rush: farther than this (horizontal metres) from its MCOM a defender sprints in its zone instead of walking.
+		RUSH_DEFEND_SPRINT_DISTANCE = 25.0,
 		-- Rush: defenders on foot up to this far (m) from an armed MCOM go there to disarm it, also from the other MCOM
 		-- (the fuse is 25 s: about the way a soldier sprints in that time).
 		RUSH_DEFEND_ARMED_DISTANCE = 120.0,
+		-- Rush: those up to this far (m) get the job to disarm it at once, not only once they are in the zone of the MCOM
+		-- (they got it 10 s after the arm, median; disarms in A/B rounds 22 % instead of 11 %).
+		RUSH_DISARM_JOB_DISTANCE = 40.0,
 		-- Seconds a bot keeps shooting at one target at least (on foot, in a vehicle). Below 2.5 in a vehicle the bots
 		-- switch targets too often.
 		MIN_TIME_SHOOT_AT_PLAYER = 0.7,

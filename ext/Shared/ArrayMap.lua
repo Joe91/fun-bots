@@ -51,8 +51,4 @@ function ArrayMap:join(p_Character)
 	return table.concat(self._Entries, p_Character)
 end
 
-function ArrayMap:_tostring()
-	return '[ArrayList Count=' .. self:count() .. ', ' .. json.encode(self._Entries) .. ']'
-end
-
 return ArrayMap

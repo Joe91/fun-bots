@@ -551,8 +551,9 @@ function BotSpawner:UpdateBotAmountAndTeam()
 
 	-- The debug-bridge watches the game without a player: spawn the bots as if one player joined the player-team. The
 	-- player isn't there, so it takes no place of a bot (the other team had one bot more in all tests).
-	-- Not on TDM: creating a bot-player (PlayerManager:CreatePlayer) on a TDM-server without a real player crashes it.
-	if s_PlayerCount == 0 and m_DebugBridge:IsEnabled() and not Globals.IsTdm then
+	-- Not on TDM: creating a bot-player (PlayerManager:CreatePlayer) on a TDM-server without a real player crashes it
+	-- (debug command "tdm_bots" to try anyway).
+	if s_PlayerCount == 0 and m_DebugBridge:IsEnabled() and (not Globals.IsTdm or m_DebugBridge.m_TdmBots) then
 		s_CountPlayers[s_PlayerTeam] = 1
 		s_PlayerCount = 1
 	end
@@ -2203,7 +2204,6 @@ function BotSpawner:_GetCustomization(p_Bot, p_Kit)
 	p_SoldierCustomization.removeAllExistingWeapons = false
 
 	if Globals.IsGm then
-		p_Bot.m_LastWeapon = nil
 		return p_SoldierCustomization
 	end
 

@@ -58,6 +58,8 @@ function DebugBridge:__init()
 	self.m_Enabled = false
 	-- Read by ServerRaycasts before it builds a trace. Only true while connected and the channel is on.
 	self.m_TraceRaycasts = false
+	-- Tests: bots on TDM without a real player as well (debug command "tdm_bots", BotSpawner).
+	self.m_TdmBots = false
 
 	---@type { Name: string, Callback: fun(p_Bridge: DebugBridge): any }[]
 	self._Collectors = {}

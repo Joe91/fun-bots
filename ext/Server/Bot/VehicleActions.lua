@@ -31,7 +31,7 @@ end
 function Bot:_OnFootAgain()
 	self.m_ActiveVehicle = nil
 	self._ChopperStartHeight = nil
-	self._ChopperGround = nil
+	self._GroundAhead = nil
 	self._ChopperRecoverTime = 0.0
 	self._VehicleStart = nil
 	-- The zone it had in the vehicle (the vehicle-network of a zone, or where it got in) is no way on foot: onto the
