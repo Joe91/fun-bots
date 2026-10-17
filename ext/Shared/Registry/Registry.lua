@@ -347,6 +347,9 @@ Registry = {
 		-- Rush: defenders on foot up to this far (m) from an armed MCOM go there to disarm it, also from the other MCOM
 		-- (the fuse is 25 s: about the way a soldier sprints in that time).
 		RUSH_DEFEND_ARMED_DISTANCE = 120.0,
+		-- Rush: those up to this far (m) get the job to disarm it at once, not only once they are in the zone of the MCOM
+		-- (they got it 10 s after the arm, median; disarms in A/B rounds 22 % instead of 11 %).
+		RUSH_DISARM_JOB_DISTANCE = 40.0,
 		-- Seconds a bot keeps shooting at one target at least (on foot, in a vehicle). Below 2.5 in a vehicle the bots
 		-- switch targets too often.
 		MIN_TIME_SHOOT_AT_PLAYER = 0.7,

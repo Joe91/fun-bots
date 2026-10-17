@@ -427,8 +427,10 @@ function GameDirector:OnEngineUpdate(p_DeltaTime)
 		end
 	end
 
-	local s_ArmedDefenders = s_ArmedMcoms ~= nil and self:_ArmedDefenders(s_BotsByTeam[TeamId.Team2] or {}, s_ArmedMcoms)
-		or nil
+	local s_ArmedDefenders, s_ArmedDistances = nil, {}
+	if s_ArmedMcoms ~= nil then
+		s_ArmedDefenders, s_ArmedDistances = self:_ArmedDefenders(s_BotsByTeam[TeamId.Team2] or {}, s_ArmedMcoms)
+	end
 
 	for l_BotTeam = 1, Globals.NrOfTeams do
 		local l_Bots = s_BotsByTeam[l_BotTeam] or {}
@@ -438,6 +440,14 @@ function GameDirector:OnEngineUpdate(p_DeltaTime)
 			if s_ArmedDefenders ~= nil and l_BotTeam == TeamId.Team2 then
 				---@type string|nil
 				local s_Armed = s_ArmedDefenders[l_Bot]
+				-- Close enough: the job to disarm it at once (else only inside the zone of the MCOM, BotZoneMovement).
+				if s_Armed ~= nil and (s_ArmedDistances[l_Bot] or math.huge) < Registry.BOT.RUSH_DISARM_JOB_DISTANCE
+					and (s_BotObjective or ''):sub(-9) ~= ' interact' then
+					local s_Interact = self:_GetSubObjectiveFromObj(s_Armed)
+					if s_Interact ~= nil and self:UseSubobjective(l_Bot.m_Id, TeamId.Team2, s_Interact) then
+						s_BotObjective = s_Interact
+					end
+				end
 				local s_Current = s_BotObjective ~= nil and s_BotObjective ~= ''
 					and (self:_GetObjectiveFromSubObj(s_BotObjective) or s_BotObjective) or nil
 				if s_Armed == s_Current then
@@ -1379,6 +1389,7 @@ end
 ---@param p_Bots Bot[] the defenders
 ---@param p_ArmedMcoms string[]
 ---@return table<Bot, string>
+---@return table<Bot, number> their distance to it
 function GameDirector:_ArmedDefenders(p_Bots, p_ArmedMcoms)
 	local s_Choices = {}
 	for l_Index = 1, #p_Bots do
@@ -1396,16 +1407,18 @@ function GameDirector:_ArmedDefenders(p_Bots, p_ArmedMcoms)
 	end
 	table.sort(s_Choices, function(p_A, p_B) return p_A.Distance < p_B.Distance end)
 	local s_Result = {}
+	local s_Distances = {}
 	local s_Count = {}
 	for l_Index = 1, #s_Choices do
 		local l_Choice = s_Choices[l_Index]
 		if s_Result[l_Choice.Bot] == nil and (s_Count[l_Choice.Mcom] or 0) < ARMED_DEFENDERS
 			and self:_CanReach(l_Choice.Bot, l_Choice.Mcom) then
 			s_Result[l_Choice.Bot] = l_Choice.Mcom
+			s_Distances[l_Choice.Bot] = l_Choice.Distance
 			s_Count[l_Choice.Mcom] = (s_Count[l_Choice.Mcom] or 0) + 1
 		end
 	end
-	return s_Result
+	return s_Result, s_Distances
 end
 
 ---@param p_Objective string|nil "mcom N"

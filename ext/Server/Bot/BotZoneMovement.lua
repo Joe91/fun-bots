@@ -1278,10 +1278,12 @@ function Bot:UpdateZoneMovement(p_DeltaTime)
 	local s_Narrow = (s_TargetPoint ~= nil and s_TargetPoint.Clearance < ZONE_NARROW)
 		or (s_Distance < ZONE_STEEP_RANGE and math.abs(s_Target.Position.y - s_Position.y) > ZONE_STEEP)
 	-- Rush: a defender still far from its MCOM runs to it (walked the last 50 m in the zone, the attackers were there
-	-- first).
+	-- first), and while it is armed (walked until it had the job to disarm it; always sprinting in the zone the
+	-- defenders held it worse).
 	local s_Center = s_State.Zone.Center
 	local s_ToMcom = s_State.Zone.Kind == 'mcom' and self:_ZoneDefends(s_State)
-		and (s_Center.x - s_Position.x) ^ 2 + (s_Center.z - s_Position.z) ^ 2 > Registry.BOT.RUSH_DEFEND_SPRINT_DISTANCE ^ 2
+		and ((s_Center.x - s_Position.x) ^ 2 + (s_Center.z - s_Position.z) ^ 2 > Registry.BOT.RUSH_DEFEND_SPRINT_DISTANCE ^ 2
+			or g_GameDirector:IsMcomArmed(s_State.Zone.Name))
 	-- The reason only for the debug-snapshot (DebugSnapshots).
 	if s_Target.Flags & NavZoneFlags.Crouch ~= 0 then
 		self.m_ActiveSpeedValue = BotMoveSpeeds.SlowCrouch
