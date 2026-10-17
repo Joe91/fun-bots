@@ -1088,6 +1088,9 @@ function CensusTask:_DefaultAreas()
 				kind = tostring(l_Area.kind or 'custom'),
 				center = Vec3(tonumber(s_Pos[1]) or 0, tonumber(s_Pos[2]) or 0, tonumber(s_Pos[3]) or 0),
 				radius = tonumber(l_Area.radius) or 30.0,
+				-- The areas of a census before (exactAreas): where its soldiers spawn, the discs of a way.
+				spawns = type(l_Area.spawns) == 'table' and l_Area.spawns or nil,
+				discs = type(l_Area.discs) == 'table' and l_Area.discs or nil,
 			}
 		end
 		return s_Areas
@@ -1585,6 +1588,12 @@ end
 
 function CensusTask:_StartAreas()
 	self.Areas = self:_DefaultAreas()
+	-- The areas of a census before, all of them (census run --parts areas: the floors again, in the same grids).
+	if self.Args.exactAreas == true then
+		self.AreaSlot = 0
+		self.Area = nil
+		return
+	end
 	if self.Args.spawns ~= false then
 		local s_Spawns = _SpawnAreas(self.Areas, self.Args.ways == true)
 		for l_Index = 1, #s_Spawns do

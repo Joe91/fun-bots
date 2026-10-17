@@ -109,6 +109,14 @@ class CensusTest(unittest.TestCase):
             self.assertEqual(merged["links"], old["links"])
             self.assertEqual(merged["entities"], old["entities"])
             self.assertEqual(merged["parts"], ["entities", "nodes", "areas"])
+            # The capture zones the probe didn't measure this time stay as measured before.
+            old["zones"] = [{"name": "A", "pos": [1, 2, 3], "samples": 5, "radius": 41.0}]
+            with gzip.open(file, "wt", encoding="utf-8") as stream:
+                json.dump(old, stream)
+            new["zones"] = [{"name": "A", "pos": [1, 2, 3], "samples": 0, "radius": None}]
+            self.assertEqual(merge(new, file)["zones"][0]["radius"], 41.0)
+            new["zones"] = [{"name": "A", "pos": [1, 2, 3], "samples": 9, "radius": 44.0}]
+            self.assertEqual(merge(new, file)["zones"][0]["radius"], 44.0)
             # Another level, or a census of all parts: as it is.
             self.assertEqual(merge(dict(new, mode="ConquestLarge0"), file)["nodes"], {})
             self.assertEqual(merge(dict(new, parts=["entities", "nodes", "areas"]), file)["nodes"], {})
@@ -255,6 +263,39 @@ class NavzonesTest(unittest.TestCase):
                   "nodes": {"3": _nodes_event(3, [[float(x), 0.0, 5.0] for x in range(2, 19)])}}
         zone = navzones.build(census)
         self.assertTrue(self._connected(zone))
+
+    def test_stairs_walked_by_a_path_follow_its_waypoints(self):
+        # The grid connects the floors over the steps (0.2 m per cell), and a path walks up there: the connections
+        # between points 1 m and more apart in height take the way of the path (the check leaves those alone; its
+        # straight lines through the stairs cut the floors apart on XP2_Factory).
+        from funbots_debug.census import navzones
+        rows = []
+        for row in range(20):
+            rows.append([[min(max(column - 10, 0), 20) * 0.2, 1.0, 0, -1] for column in range(41)])
+        area = {"name": "a", "kind": "capturepoint", "center": [10.0, 0.0, 5.0], "radius": 30.0, "x0": 0.0,
+                "z0": 0.0, "step": 0.5, "columns": 41, "rows": 20, "layers": 1, "cells": rows}
+        walk = [[x * 0.5, min(max(x - 10, 0), 20) * 0.2, 5.0] for x in range(2, 39)]
+        census = {"paths": "MP_001_ConquestLarge0", "areas": [area], "entities": {}, "nodes": {"1": _nodes_event(1, walk)}}
+        zone = navzones.build(census)
+        points = zone["points"]
+        climbing = [edge for edge in zone["edges"] if abs(points[edge[0]][1] - points[edge[1]][1]) >= 1.0]
+        self.assertTrue(climbing)
+        self.assertTrue(any(len(edge) > 4 and edge[4] == 1 for edge in climbing))
+
+    def test_loose_end_past_a_blocked_point(self):
+        # The checks blocked the way to the only point within LOOSE_RANGE: the next one, 17 m away, is taken instead
+        # of cutting the path back (MP_001 Squad Rush: spawn us 1 was cut off). Not one beyond LOOSE_FALLBACK.
+        from funbots_debug.census import navzones
+        def network(first):
+            points = [[12.0, 0.0, 0.0]] + [[first + i, 0.0, 0.0] for i in range(11)]
+            edges = [[i, i + 1, 1.0, []] for i in range(len(points) - 1)]
+            return {"points": points, "edges": edges, "attach": []}
+        checks = {"blockedJunctions": [[12.0, 0.0, 0.0, 0.0, 0.0, 0.0]]}
+        result = navzones._attach_loose(network(17.0), [[5, 1, [0.0, 0.0, 0.0]]], checks)
+        self.assertEqual([(entry[0], entry[1], entry[2]) for entry in result["attach"]], [(5, 1, 1)])
+        self.assertEqual(navzones._attach_loose(network(25.0), [[5, 1, [0.0, 0.0, 0.0]]], checks)["attach"], [])
+        # Nothing blocked: the closest point, as before.
+        self.assertEqual(navzones._attach_loose(network(17.0), [[5, 1, [0.0, 0.0, 0.0]]], {})["attach"][0][2], 0)
 
     def test_overlapping_areas_one_mesh(self):
         # Two areas over the same flat ground, shifted by 6.25 m (a quarter cell off the lattice): one mesh, both zones

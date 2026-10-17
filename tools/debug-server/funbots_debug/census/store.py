@@ -144,6 +144,12 @@ def merge(data: dict, file: Path) -> dict:
         merged["links"] = old.get("links") or []
     if "areas" not in parts:
         merged["areas"] = old.get("areas") or []
+    # The capture zones: measured again, else as measured before (the zone probe found nobody this time).
+    measured = {(zone.get("name"), tuple(round(value) for value in zone.get("pos") or [])): zone
+                for zone in as_list(data.get("zones")) if zone.get("samples")}
+    zones = [measured.pop((zone.get("name"), tuple(round(value) for value in zone.get("pos") or [])), zone)
+             for zone in as_list(old.get("zones"))]
+    merged["zones"] = zones + list(measured.values()) if zones else as_list(data.get("zones"))
     merged["parts"] = [part for part in PARTS if part in parts or part in as_list(old.get("parts"))]
     merged["merged"] = {"parts": parts, "into": old.get("created"), "summary": old.get("summary")}
     return merged

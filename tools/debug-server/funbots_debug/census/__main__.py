@@ -308,6 +308,24 @@ def _maplist(file: Path) -> list[tuple[str, str]]:
     return maps
 
 
+def _same_areas(args: dict, level: str, mode: str) -> dict | None:
+    """census run --parts areas on a level with a census: the areas of that census again (the floors measured anew in
+    the same grids, the measured capture zones and the spawns as they were). A radius the zone probe measured a bit
+    smaller left the end of a path outside (XP3_Shield path 86: 59 m from flag a, its area 61 m, then 58.5 m)."""
+    file = CENSUS / f"{level}_{mode}.json.gz"
+    if not file.is_file():
+        return None
+    areas = []
+    for area in load(file).get("areas") or []:
+        entry = {"name": area.get("name"), "kind": area.get("kind"), "pos": area.get("center"),
+                 "radius": area.get("radius")}
+        for key in ("spawns", "discs"):
+            if area.get(key):
+                entry[key] = area[key]
+        areas.append(entry)
+    return dict(args, areas=areas, exactAreas=True) if areas else None
+
+
 def command_run(options) -> int:
     server = Server(options.server)
     maps: list[tuple[str, str]] = []
@@ -359,11 +377,14 @@ def command_run(options) -> int:
                 switch_level(server, level, mode, fresh=quiet)
                 switched = True
             flags = wait_objectives(server)
+            same = _same_areas(args, level, mode) if args.get("parts") == ["areas"] else None
+            if same is not None:
+                print(f"  the {len(same['areas'])} areas of the census there is")
             if options.warmup > 0:
                 # The bots play for a while, so the sizes of the capture zones get measured (zones.py).
                 print(f"  bots play for {options.warmup:.0f} s first")
                 time.sleep(options.warmup)
-            if flags and options.probe:
+            if flags and options.probe and same is None:
                 print(f"  zone probe: {probe_zones(server)}")
             if flags or options.warmup > 0:
                 zones = server.request("/api/census").get("zones") or []
@@ -372,7 +393,7 @@ def command_run(options) -> int:
                 server.rcon("funbots.kickAll")
             elif quiet:
                 kill_bots(server)
-            status = run_census(server, args, options.timeout)
+            status = run_census(server, same or args, options.timeout)
             last = status["last"]
             print(f"  saved {last['file']}")
             report = status.get("report") or {}
@@ -474,7 +495,7 @@ def command_check(options) -> int:
                 if "hits" not in result:
                     raise RuntimeError(f"rays: {answer.get('error') or result.get('error') or answer}")
                 hits += result["hits"]
-            vehicles = check.vehicles_of(server.request("/api/state"))
+            vehicles = check.vehicles_of(server.request("/api/state")) + check.vehicle_spawns_of(load(census_file))
             found = check.evaluate(networks, hits, meaning, rays, vehicles)
             print(check.summary(networks, found) + (" (junctions only)" if options.junctions else ""))
             merged = check.merge(check.load_checks(census_file), found)

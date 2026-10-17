@@ -139,5 +139,19 @@ class CheckTest(unittest.TestCase):
         self.assertEqual(navzones._drop(deck[::-1]), -1)
         self.assertIsNone(navzones._drop(deck + [[5.5, 7, 0]]))
 
+class VehicleSpawnsTest(unittest.TestCase):
+    def test_vehicle_spawns_of_the_census(self):
+        # The vehicles stand on their spawns while the check runs, also before the state knows them; the stationary
+        # weapons stay walls, the aircraft count farther.
+        from funbots_debug.census import check
+        census = {"entities": {"vehicleSpawns": [
+            {"pos": [1.0, 2.0, 3.0], "blueprint": "Vehicles/9K22_Tunguska_M/9K22_Tunguska_M"},
+            {"pos": [4.0, 5.0, 6.0], "blueprint": "Vehicles/TOW2/TOW2"},
+            {"pos": [7.0, 8.0, 9.0], "blueprint": "Vehicles/AH1Z/AH1Z"}]}}
+        self.assertEqual(check.vehicle_spawns_of(census),
+                         [([1.0, 2.0, 3.0], check.VEHICLE_REACH), ([7.0, 8.0, 9.0], check.AIRCRAFT_REACH)])
+        self.assertEqual(check.vehicle_spawns_of({}), [])
+
+
 if __name__ == "__main__":
     unittest.main()

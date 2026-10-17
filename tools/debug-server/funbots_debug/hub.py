@@ -15,7 +15,7 @@ from .analyzers import Analyzer, Finding
 from .backups import backup
 from .census.report import Report, build_report
 from .census import check, navzones
-from .census.store import Census, CensusStore
+from .census.store import Census, CensusStore, load
 from .census.zones import ZoneEstimator
 from .commands import Command, CommandQueue
 from .paths.labeler import (Options, anchors_from_flags, anchors_from_labels, apply_patch, label, make_patch,
@@ -299,9 +299,27 @@ class Hub:
         Without areas in args, the grids go around the capture points (measured radius) and the MCOMs."""
         return self.submit_command("census", self.census_args(args))
 
+    def _saved_zones(self) -> list[dict]:
+        """The capture zones measured for the running level in its census file (census/<map>.json.gz): a census of the
+        grids again (--parts areas) keeps their sizes when the zone probe measured nothing this time (XP3_Desert: the
+        areas of the flags shrank to the 40 m of an unknown zone, 500 points of the mesh were lost)."""
+        name = self.state.meta.get("paths")
+        directory = self.census.directory
+        if not name or directory is None:
+            return []
+        try:
+            return load(directory / f"{name}.json.gz").get("zones") or []
+        except (OSError, ValueError):
+            return []
+
     def _census_areas(self) -> list[dict]:
         objectives = self.state.objectives or {}
-        zones = {(zone["name"], tuple(round(value) for value in zone["pos"])): zone for zone in self.zones.to_json()}
+        zones = {(zone["name"], tuple(round(value) for value in zone["pos"])): zone for zone in self._saved_zones()
+                 if zone.get("samples")}
+        for zone in self.zones.to_json():
+            key = (zone["name"], tuple(round(value) for value in zone["pos"]))
+            if zone["samples"] or key not in zones:
+                zones[key] = zone
         visited = {zone["name"] for zone in zones.values() if zone["samples"]}
         areas = []
         for flag in as_list(objectives.get("flags")):
