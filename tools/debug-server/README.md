@@ -564,13 +564,23 @@ missed between them: the side of an escalator on MP_Subway). The mesh is built w
 moved onto that point either) (`navzones.build(..., checks=...)`) and keeps only the parts a
 junction leads to. On MP_Subway (rush) that removed 343 of 4051 connections and 105 of 1899 points; a second check
 found nothing. In the Maps tab: step *Check* (check, then trim). `census run --detail-mesh` makes the census rays hit the
-detail-meshes as well, `--area-layers N` keeps more floors per cell (default 4).
+detail-meshes as well, `--area-layers N` keeps more floors per cell (default 12).
+
+The grids keep only floors: the vertical ray of a cell goes down through up to 24 hits and keeps the surfaces flat
+enough to walk on, not under deep water, at least 1.3 m below the hit above (else inside of a solid) and with 1 m of
+room above. Before 2026-10-17 it kept the first 4 hits, also roofs, walls and slabs: under a roof and two ceilings the
+floor was missing (MP_Subway, the hall north of MCOM 4: no mesh there, the bots were sent through a wall). A census of
+some parts only (`census run --parts areas`) is merged into the census file there is: the census of the paths stays the
+one taken on the paths as recorded, before the cut. It measures the floors anew in the areas of that census (no zone
+probe, no spawn areas of its own): a capture zone measured a few metres smaller left path ends outside of the mesh.
+The measured capture zones of the file are kept, and used when the zone probe of a new census measures nothing.
 
 `check --junctions` casts only the rays of the junctions (seconds instead of minutes): a cut attaches the loose ends of
 the paths after the check (`navzones._attach_loose`), those were never checked. Repeat check and cut until nothing new is
 blocked; what can't be freed stays a `blocked-junction` warning of the lint. Hits within 4.5 m of a parked vehicle (9 m
-of an aircraft, from the state of the debug-server) don't count, the stationary weapons do: the roads start at the
-vehicle-spawns, and their junctions were all "blocked" by the vehicles standing there.
+of an aircraft, from the state of the debug-server, and of the vehicle-spawns of the census: the state may not list a
+vehicle yet) don't count, the stationary weapons do: the roads start at the vehicle-spawns, and their junctions were
+all "blocked" by the vehicles standing there.
 
 ### Recording missing ways with a bot
 

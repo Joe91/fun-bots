@@ -119,6 +119,42 @@ class Census:
         }
 
 
+PARTS = ("entities", "nodes", "areas")
+
+
+def merge(data: dict, file: Path) -> dict:
+    """A census of some parts only (--parts areas): the other parts from the census file there is, if it is of the same
+    level. The census of the paths stays the one of the paths as recorded (taken before the cut), the grids are made
+    again (more floors per cell)."""
+    parts = [part for part in as_list(data.get("parts")) if part in PARTS]
+    if not parts or set(parts) == set(PARTS) or not file.is_file():
+        return data
+    try:
+        with gzip.open(file, "rt", encoding="utf-8") as stream:
+            old = json.load(stream)
+    except (OSError, ValueError):
+        return data
+    if old.get("level") != data.get("level") or old.get("mode") != data.get("mode"):
+        return data
+    merged = dict(data)
+    if "entities" not in parts:
+        merged["entities"] = old.get("entities") or {}
+    if "nodes" not in parts:
+        merged["nodes"] = old.get("nodes") or {}
+        merged["links"] = old.get("links") or []
+    if "areas" not in parts:
+        merged["areas"] = old.get("areas") or []
+    # The capture zones: measured again, else as measured before (the zone probe found nobody this time).
+    measured = {(zone.get("name"), tuple(round(value) for value in zone.get("pos") or [])): zone
+                for zone in as_list(data.get("zones")) if zone.get("samples")}
+    zones = [measured.pop((zone.get("name"), tuple(round(value) for value in zone.get("pos") or [])), zone)
+             for zone in as_list(old.get("zones"))]
+    merged["zones"] = zones + list(measured.values()) if zones else as_list(data.get("zones"))
+    merged["parts"] = [part for part in PARTS if part in parts or part in as_list(old.get("parts"))]
+    merged["merged"] = {"parts": parts, "into": old.get("created"), "summary": old.get("summary")}
+    return merged
+
+
 class CensusStore:
     """Takes the census-events, saves every finished census into the folder."""
 
@@ -161,8 +197,9 @@ class CensusStore:
         self.directory.mkdir(parents=True, exist_ok=True)
         file = self.directory / f"{census.name}.json.gz"
         backup(census.name, "census", [file, file.with_name(f"{census.name}.navzones.json")])
+        data = merge(census.to_json(), file)
         with gzip.open(file, "wt", encoding="utf-8") as stream:
-            json.dump(census.to_json(), stream, separators=(",", ":"))
+            json.dump(data, stream, separators=(",", ":"))
         self.saves += 1
         self.last = {"file": str(file), "progress": census.progress(), "save": self.saves}
         return file

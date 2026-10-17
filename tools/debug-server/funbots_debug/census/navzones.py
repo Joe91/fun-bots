@@ -557,6 +557,10 @@ def _drop(positions: list) -> int | None:
 
 # Paths of the census from this number on were recorded since the last cut (navpaths.recorded_nodes).
 RECORDED_OFFSET = 100000
+# Two points this far apart in height that a path walks between (stairs, a ramp): the connection takes the way of the
+# person also where the grid connects them. The straight line of the grid runs into the stairs, the check left it out
+# and cut the floors apart (XP2_Factory Domination: b and c unreachable, once the census kept the floors of the steps).
+TRACE_CLIMB = 1.0
 
 
 def _trace_edges(grid: _Area, owner: dict[Surface, int], points: list[Surface], edges: list,
@@ -568,7 +572,8 @@ def _trace_edges(grid: _Area, owner: dict[Surface, int], points: list[Surface], 
     Paths recorded since the last cut (RECORDED_OFFSET) show the way also within a part: a person walked there because
     the bots didn't get along (a ramp the mesh only reaches over its side, past a railing). Each stretch between two
     points becomes a connection along it: a new one, or the one of the grid between them takes the way of the person
-    (the straight line of the grid ran into something the census didn't see)."""
+    (the straight line of the grid ran into something the census didn't see). All paths do that between two points
+    TRACE_CLIMB apart in height (stairs, a ramp)."""
     parent = list(range(len(points)))
 
     def find(index: int) -> int:
@@ -600,8 +605,10 @@ def _trace_edges(grid: _Area, owner: dict[Surface, int], points: list[Surface], 
             # Only along waypoints that all lie in the areas: where the path leaves them in between, the corners
             # would skip that stretch (a straight line across), the navigation paths lead there.
             pair = (min(last[1], network), max(last[1], network)) if last is not None else None
-            recorded = path >= RECORDED_OFFSET and last is not None and last[1] != network and pair not in along
-            if last is not None and point - last[0] <= 40 and (find(last[1]) != find(network) or recorded) \
+            other = last is not None and last[1] != network and pair not in along
+            recorded = other and path >= RECORDED_OFFSET
+            climb = other and abs(grid.pos(points[last[1]])[1] - grid.pos(points[network])[1]) >= TRACE_CLIMB
+            if last is not None and point - last[0] <= 40 and (find(last[1]) != find(network) or recorded or climb) \
                     and all(index in positions for index in range(last[0], point + 1)) \
                     and not _ladder([positions[index] for index in range(last[0], point + 1)]) \
                     and _drop([positions[index] for index in range(last[0], point + 1)]) is not None \
@@ -852,6 +859,10 @@ def spawn_positions(census: dict) -> list[list[float]]:
     return [pos for pos in positions if len(pos) >= 3 and max(abs(float(value)) for value in pos[:3]) >= 1.0]
 
 
+# The checks blocked the way to every point up to LOOSE_RANGE: a point up to this far is taken (checked again then),
+# not the end cut back. The points move with every new mesh (each is placed after the ones with more clearance): on
+# MP_001 Squad Rush the free point 13 m from path 1 came to lie 17 m away, the spawn us 1 was cut off.
+LOOSE_FALLBACK = 20.0
 LOOSE_RANGE = 15.0        # A loose end of a trimmed path (no junction, no link) is attached to the closest point of a
 LOOSE_FLOOR = 3.0         # usable part up to this far (horizontally) and this far above or below, also outside the areas.
 LOOSE_ALONG = 0.25        # A waypoint after the end instead (navpaths.loose_ends), if its way onto the mesh plus this
@@ -894,16 +905,24 @@ def _attach_loose(network: dict, loose: list, checks: dict | None = None) -> dic
         # The end itself, else a waypoint after it whose way onto the mesh is that much shorter (MP_011 path 13: the end
         # in a house, 14 m through its wall; 4 m on, out of the window and off its sill, 5 m over the alley).
         best = None
-        for candidate, cpos, along in [[point, pos, 0.0]] + (rest[0] if rest else []):
-            if (int(path), int(candidate)) in known:
+        for reach in (LOOSE_RANGE, LOOSE_FALLBACK):
+            blocked_only = False
+            for candidate, cpos, along in [[point, pos, 0.0]] + (rest[0] if rest else []):
+                if (int(path), int(candidate)) in known:
+                    break
+                for index, entry in enumerate(points):
+                    if abs(entry[1] - cpos[1]) > LOOSE_FLOOR or sizes[find(index)] < MIN_PART:
+                        continue
+                    horizontal = math.hypot(entry[0] - cpos[0], entry[2] - cpos[2])
+                    if is_blocked(entry, cpos):
+                        blocked_only = blocked_only or horizontal <= LOOSE_RANGE
+                        continue
+                    cost = horizontal + LOOSE_ALONG * along + LOOSE_CLIMB * max(0.0, abs(entry[1] - cpos[1]) - LOOSE_STEP)
+                    if horizontal <= reach and (best is None or cost < best[0]):
+                        best = (cost, index, candidate, cpos)
+            # Farther only where the checks blocked the ways to the points within LOOSE_RANGE.
+            if best is not None or not blocked_only:
                 break
-            for index, entry in enumerate(points):
-                if abs(entry[1] - cpos[1]) > LOOSE_FLOOR or sizes[find(index)] < MIN_PART or is_blocked(entry, cpos):
-                    continue
-                horizontal = math.hypot(entry[0] - cpos[0], entry[2] - cpos[2])
-                cost = horizontal + LOOSE_ALONG * along + LOOSE_CLIMB * max(0.0, abs(entry[1] - cpos[1]) - LOOSE_STEP)
-                if horizontal <= LOOSE_RANGE and (best is None or cost < best[0]):
-                    best = (cost, index, candidate, cpos)
         if best is not None:
             distance = math.dist(points[best[1]][:3], best[3])
             attach.append([int(path), int(best[2]), best[1], round(distance, 1), _round(best[3]), []])

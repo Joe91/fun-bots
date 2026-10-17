@@ -785,8 +785,10 @@ function NavZones:Closest(p_Zone, p_Position, p_Avoid, p_Range)
 			return s_Best, math.sqrt(s_BestDistance)
 		end
 	end
-	if p_Range == nil and s_Extent > s_MaxRings then
-		-- Nothing on the same floor close by: all points.
+	-- Nothing at all close by: all points. Not for a point on the same floor far away while one on another floor is close
+	-- (MP_017: bots out of a boat in the water at the beach, the mesh 3 m higher 14 m away; they were sent to a point at
+	-- the height of the water 500 m away and stood there).
+	if p_Range == nil and s_Extent > s_MaxRings and s_Best == nil then
 		s_Best, s_BestOtherFloor, s_BestDistance = _ScanClosest(p_Zone, nil, p_Position, p_Avoid, nil, nil, true, math.huge)
 	end
 	return s_Best, math.sqrt(s_BestDistance)

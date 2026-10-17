@@ -142,6 +142,24 @@ def vehicles_of(state: dict) -> list[tuple[list[float], float]]:
     return result
 
 
+# Vehicle-spawns of the census by the end of their blueprint: the stationary weapons stay (walls), the aircraft are big.
+STATIONARY_BLUEPRINTS = ("TOW2", "Kornet", "Centurion_C-RAM", "Centurion_C-RAM_Carrier", "Pantsir-S1")
+AIRCRAFT_BLUEPRINTS = ("A10_THUNDERBOLT", "AC130", "AH1Z", "AH6_Littlebird", "C130", "F18", "F18_SpawnInAir", "F35B",
+                       "KA-60_Kasatka", "Mi28", "SU-25TM", "SU-35BM-E", "SU-35BM-E_SpawnInAir", "Venom", "Z-11w")
+
+
+def vehicle_spawns_of(census: dict) -> list[tuple[list[float], float]]:
+    """The vehicle-spawns of the census as vehicles a hit close to doesn't count (position, reach): the vehicles stand
+    there at the start of a round, also when the state doesn't know them yet (XP3_Desert CQL: the Tunguska on the spawn
+    of path 80, its sides "walls", the points next to it left out, the bots then came at it from the other side)."""
+    result = []
+    for spawn in (census.get("entities") or {}).get("vehicleSpawns") or []:
+        kind = str(spawn.get("blueprint") or "").rsplit("/", 1)[-1]
+        if spawn.get("pos") and kind not in STATIONARY_BLUEPRINTS:
+            result.append((list(spawn["pos"]), AIRCRAFT_REACH if kind in AIRCRAFT_BLUEPRINTS else VEHICLE_REACH))
+    return result
+
+
 def _on_vehicle(ray: list[float], distance: float, vehicles: list[tuple[list[float], float]]) -> bool:
     length = math.dist(ray[:3], ray[3:6])
     if length <= 0:

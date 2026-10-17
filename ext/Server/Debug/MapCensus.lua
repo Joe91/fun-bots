@@ -61,10 +61,17 @@ local AREA_CORRIDOR_STEP = 6.0    -- ...this far apart along the path...
 local AREA_CORRIDOR_DISCS = 8     -- ...at most this many per area (a long path gets several)...
 local AREA_CORRIDOR_HEIGHT = 12.0 -- ...the vertical rays from this far above the highest waypoint to below the lowest.
 local AREA_STEP = 0.5
-local AREA_LAYERS = 4
+-- Floors kept per cell (the walkable surfaces, see _ProbeCell), and hits of the vertical ray followed down at most: roofs,
+-- walls and slabs above a floor took the places of the floors (MP_Subway: the hall north of MCOM 4 under a roof and two
+-- ceilings had no floor, the bots were sent through a wall there).
+local AREA_LAYERS = 12
+local AREA_HITS = 24
 local AREA_UP = 60.0              -- The vertical rays start this far above the objective...
 local AREA_DOWN = 30.0            -- ...and end this far below it.
 local LAYER_GAP = 0.3             -- The ray continues this far below a hit to find the next layer.
+local FLOOR_GAP = 1.3             -- A floor needs this much below the hit above it, else it lies inside of a solid (the
+                                  -- same as LAYER_GAP of report.py).
+local FLOOR_HEADROOM = 1.0        -- A floor needs this much room above it (WALK_HEADROOM of report.py).
 local WALKABLE_NORMAL_Y = 0.5     -- Surfaces up to 60° get edges and headroom, steeper ones are walls.
 local WADE_DEPTH = 1.3            -- Ground under more water than this isn't walked on (the soldier swims, report.py).
 -- Rays to the neighbour-cells (+x, +z) and back from them, as bits: 1 +x knee, 2 +x chest, 4 +z knee, 8 +z chest, 16 to 128
@@ -1081,6 +1088,9 @@ function CensusTask:_DefaultAreas()
 				kind = tostring(l_Area.kind or 'custom'),
 				center = Vec3(tonumber(s_Pos[1]) or 0, tonumber(s_Pos[2]) or 0, tonumber(s_Pos[3]) or 0),
 				radius = tonumber(l_Area.radius) or 30.0,
+				-- The areas of a census before (exactAreas): where its soldiers spawn, the discs of a way.
+				spawns = type(l_Area.spawns) == 'table' and l_Area.spawns or nil,
+				discs = type(l_Area.discs) == 'table' and l_Area.discs or nil,
 			}
 		end
 		return s_Areas
@@ -1578,6 +1588,12 @@ end
 
 function CensusTask:_StartAreas()
 	self.Areas = self:_DefaultAreas()
+	-- The areas of a census before, all of them (census run --parts areas: the floors again, in the same grids).
+	if self.Args.exactAreas == true then
+		self.AreaSlot = 0
+		self.Area = nil
+		return
+	end
 	if self.Args.spawns ~= false then
 		local s_Spawns = _SpawnAreas(self.Areas, self.Args.ways == true)
 		for l_Index = 1, #s_Spawns do
@@ -1662,11 +1678,14 @@ function CensusTask:_NextArea(p_Bridge)
 	return true
 end
 
----Vertical rays through one cell, from the top down. A cell is false (outside of the circle, or no hit) or a flat list
----with four numbers per layer: height, normal-y, edges, headroom.
+---Vertical rays through one cell, from the top down, through up to AREA_HITS hits. Only the floors are kept (up to
+---p_Area.layers): surfaces flat enough to walk on, not under deep water, FLOOR_GAP below the hit above them and with
+---FLOOR_HEADROOM above them. A cell is false (outside of the circle, or no floor) or a flat list with four numbers per
+---floor: height, normal-y, edges, headroom.
 ---  edges     bits of the blocked rays to the neighbour-cells at EDGE_HEIGHTS: 1 +x knee, 2 +x chest, 4 +z knee,
----            8 +z chest, 16 / 32 / 64 / 128 the same rays from the neighbour back. -1 for surfaces too steep to walk on.
----  headroom  free height above the surface, -1 = more than CEILING_MAX (or too steep to measure)
+---            8 +z chest, 16 / 32 / 64 / 128 the same rays from the neighbour back (censuses before 2026-10-17 also kept
+---            the other hits: -1 for surfaces too steep to walk on).
+---  headroom  free height above the surface, -1 = more than CEILING_MAX (or nothing above it)
 function CensusTask:_ProbeCell(p_Area, p_X, p_Z)
 	if not _Covers(p_Area, Vec3(p_X, 0, p_Z), 0.0) then
 		return false
@@ -1675,7 +1694,9 @@ function CensusTask:_ProbeCell(p_Area, p_X, p_Z)
 	local s_Step = p_Area.step
 	local s_Top = p_Area.top
 	local s_Cell = nil
-	for l_Layer = 1, p_Area.layers do
+	local s_Floors = 0
+	local s_Above = nil
+	for _ = 1, AREA_HITS do
 		local s_Hit = self:_Ray(Vec3(p_X, s_Top, p_Z), Vec3(p_X, p_Area.bottom, p_Z))
 		if s_Hit == nil then
 			break
@@ -1683,14 +1704,23 @@ function CensusTask:_ProbeCell(p_Area, p_X, p_Z)
 
 		local s_Y = s_Hit.position.y
 		local s_NormalY = s_Hit.normal.y
-		local s_Edges = -1
+		local s_Floor = s_NormalY >= WALKABLE_NORMAL_Y and (s_Above == nil or s_Above - s_Y >= FLOOR_GAP)
+		-- Deep under water (the seabed off a shore): not walkable.
+		if s_Floor then
+			local s_Water = self:_Ray(Vec3(p_X, s_Top, p_Z), Vec3(p_X, s_Y - 0.05, p_Z), RAY_FLAGS_WATER)
+			s_Floor = s_Water == nil or s_Water.position.y <= s_Y + WADE_DEPTH
+		end
 		local s_Headroom = -1
-		-- Deep under water (the seabed off a shore): not walkable, as a surface too steep.
-		local s_Water = s_NormalY >= WALKABLE_NORMAL_Y
-			and self:_Ray(Vec3(p_X, s_Top, p_Z), Vec3(p_X, s_Y - 0.05, p_Z), RAY_FLAGS_WATER) or nil
-		local s_Deep = s_Water ~= nil and s_Water.position.y > s_Y + WADE_DEPTH
-		if s_NormalY >= WALKABLE_NORMAL_Y and not s_Deep then
-			s_Edges = 0
+		-- The first hit has nothing above it.
+		if s_Floor and s_Above ~= nil then
+			local s_Ceiling = self:_Ray(Vec3(p_X, s_Y + 0.2, p_Z), Vec3(p_X, s_Y + CEILING_MAX, p_Z))
+			if s_Ceiling ~= nil then
+				s_Headroom = _Round(s_Ceiling.position.y - s_Y)
+				s_Floor = s_Headroom >= FLOOR_HEADROOM
+			end
+		end
+		if s_Floor then
+			local s_Edges = 0
 			for l_Index = 1, #EDGE_HEIGHTS do
 				local s_Height = s_Y + EDGE_HEIGHTS[l_Index]
 				local s_From = Vec3(p_X, s_Height, p_Z)
@@ -1710,21 +1740,18 @@ function CensusTask:_ProbeCell(p_Area, p_X, p_Z)
 					s_Edges = s_Edges | (s_Bit * 64)
 				end
 			end
-			-- The top layer has nothing above it.
-			if l_Layer > 1 then
-				local s_Ceiling = self:_Ray(Vec3(p_X, s_Y + 0.2, p_Z), Vec3(p_X, s_Y + CEILING_MAX, p_Z))
-				if s_Ceiling ~= nil then
-					s_Headroom = _Round(s_Ceiling.position.y - s_Y)
-				end
+			s_Cell = s_Cell or {}
+			s_Cell[#s_Cell + 1] = _Round(s_Y)
+			s_Cell[#s_Cell + 1] = _Round(s_NormalY)
+			s_Cell[#s_Cell + 1] = s_Edges
+			s_Cell[#s_Cell + 1] = s_Headroom
+			s_Floors = s_Floors + 1
+			if s_Floors >= p_Area.layers then
+				break
 			end
 		end
 
-		s_Cell = s_Cell or {}
-		s_Cell[#s_Cell + 1] = _Round(s_Y)
-		s_Cell[#s_Cell + 1] = _Round(s_NormalY)
-		s_Cell[#s_Cell + 1] = s_Edges
-		s_Cell[#s_Cell + 1] = s_Headroom
-
+		s_Above = s_Y
 		s_Top = s_Y - LAYER_GAP
 		if s_Top <= p_Area.bottom then
 			break
