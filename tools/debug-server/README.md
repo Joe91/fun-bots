@@ -564,7 +564,14 @@ missed between them: the side of an escalator on MP_Subway). The mesh is built w
 moved onto that point either) (`navzones.build(..., checks=...)`) and keeps only the parts a
 junction leads to. On MP_Subway (rush) that removed 343 of 4051 connections and 105 of 1899 points; a second check
 found nothing. In the Maps tab: step *Check* (check, then trim). `census run --detail-mesh` makes the census rays hit the
-detail-meshes as well, `--area-layers N` keeps more floors per cell (default 4).
+detail-meshes as well, `--area-layers N` keeps more floors per cell (default 12).
+
+The grids keep only floors: the vertical ray of a cell goes down through up to 24 hits and keeps the surfaces flat
+enough to walk on, not under deep water, at least 1.3 m below the hit above (else inside of a solid) and with 1 m of
+room above. Before 2026-10-17 it kept the first 4 hits, also roofs, walls and slabs: under a roof and two ceilings the
+floor was missing (MP_Subway, the hall north of MCOM 4: no mesh there, the bots were sent through a wall). A census of
+some parts only (`census run --parts areas`) is merged into the census file there is: the census of the paths stays the
+one taken on the paths as recorded, before the cut.
 
 `check --junctions` casts only the rays of the junctions (seconds instead of minutes): a cut attaches the loose ends of
 the paths after the check (`navzones._attach_loose`), those were never checked. Repeat check and cut until nothing new is

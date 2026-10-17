@@ -89,6 +89,30 @@ class CensusTest(unittest.TestCase):
         self.assertIn((0, 1, 0), links[(0, 0, 0)])
         self.assertNotIn((0, 2, 0), links[(0, 1, 0)])
 
+    def test_partial_census_merged_into_the_file(self):
+        """census run --parts areas: the grids new, the census of the paths and the entities from the file there is."""
+        import gzip
+        import json
+        from funbots_debug.census.store import merge
+        with tempfile.TemporaryDirectory() as folder:
+            file = Path(folder) / "MP_001_RushLarge0.json.gz"
+            old = {"level": "Levels/MP_001/MP_001", "mode": "RushLarge0", "parts": ["entities", "nodes", "areas"],
+                   "created": "2026-10-06", "entities": {"mcoms": [1]}, "nodes": {"1": {"points": [[0, 0, 0]]}},
+                   "links": [[1, 1, 2, 1]], "areas": [{"name": "old"}]}
+            with gzip.open(file, "wt", encoding="utf-8") as stream:
+                json.dump(old, stream)
+            new = {"level": old["level"], "mode": old["mode"], "parts": ["areas"], "created": "2026-10-17",
+                   "entities": {}, "nodes": {}, "links": [], "areas": [{"name": "new"}]}
+            merged = merge(new, file)
+            self.assertEqual(merged["areas"], [{"name": "new"}])
+            self.assertEqual(merged["nodes"], old["nodes"])
+            self.assertEqual(merged["links"], old["links"])
+            self.assertEqual(merged["entities"], old["entities"])
+            self.assertEqual(merged["parts"], ["entities", "nodes", "areas"])
+            # Another level, or a census of all parts: as it is.
+            self.assertEqual(merge(dict(new, mode="ConquestLarge0"), file)["nodes"], {})
+            self.assertEqual(merge(dict(new, parts=["entities", "nodes", "areas"]), file)["nodes"], {})
+
     def test_out_of_area(self):
         # Each team gets the smallest shape around its HQ, the big one (aircraft) counts for nobody.
         big = {"points": [[-500, 0, -500], [500, 0, -500], [500, 0, 500], [-500, 0, 500]]}

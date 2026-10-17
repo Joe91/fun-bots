@@ -746,7 +746,7 @@ def main() -> int:
     run.add_argument("--budget-ms", type=float, default=20.0,
                      help="ms of raycasts per update of the server (100k raycasts/s at most, from about 20 ms)")
     run.add_argument("--area-step", type=float, help="cell-size of the grids around the objectives (default 0.5)")
-    run.add_argument("--area-layers", type=int, help="floors per cell of the grids (default 4)")
+    run.add_argument("--area-layers", type=int, help="floors per cell of the grids (default 12)")
     run.add_argument("--detail-mesh", action="store_true",
                      help="the rays also hit the detail-meshes of the level (walls, ceilings, floors made of them)")
     run.add_argument("--timeout", type=float, default=3600.0, help="seconds per level")
