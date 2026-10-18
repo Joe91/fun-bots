@@ -83,7 +83,7 @@ Every manager is a singleton: the module creates `g_<Name>` once and returns it,
 - Vehicle: `VehicleMovement`, `VehicleAiming`, `VehicleAttacking`, `VehicleWeaponHandling`, `VehicleJetControl`, `VehicleChopperControl`, `VehicleActions`
 - Accessors: `BotGetters`, `BotSetters`
 
-A bot drives its soldier by writing to an `EntryInput` (`self.m_Player.input:SetLevel(...)`) and setting authoritative yaw/pitch. It does not teleport or script animations.
+A bot drives its soldier by writing to an `EntryInput` (`self.m_Player.input:SetLevel(...)`) and setting authoritative yaw/pitch. It doesn't script animations. It sets the soldier transform only to get back onto the mesh, over a few metres up to `OFF_MESH_TELEPORT_RANGE` (`Bot:TeleportToMesh`, `Bot:_ZoneForceAcross`, the arm spot of `Bot:_ZoneAction`, `GameDirector:ForwardSpawn`, spawns at a mate).
 
 #### State machine
 
@@ -243,7 +243,7 @@ Subscribe in the owning manager, check permissions first in the handler, and nil
 In-game: F12 → Waypoint editor (needs `UserInterface.WaypointEditor.*`), then save. To commit it, export traces with the helper and commit the `.map` file. Regenerate `Supported-maps.md`.
 
 **Debugging**
-Set per-module levels in [Debug.lua](../ext/Shared/Debug.lua) and the switches in `Registry.DEBUG`. `g_Profiler:Start/End` markers are already in hot paths, commented out.
+Set per-module levels in [Debug.lua](../ext/Shared/Debug.lua) and the switches in `Registry.DEBUG`. `g_Profiler:Start/End` markers are already in hot paths, commented out. With the debug-server (tools/debug-server), test vehicles by waiting for bots to use them on their own: twice the server crashed (engine null-read at `vu.com+0x119501f`) the moment a debug command put a bot into a vehicle ~500 m away or set a soldier's transform.
 
 ---
 
@@ -259,4 +259,4 @@ See [.github/CODING_GUIDELINES.md](../.github/CODING_GUIDELINES.md). In short:
 ## 10. Related docs
 
 - [CHANGELOG](../.github/CHANGELOG.md), [CONTRIBUTING](../.github/CONTRIBUTING.md), [CODING_GUIDELINES](../.github/CODING_GUIDELINES.md)
-- [REVIEW_FINDINGS.md](REVIEW_FINDINGS.md): open items and things still to test from the September 2026 code review
+- [REVIEW_FINDINGS.md](REVIEW_FINDINGS.md): open items from the code reviews and playtests

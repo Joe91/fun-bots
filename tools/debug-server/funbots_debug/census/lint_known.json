@@ -53,7 +53,7 @@
  "tasks": [
   {
    "map": "MP_Subway_RushLarge0",
-   "todo": "Optional (works at runtime since 2026-10-13): MCOM 7 stands in a ticket office (-219.9, 64.6, -531.5) behind two glass doors (south (-216.8, 65, -537.9), east (-210.4, 65, -529)) and a selling desk; the census measured it with the doors closed, the mesh doesn't reach in. The bots go to the mesh point at the east door, shoot the glass and walk round the desk (Bot:_ZoneAction, _ZoneArmDetour); armed and destroyed in the test. Leaving the office they are put out (zone_force). A helper foot path from the mesh at (-209.5, 65, -528.5) through the east door, along z -529.3 to (-216.7, 64.6, -529.6) and to the MCOM would make it smoother."
+   "todo": "Optional (works at runtime): MCOM 7 stands in a ticket office (-219.9, 64.6, -531.5) behind two glass doors (south (-216.8, 65, -537.9), east (-210.4, 65, -529)) and a selling desk; the mesh doesn't reach in (its closest point since the rescan of 2026-10-17, (-224, 65.6, -530), is behind the west wall). The bots shoot the east door, walk round the desk (Bot:_ZoneAction, _ZoneArmDetour) and are put out onto that point afterwards (zone_force; armed and destroyed 2026-10-17). A helper foot path from the mesh at (-209.5, 65, -528.5) through the east door, along z -529.3 to (-216.7, 64.6, -529.6) and to the MCOM would make it smoother."
   }
  ]
 }

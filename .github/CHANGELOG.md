@@ -29,7 +29,8 @@ This is the changelog for release **V3.6.0**. Don't forget to [join us on Discor
 * **Optional server-side raycasts:** bots fight each other without any client ("!serverraycasts on")
 * **Debug-server** (tools/debug-server): live map, recordings and analyzers in the browser, RCON/chat console, and a
   *Maps* tab that makes the mesh of a level and cuts its paths (see tools/debug-server/NEW_MAP.md); every step keeps a
-  backup of what it overwrites. A bot can record the missing way from a cut-off spawn
+  backup of what it overwrites. A bot can record the missing way from a cut-off spawn. The census measures only floors
+  (up to 12 per spot) and can rescan the floors of a level without breaking its mesh
 * **Performance:** much less garbage collection, faster route and mesh searches
 * Web UI: values can be typed directly, changed values are marked and can be reset
 * Node editor: better performance, shows the mesh, more info on selected nodes
@@ -49,6 +50,7 @@ This is the changelog for release **V3.6.0**. Don't forget to [join us on Discor
 * Errors with destroyed vehicles, beacons and players on round switch, crashes on Scavenger and GunMaster
 * Bots kept the Gun Master weapons in the next level (no kills in Squad Deathmatch after Gun Master)
 * Choppers crashing during an attack
+* Bots out of a boat in the water no longer walk to a point of the mesh far away (MP_017)
 * Many more small fixes
 
 ### Updated maps
@@ -57,3 +59,5 @@ This is the changelog for release **V3.6.0**. Don't forget to [join us on Discor
   XP3_Desert_ConquestLarge
 * Domination: navigation meshes for XP2_Office, XP2_Palace, XP2_Skybar and XP2_Factory
 * Junctions re-checked on all maps; recorded ways from cut-off spawns on 11 maps; MP_017 Rush fixed
+* All maps: meshes rescanned from the floors only, stairs and buildings with several storeys are covered now; MP_Subway
+  Rush no longer leads through a wall north of MCOM 4
