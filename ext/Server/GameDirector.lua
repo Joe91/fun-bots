@@ -83,6 +83,9 @@ local DRIVER_DEFEND_PENALTY = 1000.0
 local STRANDED_MATE_DISTANCE = 60.0
 -- Seconds a bot without an objective waits where no way leads on before it respawns at a mate (_CheckStranded).
 local STRANDED_TIME = 30.0
+-- No spawn on a squad mate with an enemy this close (as for players: a mate in a fight): squad rush, 2026-10-18, 42 of
+-- the 45 spawns next to an enemy on XP3_Valley were on a mate.
+local MATE_SPAWN_ENEMY_DISTANCE = 25.0
 -- Rush: defenders that go to an armed MCOM, the closest ones (_ArmedDefenders).
 local ARMED_DEFENDERS = 5
 
@@ -2376,6 +2379,26 @@ function GameDirector:GetSpawnableBeaconOrMate(p_TeamId, p_SquadId, p_Stranded, 
 			and (p_Avoid == nil or p_Position:Distance(p_Avoid) > STRANDED_MATE_DISTANCE)
 	end
 
+	local s_Enemies = {}
+	local s_Players = PlayerManager:GetPlayers()
+	for l_Index = 1, #s_Players do
+		local l_Player = s_Players[l_Index]
+		if l_Player.soldier ~= nil and l_Player.teamId ~= p_TeamId and l_Player.teamId ~= TeamId.TeamNeutral then
+			s_Enemies[#s_Enemies + 1] = l_Player.soldier.worldTransform.trans
+		end
+	end
+
+	---@param p_Position Vec3
+	---@return boolean
+	local function _InFight(p_Position)
+		for l_Index = 1, #s_Enemies do
+			if s_Enemies[l_Index]:Distance(p_Position) < MATE_SPAWN_ENEMY_DISTANCE then
+				return true
+			end
+		end
+		return false
+	end
+
 	for l_Index = 1, #s_SquadMates do
 		local l_Player = s_SquadMates[l_Index]
 		local s_Beacon = self:GetPlayerBeacon(l_Player.name)
@@ -2390,7 +2413,7 @@ function GameDirector:GetSpawnableBeaconOrMate(p_TeamId, p_SquadId, p_Stranded, 
 		-- Not at a bot that is stuck (the next one gets stuck with it).
 		local l_Bot = l_Player.soldier and g_BotManager:GetBotByName(l_Player.name)
 		if l_Player.soldier and l_Player.isAllowedToSpawnOn and _Away(l_Player.soldier.worldTransform.trans)
-			and not (l_Bot and l_Bot:IsStuck()) then
+			and not (l_Bot and l_Bot:IsStuck()) and not _InFight(l_Player.soldier.worldTransform.trans) then
 			-- check for vehicle and spawn either on player or vehicle
 			if m_Utilities:CheckProbability(s_Probability) then
 				m_Logger:Write("spawn at squad-mate " .. l_Player.name)

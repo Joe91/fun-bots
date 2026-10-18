@@ -265,6 +265,10 @@ function Bot:__init(p_Player)
 	self._LeftVehicleUntil = 0.0
 	-- Seconds without an objective where no way leads on (GameDirector:_CheckStranded).
 	self._StrandedTime = 0.0
+	-- The last death for the tickets (BotSpawner:_SettleDeathTicket on the next spawn): { Team, ByMod }; a kill of the mod
+	-- (KillSoldier) is marked until the game reports it.
+	self._DeathTicket = nil
+	self._ModKill = false
 	self._ChaseTarget = nil
 	self._ChaseCooldown = 0.0
 	-- Progress towards the objective and of the vehicle (GameDirector:_CheckObjectiveProgress, _CheckVehicleProgress).
@@ -708,7 +712,15 @@ function Bot:KillSoldier(p_Reason)
 			pos = DebugBridge.Vec(s_Soldier.worldTransform.trans),
 		})
 	end
+	self._ModKill = true
 	s_Soldier:Kill()
+end
+
+---Killed (Player:Killed): the ticket of this death is settled on the next spawn (BotSpawner:_SettleDeathTicket), a
+---revive spawns nothing and costs nothing.
+function Bot:NoteDeath()
+	self._DeathTicket = { Team = self.m_Player.teamId, ByMod = self._ModKill }
+	self._ModKill = false
 end
 
 function Bot:Destroy()

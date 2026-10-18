@@ -95,6 +95,11 @@ end
 ---VEXT Shared Level:Destroy Event
 function BotSpawner:OnLevelDestroy()
 	self:RegisterVars()
+	-- The tickets of the next round are new: a death of this one costs nothing there.
+	local s_Bots = m_BotManager:GetBots()
+	for l_Index = 1, #s_Bots do
+		s_Bots[l_Index]._DeathTicket = nil
+	end
 end
 
 -- =============================================
@@ -182,6 +187,7 @@ function BotSpawner:OnEngineUpdate(p_DeltaTime, p_SimulationDeltaTime)
 			end
 
 			if l_Bot.m_Player.soldier ~= nil then
+				self:_SettleDeathTicket(l_Bot)
 				local s_SpecialSpawn, s_SpecialSpawnEntity = self:_GetSpecialSpawnEnity(l_Bot, l_Bot.m_Player.teamId)
 				local s_Entered = -1
 				if s_SpecialSpawnEntity then
@@ -1032,14 +1038,13 @@ function BotSpawner:_SelectLoadout(p_Bot)
 	self:_SetKitAndAppearance(p_Bot, s_BotKit, s_BotColor)
 end
 
----Spawn at the spawn-points of the game (Globals.UseGameSpawn) instead of on waypoints. Always in conquest and rush on a
----level with a mesh: the bots start on it (Bot:TryEnterZoneAt), the paths have no names of objectives to spawn at.
+---Spawn at the spawn-points of the game (Globals.UseGameSpawn) instead of on waypoints. Always in conquest and rush: on
+---a level with a mesh the bots start on it (Bot:TryEnterZoneAt), the paths have no names of objectives to spawn at;
+---without one (a community mapfile) on the closest path (OnEngineUpdate). On random waypoints they spawned outside the
+---combat area of the stage (MP_Subway rush without its mesh: 182 of 496 spawns died 10 s later).
 ---@return boolean
 function BotSpawner:_UseGameSpawn()
-	if Globals.UseGameSpawn then
-		return true
-	end
-	return (Globals.IsConquest or Globals.IsRush) and m_NavZones:GetMesh() ~= nil
+	return Globals.UseGameSpawn or Globals.IsConquest or Globals.IsRush
 end
 
 ---@param p_Bot Bot
@@ -1759,11 +1764,35 @@ function BotSpawner:_SpawnBot(p_Bot, p_Transform, p_SetKit)
 		return
 	end
 
+	self:_SettleDeathTicket(p_Bot)
 	p_Bot.m_Player.soldier:ApplyCustomization(self:_GetCustomization(p_Bot, s_BotKit))
 
 	if Globals.RemoveKitVisuals then
 		-- for Civilianizer-mod:
 		Events:Dispatch('Bot:SoldierEntity', p_Bot.m_Player.soldier)
+	end
+end
+
+---The ticket of the last death of a bot that spawned again (Bot:NoteDeath). Conquest, domination, air and tank
+---superiority: the game takes a ticket for the death of a player but none for a bot (bleed and player deaths count), so
+---it goes now - once per death, a revive spawns nothing. Rush takes one for every death, also for the kills of the mod
+---(stranded on the ship of MP_017, stuck, team balance): those come back.
+---@param p_Bot Bot
+function BotSpawner:_SettleDeathTicket(p_Bot)
+	local s_Death = p_Bot._DeathTicket
+	if s_Death == nil then
+		return
+	end
+	p_Bot._DeathTicket = nil
+	p_Bot._ModKill = false
+	local s_Tickets = TicketManager:GetTicketCount(s_Death.Team)
+	if Globals.IsRush then
+		if s_Death.ByMod and s_Tickets > 0 then
+			TicketManager:SetTicketCount(s_Death.Team, s_Tickets + 1)
+		end
+	elseif Globals.IsConquest and not s_Death.ByMod and s_Tickets > 1
+		and not SharedUtils:GetCurrentGameMode():match('CaptureTheFlag') then
+		TicketManager:SetTicketCount(s_Death.Team, s_Tickets - 1)
 	end
 end
 
@@ -1899,8 +1928,7 @@ function BotSpawner:_GetSpawnPoint(p_TeamId, p_SquadId)
 		return "SpawnInGunship"
 	end
 
-	-- Away from the other team (deathmatch modes; levels of other modes without a mesh spawn at the game, see
-	-- _UseGameSpawn).
+	-- Away from the other team (the deathmatch modes that don't spawn at the game, see _UseGameSpawn).
 	do
 		while not s_ValidPointFound and s_TrysDone < s_MaximumTrys do
 			-- Get new point.

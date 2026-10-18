@@ -184,8 +184,8 @@ end
 ---the routes know the objective they decide at the nodes (NavRoutes:Step), not here. On the way to its objective (a
 ---vehicle, the paths with that name) a bot stays, and onto it it switches. A bot with a beacon to place takes the way to a beacon now and
 ---then. Any other path (spawned at a beacon, a connecting path, after the vehicle left) it leaves: for a navigation path,
----else for a path that isn't the dead end of another objective. Without a mesh (deathmatch modes, no objectives) the bots
----walk the paths and switch at random.
+---else for a path that isn't the dead end of another objective. Without a mesh conquest and rush go by the objectives on
+---the paths (_SwitchByPriority, a community mapfile), the deathmatch modes switch at random.
 ---@param p_Bot Bot
 ---@param p_Point Waypoint
 ---@param p_Objective string
@@ -223,6 +223,10 @@ function PathSwitcher:_GetNewFootPath(p_Bot, p_Point, p_Objective)
 		if s_TakeBeacon then
 			---@cast s_Beacon -nil
 			return true, s_Beacon, m_NodeCollection:_ActionDirection(s_Beacon)
+		end
+		-- Conquest and rush (community mapfiles without a mesh): by the objectives on the paths, as the vehicles.
+		if Globals.IsConquest or Globals.IsRush then
+			return self:_SwitchByPriority(p_Point, p_Objective, p_Bot.m_Player.teamId, s_Candidates, p_Bot.m_Id)
 		end
 		if m_Utilities:CheckProbability(Registry.GAME_DIRECTOR.PROBABILITY_SWITCH_SAME_PRIO) then
 			m_Logger:Write('switch at random')
@@ -282,7 +286,7 @@ function PathSwitcher:_GetNewFootPath(p_Bot, p_Point, p_Objective)
 	return true, s_Exits[MathUtils:GetRandomInt(1, #s_Exits)]
 end
 
----Vehicles: by the objectives on the vehicle-paths.
+---Vehicles: by the objectives on the vehicle-paths (the paths for the terrain of the vehicle).
 ---@param p_Point Waypoint
 ---@param p_Objective string|nil
 ---@param p_TeamId TeamId
@@ -290,44 +294,6 @@ end
 ---@returns boolean
 ---@returns Waypoint|nil
 function PathSwitcher:_GetNewVehiclePath(p_Point, p_Objective, p_TeamId, p_ActiveVehicle)
-	-- Check if on base, or on path away from base. In this case: change path.
-	local s_OnBasePath = false
-	local s_CurrentPathFirst = m_NodeCollection:GetFirst(p_Point.PathIndex)
-	local s_CurrentPathStatus = 0
-	if s_CurrentPathFirst.Data ~= nil and s_CurrentPathFirst.Data.Objectives ~= nil then
-		s_CurrentPathStatus = m_GameDirector:GetEnableStateOfPath(s_CurrentPathFirst.Data.Objectives)
-		s_OnBasePath = m_GameDirector:IsBasePath(s_CurrentPathFirst.Data.Objectives)
-	end
-	p_Objective = p_Objective or ''
-
-	-- Bots always leave a path of a base alone, where they spawn, a path out of a base at its end (else they walk it
-	-- back to the base), the path of a destroyed MCOM, the way to a vehicle that isn't their objective (of the other
-	-- team, or gone) and the way to a beacon. If the path has no regular way out, over any other path (see below).
-	local s_LeavePath = false
-	if s_OnBasePath then
-		s_LeavePath = #s_CurrentPathFirst.Data.Objectives == 1 or p_Point.PointIndex == 1
-			or p_Point.PointIndex == #m_NodeCollection:Get(nil, p_Point.PathIndex)
-	elseif s_CurrentPathFirst.Data ~= nil and s_CurrentPathFirst.Data.Objectives ~= nil then
-		local s_Objectives = s_CurrentPathFirst.Data.Objectives
-		-- UseVehicle sends bots onto the way to a vehicle without changing their objective: they stay on it while
-		-- the vehicle can be used by their team.
-		s_LeavePath = m_GameDirector:IsDestroyedPath(s_Objectives) or (#s_Objectives == 1
-			and s_Objectives[1] ~= p_Objective and m_GameDirector:IsVehicleEnterPath(s_Objectives[1])
-			and not m_GameDirector:UseVehicle(p_TeamId, s_Objectives[1]))
-			-- The way to a beacon is a dead end (bots that spawned at the beacon start on it).
-			or (#s_Objectives == 1 and s_Objectives[1] ~= p_Objective and m_GameDirector:IsBeaconPath(s_Objectives[1]))
-	end
-	local s_Exits = {}
-	local s_BestExitScore = -1
-
-	-- To-do: get all paths via links, assign priority, sort by priority.
-	-- If multiple are top priority, choose at random.
-
-	local s_OnVehicleEnterObjective = m_GameDirector:IsVehicleEnterPath(p_Objective)
-	local s_ValidPaths = {}
-	local s_HighestPriority = 0
-	local s_CurrentPriority = 0
-
 	local s_PossiblePaths = {}
 
 	for i = 1, #p_Point.Data.Links do
@@ -367,11 +333,60 @@ function PathSwitcher:_GetNewVehiclePath(p_Point, p_Objective, p_TeamId, p_Activ
 			end
 		end
 	end
+	return self:_SwitchByPriority(p_Point, p_Objective, p_TeamId, s_PossiblePaths, nil)
+end
+
+---By the state of the objectives on the paths (vehicles; soldiers on a level without a mesh, where no routes guide them).
+---@param p_Point Waypoint
+---@param p_Objective string|nil
+---@param p_TeamId TeamId
+---@param p_PossiblePaths Waypoint[] the linked waypoints the bot may take
+---@param p_BotId integer|nil soldiers: also onto the path of a sub-objective the GameDirector gives them (an MCOM to arm)
+---@returns boolean
+---@returns Waypoint|nil
+function PathSwitcher:_SwitchByPriority(p_Point, p_Objective, p_TeamId, p_PossiblePaths, p_BotId)
+	-- Check if on base, or on path away from base. In this case: change path.
+	local s_OnBasePath = false
+	local s_CurrentPathFirst = m_NodeCollection:GetFirst(p_Point.PathIndex)
+	local s_CurrentPathStatus = 0
+	if s_CurrentPathFirst.Data ~= nil and s_CurrentPathFirst.Data.Objectives ~= nil then
+		s_CurrentPathStatus = m_GameDirector:GetEnableStateOfPath(s_CurrentPathFirst.Data.Objectives)
+		s_OnBasePath = m_GameDirector:IsBasePath(s_CurrentPathFirst.Data.Objectives)
+	end
+	p_Objective = p_Objective or ''
+
+	-- Bots always leave a path of a base alone, where they spawn, a path out of a base at its end (else they walk it
+	-- back to the base), the path of a destroyed MCOM, the way to a vehicle that isn't their objective (of the other
+	-- team, or gone) and the way to a beacon. If the path has no regular way out, over any other path (see below).
+	local s_LeavePath = false
+	if s_OnBasePath then
+		s_LeavePath = #s_CurrentPathFirst.Data.Objectives == 1 or p_Point.PointIndex == 1
+			or p_Point.PointIndex == #m_NodeCollection:Get(nil, p_Point.PathIndex)
+	elseif s_CurrentPathFirst.Data ~= nil and s_CurrentPathFirst.Data.Objectives ~= nil then
+		local s_Objectives = s_CurrentPathFirst.Data.Objectives
+		-- UseVehicle sends bots onto the way to a vehicle without changing their objective: they stay on it while
+		-- the vehicle can be used by their team.
+		s_LeavePath = m_GameDirector:IsDestroyedPath(s_Objectives) or (#s_Objectives == 1
+			and s_Objectives[1] ~= p_Objective and m_GameDirector:IsVehicleEnterPath(s_Objectives[1])
+			and not m_GameDirector:UseVehicle(p_TeamId, s_Objectives[1]))
+			-- The way to a beacon is a dead end (bots that spawned at the beacon start on it).
+			or (#s_Objectives == 1 and s_Objectives[1] ~= p_Objective and m_GameDirector:IsBeaconPath(s_Objectives[1]))
+	end
+	local s_Exits = {}
+	local s_BestExitScore = -1
+
+	-- To-do: get all paths via links, assign priority, sort by priority.
+	-- If multiple are top priority, choose at random.
+
+	local s_OnVehicleEnterObjective = m_GameDirector:IsVehicleEnterPath(p_Objective)
+	local s_ValidPaths = {}
+	local s_HighestPriority = 0
+	local s_CurrentPriority = 0
 
 	-- Loop through each possible path.
 	s_CurrentPriority = self:GetPriorityOfPath(s_CurrentPathFirst, p_Objective)
-	for i = 1, #s_PossiblePaths do
-		local s_NewPoint = s_PossiblePaths[i]
+	for i = 1, #p_PossiblePaths do
+		local s_NewPoint = p_PossiblePaths[i]
 		local s_PathNode = m_NodeCollection:GetFirst(s_NewPoint.PathIndex)
 		local s_NewPathStatus = m_GameDirector:GetEnableStateOfPath(s_PathNode.Data.Objectives or {})
 		local s_NewBasePath = m_GameDirector:IsBasePath(s_PathNode.Data.Objectives or {})
@@ -394,6 +409,10 @@ function PathSwitcher:_GetNewVehiclePath(p_Point, p_Objective, p_TeamId, p_Activ
 				goto skip
 			end
 
+			-- Rush: onto the path of an MCOM ("mcom N interact") the GameDirector sends this soldier to.
+			if p_BotId ~= nil and p_Objective ~= '' and m_GameDirector:UseSubobjective(p_BotId, p_TeamId, s_PathNode.Data.Objectives[1]) then
+				return true, s_NewPoint
+			end
 		end
 
 		-- Fallback way out: any path but a base-path alone, the way to a vehicle or a beacon, or another destroyed

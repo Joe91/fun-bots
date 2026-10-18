@@ -654,7 +654,7 @@ function FunBotServer:OnLevelLoaded(p_LevelName, p_GameMode, p_Round, p_RoundsPe
 	self:DetectSpecialMods()
 	self:RegisterInputRestrictionEventCallbacks()
 	self:SetGameMode(p_GameMode, p_LevelName)
-	-- Spawns of the game in these modes (conquest and rush on a level with a mesh as well, BotSpawner:_UseGameSpawn),
+	-- Spawns of the game in these modes (conquest and rush as well, BotSpawner:_UseGameSpawn),
 	-- else on the waypoints. Domination: on the waypoints half of the bots spawned next to an enemy (XP2_Office).
 	Globals.UseGameSpawn = Registry.BOT_SPAWN.GAME_SPAWNS_EVERYWHERE or Globals.IsTdm or Globals.IsSdm or Globals.IsGm
 		or Globals.IsAirSuperiority or Globals.IsDomination
@@ -774,6 +774,10 @@ function FunBotServer:OnPlayerKilled(p_Player, p_Inflictor, p_Position, p_Weapon
 	m_NodeEditor:OnPlayerKilled(p_Player)
 	m_AirTargets:OnPlayerKilled(p_Player)
 	m_DebugSnapshots:OnPlayerKilled(p_Player, p_Inflictor, p_Position, p_Weapon, p_IsRoadKill, p_IsHeadShot)
+	local s_Victim = m_BotManager:GetBotById(p_Player.id)
+	if s_Victim ~= nil then
+		s_Victim:NoteDeath()
+	end
 	-- Killed for leaving the combat area (rush: the defenders in the area of the stage that fell) is no hazard.
 	if p_Weapon == 'DamageArea' and not self.m_OutsideCombatArea[p_Player.id] then
 		m_NavZones:OnDamageAreaDeath(p_Position)
@@ -786,11 +790,8 @@ function FunBotServer:OnPlayerKilled(p_Player, p_Inflictor, p_Position, p_Weapon
 		m_NavZones:OnKilled(p_Player.teamId, p_Position)
 	end
 	-- Without a killer right after the mod put the bot onto a point of the mesh: nobody is put there again.
-	if p_Inflictor == nil then
-		local s_Bot = m_BotManager:GetBotById(p_Player.id)
-		if s_Bot ~= nil then
-			s_Bot:OnDiedAfterPut()
-		end
+	if p_Inflictor == nil and s_Victim ~= nil then
+		s_Victim:OnDiedAfterPut()
 	end
 end
 

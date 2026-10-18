@@ -396,9 +396,9 @@ Registry = {
 		-- Rush: the defenders (always Team2) get this share of the bots of their team (balanced_teams), e.g. to test
 		-- the attack. 1.0 = as many as the attackers.
 		RUSH_DEFENDER_FACTOR = 0.85,
-		-- Bots spawn at the spawn-points of the game in all game modes. Else only in TDM, SDM, GunMaster, AirSuperiority
-		-- and in conquest and rush on levels with a mesh; elsewhere on the waypoints (the game-spawns of the other modes
-		-- don't work on most levels).
+		-- Bots spawn at the spawn-points of the game in all game modes. Else only in TDM, SDM, GunMaster, AirSuperiority,
+		-- Domination, conquest and rush; elsewhere on the waypoints (the game-spawns of the other modes don't work on most
+		-- levels).
 		GAME_SPAWNS_EVERYWHERE = false,
 		-- Spawning on the waypoints: at least this far (metres) from the soldiers of the other team (one at least
 		-- HEIGHT_DISTANCE_TO_PLAYERS above or below is on another floor and doesn't count). After MAX_TRIES_AT_DISTANCE
