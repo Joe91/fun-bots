@@ -51,6 +51,11 @@ This is the changelog for release **V3.6.0**. Don't forget to [join us on Discor
 * Bots kept the Gun Master weapons in the next level (no kills in Squad Deathmatch after Gun Master)
 * Choppers crashing during an attack
 * Bots out of a boat in the water no longer walk to a point of the mesh far away (MP_017)
+* Conquest, Domination, Air and Tank Superiority: the deaths of bots cost tickets (the game only counted players); Rush:
+  bots the mod respawns (stuck, stranded on a ship) cost no ticket
+* No spawn on a squad mate in a fight (squad rush: 2 % of the spawns next to an enemy instead of 20-30 %)
+* Levels without a navigation mesh (community mapfiles): bots spawn at the spawns of the game and follow the objectives
+  on the paths again (MCOMs are armed)
 * Many more small fixes
 
 ### Updated maps
