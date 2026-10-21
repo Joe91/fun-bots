@@ -972,6 +972,23 @@ function GameDirector:_CheckStranded(p_Bot)
 		end
 	end
 	p_Bot._StrandedTime = (p_Bot._StrandedTime or 0.0) + Registry.GAME_DIRECTOR.UPDATE_OBJECTIVES_CYCLE
+	-- Debug: once per stranded spell, the vehicles of the team close by and why the bot doesn't get to them.
+	if m_DebugBridge.m_Enabled and p_Bot._StrandedTime >= 3.0
+		and p_Bot._StrandedTime < 3.0 + Registry.GAME_DIRECTOR.UPDATE_OBJECTIVES_CYCLE then
+		local s_Vehicles = {}
+		for l_Index = 1, #self.m_AllObjectives do
+			local l_Objective = self.m_AllObjectives[l_Index]
+			if l_Objective.isVehicleEntity and l_Objective.position ~= nil
+				and l_Objective.position:Distance(s_Here) <= Registry.GAME_DIRECTOR.MAX_VEHICLE_OBJECTIVE_DISTANCE then
+				s_Vehicles[#s_Vehicles + 1] = { name = l_Objective.name, active = l_Objective.active, team = l_Objective.team,
+					seats = l_Objective.seats, assigned = l_Objective.assigned[s_TeamId],
+					reach = p_Bot:CanReach(l_Objective.name), known = g_NavRoutes ~= nil and g_NavRoutes:Knows(l_Objective.name),
+					pos = DebugBridge.Vec(l_Objective.position) }
+			end
+		end
+		m_DebugBridge:Event('stranded_vehicles', { bot = p_Bot.m_Id, point = p_Bot.m_Zone.Point,
+			pos = DebugBridge.Vec(s_Here), vehicles = s_Vehicles })
+	end
 	if p_Bot._StrandedTime < STRANDED_TIME then
 		return
 	end

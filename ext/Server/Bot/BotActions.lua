@@ -365,7 +365,7 @@ function Bot:_EnterVehicleEntity(p_Entity, p_PlayerIsDriver)
 			else
 				self._VehicleWaitTimer = 0.0
 
-				if s_SeatIndex == s_MaxEntries - 1 then
+				if s_SeatIndex == s_MaxEntries - 1 and #m_Vehicles:WalkInPassengerSeats(p_Entity, s_VehicleData) == 0 then
 					-- Last seat taken: Disable vehicle and abort, wait for passengers.
 					local s_Driver = p_Entity:GetPlayerInEntry(0)
 
@@ -379,6 +379,18 @@ function Bot:_EnterVehicleEntity(p_Entity, p_PlayerIsDriver)
 			return 0, s_Position -- Everything fine.
 		end
 		::next_seat::
+	end
+
+	-- The crew is full: along in a passenger seat of an AMTRAC (Vehicles:WalkInPassengerSeats).
+	if not p_PlayerIsDriver and #m_Vehicles:WalkInPassengerSeats(p_Entity, s_VehicleData) > 0
+		and self:_EnterPassengerSeat(p_Entity) == 0 then
+		-- The last one: the driver goes.
+		local s_Driver = p_Entity:GetPlayerInEntry(0)
+		if s_Driver ~= nil and #m_Vehicles:WalkInPassengerSeats(p_Entity, s_VehicleData) == 0 then
+			Events:Dispatch('Bot:AbortWait', s_Driver.id)
+			g_GameDirector:_SetVehicleObjectiveState(p_Entity.transform.trans:Clone(), false)
+		end
+		return 0, s_Position
 	end
 
 	-- No place left.

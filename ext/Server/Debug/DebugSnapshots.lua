@@ -321,7 +321,9 @@ function DebugSnapshots.CollectObjectives()
 	for l_Index = 1, #s_AllObjectives do
 		local l_Objective = s_AllObjectives[l_Index]
 		if l_Objective.isEnterVehiclePath then
-			s_Vehicles[#s_Vehicles + 1] = { name = l_Objective.name, active = l_Objective.active, team = l_Objective.team }
+			-- The seats bots may take and how many bots of the team have it as objective or spawn for it (the last cycle).
+			s_Vehicles[#s_Vehicles + 1] = { name = l_Objective.name, active = l_Objective.active, team = l_Objective.team,
+				seats = l_Objective.seats, assigned = l_Objective.assigned and l_Objective.assigned[l_Objective.team] or nil }
 		end
 	end
 

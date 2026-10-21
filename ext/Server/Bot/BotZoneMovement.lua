@@ -83,7 +83,10 @@ local ZONE_ARM_PLACE_RANGE = 2.5 -- put there.
 local ZONE_VEHICLE_REACH = 10.0  -- Registry.VEHICLES.MIN_DISTANCE_VEHICLE_ENTER: the bot gets in from this close.
 local ZONE_VEHICLE_NEAR = 5.5    -- Horizontal metres to the middle of the vehicle (a tank is about 8 m long): on the way
 local ZONE_VEHICLE_FLOOR = 3.0   -- to the point next to it the bot gets in from here. The point can be under the hull.
+local ZONE_VEHICLE_GOAL_REACH = 17.0 -- At the point next to it: in from this close (NavRoutes ACTION_RANGE_FAR, a boat
+                                     -- 14 m off the dock of the MP_017 ship), farther it drove off meanwhile.
 local ZONE_OFF_POINT = 3.0       -- Horizontal metres from its point: a new route first leads back to it.
+local ZONE_FELL = 1.5            -- Stuck this far below both points of a connection: fell off, not the connection's fault.
 local ZONE_SMOOTH_ROOM = 2.5     -- Smoothing: metres before a point the bot turns towards the next one (at most).
 local ZONE_INLINE_SHARE = 0.7    -- Look-ahead (Bot:_ZoneInLine): the free radius around a point is its clearance times
 local ZONE_INLINE_MARGIN = 0.75  -- this (measured along the grid, more than straight) less this many metres...
@@ -1528,7 +1531,7 @@ function Bot:_ZoneAction(p_DeltaTime)
 			self:SetObjective('')
 			return true
 		end
-		if s_Position:Distance(s_Soldier.worldTransform.trans) > ZONE_VEHICLE_REACH then
+		if s_Position:Distance(s_Soldier.worldTransform.trans) > ZONE_VEHICLE_GOAL_REACH then
 			-- It drove off meanwhile: the way to where it is now.
 			s_State.Action = nil
 			self:_ZoneDecide()
@@ -1793,6 +1796,22 @@ function Bot:OnDiedAfterPut()
 	end
 end
 
+---Whether the points are connected straight (no corners round something in between).
+---@param p_Zone NavZone
+---@param p_A integer
+---@param p_B integer
+---@return boolean
+local function _IsStraightConnection(p_Zone, p_A, p_B)
+	local s_Neighbours = p_Zone.Neighbours[p_A] or {}
+	for l_Index = 1, #s_Neighbours do
+		local l_Edge = s_Neighbours[l_Index]
+		if l_Edge.To == p_B then
+			return l_Edge.Corners == nil or #l_Edge.Corners == 0
+		end
+	end
+	return false
+end
+
 ---The bot doesn't get along to the next point: all bots avoid this connection from now on, the bot takes another
 ---way. After ZONE_MAX_FAILS of them in a row it goes back to the waypoints.
 ---@param p_Position Vec3
@@ -1829,10 +1848,23 @@ function Bot:_ZoneGiveUpConnection(p_Position, p_Target)
 		s_From = s_State.Point
 	elseif s_Next ~= nil then
 		-- It didn't get back to its own point (pushed off, came onto the mesh beside it): the way there from the point it
-		-- stands at is blocked (a railing, a bench the census and the checks don't see), for all bots.
+		-- stands at is blocked (a railing, a bench the census and the checks don't see), for all bots. Only a straight
+		-- connection: one with corners goes round what the bot walked into straight, its next route takes it
+		-- (s_State.Avoid below). MP_Subway conquest: bots back on the other side of a barrier at (-166.6, 65, -431)
+		-- blamed the connection that leads through its gap over a corner.
 		local s_Near = m_NavZones:Closest(s_State.Zone, p_Position, s_Next)
-		if s_Near ~= nil and s_Near ~= s_Next then
+		if s_Near ~= nil and s_Near ~= s_Next and _IsStraightConnection(s_State.Zone, s_Near, s_Next) then
 			s_From = s_Near
+		end
+	end
+	-- Far below both points: it fell off (into the water of the well deck of the MP_017 ship, a pit), the connection is
+	-- not to blame. Blocked three times there, the dock of the ship was cut off and nobody got to the boats any more.
+	if s_From ~= nil and s_Next ~= nil then
+		local s_FromPoint = s_State.Zone.Points[s_From]
+		local s_NextPoint = s_State.Zone.Points[s_Next]
+		if s_FromPoint ~= nil and s_NextPoint ~= nil
+			and p_Position.y < math.min(s_FromPoint.Position.y, s_NextPoint.Position.y) - ZONE_FELL then
+			s_From = nil
 		end
 	end
 	if s_From ~= nil then

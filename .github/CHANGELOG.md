@@ -54,6 +54,10 @@ This is the changelog for release **V3.6.0**. Don't forget to [join us on Discor
 * Conquest, Domination, Air and Tank Superiority: the deaths of bots cost tickets (the game only counted players); Rush:
   bots the mod respawns (stuck, stranded on a ship) cost no ticket
 * No spawn on a squad mate in a fight (squad rush: 2 % of the spawns next to an enemy instead of 20-30 %)
+* Medics revive bots again (since 2024 only right after their own spawn: 1 % of the deaths, now 11-21 %); in a fight
+  only a mate down close by
+* MP_017 Rush: the attackers on the ship get to the boats and the AMTRAC again and ride along in its passenger seats
+  (40 % fewer bots stuck on the ship)
 * Levels without a navigation mesh (community mapfiles): bots spawn at the spawns of the game and follow the objectives
   on the paths again (MCOMs are armed)
 * Many more small fixes

@@ -13,6 +13,11 @@ local m_ServerRaycasts = require('ServerRaycasts')
 ---@type Logger
 local m_Logger = Logger("BotManager", Debug.Server.BOT)
 
+-- A medic in a fight leaves it for a mate down only this close (metres): farther, a third to almost half of them died
+-- on the way (bodies within 5 m: a fifth to a quarter, medics that weren't fighting: 10-15 %). The probability is
+-- rolled every check (Registry.GAME_RAYCASTING.BOT_BOT_REVIVE_INTERVAL), so it only delays the revive.
+local REVIVE_DISTANCE_IN_FIGHT = 5.0
+
 function BotManager:__init()
 	self:RegisterVars()
 end
@@ -1732,7 +1737,10 @@ function BotManager:_CheckForBotBotRevive()
 
 	for l_Index = 1, #self._Bots do
 		local l_Bot = self._Bots[l_Index]
-		if l_Bot.m_ActiveState == s_StateIdle then
+		-- Dead bots wait in Idle. The medics are on foot: mostly Moving or Attacking (only Idle, they revived only right
+		-- after their spawn: 5 of 538 deaths on MP_017).
+		local s_State = l_Bot.m_ActiveState
+		if s_State == s_StateIdle or g_BotStates:IsSoldierState(s_State) then
 			if l_Bot.m_Player.corpse
 				and not l_Bot.m_Player.corpse.isDead
 				and not l_Bot.m_DontRevive
@@ -1798,13 +1806,15 @@ function BotManager:_CheckForBotBotRevive()
 					local s_Distance = s_PosBody:Distance(s_PosMedic)
 
 					local l_ReviveProbability = Registry.BOT.REVIVE_PROBABILITY
+					local s_MaxDistance = Registry.BOT.REVIVE_DISTANCE
 					if l_MedicBot._ShootPlayer ~= nil then
 						l_ReviveProbability = Registry.BOT.REVIVE_PROBABILITY_IF_HAS_TARGET
+						s_MaxDistance = REVIVE_DISTANCE_IN_FIGHT
 					end
 
 					local l_ShouldRevive = m_Utilities:CheckProbability(l_ReviveProbability)
 
-					if s_Distance < Registry.BOT.REVIVE_DISTANCE and l_ShouldRevive then
+					if s_Distance < s_MaxDistance and l_ShouldRevive then
 						-- insert positions
 						s_PosBody.y = s_PosBody.y + 0.2
 						s_PosMedic.y = s_PosMedic.y + 1.6

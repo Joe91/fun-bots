@@ -78,6 +78,12 @@ local FIELD_REFRESH = 5.0
 -- Points of the mesh next to a vehicle (horizontal metres, Registry.VEHICLES.MIN_DISTANCE_VEHICLE_ENTER) and on its
 -- floor (the vehicle-spawn is the middle of the vehicle): the bot gets in from there. At most ACTION_POINTS of them.
 local ACTION_RANGE = 8.0
+-- None that close: up to this far, and this much higher or lower (MP_017 Rush: the boats respawn 14 m off the dock of the
+-- ship, the AAV 3.1 m below it; nobody walked to them, the drivers spawned into them left alone and the attackers waited
+-- on the ship. MP_018 Rush: the boats lie in the water 3.7-5.5 m below the deck). The bot gets in from there (the seat is
+-- taken at once, BotZoneMovement ZONE_VEHICLE_GOAL_REACH).
+local ACTION_RANGE_FAR = 15.0
+local ACTION_FLOOR_FAR = 6.0
 -- An MCOM: only points in sight of it (_InSight), up to this far.
 local ACTION_RANGE_MCOM = 12.0
 local ACTION_RANGE_MCOM_FAR = 25.0
@@ -587,11 +593,13 @@ function NavRoutes:_ActionTarget(p_Objective, p_Action)
 	local s_FromX, s_FromY, s_FromZ = s_From.x, s_From.y, s_From.z
 	local s_Candidates = {}
 	-- An MCOM in a room the mesh doesn't reach into (behind walls): the points up to ACTION_RANGE_MCOM_FAR then.
-	local s_Ranges = p_Action.Kind == 'mcom' and { ACTION_RANGE_MCOM, ACTION_RANGE_MCOM_FAR } or { ACTION_RANGE }
+	local s_Ranges = p_Action.Kind == 'mcom' and { ACTION_RANGE_MCOM, ACTION_RANGE_MCOM_FAR }
+		or { ACTION_RANGE, ACTION_RANGE_FAR }
 	-- The points of the zone of the MCOM, else the ones in the cells of the grid around the vehicle.
 	local s_Pool = p_Action.Zone ~= nil and p_Action.Zone.Inside
 		or m_NavZones:PointsAround(s_Mesh, s_From, s_Ranges[#s_Ranges])
 	for _, l_Range in ipairs(s_Ranges) do
+		local s_Floor = l_Range > ACTION_RANGE and ACTION_FLOOR_FAR or ACTION_FLOOR
 		for l_Index = 1, #s_Pool do
 			local l_Point = s_Pool[l_Index]
 			local s_MeshPoint = s_Mesh.Points[l_Point]
@@ -603,7 +611,7 @@ function NavRoutes:_ActionTarget(p_Objective, p_Action)
 			-- interacted from up there in vain, XP4_Rubble MCOM 2).
 			local s_Height = s_MeshPoint.Y - s_FromY
 			local s_OnFloor = p_Action.Kind == 'mcom' and s_Height <= ACTION_MCOM_ABOVE and s_Height >= -ACTION_MCOM_BELOW
-				or p_Action.Kind ~= 'mcom' and math.abs(s_Height) <= ACTION_FLOOR
+				or p_Action.Kind ~= 'mcom' and math.abs(s_Height) <= s_Floor
 			if s_Distance <= l_Range and s_OnFloor
 				and (s_Mesh.PartSize[s_Mesh.Part[l_Point]] or 0) >= ACTION_MIN_PART then
 				s_Candidates[#s_Candidates + 1] = { l_Point, s_Distance }

@@ -197,21 +197,42 @@ function Vehicles:HasFreeBotSeat(p_Entity, p_VehicleData)
 	return false
 end
 
----How many seats a bot may still take (HasFreeBotSeat): the driver and its passengers walk to the vehicle together.
+---How many seats a bot may still take (HasFreeBotSeat): the driver and its passengers walk to the vehicle together. An
+---AMTRAC also takes them in its passenger seats (WalkInPassengerSeats).
 ---@param p_Entity ControllableEntity
 ---@param p_VehicleData VehicleDataInner
 ---@return integer
 function Vehicles:FreeBotSeats(p_Entity, p_VehicleData)
-	if not self:HasFreeBotSeat(p_Entity, p_VehicleData) then
-		return 0
-	end
-	local s_Free = 0
-	for l_Seat = 0, self:GetBotSeatCount(p_Entity, p_VehicleData, false) - 1 do
-		if p_Entity:GetPlayerInEntry(l_Seat) == nil then
-			s_Free = s_Free + 1
+	local s_Free = {}
+	if self:HasFreeBotSeat(p_Entity, p_VehicleData) then
+		for l_Seat = 0, self:GetBotSeatCount(p_Entity, p_VehicleData, false) - 1 do
+			if p_Entity:GetPlayerInEntry(l_Seat) == nil then
+				s_Free[l_Seat] = true
+			end
 		end
 	end
-	return s_Free
+	local s_Passengers = self:WalkInPassengerSeats(p_Entity, p_VehicleData)
+	for l_Index = 1, #s_Passengers do
+		s_Free[s_Passengers[l_Index]] = true
+	end
+	local s_Count = 0
+	for _ in pairs(s_Free) do
+		s_Count = s_Count + 1
+	end
+	return s_Count
+end
+
+---The passenger seats of an AMTRAC a bot that walks up to it may take, beyond Config.MaxBotsPerVehicle (the crew): the
+---attackers of MP_017 rush only get ashore by boat and AMTRAC, 12 seats for 18 of them, the rest waited on the ship.
+---Not the ones of a transport helicopter (it takes off at once). The crew seats are taken first (Bot:_EnterVehicleEntity).
+---@param p_Entity ControllableEntity
+---@param p_VehicleData VehicleDataInner|nil
+---@return integer[] seat indices
+function Vehicles:WalkInPassengerSeats(p_Entity, p_VehicleData)
+	if p_VehicleData == nil or p_VehicleData.FirstPassengerSeat == nil or self:IsAirVehicle(p_VehicleData) then
+		return {}
+	end
+	return self:FreePassengerSeats(p_Entity, p_VehicleData)
 end
 
 ---The passenger seats of a transport helicopter or an AMTRAC that a bot may spawn in. They don't count towards

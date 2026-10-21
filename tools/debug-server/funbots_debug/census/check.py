@@ -41,6 +41,10 @@ GROUND_STEP = 0.5          # Metres between the ground-rays along a connection..
 GROUND_ABOVE = 1.6         # ...from this far above the straight line...
 GROUND_BELOW = 2.5         # ...to this far below it.
 LEDGE = 0.8                # More up or down between two of them: a ledge.
+CORNER_REACH = 0.4         # Across each corner of a way: from this far before it to this far after it (a corner inside a
+                           # thin wall: the rays of both stretches end on its surface, neither hits it. MP_Subway
+                           # conquest: a breakable panel at (-166.6, 65, -431), 60-90 bots per round were put across).
+CORNER_SEGMENT = 1000      # The corner rays count as stretches of their own: segment CORNER_SEGMENT + the corner.
 CHUNK = 3000               # Rays per command.
 # Vehicles stand on their spawns while the check runs (the bots are killed): a hit this close (horizontal metres) to one
 # is no wall, the vehicle drives away (MP_001: the junctions of the roads with the mesh start at the vehicle-spawns, all
@@ -70,6 +74,34 @@ def load_checks(census_file: Path) -> dict | None:
         return json.loads(file.read_text(encoding="utf-8"))
     except (OSError, ValueError):
         return None
+
+
+def _across_corners(way: list[list[float]]) -> list[tuple[list[float], list[float]]]:
+    """For each corner of the way: a stretch from CORNER_REACH before it to CORNER_REACH after it (at most half of each
+    stretch), over the corner."""
+    result = []
+    for before, corner, after in zip(way, way[1:], way[2:]):
+        ends = []
+        for other in (before, after):
+            length = math.hypot(other[0] - corner[0], other[2] - corner[2])
+            share = min(CORNER_REACH, length / 2) / length if length > 0 else 0.0
+            ends.append([corner[i] + (other[i] - corner[i]) * share for i in range(3)])
+        result.append((ends[0], corner, ends[1]))
+    return result
+
+
+def _corner_rays(way: list[list[float]], kind: str, index: int) -> tuple[list[list[float]], list[tuple]]:
+    """The rays across the corners of the way, both heights and directions: over the corner in two pieces would start
+    inside of the wall again, so straight from end to end (the corner is close to that line)."""
+    result, meaning = [], []
+    for corner_index, (p, _, q) in enumerate(_across_corners(way)):
+        for height_index, height in enumerate(HEIGHTS):
+            start = [p[0], p[1] + height, p[2]]
+            end = [q[0], q[1] + height, q[2]]
+            result += [start + end, end + start]
+            segment = CORNER_SEGMENT + corner_index
+            meaning += [(kind, index, segment, height_index, 0), (kind, index, segment, height_index, 1)]
+    return result, meaning
 
 
 def rays(networks: dict, junctions_only: bool = False) -> tuple[list[list[float]], list[tuple]]:
@@ -106,6 +138,9 @@ def rays(networks: dict, junctions_only: bool = False) -> tuple[list[list[float]
                 x, y, z = p[0] + (q[0] - p[0]) * t, p[1] + (q[1] - p[1]) * t, p[2] + (q[2] - p[2]) * t
                 result.append([x, y + GROUND_ABOVE, z, x, y - GROUND_BELOW, z])
                 meaning.append(("ground", index, segment, sample, y + GROUND_ABOVE))
+        corner_rays, corner_meaning = _corner_rays(way, "edge", index)
+        result += corner_rays
+        meaning += corner_meaning
     # The junctions: the way from the point of the mesh to the waypoint (the grid can lead through a wall it missed,
     # the side of an escalator).
     for index, entry in enumerate(networks.get("attach") or []):
@@ -119,6 +154,9 @@ def rays(networks: dict, junctions_only: bool = False) -> tuple[list[list[float]
                 end = [q[0], q[1] + height, q[2]]
                 result += [start + end, end + start]
                 meaning += [("junction", index, segment, height_index, 0), ("junction", index, segment, height_index, 1)]
+        corner_rays, corner_meaning = _corner_rays(way, "junction", index)
+        result += corner_rays
+        meaning += corner_meaning
     for index, point in enumerate([] if junctions_only else points):
         x, y, z = point[:3]
         result.append([x, y + 0.2, z, x, y + HEADROOM, z])
