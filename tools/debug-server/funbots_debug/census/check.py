@@ -46,6 +46,7 @@ CORNER_REACH = 0.4         # Across each corner of a way: from this far before i
                            # conquest: a breakable panel at (-166.6, 65, -431), 60-90 bots per round were put across).
 CORNER_SEGMENT = 1000      # The corner rays count as stretches of their own: segment CORNER_SEGMENT + the corner.
 CHUNK = 3000               # Rays per command.
+RECHECK_WAIT = 20.0        # Seconds between the two passes of the check (both): a block has to hold.
 # Vehicles stand on their spawns while the check runs (the bots are killed): a hit this close (horizontal metres) to one
 # is no wall, the vehicle drives away (MP_001: the junctions of the roads with the mesh start at the vehicle-spawns, all
 # of them "blocked"). Not the stationary weapons (TOW, Kornet, AA): they stay. VehicleTypes of the mod.
@@ -257,8 +258,23 @@ def evaluate(networks: dict, hits: list[float], meaning: list[tuple], rays: list
     def position(index: int) -> list[float]:
         return [round(value, 2) for value in points[index][:3]]
 
+    # Blocked with corners the builder moved to more room (navzones._center_corners): the next cut keeps the corners of
+    # the census for it (XP1_003 rush: moved, 3 of 5 connections ran into something the census doesn't see; their old
+    # corners were free, dropping them sent more bots over the stairs at (274, 96, -140)).
+    centered = networks.get("centered") or []
+
+    def moved(index: int) -> bool:
+        a, b = position(int(edges[index][0])), position(int(edges[index][1]))
+        return any((math.dist(entry[:3], a) <= MATCH and math.dist(entry[3:], b) <= MATCH)
+                   or (math.dist(entry[:3], b) <= MATCH and math.dist(entry[3:], a) <= MATCH) for entry in centered)
+
+    blocked_centered = {index for index in blocked if moved(index)}
+    blocked = blocked - blocked_centered
+
     return {
         "version": VERSION,
+        "blockedCentered": [position(int(edges[index][0])) + position(int(edges[index][1]))
+                            for index in sorted(blocked_centered)],
         "blockedEdges": [position(int(edges[index][0])) + position(int(edges[index][1])) for index in sorted(blocked)],
         "blockedTraces": [position(int(edges[index][0])) + position(int(edges[index][1]))
                           for index in sorted(blocked_traces)],
@@ -270,12 +286,23 @@ def evaluate(networks: dict, hits: list[float], meaning: list[tuple], rays: list
     }
 
 
+def both(first: dict, second: dict) -> dict:
+    """What two checks of the same mesh found both times. Right after the level loads something can stand in the way
+    for a moment (XP1_003 rush: 3 of 5 connections blocked once were free in the running round): the check casts its
+    rays twice, a while apart, and a block has to hold."""
+    result = dict(second)
+    for key in ("blockedEdges", "blockedCentered", "blockedTraces", "blockedJunctions", "lowPoints", "insidePoints"):
+        seen = {tuple(entry) for entry in first.get(key) or []}
+        result[key] = [entry for entry in second.get(key) or [] if tuple(entry) in seen]
+    return result
+
+
 def merge(old: dict | None, new: dict) -> dict:
     """Earlier checks stay (a rebuilt mesh has the connections that are left)."""
     if not old:
         return new
     merged = dict(new)
-    for key in ("blockedEdges", "blockedTraces", "blockedJunctions", "lowPoints", "insidePoints"):
+    for key in ("blockedEdges", "blockedCentered", "blockedTraces", "blockedJunctions", "lowPoints", "insidePoints"):
         seen = {tuple(entry) for entry in old.get(key) or []}
         merged[key] = list(old.get(key) or []) + [entry for entry in new.get(key) or [] if tuple(entry) not in seen]
     return merged
@@ -284,6 +311,7 @@ def merge(old: dict | None, new: dict) -> dict:
 def summary(networks: dict, checks: dict) -> str:
     return (f"  check: {len(checks['blockedEdges'])} of {len(networks.get('edges') or [])} connections blocked "
             f"({len(checks.get('blockedTraces') or [])} along waypoints), "
+            f"{len(checks.get('blockedCentered') or [])} with moved corners (the census corners again), "
             f"{len(checks.get('blockedJunctions') or [])} junctions blocked, "
             f"{len(checks['lowPoints'])} points without room, {len(checks['insidePoints'])} inside of a solid "
             f"(of {len(networks.get('points') or [])})")

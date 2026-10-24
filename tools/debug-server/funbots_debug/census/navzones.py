@@ -56,6 +56,8 @@ COVER_RANGE = 3           # Cells in each of the 8 directions that are checked f
 ATTACH_HEIGHT = 1.0       # A waypoint belongs to a surface this close below or above it...
 ROAD_ATTACH_HEIGHT = 3.0  # ...a waypoint of a land vehicle path (where the vehicle was) this close.
 STEP_HEIGHT = 0.6         # Same as report.STEP_HEIGHT: what a straight line may step up or down per cell.
+CORNER_SHIFT = 2          # Cells a corner of a way may move to where it has more room (_center_corners).
+CORNER_ROOM = 1.0         # A corner with this much room (metres, also along its lines) stays where it is.
 MERGE_HEIGHT = 0.5        # Surfaces of the same cell from overlapping areas this close in height are the same.
 MESH_ONLY = ("spawn", "way")  # Kinds of areas that are no zones, only mesh (spawns, the ways from them to the targets).
 
@@ -306,6 +308,85 @@ def _simplify(grid: _Area, clearance: dict[Surface, float], way: list[Surface], 
     return result
 
 
+def _line_room(grid: _Area, clearance: dict[Surface, float], a: Surface, b: Surface, profile: Profile = SOLDIER,
+               allowed: set[Surface] | None = None) -> float | None:
+    """As _straight, the least clearance of the cells the straight line from a to b crosses (inf if none in between);
+    None where it isn't walkable."""
+    ax, _, az = grid.pos(a)
+    bx, _, bz = grid.pos(b)
+    samples = max(1, math.ceil(math.hypot(bx - ax, bz - az) / (grid.step / 2)))
+    current = a
+    room = math.inf
+    for index in range(1, samples + 1):
+        t = index / samples
+        cell = grid.cell_of(ax + (bx - ax) * t, az + (bz - az) * t)
+        if cell == (current[0], current[1]):
+            continue
+        if cell == (b[0], b[1]):
+            return room if (b == current or b in grid.links.get(current, []) or _diagonal(grid, current, b)) else None
+        nxt = None
+        y = grid.surfaces[current][0]
+        for key in grid.by_cell.get(cell, []):
+            if key in grid.links.get(current, []) or (abs(grid.surfaces[key][0] - y) <= STEP_HEIGHT and
+                                                      _diagonal(grid, current, key)):
+                nxt = key
+                break
+        if nxt is None or (allowed is not None and nxt not in allowed):
+            return None
+        value = clearance.get(nxt, 0.0)
+        if value <= 0.0 or value < profile.line_clearance:
+            return None
+        room = min(room, value)
+        current = nxt
+    return room if current == b else None
+
+
+def _center_corners(grid: _Area, clearance: dict[Surface, float], corners: list[Surface], profile: Profile = SOLDIER,
+                    allowed: set[Surface] | None = None) -> list[Surface]:
+    """Moves each corner of a simplified way (not its ends) up to CORNER_SHIFT cells to where the corner and both
+    straight lines to its neighbours have the most room. _simplify keeps the farthest corner the line still passes,
+    right at the end of what it goes round: MP_Subway conquest, a corner 0.1 m from the end of a barrier in the middle
+    of a 1.5 m gap, 60-90 bots per round ran into the barrier."""
+    result = list(corners)
+    for index in range(1, len(result) - 1):
+        before, corner, after = result[index - 1], result[index], result[index + 1]
+        y = grid.surfaces[corner][0]
+
+        def score(candidate: Surface) -> tuple[float, float] | None:
+            first = _line_room(grid, clearance, before, candidate, profile, allowed)
+            second = _line_room(grid, clearance, candidate, after, profile, allowed)
+            if first is None or second is None:
+                return None
+            length = grid.distance(before, candidate) + grid.distance(candidate, after)
+            return min(first, second, clearance.get(candidate, 0.0)), -length
+
+        best, best_score = corner, score(corner)
+        if best_score is None or best_score[0] >= CORNER_ROOM:
+            continue
+        for d_row in range(-CORNER_SHIFT, CORNER_SHIFT + 1):
+            for d_column in range(-CORNER_SHIFT, CORNER_SHIFT + 1):
+                for candidate in grid.by_cell.get((corner[0] + d_row, corner[1] + d_column), []):
+                    if candidate == corner or abs(grid.surfaces[candidate][0] - y) > STEP_HEIGHT \
+                            or (allowed is not None and candidate not in allowed):
+                        continue
+                    value = score(candidate)
+                    # More room only: the shortest way among equal ones stays where it was.
+                    if value is not None and value[0] > best_score[0]:
+                        best, best_score = candidate, value
+        result[index] = best
+    return result
+
+
+def _listed(entries: list | None, ends: list[float]) -> bool:
+    """Whether the connection between the two positions (a + b) is one of the entries (either way round, check.MATCH)."""
+    a, b = ends[:3], ends[3:]
+    for entry in entries or []:
+        if (math.dist(entry[:3], a) <= 0.3 and math.dist(entry[3:], b) <= 0.3) or \
+                (math.dist(entry[:3], b) <= 0.3 and math.dist(entry[3:], a) <= 0.3):
+            return True
+    return False
+
+
 def _cover(grid: _Area, key: Surface) -> int:
     """In how many of the 8 directions a wall is within COVER_RANGE cells (at chest height, or no floor)."""
     blocked = 0
@@ -369,11 +450,14 @@ def _round(pos) -> list[float]:
 
 def _network(grid: _Area, clearance: dict[Surface, float], allowed: set[Surface],
              walked: list[tuple[int, int, list[float], Surface | None]], nodes: _Nodes, inside, profile: Profile,
-             cover: bool, attached: tuple[list, _Nodes] | None = None, spawns: list | None = None) -> dict:
+             cover: bool, attached: tuple[list, _Nodes] | None = None, spawns: list | None = None,
+             keep_corners: list | None = None) -> dict:
     """Points, connections and junctions over the allowed surfaces. walked: the waypoints in the area that choose the
     parts that are kept and get attached ([path, point, position, surface]). attached: other waypoints to attach instead
     (walked, nodes), e.g. the paths cut at the zones (navpaths.py), while the parts still come from the census.
-    spawns: where the game spawns soldiers (on the ground), they keep their parts as well."""
+    spawns: where the game spawns soldiers (on the ground), they keep their parts as well. keep_corners: connections
+    ([a, b] positions, check.py "blockedCentered") the check found blocked with moved corners (_center_corners): they
+    keep the corners of _simplify, the next check decides on those."""
     components = [component for component in _components(grid, allowed) if len(component) >= MIN_COMPONENT]
     seeds = {key for _, _, _, key in walked if key is not None}
     for pos in spawns or []:
@@ -396,13 +480,24 @@ def _network(grid: _Area, clearance: dict[Surface, float], allowed: set[Surface]
             if a is not None and b is not None and a != b:
                 pairs.add((min(a, b), max(a, b)))
     edges = []
+    centered = []
     for a, b in sorted(pairs):
         way = _grid_way(grid, clearance, points[a], points[b], {a, b}, owner, profile)
         if way is None:
             continue
         corners = _simplify(grid, clearance, way, profile, surfaces)
+        # The length (what the connection costs the routes) is the one of the corners of _simplify: moved corners make
+        # the walk a little longer, the ways around a spot seemed longer than through it (XP1_003 rush: twice the bots
+        # on the stairs at (274, 96, -140) and stuck there).
+        straight = [grid.pos(key) for key in corners]
+        length = sum(math.dist(p, q) for p, q in zip(straight, straight[1:]))
+        ends = _round(grid.pos(points[a])) + _round(grid.pos(points[b]))
+        if not _listed(keep_corners, ends):
+            moved = _center_corners(grid, clearance, corners, profile, surfaces)
+            if moved != corners:
+                corners = moved
+                centered.append(ends)
         positions = [grid.pos(key) for key in corners]
-        length = sum(math.dist(p, q) for p, q in zip(positions, positions[1:]))
         edges.append([a, b, round(length, 1), [_round(pos) for pos in positions[1:-1]]])
     if cover:
         edges += _trace_edges(grid, owner, points, edges, walked, nodes)
@@ -462,6 +557,7 @@ def _network(grid: _Area, clearance: dict[Surface, float], allowed: set[Surface]
         "points": point_entries,
         "edges": edges,
         "attach": attach,
+        "centered": centered,
         "stats": {
             "kept": len(surfaces),
             "parts": len(kept),
@@ -962,7 +1058,8 @@ def build(census: dict, attach: dict | None = None, checks: dict | None = None, 
         soldier_attach = (_walked(grid, attach_nodes, attach_nodes.foot, ATTACH_HEIGHT)
                           + _walked(grid, attach_nodes, _roads(attach_nodes), ROAD_ATTACH_HEIGHT), attach_nodes)
     soldier = _network(grid, clearance, set(grid.surfaces), _walked(grid, nodes, nodes.foot, ATTACH_HEIGHT), nodes,
-                       inside_any, SOLDIER, True, soldier_attach, spawns=spawn_positions(census))
+                       inside_any, SOLDIER, True, soldier_attach, spawns=spawn_positions(census),
+                       keep_corners=(checks or {}).get("blockedCentered"))
     soldier = _reattach(check_apply(soldier, checks, spawn_positions(census)), checks)
     nav_paths = {int(path) for path, entry in (attach or {}).items() if entry.get("nav")}
     if nav_paths:
@@ -970,6 +1067,7 @@ def build(census: dict, attach: dict | None = None, checks: dict | None = None, 
     if loose:
         soldier = _attach_loose(soldier, loose, checks)
     data.update(points=soldier["points"], edges=soldier["edges"], attach=soldier["attach"],
+                centered=soldier.get("centered") or [],
                 stats=dict(soldier["stats"], surfaces=len(grid.surfaces)))
 
     # Land vehicles: wide, open, not too steep. The waypoints of vehicle-paths are the position of the vehicle, about a

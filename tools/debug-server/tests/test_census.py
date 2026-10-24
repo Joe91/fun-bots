@@ -234,6 +234,51 @@ class NavzonesTest(unittest.TestCase):
                     t = (10.0 - p[0]) / (q[0] - p[0])
                     self.assertTrue(4.0 <= p[2] + t * (q[2] - p[2]) <= 6.0)
 
+    def test_corner_in_the_middle_of_a_door(self):
+        # A 2.5 m door (rows 8-12): the simplified way leads past the end of the wall (row 11), its corner is moved to
+        # where the way through the door has the most room (MP_Subway conquest: a corner 0.1 m from the end of a
+        # barrier, the bots ran into it).
+        from funbots_debug.census import navzones
+        area = _rooms_area(True)
+        for row in (8, 12):
+            area["cells"][row][20] = [0.0, 1.0, 0, -1]
+        grid = navzones._Merged([area])
+        clearance = navzones._clearance(grid)
+
+        def key(row, column):
+            return grid.by_cell[(row, column)][0]
+
+        corners = navzones._center_corners(grid, clearance, [key(3, 10), key(11, 20), key(17, 30)],
+                                           navzones.SOLDIER, set(grid.surfaces))
+        line = [grid.pos(corner) for corner in corners]
+        crossings = [p[2] + (10.0 - p[0]) / (q[0] - p[0]) * (q[2] - p[2])
+                     for p, q in zip(line, line[1:]) if (p[0] - 10.0) * (q[0] - 10.0) <= 0 and p[0] != q[0]]
+        self.assertTrue(crossings)
+        for z in crossings:
+            self.assertTrue(4.75 <= z <= 5.25, z)
+
+    def test_connection_blocked_with_moved_corners_gets_the_census_corners(self):
+        from funbots_debug.census import navzones
+        area = _rooms_area(True)
+        for row in (8, 12):
+            area["cells"][row][20] = [0.0, 1.0, 0, -1]
+        census = {"paths": "MP_001_ConquestLarge0", "areas": [area], "entities": {},
+                  "nodes": {"1": _nodes_event(1, [[2.0, 0.0, 1.0], [3.0, 0.0, 1.5]]),
+                            "2": _nodes_event(2, [[17.0, 0.0, 8.5], [18.0, 0.0, 9.0]])}}
+        first = navzones.build(census)
+        self.assertTrue(first["centered"])
+        again = navzones.build(census, checks={"blockedCentered": first["centered"]})
+        self.assertEqual(again["centered"], [])
+
+        def corners(zone):
+            points = zone["points"]
+            return {tuple(points[a][:3] + points[b][:3]): tuple(map(tuple, c)) for a, b, _, c, *_ in zone["edges"]}
+        before, after = corners(first), corners(again)
+        for ends in first["centered"]:
+            key = tuple(ends) if tuple(ends) in after else tuple(ends[3:] + ends[:3])
+            self.assertIn(key, after)
+            self.assertNotEqual(before[key], after[key])
+
     def test_path_end_without_surface_attached_to_closest_point(self):
         # The ends of path 4 lie in a gap the census has no surfaces in (stairs down into a metro), 2.5 m from the
         # first room: attached straight to its closest point there.

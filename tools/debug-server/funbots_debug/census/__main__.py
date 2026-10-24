@@ -487,16 +487,28 @@ def command_check(options) -> int:
                 kill_bots(server)
             networks = json.loads(zones_file.read_text(encoding="utf-8"))
             rays, meaning = check.rays(networks, junctions_only=options.junctions)
-            hits: list[float] = []
-            for start in range(0, len(rays), check.CHUNK):
-                answer = server.request("/api/command?wait=120", {"type": "rays", "args": {
-                    "rays": rays[start:start + check.CHUNK], "flags": check.RAY_FLAGS}}, timeout=130.0)
-                result = answer.get("result") or {}
-                if "hits" not in result:
-                    raise RuntimeError(f"rays: {answer.get('error') or result.get('error') or answer}")
-                hits += result["hits"]
-            vehicles = check.vehicles_of(server.request("/api/state")) + check.vehicle_spawns_of(load(census_file))
-            found = check.evaluate(networks, hits, meaning, rays, vehicles)
+
+            def cast() -> dict:
+                hits: list[float] = []
+                for start in range(0, len(rays), check.CHUNK):
+                    answer = server.request("/api/command?wait=120", {"type": "rays", "args": {
+                        "rays": rays[start:start + check.CHUNK], "flags": check.RAY_FLAGS}}, timeout=130.0)
+                    result = answer.get("result") or {}
+                    if "hits" not in result:
+                        raise RuntimeError(f"rays: {answer.get('error') or result.get('error') or answer}")
+                    hits += result["hits"]
+                vehicles = check.vehicles_of(server.request("/api/state")) + check.vehicle_spawns_of(load(census_file))
+                return check.evaluate(networks, hits, meaning, rays, vehicles)
+
+            found = cast()
+            findings = ("blockedEdges", "blockedCentered", "blockedTraces", "blockedJunctions", "lowPoints", "insidePoints")
+            if options.twice and any(found.get(key) for key in findings):
+                time.sleep(check.RECHECK_WAIT)
+                again = cast()
+                held = check.both(found, again)
+                dropped = sum(len(found.get(key) or []) - len(held.get(key) or []) for key in findings)
+                print(f"  second pass: {dropped} finding(s) of the first one gone")
+                found = held
             print(check.summary(networks, found) + (" (junctions only)" if options.junctions else ""))
             merged = check.merge(check.load_checks(census_file), found)
             target = check.checks_file(census_file)
@@ -799,6 +811,8 @@ def main() -> int:
     checks.add_argument("--census", type=Path, default=CENSUS, help="where the checks are saved (next to the census)")
     checks.add_argument("--no-quiet", dest="quiet", action="store_false",
                         help="check the level as it runs (default: a new round, the bots killed at once)")
+    checks.add_argument("--once", dest="twice", action="store_false",
+                        help="one pass of the rays (default: a second one after check.RECHECK_WAIT, blocks have to hold)")
     checks.add_argument("--junctions", action="store_true",
                         help="only the junctions with the paths (fast; after a cut that added junctions)")
     checks.set_defaults(handler=command_check)

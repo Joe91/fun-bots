@@ -21,6 +21,31 @@ def _network():
 
 
 class CheckTest(unittest.TestCase):
+    def test_blocked_with_moved_corners_is_filed_apart(self):
+        # A connection whose corners the builder moved (navzones._center_corners) and the rays found blocked: the next
+        # cut gives it the corners of the census again instead of leaving it out.
+        from funbots_debug.census import check
+        networks = {"points": [[0.0, 0.0, 0.0, 2, 0, 0], [5.0, 0.0, 0.0, 2, 0, 0], [5.0, 0.0, 5.0, 2, 0, 0]],
+                    "edges": [[0, 1, 5.0, []], [1, 2, 5.0, []]], "attach": [],
+                    "centered": [[0.0, 0.0, 0.0, 5.0, 0.0, 0.0]]}
+        rays, meaning = check.rays(networks)
+        hits = [2.0 if what[0] == "edge" else (check.GROUND_ABOVE if what[0] == "ground" else -1) for what in meaning]
+        found = check.evaluate(networks, hits, meaning)
+        self.assertEqual(found["blockedCentered"], [[0.0, 0.0, 0.0, 5.0, 0.0, 0.0]])
+        self.assertEqual(found["blockedEdges"], [[5.0, 0.0, 0.0, 5.0, 0.0, 5.0]])
+
+    def test_a_block_has_to_hold_in_both_passes(self):
+        from funbots_debug.census import check
+        first = {"version": 1, "blockedEdges": [[0, 0, 0, 5, 0, 0], [5, 0, 0, 10, 0, 0]], "blockedTraces": [],
+                 "blockedJunctions": [[1, 0, 1, 2, 0, 2]], "lowPoints": [[3, 0, 3]], "insidePoints": []}
+        second = {"version": 1, "blockedEdges": [[5, 0, 0, 10, 0, 0], [10, 0, 0, 15, 0, 0]], "blockedTraces": [],
+                  "blockedJunctions": [], "lowPoints": [[3, 0, 3]], "insidePoints": [[4, 0, 4]]}
+        held = check.both(first, second)
+        self.assertEqual(held["blockedEdges"], [[5, 0, 0, 10, 0, 0]])
+        self.assertEqual(held["blockedJunctions"], [])
+        self.assertEqual(held["lowPoints"], [[3, 0, 3]])
+        self.assertEqual(held["insidePoints"], [])
+
     def test_blocked_connection_drops_what_lies_behind_it(self):
         result = check.apply(_network(), {"blockedEdges": [[5.0, 0.0, 0.0, 10.0, 0.0, 0.0]]})
         self.assertEqual([point[0] for point in result["points"]], [0.0, 5.0])
