@@ -70,3 +70,6 @@ This is the changelog for release **V3.6.0**. Don't forget to [join us on Discor
 * Junctions re-checked on all maps; recorded ways from cut-off spawns on 11 maps; MP_017 Rush fixed
 * All maps: meshes rescanned from the floors only, stairs and buildings with several storeys are covered now; MP_Subway
   Rush no longer leads through a wall north of MCOM 4
+* All maps: meshes cut again, the corners of the mesh keep away from the ends of walls and barriers (MP_Subway
+  Conquest: 60-90 bots a round ran into a barrier near B and C, now about 6) and the check finds walls through a
+  corner

@@ -50,19 +50,25 @@ deck can be picked from below (`Route` nil, the bot waits a cycle). There are mo
 junction of path 23 at its first waypoint clips a pillar at (-97.7, 69.8, -123.3). MP_017: bots on path 74 (boat/AAV to
 the beach) stand off the mesh for 30-70 s.
 
-**P13. MP_Subway conquest: a corner at the end of a barrier.** 60-92 bots per round are put across at (-167, 65, -432),
-about 5 bot-minutes stuck (median 4.5 s each). A breakable barrier at x -166.6 has a gap from z -432.9 to -431.4; the
-connection 614-492 leads through it over the corner (-166.5, -431.5), 0.1 m from the end of the barrier. The bots take
-the corner as reached 1.0-1.3 m before it, head for 492 and run into the barrier. The census grid (0.5 m) sees the gap,
-but A* only avoids cells with less than 0.5 m clearance and the simplified line hugs the end: `line_clearance` 1.0
-would fix it but quadruples the corners of the level (675 -> 2698, offline build). Options: a corner placed in the
-middle of a gap (most clearance among the cells of the way next to it), or a check ray offset by the radius of a
-soldier. Also prepared: no blame for a connection with corners when the bot didn't get back to its point (bots east
-of the barrier blamed 614-492 as well). Once (2026-10-20): (-191, 59, -265) 85 times by 18 bots.
+**P13. What is left of the corners at the ends of obstacles.** All 97 layouts were cut again on 2026-10-24 with
+`navzones._center_corners` (a corner with less than 1 m room moves up to 2 cells to more room; routes keep the cost of
+the census corners; a connection the check blocks with moved corners gets the census corners again, `blockedCentered`)
+and the check casting across each corner, twice. MP_Subway conquest: the bots that ran into the barrier at (-167, 65,
+-432) went from 29 to 6 a round. Left there: bots that drift 1.5 m east of 387-614 into a structure at the south end of
+the barrier (-167.8, 65, -435.9), about 10 a round. MP_001 squad rush: the loose end of path 1 at (-64, 75, 38) gets
+attached to the next waypoint at every cut and the check blocks it (13 m through a wall), 12 times in a row; lint is
+clean without it. Gains elsewhere are modest (per rush stage `zone_stuck` 0-25 % lower, conquest about the same); a new
+census changes nothing (cells measured again: 0.00 % differ).
 
-**P14. The census check misses a wall through a corner of a connection.** The rays of both stretches end on its
-surface (the corner of MP_Subway conquest edge 748-750 at (-82, 68.5, -115.5) lies in a solid). Prepared: `check.py`
-casts across each corner (`CORNER_REACH` 0.4 m); applies with the next check + cut of a level.
+**P15. XP3_Desert conquest: a corner of the mesh under a parked vehicle.** The Tunguska at spawn ru 1 (-815.5, 68.7,
+-148.4) stands on a corner of the mesh (the check leaves out hits next to vehicle spawns: they usually drive off). The
+bots take no AA vehicle, it stays: 1-2 bots a round walk into it (21-46 `zone_stuck`, `vehicle_unreachable` every 30 s
+for the buggies behind it).
+
+**P16. MP_013 rush: bots slide down the slope off paths 8 and 9** (stage 3, MCOMs 5/6) and walk straight back to
+their waypoint 30 m away at the same height: traps of 30-55 s at (-10..15, 215, 0) and (-112, 225, -14), then
+`off_mesh` / `no_progress`. 0-6 traps a round on the old and the new mesh (P13 pilot: 2.1 vs 1.3 in 8 / 9 rounds),
+more the longer a round stays in stage 3.
 
 **M0. Domination (XP2).** The zone of Factory's C has a single mesh point (capture radius 4 m, points 5 m apart): the
 census needs a point at the flag for small zones. Each level has two HQs per team of the same name (NavZones warns and
