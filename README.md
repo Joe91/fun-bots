@@ -12,7 +12,7 @@ Do you enjoy this mod? Feel free to [Donate](https://www.paypal.me/joe91de)
 Quite fun to use bots on different maps and gamemodes!
 - Bots can walk around, shoot and attack enemies using grenades, RPGs and other weaponry. [Which maps are supported?](https://github.com/Joe91/fun-bots/blob/master/Supported-maps.md)
 - Bots can drive all kinds of vehicles (on supported maps)
-- Need something a bit more? [Create your own traces](https://github.com/Joe91/fun-bots/wiki/Traces) using an easy-to-use trace manager (press <kbd>F12</kbd> in a game)
+- Need something a bit more? [Support a new map](https://github.com/Joe91/fun-bots/blob/master/tools/debug-server/NEW_MAP.md): record paths in the game (press <kbd>F12</kbd>), the debug-server does the rest
 - And all this, [highly configurable](https://github.com/Joe91/fun-bots/wiki/Basic-Configuration) to suit your needs using an easy-to-use in-game editor (accessible by pressing <kbd>F12</kbd>).
 - Want to see some Gameplay? [Here is a gameplay video](https://www.youtube.com/watch?v=TRA7RjqXRgk&lc=UgwP_9avBu3YTHdhSiZ4AaABAg.9UmWfabUSZ39UmcTFJsgOc) by EUWINPRO.
 
