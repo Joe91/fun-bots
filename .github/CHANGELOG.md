@@ -60,6 +60,9 @@ This is the changelog for release **V3.6.0**. Don't forget to [join us on Discor
   (40 % fewer bots stuck on the ship)
 * Levels without a navigation mesh (community mapfiles): bots spawn at the spawns of the game and follow the objectives
   on the paths again (MCOMs are armed)
+* Capture the Flag: bots spawn on the paths and walk them again (they spawned far from them: 4 % of the time stuck)
+* Deathmatch modes: a bot that spawns far from the paths starts on the closest one (XP3_Alborz Team Deathmatch: bots
+  stood at walls for minutes, 6.5 % of the time stuck, now 0.2 %)
 * Many more small fixes
 
 ### Updated maps

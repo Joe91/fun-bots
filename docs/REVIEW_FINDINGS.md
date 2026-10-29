@@ -2,7 +2,8 @@
 
 Open items from the code reviews of `ext/`, `WebUI/` and `fun-bots-helper/` and from the clientless playtests. Fixed
 items are removed; their write-ups are in the git history of this file. Checked against the code and playtests of
-2026-10-18 (Rush, Squad Rush, Conquest, Domination, CTF, TDM, Gun Master, Squad Deathmatch).
+2026-10-29 for v3.6.0 (47 rounds on 36 layouts: Rush, Squad Rush, Conquest, Conquest Assault, Tank and Air
+Superiority, Scavenger, Domination, CTF, TDM, Gun Master, Squad Deathmatch).
 
 ---
 
@@ -10,10 +11,11 @@ items are removed; their write-ups are in the git history of this file. Checked 
 
 **P0. Rush balance differs by level.** 2026-10-18 (12 layouts, 900 s, factor 0.85): 1.7 MCOMs destroyed per 10 min.
 XP4_Parl lost all 8 in 9 min and MP_001 lost 6, while XP1_003, XP5_001, XP4_Quake and MP_018 lost only MCOM 1 before
-the attackers ran out of tickets. MP_017 varies most: since the kills of the mod cost no tickets (2026-10-18) one of
-two rounds destroyed 5 MCOMs, the other armed none (the attackers didn't get ashore: 46 of 117 lives began there,
+the attackers ran out of tickets (XP5_003: 0-1 MCOMs in four rounds of 10 min). MP_017 varies most: since the kills of
+the mod cost no tickets (2026-10-18) one of two rounds destroyed 5 MCOMs, the other armed none (the attackers didn't get ashore: 46 of 117 lives began there,
 against 198 of 239). 2026-10-20 (22 rounds of 900 s): 0-6 MCOMs per round, 0 in most. With the attackers getting off
-the ship again (Next 1) stage 1 still mostly holds: the attack fails at the beach and the MCOMs, not on the ship.
+the ship again (2026-10-20: boats, AMTRAC passenger seats) stage 1 still mostly holds: the attack fails at the beach
+and the MCOMs, not on the ship.
 
 **P4. Connections with a single way.** From the recordings (`routes.py`): MP_007 Rush spawn 6 ↔ spawn us 3 (paths
 39/5), mcom 2 ↔ spawn us 3, mcom 1 ↔ spawn 5; XP3_Valley Rush mcom 2 ↔ spawn ru 8 (path 38). Record another path
@@ -70,6 +72,12 @@ their waypoint 30 m away at the same height: traps of 30-55 s at (-10..15, 215, 
 `off_mesh` / `no_progress`. 0-6 traps a round on the old and the new mesh (P13 pilot: 2.1 vs 1.3 in 8 / 9 rounds),
 more the longer a round stays in stage 3.
 
+**P17. XP4_FD rush stage 3: the routes lead the attackers out of the combat area.** Up the staircases at (40, 68,
+-20) and (40, 68, -40) onto the floor above (y 70), outside the area of stage 3: they turn back, wait at the border
+(`Bot:OnCombatAreaLeft`, `BORDER_WAIT`) and take the same way again, 20-25 times a minute while stage 3 lasts (2026-10-29:
+130-190 border waits a round, 7-10 `no_progress` respawns). The routes don't know the combat area. Tried: the spot where a
+bot leaves the area as team danger (`NavZones:OnKilled`): no change (23 vs 25 a minute), removed.
+
 **M0. Domination (XP2).** The zone of Factory's C has a single mesh point (capture radius 4 m, points 5 m apart): the
 census needs a point at the flag for small zones. Each level has two HQs per team of the same name (NavZones warns and
 drops the second). Many spawns land next to enemies (XP2_Office 49 %, XP2_Factory 35 %).
@@ -104,13 +112,5 @@ with ~120 such respawns didn't crash, so it isn't proven. Earlier: loading XP5_0
 
 ## Next
 
-1. **MP_017 Rush (prepared 2026-10-20, uncommitted, to test):** three causes kept the attackers on the ship. The boats
-   respawn 14 m off the dock (no mesh point within the 8 m of a vehicle target), the AAV 3.1 m below it: a second
-   ring of 15 m / 4.5 m (`NavRoutes:_ActionTarget`). Bots that fell into the water of the well deck gave up the
-   connections of the dock until it was cut off as a small part (`BlockEdge`, `MIN_PART`): no blame for a connection
-   more than 1.5 m above the bot (`Bot:_ZoneGiveUpConnection`). 12 seats for 18 attackers: walkers also take the passenger seats
-   of an AMTRAC (`Vehicles:WalkInPassengerSeats`). A/B 4 against 4 rounds: full boats 65 % instead of 39 %, the AAV
-   with 5 instead of 3, 40 % fewer stranded kills; MCOMs unchanged (P0). Left: a bot put into a far vehicle after
-   its spawn (the crash suspect of P7), P10.
-2. **Z6:** the parts of the mesh with the one-way connections (107 on 34 levels now).
-3. **P4/P5:** record the missing paths (single ways, deathmatch obstacles).
+1. **Z6:** the parts of the mesh with the one-way connections (107 on 34 levels now).
+2. **P4/P5:** record the missing paths (single ways, deathmatch obstacles).
