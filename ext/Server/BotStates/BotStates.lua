@@ -1,5 +1,5 @@
 ---@class BotStates
----@overload fun(p_Player: Player):BotStates
+---@overload fun():BotStates
 BotStates = class('BotStates')
 
 function BotStates:__init()
@@ -10,7 +10,6 @@ function BotStates:__init()
 		Reviving = nil,
 		Repairing = nil,
 
-		-- InVehicleIdle = require('BotStates/StateInVehicleIdle'),
 		InVehicleMoving = require('BotStates/StateInVehicleMoving'),
 		InVehicleAttacking = require('BotStates/StateInVehicleAttacking'),
 
@@ -47,17 +46,6 @@ function BotStates:IsInVehicleState(p_State)
 	end
 end
 
-function BotStates:IsAttackingState(p_State)
-	if p_State == self.States.Attacking or
-		p_State == self.States.InVehicleAttacking or
-		p_State == self.States.OnVehicleAttacking or
-		p_State == self.States.StaticAttacking then
-		return true
-	else
-		return false
-	end
-end
-
 function BotStates:IsOnVehicleState(p_State)
 	if p_State == self.States.OnVehicleAttacking or
 		p_State == self.States.OnVehicleIdle then
@@ -70,20 +58,6 @@ end
 function BotStates:IsStaticState(p_State)
 	if p_State == self.States.StaticMovement or
 		p_State == self.States.StaticAttacking then
-		return true
-	else
-		return false
-	end
-end
-
-function BotStates:IsVehicleState(p_State)
-	if p_State == self.States.InVehicleAttacking or
-		p_State == self.States.InVehicleMoving or
-		p_State == self.States.InVehicleJetControl or
-		p_State == self.States.InVehicleChopperControl or
-		p_State == self.States.InVehicleStationaryAaControl or
-		p_State == self.States.OnVehicleAttacking or
-		p_State == self.States.OnVehicleIdle then
 		return true
 	else
 		return false

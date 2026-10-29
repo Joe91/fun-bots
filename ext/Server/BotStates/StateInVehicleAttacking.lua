@@ -13,7 +13,6 @@ StateInVehicleAttacking = class('StateInVehicleAttacking')
 
 -- bot-methods
 local m_Vehicles = require('Vehicles')
-local m_AirTargets = require('AirTargets')
 local m_VehicleAiming = require('Bot/VehicleAiming')
 local m_VehicleAttacking = require('Bot/VehicleAttacking')
 local m_VehicleMovement = require('Bot/VehicleMovement')
@@ -88,7 +87,7 @@ function StateInVehicleAttacking:UpdateFast(p_Bot, p_DeltaTime)
 
 	-- Fast code.
 	if m_Vehicles:IsAirVehicle(p_Bot.m_ActiveVehicle) then -- TODO: simplyfy once Gunship has own state and handling
-		m_VehicleAiming:UpdateAimingVehicle(p_Bot, true)
+		m_VehicleAiming:UpdateAimingVehicle(p_Bot, true, p_DeltaTime)
 	else
 		if p_Bot._VehicleMoveWhileShooting and m_Vehicles:IsNotVehicleTerrain(p_Bot.m_ActiveVehicle, VehicleTerrains.Air) then
 			if p_Bot.m_Player.controlledEntryId == 0 and not s_IsStationaryLauncher then -- Only if driver.
@@ -96,10 +95,10 @@ function StateInVehicleAttacking:UpdateFast(p_Bot, p_DeltaTime)
 				m_VehicleMovement:UpdateTargetMovementVehicle(p_Bot, p_DeltaTime)
 			end
 		end
-		m_VehicleAiming:UpdateAimingVehicle(p_Bot, false)
+		m_VehicleAiming:UpdateAimingVehicle(p_Bot, false, p_DeltaTime)
 	end
 
-	m_VehicleMovement:UpdateYawVehicle(p_Bot, true, s_IsStationaryLauncher)
+	m_VehicleMovement:UpdateYawVehicle(p_Bot, true, s_IsStationaryLauncher, p_DeltaTime)
 end
 
 ---update in every frame

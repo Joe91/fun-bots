@@ -12,7 +12,6 @@ local m_Console = require('Commands/Console')
 function PermissionManager:__init()
 	self.m_Permissions = {}
 	self.m_Guid_Players = {}
-	self.m_Names_Players = {}
 	self.m_Events = {
 		ModuleLoaded = Events:Subscribe('Extension:Loaded', self, self.__boot)
 	}
@@ -44,7 +43,7 @@ function PermissionManager:__boot()
 
 	m_Logger:Write('Loading ' .. #s_Permissions .. ' permissions.')
 
-	for l_Name, l_Value in pairs(s_Permissions) do
+	for _, l_Value in pairs(s_Permissions) do
 		if self.m_Guid_Players[l_Value.PlayerName] == nil then
 			self.m_Guid_Players[l_Value.PlayerName] = l_Value.GUID
 		end
@@ -74,7 +73,8 @@ function PermissionManager:GetPermissions(p_Name)
 		return nil
 	end
 
-	return self.m_Permissions[p_Name]
+	-- p_Name can also be a Player object; permissions are keyed by name.
+	return self.m_Permissions[s_Player.name]
 end
 
 function PermissionManager:AddPermission(p_Name, p_Permission)
@@ -95,8 +95,8 @@ function PermissionManager:AddPermission(p_Name, p_Permission)
 		self.m_Permissions[p_Name][#self.m_Permissions[p_Name] + 1] = p_Permission
 	end
 
-	local s_Single = m_Database:Single('SELECT * FROM `FB_Permissions` WHERE `PlayerName`=\'' ..
-		p_Name .. '\' AND `Value`=\'' .. p_Permission .. '\' LIMIT 1')
+	local s_Single = m_Database:Single('SELECT * FROM `FB_Permissions` WHERE `PlayerName`=' ..
+		m_Database:Quote(p_Name) .. ' AND `Value`=' .. m_Database:Quote(p_Permission) .. ' LIMIT 1')
 	local s_Guid = '0'
 
 	if s_Player ~= nil then
@@ -133,7 +133,7 @@ end
 function PermissionManager:ExtendPermissions(p_Permissions)
 	local s_Result = {}
 
-	for l_Index, l_Permission in pairs(p_Permissions) do
+	for _, l_Permission in pairs(p_Permissions) do
 		local s_Parts = l_Permission:split('.')
 		local s_Temp = ''
 
@@ -230,6 +230,25 @@ function PermissionManager:HasPermission(p_Player, p_Permission)
 	end
 
 	return s_Result
+end
+
+---Subscribe to a client NetEvent whose handler only runs for players with the given permission.
+---The client hides these actions from players without permission, but the server must not rely on that.
+---@param p_EventName string
+---@param p_Permission string
+---@param p_Context table
+---@param p_Callback fun(p_Context: table, p_Player: Player, ...)
+---@return NetEvent
+function PermissionManager:SubscribeNetEvent(p_EventName, p_Permission, p_Context, p_Callback)
+	return NetEvents:Subscribe(p_EventName, function(p_Player, ...)
+		if not self:HasPermission(p_Player, p_Permission) then
+			m_Logger:Warning('Rejected ' .. p_EventName .. ' from ' .. tostring(p_Player and p_Player.name) ..
+				' (missing permission ' .. p_Permission .. ')')
+			return
+		end
+
+		p_Callback(p_Context, p_Player, ...)
+	end)
 end
 
 function PermissionManager:Revoke(p_Name, p_Permission)

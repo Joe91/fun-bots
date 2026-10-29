@@ -12,19 +12,23 @@
 	- Shoot with selected weapon (don't look in default direction)
 	- Without further moving, enter "!car" in the chat
 	- Offset of the relevant Indexes will be printed out
+10. Or automatic: "!aimeval on", let bots (or yourself) shoot with the vehicle, "!aimeval report".
+	- Prints measured Offset and AimOffset per seat / weapon, the part that really follows the gun,
+	  the aim-error of the bots and measured bullet-speed / gravity.
 --]]
 
 ---@class VehicleDataInner
 ---@field Name string
 ---@field Type VehicleTypes|integer
 ---@field Terrain VehicleTerrains|integer
----@field Parts table<integer, integer|nil>
+---@field Parts table<integer, integer|nil> Part that follows the gun. -1 = no aimable weapon (bots don't attack), -2 = aimed with the whole vehicle.
 ---@field Speed integer[]
 ---@field Drop number[]
 ---@field Team TeamId|integer|nil
 ---@field Offset Vec3[]
 ---@field FirstPassengerSeat integer
 ---@field RotationOffset Vec3[]|nil
+---@field AimOffset Vec3[]|nil Vec3(yaw, pitch, 0) of the shot relative to the aiming-part, same structure as Offset. Measure with "!aimeval".
 
 ---@class VehicleData
 ---@type VehicleDataInner[]
@@ -219,7 +223,6 @@ VehicleData = {
 		Drop = { 0.0 },
 		Offset = { Vec3(0.169, 0.562, -1.230) }
 	},
-	-- TODO: Handling of Light vehicle needed?
 	["VodnikPhoenix"] = {
 		Name = "[VODNIK AA]",
 		Type = VehicleTypes.LightAA,
@@ -343,8 +346,8 @@ VehicleData = {
 		Name = "[A-10 THUNDERBOLT]",
 		Type = VehicleTypes.Plane,
 		Terrain = VehicleTerrains.Air,
-		Parts = { { -1, -1 } },
-		Speed = { { 900, 10000 } },
+		Parts = { { -2, -2 } },
+		Speed = { { 880, 10000 } },
 		Drop = { { 0.0, 0.0 } },
 		Offset = { { Vec3(0.0, 1.534, 5.110), Vec3(0.0, 1.534, 5.110) } }
 	},
@@ -352,8 +355,8 @@ VehicleData = {
 		Name = "[A-10 THUNDERBOLT]",
 		Type = VehicleTypes.Plane,
 		Terrain = VehicleTerrains.Air,
-		Parts = { { -1, -1 } },
-		Speed = { { 900, 10000 } },
+		Parts = { { -2, -2 } },
+		Speed = { { 880, 10000 } },
 		Drop = { { 0.0, 0.0 } },
 		Offset = { { Vec3(0.0, 1.534, 5.110), Vec3(0.0, 1.534, 5.110) } }
 	},
@@ -361,8 +364,8 @@ VehicleData = {
 		Name = "[F/A-18E SUPER HORNET]",
 		Type = VehicleTypes.Plane,
 		Terrain = VehicleTerrains.Air,
-		Parts = { { -1, -1 } },
-		Speed = { { 900, 10000 } },
+		Parts = { { -2, -2 } },
+		Speed = { { 880, 10000 } },
 		Drop = { { 0.0, 0.0 } },
 		Offset = { { Vec3(0.0, 0.880, 6.540), Vec3(0.0, 0.880, 6.540) } }
 	},
@@ -370,8 +373,8 @@ VehicleData = {
 		Name = "[F/A-18E SUPER HORNET]",
 		Type = VehicleTypes.Plane,
 		Terrain = VehicleTerrains.Air,
-		Parts = { { -1, -1 } },
-		Speed = { { 900, 10000 } },
+		Parts = { { -2, -2 } },
+		Speed = { { 880, 10000 } },
 		Drop = { { 0.0, 0.0 } },
 		Offset = { { Vec3(0.0, 0.880, 6.540), Vec3(0.0, 0.880, 6.540) } }
 	},
@@ -379,8 +382,8 @@ VehicleData = {
 		Name = "[SU-25TM FROGFOOT]",
 		Type = VehicleTypes.Plane,
 		Terrain = VehicleTerrains.Air,
-		Parts = { { -1, -1 } },
-		Speed = { { 900, 10000 } },
+		Parts = { { -2, -2 } },
+		Speed = { { 880, 10000 } },
 		Drop = { { 0.0, 0.0 } },
 		Offset = { { Vec3(0.0, 1.031, 3.853), Vec3(0.0, 1.031, 3.853) } }
 	},
@@ -388,8 +391,8 @@ VehicleData = {
 		Name = "[SU-35BM FLANKER-E]",
 		Type = VehicleTypes.Plane,
 		Terrain = VehicleTerrains.Air,
-		Parts = { { -1, -1 } },
-		Speed = { { 900, 10000 } },
+		Parts = { { -2, -2 } },
+		Speed = { { 880, 10000 } },
 		Drop = { { 0.0, 0.0 } },
 		Offset = { { Vec3(0.0, 1.549, 8.190), Vec3(0.0, 1.549, 8.190) } }
 	},
@@ -397,8 +400,8 @@ VehicleData = {
 		Name = "[SU-37]",
 		Type = VehicleTypes.Plane,
 		Terrain = VehicleTerrains.Air,
-		Parts = { { -1, -1 } },
-		Speed = { { 900, 10000 } },
+		Parts = { { -2, -2 } },
+		Speed = { { 880, 10000 } },
 		Drop = { { 0.0, 0.0 } },
 		Offset = { { Vec3(0.0, 1.549, 8.190), Vec3(0.0, 1.549, 8.190) } }
 	},
@@ -406,8 +409,8 @@ VehicleData = {
 		Name = "[F-35]",
 		Type = VehicleTypes.Plane,
 		Terrain = VehicleTerrains.Air,
-		Parts = { { -1, -1 } },
-		Speed = { { 900, 10000 } },
+		Parts = { { -2, -2 } },
+		Speed = { { 880, 10000 } },
 		Drop = { { 0.0, 0.0 } },
 		Offset = { { Vec3(-0.001, 1.025, 5.963), Vec3(-0.001, 1.025, 5.963) } }
 	},
@@ -496,7 +499,7 @@ VehicleData = {
 		Name = "[Z-11W]",
 		Type = VehicleTypes.ScoutChopper,
 		Terrain = VehicleTerrains.Air,
-		Parts = { { -1, -1 }, -1, -1, -1 },
+		Parts = { { -2, -2 }, -1, -1, -1 },
 		Speed = { { 900, 10000 }, 350, 350, 350 },
 		Drop = { { 0.0, 0.0 }, 9.81, 9.81, 9.81 },
 		FirstPassengerSeat = 2,
@@ -506,7 +509,7 @@ VehicleData = {
 		Name = "[Z-11W]",
 		Type = VehicleTypes.ScoutChopper,
 		Terrain = VehicleTerrains.Air,
-		Parts = { { -1, -1 }, -1, -1, -1 },
+		Parts = { { -2, -2 }, -1, -1, -1 },
 		Speed = { { 900, 10000 }, 350, 350, 350 },
 		Drop = { { 0.0, 0.0 }, 9.81, 9.81, 9.81 },
 		FirstPassengerSeat = 2,
@@ -587,8 +590,8 @@ VehicleData = {
 		Parts = { -1, { 1, 3 }, { 0, 2 } },
 		Speed = { 300, { 600, 900 }, { 250, 900 } },
 		Drop = { 0.0, { 0.0, 0.0 }, { 0.0, 0.0 } },
-		--FirstPassengerSeat = 3, although the 1st one should be the piolt one is disabled due to the auto driving logic in a certain orbit
-		FirstPassengerSeat = 4,                                                                                                                         --Lets try with 4 as its index ?
+		-- Seat 3 (first gunner) is left out: it is driven by the auto-orbit logic.
+		FirstPassengerSeat = 4,
 		RotationOffset = { Vec3(0, 0, 0), { Vec3(math.pi / 2, 0.52, 0), Vec3(math.pi / 2, 0, 0) }, { Vec3(math.pi / 2, 0.375, 0), Vec3(math.pi / 2, 0, 0) } } -- use yaw and pitch as offset here
 	},
 	-- AA Stationary.

@@ -8,6 +8,72 @@ function Utilities:__init()
 	-- Nothing to do.
 end
 
+-- SharedUtils:GetTime() only counts whole seconds. GetTimeNS() has 1 ms resolution, anchored once to the Unix-time.
+local s_EpochOffset = SharedUtils:GetTime() - SharedUtils:GetTimeNS() / 1000000000
+
+---Unix-time in s with sub-second resolution (unlike SharedUtils:GetTime()). Use it for all timings below 1 s.
+---@return number
+function Utilities:GetTime()
+	return s_EpochOffset + SharedUtils:GetTimeNS() / 1000000000
+end
+
+---Whether the capture point is a base (HQ): it can't be captured (CapturableType 1). From the engine, the names don't
+---always end with "HQ" (XP1_004 conquest assault: "_US_HQ_1").
+---@param p_CapturePoint CapturePointEntity|Entity
+---@return boolean
+function Utilities:IsHq(p_CapturePoint)
+	local s_Data = p_CapturePoint.data
+	if s_Data ~= nil and s_Data:Is('CapturePointEntityData') then
+		return CapturePointEntityData(s_Data).capturableType == 1
+	end
+	return string.sub(CapturePointEntity(p_CapturePoint).name, -2) == 'HQ'
+end
+
+-- The raycasts return max 5 hits at the moment.
+local MAX_RAY_HITS = 5
+-- A hit on a vehicle this close to the target-point counts as a hit on the target-vehicle.
+local VEHICLE_HIT_RADIUS = 10.0
+
+---Evaluates a collision-raycast. It stops at the first solid hit. All hits before it are parts the ray passed
+---through (windows, fences, ...), so only the last hit can block the sight.
+---Only uses the data of the hits: casting the rigidBody and reading its userData (raw engine-pointer) crashes
+---the game, if the hit entity is no physics-entity or already destroyed.
+---@param p_RayHits RayCastHit[]
+---@param p_PassThroughFlags integer MaterialFlags the ray passes through
+---@param p_TargetPos Vec3 end-point of the ray
+---@param p_TargetIsVehicle boolean the ray may end on the hull of the target-vehicle
+---@return boolean
+function Utilities:IsInSight(p_RayHits, p_PassThroughFlags, p_TargetPos, p_TargetIsVehicle)
+	local s_HitCount = #p_RayHits
+	if s_HitCount == 0 then
+		return true -- Nothing in the way. The target-point can be above the hull of low vehicles.
+	end
+
+	local s_LastHit = p_RayHits[s_HitCount]
+	local s_RigidBody = s_LastHit.rigidBody
+	if s_RigidBody == nil then
+		return false
+	end
+
+	if p_TargetIsVehicle and s_RigidBody:Is('DynamicPhysicsEntity') and
+		s_LastHit.position:Distance(p_TargetPos) < VEHICLE_HIT_RADIUS then
+		return true
+	end
+
+	-- The ray might have stopped before the target.
+	if s_HitCount >= MAX_RAY_HITS then
+		return false
+	end
+
+	-- The ray reached the target-point and only passed see-through parts.
+	local s_Material = s_LastHit.material
+	if s_Material == nil or not s_Material:Is('MaterialContainerPair') then
+		return false
+	end
+
+	return (MaterialContainerPair(s_Material).flagsAndIndex & p_PassThroughFlags) ~= 0
+end
+
 ---@param p_Player Player
 ---@param p_IsTarget boolean
 ---@param p_AimForHead boolean
@@ -16,7 +82,7 @@ function Utilities:getCameraPos(p_Player, p_IsTarget, p_AimForHead)
 	return Vec3(0.00, self:getTargetHeight(p_Player.soldier, p_IsTarget, p_AimForHead), 0.00)
 end
 
----@param p_Soldier Soldier
+---@param p_Soldier SoldierEntity
 ---@param p_IsTarget boolean
 ---@param p_AimForHead boolean
 ---@return number
@@ -78,6 +144,80 @@ function Utilities:DistanceFast(p_PosA, p_PosB)
 	return (math.abs(p_PosA.x - p_PosB.x) +
 		math.abs(p_PosA.y - p_PosB.y) +
 		math.abs(p_PosA.z - p_PosB.z))
+end
+
+---Pitch of a vehicle from the Euler angles of its rotation (x = yaw, y = roll, z = pitch).
+---The roll correction is clamped so the value stays finite while banking towards 90°.
+---@param p_Euler Vec3
+---@return number
+function Utilities:GetPitchFromEuler(p_Euler)
+	local s_CosRoll = math.cos(p_Euler.y)
+
+	if math.abs(s_CosRoll) < 0.2 then
+		s_CosRoll = s_CosRoll < 0 and -0.2 or 0.2
+	end
+
+	return -p_Euler.z / s_CosRoll
+end
+
+---Attitude of an object, taken directly from the axes of its transform (no Euler decomposition, so no
+---coupling between the angles and no singularities while flying).
+---yaw: same convention as the target yaw of the bots (atan(dz, dx) shifted to [0, 2pi], decreasing = turning left).
+---pitch: positive = nose up. roll: positive = rolled right (left side up).
+---@param p_Transform LinearTransform
+---@return number yaw
+---@return number pitch
+---@return number roll
+function Utilities:GetYawPitchRoll(p_Transform)
+	local s_Forward = p_Transform.forward
+	local s_AtanDzDx = math.atan(s_Forward.z, s_Forward.x)
+	local s_Yaw = (s_AtanDzDx > math.pi / 2) and (s_AtanDzDx - math.pi / 2) or (s_AtanDzDx + 3 * math.pi / 2)
+	local s_Pitch = math.asin(math.max(-1.0, math.min(1.0, s_Forward.y)))
+	-- Bank angle around the forward axis, independent of the pitch.
+	local s_Roll = math.atan(p_Transform.left.y, p_Transform.up.y)
+	return s_Yaw, s_Pitch, s_Roll
+end
+
+---Yaw and pitch deviation of a direction relative to the orientation of a transform.
+---Works on plain numbers: Vec3 math allocates and this runs every fast update for vehicle bots.
+---@param p_Transform LinearTransform
+---@param p_DirX number direction to the target (does not need to be normalized)
+---@param p_DirY number
+---@param p_DirZ number
+---@return number yawDeviation
+---@return number pitchDeviation
+function Utilities:GetDeviationFromTransform(p_Transform, p_DirX, p_DirY, p_DirZ)
+	local s_Length = math.sqrt(p_DirX * p_DirX + p_DirY * p_DirY + p_DirZ * p_DirZ)
+	if s_Length > 0 then
+		p_DirX, p_DirY, p_DirZ = p_DirX / s_Length, p_DirY / s_Length, p_DirZ / s_Length
+	end
+
+	local s_Forward = p_Transform.forward
+	local s_FX, s_FY, s_FZ = s_Forward.x, s_Forward.y, s_Forward.z
+
+	local s_Dot = s_FX * p_DirX + s_FY * p_DirY + s_FZ * p_DirZ
+
+	-- cross = forward x direction
+	local s_CX = s_FY * p_DirZ - s_FZ * p_DirY
+	local s_CY = s_FZ * p_DirX - s_FX * p_DirZ
+	local s_CZ = s_FX * p_DirY - s_FY * p_DirX
+
+	local s_Up = p_Transform.up
+	local s_Left = p_Transform.left
+	local s_YawDeviation = math.atan(s_CX * s_Up.x + s_CY * s_Up.y + s_CZ * s_Up.z, s_Dot)
+	local s_PitchDeviation = math.asin(s_CX * s_Left.x + s_CY * s_Left.y + s_CZ * s_Left.z)
+
+	return s_YawDeviation, s_PitchDeviation
+end
+
+---Same as GetDeviationFromTransform, with a target position instead of a direction.
+---@param p_Transform LinearTransform
+---@param p_Target Vec3
+---@return number yawDeviation
+---@return number pitchDeviation
+function Utilities:GetDeviationToTarget(p_Transform, p_Target)
+	local s_Trans = p_Transform.trans
+	return self:GetDeviationFromTransform(p_Transform, p_Target.x - s_Trans.x, p_Target.y - s_Trans.y, p_Target.z - s_Trans.z)
 end
 
 -- Do not use on numerically indexed tables, only tables with string keys.
@@ -173,12 +313,40 @@ end
 ---@param p_Angle number
 ---@return number
 function Utilities:NormalizeAngleRad(p_Angle)
-	if p_Angle > math.pi then
-		p_Angle = p_Angle - 2 * math.pi
-	elseif p_Angle < -math.pi then
+	-- Ensure the angle is in the range (-2π, 2π).
+	p_Angle = math.fmod(p_Angle, 2 * math.pi)
+	-- Normalise the angle to its equivalent in [-π, π).
+	if p_Angle < -math.pi then
 		p_Angle = p_Angle + 2 * math.pi
+	elseif math.pi <= p_Angle then
+		p_Angle = p_Angle - 2 * math.pi
 	end
 	return p_Angle
+end
+
+---Angular speed (rad/s) of a target moving across the view: velocity perpendicular to the line of sight / distance.
+---Works on plain numbers, Vec3 math allocates.
+---@param p_DiffX number target - viewer
+---@param p_DiffY number
+---@param p_DiffZ number
+---@param p_Distance number length of the difference
+---@param p_VelX number velocity of the target relative to the viewer
+---@param p_VelY number
+---@param p_VelZ number
+---@return number
+function Utilities:GetAngularSpeed(p_DiffX, p_DiffY, p_DiffZ, p_Distance, p_VelX, p_VelY, p_VelZ)
+	if p_Distance < 0.1 then
+		return 0.0
+	end
+
+	local s_Radial = (p_VelX * p_DiffX + p_VelY * p_DiffY + p_VelZ * p_DiffZ) / p_Distance
+	local s_PerpendicularSq = p_VelX * p_VelX + p_VelY * p_VelY + p_VelZ * p_VelZ - s_Radial * s_Radial
+
+	if s_PerpendicularSq <= 0.0 then
+		return 0.0
+	end
+
+	return math.sqrt(s_PerpendicularSq) / p_Distance
 end
 
 function Utilities:has(p_Object, p_Value)
@@ -202,18 +370,6 @@ function table:has(p_Value)
 	return false
 end
 
----@param p_Value string
----@return boolean
-function string:isLower(p_Value)
-	return p_Value:lower() == p_Value
-end
-
----@param p_Value string
----@return boolean
-function string:isDigit(p_Value)
-	return tonumber(p_Value) ~= nil
-end
-
 ---@param p_Str string
 ---@param p_Sep string
 ---@return table<string>
@@ -235,8 +391,8 @@ function string.starts(p_Str, p_Start)
 end
 
 function requireExists(p_Module)
-	local function reference(p_Module)
-		require(p_Module)
+	local function reference(p_Name)
+		require(p_Name)
 		return true
 	end
 

@@ -24,6 +24,11 @@ function StateOnVehicleIdle:Update(p_Bot, p_DeltaTime)
 		p_Bot:SetState(g_BotStates.States.Idle)
 		return
 	end
+	-- No longer on a vehicle (it was destroyed, the bot was thrown off): on foot again, else it stood there for minutes.
+	if p_Bot.m_Player.attachedControllable == nil then
+		p_Bot:_OnFootAgain()
+		return
+	end
 
 	-- update state-timer
 	p_Bot.m_StateTimer = p_Bot.m_StateTimer + p_DeltaTime

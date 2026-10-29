@@ -520,14 +520,14 @@ function WeaponList:UpdateWeaponList()
 
 	Weapons = {}
 	-- Clear weapons-table.
-	for l_Key, l_Value in pairs(BotKits) do
+	for _, l_Value in pairs(BotKits) do
 		if l_Value ~= BotKits.Count and l_Value ~= BotKits.RANDOM_KIT then
 			Weapons[l_Value] = {}
 		end
 	end
 
 	-- Clear scavenger-table.
-	for l_key, l_Value in pairs(BotWeapons) do
+	for _, l_Value in pairs(BotWeapons) do
 		if l_Value ~= BotWeapons.Auto then
 			ScavengerWeapons[l_Value] = {}
 		end
@@ -536,7 +536,7 @@ function WeaponList:UpdateWeaponList()
 	for l_Class, _ in pairs(Weapons) do
 		local s_TempTable = {}
 
-		for l_key, l_Value in pairs(BotWeapons) do
+		for _, l_Value in pairs(BotWeapons) do
 			if l_Value ~= BotWeapons.Auto then
 				s_TempTable[l_Value] = {}
 			end

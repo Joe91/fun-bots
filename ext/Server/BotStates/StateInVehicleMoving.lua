@@ -79,7 +79,7 @@ function StateInVehicleMoving:UpdateFast(p_Bot, p_DeltaTime)
 		m_VehicleMovement:UpdateVehicleLookAround(p_Bot, p_DeltaTime)
 	end
 
-	m_VehicleMovement:UpdateYawVehicle(p_Bot, false, s_IsStationaryLauncher)
+	m_VehicleMovement:UpdateYawVehicle(p_Bot, false, s_IsStationaryLauncher, p_DeltaTime)
 end
 
 ---update in every frame

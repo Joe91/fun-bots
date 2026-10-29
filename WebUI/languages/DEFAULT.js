@@ -1,4 +1,4 @@
-Language['xx_XX'] /* Add/replace the xx_XX here with your language code (like de_DE, en_US, or other)! */ = {
+Language['xx_XX'] /* Add/replace the xx_XX here with your language code (like de_DE, en_EN, or other)! */ = {
 	"__LANGUAGE_INFO": {
 		"name": "English",
 		"author": "Unknown",
@@ -33,6 +33,7 @@ Language['xx_XX'] /* Add/replace the xx_XX here with your language code (like de
 	"Reset all Traces": "",
 	"Current Trace Index": "",
 	"Total Distance": "",
+	"Recording...": "",
 	"Node Operation Controls": "",
 	"Merge": "",
 	"Link": "",

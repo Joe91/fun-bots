@@ -27,7 +27,7 @@ function RCONCommands:__init()
 			end)
 		},
 
-		-- Save config.
+		-- Restore the default config.
 		CONFIG_RESET = {
 			Name = 'funbots.restore',
 			Callback = (function(p_Command, p_Args)
@@ -91,7 +91,7 @@ function RCONCommands:__init()
 		KICKALLL = {
 			Name = 'funbots.kickAll',
 			Callback = (function(p_Command, p_Args)
-				Globals.SpawnMode = "manual"
+				Globals.SpawnMode = SpawnModes.manual
 				m_BotManager:DestroyAll()
 
 				return { 'OK' }
@@ -119,10 +119,56 @@ function RCONCommands:__init()
 		KILLALL = {
 			Name = 'funbots.killAll',
 			Callback = (function(p_Command, p_Args)
-				Globals.SpawnMode = "manual"
+				Globals.SpawnMode = SpawnModes.manual
 				m_BotManager:KillAll()
 
 				return { 'OK' }
+			end)
+		},
+
+		-- Server-side raycasts <on|off>. Without argument it returns the current state.
+		SERVER_RAYCASTS = {
+			Name = 'funbots.serverRaycasts',
+			Parameters = { 'on|off' },
+			Callback = (function(p_Command, p_Args)
+				local s_ServerRaycasts = require('ServerRaycasts')
+				local s_Mode = p_Args[1] and string.lower(p_Args[1])
+
+				if s_Mode == 'on' or s_Mode == 'true' or s_Mode == '1' then
+					s_ServerRaycasts:SetEnabled(true)
+				elseif s_Mode == 'off' or s_Mode == 'false' or s_Mode == '0' then
+					s_ServerRaycasts:SetEnabled(false)
+				elseif s_Mode ~= nil then
+					return { 'ERROR', 'Needing <on|off>.' }
+				end
+
+				return { 'OK', s_ServerRaycasts:IsEnabled() and 'on' or 'off' }
+			end)
+		},
+
+		-- Debug-bridge to the debug-server (tools/debug-server) <on|off> [url].
+		-- Without argument it returns the current state.
+		DEBUG_BRIDGE = {
+			Name = 'funbots.debugBridge',
+			Parameters = { 'on|off', 'Url' },
+			Callback = (function(p_Command, p_Args)
+				local s_DebugBridge = require('Debug/DebugBridge')
+				local s_Mode = p_Args[1] and string.lower(p_Args[1])
+
+				if p_Args[2] ~= nil then
+					s_DebugBridge:SetUrl(p_Args[2])
+				end
+
+				if s_Mode == 'on' or s_Mode == 'true' or s_Mode == '1' then
+					s_DebugBridge:SetEnabled(true)
+				elseif s_Mode == 'off' or s_Mode == 'false' or s_Mode == '0' then
+					s_DebugBridge:SetEnabled(false)
+				elseif s_Mode ~= nil then
+					return { 'ERROR', 'Needing <on|off> [url].' }
+				end
+
+				return { 'OK', (s_DebugBridge:IsEnabled() and 'on' or 'off'),
+					(s_DebugBridge:IsConnected() and 'connected' or 'not connected'), s_DebugBridge:GetUrl() }
 			end)
 		},
 
@@ -142,11 +188,11 @@ function RCONCommands:__init()
 					return { 'ERROR', 'Needing Team.' }
 				end
 
-				if tonumber(s_Value) == nil then
+				local s_Amount = tonumber(s_Value)
+
+				if s_Amount == nil then
 					return { 'ERROR', 'Needing Spawn amount.' }
 				end
-
-				local s_Amount = tonumber(s_Value)
 
 				if TeamId[s_Team] == nil then
 					return { 'ERROR', 'Unknown Team: TeamId.' .. s_Team }
@@ -173,7 +219,7 @@ function RCONCommands:__init()
 						local s_Result = { 'OK', 'REVOKED' }
 
 						if s_Permissions ~= nil and #s_Permissions >= 1 then
-							for l_Key, l_Value in pairs(s_Permissions) do
+							for _, l_Value in pairs(s_Permissions) do
 								s_Result[#s_Result + 1] = PermissionManager:GetCorrectName(l_Value)
 							end
 						end
@@ -206,7 +252,7 @@ function RCONCommands:__init()
 					if s_All ~= nil and #s_All >= 1 then
 						local s_Result = { 'OK', 'LIST' }
 
-						for l_Key, l_Value in pairs(s_All) do
+						for _, l_Value in pairs(s_All) do
 							s_Result[#s_Result + 1] = PermissionManager:GetCorrectName(l_Value)
 						end
 
@@ -221,7 +267,7 @@ function RCONCommands:__init()
 					local s_Permissions = PermissionManager:GetPermissions(s_Name)
 
 					if s_Permissions ~= nil then
-						for l_Name, l_Value in pairs(s_Permissions) do
+						for _, l_Value in pairs(s_Permissions) do
 							s_Result[#s_Result + 1] = PermissionManager:GetCorrectName(l_Value)
 						end
 					end
@@ -245,7 +291,7 @@ function RCONCommands:__init()
 
 		s_Result[#s_Result + 1] = 'OK'
 
-		for l_Index, l_Command in pairs(self.m_Commands) do
+		for _, l_Command in pairs(self.m_Commands) do
 			local s_Command = l_Command.Name
 
 			if l_Command.Parameters ~= nil then
@@ -264,7 +310,7 @@ function RCONCommands:__init()
 end
 
 function RCONCommands:CreateConfigCommands()
-	for key, value in pairs(Config) do
+	for key in pairs(Config) do
 		RCON:RegisterCommand('funbots.config.' .. key, RemoteCommandFlag.RequiresLogin,
 			function(p_Command, p_Args, p_LoggedIn)
 				local s_values = p_Command:split(".")
@@ -290,7 +336,7 @@ end
 function RCONCommands:_Create()
 	self:CreateConfigCommands()
 
-	for l_Index, l_Command in pairs(self.m_Commands) do
+	for _, l_Command in pairs(self.m_Commands) do
 		self:_CreateCommand(l_Command.Name, l_Command.Callback)
 	end
 end

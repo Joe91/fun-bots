@@ -43,6 +43,10 @@ end
 	@method: IsValid
 ]]
 function Range:IsValid(p_Value)
+	if type(p_Value) ~= 'number' or p_Value ~= p_Value then -- Reject non-numbers and NaN.
+		return false
+	end
+
 	return p_Value >= self.m_Min and p_Value <= self.m_Max
 end
 

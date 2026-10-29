@@ -2,19 +2,23 @@
 	"folders": [
 		{
 			"name": "Shared",
-			"path": "ext\\Shared"
+			"path": "ext/Shared"
 		},
 		{
 			"name": "Server",
-			"path": "ext\\Server"
+			"path": "ext/Server"
 		},
 		{
 			"name": "Client",
-			"path": "ext\\Client"
+			"path": "ext/Client"
 		},
 		{
 			"name": "Web UI",
 			"path": "WebUI"
+		},
+		{
+			"name": "root",
+			"path": "."
 		}
 	],
 	"settings": {

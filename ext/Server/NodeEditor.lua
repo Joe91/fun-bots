@@ -4,6 +4,12 @@ NodeEditor = class('NodeEditor')
 
 ---@type NodeCollection
 local m_NodeCollection = require('NodeCollection')
+---@type NavZones
+local m_NavZones = require('NavZones')
+---@type Vehicles
+local m_Vehicles = require('Vehicles')
+---@type PermissionManager
+local m_PermissionManager = require('PermissionManager')
 ---@type Logger
 local m_Logger = Logger('NodeEditor', Debug.Server.NODEEDITOR)
 
@@ -22,6 +28,8 @@ function NodeEditor:RegisterVars()
 	self.m_CustomTraceTimer = {}
 	self.m_CustomTraceDistance = {}
 	self.m_CustomTraceLastNodeIndex = {}
+	-- The terrain of the vehicle the player sat in while tracing (the path gets "Vehicles"), per player.
+	self.m_CustomTraceVehicle = {}
 	self.m_JumpDetected = {}
 
 	self.m_lastDrawIndexNode = {}
@@ -29,49 +37,46 @@ function NodeEditor:RegisterVars()
 
 	self.m_NodeOperation = ''
 
-	self.m_NodeSendUpdateTimer = 0
 end
 
 function NodeEditor:RegisterCustomEvents()
-	-- Remove them?
-	-- NetEvents:Subscribe('UI_Request_Save_Settings', self, self.OnUIRequestSaveSettings)
+	-- EDIT-Events from Client. All of them require the waypoint-editor permission.
+	local s_Permission = 'UserInterface.WaypointEditor'
+	m_PermissionManager:SubscribeNetEvent('NodeEditor:Select', s_Permission, self, self.OnSelect)
+	m_PermissionManager:SubscribeNetEvent('NodeEditor:Deselect', s_Permission, self, self.OnDeselect)
+	m_PermissionManager:SubscribeNetEvent('NodeEditor:SelectBetween', s_Permission, self, self.OnSelectBetween)
+	m_PermissionManager:SubscribeNetEvent('NodeEditor:SelectNext', s_Permission, self, self.OnSelectNext)
+	m_PermissionManager:SubscribeNetEvent('NodeEditor:SelectPrevious', s_Permission, self, self.OnSelectPrevious)
+	m_PermissionManager:SubscribeNetEvent('NodeEditor:ClearSelection', s_Permission, self, self.OnClearSelection)
+	m_PermissionManager:SubscribeNetEvent('NodeEditor:SetInputNode', s_Permission, self, self.OnSetInputNode)
+	m_PermissionManager:SubscribeNetEvent('NodeEditor:LinkNodes', s_Permission, self, self.OnLinkNodes)
+	m_PermissionManager:SubscribeNetEvent('NodeEditor:UnlinkNodes', s_Permission, self, self.OnUnlinkNodes)
+	m_PermissionManager:SubscribeNetEvent('NodeEditor:MergeNodes', s_Permission, self, self.OnMergeNodes)
+	m_PermissionManager:SubscribeNetEvent('NodeEditor:TeleportToEdge', s_Permission, self, self.OnTeleportToEdge)
+	m_PermissionManager:SubscribeNetEvent('NodeEditor:SplitNode', s_Permission, self, self.OnSplitNode)
+	m_PermissionManager:SubscribeNetEvent('NodeEditor:RemoveNode', s_Permission, self, self.OnRemoveNode)
 
-	-- EDIT-Events from Client.
-	NetEvents:Subscribe('NodeEditor:Select', self, self.OnSelect)
-	NetEvents:Subscribe('NodeEditor:Deselect', self, self.OnDeselect)
-	NetEvents:Subscribe('NodeEditor:SelectBetween', self, self.OnSelectBetween)
-	NetEvents:Subscribe('NodeEditor:SelectNext', self, self.OnSelectNext)
-	NetEvents:Subscribe('NodeEditor:SelectPrevious', self, self.OnSelectPrevious)
-	NetEvents:Subscribe('NodeEditor:ClearSelection', self, self.OnClearSelection)
-	NetEvents:Subscribe('NodeEditor:SetInputNode', self, self.OnSetInputNode)
-	NetEvents:Subscribe('NodeEditor:LinkNodes', self, self.OnLinkNodes)
-	NetEvents:Subscribe('NodeEditor:UnlinkNodes', self, self.OnUnlinkNodes)
-	NetEvents:Subscribe('NodeEditor:MergeNodes', self, self.OnMergeNodes)
-	NetEvents:Subscribe('NodeEditor:TeleportToEdge', self, self.OnTeleportToEdge)
-	NetEvents:Subscribe('NodeEditor:SplitNode', self, self.OnSplitNode)
-	NetEvents:Subscribe('NodeEditor:RemoveNode', self, self.OnRemoveNode)
+	m_PermissionManager:SubscribeNetEvent('NodeEditor:AddMcom', s_Permission, self, self.OnAddMcom)
+	m_PermissionManager:SubscribeNetEvent('NodeEditor:AddVehicle', s_Permission, self, self.OnAddVehicle)
+	m_PermissionManager:SubscribeNetEvent('NodeEditor:ExitVehicle', s_Permission, self, self.OnExitVehicle)
+	m_PermissionManager:SubscribeNetEvent('NodeEditor:CustomAction', s_Permission, self, self.OnCustomAction)
+	m_PermissionManager:SubscribeNetEvent('NodeEditor:AddVehiclePath', s_Permission, self, self.OnAddVehiclePath)
+	m_PermissionManager:SubscribeNetEvent('NodeEditor:AddObjective', s_Permission, self, self.OnAddObjective)
+	m_PermissionManager:SubscribeNetEvent('NodeEditor:RemoveObjective', s_Permission, self, self.OnRemoveObjective)
+	m_PermissionManager:SubscribeNetEvent('NodeEditor:SetVehicleSpawn', s_Permission, self, self.OnSetVehicleSpawn)
+	m_PermissionManager:SubscribeNetEvent('NodeEditor:RemoveData', s_Permission, self, self.OnRemoveData)
 
-	NetEvents:Subscribe('NodeEditor:AddMcom', self, self.OnAddMcom)
-	NetEvents:Subscribe('NodeEditor:AddVehicle', self, self.OnAddVehicle)
-	NetEvents:Subscribe('NodeEditor:ExitVehicle', self, self.OnExitVehicle)
-	NetEvents:Subscribe('NodeEditor:CustomAction', self, self.OnCustomAction)
-	NetEvents:Subscribe('NodeEditor:AddVehiclePath', self, self.OnAddVehiclePath)
-	NetEvents:Subscribe('NodeEditor:AddObjective', self, self.OnAddObjective)
-	NetEvents:Subscribe('NodeEditor:RemoveObjective', self, self.OnRemoveObjective)
-	NetEvents:Subscribe('NodeEditor:SetVehicleSpawn', self, self.OnSetVehicleSpawn)
-	NetEvents:Subscribe('NodeEditor:RemoveData', self, self.OnRemoveData)
+	m_PermissionManager:SubscribeNetEvent('NodeEditor:RemoveAllObjectives', s_Permission, self, self.OnRemoveAllObjectives)
+	m_PermissionManager:SubscribeNetEvent('NodeEditor:SetPathLoops', s_Permission, self, self.OnSetLoopMode)
+	m_PermissionManager:SubscribeNetEvent('NodeEditor:AddSpawnPath', s_Permission, self, self.OnSetSpawnPath)
 
-	NetEvents:Subscribe('NodeEditor:RemoveAllObjectives', self, self.OnRemoveAllObjectives)
-	NetEvents:Subscribe('NodeEditor:SetPathLoops', self, self.OnSetLoopMode)
-	NetEvents:Subscribe('NodeEditor:AddSpawnPath', self, self.OnSetSpawnPath)
+	m_PermissionManager:SubscribeNetEvent('NodeEditor:SpawnBot', s_Permission, self, self.OnSpawnBot)
+	m_PermissionManager:SubscribeNetEvent('NodeEditor:UpdatePos', s_Permission, self, self.OnUpdatePos)
+	m_PermissionManager:SubscribeNetEvent('NodeEditor:AddNode', s_Permission, self, self.OnAddNode)
 
-	NetEvents:Subscribe('NodeEditor:SpawnBot', self, self.OnSpawnBot)
-	NetEvents:Subscribe('NodeEditor:UpdatePos', self, self.OnUpdatePos)
-	NetEvents:Subscribe('NodeEditor:AddNode', self, self.OnAddNode)
+	m_PermissionManager:SubscribeNetEvent('NodeEditor:JumpDetected', s_Permission, self, self.OnJumpDetected)
 
-	NetEvents:Subscribe('NodeEditor:JumpDetected', self, self.OnJumpDetected)
-
-	NetEvents:Subscribe('NodeEditor:RequestData', self, self.OnRequestData)
+	m_PermissionManager:SubscribeNetEvent('NodeEditor:RequestData', s_Permission, self, self.OnRequestData)
 
 
 	-- To-do: fill.
@@ -191,8 +196,6 @@ end
 
 ---@param p_Player Player
 function NodeEditor:OnExitVehicle(p_Player, p_Args)
-	self.m_CommoRoseActive = false
-
 	if not p_Player.soldier then
 		self:Log(p_Player, 'Player must be alive')
 		return
@@ -229,8 +232,6 @@ end
 ---@param p_Player Player
 ---@param p_Args table
 function NodeEditor:OnCustomAction(p_Player, p_Args)
-	self.m_CommoRoseActive = false
-
 	if not p_Player.soldier then
 		self:Log(p_Player, 'Player must be alive')
 		return
@@ -653,9 +654,54 @@ function NodeEditor:OnRequestData(p_Player)
 
 	print('[NodeEditor] Sending ' .. tostring(#s_SerializedNodes) .. ' waypoints to client.')
 
-	-- TODO: better handling here for all Players
-	self:SendToAllPlayers('ClientNodeEditor:RevieveNodes', s_SerializedNodes)
+	-- To all editing players on purpose: when several trace at the same time, all need the new nodes.
+	self:SendToAllPlayers('ClientNodeEditor:ReceiveNodes', s_SerializedNodes)
 	print('[NodeEditor] Sent waypoints to client.')
+	self:SendNavZones()
+end
+
+---The walking mesh (NavZones): points (position, flags), connections (with the corners between them) and junctions
+---(position of the waypoint, point), then the zones on it (name, kind, middle).
+function NodeEditor:SendNavZones()
+	self:SendToAllPlayers('ClientNodeEditor:ClearNavZones', nil)
+	local s_Mesh = m_NavZones:GetMesh()
+	if s_Mesh == nil then
+		return
+	end
+	local s_Points = {}
+	for l_Index = 1, #s_Mesh.Points do
+		local l_Point = s_Mesh.Points[l_Index]
+		s_Points[l_Index] = { Position = l_Point.Position, Flags = l_Point.Flags }
+	end
+	local s_Edges = {}
+	for l_From, l_Neighbours in pairs(s_Mesh.Neighbours) do
+		for l_Index = 1, #l_Neighbours do
+			local l_Neighbour = l_Neighbours[l_Index]
+			if l_Neighbour.To > l_From then
+				s_Edges[#s_Edges + 1] = { From = l_From, To = l_Neighbour.To, Corners = l_Neighbour.Corners }
+			end
+		end
+	end
+	local s_Junctions = {}
+	for l_Index = 1, #s_Mesh.Junctions do
+		local l_Junction = s_Mesh.Junctions[l_Index]
+		s_Junctions[l_Index] = { Position = l_Junction.Position, Point = l_Junction.Point }
+	end
+	self:SendToAllPlayers('ClientNodeEditor:ReceiveNavZone', {
+		Name = s_Mesh.Name,
+		Kind = s_Mesh.Kind,
+		Points = s_Points,
+		Edges = s_Edges,
+		Junctions = s_Junctions,
+	})
+	for _, l_Zone in pairs(m_NavZones:GetZones()) do
+		self:SendToAllPlayers('ClientNodeEditor:ReceiveNavZone', {
+			Name = l_Zone.Name,
+			Kind = l_Zone.Kind,
+			Center = l_Zone.Center,
+			Size = #l_Zone.Inside,
+		})
+	end
 end
 
 function NodeEditor:RefreshCustomTracesOnClient()
@@ -882,7 +928,7 @@ function NodeEditor:_getNewIndex()
 
 	local s_HighestIndex = 0
 
-	for l_PathIndex, l_Points in pairs(s_AllPaths) do
+	for l_PathIndex in pairs(s_AllPaths) do
 		if l_PathIndex > s_HighestIndex then
 			s_HighestIndex = l_PathIndex
 		end
@@ -909,7 +955,28 @@ function NodeEditor:_getNewIndex()
 	return s_HighestIndex + 1
 end
 
+---The "Vehicles" of a path traced in the vehicle the player sits in now, nil on foot.
 ---@param p_Player Player
+---@return string[]|nil
+local function _TraceVehicles(p_Player)
+	local s_Controllable = p_Player.controlledControllable
+	if s_Controllable == nil or s_Controllable:Is('ServerSoldierEntity') then
+		return nil
+	end
+	local s_Data = m_Vehicles:GetVehicleByEntity(s_Controllable)
+	if s_Data == nil then
+		return nil
+	end
+	if s_Data.Terrain == VehicleTerrains.Air then
+		return { 'air' }
+	elseif s_Data.Terrain == VehicleTerrains.Water then
+		return { 'water' }
+	elseif s_Data.Terrain == VehicleTerrains.Amphibious then
+		return { 'land', 'water' }
+	end
+	return { 'land' }
+end
+
 function NodeEditor:StartTrace(p_Player)
 	if not p_Player.soldier then
 		return
@@ -920,13 +987,14 @@ function NodeEditor:StartTrace(p_Player)
 	end
 	NetEvents:SendToLocal('ClientNodeEditor:ClearCustomTrace', p_Player)
 
-	self.m_CustomTrace[p_Player.onlineId] = NodeCollection(true)
+	self.m_CustomTrace[p_Player.onlineId] = NodeCollection()
 	self.m_CustomTraceTimer[p_Player.onlineId] = 0
 	self.m_JumpDetected[p_Player.onlineId] = 0
 	self.m_NodeWaitTimer[p_Player.onlineId] = 0
 	self.m_CustomTraceIndex[p_Player.onlineId] = self:_getNewIndex()
 	self.m_CustomTraceLastNodeIndex[p_Player.onlineId] = 0
 	self.m_CustomTraceDistance[p_Player.onlineId] = 0
+	self.m_CustomTraceVehicle[p_Player.onlineId] = _TraceVehicles(p_Player)
 
 	local s_PlayerPos = nil
 	if not p_Player.attachedControllable then
@@ -960,24 +1028,25 @@ end
 ---@param p_Player Player
 function NodeEditor:EndTrace(p_Player)
 	self.m_CustomTraceTimer[p_Player.onlineId] = -1
+	-- Got into a vehicle on the way: a vehicle-path as well.
+	if self.m_CustomTraceVehicle[p_Player.onlineId] == nil then
+		self.m_CustomTraceVehicle[p_Player.onlineId] = _TraceVehicles(p_Player)
+	end
 	NetEvents:SendToLocal('UI_ClientNodeEditor_TraceData', p_Player, nil, nil, nil, false, nil)
 
 	local s_FirstWaypoint = self.m_CustomTrace[p_Player.onlineId]:GetFirst()
 
 	if s_FirstWaypoint then
-		local s_FirstWaypoint = self.m_CustomTrace[p_Player.onlineId]:GetFirst()
-
 		local s_StartPos = s_FirstWaypoint.Position + Vec3.up
 		local s_EndPos = self.m_CustomTrace[p_Player.onlineId]:GetLast().Position + Vec3.up
 		local s_RayHits = nil
 
 		local s_FlagsMaterial = MaterialFlags.MfNoCollisionResponse
-		---@type RayCastFlags
 		local s_RaycastFlags = RayCastFlags.DontCheckWater | RayCastFlags.DontCheckCharacter | RayCastFlags.DontCheckRagdoll |
 			RayCastFlags.CheckDetailMesh
 
 
-		s_RayHits = RaycastManager:DetailedRaycast(s_StartPos, s_EndPos, 2, s_FlagsMaterial, s_RaycastFlags)
+		s_RayHits = RaycastManager:DetailedRaycast(s_StartPos, s_EndPos, 2, s_FlagsMaterial, s_RaycastFlags --[[@as RayCastFlags]])
 
 		self.m_CustomTrace[p_Player.onlineId]:ClearSelection()
 		self.m_CustomTrace[p_Player.onlineId]:Select(nil, s_FirstWaypoint)
@@ -1067,6 +1136,14 @@ function NodeEditor:SaveTrace(p_Player, p_PathIndex)
 
 	self.m_NodeOperation = 'Custom Trace'
 
+	-- Traced in a vehicle: a path of that terrain (no need to tag it by hand).
+	local s_Vehicles = self.m_CustomTraceVehicle[p_Player.onlineId]
+	local s_TraceFirst = self.m_CustomTrace[p_Player.onlineId]:GetFirst()
+	if s_Vehicles ~= nil and s_TraceFirst ~= nil and s_TraceFirst.Data ~= nil and s_TraceFirst.Data.Vehicles == nil then
+		s_TraceFirst.Data.Vehicles = s_Vehicles
+		self:Log(p_Player, 'Traced in a vehicle: path for %s', table.concat(s_Vehicles, ', '))
+	end
+
 	local s_PathCount = m_NodeCollection:GetNrOfPaths()
 	p_PathIndex = tonumber(p_PathIndex) or self:_getNewIndex()
 	local s_CurrentWaypoint = self.m_CustomTrace[p_Player.onlineId]:GetFirst()
@@ -1127,9 +1204,9 @@ function NodeEditor:SaveTrace(p_Player, p_PathIndex)
 		local s_NewWaypoint = m_NodeCollection:Create(s_CurrentWaypoint)
 
 		if s_Direction == 'Next' then
-			m_NodeCollection:InsertAfter(s_ReferrenceWaypoint, s_NewWaypoint)
+			m_NodeCollection:InsertAfter(s_ReferrenceWaypoint --[[@as Waypoint]], s_NewWaypoint)
 		else
-			m_NodeCollection:InsertBefore(s_ReferrenceWaypoint, s_NewWaypoint)
+			m_NodeCollection:InsertBefore(s_ReferrenceWaypoint --[[@as Waypoint]], s_NewWaypoint)
 		end
 
 		s_ReferrenceWaypoint = s_NewWaypoint
@@ -1193,7 +1270,7 @@ end
 function NodeEditor:EndOfLoad()
 	m_NodeCollection:ParseObjectives()
 	local s_Counter = 0
-	local s_Waypoints = m_NodeCollection:Get()
+	local s_Waypoints = m_NodeCollection:Get() --[[@as Waypoint[] ]]
 
 	for i = 1, #s_Waypoints do
 		local s_Waypoint = s_Waypoints[i]
@@ -1309,7 +1386,7 @@ function NodeEditor:OnEngineUpdate(p_DeltaTime, p_SimulationDeltaTime)
 						if s_Player.soldier.weaponsComponent.currentWeaponSlot == WeaponSlot.WeaponSlot_0 then
 							self.m_NodeWaitTimer[l_PlayerGuid] = 0.0
 
-							local s_NewWaypoint, s_Msg = self.m_CustomTrace[l_PlayerGuid]:Add()
+							local s_NewWaypoint = self.m_CustomTrace[l_PlayerGuid]:Add()
 							self.m_CustomTrace[l_PlayerGuid]:Update(s_NewWaypoint, {
 								Position = s_PlayerPos,
 							})

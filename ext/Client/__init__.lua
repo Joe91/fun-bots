@@ -15,7 +15,6 @@ require('__shared/Constants/WeaponTypes')
 require('__shared/Constants/BotAttackModes')
 require('__shared/Constants/BotMoveSpeeds')
 require('__shared/Constants/SpawnModes')
-require('__shared/Constants/SpawnMethods')
 require('__shared/Constants/TeamSwitchModes')
 require('__shared/Languages/Languages')
 require('__shared/Settings/Type')
@@ -69,13 +68,12 @@ function FunBotClient:RegisterEvents()
 	Events:Subscribe('Level:Loaded', self, self.OnLevelLoaded)
 	Events:Subscribe('Player:Deleted', self, self.OnPlayerDeleted)
 	Events:Subscribe('Client:UpdateInput', self, self.OnClientUpdateInput)
-	Events:Subscribe('Engine:Update', self, self.OnEngineUpdate)
-	Events:Subscribe('Player:Respawn', self, self.OnPlayerRespawn)
 	Events:Subscribe('UI:DrawHud', self, self.OnUIDrawHud)
 	Events:Subscribe('Partition:Loaded', self, self.OnPartitionLoaded)
 
 	NetEvents:Subscribe('WriteClientSettings', self, self.OnWriteClientSettings)
 	NetEvents:Subscribe('CheckBotBotAttack', self, self.CheckForBotBotAttack)
+	NetEvents:Subscribe('ServerRaycasts:SetEnabled', self, self.OnServerRaycastsSetEnabled)
 	NetEvents:Subscribe('UI_Settings', self, self.OnUISettings)
 
 	NetEvents:Subscribe('ConsoleCommands:RegisterCommands', self, self.OnRegisterConsoleCommands)
@@ -96,19 +94,6 @@ end
 ---@param p_Message Message
 function FunBotClient:OnEngineMessage(p_Message)
 	m_ClientBotManager:OnEngineMessage(p_Message)
-end
-
----VEXT Client Player:Respawn Event
----@param p_Player Player
-function FunBotClient:OnPlayerRespawn(p_Player)
-	local s_LocalPlayer = PlayerManager:GetLocalPlayer()
-
-	if s_LocalPlayer ~= nil and p_Player == s_LocalPlayer then
-		local s_OldMemory = math.floor(collectgarbage("count") / 1024)
-		collectgarbage('collect')
-		m_Logger:Write("*Collecting Garbage on Level Destroy: " ..
-			math.floor(collectgarbage("count") / 1024) .. " MB | Old Memory: " .. s_OldMemory .. " MB")
-	end
 end
 
 ---VEXT Shared UpdateManager:Update Event
@@ -132,6 +117,12 @@ function FunBotClient:OnLevelDestroy()
 	m_ClientSpawnPointHelper:OnLevelDestroy()
 	m_FunBotUIClient:OnLevelDestroy()
 	self._ReadyToUpdate = false
+
+	-- A full collect stalls the game for a moment, so only do it while the level unloads (not on every respawn).
+	local s_OldMemory = math.floor(collectgarbage("count") / 1024)
+	collectgarbage('collect')
+	m_Logger:Write("*Collecting Garbage on Level Destroy: " ..
+		math.floor(collectgarbage("count") / 1024) .. " MB | Old Memory: " .. s_OldMemory .. " MB")
 end
 
 function FunBotClient:OnLevelLoaded()
@@ -154,20 +145,12 @@ function FunBotClient:OnClientUpdateInput(p_DeltaTime)
 	m_FunBotUIClient:OnClientUpdateInput(p_DeltaTime)
 end
 
----VEXT Shared Engine:Update Event
----@param p_DeltaTime number
----@param p_SimulationDeltaTime number
-function FunBotClient:OnEngineUpdate(p_DeltaTime, p_SimulationDeltaTime)
-	-- m_ClientNodeEditor:OnEngineUpdate(p_DeltaTime, p_SimulationDeltaTime)
-end
-
 ---VEXT Client UI:DrawHud Event
 function FunBotClient:OnUIDrawHud()
 	if not self._ReadyToUpdate then
 		return
 	end
 	m_ClientNodeEditor:OnUIDrawHud()
-	-- m_ClientSpawnPointHelper:OnUIDrawHud()
 
 	if Registry.COMMON.USE_EXPERIMENTAL_NAMETAGS then
 		-- Just adding custom nametags to see the names of the friendly bots ... needs some clean up and a config to enable and disable it
@@ -207,14 +190,14 @@ function FunBotClient:OnUIDrawHud()
 			if p == lp or not p.soldier or p.soldier.health <= 0 then goto skip end
 			if p.teamId ~= lp.teamId then goto skip end
 
-			local headPos = p.soldier.worldTransform.trans + VERT_OFFS
+			local headPos = p.soldier.worldTransform.trans:Clone() + VERT_OFFS
 
 			-- occlusion check
-			local hit = RaycastManager:Raycast(lp.soldier.worldTransform.trans,
+			local hit = RaycastManager:Raycast(lp.soldier.worldTransform.trans:Clone(),
 				headPos,
-				RayCastFlags.DontCheckWater |
+				(RayCastFlags.DontCheckWater |
 				RayCastFlags.DontCheckCharacter |
-				RayCastFlags.DontCheckRagdoll)
+				RayCastFlags.DontCheckRagdoll) --[[@as RayCastFlags]])
 			if hit ~= nil then goto skip end
 
 			local sp = ClientUtils:WorldToScreen(headPos)
@@ -225,7 +208,7 @@ function FunBotClient:OnUIDrawHud()
 			if a <= 0 then goto skip end
 
 			-- subtle glow pulse
-			local pulse = math.sin(SharedUtils:GetTime() * 6) * 0.15 + 0.85
+			local pulse = math.sin(SharedUtils:GetTimeNS() / 1000000000 * 6) * 0.15 + 0.85
 			local col   = colour(p, lp)
 			col.w       = a * 0.9 * pulse
 
@@ -259,6 +242,7 @@ end
 ---@param p_UpdateWeaponSets boolean
 function FunBotClient:OnWriteClientSettings(p_NewConfig, p_UpdateWeaponSets)
 	m_ClientBotManager:OnWriteClientSettings(p_NewConfig, p_UpdateWeaponSets)
+	m_ClientNodeEditor:OnSettingsChanged()
 
 	if not self._SettingsValid then
 		self._SettingsValid = true
@@ -270,6 +254,11 @@ end
 ---@param p_RaycastData RaycastRequests
 function FunBotClient:CheckForBotBotAttack(p_RaycastData)
 	m_ClientBotManager:CheckForBotBotAttack(p_RaycastData)
+end
+
+---@param p_Enabled boolean
+function FunBotClient:OnServerRaycastsSetEnabled(p_Enabled)
+	m_ClientBotManager:OnServerRaycastsSetEnabled(p_Enabled)
 end
 
 ---@param p_Data any

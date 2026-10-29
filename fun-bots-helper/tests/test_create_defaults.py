@@ -24,7 +24,7 @@ def test_create_defaults(tmp_path: Path) -> None:
     all_settings = get_settings(first_key="Text")
     with temp_lua_path.open("a") as temp_lua:
         temp_lua.write(
-            "local code = 'xx_XX' -- Add/replace the xx_XX here with your language code (like de_DE, en_US, or other)!\n\n"
+            "local code = 'xx_XX' -- Add/replace the xx_XX here with your language code (like de_DE, en_EN, or other)!\n\n"
         )
         out_file_lines = get_lua_lines(all_settings)
         for line in out_file_lines:
@@ -35,7 +35,7 @@ def test_create_defaults(tmp_path: Path) -> None:
 
     with temp_js_path.open("a") as temp_js:
         temp_js.write(
-            """Language['xx_XX'] /* Add/replace the xx_XX here with your language code (like de_DE, en_US, or other)! */ = {
+            """Language['xx_XX'] /* Add/replace the xx_XX here with your language code (like de_DE, en_EN, or other)! */ = {
 	"__LANGUAGE_INFO": {
 		"name": "English",
 		"author": "Unknown",

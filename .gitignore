@@ -1,5 +1,6 @@
 # VU related files 
 .vu
+.vua_data
 mod.db
 
 # IDE files
@@ -165,3 +166,16 @@ cython_debug/
 #  and can be added to the global gitignore or merged into this file.  For a more nuclear
 #  option (not recommended) you can uncomment the following to ignore the entire idea folder.
 #.idea/
+pyvenv.cfg
+
+# Recordings of the debug-server
+tools/debug-server/recordings/
+# Census data and lists of the debug-server: results are in mapfiles/ and navzones/, a census can be measured again
+tools/debug-server/census/*
+!tools/debug-server/census/start_vu.sh
+
+# Local notes
+/TODO.txt
+
+# Copies of the map data before a tool overwrote it (tools/debug-server/funbots_debug/backups.py)
+backups/

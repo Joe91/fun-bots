@@ -3,8 +3,10 @@
 Bot = class('Bot')
 
 require('Bot/BotAiming')
+require('Bot/BotAimError')
 require('Bot/BotAttacking')
 require('Bot/BotMovement')
+require('Bot/BotZoneMovement')
 require('Bot/BotWeaponHandling')
 
 require('Bot/BotActions')
@@ -22,6 +24,17 @@ local m_NodeCollection = require('NodeCollection')
 local m_Logger = Logger('Bot', Debug.Server.BOT)
 ---@type Vehicles
 local m_Vehicles = require('Vehicles')
+---@type NavZones
+local m_NavZones = require('NavZones')
+---@type DebugBridge
+local m_DebugBridge = require('Debug/DebugBridge')
+
+-- A passenger of a vehicle on the ground or in the water gets out at the objective only with a point of the mesh this
+-- close (horizontal metres) at about the height of the vehicle (Bot:_CheckShouldExitVehicleIfPassenger), checked at
+-- most this often (seconds).
+local PASSENGER_EXIT_MESH_RANGE = 20.0
+local PASSENGER_EXIT_MESH_HEIGHT = 2.5
+local PASSENGER_EXIT_CHECK_TIME = 1.0
 
 -- Create a new bot.
 ---@param p_Player Player
@@ -29,6 +42,10 @@ function Bot:__init(p_Player)
 	-- Player Object.
 	---@type Player
 	self.m_Player = p_Player
+	-- The input the BotManager created for this player (player.input is the same object). Use this instead of
+	-- m_Player.input: every access of player.input creates a new wrapper object for the GC.
+	---@type EntryInput
+	self.m_Input = p_Player.input
 	-- The ID of the player.
 	---@type integer
 	self.m_Id = p_Player.id
@@ -36,7 +53,7 @@ function Bot:__init(p_Player)
 	-- statemachine-part
 	-- The active state object.
 	-- TODO: think about making use of subclasses which work like `class ("StateAttacking", BaseSoldierState)` & `class ("StateInVehicleAttacking", BaseInVehicleState)` & `class ("BaseInVehicleState", BaseVehicleState)`.
-	---@type StateAttacking|StateIdle|StateInVehicleAttacking|StateInVehicleChopperControl|StateInVehicleIdle|StateInVehicleJetControl|StateInVehicleMoving|StateInVehicleStationaryAAControl|StateMoving|StateOnVehicleAttacking|StateOnVehicleIdle
+	---@type StateAttacking|StateIdle|StateInVehicleAttacking|StateInVehicleChopperControl|StateInVehicleJetControl|StateInVehicleMoving|StateInVehicleStationaryAAControl|StateMoving|StateOnVehicleAttacking|StateOnVehicleIdle
 	self.m_ActiveState = g_BotStates.States.Idle
 	-- TODO: only used in StateInVehicleAttacking. Might make sense to move it to that class. Or move it to a BaseState class and inherit that in every other state as a subclass.
 	-- The timer of the current state.
@@ -51,9 +68,10 @@ function Bot:__init(p_Player)
 	-- create some character proporties
 	---@type BotBehavior
 	self.m_Behavior = nil
+	-- 0 = fastest, 1 = slowest reaction.
 	self.m_Reaction = 0.0
-	self.m_Accuracy = 0.0
-	self.m_Skill = 0.0
+	-- 0 = best, 1 = worst aim.
+	self.m_Inaccuracy = 0.0
 	self.m_PrefWeapon = ""
 	self.m_PrefVehicle = ""
 
@@ -67,10 +85,18 @@ function Bot:__init(p_Player)
 	-- TODO: this whole block could be moved to an inner class `Bot.Loadout = class('Bot.Loadout')`.
 	---@type BotKits|integer
 	self.m_Kit = nil
+	-- Kit of the name of the bot. The spawner uses it, as long as the kit-limits allow it.
+	---@type BotKits|nil
+	self.m_PreferredKit = nil
+	-- The kit counts for the kit-limits: set on spawn, reset once the bot is deactivated (ResetVars).
+	self._KitInUse = false
 	-- Only used in BotSpawner.
 	-- The bot color is the soldier camo (color).
 	---@type BotColors|integer
 	self.m_Color = nil
+	-- Name of the squad-perk the bot got (BotSpawner:_GetUnlocks), so its squad doesn't have to read its unlocks.
+	---@type string|nil
+	self.m_SquadPerk = nil
 	---@type Weapon|nil
 	self.m_ActiveWeapon = nil
 	self.m_ActiveVehicle = nil
@@ -97,9 +123,18 @@ function Bot:__init(p_Player)
 	self._SpawnDelayTimer = 0.0
 	self._WayWaitTimer = 0.0
 	self._VehicleWaitTimer = 0.0
+	-- Seconds the driver waited for passengers so far (VehicleMovement).
+	self._VehicleWaited = 0.0
+	self._VehicleLookAroundTimer = 0.0
+	self._LookAroundYawOffset = 0.0
+	self._LookAroundYawGoal = 0.0
+	self._LookAroundPitch = 0.0
+	self._LookAroundPitchGoal = 0.0
+	self._LookAroundSide = 1
+	self._LookAroundBaseYaw = 0.0
+	self._LookAroundLastTime = 0.0
 	self._VehicleSeatTimer = 0.0
 	self._VehicleTakeoffTimer = 0.0
-	self._WayWaitYawTimer = 0.0
 	self._ObstacleSequenceTimer = 0.0
 	self._StuckTimer = 0.0
 	self._ShotTimer = 0.0
@@ -117,6 +152,17 @@ function Bot:__init(p_Player)
 	self._DefendTimer = 0.0
 	self._SidewardsTimer = 0.0
 	self._KillYourselfTimer = 0.0
+	-- Off the mesh: where the bot walks to (end of its navigation path, or objective) and how close it got to it
+	-- (GameDirector:_CheckProgressOffMesh, the time only counts without progress).
+	---@type string|nil
+	self._OffMeshTarget = nil
+	---@type Waypoint|nil the node of the routes it walks to (GameDirector:_CheckProgressOffMesh)
+	self._OffMeshEnd = nil
+	-- The key of the path whose stretch it got stuck on (NavRoutes:BlockStretch), once per path.
+	self._OffMeshBlocked = nil
+	self._OffMeshBestDistance = math.huge
+	---@type Vec3|nil where the soldier was at its last progress
+	self._OffMeshMoved = nil
 	self._RocketCooldownTimer = 0.0
 
 	-- Shared movement vars.
@@ -138,6 +184,28 @@ function Bot:__init(p_Player)
 	self.m_YawOffset = 0.0
 	self.m_StrafeValue = 0.0
 
+	-- Path-offset (see Bot:ApplyPathOffset).
+	---@type integer|nil
+	self.m_PathSide = nil
+	self.m_OffsetDistance = 0.0
+	self.m_OffsetFactor = 0.0
+	self.m_OffsetCenterTimer = 0.0
+	self.m_PathOffsetCache = {}
+
+	-- Obstacle-detection (see Bot:_DetectObstacle).
+	self._LowSpeedTimer = 0.0
+	self._NoProgressTimer = 0.0
+	self._ProgressNode = nil
+	self._ProgressBestDistance = 0.0
+	self._ProgressLastTime = 0.0
+	self._ObstacleStartDistance = 0.0
+	-- Another bot in the way (see Bot:_CrowdHandling): seconds of stepping aside for this target, the step running.
+	self._CrowdTime = 0.0
+	self._CrowdStepTimer = 0.0
+	self._CrowdStrafe = nil
+	self._CrowdStepStrafe = 0.0
+	self._CrowdCheckTime = 0.0
+
 	-- Advanced movement.
 	---@type BotAttackModes
 	self._AttackMode = BotAttackModes.RandomNotSet
@@ -155,6 +223,7 @@ function Bot:__init(p_Player)
 	self._PathIndex = 0
 	self._LastWayDistance = 1000.0
 	self._LastActionId = -1
+	self._StuckRerouteCount = 0
 	self._InvertPathDirection = false
 	self._ExitVehicleActive = false
 	self._ObstacleRetryCounter = 0
@@ -164,6 +233,59 @@ function Bot:__init(p_Player)
 	self._ActiveDelay = 0.0
 	self._VehicleMoveWhileShooting = false
 	self._MoveWhileShooting = false
+	-- Rush: the attacker keeps going to its MCOM while shooting (StateAttacking, Bot:UpdatePushMovement).
+	self._PushWhileShooting = false
+	self._Pushing = false
+	-- Shooting at a wall in the way (Bot:_TryBreach): { Position, Time, Fire }, and how often for which target.
+	self._Breach = nil
+	self._BreachKey = nil
+	self._BreachCount = 0
+	-- Out of a vehicle: onto the mesh once on the ground (VehicleActions, UpdateNormalMovement).
+	self._MeshAfterExit = false
+	self._MeshRetryTimer = 0.0
+	-- The node of the paths the bot decided at last (NavRoutes:Step): it doesn't go straight back there.
+	self._NavCame = nil
+	self.m_RecentExits = nil
+	-- Seconds the bot runs after the target of an action, and until when it uses no C4 (StateAttacking).
+	self._ChaseTime = 0.0
+	self._ChopperStartHeight = nil
+	-- Highest ground under the way of the chopper ahead (VehicleChopperControl), for a jet the ground its way hits
+	-- (VehicleJetControl), and when it was looked for.
+	self._GroundAhead = nil
+	self._GroundProbeTime = 0.0
+	-- Seconds the chopper still levels out and climbs (attacking too low, VehicleChopperControl).
+	self._ChopperRecoverTime = 0.0
+	self._PassengerExitTime = nil
+	-- The point of the mesh the bot was put onto last, and when (Bot:OnDiedAfterPut).
+	self._PutOnto = nil
+	-- The last answer of _ZoneRejoinPoint: { Point, Objective, Time, Result }.
+	self._RejoinCache = nil
+	-- The vehicle the bot got out of or didn't get to ("vehicle <id>"): it isn't sent to it again until then.
+	self._LeftVehicle = nil
+	self._LeftVehicleUntil = 0.0
+	-- Seconds without an objective where no way leads on (GameDirector:_CheckStranded).
+	self._StrandedTime = 0.0
+	-- The last death for the tickets (BotSpawner:_SettleDeathTicket on the next spawn): { Team, ByMod }; a kill of the mod
+	-- (KillSoldier) is marked until the game reports it.
+	self._DeathTicket = nil
+	self._ModKill = false
+	self._ChaseTarget = nil
+	self._ChaseCooldown = 0.0
+	-- Progress towards the objective and of the vehicle (GameDirector:_CheckObjectiveProgress, _CheckVehicleProgress).
+	self._ProgressObjective = nil
+	self._ProgressBest = math.huge
+	self._ProgressTime = 0.0
+	self._VehicleAnchor = nil
+	self._VehicleGoal = nil
+	self._VehicleStart = nil
+	self._VehicleGoalBest = 0.0
+	self._VehicleGoalTime = 0.0
+	self._VehicleStuckTime = 0.0
+	-- Where it got nowhere before it was respawned: not again close to there (BotSpawner).
+	self._RespawnAway = nil
+	-- Since when it waits instead of spawning where no way leads on (BotSpawner:_ConquestSpawn).
+	---@type number|nil
+	self._DeadEndSince = nil
 	self._FireCycleModifier = 1.0
 
 	-- Vehicle stuff.
@@ -176,27 +298,41 @@ function Bot:__init(p_Player)
 	self._JetAbortAttackActive = false
 	self._JetTakeoffActive = false
 	self._ExitVehicleHealth = 0.0
+	-- When a passenger checks next whether it can get out here (_CheckShouldExitVehicleIfPassenger).
+	self._PassengerExitCheck = 0.0
 	self._LastVehicleHealth = 0.0
 	self._VehicleWeaponSlotToUse = 1
 	self._ActiveVehicleWeaponSlot = 0
 	---@type ControllableEntity|nil
 	self._RepairVehicleEntity = nil
-	-- PID Controllers.
-	-- Normal driving.
+	-- PID Controllers (Kp, Ki [1/s], Kd [s], Limit), see PidController.
+	-- Normal driving (also chopper yaw).
 	---@type PidController
-	self._Pid_Drv_Yaw = PidController(5, 0.05, 0.2, 1.0)
-	-- Chopper / Plane
+	self._Pid_Drv_Yaw = PidController(5, 1.5, 0.007, 1.0)
+	-- Plane (speed).
 	---@type PidController
-	self._Pid_Drv_Throttle = PidController(3, 0.05, 0.2, 1.0)
+	self._Pid_Drv_Throttle = PidController(3, 1.5, 0.007, 1.0)
+	-- Chopper (yaw, height, tilt, roll). Derivative on the measurement to damp the motion.
 	---@type PidController
-	self._Pid_Drv_Tilt = PidController(6, 0.1, 0.2, 1.0)
+	self._Pid_Drv_YawChopper = PidController(3, 0.3, 1.2, 1.0, true)
 	---@type PidController
-	self._Pid_Drv_Roll = PidController(6, 0.1, 0.2, 1.0)
+	self._Pid_Drv_Height = PidController(1.0, 0.3, 1.0, 1.0)
+	---@type PidController
+	self._Pid_Drv_Tilt = PidController(3, 0.5, 1.0, 1.0)
+	---@type PidController
+	self._Pid_Drv_Roll = PidController(3, 0.5, 1.0, 1.0)
+	-- Jet (pitch, rudder) while attacking: deviation to the lead-point.
+	---@type PidController
+	self._Pid_Jet_Pitch = PidController(5, 4.0, 0.4, 1.0)
+	---@type PidController
+	self._Pid_Jet_Yaw = PidController(5, 4.0, 0.4, 1.0)
+	-- Measured acceleration of the jet-target (lead of turning targets), see VehicleAiming.
+	self._JetTargetAcceleration = { TargetId = nil, LastX = 0.0, LastY = 0.0, LastZ = 0.0, X = 0.0, Y = 0.0, Z = 0.0 }
 	-- Guns.
 	---@type PidController
-	self._Pid_Att_Yaw = PidController(10, 2.0, 2.0, 1.0)
+	self._Pid_Att_Yaw = PidController(10, 60, 0.067, 1.0)
 	---@type PidController
-	self._Pid_Att_Pitch = PidController(10, 2.0, 2.0, 1.0)
+	self._Pid_Att_Pitch = PidController(10, 60, 0.067, 1.0)
 	-- movement
 
 	-- Shooting.
@@ -210,6 +346,24 @@ function Bot:__init(p_Player)
 	self._ShootPlayerVehicleType = VehicleTypes.NoVehicle
 	self._ShootPlayerId = -1
 	self._DistanceToPlayer = 0.0
+	-- Aim error (see BotAimError).
+	self._AimAcquire = true
+	self._AimDriftYaw = 0.0
+	self._AimDriftPitch = 0.0
+	self._AimAcquireYaw = 0.0
+	self._AimAcquirePitch = 0.0
+	self._AimFlinchYaw = 0.0
+	self._AimFlinchPitch = 0.0
+	-- Movement of the target as the bot perceives it.
+	self._AimVelX = 0.0
+	self._AimVelY = 0.0
+	self._AimVelZ = 0.0
+	-- Position of the target, when the bot saw it the last time.
+	---@type Vec3|nil
+	self._LastSeenPosition = nil
+	-- Only one grenade-attempt per attack.
+	self._GrenadeTried = false
+	self._GrenadeTimer = 0.0
 	---@type BotWeapons
 	self._WeaponToUse = BotWeapons.Primary
 	-- To-do: add emmylua type.
@@ -223,6 +377,21 @@ function Bot:__init(p_Player)
 
 	self._FollowTargetPlayer = nil
 	self._FollowingTraceTimer = 0.0
+	-- Walked by the debug-server along given points (Debug/BotWalker.lua), nil otherwise.
+	self._RemoteWalk = nil
+
+	-- Free movement in the zone of the objective (BotZoneMovement), nil on the waypoints.
+	---@type BotZoneState|nil
+	self.m_Zone = nil
+	-- Times the bot left the mesh after getting stuck, without reaching a goal or an exit in between.
+	self.m_ZoneGiveUps = 0
+	---@type { Position: Vec3, Time: number }[]|nil where and when it gave up its last ways (trapped: _ZoneGiveUpConnection)
+	self.m_ZoneTrap = nil
+	-- Its own route among similar ones, for a life (NavRoutes:Next).
+	self.m_RouteSeed = math.random() * 1000.0
+	-- Rush: left the combat area (the next stage isn't open yet), waits at the border (Bot:OnCombatAreaLeft).
+	---@type { Left: number, Returned: number|nil, Inverted: boolean }|nil
+	self.m_Border = nil
 end
 
 -- =============================================
@@ -263,10 +432,7 @@ function Bot:UpdateDontAttackFlag()
 	-- Don't attack as driver in some vehicles.
 	if g_BotStates:IsInVehicleState(self.m_ActiveState) and self.m_Player.controlledEntryId == 0 then
 		if m_Vehicles:IsVehicleType(self.m_ActiveVehicle, VehicleTypes.Chopper) then                               -- do not include ScoutChopper here (they can attack)
-			if self._VehicleMovableId == -1 then
-				self._DontAttackPlayers = true                                                                     -- Tranotort-choppers don't attack as driver.
-				return
-			elseif self.m_Player.controlledControllable:GetPlayerInEntry(1) ~= nil and not Config.ChopperDriversAttack then -- Don't attack if gunner available and config is false.
+			if self.m_Player.controlledControllable:GetPlayerInEntry(1) ~= nil and not Config.ChopperDriversAttack then -- Don't attack if gunner available and config is false.
 				self._DontAttackPlayers = true
 				return
 			end
@@ -293,6 +459,18 @@ function Bot:UpdateDontAttackFlag()
 			self._DontAttackPlayers = true
 			return
 		end
+	end
+
+	-- Seats without an aimable part (-1) can't aim their weapon (passengers or fixed guns like on the M1128).
+	-- Weapons aimed with the whole vehicle (chopper / jet main guns) use -2.
+	-- Drivers of mobile artillery and light AA attack anyway: they switch to the gunner seat (_CheckForVehicleActions).
+	if g_BotStates:IsInVehicleState(self.m_ActiveState) and self._VehicleMovableId == -1
+		and not (self.m_Player.controlledEntryId == 0
+			and (m_Vehicles:IsVehicleType(self.m_ActiveVehicle, VehicleTypes.MobileArtillery)
+				or m_Vehicles:IsVehicleType(self.m_ActiveVehicle, VehicleTypes.LightAA)))
+	then
+		self._DontAttackPlayers = true
+		return
 	end
 	self._DontAttackPlayers = false
 end
@@ -342,8 +520,14 @@ function Bot:_CheckForVehicleActions(p_DeltaTime, p_AttackActive)
 		if s_DesiredSeat ~= self.m_Player.controlledEntryId
 			and s_VehicleEntity:GetPlayerInEntry(s_DesiredSeat) == nil
 		then
+			-- UpdateVehicleMovableId resets the target: keep it, to attack it from the gunner seat.
+			local s_ShootPlayer = self._ShootPlayer
+			local s_ShootPlayerId = self._ShootPlayerId
 			self.m_Player:EnterVehicle(s_VehicleEntity, s_DesiredSeat)
 			self:UpdateVehicleMovableId()
+			self:_DriveOnAfterSeatChange(s_VehicleEntity)
+			self._ShootPlayer = s_ShootPlayer
+			self._ShootPlayerId = s_ShootPlayerId
 		end
 	else
 		-- Check if better seat is available.
@@ -359,6 +543,7 @@ function Bot:_CheckForVehicleActions(p_DeltaTime, p_AttackActive)
 						self:AbortAttack()
 						self.m_Player:EnterVehicle(s_VehicleEntity, l_SeatIndex)
 						self:UpdateVehicleMovableId()
+						self:_DriveOnAfterSeatChange(s_VehicleEntity)
 						break
 					end
 				end
@@ -383,6 +568,16 @@ function Bot:_CheckForVehicleActions(p_DeltaTime, p_AttackActive)
 	end
 end
 
+---Into the driver seat by a seat change (back from the gunner seat of artillery or light AA, a gunner into the free
+---driver seat): UpdateVehicleMovableId reset the way (the vehicle-network of a zone, ResetSpawnVars), the driver finds it
+---from where the vehicle stands, as when it got in. Else it drove the path it had before, maybe far away.
+---@param p_VehicleEntity ControllableEntity
+function Bot:_DriveOnAfterSeatChange(p_VehicleEntity)
+	if self.m_Player.controlledEntryId == 0 and self.m_ActiveVehicle ~= nil then
+		self:FindVehiclePath(p_VehicleEntity.transform.trans:Clone())
+	end
+end
+
 ---comment
 ---@param p_VehicleEntity ControllableEntity
 ---@param p_OnVehicle boolean
@@ -403,29 +598,56 @@ function Bot:_CheckShouldExitVehicleIfPassenger(p_VehicleEntity, p_OnVehicle)
 		return
 	end
 
-	local s_ShouldExit = false
 	local s_ExitDistance = Registry.BOT.PASSENGER_EXIT_DISTANCE
+	local s_ExitDistanceSquared = s_ExitDistance * s_ExitDistance
+	local s_CurrentPosition = self.m_Player.soldier.worldTransform.trans
+	local s_CurrentX = s_CurrentPosition.x
+	local s_CurrentZ = s_CurrentPosition.z
+
+	-- Horizontal (x/z) distance only, compared squared to avoid allocations and sqrt.
+	local function _IsInExitRange(p_Position)
+		local s_DeltaX = p_Position.x - s_CurrentX
+		local s_DeltaZ = p_Position.z - s_CurrentZ
+		return (s_DeltaX * s_DeltaX + s_DeltaZ * s_DeltaZ) < s_ExitDistanceSquared
+	end
+
+	-- At a capture point the team doesn't hold (where the pilot flies), not over the own ones on the way.
+	local s_ShouldExit = false
+	local s_TeamId = self.m_Player.teamId
 	local s_AllCapturePoints = g_GameDirector:GetAllCapturePoints()
-	local s_ActiveMcoms = g_GameDirector:GetActiveMcomPositions()
-	local s_CurrentPosition = self.m_Player.soldier.worldTransform.trans:Clone()
-	s_CurrentPosition.y = 0
-
-	local s_Coordinates = {}
 	for l_Index = 1, #s_AllCapturePoints do
-		s_Coordinates[#s_Coordinates + 1] = s_AllCapturePoints[l_Index].transform.trans
-	end
-	for l_Index = 1, #s_ActiveMcoms do
-		s_Coordinates[#s_Coordinates + 1] = s_ActiveMcoms[l_Index]
-	end
-
-	for l_Index = 1, #s_Coordinates do
-		local l_Coord = s_Coordinates[l_Index]
-		local s_Position = l_Coord:Clone()
-		s_Position.y = 0
-
-		if s_Position:Distance(s_CurrentPosition) < s_ExitDistance then
+		local l_CapturePoint = s_AllCapturePoints[l_Index]
+		if l_CapturePoint.team ~= s_TeamId and _IsInExitRange(l_CapturePoint.transform.trans) then
 			s_ShouldExit = true
 			break
+		end
+	end
+
+	if not s_ShouldExit then
+		local s_ActiveMcoms = g_GameDirector:GetActiveMcomPositions()
+		for l_Index = 1, #s_ActiveMcoms do
+			if _IsInExitRange(s_ActiveMcoms[l_Index]) then
+				s_ShouldExit = true
+				break
+			end
+		end
+	end
+
+	-- On the ground or in the water: only where the soldiers get onto the mesh (a point close by, at the height of the
+	-- vehicle). An AMTRAC in the canal below the quay (MP_017 Rush, 45 m from MCOM 1): the passengers got out in the
+	-- water, stood at the wall for good, respawned in the AMTRAC and got out there again; stage 1 never fell.
+	if s_ShouldExit and m_NavZones:GetMesh() ~= nil and not m_Vehicles:IsAirVehicle(self.m_ActiveVehicle) then
+		local s_Now = SharedUtils:GetTime()
+		if s_Now < self._PassengerExitCheck then
+			return
+		end
+		self._PassengerExitCheck = s_Now + PASSENGER_EXIT_CHECK_TIME
+		local s_Mesh = m_NavZones:GetMesh()
+		---@cast s_Mesh -nil
+		local s_Ground = p_VehicleEntity.transform.trans
+		local s_Point = m_NavZones:Closest(s_Mesh, s_Ground, nil, PASSENGER_EXIT_MESH_RANGE)
+		if s_Point == nil or math.abs(s_Mesh.Points[s_Point].Y - s_Ground.y) > PASSENGER_EXIT_MESH_HEIGHT then
+			s_ShouldExit = false
 		end
 	end
 
@@ -445,6 +667,11 @@ function Bot:ClearPlayer(p_Player)
 		self._TargetPlayer = nil
 	end
 
+	if self._FollowTargetPlayer == p_Player then
+		self._FollowTargetPlayer = nil
+		self._FollowWayPoints = {}
+	end
+
 	local s_CurrentShootPlayer = PlayerManager:GetPlayerById(self._ShootPlayerId)
 
 	if s_CurrentShootPlayer == p_Player then
@@ -453,20 +680,53 @@ function Bot:ClearPlayer(p_Player)
 	end
 end
 
-function Bot:Kill()
+---@param p_Reason string|nil why the mod kills the bot (debug-bridge event "mod_kill"), default "reset"
+function Bot:Kill(p_Reason)
 	self:ResetVars()
 
 	if self.m_Player.soldier ~= nil then
 		if m_Vehicles:IsVehicleType(self.m_ActiveVehicle, VehicleTypes.StationaryAA) then
 			g_GameDirector:ReturnStationaryAaEntity(self.m_Player.controlledControllable, self.m_Player.teamId)
 		end
-		self.m_Player.soldier:Kill()
+		self:KillSoldier(p_Reason or 'reset')
 	end
+end
+
+---Kills the soldier for a reason of the mod (stuck, no progress, a seat it didn't get, ...); the bot respawns as usual.
+---The game reports these deaths as "Death" without a killer: the debug-bridge gets the reason (event "mod_kill").
+---@param p_Reason string
+function Bot:KillSoldier(p_Reason)
+	local s_Soldier = self.m_Player.soldier
+	if s_Soldier == nil then
+		return
+	end
+	if m_DebugBridge.m_Enabled then
+		m_DebugBridge:Event('mod_kill', {
+			bot = self.m_Id,
+			team = self.m_Player.teamId,
+			reason = p_Reason,
+			zone = self.m_Zone ~= nil and self.m_Zone.Zone.Name or nil,
+			path = self.m_Zone == nil and self._PathIndex or nil,
+			objective = self._Objective,
+			vehicle = self.m_ActiveVehicle ~= nil and self.m_ActiveVehicle.Name or nil,
+			pos = DebugBridge.Vec(s_Soldier.worldTransform.trans),
+		})
+	end
+	self._ModKill = true
+	s_Soldier:Kill()
+end
+
+---Killed (Player:Killed): the ticket of this death is settled on the next spawn (BotSpawner:_SettleDeathTicket), a
+---revive spawns nothing and costs nothing.
+function Bot:NoteDeath()
+	self._DeathTicket = { Team = self.m_Player.teamId, ByMod = self._ModKill }
+	self._ModKill = false
 end
 
 function Bot:Destroy()
 	self:ResetVars()
 	self.m_Player.input = nil
+	self.m_Input = nil
 
 	if self.m_Player.soldier ~= nil then
 		self.m_Player.soldier:Destroy()
@@ -480,66 +740,109 @@ end
 -- Private Functions
 -- =============================================
 
+---Human-like scanning: glance at a random point, hold it for a moment, then pan smoothly to the next one.
+---Glances mostly alternate sides, so left and right both get covered, with an occasional check straight ahead.
+---Updates self._LookAroundYawOffset (relative to the vehicle forward or the soldier's base yaw) and self._LookAroundPitch (absolute).
+---@param p_DeltaTime number
+---@param p_MaxYaw number max yaw offset to either side in rad
+---@param p_MaxPitch number max pitch deviation from the horizon in rad
+function Bot:UpdateLookAroundGlance(p_DeltaTime, p_MaxYaw, p_MaxPitch)
+	self._VehicleLookAroundTimer = self._VehicleLookAroundTimer - p_DeltaTime
+
+	if self._VehicleLookAroundTimer <= 0.0 then
+		if MathUtils:GetRandom(0.0, 1.0) < 0.2 then
+			-- Check the front again.
+			self._LookAroundYawGoal = MathUtils:GetRandom(-0.15, 0.15)
+			self._VehicleLookAroundTimer = MathUtils:GetRandom(1.0, 2.5)
+		else
+			-- Usually switch sides, sometimes take a second look at the same side.
+			if MathUtils:GetRandom(0.0, 1.0) < 0.75 then
+				self._LookAroundSide = -self._LookAroundSide
+			end
+
+			self._LookAroundYawGoal = self._LookAroundSide * MathUtils:GetRandom(0.3 * p_MaxYaw, p_MaxYaw)
+			self._VehicleLookAroundTimer = MathUtils:GetRandom(1.5, 4.0)
+		end
+
+		-- Mostly scan the horizon, slightly more below than above.
+		self._LookAroundPitchGoal = MathUtils:GetRandom(-p_MaxPitch, 0.5 * p_MaxPitch)
+	end
+
+	-- Ease towards the goal: fast start, slow settle, capped turn rate.
+	local s_Ease = math.min(1.0, p_DeltaTime * 3.0)
+	local s_MaxStep = 1.2 * p_DeltaTime -- ~70°/s
+	local s_YawStep = (self._LookAroundYawGoal - self._LookAroundYawOffset) * s_Ease
+
+	if s_YawStep > s_MaxStep then
+		s_YawStep = s_MaxStep
+	elseif s_YawStep < -s_MaxStep then
+		s_YawStep = -s_MaxStep
+	end
+
+	self._LookAroundYawOffset = self._LookAroundYawOffset + s_YawStep
+	self._LookAroundPitch = self._LookAroundPitch + (self._LookAroundPitchGoal - self._LookAroundPitch) * s_Ease
+end
+
 ---@param p_DeltaTime number
 function Bot:_UpdateLookAroundPassenger(p_DeltaTime)
-	-- Move around a little.
-	-- TODO: why is this check needed sometimes?
+	-- Can be nil while the bot enters or leaves the vehicle.
 	if self.m_Player.attachedControllable == nil then
 		return
 	end
 
+	self:UpdateLookAroundGlance(p_DeltaTime, 1.4, 0.12)
+
 	local s_Pos = self.m_Player.attachedControllable.transform.forward
 	local s_AtanDzDx = math.atan(s_Pos.z, s_Pos.x)
-	self._TargetYaw = (s_AtanDzDx > math.pi / 2) and (s_AtanDzDx - math.pi / 2) or (s_AtanDzDx + 3 * math.pi / 2)
-	self._TargetPitch = 0.0
+	local s_Yaw = (s_AtanDzDx > math.pi / 2) and (s_AtanDzDx - math.pi / 2) or (s_AtanDzDx + 3 * math.pi / 2)
+	s_Yaw = s_Yaw + self._LookAroundYawOffset
 
-	self._VehicleWaitTimer = self._VehicleWaitTimer + p_DeltaTime
-
-	if self._VehicleWaitTimer > 9.0 then
-		self._VehicleWaitTimer = 0.0
-	elseif self._VehicleWaitTimer >= 6.0 then
-	elseif self._VehicleWaitTimer >= 3.0 then
-		self._TargetYaw = self._TargetYaw - 1.0 -- 60° rotation left.
-		self._TargetPitch = 0.2
-
-		if self._TargetYaw < 0.0 then
-			self._TargetYaw = self._TargetYaw + (2 * math.pi)
-		end
-	elseif self._VehicleWaitTimer >= 0.0 then
-		self._TargetYaw = self._TargetYaw + 1.0 -- 60° rotation right.
-		self._TargetPitch = -0.2
-
-		if self._TargetYaw > (math.pi * 2) then
-			self._TargetYaw = self._TargetYaw - (2 * math.pi)
-		end
+	if s_Yaw < 0.0 then
+		s_Yaw = s_Yaw + (2 * math.pi)
+	elseif s_Yaw > (2 * math.pi) then
+		s_Yaw = s_Yaw - (2 * math.pi)
 	end
+
+	self._TargetYaw = s_Yaw
+	self._TargetPitch = self._LookAroundPitch
 end
 
 ---@param p_DeltaTime number
 function Bot:_UpdateInputs(p_DeltaTime)
+	local s_Input = self.m_Input
+	local s_ActiveInputs = self.m_ActiveInputs
 	---@type EntryInputActionEnum
 	for i = 0, 36 do
-		if self.m_ActiveInputs[i].reset then
-			self.m_Player.input:SetLevel(i, 0)
-			self.m_ActiveInputs[i].value = 0
-			self.m_ActiveInputs[i].reset = false
-		elseif self.m_ActiveInputs[i].value ~= 0 then
-			self.m_Player.input:SetLevel(i, self.m_ActiveInputs[i].value)
-			self.m_ActiveInputs[i].reset = true
+		local s_ActiveInput = s_ActiveInputs[i]
+		if s_ActiveInput.reset then
+			s_Input:SetLevel(i, 0)
+			s_ActiveInput.value = 0
+			s_ActiveInput.reset = false
+		elseif s_ActiveInput.value ~= 0 then
+			s_Input:SetLevel(i, s_ActiveInput.value)
+			s_ActiveInput.reset = true
 		end
 	end
 
-	for l_Index = 1, #self.m_DelayedInputs do
-		local l_DelayedInput = self.m_DelayedInputs[l_Index]
+	-- Apply every expired delayed input in insertion order and keep the rest, compacting the list in place.
+	local s_DelayedInputs = self.m_DelayedInputs
+	local s_Count = #s_DelayedInputs
+	local s_Remaining = 0
+
+	for l_Index = 1, s_Count do
+		local l_DelayedInput = s_DelayedInputs[l_Index]
 		l_DelayedInput.delay = l_DelayedInput.delay - p_DeltaTime
+
 		if l_DelayedInput.delay <= 0 then
-			self.m_ActiveInputs[l_DelayedInput.input] = {
-				value = l_DelayedInput.value,
-				reset = l_DelayedInput.value == 0,
-			}
-			table.remove(self.m_DelayedInputs, l_Index)
-			break
+			self:_SetInput(l_DelayedInput.input, l_DelayedInput.value)
+		else
+			s_Remaining = s_Remaining + 1
+			s_DelayedInputs[s_Remaining] = l_DelayedInput
 		end
+	end
+
+	for l_Index = s_Count, s_Remaining + 1, -1 do
+		s_DelayedInputs[l_Index] = nil
 	end
 end
 
@@ -558,9 +861,35 @@ function Bot:_UpdateRespawn(p_DeltaTime)
 	end
 end
 
+-- A land vehicle with no vehicle-path this close but the vehicle-network of a zone (VEHICLE_ZONE_START_RANGE) starts on
+-- that network: it leaves it at the junction towards its objective (_ZoneDecide). Else the driver steered straight to
+-- the closest waypoint (MP_013 CQL: a Vodnik parked at E, the waypoint 68 m away behind houses; the bases: the path
+-- 24 m from the vehicle spawns), got nowhere and everybody got out.
+local VEHICLE_PATH_NEAR = 10.0
+-- Closer to it than to the network by this many metres: the path (MP_018: the path 10 m from the vehicle spawns).
+local VEHICLE_PATH_PREFER = 5.0
+local VEHICLE_ZONE_START_RANGE = 20.0
+
 ---@param p_Position Vec3
 function Bot:FindVehiclePath(p_Position)
 	local s_Node = g_GameDirector:FindClosestPath(p_Position, true, true, self.m_ActiveVehicle.Terrain)
+
+	if Registry.BOT.USE_VEHICLE_ZONE_NETWORKS
+		and (self.m_ActiveVehicle.Terrain == VehicleTerrains.Land or self.m_ActiveVehicle.Terrain == VehicleTerrains.Amphibious)
+		and self.m_Player.controlledEntryId == 0 and self.m_Zone == nil then
+		local s_Zone, s_Point = m_NavZones:VehicleZoneAt(p_Position, VEHICLE_ZONE_START_RANGE, self._Objective)
+		local s_PathDistance = s_Node ~= nil and s_Node.Position:Distance(p_Position) or math.huge
+		if s_Zone ~= nil and s_Point ~= nil and (s_PathDistance > VEHICLE_PATH_NEAR
+				or s_PathDistance > s_Zone.Points[s_Point].Position:Distance(p_Position) + VEHICLE_PATH_PREFER) then
+			if s_Node ~= nil then
+				-- Where it goes on from when it leaves the network over a path.
+				self._PathIndex = s_Node.PathIndex
+				self._CurrentWayPoint = s_Node.PointIndex
+			end
+			self:_EnterZone(s_Zone, s_Point, true)
+			return
+		end
+	end
 
 	if s_Node ~= nil then
 		-- Switch to vehicle.
@@ -606,20 +935,10 @@ function Bot:UpdateVehicleMovableId()
 			self._ActiveVehicleWeaponSlot)
 
 		if self.m_Player.controlledEntryId == 0 then
-			self:FindVehiclePath(self.m_Player.soldier.worldTransform.trans)
+			self:FindVehiclePath(self.m_Player.soldier.worldTransform.trans:Clone())
 		end
 	end
 	self:UpdateDontAttackFlag()
-end
-
-function Bot:AtObjectivePath()
-	local s_FirstPoint = m_NodeCollection:GetFirst(self._PathIndex)
-
-	if #s_FirstPoint.Data.Objectives == 1 and s_FirstPoint.Data.Objectives[1] == self._Objective then
-		return true
-	end
-
-	return false
 end
 
 function Bot:AbortAttack()
@@ -635,9 +954,12 @@ function Bot:AbortAttack()
 		self._Pid_Drv_Yaw:Reset()
 		self._Pid_Drv_Tilt:Reset()
 		self._Pid_Drv_Roll:Reset()
+		self._Pid_Jet_Pitch:Reset()
+		self._Pid_Jet_Yaw:Reset()
+		self._JetTargetAcceleration.TargetId = nil
 	end
 
-	self.m_Player.input.zoomLevel = 0
+	self.m_Input.zoomLevel = 0
 	self._ShootPlayerId = -1
 	self._ShootPlayer = nil
 	self._ShootModeTimer = 0.0

@@ -23,9 +23,12 @@ Registry = {
 		USE_BUGGED_HITBOXES = false,
 		-- Distance commands are heard by bots.
 		COMMAND_DISTANCE = 20,
+		-- Time in seconds a gunship seat is kept free for a player after the "Free Gunship Seat" command.
+		GUNSHIP_SEAT_RESERVE_TIME = 30.0,
 		-- Use load of Bundle to fix Bug of weapons disappearing (thanks to Lesley!) !!! THIS MIGHT CAUSE CRASHES OR OTHER ISSUES!!!
 		USE_LOAD_BUNDLE_BUGFIX = false,
-		-- Keep the last ticket in conquest for the gamemode counter
+		-- Conquest: bots don't spawn on the last ticket of their team (it stays for the counter of the game mode, else the
+		-- end of the round could crash).
 		DONT_SPAWN_BOTS_ON_LAST_CONQUEST_TICKET = true,
 		-- Valid keys can be found here: https://docs.veniceunleashed.net/vext/ref/fb/inputdevicekeys/.
 		BOT_COMMAND_KEY = InputDeviceKeys.IDK_LeftAlt,
@@ -35,6 +38,10 @@ Registry = {
 		MAX_NUMBER_OF_NODES_PER_CYCLE = 1024,
 		-- experimental nametags
 		USE_EXPERIMENTAL_NAMETAGS = false,
+		-- Generational garbage-collection of Lua on the server instead of incremental. Each GC-cycle has to go through
+		-- all waypoints (50000 on big maps): with it, about half as many frames take longer than 50 ms there.
+		-- Set to false if the server gets unstable.
+		USE_GENERATIONAL_GC = true,
 	},
 	-- Version and Release related variables.
 	-- Variables related to the current build version, version and the type of version.
@@ -43,7 +50,7 @@ Registry = {
 		-- Major version.
 		VERSION_MAJ = 3,
 		-- Minor version.
-		VERSION_MIN = 0,
+		VERSION_MIN = 6,
 		-- Patch version.
 		VERSION_PATCH = 0,
 		-- Additional label for pre-releases and build metadata.
@@ -59,7 +66,7 @@ Registry = {
 	},
 	-- Some Client Variables.
 	CLIENT = {
-		-- Distance a bot tries to revive a player.
+		-- Distance a bot tries to revive a real player (BOT.REVIVE_DISTANCE: another bot).
 		REVIVE_DISTANCE = 30.0,
 		-- The number of attack-checks done per cycle.
 		MAX_CHECKS_PER_CYCLE = 10,
@@ -77,29 +84,67 @@ Registry = {
 		RAYCAST_INTERVAL_ENEMY_CHECK = 0.03,
 		-- How often are the connections for a bot-bot-attack checked.
 		BOT_BOT_CHECK_INTERVAL = 0.05,
+		-- How long position and state of a bot are reused by the bot-bot-check before they are read again.
+		BOT_BOT_INFO_MAX_AGE = 0.25,
 		-- Hof often Bot-Revive-Bot-Raycast-chcks are done (costs server performance)
 		BOT_BOT_REVIVE_INTERVAL = 0.5,
 		-- Max checks per cycle.
 		BOT_BOT_MAX_CHECKS = 30,
+		-- Pairs of bots farther apart than this (m) are checked only in every second round over all pairs: the close ones
+		-- more often (a round took up to 5 s on crowded levels, half of the rays went to pairs farther than 75 m).
+		BOT_BOT_FAR_DISTANCE = 75.0,
 		-- Max Raycaststs Bot-Bot-Revive
-		BOT_BOT_REVIVE_MAX_RAYCASTS = 15
+		BOT_BOT_REVIVE_MAX_RAYCASTS = 15,
+		-- Do all sight-checks (bot-bot, bot-player, player-revive) with server-side raycasts instead of sending
+		-- them to the clients. No client is needed then: bots also fight each other on an empty server.
+		-- Costs server performance. Toggle ingame with "!serverraycasts on|off" or RCON "funbots.serverRaycasts".
+		USE_SERVER_RAYCASTS = false,
+		-- Max server-raycasts per bot-bot-check (every BOT_BOT_CHECK_INTERVAL).
+		SERVER_RAYCASTS_BOT_BOT = 6,
+		-- Max server-raycasts per real player and update for the bot-player- and revive-checks.
+		SERVER_RAYCASTS_PER_PLAYER = 1,
 	},
 	GAME_DIRECTOR = {
 		UPDATE_OBJECTIVES_CYCLE = 1.5,
+		-- A bot is only sent to a vehicle this close (metres): with the navigation paths it would walk to any.
+		MAX_VEHICLE_OBJECTIVE_DISTANCE = 100.0,
 		-- Time after a MCO is considered destroyed.
 		MCOMS_CHECK_CYCLE = 26.5,
-		-- Kill Bots without valid paths after this amount of time
-		KILL_ON_INVALID_PATH_TIME = 50,
+		-- Off the mesh, a bot that doesn't get this many metres closer to the end of its navigation path (or to its
+		-- objective) for OFF_MESH_TELEPORT_TIME seconds is teleported onto the mesh, if it is up to
+		-- OFF_MESH_TELEPORT_RANGE metres away (and TeleportIfStuck is on), after OFF_MESH_KILL_TIME seconds killed.
+		-- Not while it fights, waits or does an action.
+		OFF_MESH_MIN_PROGRESS = 5.0,
+		OFF_MESH_TELEPORT_TIME = 20,
+		OFF_MESH_TELEPORT_RANGE = 30.0,
+		OFF_MESH_KILL_TIME = 50,
+		-- The last resort: a bot on foot that doesn't get OBJECTIVE_PROGRESS_MIN metres closer to its objective for
+		-- OBJECTIVE_PROGRESS_TIME seconds respawns (not within OBJECTIVE_PROGRESS_NEAR metres of it, not while it fights).
+		OBJECTIVE_PROGRESS_MIN = 5.0,
+		OBJECTIVE_PROGRESS_TIME = 90,
+		OBJECTIVE_PROGRESS_NEAR = 30.0,
+		-- On foot to a vehicle: not within VEHICLE_OBJECTIVE_NEAR metres for VEHICLE_OBJECTIVE_TIME seconds, the bot gives
+		-- it up and isn't sent to it again for VEHICLE_UNREACHABLE_TIME seconds (a boat it can't get to). After getting out
+		-- of a vehicle it isn't sent back to it for LEFT_VEHICLE_TIME seconds.
+		VEHICLE_OBJECTIVE_NEAR = 10.0,
+		VEHICLE_OBJECTIVE_TIME = 30,
+		VEHICLE_UNREACHABLE_TIME = 300,
+		LEFT_VEHICLE_TIME = 60,
+		-- A vehicle a bot on foot was sent to and that it gave up (no way there, no seat): not again for this long.
+		VEHICLE_RETRY_TIME = 20,
+		-- A ground vehicle whose driver doesn't get VEHICLE_PROGRESS_MIN metres away for VEHICLE_PROGRESS_TIME seconds
+		-- (not waiting for passengers, not at its objective): all bots get out.
+		VEHICLE_PROGRESS_MIN = 5.0,
+		VEHICLE_PROGRESS_TIME = 30,
 		-- Increments of nodes to search best patch with.
 		NODE_SEARCH_INCREMENTS = 10,
 		--- Weight for attacking objectives
 		WEIGHT_ATTACK_OBJECTIVE = 4.0,
 		--- Weight for defending objectives
 		WEIGHT_DEFEND_OBJECTIVE = 1.0,
-		--- PathSwitch on same prio
+		--- Levels without a mesh: probability (%) that a bot switches to another path at a link. Vehicles: between
+		--- paths of the same priority.
 		PROBABILITY_SWITCH_SAME_PRIO = 20,
-		--- Allow bots to spawn on the last tickets in conquest.
-		DONT_SPAWN_BOTS_ON_LAST_TICKETS = true,
 	},
 	VEHICLES = {
 		-- Distance for the "enter vehicle" command.
@@ -119,9 +164,46 @@ Registry = {
 		-- Time a jet waits after an attack.
 		JET_ABORT_ATTACK_TIME = 6.0,
 		-- Time a jet waits after an attack on another jet.
-		JET_ABORT_JET_ATTACK_TIME = 4.0,
-		-- Target height for jets.
+		JET_ABORT_JET_ATTACK_TIME = 8.0,
+		-- After an attack a jet extends (flies straight away) for that time, but not further than this (m, horizontal)
+		-- from its patrol-point above the objective. Else the jets flew out of the map.
+		JET_EXTEND_MAX_DISTANCE = 600.0,
+		-- Target height for jets (m above the objective).
 		JET_TARGET_HEIGHT = 350,
+		-- The same in air superiority. Its flags are spheres of ~290 m around the flag in the air: fly in the upper half,
+		-- above JET_MIN_ALTITUDE. At the flag itself (below the minimum altitude) the jets zoomed up and stalled, and
+		-- the height-band of the attack aborted every attack. Not higher: the ceiling of the level (XP5_002: ~750 m).
+		JET_TARGET_HEIGHT_AIR_SUPERIORITY = 150,
+		-- Seconds between target-scans of a jet that is not attacking (while attacking: BOT.VEHICLE_FIRE_MODE_DURATION).
+		JET_TARGET_SCAN_INTERVAL = 1.0,
+		-- Target-selection of jets: metres added to the distance per radian the target is away from the nose.
+		-- Prefers targets in front, that can be attacked sooner. 0 = closest target only.
+		JET_TARGET_ANGLE_PENALTY = 400,
+		-- A jet keeps its target as long as the attack is promising: target within this angle (rad) from the nose and
+		-- within MAX_ATTACK_DISTANCE_JET. Checked every BOT.VEHICLE_FIRE_MODE_DURATION, else it aborts and extends.
+		JET_ATTACK_KEEP_ANGLE = 1.57,
+		-- The lead of jets includes the acceleration of the target (turning targets). Smoothing-time (s) of the
+		-- measured acceleration, and its limit (m/s²) against spikes.
+		JET_TARGET_ACCELERATION_SMOOTHING = 0.3,
+		JET_TARGET_ACCELERATION_MAX = 100.0,
+		-- A jet fires once the shot would pass the lead-point closer than this (m).
+		JET_FIRE_HIT_RADIUS = 50.0,
+		-- Limits of that fire-angle (rad): always allowed below MIN, never above MAX.
+		JET_FIRE_MIN_ANGLE = 0.1,
+		JET_FIRE_MAX_ANGLE = 0.3,
+		-- Collision avoidance: a jet breaks right (and the higher one climbs) if another aircraft would pass closer than
+		-- JET_AVOID_DISTANCE (m) within JET_AVOID_TIME (s). Without it, two jets attacking each other fly head-on into each other.
+		JET_AVOID_DISTANCE = 50.0,
+		JET_AVOID_TIME = 2.5,
+		-- Closing faster than JET_AVOID_HEAD_ON_SPEED (m/s, head-on): JET_AVOID_HEAD_ON_DISTANCE instead. Two jets attacking
+		-- each other steer at each other all the time, the straight-line prediction showed a miss until it was too late
+		-- (XP3_Valley: 5 head-on collisions in 10 minutes, closing with 190 m/s).
+		JET_AVOID_HEAD_ON_SPEED = 120.0,
+		JET_AVOID_HEAD_ON_DISTANCE = 150.0,
+		-- Ground avoidance: a jet that would get lower than JET_MIN_ALTITUDE (m above the objective) within
+		-- JET_PULL_OUT_TIME (s) at its current sink-rate levels its wings and pulls up, whatever it does.
+		JET_MIN_ALTITUDE = 120.0,
+		JET_PULL_OUT_TIME = 3.0,
 		-- Target height for choppers.
 		CHOPPER_TARGET_HEIGHT = 110,
 		-- Percentage of vehicle health to leave vehicle with (currently no passive events for bot-only vehicles)
@@ -139,7 +221,7 @@ Registry = {
 	},
 	-- Bot related.
 	BOT = {
-		-- Distance a bot tries to revive a bot.
+		-- Distance a bot tries to revive another bot (CLIENT.REVIVE_DISTANCE: a real player).
 		REVIVE_DISTANCE = 15.0,
 		-- Revive probabilities
 		REVIVE_PROBABILITY = 80.0,
@@ -160,10 +242,16 @@ Registry = {
 		PROBABILITY_TELEPORT_IF_STUCK = 80,
 		-- Chance that the bot will teleport when they are stuck in a vehicle.
 		PROBABILITY_TELEPORT_IF_STUCK_IN_VEHICLE = 20,
-		-- At the end of an attack cycle, chance of throwing a grenade.
+		-- Chance of throwing a grenade once the target is out of sight (rolled once per attack).
 		PROBABILITY_THROW_GRENADE = 50,
-		-- At the end of an attack cycle, chance of throwing a grenade, if behavior priorizes this.
+		-- Chance of throwing a grenade once the target is out of sight, if behavior priorizes this.
 		PROBABILITY_THROW_GRENADE_PRIO = 95,
+		-- Seconds without sight of the target before a bot throws a grenade at its last known position.
+		GRENADE_LOST_SIGHT_TIME = 1.2,
+		-- Throw-speed of a grenade in m/s, used to calculate the throw-pitch.
+		GRENADE_THROW_SPEED = 15.5,
+		-- Max time for switching to the grenade and throwing it, before the bot gives up.
+		GRENADE_THROW_TIMEOUT = 3.0,
 		-- The probability to use the rocket instead of the primary.
 		PROBABILITY_SHOOT_ROCKET = 20,
 		-- The probability to use the rocket, if behavior of bot priorizes this
@@ -172,23 +260,70 @@ Registry = {
 		ROCKET_RELOAD_COOLDOWN = 13.0,
 		-- The probability to use the rifle to attack a chopper.
 		PROBABILITY_ATTACK_CHOPPER_WITH_RIFLE = 25,
-		-- If the game mode is Rush or Conquest, change direction if the bot is stuck on non-connecting paths.
-		PROBABILITY_CHANGE_DIRECTION_IF_STUCK = 50,
+		-- Hard reroutes to the closest path a stuck bot tries before it is killed.
+		MAX_STUCK_REROUTES = 2,
+		-- Drivers of land vehicles also drive the vehicle-networks of the capture points (experimental).
+		USE_VEHICLE_ZONE_NETWORKS = true,
+		-- On the mesh: turn towards the next point before reaching one, as far as there is room around it (smoother
+		-- ways instead of walking from point to point and turning there).
+		ZONE_SMOOTHING = true,
+		-- Share by which a navigation path may seem longer to a bot (random per bot and life): the bots spread over
+		-- the routes to their objective instead of all taking the shortest one. 0: all take the shortest.
+		NAV_ROUTE_SPREAD = 0.25,
+		-- Seconds a bot tries to free a stuck ground-vehicle before they exit it and continue on foot.
+		VEHICLE_STUCK_EXIT_TIME = 30.0,
 		-- Trace delta, a bot uses when they are off a trace path to find his way back to the best path.
 		TRACE_DELTA_SHOOTING = 0.4,
 		-- The max time a bot tries to move to the repair-vehicle.
 		MAX_TIME_TRY_REPAIR = 10,
-		-- The minimum distance to throw a nade
+		-- The minimum distance to throw a nade (horizontal, to the last known position of the target)
 		MIN_DISTANCE_NADE = 12,
 		-- Advanced aiming makes a difference on huge distances, but costs more performance.
 		USE_ADVANCED_AIMING = false,
 		-- Use of path-Offset
 		USE_PATH_OFFSETS = true,
-		-- Worsening bots on larger distances. Factor 1.0 = no worsening, always same offset
-		WORSENING_FACTOR_DISTANCE = 0.95,
+		-- Humanlike aim error (see Bot/BotAimError.lua). The base error is set in the config in mrad. Angles in rad, times in s.
+		-- Configured aim error (mrad) at which flick, flinch and tracking have the values below. They scale linearly with
+		-- it, so an aim error of 0 is a perfect aim.
+		AIM_ERROR_REFERENCE = 6.0,
+		-- Players take more care on greater distances: the angle of the error shrinks with (REFERENCE_DISTANCE / distance)
+		-- ^ EXPONENT, the miss in m still grows. Exponent 0 = same angle on all distances, 1 = same miss in m.
+		-- The configured aim error is the one at REFERENCE_DISTANCE. Below MIN_DISTANCE the angle does not grow anymore.
+		AIM_ERROR_REFERENCE_DISTANCE = 25.0,
+		AIM_ERROR_DISTANCE_EXPONENT = 0.5,
+		AIM_ERROR_MIN_DISTANCE = 2.0,
+		-- Time constant of the slow drift of the crosshair around the target.
+		AIM_ERROR_DRIFT_TIME = 0.3,
+		-- Vertical aim error relative to the horizontal one (humans miss more to the sides).
+		AIM_ERROR_PITCH_FACTOR = 0.7,
+		-- Additional aim error per m/s of own movement (0.15 → moving with 4 m/s = +60 %).
+		AIM_ERROR_SELF_SPEED = 0.15,
+		-- Aim error from tracking a moving target: angular speed of the target (rad/s, own movement of the target only)
+		-- multiplied by this.
+		AIM_TRACKING_ERROR = 0.03,
+		-- Delay with which an average bot notices changes of the target movement (e.g. strafing). Scaled with skill.
+		AIM_TRACKING_LAG = 0.15,
+		-- Error after the flick to a new target, as share of the turned angle. Decays with AIM_ACQUISITION_TIME.
+		AIM_ACQUISITION_ERROR = 0.1,
+		AIM_ACQUISITION_TIME = 0.25,
+		AIM_ACQUISITION_MAX_ERROR = 0.25,
+		-- Probability that the flick overshoots instead of undershooting.
+		AIM_PROBABILITY_OVERSHOOT = 25,
+		-- Kick of the aim when the bot gets hit and its decay-time.
+		AIM_FLINCH = 0.01,
+		AIM_FLINCH_TIME = 0.2,
+		-- Share of the weapon spread the bots compensate. Bots can't aim down sights, this emulates it (0 = hip-fire spread).
+		-- Players fire from the hip on short distances: NEAR up to NEAR_DISTANCE, rising to FAR from FAR_DISTANCE on.
+		AIM_SPREAD_COMPENSATION_NEAR = 0.4,
+		AIM_SPREAD_COMPENSATION_NEAR_DISTANCE = 10.0,
+		AIM_SPREAD_COMPENSATION_FAR = 0.8,
+		AIM_SPREAD_COMPENSATION_FAR_DISTANCE = 30.0,
+		-- Fitts' law for the first shot: extra delay per doubling of the angle to the target. The angle is measured in
+		-- multiples of FIRST_SHOT_TARGET_ANGLE (180° → +0.24 s, 20° → +0.12 s).
+		FIRST_SHOT_DELAY_PER_BIT = 0.04,
+		FIRST_SHOT_TARGET_ANGLE = 0.05,
+		-- Probability (%) that a bot with a beacon to place takes the way to a beacon at a link to it.
 		PROBABILITY_SWITCH_TO_BEACON_PATH = 80,
-		PROBABILITY_SWITCH_TO_EXPLORE_PATH = 60,
-		PROBABILITY_KEEP_KIT_IF_HAS_BEACON = 80,
 		-- number of nodes in every direction to scan for best way back
 		NUMBER_NODES_TO_SCAN_AFTER_ATTACK = 20,
 		-- Delay on destroying several bots
@@ -196,7 +331,44 @@ Registry = {
 		-- Distance to closest objective on which passengers should exit vehicles
 		PASSENGER_EXIT_DISTANCE = 50,
 		-- Probability to stop in while shooting
-		PROBABILITY_STOP_TO_SHOOT = 35
+		PROBABILITY_STOP_TO_SHOOT = 35,
+		-- Rush: probability (%) that an attacker (a defender on the way to its MCOM) keeps going to its MCOM while
+		-- shooting, instead of fighting where they are. Else the respawned defenders are back before the attackers reach
+		-- the MCOM.
+		RUSH_PUSH_PROBABILITY = 50,
+		-- Rush: closer than this (metres) to its MCOM an attacker always keeps going while shooting, unless the enemy
+		-- is closer than RUSH_PUSH_MIN_ENEMY_DISTANCE.
+		RUSH_PUSH_OBJECTIVE_DISTANCE = 40.0,
+		RUSH_PUSH_MIN_ENEMY_DISTANCE = 10.0,
+		-- Rush: farther than this (metres) from its MCOM a defender keeps going there while shooting, by the same chance.
+		RUSH_DEFEND_PUSH_DISTANCE = 30.0,
+		-- Rush: farther than this (horizontal metres) from its MCOM a defender sprints in its zone instead of walking.
+		RUSH_DEFEND_SPRINT_DISTANCE = 25.0,
+		-- Rush: defenders on foot up to this far (m) from an armed MCOM go there to disarm it, also from the other MCOM
+		-- (the fuse is 25 s: about the way a soldier sprints in that time).
+		RUSH_DEFEND_ARMED_DISTANCE = 120.0,
+		-- Rush: those up to this far (m) get the job to disarm it at once, not only once they are in the zone of the MCOM
+		-- (they got it 10 s after the arm, median; disarms in A/B rounds 22 % instead of 11 %).
+		RUSH_DISARM_JOB_DISTANCE = 40.0,
+		-- Seconds a bot keeps shooting at one target at least (on foot, in a vehicle). Below 2.5 in a vehicle the bots
+		-- switch targets too often.
+		MIN_TIME_SHOOT_AT_PLAYER = 0.7,
+		VEHICLE_MIN_TIME_SHOOT_AT_PLAYER = 4.0,
+		-- Seconds a bot tries to shoot a target at least (on foot, in a vehicle). Below 3.0 (7.0 in a vehicle) they give up
+		-- too early.
+		FIRE_MODE_DURATION = 4.5,
+		VEHICLE_FIRE_MODE_DURATION = 9.0,
+		-- Degrees a bot turns per second at most.
+		MAX_YAW_PER_SEC = 550,
+		-- Metres to a waypoint at which a bot goes on to the next one (on foot and in land vehicles, in aircraft).
+		TARGET_DISTANCE_WAYPOINT = 0.8,
+		TARGET_DISTANCE_WAYPOINT_AIR = 16.0,
+		-- Seconds a bot waits before it attacks with the knife again.
+		MELEE_ATTACK_COOLDOWN = 3.5,
+		-- Sidewards movement (Config.MoveSidewards): seconds straight at most, sidewards at most, either at least.
+		MAX_STRAIGHT_CYCLE = 10.0,
+		MAX_SIDE_CYCLE = 5.0,
+		MIN_MOVE_CYCLE = 0.3,
 	},
 	-- Bot team balancing (only in keep_playercount - spawn-mode)
 	BOT_TEAM_BALANCING = {
@@ -218,27 +390,45 @@ Registry = {
 		DELAY_DIRECT_SPAWN = 6.0,
 		-- Probability of a bot spawning on a member of the same squad.
 		PROBABILITY_SQUADMATE_SPAWN = 20,
-		-- Probability of a bot spawning in the vehicle of a bot of the same squad.
-		PROBABILITY_SQUADMATE_VEHICLE_SPAWN = 70,
-		-- Probability of a bot spawning on a random teammate
-		PROBABILITY_TEAMMATE_SPAWN = 1,
-		-- Probability of a bot spawning in a random teammate vehicle
-		PROBABILITY_TEAMMATE_VEHICLE_SPAWN = 50,
-		-- Probability of a bot spawning in the vehicle of a player of the same squad.
-		PROBABILITY_SQUADMATE_PLAYER_VEHICLE_SPAWN = 50,
-		-- Probability of a bot spawning on the closest spawn point.
-		PROBABILITY_CLOSEST_SPAWN = 40,
-		-- Probability of a bot spawning on an attacked spawn point.
-		PROBABILITY_ATTACKED_SPAWN = 60,
-		-- Probability of a bot spawning on their deployment base.
-		PROBABILITY_BASE_SPAWN = 5,
-		-- Probability of a bot spawning on their deployment base.
-		PROBABILITY_BASE_VEHICLE_SPAWN = 30,
+		-- Conquest: probability (%) that a spawning bot takes a free vehicle of its team: it spawns at the capture
+		-- point (or HQ) next to it and goes there. Else at the capture point closest to the front.
+		PROBABILITY_SPAWN_FOR_VEHICLE = 50,
+		-- Rush: the defenders (always Team2) get this share of the bots of their team (balanced_teams), e.g. to test
+		-- the attack. 1.0 = as many as the attackers.
+		RUSH_DEFENDER_FACTOR = 0.85,
+		-- Bots spawn at the spawn-points of the game in all game modes. Else only in TDM, SDM, GunMaster, AirSuperiority,
+		-- Domination, conquest and rush; elsewhere on the waypoints (the game-spawns of the other modes don't work on most
+		-- levels).
+		GAME_SPAWNS_EVERYWHERE = false,
+		-- Spawning on the waypoints: at least this far (metres) from the soldiers of the other team (one at least
+		-- HEIGHT_DISTANCE_TO_PLAYERS above or below is on another floor and doesn't count). After MAX_TRIES_AT_DISTANCE
+		-- tries the distance gets DISTANCE_REDUCTION smaller.
+		DISTANCE_TO_PLAYERS = 30,
+		HEIGHT_DISTANCE_TO_PLAYERS = 2.8,
+		DISTANCE_REDUCTION = 8,
+		MAX_TRIES_AT_DISTANCE = 3,
 	},
 	-- Debug
 	DEBUG = {
 		-- enables prints on bullet-collistions for vehicle-offset-identification
 		VEHICLE_PROJECTILE_TRACE = false,
+		-- Aim-evaluation of vehicle-weapons on start (toggle ingame with "!aimeval on|off"). Prints measured offsets,
+		-- misalignment of the aiming-parts and the aim-error of the bots. See AimEvaluation.lua.
+		AIM_EVALUATION = false,
+		-- Seconds between the automatic reports of the aim-evaluation.
+		AIM_EVALUATION_REPORT_INTERVAL = 15.0,
+		-- Seconds between prints of Lua memory, bot-update times, GC and table sizes. 0 = off.
+		-- Used to find what grows or stutters over long rounds.
+		ROUND_STATS_INTERVAL = 0.0,
+		-- Prints every single call of a mod-function that takes longer than this (ms), with its callers. 0 = off.
+		SPIKE_TRACE_MS = 0,
+		-- Streams the game-state to the external debug-server (tools/debug-server) and executes its commands.
+		-- Toggle ingame with "!debugbridge on|off" or RCON "funbots.debugBridge".
+		DEBUG_BRIDGE = false,
+		-- Address of the debug-server.
+		DEBUG_BRIDGE_URL = "http://127.0.0.1:8765",
+		-- Seconds between two snapshots sent to the debug-server.
+		DEBUG_BRIDGE_INTERVAL = 0.2,
 	},
 
 	-- Get the version of the current build as in a semantic format.

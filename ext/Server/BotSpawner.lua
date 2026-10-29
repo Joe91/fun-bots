@@ -14,9 +14,16 @@ local m_BotCreator = require('BotCreator')
 local m_WeaponList = require('__shared/WeaponList')
 ---@type Utilities
 local m_Utilities = require('__shared/Utilities')
+---@type DebugBridge
+local m_DebugBridge = require('Debug/DebugBridge')
 ---@type Logger
 local m_Logger = Logger("BotSpawner", Debug.Server.BOT)
 local m_Vehicles = require('Vehicles')
+---@type NavZones
+local m_NavZones = require('NavZones')
+
+-- A spawn of the game farther from the closest path (metres): the bot starts on its waypoint (OnEngineUpdate).
+local SPAWN_PATH_RANGE = 25.0
 
 function BotSpawner:__init()
 	self:RegisterVars()
@@ -37,7 +44,11 @@ function BotSpawner:RegisterVars()
 	self._KickPlayers = {}
 	---@type Bot[]
 	self._BotsWithoutPath = {}
+	-- Per team: times bots were let through to a vehicle at a spawn no way leads on from (_SeatLeft).
+	self._SeatClaims = {}
 	self._ResourceDataContainer = {}
+	-- "No paths found" was logged in this level (SpawnWayBots).
+	self._NoPathsWarned = false
 end
 
 function BotSpawner:GetResourceDataContainer(p_ResourceName)
@@ -87,6 +98,11 @@ end
 ---VEXT Shared Level:Destroy Event
 function BotSpawner:OnLevelDestroy()
 	self:RegisterVars()
+	-- The tickets of the next round are new: a death of this one costs nothing there.
+	local s_Bots = m_BotManager:GetBots()
+	for l_Index = 1, #s_Bots do
+		s_Bots[l_Index]._DeathTicket = nil
+	end
 end
 
 -- =============================================
@@ -121,14 +137,12 @@ function BotSpawner:OnEngineUpdate(p_DeltaTime, p_SimulationDeltaTime)
 
 	if #self._SpawnSets > 0 then
 		if self._BotSpawnTimer > 0.3 then -- Time to wait between spawn. 0.2 works
-			-- g_Profiler:Start("BotSpawner:Spawn")
 			self._BotSpawnTimer = 0.0
 			local s_PosOfSetInTable = MathUtils:GetRandomInt(1, #self._SpawnSets)
 			---@type SpawnSet
 			local s_SpawnSet = table.remove(self._SpawnSets, s_PosOfSetInTable)
 			self:_SpawnSingleWayBot(s_SpawnSet.PlayerVarOfBot, s_SpawnSet.UseRandomWay, s_SpawnSet.ActiveWayIndex,
 				s_SpawnSet.IndexOnPath, s_SpawnSet.Bot, s_SpawnSet.Team)
-			-- g_Profiler:End("BotSpawner:Spawn")
 		end
 
 		self._BotSpawnTimer = self._BotSpawnTimer + p_DeltaTime
@@ -168,7 +182,6 @@ function BotSpawner:OnEngineUpdate(p_DeltaTime, p_SimulationDeltaTime)
 	end
 
 	if #self._BotsWithoutPath > 0 then
-		-- g_Profiler:Start("BotSpawner:AfterSpawn")
 		for l_Index = 1, #self._BotsWithoutPath do
 			local l_Bot = self._BotsWithoutPath[l_Index]
 			if l_Bot == nil or l_Bot.m_Player == nil then
@@ -177,15 +190,101 @@ function BotSpawner:OnEngineUpdate(p_DeltaTime, p_SimulationDeltaTime)
 			end
 
 			if l_Bot.m_Player.soldier ~= nil then
-				local s_String, s_SpawnEntity = self:_GetSpecialSpawnEnity(l_Bot, l_Bot.m_Player.teamId)
-				if s_SpawnEntity then
+				self:_SettleDeathTicket(l_Bot)
+				local s_SpecialSpawn, s_SpecialSpawnEntity = self:_GetSpecialSpawnEnity(l_Bot, l_Bot.m_Player.teamId)
+				local s_Entered = -1
+				if s_SpecialSpawnEntity then
+					local s_SpawnTransform = l_Bot.m_Player.soldier.worldTransform:Clone()
+					s_Entered = s_SpecialSpawn == "SpawnInMobileVehicle" and l_Bot:_EnterPassengerSeat(s_SpecialSpawnEntity)
+						or l_Bot:_EnterVehicleEntity(s_SpecialSpawnEntity, false)
+					-- Not into the first vehicle of the base (a jet bots may not fly, the seat taken meanwhile): the others.
+					if s_Entered ~= 0 and s_SpecialSpawn == "SpawnInVehicle" and l_Bot.m_Player.soldier ~= nil then
+						local s_Others = g_GameDirector:GetSpawnableVehicle(l_Bot.m_Player.teamId)
+						for l_Other = 1, #s_Others do
+							if s_Others[l_Other] ~= s_SpecialSpawnEntity and l_Bot:_EnterVehicleEntity(s_Others[l_Other], false) == 0 then
+								s_SpecialSpawnEntity = s_Others[l_Other]
+								s_Entered = 0
+								break
+							end
+						end
+					end
+					if s_Entered ~= 0 and l_Bot.m_Player.soldier ~= nil then
+						if m_DebugBridge.m_Enabled then
+							m_DebugBridge:Event('spawn_vehicle_failed', { bot = l_Bot.m_Id, code = s_Entered, kind = s_SpecialSpawn,
+								pos = DebugBridge.Vec(l_Bot.m_Player.soldier.worldTransform.trans) })
+						end
+						-- Didn't get in (the seat taken in the same frame): on foot where the game spawned it, like any other
+						-- spawn below, not dead (a ticket) and not on foot with a vehicle-path (MP_017: into the water
+						-- towards a boat path).
+						l_Bot.m_ActiveVehicle = nil
+						if l_Bot.m_Player.soldier.worldTransform.trans:Distance(s_SpawnTransform.trans) > 2.0 then
+							l_Bot.m_Player.soldier:SetTransform(s_SpawnTransform)
+						end
+					end
+				end
+				if s_Entered == 0 then
 					table.remove(self._BotsWithoutPath, l_Index)
 					l_Bot:SetVarsWay(nil, true, 0, 0, false)
+					l_Bot:FindVehiclePath(s_SpecialSpawnEntity.transform.trans:Clone())
 
-					if l_Bot:_EnterVehicleEntity(s_SpawnEntity, false) ~= 0 then
-						l_Bot:Kill()
-					elseif s_SpawnEntity ~= nil then
-						l_Bot:FindVehiclePath(s_SpawnEntity.transform.trans)
+					self:_ApplyCosumizationAfterSpawn(l_Bot)
+
+					-- for Civilianizer-mod:
+					if Globals.RemoveKitVisuals then
+						Events:Dispatch('Bot:SoldierEntity', l_Bot.m_Player.soldier)
+					end
+
+					break
+				end
+
+				-- check for mate or beacon (not a bot that spawned for a vehicle)
+				local s_PathIndex, s_IndexOnPath, s_InvertDirection, s_SpawnEntity, s_SpawnPosition = nil, nil, nil, nil, nil
+				if g_GameDirector:GetReservedVehicle(l_Bot) == nil then
+					-- Spawned where no way leads on (the ship of the attackers): on a mate away from there, if any.
+					local s_Here = l_Bot.m_Player.soldier.worldTransform.trans:Clone()
+					-- Rush: spawned far behind the front (the base of a stage that fell): at a forward spawn instead.
+					local s_Forward = g_GameDirector:ForwardSpawn(l_Bot.m_Player.teamId, s_Here)
+					if s_Forward ~= nil then
+						local s_Transform = l_Bot.m_Player.soldier.worldTransform:Clone()
+						s_Transform.trans = s_Forward
+						l_Bot.m_Player.soldier:SetTransform(s_Transform)
+						s_Here = s_Forward:Clone()
+					end
+					local s_Stranded = g_GameDirector:LeadsNowhere(s_Here, l_Bot.m_Player.teamId) and s_Here or nil
+					-- Respawned because it got nowhere (GameDirector:_CheckObjectiveProgress) and spawned close to that spot
+					-- again (a rush base behind a border that stays closed): on a mate away from there as well.
+					local s_Away = l_Bot._RespawnAway
+					l_Bot._RespawnAway = nil
+					if s_Stranded == nil and s_Away ~= nil and s_Here:Distance(s_Away) < 100.0 then
+						s_Stranded = s_Away
+					end
+					-- Not at a mate where it got nowhere either (spawned far from there: a mate stuck at that spot).
+					s_PathIndex, s_IndexOnPath, s_InvertDirection, s_SpawnEntity, s_SpawnPosition = g_GameDirector:GetSpawnableBeaconOrMate(l_Bot.m_Player.teamId, l_Bot.m_Player.squadId, s_Stranded, s_Away)
+				end
+				if s_PathIndex then
+					-- spawn at mate or beacon. Done here: the closest-path code below must not
+					-- overwrite the chosen path, and the bot must not be teleported again.
+					table.remove(self._BotsWithoutPath, l_Index)
+					l_Bot:SetVarsWay(nil, true, s_PathIndex, s_IndexOnPath, s_InvertDirection)
+					if s_SpawnEntity then
+						-- Into the vehicle of the mate. The way on foot from here, not path 1 point 1 (GetSpawnableBeaconOrMate):
+						-- the engine doesn't always seat the bot (two bots for the last seat), on foot it walked straight to that
+						-- waypoint, up to 440 m away (XP3_Shield, MP_003).
+						local s_Node = g_GameDirector:FindClosestPath(l_Bot.m_Player.soldier.worldTransform.trans:Clone(), false, true)
+						if s_Node ~= nil then
+							l_Bot:SetVarsWay(nil, true, s_Node.PathIndex, s_Node.PointIndex, false)
+						end
+						if l_Bot:_EnterVehicleEntity(s_SpawnEntity, false) ~= 0 then
+							-- Not in (the seat taken meanwhile): on foot from the spawn of the game, not dead (a ticket).
+							l_Bot.m_ActiveVehicle = nil
+							l_Bot:TryEnterZoneAt(l_Bot.m_Player.soldier.worldTransform.trans:Clone(), true)
+						end
+					elseif s_SpawnPosition then
+						local s_Transform = l_Bot.m_Player.soldier.worldTransform:Clone()
+						s_Transform.trans = s_SpawnPosition
+						l_Bot.m_Player.soldier:SetTransform(s_Transform)
+						-- The mate may be in a zone (base, capture point): then the bot starts on its network.
+						l_Bot:TryEnterZoneAt(s_SpawnPosition, true)
 					end
 
 					self:_ApplyCosumizationAfterSpawn(l_Bot)
@@ -198,40 +297,32 @@ function BotSpawner:OnEngineUpdate(p_DeltaTime, p_SimulationDeltaTime)
 					break
 				end
 
-				-- check for mate or beacon
-				local s_PathIndex, s_IndexOnPath, s_InvertDirection, s_SpawnEntity, s_SpawnPosition = g_GameDirector:GetSpawnableBeaconOrMate(l_Bot.m_Player.teamId, l_Bot.m_Player.squadId)
-				if s_PathIndex then
-					-- spawn at mate or beacon
-					l_Bot:SetVarsWay(nil, true, s_PathIndex, s_IndexOnPath, s_InvertDirection)
-					if s_SpawnEntity then
-						if l_Bot:_EnterVehicleEntity(s_SpawnEntity, false) ~= 0 then
-							l_Bot:Kill()
-						end
-					elseif s_SpawnPosition then
-						local s_Transform = l_Bot.m_Player.soldier.worldTransform:Clone()
-						s_Transform.trans = s_SpawnPosition
-						l_Bot.m_Player.soldier:SetTransform(s_Transform)
-					end
-
-					self:_ApplyCosumizationAfterSpawn(l_Bot)
-
-					-- for Civilianizer-mod:
-					if Globals.RemoveKitVisuals then
-						Events:Dispatch('Bot:SoldierEntity', l_Bot.m_Player.soldier)
-					end
-				end
-
 				local s_Position = l_Bot.m_Player.soldier.worldTransform.trans:Clone()
 				local s_Link = nil
 
-				local s_Node = g_GameDirector:FindClosestPath(s_Position, false, false)
+				-- All along the paths: since they are trimmed at the mesh their first waypoints can be far off.
+				local s_Node = g_GameDirector:FindClosestPath(s_Position, false, true)
 				if s_Node then
 					s_Link = { s_Node.PathIndex, s_Node.PointIndex }
 				end
 
-				if s_Link then
-					l_Bot:SetVarsWay(nil, true, s_Link[1], s_Link[2], false)
+				-- No path at all (a level the mesh covers whole): onto the mesh only.
+				if s_Link or m_NavZones:GetMesh() ~= nil then
+					if s_Link then
+						l_Bot:SetVarsWay(nil, true, s_Link[1], s_Link[2], false)
+					else
+						l_Bot:SetVarsWay(nil, true, 0, 1, false)
+					end
 					table.remove(self._BotsWithoutPath, l_Index)
+					-- On the network of a zone (base, capture point) the bot starts there (BotZoneMovement).
+					if not l_Bot:TryEnterZoneAt(s_Position, true) and s_Node ~= nil
+						and s_Node.Position:Distance(s_Position) > SPAWN_PATH_RANGE then
+						-- A spawn of the game far from the paths: onto the waypoint at once, nobody sees the bot there yet
+						-- (XP3_Alborz TDM: two spawns 30-45 m from them, walls between, bots stood there for minutes).
+						local s_Transform = l_Bot.m_Player.soldier.worldTransform:Clone()
+						s_Transform.trans = s_Node.Position:Clone()
+						l_Bot.m_Player.soldier:SetTransform(s_Transform)
+					end
 
 					self:_ApplyCosumizationAfterSpawn(l_Bot)
 
@@ -244,7 +335,6 @@ function BotSpawner:OnEngineUpdate(p_DeltaTime, p_SimulationDeltaTime)
 				end
 			end
 		end
-		-- g_Profiler:End("BotSpawner:AfterSpawn")
 	end
 end
 
@@ -333,9 +423,7 @@ function BotSpawner:OnTeamChange(p_Player, p_TeamId, p_SquadId)
 	-- kill bot, if still alive
 	local s_Bot = m_BotManager:GetBotById(p_Player.id)
 	if s_Bot ~= nil then
-		if s_Bot.m_Player.soldier ~= nil then
-			s_Bot.m_Player.soldier:Kill()
-		end
+		s_Bot:KillSoldier('team_change')
 		s_Bot.m_Player.teamId = p_TeamId --not needed, but does not hurt as well.
 	end
 
@@ -368,12 +456,10 @@ end
 ---@param p_Bot Bot
 function BotSpawner:TriggerRespawnBot(p_Bot)
 	-- fix for end-of-round-crash
-	if Registry.COMMON.DONT_SPAWN_BOTS_ON_LAST_CONQUEST_TICKET and Globals.IsConquest then
-		local s_TicketsOfPlayerTeam = TicketManager:GetTicketCount(p_Bot.m_Player.teamId)
-		if Registry.GAME_DIRECTOR.DONT_SPAWN_BOTS_ON_LAST_TICKETS and s_TicketsOfPlayerTeam < 2 then
-			-- only one ticket remaining. Don't spawn
-			return
-		end
+	if Registry.COMMON.DONT_SPAWN_BOTS_ON_LAST_CONQUEST_TICKET and Globals.IsConquest
+		and TicketManager:GetTicketCount(p_Bot.m_Player.teamId) < 2 then
+		-- Only one ticket left: don't spawn.
+		return
 	end
 
 	local s_SpawnMode = p_Bot:GetSpawnMode()
@@ -449,6 +535,8 @@ function BotSpawner:UpdateBotAmountAndTeam()
 	local s_TeamCount = {}
 	local s_CountBots = {}
 	local s_TargetTeamCount = {}
+	-- Bots and players that are there, without the places held for the vehicles (s_BotsToDelay).
+	local s_PresentCount = {}
 
 	local s_BotsToDelay = {}
 
@@ -470,8 +558,20 @@ function BotSpawner:UpdateBotAmountAndTeam()
 			end
 		end
 
-		s_TeamCount[i] = s_CountBots[i] + s_CountPlayers[i] + s_BotsToDelay[i]
+		-- The places held for the vehicles only hold back new spawns: they never kill a bot. Their number grows when a
+		-- vehicle spawns late (the second jet on Firestorm), which killed the bot that spawned last ("balance").
+		s_PresentCount[i] = s_CountBots[i] + s_CountPlayers[i]
+		s_TeamCount[i] = s_PresentCount[i] + s_BotsToDelay[i]
 		s_PlayerCount = s_PlayerCount + s_CountPlayers[i]
+	end
+
+	-- The debug-bridge watches the game without a player: spawn the bots as if one player joined the player-team. The
+	-- player isn't there, so it takes no place of a bot (the other team had one bot more in all tests).
+	-- Not on TDM: creating a bot-player (PlayerManager:CreatePlayer) on a TDM-server without a real player crashes it
+	-- (debug command "tdm_bots" to try anyway).
+	if s_PlayerCount == 0 and m_DebugBridge:IsEnabled() and (not Globals.IsTdm or m_DebugBridge.m_TdmBots) then
+		s_CountPlayers[s_PlayerTeam] = 1
+		s_PlayerCount = 1
 	end
 
 	self._NrOfPlayers = s_PlayerCount
@@ -479,7 +579,7 @@ function BotSpawner:UpdateBotAmountAndTeam()
 	-- Kill and destroy bots, if no player left.
 	if s_PlayerCount == 0 then
 		if s_BotCount > 0 then
-			m_BotManager:KillAll() -- Trigger once.
+			m_BotManager:KillAll(nil, nil, 'no_players') -- Trigger once.
 		else
 			self._UpdateActive = false
 		end
@@ -521,8 +621,8 @@ function BotSpawner:UpdateBotAmountAndTeam()
 		for i = 1, Globals.NrOfTeams do
 			if s_TeamCount[i] < s_TargetTeamCount[i] then
 				self:SpawnWayBots(s_TargetTeamCount[i] - s_TeamCount[i], true, 0, 0, i)
-			elseif s_TeamCount[i] > s_TargetTeamCount[i] and s_CountBots[i] > 0 then
-				m_BotManager:KillAll(s_TeamCount[i] - s_TargetTeamCount[i], i)
+			elseif s_PresentCount[i] > s_TargetTeamCount[i] and s_CountBots[i] > 0 then
+				m_BotManager:KillAll(s_PresentCount[i] - s_TargetTeamCount[i], i, 'balance')
 			end
 		end
 
@@ -533,9 +633,11 @@ function BotSpawner:UpdateBotAmountAndTeam()
 
 			for i = 1, Globals.NrOfTeams do
 				if s_CountPlayers[i] < s_MinTargetPlayersPerTeam then
-					for l_Index = 1, #PlayerManager:GetPlayers() do
-						local l_Player = PlayerManager:GetPlayers()[l_Index]
-						if l_Player.soldier == nil and l_Player.teamId ~= i then
+					local s_Players = PlayerManager:GetPlayers()
+					for l_Index = 1, #s_Players do
+						local l_Player = s_Players[l_Index]
+						-- Only move dead real players; bots are balanced by spawning and killing above.
+						if l_Player.soldier == nil and l_Player.teamId ~= i and not m_Utilities:isBot(l_Player) then
 							local s_OldTeam = l_Player.teamId
 							l_Player.teamId = i
 							s_CountPlayers[i] = s_CountPlayers[i] + 1
@@ -575,13 +677,17 @@ function BotSpawner:UpdateBotAmountAndTeam()
 			if Globals.NrOfTeams == 2 and i == s_PlayerTeam then
 				s_TargetTeamCount[i] = math.floor((s_TargetTeamCount[i] * Config.FactorPlayerTeamCount) + 0.5)
 			end
+
+			if Globals.IsRush and i == TeamId.Team2 then
+				s_TargetTeamCount[i] = math.floor((s_TargetTeamCount[i] * Registry.BOT_SPAWN.RUSH_DEFENDER_FACTOR) + 0.5)
+			end
 		end
 
 		for i = 1, Globals.NrOfTeams do
 			if s_TeamCount[i] < s_TargetTeamCount[i] then
 				self:SpawnWayBots(s_TargetTeamCount[i] - s_TeamCount[i], true, 0, 0, i)
-			elseif s_TeamCount[i] > s_TargetTeamCount[i] then
-				m_BotManager:KillAll(s_TeamCount[i] - s_TargetTeamCount[i], i)
+			elseif s_PresentCount[i] > s_TargetTeamCount[i] then
+				m_BotManager:KillAll(s_PresentCount[i] - s_TargetTeamCount[i], i, 'balance')
 			end
 		end
 
@@ -615,15 +721,15 @@ function BotSpawner:UpdateBotAmountAndTeam()
 			for i = 1, Globals.NrOfTeams do
 				if s_TeamCount[i] < s_TargetTeamCount[i] then
 					self:SpawnWayBots(s_TargetTeamCount[i] - s_TeamCount[i], true, 0, 0, i)
-				elseif s_TeamCount[i] > s_TargetTeamCount[i] and s_CountBots[i] > 0 then
-					m_BotManager:KillAll(s_TeamCount[i] - s_TargetTeamCount[i], i)
+				elseif s_PresentCount[i] > s_TargetTeamCount[i] and s_CountBots[i] > 0 then
+					m_BotManager:KillAll(s_PresentCount[i] - s_TargetTeamCount[i], i, 'balance')
 				end
 			end
 		else
 			-- Check for bots in wrong team.
 			for i = 1, Globals.NrOfTeams do
 				if i == s_PlayerTeam and s_CountBots[i] > 0 then
-					m_BotManager:KillAll(nil, i)
+					m_BotManager:KillAll(nil, i, 'balance')
 				end
 			end
 
@@ -639,8 +745,8 @@ function BotSpawner:UpdateBotAmountAndTeam()
 				if i ~= s_PlayerTeam then
 					if s_TeamCount[i] < s_TargetBotCountPerEnemyTeam then
 						self:SpawnWayBots(s_TargetBotCountPerEnemyTeam - s_TeamCount[i], true, 0, 0, i)
-					elseif s_TeamCount[i] > s_TargetBotCountPerEnemyTeam then
-						m_BotManager:KillAll(s_TeamCount[i] - s_TargetBotCountPerEnemyTeam, i)
+					elseif s_PresentCount[i] > s_TargetBotCountPerEnemyTeam then
+						m_BotManager:KillAll(s_PresentCount[i] - s_TargetBotCountPerEnemyTeam, i, 'balance')
 					end
 				end
 			end
@@ -667,15 +773,15 @@ function BotSpawner:UpdateBotAmountAndTeam()
 			for i = 1, Globals.NrOfTeams do
 				if s_TeamCount[i] < s_TargetTeamCount[i] then
 					self:SpawnWayBots(s_TargetTeamCount[i] - s_TeamCount[i], true, 0, 0, i)
-				elseif s_TeamCount[i] > s_TargetTeamCount[i] and s_CountBots[i] > 0 then
-					m_BotManager:KillAll(s_TeamCount[i] - s_TargetTeamCount[i], i)
+				elseif s_PresentCount[i] > s_TargetTeamCount[i] and s_CountBots[i] > 0 then
+					m_BotManager:KillAll(s_PresentCount[i] - s_TargetTeamCount[i], i, 'balance')
 				end
 			end
 		else
 			-- Check for bots in wrong team.
 			for i = 1, Globals.NrOfTeams do
 				if i == s_PlayerTeam and s_CountBots[i] > 0 then
-					m_BotManager:KillAll(nil, i)
+					m_BotManager:KillAll(nil, i, 'balance')
 				end
 			end
 
@@ -690,8 +796,8 @@ function BotSpawner:UpdateBotAmountAndTeam()
 				if i ~= s_PlayerTeam then
 					if s_TeamCount[i] < s_TargetBotCountPerEnemyTeam then
 						self:SpawnWayBots(s_TargetBotCountPerEnemyTeam - s_TeamCount[i], true, 0, 0, i)
-					elseif s_TeamCount[i] > s_TargetBotCountPerEnemyTeam then
-						m_BotManager:KillAll(s_TeamCount[i] - s_TargetBotCountPerEnemyTeam, i)
+					elseif s_PresentCount[i] > s_TargetBotCountPerEnemyTeam then
+						m_BotManager:KillAll(s_PresentCount[i] - s_TargetBotCountPerEnemyTeam, i, 'balance')
 					end
 				end
 			end
@@ -737,7 +843,7 @@ end
 ---@param p_Length integer
 ---@param p_Spacing number
 function BotSpawner:SpawnBotRow(p_Player, p_Length, p_Spacing)
-	Globals.SpawnMode = "manual"
+	Globals.SpawnMode = SpawnModes.manual
 
 	local s_TeamId = m_BotManager:GetBotTeam()
 	for i = 1, p_Length do
@@ -745,7 +851,7 @@ function BotSpawner:SpawnBotRow(p_Player, p_Length, p_Spacing)
 
 		if s_Name ~= nil then
 			local s_Transform = LinearTransform()
-			s_Transform.trans = p_Player.soldier.worldTransform.trans + (p_Player.soldier.worldTransform.forward * i * p_Spacing)
+			s_Transform.trans = p_Player.soldier.worldTransform.trans:Clone() + (p_Player.soldier.worldTransform.forward:Clone() * i * p_Spacing)
 			local s_Bot = m_BotManager:CreateBot(s_Name, s_TeamId, SquadId.SquadNone)
 
 			if not s_Bot then
@@ -761,7 +867,7 @@ end
 ---@param p_Player Player
 ---@param p_Height integer
 function BotSpawner:SpawnBotTower(p_Player, p_Height)
-	Globals.SpawnMode = "manual"
+	Globals.SpawnMode = SpawnModes.manual
 
 	local s_TeamId = m_BotManager:GetBotTeam()
 	for i = 1, p_Height do
@@ -790,7 +896,7 @@ end
 ---@param p_Columns integer
 ---@param p_Spacing number
 function BotSpawner:SpawnBotGrid(p_Player, p_Rows, p_Columns, p_Spacing)
-	Globals.SpawnMode = "manual"
+	Globals.SpawnMode = SpawnModes.manual
 
 	local s_TeamId = m_BotManager:GetBotTeam()
 	for i = 1, p_Rows do
@@ -825,8 +931,14 @@ end
 ---@param p_IndexOnPath? integer
 ---@param p_TeamId? TeamId|integer
 function BotSpawner:SpawnWayBots(p_Amount, p_UseRandomWay, p_ActiveWayIndex, p_IndexOnPath, p_TeamId)
-	if m_NodeCollection:GetNrOfPaths() <= 0 then
-		m_Logger:Warning("No paths found. Can't spawn way-bots.")
+	-- A level the mesh covers whole needs no paths (the cut drops them all, XP2_Office Domination): the bots spawn at the
+	-- spawns of the game and start on the mesh.
+	if m_NodeCollection:GetNrOfPaths() <= 0 and not (m_NavZones:GetMesh() ~= nil and self:_UseGameSpawn()) then
+		-- Once per level: this is asked every update (XP5_001 CTF: every 2 s).
+		if not self._NoPathsWarned then
+			self._NoPathsWarned = true
+			m_Logger:Warning("No paths found. Can't spawn way-bots.")
+		end
 		return
 	end
 
@@ -848,7 +960,7 @@ function BotSpawner:SpawnWayBots(p_Amount, p_UseRandomWay, p_ActiveWayIndex, p_I
 		p_Amount = s_SlotsLeft
 	end
 
-	for i = 1, p_Amount do
+	for _ = 1, p_Amount do
 		---@type SpawnSet
 		local s_SpawnSet = {
 			PlayerVarOfBot = nil,
@@ -912,16 +1024,14 @@ end
 
 ---@param p_Bot Bot
 function BotSpawner:_SelectLoadout(p_Bot)
-	local s_WriteNewKit = false
-
-	if p_Bot.m_ActiveWeapon == nil then
-		s_WriteNewKit = true
-	end
+	local s_WriteNewKit = self:_NeedsNewWeapons(p_Bot)
 
 	local s_BotColor = p_Bot.m_Color
 	local s_BotKit = p_Bot.m_Kit
 
 	p_Bot:ResetSpawnVars()
+	-- Killed in a vehicle: on foot now (else it attacked as that vehicle, GetAttackPriority).
+	p_Bot.m_ActiveVehicle = nil
 	local s_Team = "US"
 
 	if p_Bot.m_Player.teamId % 2 == 0 then
@@ -938,8 +1048,18 @@ function BotSpawner:_SelectLoadout(p_Bot)
 	self:_SetKitAndAppearance(p_Bot, s_BotKit, s_BotColor)
 end
 
+---Spawn at the spawn-points of the game (Globals.UseGameSpawn) instead of on waypoints. Always in conquest and rush: on
+---a level with a mesh the bots start on it (Bot:TryEnterZoneAt), the paths have no names of objectives to spawn at;
+---without one (a community mapfile) on the closest path (OnEngineUpdate). On random waypoints they spawned outside the
+---combat area of the stage (MP_Subway rush without its mesh: 182 of 496 spawns died 10 s later).
+---@return boolean
+function BotSpawner:_UseGameSpawn()
+	return Globals.UseGameSpawn or (Globals.IsConquest and not Globals.IsCtf) or Globals.IsRush
+end
+
 ---@param p_Bot Bot
-function BotSpawner:_TriggerSpawn(p_Bot)
+---@param p_Near Vec3|nil rush, conquest: the spawn closest to this position (the vehicle the bot spawns for)
+function BotSpawner:_TriggerSpawn(p_Bot, p_Near)
 	local s_CurrentGameMode = SharedUtils:GetCurrentGameMode()
 
 	if s_CurrentGameMode == nil then
@@ -957,10 +1077,10 @@ function BotSpawner:_TriggerSpawn(p_Bot)
 	elseif s_CurrentGameMode:match("Rush") then
 		-- Seems to be the same as DeathMatchSpawn.
 		-- But it has vehicles.
-		self:_RushSpawn(p_Bot)
+		self:_RushSpawn(p_Bot, p_Near)
 	elseif s_CurrentGameMode:match("Conquest") then
 		-- event + target spawn ("ID_H_US_B", "_ID_H_US_HQ", etc.)
-		self:_ConquestSpawn(p_Bot)
+		self:_ConquestSpawn(p_Bot, p_Near)
 	elseif s_CurrentGameMode:match("AirSuperiority") then
 		self:_AirSuperioritySpawn(p_Bot)
 	end
@@ -986,30 +1106,47 @@ function BotSpawner:_DeathMatchSpawn(p_Bot)
 end
 
 ---@param p_Bot Bot
-function BotSpawner:_RushSpawn(p_Bot)
+---@param p_Near Vec3|nil the spawn closest to this position, else the first one
+function BotSpawner:_RushSpawn(p_Bot, p_Near)
 	local s_Event = ServerPlayerEvent("Spawn", p_Bot.m_Player, true, false, false, false, false, false,
 		p_Bot.m_Player.teamId)
 	local s_EntityIterator = EntityManager:GetIterator("ServerCharacterSpawnEntity")
 	local s_Entity = s_EntityIterator:Next()
+	-- [1]: spawns without a vehicle-spawn on their bus, [2]: with one (a spawn into the vehicle). The B2K levels have
+	-- one on the bus of all their spawns (XP1_003: no spawn left, no bot spawned): those are taken if there is no other.
+	local s_Best = {}
+	local s_BestDistance = { math.huge, math.huge }
 
 	while s_Entity do
 		if s_Entity.data:Is('CharacterSpawnReferenceObjectData') then
-			if CharacterSpawnReferenceObjectData(s_Entity.data).team == p_Bot.m_Player.teamId then
-				-- Skip if it is a vehicle spawn.
+			-- Only the spawns of the current stage are enabled.
+			if CharacterSpawnReferenceObjectData(s_Entity.data).team == p_Bot.m_Player.teamId and SpawnEntity(s_Entity).enabled then
+				local s_Kind = 1
 				for l_Index = 1, #s_Entity.bus.entities do
 					local l_Entity = s_Entity.bus.entities[l_Index]
 					if l_Entity:Is("ServerVehicleSpawnEntity") then
-						goto skip
+						s_Kind = 2
+						break
 					end
 				end
 
-				s_Entity:FireEvent(s_Event)
-				return
+				local s_Distance = p_Near ~= nil and SpawnEntity(s_Entity).transform.trans:Distance(p_Near) or 0.0
+				if s_Best[s_Kind] == nil or s_Distance < s_BestDistance[s_Kind] then
+					s_Best[s_Kind] = s_Entity
+					s_BestDistance[s_Kind] = s_Distance
+				end
+				if s_Kind == 1 and p_Near == nil then
+					break
+				end
 			end
 		end
 
-		::skip::
 		s_Entity = s_EntityIterator:Next()
+	end
+
+	local s_Spawn = s_Best[1] or s_Best[2]
+	if s_Spawn ~= nil then
+		s_Spawn:FireEvent(s_Event)
 	end
 end
 
@@ -1019,24 +1156,18 @@ function BotSpawner:_AirSuperioritySpawn(p_Bot)
 		p_Bot.m_Player.teamId)
 	local s_EntityIterator = EntityManager:GetIterator("ServerCharacterSpawnEntity")
 	local s_Entity = s_EntityIterator:Next()
-	local s_ValidSpawn = false
 
 	while s_Entity do
 		if s_Entity.data:Is('CharacterSpawnReferenceObjectData') then
 			if CharacterSpawnReferenceObjectData(s_Entity.data).team == p_Bot.m_Player.teamId then
-				-- Skip if it is a vehicle spawn.
+				-- Only spawn at a spawn that has a vehicle (the jet). Keep looking otherwise.
 				for l_Index = 1, #s_Entity.bus.entities do
 					local l_Entity = s_Entity.bus.entities[l_Index]
 					if l_Entity:Is("ServerVehicleSpawnEntity") then
-						s_ValidSpawn = true
-						break
+						s_Entity:FireEvent(s_Event)
+						return
 					end
 				end
-
-				if s_ValidSpawn then
-					s_Entity:FireEvent(s_Event)
-				end
-				return
 			end
 		end
 
@@ -1044,14 +1175,68 @@ function BotSpawner:_AirSuperioritySpawn(p_Bot)
 	end
 end
 
+-- Seconds a bot let through to a vehicle counts as on its way into it (_SeatLeft).
+local SEAT_CLAIM_TIME = 5.0
+
+---Whether the bot gets into a vehicle when it spawns (_GetSpecialSpawnEnity): more vehicles of the base than bots that
+---spawned a moment ago and aren't placed yet (_BotsWithoutPath) - at the start of the round all bots saw the same free
+---vehicle, a few got in, the others stood in the hangar of the carrier.
+---@param p_Bot Bot
+---@return boolean
+function BotSpawner:_SeatLeft(p_Bot)
+	local s_TeamId = p_Bot.m_Player.teamId
+	local s_Type, s_Entity = self:_GetSpecialSpawnEnity(p_Bot, s_TeamId)
+	if s_Entity == nil then
+		return false
+	end
+	-- Bots let through a moment ago (their soldier may not be there yet when the next one asks).
+	local s_Now = SharedUtils:GetTime()
+	local s_Claims = self._SeatClaims[s_TeamId] or {}
+	for l_Index = #s_Claims, 1, -1 do
+		if s_Now - s_Claims[l_Index] > SEAT_CLAIM_TIME then
+			table.remove(s_Claims, l_Index)
+		end
+	end
+	self._SeatClaims[s_TeamId] = s_Claims
+	local s_Pending = #s_Claims
+	for l_Index = 1, #self._BotsWithoutPath do
+		local l_Bot = self._BotsWithoutPath[l_Index]
+		-- Spawned, not placed yet (the bots waiting here are in the list as well, without a soldier).
+		if l_Bot ~= p_Bot and l_Bot.m_Player ~= nil and l_Bot.m_Player.teamId == s_TeamId and l_Bot.m_Player.soldier ~= nil then
+			s_Pending = s_Pending + 1
+		end
+	end
+	local s_Left = s_Pending == 0
+	if s_Type == "SpawnInVehicle" then
+		-- One bot each: the first one in takes the vehicle off the list (GameDirector:OnVehicleEnter).
+		s_Left = #g_GameDirector:GetSpawnableVehicle(s_TeamId) > s_Pending
+	end
+	if s_Left then
+		s_Claims[#s_Claims + 1] = s_Now
+	end
+	return s_Left
+end
+
+-- Seconds a bot waits at most instead of spawning where no way leads on (_ConquestSpawn): spawned there it only gets
+-- stuck, waiting it still spawns into a vehicle there or at a mate as soon as there is one. The limit only in case the
+-- spawn was taken for a dead end by mistake.
+local DEAD_END_WAIT_TIME = 180.0
+
 ---@param p_Bot Bot
 --TODO: handle spawn-logic here as well (unify it?)
-function BotSpawner:_ConquestSpawn(p_Bot)
+---@param p_Near Vec3|nil the capture point (or HQ) closest to this position (the vehicle the bot spawns for)
+function BotSpawner:_ConquestSpawn(p_Bot, p_Near)
 	local s_Event = ServerPlayerEvent("Spawn", p_Bot.m_Player, true, false, false, false, false, false,
 		p_Bot.m_Player.teamId)
-	local s_BestSpawnPoint = self:_FindAttackedSpawnPoint(p_Bot.m_Player.teamId)
+	local s_Reason = 'vehicle'
+	local s_BestSpawnPoint = p_Near and self:_FindSpawnPointNear(p_Bot.m_Player.teamId, p_Near)
+	if s_BestSpawnPoint == nil then
+		s_Reason = 'attacked'
+		s_BestSpawnPoint = self:_FindAttackedSpawnPoint(p_Bot.m_Player.teamId)
+	end
 
 	if s_BestSpawnPoint == nil then
+		s_Reason = 'front'
 		s_BestSpawnPoint = self:_FindClosestSpawnPoint(p_Bot.m_Player.teamId)
 	end
 
@@ -1060,137 +1245,162 @@ function BotSpawner:_ConquestSpawn(p_Bot)
 		return
 	end
 
+	-- The only spawn leads nowhere (no capture point of the team, the HQ on a carrier): only into a vehicle there or at a
+	-- mate away from it. Else the bot waits (it tries again after its respawn delay): spawned it got stuck and was killed
+	-- 50 s later, one after the other (XP1_004 conquest assault). Not for ever: DEAD_END_WAIT_TIME at most.
+	if s_Reason == 'front' then
+		local s_Position = SpawnEntity(s_BestSpawnPoint).transform.trans
+		local s_Now = SharedUtils:GetTime()
+		if not self:_SeatLeft(p_Bot) and (p_Bot._DeadEndSince == nil or s_Now - p_Bot._DeadEndSince < DEAD_END_WAIT_TIME)
+			and g_GameDirector:IsDeadEndSpawn(s_Position, p_Bot.m_Player.teamId, p_Bot.m_Player.squadId) then
+			p_Bot._DeadEndSince = p_Bot._DeadEndSince or s_Now
+			return
+		end
+	end
+	p_Bot._DeadEndSince = nil
+
+	if m_DebugBridge.m_Enabled then
+		local s_Data = CharacterSpawnReferenceObjectData(s_BestSpawnPoint.data)
+		m_DebugBridge:Event('spawn_choice', {
+			bot = p_Bot.m_Id,
+			team = p_Bot.m_Player.teamId,
+			reason = s_Reason,
+			spawnTeam = s_Data.team,
+			pos = DebugBridge.Vec(SpawnEntity(s_BestSpawnPoint).transform.trans),
+		})
+	end
 	s_BestSpawnPoint:FireEvent(s_Event)
 end
 
+---The spawn-entity of the capture point (or HQ) for the team: the one of the team on its bus, else the one without a
+---team. The data-team of the spawn-entities doesn't tell HQ from flag (the HQ of MP_012 has one without a team, its
+---flags one per team): that is Utilities:IsHq.
+---@param p_CapturePoint CapturePointEntity
+---@param p_TeamId TeamId|integer
+---@return Entity|nil @ServerCharacterSpawnEntity
+local function _SpawnOf(p_CapturePoint, p_TeamId)
+	local s_Neutral = nil
+	for l_Index = 1, #p_CapturePoint.bus.entities do
+		local l_Entity = p_CapturePoint.bus.entities[l_Index]
+		if l_Entity:Is('ServerCharacterSpawnEntity') then
+			local s_Team = CharacterSpawnReferenceObjectData(l_Entity.data).team
+			if s_Team == p_TeamId then
+				return l_Entity
+			elseif s_Team == 0 and s_Neutral == nil then
+				s_Neutral = l_Entity
+			end
+		end
+	end
+	return s_Neutral
+end
+
+---The capture points and HQs of the level: { Entity, Spawn (of the team), Hq, Own (held by the team) }.
+---@param p_TeamId TeamId|integer
+---@return table[]
+local function _CapturePoints(p_TeamId)
+	local s_Result = {}
+	local s_EntityIterator = EntityManager:GetIterator("ServerCapturePointEntity")
+	local s_Entity = s_EntityIterator:Next()
+	while s_Entity do
+		local s_CapturePoint = CapturePointEntity(s_Entity)
+		s_Result[#s_Result + 1] = {
+			Entity = s_CapturePoint,
+			Spawn = _SpawnOf(s_CapturePoint, p_TeamId),
+			Hq = m_Utilities:IsHq(s_CapturePoint),
+			Own = s_CapturePoint.team == p_TeamId and s_CapturePoint.isControlled,
+			Position = s_CapturePoint.transform.trans:Clone(),
+		}
+		s_Entity = s_EntityIterator:Next()
+	end
+	return s_Result
+end
+
+---The spawn of the team's capture point (or HQ) closest to the position.
+---@param p_TeamId TeamId|integer
+---@param p_Position Vec3
+---@return Entity|nil @ServerCharacterSpawnEntity
+function BotSpawner:_FindSpawnPointNear(p_TeamId, p_Position)
+	local s_Best = nil
+	local s_BestDistance = math.huge
+	for _, l_Point in ipairs(_CapturePoints(p_TeamId)) do
+		local s_Distance = l_Point.Position:Distance(p_Position)
+		if l_Point.Own and l_Point.Spawn ~= nil and s_Distance < s_BestDistance then
+			s_Best = l_Point.Spawn
+			s_BestDistance = s_Distance
+		end
+	end
+	return s_Best
+end
+
+---The capture point of the team the enemy takes right now (the one closest to being lost), not the HQ.
 ---@param p_TeamId TeamId|integer
 ---@return Entity|nil @ServerCharacterSpawnEntity
 function BotSpawner:_FindAttackedSpawnPoint(p_TeamId)
-	---@type Entity|nil
-	local s_BestSpawnPoint = nil
+	local s_Best = nil
 	local s_LowestFlagLocation = 100.0
-	local s_EntityIterator = EntityManager:GetIterator("ServerCapturePointEntity")
-	local s_Entity = s_EntityIterator:Next()
-
-	while s_Entity do
-		s_Entity = CapturePointEntity(s_Entity)
-
-		if s_Entity.team ~= p_TeamId then
-			goto endOfLoop
+	for _, l_Point in ipairs(_CapturePoints(p_TeamId)) do
+		if l_Point.Own and not l_Point.Hq and l_Point.Spawn ~= nil and l_Point.Entity.flagLocation < s_LowestFlagLocation then
+			s_Best = l_Point.Spawn
+			s_LowestFlagLocation = l_Point.Entity.flagLocation
 		end
-
-		for l_Index = 1, #s_Entity.bus.entities do
-			local l_Entity = s_Entity.bus.entities[l_Index]
-			if l_Entity:Is('ServerCharacterSpawnEntity') then
-				if CharacterSpawnReferenceObjectData(l_Entity.data).team == p_TeamId
-					or CharacterSpawnReferenceObjectData(l_Entity.data).team == 0 then
-					if s_Entity.flagLocation < 100.0 and s_Entity.isControlled then
-						if s_BestSpawnPoint == nil then
-							s_BestSpawnPoint = l_Entity
-							s_LowestFlagLocation = s_Entity.flagLocation
-						elseif s_Entity.flagLocation < s_LowestFlagLocation then
-							s_BestSpawnPoint = l_Entity
-							s_LowestFlagLocation = s_Entity.flagLocation
-						end
-					end
-
-					goto endOfLoop
-				end
-			end
-		end
-
-		::endOfLoop::
-		s_Entity = s_EntityIterator:Next()
 	end
-
-	return s_BestSpawnPoint
+	return s_Best
 end
 
+-- Capture points of the team at most this many metres farther from the front than the closest one are spawned at as
+-- well (at random): not all bots at the same flag.
+local SPAWN_FRONT_SPREAD = 60.0
+
+---The spawn of a capture point of the team at the front: the one closest to a capture point the team doesn't hold (else
+---to the HQ of the enemy), now and then one a bit farther back. The HQ only if the team holds no capture point: the bots
+---are needed at the flags, not far behind them (vehicles in the HQ get their bots from _FindSpawnPointNear).
 ---@param p_TeamId TeamId|integer
 ---@return Entity|nil @ServerCharacterSpawnEntity
 function BotSpawner:_FindClosestSpawnPoint(p_TeamId)
-	---@type Entity|nil
-	local s_BestSpawnPoint = nil
-	local s_ClosestDistance = 0
-	-- Enemy and Neutralized CapturePoints.
-	local s_TargetLocation = self:_FindTargetLocation(p_TeamId)
-	local s_EntityIterator = EntityManager:GetIterator("ServerCapturePointEntity")
-	local s_Entity = s_EntityIterator:Next()
-
-	while s_Entity do
-		s_Entity = CapturePointEntity(s_Entity)
-
-		if s_Entity.team ~= p_TeamId then
-			goto endOfLoop
-		end
-
-		for l_Index = 1, #s_Entity.bus.entities do
-			local l_Entity = s_Entity.bus.entities[l_Index]
-			if l_Entity:Is('ServerCharacterSpawnEntity') then
-				if CharacterSpawnReferenceObjectData(l_Entity.data).team == p_TeamId
-					or CharacterSpawnReferenceObjectData(l_Entity.data).team == 0 then
-					if s_Entity.isControlled then
-						if s_BestSpawnPoint == nil then
-							s_BestSpawnPoint = l_Entity
-
-							-- For the case that the enemies have no place to spawn.
-							if s_TargetLocation == nil then
-								return s_BestSpawnPoint
-							end
-
-							s_ClosestDistance = s_TargetLocation:Distance(s_Entity.transform.trans)
-						elseif s_TargetLocation and s_ClosestDistance > s_TargetLocation:Distance(s_Entity.transform.trans) then
-							s_BestSpawnPoint = l_Entity
-							s_ClosestDistance = s_TargetLocation:Distance(s_Entity.transform.trans)
-						end
-					end
-
-					goto endOfLoop
-				end
+	local s_Own = {}
+	local s_Hq = nil
+	local s_Targets = {}
+	local s_EnemyHqs = {}
+	for _, l_Point in ipairs(_CapturePoints(p_TeamId)) do
+		if l_Point.Own and l_Point.Spawn ~= nil then
+			if l_Point.Hq then
+				s_Hq = l_Point.Spawn
+			else
+				s_Own[#s_Own + 1] = l_Point
 			end
+		elseif not l_Point.Own and not l_Point.Hq then
+			s_Targets[#s_Targets + 1] = l_Point.Position
+		elseif l_Point.Hq and l_Point.Entity.team ~= p_TeamId then
+			s_EnemyHqs[#s_EnemyHqs + 1] = l_Point.Position
 		end
-
-		::endOfLoop::
-		s_Entity = s_EntityIterator:Next()
 	end
 
-	return s_BestSpawnPoint
-end
-
----@param p_TeamId TeamId|integer
----@return Vec3|nil
-function BotSpawner:_FindTargetLocation(p_TeamId)
-	---@type Vec3|nil
-	local s_TargetLocation = nil
-	local s_EntityIterator = EntityManager:GetIterator("ServerCapturePointEntity")
-	local s_Entity = s_EntityIterator:Next()
-
-	while s_Entity do
-		s_Entity = CapturePointEntity(s_Entity)
-
-		if s_Entity.team == p_TeamId then
-			goto endOfLoop
-		end
-
-		for l_Index = 1, #s_Entity.bus.entities do
-			local l_Entity = s_Entity.bus.entities[l_Index]
-			if l_Entity:Is('ServerCharacterSpawnEntity') then
-				if CharacterSpawnReferenceObjectData(l_Entity.data).team == 0 then
-					s_TargetLocation = s_Entity.transform.trans
-				else
-					return s_Entity.transform.trans
-				end
-
-				goto endOfLoop
-			end
-		end
-
-		::endOfLoop::
-		s_Entity = s_EntityIterator:Next()
+	if #s_Own == 0 then
+		return s_Hq
+	end
+	if #s_Targets == 0 then
+		s_Targets = s_EnemyHqs
+	end
+	if #s_Targets == 0 then
+		return s_Own[MathUtils:GetRandomInt(1, #s_Own)].Spawn
 	end
 
-	-- Return enemy base location (or nil) if all capture points were captured by bot team already.
-	return s_TargetLocation
+	local s_Best = math.huge
+	for l_Index = 1, #s_Own do
+		local l_Own = s_Own[l_Index]
+		l_Own.Front = math.huge
+		for l_Target = 1, #s_Targets do
+			l_Own.Front = math.min(l_Own.Front, l_Own.Position:Distance(s_Targets[l_Target]))
+		end
+		s_Best = math.min(s_Best, l_Own.Front)
+	end
+	local s_Candidates = {}
+	for l_Index = 1, #s_Own do
+		if s_Own[l_Index].Front <= s_Best + SPAWN_FRONT_SPREAD then
+			s_Candidates[#s_Candidates + 1] = s_Own[l_Index].Spawn
+		end
+	end
+	return s_Candidates[MathUtils:GetRandomInt(1, #s_Candidates)]
 end
 
 ---Check to avoid the iteration through entities without need. If there are already 2 planes alive per team, don't even check.
@@ -1205,12 +1415,9 @@ end
 
 ---@return boolean
 function BotSpawner:_HasMaxPlanePlayers(teamId)
-	-- print("Checking the playerData for planes for team " .. teamId)
 	local planeCount = 0
-	for playerName, playerData in pairs(g_PlayerData._Players) do
-		-- print(playerName .. " " .. playerData["Vehicle"] .. " " .. playerData["Team"])
+	for _, playerData in pairs(g_PlayerData._Players) do
 		if playerData.Vehicle == VehicleTypes.Plane and playerData.Team == teamId then
-			-- print("Plane found for " .. playerName)
 			planeCount = planeCount + 1
 			if planeCount == 2 then
 				return true
@@ -1244,7 +1451,6 @@ function BotSpawner:_CheckAndGetAvailableJetSpawn(p_TeamId)
 
 	while spawn do
 		if spawn.data:Is('CharacterSpawnReferenceObjectData') then
-			-- local spawnData = CharacterSpawnReferenceObjectData(spawn.data) -- the data attribs, meaning the EBX are always tatic, no need to check this really...
 			local spawnEntity = SpawnEntity(spawn)
 			if spawnEntity.teamId == p_TeamId and spawnEntity.enabled and
 				spawnEntity.spawnTimer == 0 and
@@ -1327,22 +1533,8 @@ function BotSpawner:_SpawnSingleWayBot(p_Player, p_UseRandomWay, p_ActiveWayInde
 
 	if s_Name ~= nil or s_IsRespawn then
 		---@cast s_Name -nil
-		-- g_Profiler:Start("BotSpawner:SpawnPart2") -- about 60 ms on conquest (close to 0 on deathmatch)
-		if Globals.UsedSpawnMethod == SpawnMethod.Spawn and
-			not (Globals.IsTdm and (self._DelayDirectSpawn > -(Registry.BOT_SPAWN.DELAY_DIRECT_SPAWN))) then -- workaround for TDM-Spawn-Behaviour
-			local s_Bot = self:GetBot(p_ExistingBot, s_Name, s_TeamId, s_SquadId)
-			if s_Bot == nil then
-				return
-			end
-
-			m_BotCreator:SetAttributesToBot(s_Bot)
-			self:_SelectLoadout(s_Bot)
-			self:_TriggerSpawn(s_Bot)
-			self._BotsWithoutPath[#self._BotsWithoutPath + 1] = s_Bot
-			return
-		end
-
-		-- special handling for dynamic jet spawns on conquest maps that support it
+		-- Dynamic jet spawns on conquest maps that support it (XP5_002, XP5_004: jets that spawn in the air). Before the
+		-- spawns of the game: on these levels (with a mesh) the bots spawned there and never got a jet.
 		if self:CQMapSupportDynamicVehicleSpawnReinforncments(s_TeamId) and Config.UseAirVehicles then
 			local hasJet, spawnEntity = self:_CheckAndGetAvailableJetSpawn(s_TeamId)
 			if hasJet and spawnEntity then
@@ -1358,10 +1550,33 @@ function BotSpawner:_SpawnSingleWayBot(p_Player, p_UseRandomWay, p_ActiveWayInde
 					s_Bot.m_Player.teamId
 				)
 				spawnEntity:FireEvent(spawnEvent)
-				self._BotsWithoutPath[#self._BotsWithoutPath + 1] = s_Bot
+				self:_AddBotWithoutPath(s_Bot)
 				m_Logger:Write("Spawned bot " .. s_Bot.m_Player.name .. " in a jet")
 				return
 			end
+		end
+
+		if self:_UseGameSpawn() and
+			not (Globals.IsTdm and (self._DelayDirectSpawn > -(Registry.BOT_SPAWN.DELAY_DIRECT_SPAWN))) then -- workaround for TDM-Spawn-Behaviour
+			local s_Bot = self:GetBot(p_ExistingBot, s_Name, s_TeamId, s_SquadId)
+			if s_Bot == nil then
+				return
+			end
+
+			m_BotCreator:SetAttributesToBot(s_Bot)
+			-- Rush: one bot per free vehicle spawns at the spawn of the game next to it, the others where the game spawns
+			-- them (the alternate spawns of the stage). Conquest: now and then at the capture point next to a free vehicle
+			-- (else at the front).
+			local s_Vehicle = nil
+			if Globals.IsRush then
+				s_Vehicle = g_GameDirector:ReserveVehicle(s_Bot)
+			elseif Globals.IsConquest and m_Utilities:CheckProbability(Registry.BOT_SPAWN.PROBABILITY_SPAWN_FOR_VEHICLE) then
+				s_Vehicle = g_GameDirector:ReserveVehicle(s_Bot)
+			end
+			self:_SelectLoadout(s_Bot)
+			self:_TriggerSpawn(s_Bot, s_Vehicle)
+			self:_AddBotWithoutPath(s_Bot)
+			return
 		end
 
 		local s_Beacon = g_GameDirector:GetPlayerBeacon(s_Name)
@@ -1408,15 +1623,23 @@ function BotSpawner:_SpawnSingleWayBot(p_Player, p_UseRandomWay, p_ActiveWayInde
 					s_SpawnEntity = g_GameDirector:GetGunship(s_TeamId)
 				end
 
+				-- Nothing to spawn in: don't spawn at the world origin (s_Transform) and kill.
+				-- A dead bot tries again after its respawn delay; spawn modes retry next cycle.
+				if s_SpawnEntity == nil then
+					return
+				end
+
 
 				if s_IsRespawn and p_ExistingBot then
 					p_ExistingBot:SetVarsWay(nil, true, 0, 0, false)
 					self:_SpawnBot(p_ExistingBot, s_Transform, false)
 
-					if p_ExistingBot:_EnterVehicleEntity(s_SpawnEntity, false) ~= 0 then
-						p_ExistingBot:Kill()
+					local s_Entered = s_SpawnPoint == "SpawnAtMobileVehicle" and p_ExistingBot:_EnterPassengerSeat(s_SpawnEntity)
+						or p_ExistingBot:_EnterVehicleEntity(s_SpawnEntity, false)
+					if s_Entered ~= 0 then
+						self:_KillSoldierKeepRespawn(p_ExistingBot)
 					elseif s_SpawnEntity ~= nil then
-						p_ExistingBot:FindVehiclePath(s_SpawnEntity.transform.trans)
+						p_ExistingBot:FindVehiclePath(s_SpawnEntity.transform.trans:Clone())
 					end
 				else
 					local s_Bot = m_BotManager:CreateBot(s_Name, s_TeamId, s_SquadId)
@@ -1430,10 +1653,12 @@ function BotSpawner:_SpawnSingleWayBot(p_Player, p_UseRandomWay, p_ActiveWayInde
 						s_Bot:SetVarsWay(nil, true, 0, 0, false)
 						self:_SpawnBot(s_Bot, s_Transform, true)
 
-						if s_Bot:_EnterVehicleEntity(s_SpawnEntity, false) ~= 0 then
-							s_Bot:Kill()
+						local s_Entered = s_SpawnPoint == "SpawnAtMobileVehicle" and s_Bot:_EnterPassengerSeat(s_SpawnEntity)
+							or s_Bot:_EnterVehicleEntity(s_SpawnEntity, false)
+						if s_Entered ~= 0 then
+							self:_KillSoldierKeepRespawn(s_Bot)
 						elseif s_SpawnEntity then
-							s_Bot:FindVehiclePath(s_SpawnEntity.transform.trans)
+							s_Bot:FindVehiclePath(s_SpawnEntity.transform.trans:Clone())
 						end
 					end
 				end
@@ -1444,8 +1669,6 @@ function BotSpawner:_SpawnSingleWayBot(p_Player, p_UseRandomWay, p_ActiveWayInde
 			s_SpawnPoint = m_NodeCollection:Get(p_IndexOnPath, p_ActiveWayIndex)
 		end
 
-		-- g_Profiler:End("BotSpawner:SpawnPart2")
-		-- g_Profiler:Start("BotSpawner:SpawnPart3") -- about 20 ms
 		if s_SpawnPoint == nil then
 			if s_SquadSpawnVehicle ~= nil then
 				s_SpawnPoint = m_NodeCollection:Get()[1]
@@ -1463,7 +1686,7 @@ function BotSpawner:_SpawnSingleWayBot(p_Player, p_UseRandomWay, p_ActiveWayInde
 
 		-- Find out direction, if path has a return point.
 		if s_InverseDirection == nil then
-			if m_NodeCollection:Get(1, p_ActiveWayIndex).OptValue == 0xFF then
+			if not m_NodeCollection:Loops(p_ActiveWayIndex) then
 				s_InverseDirection = (MathUtils:GetRandomInt(0, 1) == 1)
 			else
 				s_InverseDirection = false
@@ -1496,7 +1719,6 @@ function BotSpawner:_SpawnSingleWayBot(p_Player, p_UseRandomWay, p_ActiveWayInde
 				end
 			end
 		end
-		-- g_Profiler:End("BotSpawner:SpawnPart3")
 	end
 end
 
@@ -1521,11 +1743,7 @@ end
 ---@param p_Transform LinearTransform
 ---@param p_SetKit boolean
 function BotSpawner:_SpawnBot(p_Bot, p_Transform, p_SetKit)
-	local s_WriteNewKit = false
-
-	if p_Bot.m_ActiveWeapon == nil then
-		s_WriteNewKit = true
-	end
+	local s_WriteNewKit = self:_NeedsNewWeapons(p_Bot)
 
 	local s_BotColor = p_Bot.m_Color
 	local s_BotKit = p_Bot.m_Kit
@@ -1538,6 +1756,8 @@ function BotSpawner:_SpawnBot(p_Bot, p_Transform, p_SetKit)
 
 	self:_SetBotWeapons(p_Bot, s_BotKit, s_Team, s_WriteNewKit)
 	p_Bot:ResetSpawnVars()
+	-- Killed in a vehicle: on foot now (else it attacked as that vehicle, GetAttackPriority).
+	p_Bot.m_ActiveVehicle = nil
 
 	-- Create kit and appearance.
 	if p_Bot.m_Player.selectedKit == nil then
@@ -1554,6 +1774,7 @@ function BotSpawner:_SpawnBot(p_Bot, p_Transform, p_SetKit)
 		return
 	end
 
+	self:_SettleDeathTicket(p_Bot)
 	p_Bot.m_Player.soldier:ApplyCustomization(self:_GetCustomization(p_Bot, s_BotKit))
 
 	if Globals.RemoveKitVisuals then
@@ -1562,9 +1783,67 @@ function BotSpawner:_SpawnBot(p_Bot, p_Transform, p_SetKit)
 	end
 end
 
+---The ticket of the last death of a bot that spawned again (Bot:NoteDeath). Conquest, domination, air and tank
+---superiority: the game takes a ticket for the death of a player but none for a bot (bleed and player deaths count), so
+---it goes now - once per death, a revive spawns nothing. Rush takes one for every death, also for the kills of the mod
+---(stranded on the ship of MP_017, stuck, team balance): those come back.
 ---@param p_Bot Bot
+function BotSpawner:_SettleDeathTicket(p_Bot)
+	local s_Death = p_Bot._DeathTicket
+	if s_Death == nil then
+		return
+	end
+	p_Bot._DeathTicket = nil
+	p_Bot._ModKill = false
+	local s_Tickets = TicketManager:GetTicketCount(s_Death.Team)
+	if Globals.IsRush then
+		if s_Death.ByMod and s_Tickets > 0 then
+			TicketManager:SetTicketCount(s_Death.Team, s_Tickets + 1)
+		end
+	elseif Globals.IsConquest and not Globals.IsCtf and not s_Death.ByMod and s_Tickets > 1 then
+		TicketManager:SetTicketCount(s_Death.Team, s_Tickets - 1)
+	end
+end
+
+---Kills the soldier but keeps the bot active, so it respawns normally.
+---Bot:Kill() would also reset the bot to NoRespawn and so disable it.
+---@param p_Bot Bot
+function BotSpawner:_KillSoldierKeepRespawn(p_Bot)
+	-- Spawned into a vehicle (mobile spawn, squad-mate's vehicle) but the engine didn't seat it.
+	p_Bot:KillSoldier('not_seated')
+end
+
+---@param p_Bot Bot
+function BotSpawner:_AddBotWithoutPath(p_Bot)
+	-- A bot whose last spawn failed can still be in the list.
+	for l_Index = 1, #self._BotsWithoutPath do
+		if self._BotsWithoutPath[l_Index] == p_Bot then
+			return
+		end
+	end
+
+	self._BotsWithoutPath[#self._BotsWithoutPath + 1] = p_Bot
+end
+
 function BotSpawner:_ApplyCosumizationAfterSpawn(p_Bot)
 	p_Bot.m_Player.soldier:ApplyCustomization(self:_GetCustomization(p_Bot, p_Bot.m_Kit))
+end
+
+---Probability (%) that a bot spawns in a transport helicopter or an AMTRAC of its team: in conquest 100 % while the team
+---holds no capture point, 10 % when it holds all of them; else 30 %.
+---@param p_TeamId TeamId|integer
+---@return number
+function BotSpawner:_MobileSpawnProbability(p_TeamId)
+	if not Globals.IsConquest then
+		return 30
+	end
+	local s_CaptureStats = g_GameDirector:CapturePointStats()
+	local s_TotalCapturePoints = #s_CaptureStats.all
+	if s_TotalCapturePoints == 0 then
+		return 30
+	end
+	local s_Captured = #s_CaptureStats.captured[p_TeamId]
+	return (-90 / s_TotalCapturePoints) * s_Captured + 100
 end
 
 ---comment
@@ -1574,10 +1853,38 @@ end
 ---@return ControllableEntity?
 function BotSpawner:_GetSpecialSpawnEnity(p_Bot, p_TeamId)
 	if Globals.IsAirSuperiority or Globals.MapHasDynamiJetSpawns then
-		return "SpawnInJet", p_Bot.m_Player.controlledControllable
+		-- Spawned into a jet (_CheckAndGetAvailableJetSpawn). Not a bot the game spawned on foot (XP5_002 conquest: its
+		-- soldier was taken for the jet, the cast failed in every frame).
+		local s_Controllable = p_Bot.m_Player.controlledControllable
+		if s_Controllable ~= nil and not s_Controllable:Is('ServerSoldierEntity') then
+			return "SpawnInJet", s_Controllable
+		end
+		if Globals.IsAirSuperiority then
+			return nil
+		end
 	end
 	if Config.UseVehicles and self._DelayDirectSpawn <= 0.0 and #g_GameDirector:GetSpawnableVehicle(p_TeamId) > 0 then
 		return "SpawnInVehicle", g_GameDirector:GetSpawnableVehicle(p_TeamId)[1]
+	end
+
+	-- Into a transport helicopter or an AMTRAC of the team that is under way (the passengers get out at the objective,
+	-- Bot:_CheckShouldExitVehicleIfPassenger). The game spawns on a level with a mesh only lead here.
+	if Config.UseVehicles and Config.SpawnInMobileRespawnVehicles then
+		-- One with a free passenger seat that isn't stuck (MP_017: the AMTRAC wedged at the ship, 23 bots spawned for it in a
+		-- round, didn't get in and stood on the ship).
+		local s_Vehicles = g_GameDirector:GetMobileRespawnVehicles(p_TeamId)
+		local s_Usable = nil
+		for l_Index = 1, #s_Vehicles do
+			local l_Vehicle = s_Vehicles[l_Index]
+			if not g_GameDirector:IsStuckVehicle(l_Vehicle)
+				and #m_Vehicles:FreePassengerSeats(l_Vehicle, m_Vehicles:GetVehicleByEntity(l_Vehicle)) > 0 then
+				s_Usable = l_Vehicle
+				break
+			end
+		end
+		if s_Usable ~= nil and m_Utilities:CheckProbability(self:_MobileSpawnProbability(p_TeamId)) then
+			return "SpawnInMobileVehicle", s_Usable
+		end
 	end
 
 	if Config.AABots and #g_GameDirector:GetStationaryAas(p_TeamId) > 0 then
@@ -1585,17 +1892,8 @@ function BotSpawner:_GetSpecialSpawnEnity(p_Bot, p_TeamId)
 	end
 
 	local s_Gunship = g_GameDirector:GetGunship(p_TeamId)
-	if s_Gunship then
-		local s_SeatsLeft = false
-		for i = 1, s_Gunship.entryCount - 1 do
-			if s_Gunship:GetPlayerInEntry(i) == nil then
-				s_SeatsLeft = true
-				break
-			end
-		end
-		if s_SeatsLeft then
-			return "SpawnInGunship", g_GameDirector:GetGunship(p_TeamId)
-		end
+	if s_Gunship and g_GameDirector:GunshipHasFreeBotSeat(s_Gunship) then
+		return "SpawnInGunship", s_Gunship
 	end
 
 	return nil
@@ -1614,8 +1912,8 @@ function BotSpawner:_GetSpawnPoint(p_TeamId, p_SquadId)
 	local s_TargetNode = nil
 	local s_VehicleToSpawnIn = nil
 	local s_ValidPointFound = false
-	local s_TargetDistance = Config.DistanceToSpawnBots
-	local s_RetryCounter = Config.MaxTrysToSpawnAtDistance
+	local s_TargetDistance = Registry.BOT_SPAWN.DISTANCE_TO_PLAYERS
+	local s_RetryCounter = Registry.BOT_SPAWN.MAX_TRIES_AT_DISTANCE
 	local s_MaximumTrys = 100
 	local s_TrysDone = 0
 
@@ -1625,22 +1923,8 @@ function BotSpawner:_GetSpawnPoint(p_TeamId, p_SquadId)
 
 	if Config.UseVehicles and Config.SpawnInMobileRespawnVehicles then
 		local s_Vehicles = g_GameDirector:GetMobileRespawnVehicles(p_TeamId)
-		if #s_Vehicles > 0 then
-			local s_ProbabilityToSpawn = 0 -- percents
-
-			if Globals.IsConquest then
-				local s_CaptureStats = g_GameDirector:CapturePointStats()
-				local s_TotalCapturePoints = #s_CaptureStats.all
-				local s_Captured = #s_CaptureStats.captured[p_TeamId]
-				-- 100% if 0 flags captured, 10% if all flags captured
-				s_ProbabilityToSpawn = (-90 / s_TotalCapturePoints) * s_Captured + 100
-			else
-				s_ProbabilityToSpawn = 30
-			end
-
-			if m_Utilities:CheckProbability(s_ProbabilityToSpawn) then
-				return "SpawnAtMobileVehicle"
-			end
+		if #s_Vehicles > 0 and m_Utilities:CheckProbability(self:_MobileSpawnProbability(p_TeamId)) then
+			return "SpawnAtMobileVehicle"
 		end
 	end
 
@@ -1649,48 +1933,12 @@ function BotSpawner:_GetSpawnPoint(p_TeamId, p_SquadId)
 	end
 
 	local s_Gunship = g_GameDirector:GetGunship(p_TeamId)
-	if s_Gunship then
-		local s_SeatsLeft = false
-		for i = 1, s_Gunship.entryCount - 1 do
-			if s_Gunship:GetPlayerInEntry(i) == nil then
-				s_SeatsLeft = true
-				break
-			end
-		end
-		if s_SeatsLeft then
-			return "SpawnInGunship"
-		end
+	if s_Gunship and g_GameDirector:GunshipHasFreeBotSeat(s_Gunship) then
+		return "SpawnInGunship"
 	end
 
-	-- CONQUEST
-	-- Spawn at base, squad-mate, captured flag.
-	if Globals.IsConquest then
-		s_ActiveWayIndex, s_IndexOnPath, s_InvertDirection, s_VehicleToSpawnIn = g_GameDirector:GetSpawnPath(p_TeamId,
-			p_SquadId, false)
-
-		if s_ActiveWayIndex == 0 then
-			-- Something went wrong. Use random path.
-			m_Logger:Write("no base or capturepoint found to spawn")
-			return
-		end
-
-		s_TargetNode = m_NodeCollection:Get(s_IndexOnPath, s_ActiveWayIndex)
-		-- RUSH
-		-- Spawn at base (of zone) or squad-mate.
-	elseif Globals.IsRush then
-		s_ActiveWayIndex, s_IndexOnPath, s_InvertDirection, s_VehicleToSpawnIn = g_GameDirector:GetSpawnPath(p_TeamId,
-			p_SquadId, true)
-
-		if s_ActiveWayIndex == 0 then
-			-- Something went wrong. Use random path.
-			m_Logger:Write("no base found to spawn")
-			return
-		end
-
-		s_TargetNode = m_NodeCollection:Get(s_IndexOnPath, s_ActiveWayIndex)
-		-- TDM / GM / SCAVENGER
-		-- Spawn away from other team.
-	else
+	-- Away from the other team (the deathmatch modes that don't spawn at the game, see _UseGameSpawn).
+	do
 		while not s_ValidPointFound and s_TrysDone < s_MaximumTrys do
 			-- Get new point.
 			s_ActiveWayIndex = MathUtils:GetRandomInt(1, m_NodeCollection:GetNrOfPaths())
@@ -1729,7 +1977,7 @@ function BotSpawner:_GetSpawnPoint(p_TeamId, p_SquadId)
 						local s_Distance = s_TempPlayer.soldier.worldTransform.trans:Distance(s_SpawnPoint)
 						local s_HeightDiff = math.abs(s_TempPlayer.soldier.worldTransform.trans.y - s_SpawnPoint.y)
 
-						if s_Distance < s_TargetDistance and s_HeightDiff < Config.HeightDistanceToSpawn then
+						if s_Distance < s_TargetDistance and s_HeightDiff < Registry.BOT_SPAWN.HEIGHT_DISTANCE_TO_PLAYERS then
 							s_PlayerNearby = true
 							break
 						end
@@ -1741,8 +1989,8 @@ function BotSpawner:_GetSpawnPoint(p_TeamId, p_SquadId)
 			s_TrysDone = s_TrysDone + 1
 
 			if s_RetryCounter == 0 then
-				s_RetryCounter = Config.MaxTrysToSpawnAtDistance
-				s_TargetDistance = s_TargetDistance - Config.DistanceToSpawnReduction
+				s_RetryCounter = Registry.BOT_SPAWN.MAX_TRIES_AT_DISTANCE
+				s_TargetDistance = s_TargetDistance - Registry.BOT_SPAWN.DISTANCE_REDUCTION
 
 				if s_TargetDistance < 0 then
 					s_TargetDistance = 0
@@ -1786,15 +2034,9 @@ function BotSpawner:_GetUnlocks(p_Bot, p_TeamId, p_SquadId)
 		return nil
 	end
 
-	local s_CurrentUnlockNames = {}
-	local s_CurrentUnlocks = {}
-
-	for l_Index = 1, #p_Bot.m_Player.selectedUnlocks do
-		local l_PlayerUnlock = p_Bot.m_Player.selectedUnlocks[l_Index]
-		s_CurrentUnlocks[#s_CurrentUnlocks + 1] = l_PlayerUnlock
-		s_CurrentUnlockNames[#s_CurrentUnlockNames + 1] = l_PlayerUnlock["partition"]["name"]
-	end
-
+	-- Only names here: every access of selectedUnlocks (and of its partition and name) allocates, reading them for the
+	-- bot and its whole squad made each spawn take several ms. The unlocks are built from the names, over the cache of
+	-- GetResourceDataContainer.
 	local s_Unlocks = {}
 	local s_SelectedPerk = ""
 	local s_PossiblePerks = {                                         -- Sorted by quality.
@@ -1848,19 +2090,30 @@ function BotSpawner:_GetUnlocks(p_Bot, p_TeamId, p_SquadId)
 		end
 	end
 
+	-- The perks the squad already has. Bots remember theirs, only real players have to be read.
+	local function _RemovePerk(p_UsedSquadPerk)
+		for l_PerkIndex = 1, #s_PossiblePerks do
+			if s_PossiblePerks[l_PerkIndex] == p_UsedSquadPerk then
+				table.remove(s_PossiblePerks, l_PerkIndex)
+				return
+			end
+		end
+	end
+
 	local s_SquadPlayers = PlayerManager:GetPlayersBySquad(p_TeamId, p_SquadId)
 	for l_Index = 1, #s_SquadPlayers do
 		local l_SquadPlayer = s_SquadPlayers[l_Index]
-		if l_SquadPlayer.id ~= p_Bot.m_Player.id then
-			for l_Index = 1, #l_SquadPlayer.selectedUnlocks do
-				local l_PlayerUnlock = l_SquadPlayer.selectedUnlocks[l_Index]
-				local s_UsedSquadPerk = l_PlayerUnlock["partition"]["name"]
-				for l_Index = 1, #s_PossiblePerks do
-					local l_PossiblePerk = s_PossiblePerks[l_Index]
-					if l_PossiblePerk == s_UsedSquadPerk then
-						table.remove(s_PossiblePerks, l_Index)
-						break
-					end
+		local s_SquadPlayerId = l_SquadPlayer.id
+		if s_SquadPlayerId ~= p_Bot.m_Player.id then
+			local s_SquadBot = m_BotManager:GetBotById(s_SquadPlayerId)
+			if s_SquadBot ~= nil then
+				if s_SquadBot.m_SquadPerk ~= nil then
+					_RemovePerk(s_SquadBot.m_SquadPerk)
+				end
+			else
+				local s_SelectedUnlocks = l_SquadPlayer.selectedUnlocks
+				for l_UnlockIndex = 1, #s_SelectedUnlocks do
+					_RemovePerk(s_SelectedUnlocks[l_UnlockIndex].partition.name)
 				end
 			end
 		end
@@ -1875,34 +2128,12 @@ function BotSpawner:_GetUnlocks(p_Bot, p_TeamId, p_SquadId)
 		end
 	end
 
-	-- Update Perks if needed.
-	for l_Index = 1, #s_CurrentUnlockNames do
-		local l_PerkName = s_CurrentUnlockNames[l_Index]
-		if string.find(l_PerkName, "soldiers") then
-			-- Squad perk.
-			if l_PerkName == s_SelectedPerk then
-				s_SelectedPerk = ""
-				s_Unlocks[#s_Unlocks + 1] = s_CurrentUnlocks[l_Index]
-			end
-		else
-			-- Vehicle perk.
-			for l_IndexVehiclePerk = #s_VehiclePerksToAdd, 1, -1 do
-				local l_VehiclePerkName = s_VehiclePerksToAdd[l_IndexVehiclePerk]
-				if l_PerkName == l_VehiclePerkName then
-					table.remove(s_VehiclePerksToAdd, l_IndexVehiclePerk)
-					s_Unlocks[#s_Unlocks + 1] = s_CurrentUnlocks[l_Index]
-				end
-			end
-		end
-	end
-
-	-- Add perk if not already copied.
+	p_Bot.m_SquadPerk = s_SelectedPerk ~= "" and s_SelectedPerk or nil
 	if s_SelectedPerk ~= "" then
 		s_Unlocks[#s_Unlocks + 1] = self:GetResourceDataContainer(s_SelectedPerk)
 	end
 	for l_Index = 1, #s_VehiclePerksToAdd do
-		local l_VehicelPerk = s_VehiclePerksToAdd[l_Index]
-		s_Unlocks[#s_Unlocks + 1] = self:GetResourceDataContainer(l_VehicelPerk)
+		s_Unlocks[#s_Unlocks + 1] = self:GetResourceDataContainer(s_VehiclePerksToAdd[l_Index])
 	end
 
 	return s_Unlocks
@@ -2010,7 +2241,6 @@ function BotSpawner:_GetCustomization(p_Bot, p_Kit)
 	p_SoldierCustomization.removeAllExistingWeapons = false
 
 	if Globals.IsGm then
-		p_Bot.m_LastWeapon = nil
 		return p_SoldierCustomization
 	end
 
@@ -2121,54 +2351,49 @@ function BotSpawner:_GetCustomization(p_Bot, p_Kit)
 	return p_SoldierCustomization
 end
 
+---@param p_Kit BotKits|integer
+---@param p_AllKitCounts table<BotKits|integer, integer>
+---@return boolean
+local function _IsKitAllowed(p_Kit, p_AllKitCounts)
+	local s_Limit = Config.MaxReconBots
+
+	if p_Kit == BotKits.Assault then
+		s_Limit = Config.MaxAssaultBots
+	elseif p_Kit == BotKits.Engineer then
+		s_Limit = Config.MaxEngineerBots
+	elseif p_Kit == BotKits.Support then
+		s_Limit = Config.MaxSupportBots
+	end
+
+	return s_Limit < 0 or p_AllKitCounts[p_Kit] < s_Limit
+end
+
 ---@param p_TeamId TeamId|integer
+---@param p_Kit? BotKits|integer wanted kit, random if nil
+---@param p_ExcludeBot? Bot the spawning bot, doesn't count for the limits
+---@param p_FallbackKit? BotKits|integer kit to keep, if the wanted one is over the limit
 ---@return BotKits|integer
-function BotSpawner:_GetSpawnBotKit(p_TeamId)
+function BotSpawner:_GetSpawnBotKit(p_TeamId, p_Kit, p_ExcludeBot, p_FallbackKit)
 	-- check for overwritten bot-kit
 	if Config.BotKit ~= BotKits.RANDOM_KIT then
 		return Config.BotKit
 	end
 	---@type BotKits|integer
-	local s_BotKit = MathUtils:GetRandomInt(1, BotKits.Count - 1) -- Kit enum goes from 1 to 4.
-	local s_ChangeKit = false
+	local s_BotKit = p_Kit or MathUtils:GetRandomInt(1, BotKits.Count - 1) -- Kit enum goes from 1 to 4.
 	-- Find out, if possible.
-	local s_AllKitCounts = m_BotManager:GetKitCount(p_TeamId)
+	local s_AllKitCounts = m_BotManager:GetKitCount(p_TeamId, p_ExcludeBot)
 
-	if s_BotKit == BotKits.Assault then
-		if Config.MaxAssaultBots >= 0 and s_AllKitCounts[BotKits.Assault] >= Config.MaxAssaultBots then
-			s_ChangeKit = true
+	if not _IsKitAllowed(s_BotKit, s_AllKitCounts) then
+		if p_FallbackKit and _IsKitAllowed(p_FallbackKit, s_AllKitCounts) then
+			return p_FallbackKit
 		end
-	elseif s_BotKit == BotKits.Engineer then
-		if Config.MaxEngineerBots >= 0 and s_AllKitCounts[BotKits.Engineer] >= Config.MaxEngineerBots then
-			s_ChangeKit = true
-		end
-	elseif s_BotKit == BotKits.Support then
-		if Config.MaxSupportBots >= 0 and s_AllKitCounts[BotKits.Support] >= Config.MaxSupportBots then
-			s_ChangeKit = true
-		end
-	else -- s_BotKit == BotKits.Recon
-		if Config.MaxReconBots >= 0 and s_AllKitCounts[BotKits.Recon] >= Config.MaxReconBots then
-			s_ChangeKit = true
-		end
-	end
 
-	if s_ChangeKit then
 		local s_AvailableKitList = {}
 
-		if (Config.MaxAssaultBots == -1) or (s_AllKitCounts[BotKits.Assault] < Config.MaxAssaultBots) then
-			s_AvailableKitList[#s_AvailableKitList + 1] = BotKits.Assault
-		end
-
-		if (Config.MaxEngineerBots == -1) or (s_AllKitCounts[BotKits.Engineer] < Config.MaxEngineerBots) then
-			s_AvailableKitList[#s_AvailableKitList + 1] = BotKits.Engineer
-		end
-
-		if (Config.MaxSupportBots == -1) or (s_AllKitCounts[BotKits.Support] < Config.MaxSupportBots) then
-			s_AvailableKitList[#s_AvailableKitList + 1] = BotKits.Support
-		end
-
-		if (Config.MaxReconBots == -1) or (s_AllKitCounts[BotKits.Recon] < Config.MaxReconBots) then
-			s_AvailableKitList[#s_AvailableKitList + 1] = BotKits.Recon
+		for l_Kit = 1, BotKits.Count - 1 do
+			if _IsKitAllowed(l_Kit, s_AllKitCounts) then
+				s_AvailableKitList[#s_AvailableKitList + 1] = l_Kit
+			end
 		end
 
 		if #s_AvailableKitList > 0 then
@@ -2177,6 +2402,32 @@ function BotSpawner:_GetSpawnBotKit(p_TeamId)
 	end
 
 	return s_BotKit
+end
+
+---Whether the (re)spawning bot gets new weapons: its kit changed (_ApplyKitLimit), it has none yet, or it still has the
+---weapon of a GunMaster round (UpdateGmWeapon: no gadgets, no unlock of its own). The bots stay from level to level:
+---those of a GunMaster round kept that weapon in the next mode.
+---@param p_Bot Bot
+---@return boolean
+function BotSpawner:_NeedsNewWeapons(p_Bot)
+	local s_New = self:_ApplyKitLimit(p_Bot) or p_Bot.m_ActiveWeapon == nil
+	if not Globals.IsGm and p_Bot.m_ActiveGmWeaponName ~= nil then
+		p_Bot.m_ActiveGmWeaponName = nil
+		s_New = true
+	end
+	return s_New
+end
+
+---Applies the kit-limits to a (re)spawning bot: it gets the kit of its name as long as the limits allow it, so it
+---goes back to it once the limit is raised again.
+---@param p_Bot Bot
+---@return boolean changed the kit changed, the weapons have to be selected again
+function BotSpawner:_ApplyKitLimit(p_Bot)
+	local s_OldKit = p_Bot.m_Kit
+	local s_Kit = self:_GetSpawnBotKit(p_Bot.m_Player.teamId, p_Bot.m_PreferredKit or s_OldKit, p_Bot, s_OldKit)
+	p_Bot.m_Kit = s_Kit
+	p_Bot._KitInUse = true
+	return s_Kit ~= s_OldKit
 end
 
 -- Tries to find first available kit.

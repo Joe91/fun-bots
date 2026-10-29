@@ -3,7 +3,6 @@
 VehicleAttacking = class('VehicleAttacking')
 
 ---@type Utilities
-local m_Utilities = require('__shared/Utilities')
 ---@type Vehicles
 local m_Vehicles = require("Vehicles")
 
@@ -83,6 +82,8 @@ function VehicleAttacking:UpdateAttackingVehicle(p_DeltaTime, p_Bot)
 							else
 								p_Bot._VehicleWeaponSlotToUse = 1
 							end
+						elseif m_Vehicles:IsVehicleType(p_Bot.m_ActiveVehicle, VehicleTypes.Plane) then
+							p_Bot._VehicleWeaponSlotToUse = 1
 						else
 							p_Bot._VehicleWeaponSlotToUse = 1
 						end
@@ -118,12 +119,7 @@ function VehicleAttacking:UpdateAttackingVehicle(p_DeltaTime, p_Bot)
 						self:Fire(p_Bot)
 					end
 				elseif m_Vehicles:IsVehicleType(p_Bot.m_ActiveVehicle, VehicleTypes.Plane) then
-					if p_Bot._ShotTimer >= 1.6 then
-						p_Bot._ShotTimer = 0.0
-					end
-					if p_Bot._ShotTimer >= 0.3 and p_Bot._VehicleReadyToShoot then
-						self:Fire(p_Bot)
-					end
+					-- Jets fire in VehicleJetControl:UpdateYawJet, every fast update while on target. No bursts.
 				else
 					if p_Bot._ShotTimer >= (0.6 * p_Bot._FireCycleModifier) then
 						p_Bot._ShotTimer = 0.0
@@ -143,7 +139,7 @@ function VehicleAttacking:UpdateAttackingVehicle(p_DeltaTime, p_Bot)
 			p_Bot:_ResetActionFlag(BotActionFlags.C4Active)
 			p_Bot:_ResetActionFlag(BotActionFlags.GrenadeActive)
 		end
-	elseif p_Bot._ShootPlayer.soldier == nil then -- Reset if enemy is dead.
+	else -- Reset if enemy is dead or shooting is disabled.
 		p_Bot:AbortAttack()
 	end
 

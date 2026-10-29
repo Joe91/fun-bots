@@ -3,3 +3,6 @@ mapfiles/*.map
 permission_and_config/*.cfg
 fun-bots-helper/build/
 *vua.code-workspace
+.luacheckrc
+tools/
+navzones/*.json

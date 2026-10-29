@@ -88,9 +88,45 @@ ui-view[data-name="settings"] ui-tabs figure ui-tab ui-entry {
     flex-direction: row;
 }
 
+ui-view[data-name="settings"] ui-tabs figure ui-tab ui-entry:hover {
+    background-color: rgba(84, 134, 168, 0.25);
+}
+
 ui-view[data-name="settings"] ui-tabs figure ui-tab ui-entry ui-name {
     flex: 1 auto;
     align-self: center;
+    padding: 0 0 0 5px;
+}
+
+/* Values that differ from the default */
+ui-view[data-name="settings"] ui-tabs figure ui-tab ui-entry[data-modified="true"] ui-container ui-text,
+ui-view[data-name="settings"] ui-tabs figure ui-tab ui-entry[data-modified="true"] ui-container input[type="number"] {
+    color: rgb(247, 150, 50);
+    text-shadow: 0 0 6px rgba(247, 130, 16, 0.6);
+}
+
+/* Restore to default */
+ui-view[data-name="settings"] ui-tabs figure ui-tab ui-entry ui-restore {
+    display: block;
+    flex: 0 24px;
+    width: 24px;
+    height: 24px;
+    margin: 0 0 0 10px;
+    align-self: center;
+    cursor: pointer;
+    background-image: url("../../assets/restore.png");
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: 50% 50%;
+    opacity: 0.15;
+}
+
+ui-view[data-name="settings"] ui-tabs figure ui-tab ui-entry[data-modified="true"] ui-restore {
+    opacity: 0.6;
+}
+
+ui-view[data-name="settings"] ui-tabs figure ui-tab ui-entry ui-restore:hover {
+    opacity: 1;
 }
 
 ui-view[data-name="settings"] ui-tabs figure ui-tab ui-entry ui-container {

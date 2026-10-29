@@ -55,15 +55,7 @@ function FunBotUIClient:_onUIToggle()
 	end
 
 	self._views:execute('BotEditor.Hide()')
-	-- NetEvents:Send('PathMenu:Hide')
 	self._views:disable()
-
-	-- if self._views:isVisible() then
-	-- self._views:close()
-	-- else
-	-- self._views:open()
-	-- self._views:focus()
-	-- end
 end
 
 function FunBotUIClient:_onUICommoRose(p_Data)
@@ -75,13 +67,13 @@ function FunBotUIClient:_onUICommoRose(p_Data)
 		return
 	end
 
-	self._views:execute('BotEditor.setCommoRose(\'' .. json.encode(p_Data) .. '\')')
+	self._views:execute('BotEditor.setCommoRose(\'' .. self._views:escape(json.encode(p_Data)) .. '\')')
 	self._views:focusMouse()
 	self.m_InCommScreen = true
 end
 
 function FunBotUIClient:_onSetOperationControls(p_Data)
-	self._views:execute('BotEditor.setOperationControls(\'' .. json.encode(p_Data) .. '\')')
+	self._views:execute('BotEditor.setOperationControls(\'' .. self._views:escape(json.encode(p_Data)) .. '\')')
 end
 
 function FunBotUIClient:_onUIWaypointsEditor(p_State)
@@ -97,7 +89,6 @@ function FunBotUIClient:_onUIWaypointsEditor(p_State)
 		self._views:hide('waypoint_toolbar')
 		self._views:execute('BotEditor.setCommoRose(false)')
 		self._views:show('toolbar')
-		Config.DebugTracePaths = false
 		self.m_InWaypointEditor = false
 		g_ClientNodeEditor:OnSetEnabled(false)
 		g_ClientSpawnPointHelper:OnSetEnabled(false)
@@ -106,7 +97,6 @@ function FunBotUIClient:_onUIWaypointsEditor(p_State)
 			print('UIClient: open UI_Waypoints_Editor')
 		end
 
-		Config.DebugTracePaths = true
 		g_ClientNodeEditor:OnSetEnabled(true)
 		g_ClientSpawnPointHelper:OnSetEnabled(true)
 		self._views:show('waypoint_toolbar')
@@ -168,7 +158,6 @@ function FunBotUIClient:_onUISettings(p_Data)
 		end
 
 		self._views:hide('settings')
-		-- self._views:blur()
 		return
 	end
 
@@ -228,7 +217,7 @@ function FunBotUIClient:_onUISettings(p_Data)
 		end
 	end
 
-	self._views:execute('BotEditor.openSettings(\'' .. settings:getJSON() .. '\')')
+	self._views:execute('BotEditor.openSettings(\'' .. self._views:escape(settings:getJSON()) .. '\')')
 	self._views:show('settings')
 	self._views:focus()
 end

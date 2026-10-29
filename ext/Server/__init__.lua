@@ -19,7 +19,6 @@ require('__shared/Constants/WeaponTypes')
 require('__shared/Constants/BotAttackModes')
 require('__shared/Constants/BotMoveSpeeds')
 require('__shared/Constants/SpawnModes')
-require('__shared/Constants/SpawnMethods')
 require('__shared/Constants/TeamSwitchModes')
 require('__shared/Languages/Languages')
 require('__shared/Settings/Type')
@@ -30,7 +29,6 @@ require('__shared/Settings/SettingsDefinition')
 require('__shared/WeaponList')
 require('__shared/EbxEditUtils')
 require('__shared/Utils/Logger')
-require('__shared/Utils/Profiler')
 require('Vehicles')
 require('UIServer')
 require('BotStates/BotStates')
@@ -64,11 +62,27 @@ local m_ChatCommands = require('Commands/Chat')
 ---@type Console
 local m_Console = require('Commands/Console')
 ---@type RCONCommands
-local m_RCONCommands = require('Commands/RCON')
+require('Commands/RCON')
 ---@type AirTargets
 local m_AirTargets = require('AirTargets')
 ---@type GameDirector
 local m_GameDirector = require('GameDirector')
+---@type NavZones
+local m_NavZones = require('NavZones')
+-- Routes over the navigation paths, from zone to zone (sets g_NavRoutes, used by NodeCollection and GameDirector).
+require('NavRoutes')
+---@type AimEvaluation
+local m_AimEvaluation = require('AimEvaluation')
+---@type ServerRaycasts
+local m_ServerRaycasts = require('ServerRaycasts')
+---@type DebugBridge
+local m_DebugBridge = require('Debug/DebugBridge')
+---@type DebugSnapshots
+local m_DebugSnapshots = require('Debug/DebugSnapshots')
+require('Debug/DebugCommands')
+-- Last: wraps functions of the modules above (only with Registry.DEBUG.ROUND_STATS_INTERVAL > 0).
+require('Debug/FunctionProfiler')
+require('Debug/SpikeTracer')
 ---@type PermissionManager
 PermissionManager = require('PermissionManager')
 
@@ -76,6 +90,8 @@ PermissionManager = require('PermissionManager')
 function FunBotServer:__init()
 	-- Used to calculate the respawn delay.
 	self.m_PlayerKilledDelay = 0
+	-- Players outside of the combat area (CombatArea events): player id -> true.
+	self.m_OutsideCombatArea = {}
 	Events:Subscribe('Engine:Init', self, self.OnEngineInit)
 	Events:Subscribe('Extension:Loaded', self, self.OnExtensionLoaded)
 end
@@ -87,6 +103,9 @@ end
 
 ---VEXT Shared Extension:Loaded Event
 function FunBotServer:OnExtensionLoaded()
+	if Registry.COMMON.USE_GENERATIONAL_GC then
+		collectgarbage("generational")
+	end
 	-- destroy all still existing bot-players first
 	m_BotManager:DestroyAllOldBotPlayers()
 	m_SettingsManager:OnExtensionLoaded()
@@ -157,9 +176,11 @@ function FunBotServer:RegisterCustomEvents()
 	NetEvents:Subscribe('ConsoleCommands:SetConfig', self, self.OnConsoleCommandSetConfig)
 	NetEvents:Subscribe('ConsoleCommands:SaveAll', self, self.OnConsoleCommandSaveAll)
 	NetEvents:Subscribe('ConsoleCommands:Restore', self, self.OnConsoleCommandRestore)
-	NetEvents:Subscribe('ConsoleCommands:SpawnGrenade', self, self.OnSpawnGrenade)
-	NetEvents:Subscribe('ConsoleCommands:DestroyObstaclesTest', self, self.OnDestroyObstaclesTest)
-	NetEvents:Subscribe("SpawnPointHelper:TeleportTo", self, self.OnTeleportTo)
+	-- The client only offers these to permitted players, but the server must check as well.
+	PermissionManager:SubscribeNetEvent('ConsoleCommands:SpawnGrenade', 'UserInterface.Settings', self, self.OnSpawnGrenade)
+	PermissionManager:SubscribeNetEvent('ConsoleCommands:DestroyObstaclesTest', 'UserInterface.Settings', self,
+		self.OnDestroyObstaclesTest)
+	PermissionManager:SubscribeNetEvent('SpawnPointHelper:TeleportTo', 'UserInterface.WaypointEditor', self, self.OnTeleportTo)
 	m_NodeEditor:RegisterCustomEvents()
 end
 
@@ -258,13 +279,315 @@ function FunBotServer:OnEngineUpdate(p_DeltaTime, p_SimulationDeltaTime)
 	m_GameDirector:OnEngineUpdate(p_DeltaTime)
 	m_BotSpawner:OnEngineUpdate(p_DeltaTime, p_SimulationDeltaTime)
 	m_NodeEditor:OnEngineUpdate(p_DeltaTime, p_SimulationDeltaTime)
+	m_AimEvaluation:OnEngineUpdate(p_DeltaTime)
+	m_DebugBridge:OnEngineUpdate(p_DeltaTime)
+
+	if Registry.DEBUG.ROUND_STATS_INTERVAL > 0 then
+		self:_UpdateRoundStats(p_DeltaTime)
+	end
 end
 
 ---VEXT Shared UpdateManager:Update Event
 ---@param p_DeltaTime number
 ---@param p_UpdatePass UpdatePass|integer
 function FunBotServer:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
+	if Registry.DEBUG.ROUND_STATS_INTERVAL > 0 and p_UpdatePass == UpdatePass.UpdatePass_PostFrame then
+		local s_StartTime = SharedUtils:GetTimeNS()
+		m_BotManager:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
+		local s_ElapsedMs = (SharedUtils:GetTimeNS() - s_StartTime) / 1000000
+		self._StatsBotUpdateCount = (self._StatsBotUpdateCount or 0) + 1
+		self._StatsBotUpdateTotalMs = (self._StatsBotUpdateTotalMs or 0) + s_ElapsedMs
+		self._StatsBotUpdateMaxMs = math.max(self._StatsBotUpdateMaxMs or 0, s_ElapsedMs)
+		-- Sum of the bot updates since the last frame-start, to see whether slow frames come from Lua.
+		self._StatsBotUpdateInFrameMs = (self._StatsBotUpdateInFrameMs or 0) + s_ElapsedMs
+		self._StatsDeltaMax = math.max(self._StatsDeltaMax or 0, p_DeltaTime)
+		return
+	end
+
 	m_BotManager:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
+end
+
+---Debug: measures once how many bytes common engine accesses allocate, using the first bot with a soldier.
+function FunBotServer:_BenchmarkAllocations()
+	local s_Player = nil
+	local s_Bots = m_BotManager._Bots
+	for l_Index = 1, #s_Bots do
+		if s_Bots[l_Index].m_Player.soldier ~= nil then
+			s_Player = s_Bots[l_Index].m_Player
+			break
+		end
+	end
+	if s_Player == nil then
+		return
+	end
+	self._StatsAllocBenchDone = true
+
+	local s_Soldier = s_Player.soldier
+	local s_Transform = s_Soldier.worldTransform
+	local s_Trans = s_Transform.trans
+	local s_Other = s_Trans:Clone()
+	local s_Runs = 5000
+	-- Keeps results alive. Slot 1 is reused, so the sink itself does not allocate.
+	local s_Sink = { false } -- luacheck: ignore 241
+
+	local s_Tests = {
+		{ "player.soldier", function() s_Sink[1] = s_Player.soldier end },
+		{ "soldier.worldTransform", function() s_Sink[1] = s_Soldier.worldTransform end },
+		{ "transform.trans", function() s_Sink[1] = s_Transform.trans end },
+		{ "soldier.worldTransform.trans", function() s_Sink[1] = s_Soldier.worldTransform.trans end },
+		{ "vec:Clone()", function() s_Sink[1] = s_Trans:Clone() end },
+		{ "vec - vec", function() s_Sink[1] = s_Trans - s_Other end },
+		{ "vec:Distance(vec)", function() s_Sink[1] = s_Trans:Distance(s_Other) end },
+		{ "vec.x", function() s_Sink[1] = s_Trans.x end },
+		{ "player.input", function() s_Sink[1] = s_Player.input end },
+		{ "player.teamId", function() s_Sink[1] = s_Player.teamId end },
+		{ "player.controlledControllable", function() s_Sink[1] = s_Player.controlledControllable end },
+		{ "{ a, b }", function() s_Sink[1] = { value = 1, reset = false } end },
+		{ "soldier.velocity", function() s_Sink[1] = s_Soldier.velocity end },
+		{ "soldier.pose", function() s_Sink[1] = s_Soldier.pose end },
+		{ "soldier.weaponsComponent.currentWeapon", function() s_Sink[1] = s_Soldier.weaponsComponent.currentWeapon end },
+		{ "SharedUtils:GetTimeNS()", function() s_Sink[1] = SharedUtils:GetTimeNS() end },
+		{ "collectgarbage('count')", function() s_Sink[1] = collectgarbage("count") end },
+	}
+
+	local s_WasRunning = collectgarbage("isrunning")
+	collectgarbage("stop")
+	local s_Parts = {}
+	for l_Index = 1, #s_Tests do
+		local l_Test = s_Tests[l_Index]
+		local s_Func = l_Test[2]
+		local s_MemBefore = collectgarbage("count")
+		local s_TimeBefore = SharedUtils:GetTimeNS()
+		for _ = 1, s_Runs do
+			s_Func()
+		end
+		local s_Us = (SharedUtils:GetTimeNS() - s_TimeBefore) / 1000 / s_Runs
+		local s_Bytes = (collectgarbage("count") - s_MemBefore) * 1024 / s_Runs
+		s_Parts[#s_Parts + 1] = string.format("%s %.0f B %.2f us", l_Test[1], s_Bytes, s_Us)
+	end
+	-- Iterating entities is much more expensive: fewer runs.
+	local s_IterRuns = 50
+	local s_IterStart = SharedUtils:GetTimeNS()
+	local s_IterCount = 0
+	for _ = 1, s_IterRuns do
+		local s_Iterator = EntityManager:GetIterator('ServerVehicleEntity')
+		local s_Entity = s_Iterator:Next()
+		while s_Entity ~= nil do
+			s_IterCount = s_IterCount + 1
+			s_Sink[1] = VehicleEntityData(s_Entity.data).controllableType
+			s_Entity = s_Iterator:Next()
+		end
+	end
+	s_Parts[#s_Parts + 1] = string.format("iterate ServerVehicleEntity + data-cast (%d entities) %.1f us",
+		s_IterCount / s_IterRuns, (SharedUtils:GetTimeNS() - s_IterStart) / 1000 / s_IterRuns)
+
+	s_IterStart = SharedUtils:GetTimeNS()
+	local s_FirstVehicle = nil
+	for _ = 1, s_IterRuns do
+		local s_Iterator = EntityManager:GetIterator('ServerVehicleEntity')
+		local s_Entity = s_Iterator:Next()
+		s_FirstVehicle = s_FirstVehicle or s_Entity
+		while s_Entity ~= nil do
+			s_Entity = s_Iterator:Next()
+		end
+	end
+	s_Parts[#s_Parts + 1] = string.format("iterate ServerVehicleEntity only %.1f us",
+		(SharedUtils:GetTimeNS() - s_IterStart) / 1000 / s_IterRuns)
+
+	if s_FirstVehicle ~= nil then
+		local s_Data = s_FirstVehicle.data
+		local s_CastTests = {
+			{ "entity.data", function() s_Sink[1] = s_FirstVehicle.data end },
+			{ "VehicleEntityData(data)", function() s_Sink[1] = VehicleEntityData(s_Data) end },
+			{ "VehicleEntityData(data).controllableType", function() s_Sink[1] = VehicleEntityData(s_Data).controllableType end },
+			{ "controllableType:gsub", function() s_Sink[1] = ("Vehicles/XP1/Something/SomeVehicle"):gsub(".+/.+/", "") end },
+			{ "ControllableEntity(entity).transform", function() s_Sink[1] = ControllableEntity(s_FirstVehicle).transform end },
+			{ "PhysicsEntity(entity).velocity", function() s_Sink[1] = PhysicsEntity(s_FirstVehicle).velocity end },
+		}
+		for l_Index = 1, #s_CastTests do
+			local l_Test = s_CastTests[l_Index]
+			local s_Start = SharedUtils:GetTimeNS()
+			for _ = 1, s_IterRuns * 20 do
+				l_Test[2]()
+			end
+			s_Parts[#s_Parts + 1] = string.format("%s %.2f us", l_Test[1],
+				(SharedUtils:GetTimeNS() - s_Start) / 1000 / (s_IterRuns * 20))
+		end
+	end
+
+	if s_WasRunning then
+		collectgarbage("restart")
+	end
+
+	print("[RoundStats] Bytes per access: " .. table.concat(s_Parts, " | "))
+end
+
+---Debug: periodically print values that could grow during a round (Registry.DEBUG.ROUND_STATS_INTERVAL).
+---@param p_DeltaTime number
+function FunBotServer:_UpdateRoundStats(p_DeltaTime)
+	-- Real frames of the server: Engine:Update runs once per frame. p_DeltaTime is the fixed step, so the real
+	-- frame time comes from the clock (1 ms resolution).
+	local s_Now = SharedUtils:GetTimeNS()
+	if self._StatsLastFrameNs then
+		local s_FrameMs = (s_Now - self._StatsLastFrameNs) / 1000000
+		self._StatsFrameMax = math.max(self._StatsFrameMax or 0, s_FrameMs)
+		if s_FrameMs > 20.0 then
+			self._StatsSlowFrames = (self._StatsSlowFrames or 0) + 1
+			if (self._StatsBotUpdateInFrameMs or 0) > 5.0 then
+				self._StatsSlowFramesLua = (self._StatsSlowFramesLua or 0) + 1
+			end
+		end
+	end
+	self._StatsBotUpdateInFrameMs = 0
+	self._StatsLastFrameNs = s_Now
+	self._StatsFrames = (self._StatsFrames or 0) + 1
+	self._StatsWallStartNs = self._StatsWallStartNs or s_Now
+	self._StatsTimer = (self._StatsTimer or 0) + p_DeltaTime
+	if self._StatsTimer < Registry.DEBUG.ROUND_STATS_INTERVAL then
+		return
+	end
+	local s_StatsElapsed = self._StatsTimer
+	self._StatsTimer = 0
+
+	-- Lua memory change since the last print.
+	local s_Mem = collectgarbage("count")
+	if self._StatsLastMem then
+		print(string.format("[RoundStats] Lua memory change since last print: %.0f KB", s_Mem - self._StatsLastMem))
+	end
+	self._StatsLastMem = s_Mem
+
+	local function _CountEntities(p_Type)
+		local s_Count = 0
+		local s_Iterator = EntityManager:GetIterator(p_Type)
+		local s_Entity = s_Iterator:Next()
+		while s_Entity ~= nil do
+			s_Count = s_Count + 1
+			s_Entity = s_Iterator:Next()
+		end
+		return s_Count
+	end
+
+	local function _CountCollection(p_Collection)
+		local s_Count = 0
+		for _, l_List in pairs(p_Collection or {}) do
+			s_Count = s_Count + #l_List
+		end
+		return s_Count
+	end
+
+	local s_ConnectionChecks = 0
+	for _ in pairs(m_BotManager._ConnectionCheckState) do
+		s_ConnectionChecks = s_ConnectionChecks + 1
+	end
+
+	local s_Beacons = 0
+	for _ in pairs(m_GameDirector.m_Beacons) do
+		s_Beacons = s_Beacons + 1
+	end
+
+	-- Real frames in this interval: fewer than interval * tickrate when the server can't keep up.
+	local s_FrameCount = math.max(self._StatsFrames or 0, 1)
+	local s_UpdateCount = math.max(self._StatsBotUpdateCount or 0, 1)
+	local s_WallSeconds = math.max((SharedUtils:GetTimeNS() - (self._StatsWallStartNs or 0)) / 1000000000, s_StatsElapsed)
+	print(string.format("[RoundStats] Server: %.1f fps, longest frame %.1f ms, frames > 20 ms: %d (bot update > 5 ms in %d of them), tickrate %d",
+		(self._StatsFrames or 0) / s_WallSeconds, self._StatsFrameMax or 0, self._StatsSlowFrames or 0,
+		self._StatsSlowFramesLua or 0, SharedUtils:GetTickrate()))
+	self._StatsSlowFramesLua = 0
+	self._StatsFrames = 0
+	self._StatsFrameMax = 0
+	self._StatsSlowFrames = 0
+	self._StatsWallStartNs = nil
+
+	print(string.format(
+		"[RoundStats] LuaMem: %.1f MB | BotUpdate avg %.3f ms max %.2f ms | maxDelta %.1f ms | Bots %d | SpawnSets %d | ToDestroy %d | BotBotList %d | ConnChecks %d | AirTargets %d | Beacons %d | VehSpawnable %d | VehAvailable %d | VehMobile %d | VehAA %d | EngineVehicles %d | Players %d",
+		collectgarbage("count") / 1024,
+		(self._StatsBotUpdateTotalMs or 0) / s_UpdateCount, self._StatsBotUpdateMaxMs or 0,
+		(self._StatsDeltaMax or 0) * 1000,
+		#m_BotManager._Bots, #m_BotSpawner._SpawnSets, #m_BotManager._BotsToDestroy,
+		#m_BotManager._BotBotAttackList, s_ConnectionChecks,
+		m_AirTargets:GetTargetCount(), s_Beacons,
+		_CountCollection(m_GameDirector.m_SpawnableVehicles), _CountCollection(m_GameDirector.m_AvailableVehicles),
+		_CountCollection(m_GameDirector.m_MobileRespawnVehicles), _CountCollection(m_GameDirector.m_SpawnableStationaryAas),
+		_CountEntities("ServerVehicleEntity"), PlayerManager:GetPlayerCount()
+	))
+
+	self._StatsBotUpdateCount = 0
+	self._StatsBotUpdateTotalMs = 0
+	self._StatsBotUpdateMaxMs = 0
+	self._StatsDeltaMax = 0
+
+	if not self._StatsAllocBenchDone then
+		self:_BenchmarkAllocations()
+	end
+
+	-- Breakdown of the bot update. The first call only starts the collection.
+	local s_Profile = m_BotManager:TakeProfileStats()
+	if s_Profile == nil then
+		return
+	end
+
+	local s_Parts = {}
+	for l_Name, l_Entry in pairs(s_Profile.Sections) do
+		s_Parts[#s_Parts + 1] = string.format("%s sum %.0f max %.1f alloc %.0f KB", l_Name, l_Entry.Total, l_Entry.Max, l_Entry.AllocKb)
+	end
+	table.sort(s_Parts)
+	print("[RoundStats] Sections (ms): " .. table.concat(s_Parts, " | "))
+
+	-- Frames in this interval, to show the costs per frame. The timer has a resolution of 1 ms: only sums are exact.
+	local s_Frames = s_FrameCount
+
+	-- The bot calls with the highest total time.
+	local s_Calls = {}
+	for l_Key, l_Entry in pairs(s_Profile.WorstBotCalls) do
+		s_Calls[#s_Calls + 1] = { Key = l_Key, Entry = l_Entry }
+	end
+	table.sort(s_Calls, function(a, b) return a.Entry.Total > b.Entry.Total end)
+	s_Parts = {}
+	for l_Index = 1, math.min(8, #s_Calls) do
+		local l_Call = s_Calls[l_Index]
+		s_Parts[#s_Parts + 1] = string.format("%s %.2f ms/frame (max %.0f, n %d)",
+			l_Call.Key, l_Call.Entry.Total / s_Frames, l_Call.Entry.Max, l_Call.Entry.Count)
+	end
+	print("[RoundStats] Bot calls by time: " .. table.concat(s_Parts, " | "))
+
+	-- Single functions (Debug/FunctionProfiler), inclusive: callers contain the time of the functions they call.
+	if s_Profile.Functions ~= nil then
+		local s_Functions = {}
+		for l_Key, l_Entry in pairs(s_Profile.Functions) do
+			s_Functions[#s_Functions + 1] = { Key = l_Key, Entry = l_Entry }
+		end
+		table.sort(s_Functions, function(a, b) return a.Entry.Total > b.Entry.Total end)
+		s_Parts = {}
+		for l_Index = 1, math.min(25, #s_Functions) do
+			local l_Function = s_Functions[l_Index]
+			s_Parts[#s_Parts + 1] = string.format("%s %.2f ms/frame (max %.0f) %.0f/s %.2f KB/call", l_Function.Key,
+				l_Function.Entry.Total / s_Frames, l_Function.Entry.Max,
+				l_Function.Entry.Count / Registry.DEBUG.ROUND_STATS_INTERVAL,
+				l_Function.Entry.AllocKb / math.max(l_Function.Entry.Count, 1))
+		end
+		print("[RoundStats] Functions: " .. table.concat(s_Parts, " | "))
+
+		-- The single calls that took longest (the spikes).
+		table.sort(s_Functions, function(a, b) return a.Entry.Max > b.Entry.Max end)
+		s_Parts = {}
+		for l_Index = 1, math.min(12, #s_Functions) do
+			local l_Function = s_Functions[l_Index]
+			s_Parts[#s_Parts + 1] = string.format("%s %.0f ms", l_Function.Key, l_Function.Entry.Max)
+		end
+		print("[RoundStats] Longest function calls: " .. table.concat(s_Parts, " | "))
+	end
+
+	-- The bot calls that allocate the most memory (exact only while no GC step runs inside).
+	table.sort(s_Calls, function(a, b) return a.Entry.AllocKb > b.Entry.AllocKb end)
+	s_Parts = {}
+	for l_Index = 1, math.min(8, #s_Calls) do
+		local l_Call = s_Calls[l_Index]
+		s_Parts[#s_Parts + 1] = string.format("%s %.0f KB (%.2f KB/call)",
+			l_Call.Key, l_Call.Entry.AllocKb, l_Call.Entry.AllocKb / math.max(l_Call.Entry.Count, 1))
+	end
+	print("[RoundStats] Top allocating bot calls: " .. table.concat(s_Parts, " | "))
+	print(string.format("[RoundStats] Bot calls >= 5 ms: %d, with GC running inside: %d (%s)",
+		s_Profile.Spikes, s_Profile.SpikesWithGc, _VERSION))
 end
 
 function FunBotServer:OnScoringStatEvent(p_Player, p_ObjectPlayer, p_StatEvent, p_ParamX, p_ParamY, p_Value)
@@ -274,17 +597,25 @@ function FunBotServer:OnScoringStatEvent(p_Player, p_ObjectPlayer, p_StatEvent, 
 	if p_StatEvent == StatEvent.StatEvent_CrateDisarmed then
 		m_GameDirector:OnMcomDisarmed(p_Player)
 	end
-	--[[ If p_StatEvent == StatEvent.StatEvent_CrateDestroyed then.
-		-- Not reliably usable, since place can be anywhere at this moment.
-	end ]]
+	-- The player who armed it, anywhere by now: the GameDirector knows which MCOM that was.
+	if p_StatEvent == StatEvent.StatEvent_CrateDestroyed then
+		m_GameDirector:OnMcomDestroyedBy(p_Player)
+	end
 end
 
 function FunBotServer:OnCombatAreaDeserting(p_Entity, p_Player)
-	m_GameDirector:ToggleDirectionCombatZone(p_Entity, p_Player)
+	-- Outside of the combat area: a death in a damage area now is the border, no hazard of the mesh (OnPlayerKilled).
+	if p_Player ~= nil then
+		self.m_OutsideCombatArea[p_Player.id] = true
+	end
+	m_GameDirector:OnCombatArea(p_Player, true)
 end
 
 function FunBotServer:OnCombatAreaReturning(p_Entity, p_Player)
-	m_GameDirector:ToggleDirectionCombatZone(p_Entity, p_Player)
+	if p_Player ~= nil then
+		self.m_OutsideCombatArea[p_Player.id] = nil
+	end
+	m_GameDirector:OnCombatArea(p_Player, false)
 end
 
 function FunBotServer:OnLifeCounterBaseDestoyed(p_LifeCounterEntity, p_FinalBase)
@@ -323,18 +654,10 @@ function FunBotServer:OnLevelLoaded(p_LevelName, p_GameMode, p_Round, p_RoundsPe
 	self:DetectSpecialMods()
 	self:RegisterInputRestrictionEventCallbacks()
 	self:SetGameMode(p_GameMode, p_LevelName)
-	Globals.UsedSpawnMethod = Config.SpawnMethod
-	if Config.SpawnMethod == SpawnMethod.SpawnOnTdm then
-		if Globals.IsTdm or Globals.IsSdm or Globals.IsGm then
-			Globals.UsedSpawnMethod = SpawnMethod.Spawn
-		else
-			Globals.UsedSpawnMethod = SpawnMethod.SpawnSoldierAt
-		end
-	end
-	-- If AirSuperiority is active, set SpawnMethod to Spawn.
-	if Globals.IsAirSuperiority then
-		Globals.UsedSpawnMethod = SpawnMethod.Spawn
-	end
+	-- Spawns of the game in these modes (conquest and rush as well, BotSpawner:_UseGameSpawn),
+	-- else on the waypoints. Domination: on the waypoints half of the bots spawned next to an enemy (XP2_Office).
+	Globals.UseGameSpawn = Registry.BOT_SPAWN.GAME_SPAWNS_EVERYWHERE or Globals.IsTdm or Globals.IsSdm or Globals.IsGm
+		or Globals.IsAirSuperiority or Globals.IsDomination
 	self:SetMaxBotsPerTeam(p_GameMode)
 	if Registry.COMMON.DESTROY_OBSTACLES_ON_START then
 		self:DestroyObstacles(p_LevelName, p_GameMode)
@@ -344,10 +667,13 @@ function FunBotServer:OnLevelLoaded(p_LevelName, p_GameMode, p_Round, p_RoundsPe
 	m_AirTargets:OnLevelLoaded()
 	m_BotSpawner:OnLevelLoaded(Globals.Round)
 	m_NodeEditor:OnLevelLoaded(p_LevelName, p_GameMode, s_CustomGameMode)
+	m_DebugSnapshots:OnLevelLoaded(p_LevelName, p_GameMode)
 end
 
 function FunBotServer:OnFinishedLoading()
 	m_NodeEditor:EndOfLoad()
+	-- The zones first: the GameDirector takes the MCOMs from them.
+	m_NavZones:OnLoadFinished()
 	m_GameDirector:OnLoadFinished()
 end
 
@@ -373,11 +699,16 @@ end
 
 ---VEXT Shared Level:Destroy Event
 function FunBotServer:OnLevelDestroy()
+	self.m_OutsideCombatArea = {}
 	m_BotManager:OnLevelDestroy()
 	m_BotSpawner:OnLevelDestroy()
 	m_NodeEditor:OnLevelDestroy()
 	m_AirTargets:OnLevelDestroy()
 	m_GameDirector:OnLevelDestroy()
+	m_NavZones:Clear()
+	m_AimEvaluation:OnLevelDestroy()
+	m_ServerRaycasts:OnLevelDestroy()
+	m_DebugBridge:OnLevelDestroy()
 	local s_OldMemory = math.floor(collectgarbage("count") / 1024)
 	collectgarbage('collect')
 	m_Logger:Write("*Collecting Garbage on Level Destroy: " ..
@@ -442,6 +773,26 @@ end
 function FunBotServer:OnPlayerKilled(p_Player, p_Inflictor, p_Position, p_Weapon, p_IsRoadKill, p_IsHeadShot, p_WasVictimInReviveState, p_Info)
 	m_NodeEditor:OnPlayerKilled(p_Player)
 	m_AirTargets:OnPlayerKilled(p_Player)
+	m_DebugSnapshots:OnPlayerKilled(p_Player, p_Inflictor, p_Position, p_Weapon, p_IsRoadKill, p_IsHeadShot)
+	local s_Victim = m_BotManager:GetBotById(p_Player.id)
+	if s_Victim ~= nil then
+		s_Victim:NoteDeath()
+	end
+	-- Killed for leaving the combat area (rush: the defenders in the area of the stage that fell) is no hazard.
+	if p_Weapon == 'DamageArea' and not self.m_OutsideCombatArea[p_Player.id] then
+		m_NavZones:OnDamageAreaDeath(p_Position)
+	end
+	self.m_OutsideCombatArea[p_Player.id] = nil
+	-- Killed by the enemy on foot: the ways there cost its team more for a while, the bots take other ways.
+	local s_Controllable = p_Player.controlledControllable
+	if p_Inflictor ~= nil and p_Inflictor.teamId ~= p_Player.teamId and p_Player.attachedControllable == nil
+		and (s_Controllable == nil or s_Controllable:Is('ServerSoldierEntity')) then
+		m_NavZones:OnKilled(p_Player.teamId, p_Position)
+	end
+	-- Without a killer right after the mod put the bot onto a point of the mesh: nobody is put there again.
+	if p_Inflictor == nil and s_Victim ~= nil then
+		s_Victim:OnDiedAfterPut()
+	end
 end
 
 ---VEXT Server Player:Chat Event
@@ -558,26 +909,32 @@ function FunBotServer:OnSoldierDamage(p_HookCtx, p_Soldier, p_Info, p_GiverInfo)
 end
 
 function FunBotServer:OnEntityFactoryCreate(p_HookCtx, p_EntityData, p_Transform)
-	if p_EntityData.typeInfo.name == "MissileEntityData" then
+	local s_TypeName = p_EntityData.typeInfo.name
+	-- The original may only be called once, keep the created entity for all users.
+	local s_CreatedEntity = nil
+	local s_Called = false
+
+	if s_TypeName == "MissileEntityData" then
 		local s_MissileEntityData = MissileEntityData(p_EntityData)
 		if s_MissileEntityData.lockingController then
-			local s_CreatedEntity = p_HookCtx:Call()
-			if not s_CreatedEntity then
-				return
-			end
-			local s_TimeDelay = s_MissileEntityData.engineTimeToIgnition + s_MissileEntityData.timeToActivateGuidingSystem
-			local s_MaxSpeed = s_MissileEntityData.maxSpeed
+			s_CreatedEntity = p_HookCtx:Call()
+			s_Called = true
+			if s_CreatedEntity then
+				local s_TimeDelay = s_MissileEntityData.engineTimeToIgnition + s_MissileEntityData.timeToActivateGuidingSystem
+				local s_MaxSpeed = s_MissileEntityData.maxSpeed
 
-			m_BotManager:CheckForFlareOrSmoke(s_CreatedEntity, s_MaxSpeed, s_TimeDelay)
+				m_BotManager:CheckForFlareOrSmoke(s_CreatedEntity, s_MaxSpeed, s_TimeDelay)
+			end
 		end
 	end
-	if Registry.DEBUG.VEHICLE_PROJECTILE_TRACE then
-		if p_EntityData.typeInfo.name == "ProjectileEntityData" or p_EntityData.typeInfo.name == "BulletEntityData" or p_EntityData.typeInfo.name == "MissileEntityData" then
-			local s_CreatedEntity = p_HookCtx:Call()
-			if s_CreatedEntity then
-				local s_SpartialEntity = SpatialEntity(s_CreatedEntity)
-				-- Globals.LastPorjectile = s_SpartialEntity.transform
-			end
+
+	if (Registry.DEBUG.VEHICLE_PROJECTILE_TRACE or m_AimEvaluation:IsEnabled()) and
+		(s_TypeName == "ProjectileEntityData" or s_TypeName == "BulletEntityData" or s_TypeName == "MissileEntityData") then
+		if not s_Called then
+			s_CreatedEntity = p_HookCtx:Call()
+		end
+		if m_AimEvaluation:IsEnabled() then
+			m_AimEvaluation:OnProjectileCreated(p_Transform, s_CreatedEntity, s_TypeName)
 		end
 	end
 end
@@ -587,12 +944,16 @@ end
 ---@param p_Hit RayCastHit
 ---@param p_GiverInfo DamageGiverInfo
 function FunBotServer:OnBulletEntityCollision(p_HookCtx, p_Entity, p_Hit, p_GiverInfo)
+	if m_AimEvaluation:IsEnabled() then
+		m_AimEvaluation:OnBulletCollision(p_Entity, p_Hit, p_GiverInfo)
+	end
+
 	if Registry.COMMON.USE_BUGGED_HITBOXES then
 		return
 	end
 
 	if Registry.DEBUG.VEHICLE_PROJECTILE_TRACE then
-		Globals.LastPorjectile = SpatialEntity(p_Entity).transform
+		Globals.LastProjectile = SpatialEntity(p_Entity).transform
 	end
 
 	if p_GiverInfo.giver and p_GiverInfo.giver.onlineId == 0 then
@@ -629,10 +990,11 @@ function FunBotServer:OnRequestClientSettings(p_Player)
 	m_Console:RegisterConsoleCommands(p_Player)
 	m_BotManager:RegisterActivePlayer(p_Player)
 	m_NodeEditor:RegisterActivePlayer(p_Player)
+	m_ServerRaycasts:SendStateToPlayer(p_Player)
 end
 
-function FunBotServer:OnRequestEnterVehicle(p_Player, p_BotName)
-	m_BotManager:OnRequestEnterVehicle(p_Player, p_BotName)
+function FunBotServer:OnRequestEnterVehicle(p_Player, p_BotId)
+	m_BotManager:OnRequestEnterVehicle(p_Player, p_BotId)
 end
 
 function FunBotServer:OnRequestChangeSeatVehicle(p_Player, p_SeatNumber)
@@ -652,6 +1014,10 @@ function FunBotServer:OnConsoleCommandRestore(p_Player, p_Args)
 end
 
 function FunBotServer:OnSpawnGrenade(p_Player, p_Args)
+	if p_Player.soldier == nil then
+		return
+	end
+
 	local position = p_Player.soldier.worldTransform.trans:Clone()
 	position.y = position.y + 0.1
 
@@ -686,7 +1052,8 @@ function FunBotServer:SpawnGrenade(p_Position)
 end
 
 function FunBotServer:OnTeleportTo(p_Player, p_Transform)
-	if p_Player == nil or p_Player.soldier == nil then
+	-- The transform comes from the client.
+	if p_Player == nil or p_Player.soldier == nil or type(p_Transform) ~= 'userdata' then
 		return
 	end
 
@@ -723,12 +1090,8 @@ function FunBotServer:OnStationaryAACallback(p_FiringFunctionData)
 	p_FiringFunctionData = FiringFunctionData(p_FiringFunctionData)
 	p_FiringFunctionData:MakeWritable()
 	p_FiringFunctionData.overHeat.heatPerBullet = 0.0001
-	p_FiringFunctionData.dispersion[1].minAngle = 0.2 -- Config.spreadMinAngle
-	p_FiringFunctionData.dispersion[1].maxAngle = 0.6 -- Config.spreadMaxAngle
-	-- p_FiringFunctionData.shot.initialSpeed = Vec3(0, 0, Config.bulletSpeed)
-	-- p_FiringFunctionData.shot.initialPosition = Vec3(0, 0, 35)
-	-- p_FiringFunctionData.fireLogic.rateOfFire = Config.rateOfFire
-	-- p_FiringFunctionData.fireLogic.clientFireRateMultiplier = Config.clientFireRateMultiplier
+	p_FiringFunctionData.dispersion[1].minAngle = 0.2
+	p_FiringFunctionData.dispersion[1].maxAngle = 0.6
 end
 
 -- Tweak team setup.
@@ -767,9 +1130,9 @@ function FunBotServer:OnModReloaded()
 	local s_FullLevelPathTable = s_FullLevelPath:split('/')
 	local s_Level = s_FullLevelPathTable[#s_FullLevelPathTable]
 	local s_GameMode = SharedUtils:GetCurrentGameMode()
-	m_Logger:Write(s_Level .. '_' .. s_GameMode .. ' reloaded')
 
 	if s_Level ~= nil and s_GameMode ~= nil then
+		m_Logger:Write(s_Level .. '_' .. s_GameMode .. ' reloaded')
 		self:OnLevelLoaded(s_Level, s_GameMode, TicketManager:GetCurrentRound(), TicketManager:GetRoundCount())
 	end
 end
@@ -777,10 +1140,10 @@ end
 -- Set up the used respawn time, which gets calculated by value * rcon multiplier.
 function FunBotServer:SetRespawnDelay()
 	local s_RconResponseTable = RCON:SendCommand('vars.playerRespawnTime')
-	local s_RespawnTimeModifier = tonumber(s_RconResponseTable[2]) / 100
+	local s_RespawnTimeModifier = s_RconResponseTable and tonumber(s_RconResponseTable[2])
 
 	if self.m_PlayerKilledDelay > 0 and s_RespawnTimeModifier ~= nil then
-		Globals.RespawnDelay = self.m_PlayerKilledDelay * s_RespawnTimeModifier
+		Globals.RespawnDelay = self.m_PlayerKilledDelay * s_RespawnTimeModifier / 100
 	else
 		Globals.RespawnDelay = 10.0
 	end
@@ -919,11 +1282,16 @@ function FunBotServer:SetGameMode(p_GameMode, p_LevelName)
 		p_GameMode == 'CaptureTheFlag0' or
 		p_GameMode == 'BFLAG0' or
 		p_GameMode == 'BFLAG' or
-		p_GameMode == 'AirSuperiority0' then
+		p_GameMode == 'AirSuperiority0' or
+		-- Capture points as in conquest (A, B, C), the spawns of the game as in deathmatch (BotSpawner:_TriggerSpawn).
+		p_GameMode == 'Domination0' then
 		Globals.IsConquest = true
 	else
 		Globals.IsConquest = false
 	end
+
+	-- Counts as conquest (tickets), but no objectives on its paths and no mesh: the bots walk the paths as in deathmatch.
+	Globals.IsCtf = p_GameMode == 'CaptureTheFlag0'
 
 	if p_GameMode == 'AirSuperiority0' then
 		Globals.IsAirSuperiority = true

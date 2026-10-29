@@ -75,63 +75,75 @@ SettingsDefinition = {
 
 		-- Difficulty.
 		{
-			Name = "BotAimWorsening",
-			Text = "Bot Aim Worsening",
+			Name = "BotAimError",
+			Text = "Bot Aim Error",
 			---@type Type|integer
 			Type = Type.Float,
-			Value = Config.BotAimWorsening,
-			Description = "Make bots aim worse: for difficulty: 0 = no offset (hard), 1 or even greater = more sway (easy)",
-			Reference = Range(0.00, 10.00, 0.05),
-			Default = 0.2,
+			Value = Config.BotAimError,
+			Description = "Aim error of an average bot at 25 m in milliradians (1 = 1 cm off per 10 m distance), smaller angle on greater distances: 0 = perfect aim (hard), 10 or more = easy",
+			Reference = Range(0.00, 50.00, 0.50),
+			Default = 6.0,
 			UpdateFlag = UpdateFlag.None,
 			Category = "DIFFICULTY"
 		},
 		{
-			Name = "BotSniperAimWorsening",
-			Text = "Bot Aim Worsening of Snipers",
+			Name = "BotSniperAimError",
+			Text = "Bot Aim Error of Snipers",
 			---@type Type|integer
 			Type = Type.Float,
-			Value = Config.BotSniperAimWorsening,
-			Description = "See botAimWorsening, only for Sniper-rifles",
-			Reference = Range(0.00, 10.00, 0.05),
-			Default = 0.1,
+			Value = Config.BotSniperAimError,
+			Description = "See BotAimError, only for Sniper-rifles",
+			Reference = Range(0.00, 50.00, 0.50),
+			Default = 3.0,
 			UpdateFlag = UpdateFlag.None,
 			Category = "DIFFICULTY"
 		},
 		{
-			Name = "BotSupportAimWorsening",
-			Text = "Bot Aim Worsening of Support",
+			Name = "BotSupportAimError",
+			Text = "Bot Aim Error of Support",
 			---@type Type|integer
 			Type = Type.Float,
-			Value = Config.BotSupportAimWorsening,
-			Description = "See botAimWorsening, only for LMGs",
-			Reference = Range(0.00, 10.00, 0.05),
-			Default = 0.3,
+			Value = Config.BotSupportAimError,
+			Description = "See BotAimError, only for LMGs",
+			Reference = Range(0.00, 50.00, 0.50),
+			Default = 8.0,
 			UpdateFlag = UpdateFlag.None,
 			Category = "DIFFICULTY"
 		},
 		{
-			Name = "BotWorseningSkill",
-			Text = "Bot Worsening Skill",
+			Name = "BotAimErrorSpread",
+			Text = "Bot Aim Error Spread",
 			---@type Type|integer
 			Type = Type.Float,
-			Value = Config.BotWorseningSkill,
-			Description = "Variation of the skill of a single bot. The higher, the worse the bots can get compared to the original settings",
+			Value = Config.BotAimErrorSpread,
+			Description = "Difference between single bots: the best bot has (1 - x), the worst (1 + x) times the aim error",
 			Reference = Range(0.00, 1.00, 0.05),
-			Default = 0.40,
-			UpdateFlag = UpdateFlag.Skill,
+			Default = 0.5,
+			UpdateFlag = UpdateFlag.None,
 			Category = "DIFFICULTY"
 		},
 		{
-			Name = "BotSniperWorseningSkill",
-			Text = "Bot Sniper Worsening Skill",
+			Name = "BotRecoilControlBest",
+			Text = "Recoil Control of best Bot",
 			---@type Type|integer
 			Type = Type.Float,
-			Value = Config.BotSniperWorseningSkill,
-			Description = "See BotWorseningSkill - only for BOTs using sniper bolt-action rifles",
+			Value = Config.BotRecoilControlBest,
+			Description = "Share of the weapon recoil the best bot compensates (0 = none, 1 = all)",
 			Reference = Range(0.00, 1.00, 0.05),
-			Default = 0.30,
-			UpdateFlag = UpdateFlag.Skill,
+			Default = 0.9,
+			UpdateFlag = UpdateFlag.None,
+			Category = "DIFFICULTY"
+		},
+		{
+			Name = "BotRecoilControlWorst",
+			Text = "Recoil Control of worst Bot",
+			---@type Type|integer
+			Type = Type.Float,
+			Value = Config.BotRecoilControlWorst,
+			Description = "Share of the weapon recoil the worst bot compensates (0 = none, 1 = all)",
+			Reference = Range(0.00, 1.00, 0.05),
+			Default = 0.5,
+			UpdateFlag = UpdateFlag.None,
 			Category = "DIFFICULTY"
 		},
 		{
@@ -140,9 +152,9 @@ SettingsDefinition = {
 			---@type Type|integer
 			Type = Type.Float,
 			Value = Config.ReactionTime,
-			Description = "Additional delay for bots, dependant of skill (might also be 0)",
+			Description = "Additional delay for the first shot in seconds, scaled by the reaction of each bot (0 to 1)",
 			Reference = Range(0.00, 2.00, 0.10),
-			Default = 0.2,
+			Default = 0.25,
 			UpdateFlag = UpdateFlag.None,
 			Category = "DIFFICULTY"
 		},
@@ -154,7 +166,7 @@ SettingsDefinition = {
 			Value = Config.DamageFactorAssault,
 			Description = "Original Damage from bots gets multiplied by this",
 			Reference = Range(0.00, 2.00, 0.10),
-			Default = 0.8,
+			Default = 1.0,
 			UpdateFlag = UpdateFlag.None,
 			Category = "DIFFICULTY"
 		},
@@ -166,7 +178,7 @@ SettingsDefinition = {
 			Value = Config.DamageFactorCarabine,
 			Description = "Original Damage from bots gets multiplied by this",
 			Reference = Range(0.00, 2.00, 0.10),
-			Default = 0.8,
+			Default = 1.0,
 			UpdateFlag = UpdateFlag.None,
 			Category = "DIFFICULTY"
 		},
@@ -178,7 +190,7 @@ SettingsDefinition = {
 			Value = Config.DamageFactorLMG,
 			Description = "Original Damage from bots gets multiplied by this",
 			Reference = Range(0.00, 2.00, 0.10),
-			Default = 0.8,
+			Default = 1.0,
 			UpdateFlag = UpdateFlag.None,
 			Category = "DIFFICULTY"
 		},
@@ -190,7 +202,7 @@ SettingsDefinition = {
 			Value = Config.DamageFactorPDW,
 			Description = "Original Damage from bots gets multiplied by this",
 			Reference = Range(0.00, 2.00, 0.10),
-			Default = 0.8,
+			Default = 1.0,
 			UpdateFlag = UpdateFlag.None,
 			Category = "DIFFICULTY"
 		},
@@ -202,7 +214,7 @@ SettingsDefinition = {
 			Value = Config.DamageFactorSniper,
 			Description = "Original Damage from bots gets multiplied by this",
 			Reference = Range(0.00, 2.00, 0.10),
-			Default = 0.8,
+			Default = 1.0,
 			UpdateFlag = UpdateFlag.None,
 			Category = "DIFFICULTY"
 		},
@@ -214,7 +226,7 @@ SettingsDefinition = {
 			Value = Config.DamageFactorShotgun,
 			Description = "Original Damage from bots gets multiplied by this",
 			Reference = Range(0.00, 2.00, 0.10),
-			Default = 0.8,
+			Default = 1.0,
 			UpdateFlag = UpdateFlag.None,
 			Category = "DIFFICULTY"
 		},
@@ -226,7 +238,7 @@ SettingsDefinition = {
 			Value = Config.DamageFactorPistol,
 			Description = "Original Damage from bots gets multiplied by this",
 			Reference = Range(0.00, 2.00, 0.10),
-			Default = 0.8,
+			Default = 1.0,
 			UpdateFlag = UpdateFlag.None,
 			Category = "DIFFICULTY"
 		},
@@ -243,62 +255,62 @@ SettingsDefinition = {
 			Category = "DIFFICULTY"
 		},
 		{
-			Name = "VehicleAimWorsening",
-			Text = "Vehicle Aim Worsening",
+			Name = "VehicleAimError",
+			Text = "Vehicle Aim Error",
 			---@type Type|integer
 			Type = Type.Float,
-			Value = Config.VehicleAimWorsening,
-			Description = "Make bots in vehicles aim worse: for difficulty: 0 = no offset (hard), 1 or even greater = more sway (easy)",
-			Reference = Range(0.00, 10.00, 0.05),
-			Default = 0.05,
+			Value = Config.VehicleAimError,
+			Description = "Aim error of bots in ground vehicles in milliradians (1 = 1 cm off per 10 m distance): 0 = perfect aim (hard)",
+			Reference = Range(0.00, 50.00, 0.50),
+			Default = 3.0,
 			UpdateFlag = UpdateFlag.None,
 			Category = "DIFFICULTY"
 		},
 		{
-			Name = "VehicleAAAimWorsening",
-			Text = "AA Aim Worsening",
+			Name = "VehicleAAAimError",
+			Text = "AA Aim Error",
 			---@type Type|integer
 			Type = Type.Float,
-			Value = Config.VehicleAAAimWorsening,
-			Description = "Make bots in AA aim worse: for difficulty: 0 = no offset (hard), 1 or even greater = more sway (easy)",
-			Reference = Range(0.00, 10.00, 0.05),
-			Default = 0.9,
+			Value = Config.VehicleAAAimError,
+			Description = "See VehicleAimError, only for AA",
+			Reference = Range(0.00, 50.00, 0.50),
+			Default = 4.0,
 			UpdateFlag = UpdateFlag.None,
 			Category = "DIFFICULTY"
 		},
 		{
-			Name = "VehicleGunshipAimWorsening",
-			Text = "Gunship Aim Worsening",
+			Name = "VehicleGunshipAimError",
+			Text = "Gunship Aim Error",
 			---@type Type|integer
 			Type = Type.Float,
-			Value = Config.VehicleGunshipAimWorsening,
-			Description = "Make bots in Gunships aim worse: for difficulty: 0 = no offset (hard), 1 or even greater = more sway (easy)",
-			Reference = Range(0.00, 10.00, 0.05),
-			Default = 0.8,
+			Value = Config.VehicleGunshipAimError,
+			Description = "See VehicleAimError, only for Gunships",
+			Reference = Range(0.00, 50.00, 0.50),
+			Default = 3.0,
 			UpdateFlag = UpdateFlag.None,
 			Category = "DIFFICULTY"
 		},
 		{
-			Name = "VehicleChopperAimWorsening",
-			Text = "Chopper Aim Worsening",
+			Name = "VehicleChopperAimError",
+			Text = "Chopper Aim Error",
 			---@type Type|integer
 			Type = Type.Float,
-			Value = Config.VehicleChopperAimWorsening,
-			Description = "Make bots in Choppers aim worse: for difficulty: 0 = no offset (hard), 1 or even greater = more sway (easy)",
-			Reference = Range(0.00, 10.00, 0.05),
-			Default = 0.5,
+			Value = Config.VehicleChopperAimError,
+			Description = "See VehicleAimError, only for Choppers",
+			Reference = Range(0.00, 50.00, 0.50),
+			Default = 4.0,
 			UpdateFlag = UpdateFlag.None,
 			Category = "DIFFICULTY"
 		},
 		{
-			Name = "VehiclePlaneAimWorsening",
-			Text = "Vehicle Plane Aim Worsening",
+			Name = "VehiclePlaneAimError",
+			Text = "Vehicle Plane Aim Error",
 			---@type Type|integer
 			Type = Type.Float,
-			Value = Config.VehiclePlaneAimWorsening,
-			Description = "See VehicleAimWorsening, only for Planes",
-			Reference = Range(0.00, 10.00, 0.05),
-			Default = 0.02,
+			Value = Config.VehiclePlaneAimError,
+			Description = "See VehicleAimError, only for Planes",
+			Reference = Range(0.00, 50.00, 0.50),
+			Default = 1.0,
 			UpdateFlag = UpdateFlag.None,
 			Category = "DIFFICULTY"
 		},
@@ -370,7 +382,7 @@ SettingsDefinition = {
 			Value = Config.InitNumberOfBots,
 			Description = "Bots for spawnmode",
 			Reference = Range(0.00, 128.00, 1.0),
-			Default = 10,
+			Default = 20,
 			UpdateFlag = UpdateFlag.AmountAndTeam,
 			Category = "SPAWN"
 		},
@@ -381,7 +393,7 @@ SettingsDefinition = {
 			Type = Type.Float,
 			Value = Config.NewBotsPerNewPlayer,
 			Description = "Number to increase Bots by when new players join",
-			Reference = Range(0.00, 128.00, 1.0),
+			Reference = Range(0.00, 128.00, 0.1),
 			Default = 1.6,
 			UpdateFlag = UpdateFlag.AmountAndTeam,
 			Category = "SPAWN"
@@ -515,7 +527,7 @@ SettingsDefinition = {
 			Value = Config.MaxBotsPerTeamTdm,
 			Description = "Max number of bots in one team for TDM",
 			Reference = Range(0.00, 128.00, 1.0),
-			Default = 32,
+			Default = 24,
 			UpdateFlag = UpdateFlag.MaxBots,
 			Category = "SPAWNLIMITS"
 		},
@@ -527,7 +539,7 @@ SettingsDefinition = {
 			Value = Config.MaxBotsPerTeamTdmc,
 			Description = "Max number of bots in one team for TDM-CQ",
 			Reference = Range(0.00, 128.00, 1.0),
-			Default = 8,
+			Default = 12,
 			UpdateFlag = UpdateFlag.MaxBots,
 			Category = "SPAWNLIMITS"
 		},
@@ -563,7 +575,7 @@ SettingsDefinition = {
 			Value = Config.MaxBotsPerTeamCs,
 			Description = "Max number of bots in one team for CQ-Small",
 			Reference = Range(0.00, 128.00, 1.0),
-			Default = 16,
+			Default = 20,
 			UpdateFlag = UpdateFlag.MaxBots,
 			Category = "SPAWNLIMITS"
 		},
@@ -587,7 +599,7 @@ SettingsDefinition = {
 			Value = Config.MaxBotsPerTeamCas,
 			Description = "Max number of bots in one team for CQ-Assault-Small",
 			Reference = Range(0.00, 128.00, 1.0),
-			Default = 16,
+			Default = 20,
 			UpdateFlag = UpdateFlag.MaxBots,
 			Category = "SPAWNLIMITS"
 		},
@@ -684,7 +696,7 @@ SettingsDefinition = {
 			Type = Type.Integer,
 			Value = Config.MaxShootDistance,
 			Description = "Meters before bots (not sniper) will start shooting at players",
-			Reference = Range(1.00, 1500.00, 5.0),
+			Reference = Range(5.00, 1500.00, 5.0),
 			Default = 70,
 			UpdateFlag = UpdateFlag.None,
 			Category = "BEHAVIOUR"
@@ -696,7 +708,7 @@ SettingsDefinition = {
 			Type = Type.Integer,
 			Value = Config.MaxShootDistanceSniper,
 			Description = "Meters before bots will start shooting at players",
-			Reference = Range(1.00, 1500.00, 5.0),
+			Reference = Range(5.00, 1500.00, 5.0),
 			Default = 150,
 			UpdateFlag = UpdateFlag.None,
 			Category = "BEHAVIOUR"
@@ -708,7 +720,7 @@ SettingsDefinition = {
 			Type = Type.Integer,
 			Value = Config.MaxShootDistanceMissileAir,
 			Description = "Meters before bots will start shooting with stingers",
-			Reference = Range(1.00, 1500.00, 5.0),
+			Reference = Range(5.00, 1500.00, 5.0),
 			Default = 350,
 			UpdateFlag = UpdateFlag.None,
 			Category = "BEHAVIOUR"
@@ -720,7 +732,7 @@ SettingsDefinition = {
 			Type = Type.Integer,
 			Value = Config.MaxDistanceShootBack,
 			Description = "Meters until bots (not sniper) shoot back if hit",
-			Reference = Range(1.00, 1500.00, 5.0),
+			Reference = Range(5.00, 1500.00, 5.0),
 			Default = 150,
 			UpdateFlag = UpdateFlag.None,
 			Category = "BEHAVIOUR"
@@ -732,7 +744,7 @@ SettingsDefinition = {
 			Type = Type.Integer,
 			Value = Config.MaxDistanceShootBackSniper,
 			Description = "Meters until snipers shoot back if hit",
-			Reference = Range(1.00, 1500.00, 5.0),
+			Reference = Range(5.00, 1500.00, 5.0),
 			Default = 400,
 			UpdateFlag = UpdateFlag.None,
 			Category = "BEHAVIOUR"
@@ -744,7 +756,7 @@ SettingsDefinition = {
 			Type = Type.Integer,
 			Value = Config.MaxShootDistancePistol,
 			Description = "The distance before a bot switches to pistol if his magazine is empty (Only in auto-weapon-mode)",
-			Reference = Range(1.00, 1500.00, 5.0),
+			Reference = Range(5.00, 1500.00, 5.0),
 			Default = 20,
 			UpdateFlag = UpdateFlag.None,
 			Category = "BEHAVIOUR"
@@ -878,7 +890,7 @@ SettingsDefinition = {
 			Type = Type.Integer,
 			Value = Config.DeployCycle,
 			Description = "Time between deployment of bots in seconds",
-			Reference = Range(1.00, 600.00, 5.0),
+			Reference = Range(5.00, 600.00, 5.0),
 			Default = 90,
 			UpdateFlag = UpdateFlag.None,
 			Category = "BEHAVIOUR"
@@ -946,7 +958,7 @@ SettingsDefinition = {
 			Text = "FOV of Vehicles",
 			---@type Type|integer
 			Type = Type.Integer,
-			Value = Config.FovForShooting,
+			Value = Config.FovVehicleForShooting,
 			Description = "Degrees of FOV of Non AA - Vehicles",
 			Reference = Range(0.00, 360.00, 1.0),
 			Default = 180,
@@ -1008,7 +1020,7 @@ SettingsDefinition = {
 			Type = Type.Integer,
 			Value = Config.MaxShootDistanceGunship,
 			Description = "Meters bots in the Gunship start shooting at players",
-			Reference = Range(1.00, 2000.00, 5.0),
+			Reference = Range(5.00, 2000.00, 5.0),
 			Default = 1000,
 			UpdateFlag = UpdateFlag.None,
 			Category = "VEHICLE"
@@ -1020,7 +1032,7 @@ SettingsDefinition = {
 			Type = Type.Integer,
 			Value = Config.MaxShootDistanceVehicles,
 			Description = "Meters bots in Vehicles start shooting at players",
-			Reference = Range(1.00, 1500.00, 5.0),
+			Reference = Range(5.00, 1500.00, 5.0),
 			Default = 375,
 			UpdateFlag = UpdateFlag.None,
 			Category = "VEHICLE"
@@ -1032,7 +1044,7 @@ SettingsDefinition = {
 			Type = Type.Integer,
 			Value = Config.MaxShootDistanceNoAntiAir,
 			Description = "Meters bots in vehicle (no Anti-Air) starts shooting at players",
-			Reference = Range(1.00, 1500.00, 5.0),
+			Reference = Range(5.00, 1500.00, 5.0),
 			Default = 175,
 			UpdateFlag = UpdateFlag.None,
 			Category = "VEHICLE"
@@ -1173,7 +1185,7 @@ SettingsDefinition = {
 			Value = Config.AssaultWeapon,
 			Description = "Primary weapon of Assault class, if random-weapon == false",
 			Reference = "AssaultPrimary",
-			Default = "M416",
+			Default = "M416_RX01",
 			UpdateFlag = UpdateFlag.None,
 			Category = "WEAPONS"
 		},
@@ -1185,7 +1197,7 @@ SettingsDefinition = {
 			Value = Config.EngineerWeapon,
 			Description = "Primary weapon of Engineer class, if random-weapon == false",
 			Reference = "EngineerPrimary",
-			Default = "M4A1",
+			Default = "M4A1_RX01",
 			UpdateFlag = UpdateFlag.None,
 			Category = "WEAPONS"
 		},
@@ -1197,7 +1209,7 @@ SettingsDefinition = {
 			Value = Config.SupportWeapon,
 			Description = "Primary weapon of Support class, if random-weapon == false",
 			Reference = "SupportPrimary",
-			Default = "M249",
+			Default = "M249_RX01",
 			UpdateFlag = UpdateFlag.None,
 			Category = "WEAPONS"
 		},
@@ -1209,7 +1221,7 @@ SettingsDefinition = {
 			Value = Config.ReconWeapon,
 			Description = "Primary weapon of Recon class, if random-weapon == false",
 			Reference = "ReconPrimary",
-			Default = "L96",
+			Default = "L96_RifleScope",
 			UpdateFlag = UpdateFlag.None,
 			Category = "WEAPONS"
 		},
@@ -1338,7 +1350,7 @@ SettingsDefinition = {
 			Type = Type.Float,
 			Value = Config.TraceDelta,
 			Description = "Update interval of trace",
-			Reference = Range(0.10, 10.00, 0.1),
+			Reference = Range(0.05, 10.00, 0.05),
 			Default = 0.35,
 			UpdateFlag = UpdateFlag.None,
 			Category = "TRACE"
@@ -1365,18 +1377,6 @@ SettingsDefinition = {
 			Description = "Distance bots can hear you at",
 			Reference = Range(0.00, 20.00, 1.0),
 			Default = 6,
-			UpdateFlag = UpdateFlag.None,
-			Category = "ADVANCED"
-		},
-		{
-			Name = "MeleeAttackCoolDown",
-			Text = "Bot melee attack cool-down",
-			---@type Type|integer
-			Type = Type.Float,
-			Value = Config.MeleeAttackCoolDown,
-			Description = "The time a bot waits before attacking with melee again",
-			Reference = Range(0.00, 60.00, 0.5),
-			Default = 3.5,
 			UpdateFlag = UpdateFlag.None,
 			Category = "ADVANCED"
 		},
@@ -1507,42 +1507,6 @@ SettingsDefinition = {
 			Category = "ADVANCED"
 		},
 		{
-			Name = "MaxStraigtCycle",
-			Text = "Max straight Cycle",
-			---@type Type|integer
-			Type = Type.Float,
-			Value = Config.MaxStraigtCycle,
-			Description = "Max time bots move straight, before sidewards-movement (in sec)",
-			Reference = Range(1.00, 60.00, 1.0),
-			Default = 10.0,
-			UpdateFlag = UpdateFlag.None,
-			Category = "ADVANCED"
-		},
-		{
-			Name = "MaxSideCycle",
-			Text = "Max Side Cycle",
-			---@type Type|integer
-			Type = Type.Float,
-			Value = Config.MaxSideCycle,
-			Description = "Max time bots move sidewards, before straight-movement (in sec)",
-			Reference = Range(1.00, 60.00, 1.0),
-			Default = 5.0,
-			UpdateFlag = UpdateFlag.None,
-			Category = "ADVANCED"
-		},
-		{
-			Name = "MinMoveCycle",
-			Text = "Min Move Cycle",
-			---@type Type|integer
-			Type = Type.Float,
-			Value = Config.MinMoveCycle,
-			Description = "Min time bots move sidewards or straight before switching (in sec)",
-			Reference = Range(0.30, 10.00, 0.5),
-			Default = 0.3,
-			UpdateFlag = UpdateFlag.None,
-			Category = "ADVANCED"
-		},
-		{
 			Name = "DefendObjectives",
 			Text = "Defend objectives",
 			---@type Type|integer
@@ -1561,93 +1525,9 @@ SettingsDefinition = {
 			---@type Type|integer
 			Type = Type.Float,
 			Value = Config.BotFirstShotDelay,
-			Description = "Delay for first shot. If too small, there will be great spread in first cycle because it is not compensated yet",
-			Reference = Range(0.00, 10.00, 0.10),
-			Default = 0.15,
-			UpdateFlag = UpdateFlag.None,
-			Category = "EXPERT"
-		},
-		{
-			Name = "BotMinTimeShootAtPlayer",
-			Text = "Bot min time shoot at player",
-			---@type Type|integer
-			Type = Type.Float,
-			Value = Config.BotMinTimeShootAtPlayer,
-			Description = "The minimum time a bot shoots at one player",
-			Reference = Range(0.00, 60.00, 0.5),
-			Default = 0.7,
-			UpdateFlag = UpdateFlag.None,
-			Category = "EXPERT"
-		},
-		{
-			Name = "BotVehicleMinTimeShootAtPlayer",
-			Text = "Bot min time shoot at player in vehicle",
-			---@type Type|integer
-			Type = Type.Float,
-			Value = Config.BotVehicleMinTimeShootAtPlayer,
-			Description = "The minimum time a bot shoots at one player if in vehicle - recommended minimum 2.5, below this you will have issues",
-			Reference = Range(0.00, 60.00, 0.5),
-			Default = 4.0,
-			UpdateFlag = UpdateFlag.None,
-			Category = "EXPERT"
-		},
-		{
-			Name = "BotFireModeDuration",
-			Text = "Bot fire mode duration",
-			---@type Type|integer
-			Type = Type.Float,
-			Value = Config.BotFireModeDuration,
-			Description = "The minimum time a bot tries to shoot a player - recommended minimum 3.0, below this you will have issues",
-			Reference = Range(0.00, 60.00, 0.5),
-			Default = 4.5,
-			UpdateFlag = UpdateFlag.None,
-			Category = "EXPERT"
-		},
-		{
-			Name = "BotVehicleFireModeDuration",
-			Text = "Bot fire mode duration in vehicle",
-			---@type Type|integer
-			Type = Type.Float,
-			Value = Config.BotVehicleFireModeDuration,
-			Description = "The minimum time a bot tries to shoot a player or vehicle, when in a vehicle - recommended minimum 7.0",
-			Reference = Range(0.00, 60.00, 0.5),
-			Default = 9.0,
-			UpdateFlag = UpdateFlag.None,
-			Category = "EXPERT"
-		},
-		{
-			Name = "MaximunYawPerSec",
-			Text = "Maximum yaw per sec",
-			---@type Type|integer
-			Type = Type.Integer,
-			Value = Config.MaximunYawPerSec,
-			Description = "In Degrees. Rotation Movement per second",
-			Reference = Range(0.00, 1080.00, 5.0),
-			Default = 550,
-			UpdateFlag = UpdateFlag.YawPerSec,
-			Category = "EXPERT"
-		},
-		{
-			Name = "TargetDistanceWayPoint",
-			Text = "Target distance waypoint",
-			---@type Type|integer
-			Type = Type.Float,
-			Value = Config.TargetDistanceWayPoint,
-			Description = "The distance the bots have to reach to continue with the next Waypoint",
-			Reference = Range(0.00, 100.00, 0.10),
-			Default = 0.8,
-			UpdateFlag = UpdateFlag.None,
-			Category = "EXPERT"
-		},
-		{
-			Name = "TargetDistanceWayPointAirVehicles",
-			Text = "Target distance waypoint air vehicles",
-			---@type Type|integer
-			Type = Type.Float,
-			Value = Config.TargetDistanceWayPointAirVehicles,
-			Description = "The distance the bots have to reach to continue with the next Waypoint on air vehicles",
-			Reference = Range(0.00, 100.00, 0.10),
-			Default = 16.0,
+			Description = "Minimum delay for the first shot at a new target in seconds (human reaction time)",
+			Reference = Range(0.00, 10.00, 0.05),
+			Default = 0.2,
 			UpdateFlag = UpdateFlag.None,
 			Category = "EXPERT"
 		},
@@ -1660,54 +1540,6 @@ SettingsDefinition = {
 			Description = "Always keep one slot for free new Players to join",
 			Default = true,
 			UpdateFlag = UpdateFlag.AmountAndTeam,
-			Category = "EXPERT"
-		},
-		{
-			Name = "DistanceToSpawnBots",
-			Text = "Distance to spawn",
-			---@type Type|integer
-			Type = Type.Integer,
-			Value = Config.DistanceToSpawnBots,
-			Description = "Distance to spawn Bots away from players",
-			Reference = Range(0.00, 100.00, 5.0),
-			Default = 30,
-			UpdateFlag = UpdateFlag.None,
-			Category = "EXPERT"
-		},
-		{
-			Name = "HeightDistanceToSpawn",
-			Text = "Height distance to spawn",
-			---@type Type|integer
-			Type = Type.Float,
-			Value = Config.HeightDistanceToSpawn,
-			Description = "Distance vertically, Bots should spawn away, if closer than distance",
-			Reference = Range(0.00, 100.00, 0.10),
-			Default = 2.8,
-			UpdateFlag = UpdateFlag.None,
-			Category = "EXPERT"
-		},
-		{
-			Name = "DistanceToSpawnReduction",
-			Text = "Distance to spawn reduction",
-			---@type Type|integer
-			Type = Type.Integer,
-			Value = Config.DistanceToSpawnReduction,
-			Description = "Reduce distance if not possible",
-			Reference = Range(0.00, 100.00, 1.0),
-			Default = 8,
-			UpdateFlag = UpdateFlag.None,
-			Category = "EXPERT"
-		},
-		{
-			Name = "MaxTrysToSpawnAtDistance",
-			Text = "Max tries to spawn at distance",
-			---@type Type|integer
-			Type = Type.Integer,
-			Value = Config.MaxTrysToSpawnAtDistance,
-			Description = "Try this often to spawn a bot away from players",
-			Reference = Range(0.00, 100.00, 1.0),
-			Default = 3,
-			UpdateFlag = UpdateFlag.None,
 			Category = "EXPERT"
 		},
 		{
@@ -1732,18 +1564,6 @@ SettingsDefinition = {
 			UpdateFlag = UpdateFlag.None,
 			Category = "EXPERT"
 		},
-		{
-			Name = "SpawnMethod",
-			Text = "Spawn Method",
-			---@type Type|integer
-			Type = Type.Enum,
-			Value = Config.SpawnMethod,
-			Description = "Method the bots spawn with. Careful, not supported on most of the maps!!",
-			Reference = SpawnMethod,
-			Default = SpawnMethod.SpawnOnTdm,
-			UpdateFlag = UpdateFlag.None,
-			Category = "EXPERT"
-		},
 
 		-- Other Stuff.
 		{
@@ -1762,7 +1582,7 @@ SettingsDefinition = {
 			Text = "Allow Comm-UI for all",
 			---@type Type|integer
 			Type = Type.Boolean,
-			Value = Config.DisableUserInterface,
+			Value = Config.AllowCommForAll,
 			Description = "If true, all Players can access the Comm-Screen",
 			Default = true,
 			UpdateFlag = UpdateFlag.None,
@@ -1808,7 +1628,7 @@ SettingsDefinition = {
 			Type = Type.List,
 			Value = Config.Language,
 			Description = "de_DE as sample (default is English, when language file does not exist)",
-			Default = nil,
+			Default = "en_EN",
 			Reference = Languages,
 			UpdateFlag = UpdateFlag.Language,
 			Category = "OTHER"

@@ -44,7 +44,7 @@ end
 ---@param p_Bot Bot
 ---@param p_DeltaTime number
 function StateStaticAttacking:UpdateFast(p_Bot, p_DeltaTime)
-	p_Bot:UpdateAiming()
+	p_Bot:UpdateAiming(p_DeltaTime)
 end
 
 ---update in every frame

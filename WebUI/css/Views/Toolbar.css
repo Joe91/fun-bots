@@ -167,5 +167,5 @@ ui-view[data-type="toolbar"] ui-submenu ul.main li a input[type="number"] {
     border-width: 1px;
     border-style: solid;
     border-color: rgba(255, 255, 255, 0.5);
-    color: rgba(255, 255, 255, 0.5);
+    color: var(--color_text);
 }

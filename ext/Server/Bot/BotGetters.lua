@@ -32,9 +32,9 @@ function Bot:IsReadyToAttack(p_ShootBackAfterHit, p_Player, p_CheckShootTimer, p
 	local s_InVehicle = g_BotStates:IsInVehicleState(self.m_ActiveState)
 	if self._ShootPlayerId == -1 or
 		(p_Player and not p_IsNewTarget) or -- if still the same enemy, you can trigger directly again
-		(s_InVehicle and (self._DoneShootDuration > Config.BotVehicleMinTimeShootAtPlayer)) or
-		(not s_InVehicle and (self._DoneShootDuration > Config.BotMinTimeShootAtPlayer)) or
-		(self.m_KnifeMode and self._ShootModeTimer > ((Config.BotMinTimeShootAtPlayer * 0.5))) then
+		(s_InVehicle and (self._DoneShootDuration > Registry.BOT.VEHICLE_MIN_TIME_SHOOT_AT_PLAYER)) or
+		(not s_InVehicle and (self._DoneShootDuration > Registry.BOT.MIN_TIME_SHOOT_AT_PLAYER)) or
+		(self.m_KnifeMode and self._ShootModeTimer > ((Registry.BOT.MIN_TIME_SHOOT_AT_PLAYER * 0.5))) then
 		return true
 	else
 		return false
@@ -123,17 +123,42 @@ end
 
 ---@param p_DistanceToTarget number
 ---@param p_ReducedTiming boolean
+---@param p_AngleToTarget number|nil angle between the aim and the target in rad
 ---@return number
-function Bot:GetFirstShotDelay(p_DistanceToTarget, p_ReducedTiming)
+function Bot:GetFirstShotDelay(p_DistanceToTarget, p_ReducedTiming, p_AngleToTarget)
 	local s_Delay = (Config.BotFirstShotDelay + (Config.ReactionTime * MathUtils:GetRandom(0.8, 1.2) * self.m_Reaction))
 
 	if p_ReducedTiming then
 		s_Delay = s_Delay * 0.6
 	end
 
-	-- Slower reaction on greater distances. 100 m = 0.5 extra seconda.
-	s_Delay = s_Delay + (p_DistanceToTarget * 0.005 * (1.0 + ((self.m_Reaction - 0.5) * 0.4))) -- +-20% depending on reaction-characteristic of bot
+	-- Slower reaction on greater distances. 100 m = 0.3 extra seconds (0.5 felt slow at medium distances).
+	s_Delay = s_Delay + (p_DistanceToTarget * 0.003 * (1.0 + ((self.m_Reaction - 0.5) * 0.4))) -- +-20% depending on reaction-characteristic of bot
+
+	-- Fitts' law: aiming at a target far off the crosshair takes longer, growing with log2 of the angle.
+	if p_AngleToTarget and p_AngleToTarget > 0.0 then
+		s_Delay = s_Delay + Registry.BOT.FIRST_SHOT_DELAY_PER_BIT *
+			math.log(1.0 + p_AngleToTarget / Registry.BOT.FIRST_SHOT_TARGET_ANGLE, 2)
+	end
+
 	return s_Delay
+end
+
+local GRAVITY = 9.81
+local MIN_GRENADE_DISTANCE = 3.0 -- Don't throw them too close.
+
+---High-arc throw-pitch to hit a point, so the grenade gets over cover.
+---@param p_Distance number horizontal distance to the target
+---@param p_Height number height of the target relative to the bot (feet to feet)
+---@return number|nil pitch nil if the target is out of reach
+function Bot:GetGrenadePitch(p_Distance, p_Height)
+	local s_Speed2 = Registry.BOT.GRENADE_THROW_SPEED * Registry.BOT.GRENADE_THROW_SPEED
+	local s_Distance = math.max(p_Distance, MIN_GRENADE_DISTANCE)
+	local s_Root = s_Speed2 * s_Speed2 - GRAVITY * (GRAVITY * s_Distance * s_Distance + 2.0 * p_Height * s_Speed2)
+	if s_Root < 0.0 then
+		return nil
+	end
+	return math.atan((s_Speed2 + math.sqrt(s_Root)) / (GRAVITY * s_Distance))
 end
 
 ---@param p_RelativeYaw number radians from bot center, normalized
@@ -180,11 +205,6 @@ function Bot:GetWayIndex()
 	return self._PathIndex
 end
 
----@return integer
-function Bot:GetPointIndex()
-	return self._CurrentWayPoint
-end
-
 ---@return Player|nil
 function Bot:GetTargetPlayer()
 	return self._TargetPlayer
@@ -199,13 +219,26 @@ function Bot:IsInactive()
 	end
 end
 
+---In a vehicle or on one: Player:EnterVehicle fails silently now and then (the seat taken in the same frame), the
+---soldier stays on foot.
+---@return boolean
+function Bot:IsSeated()
+	local s_Controllable = self.m_Player.controlledControllable
+	return (s_Controllable ~= nil and not s_Controllable:Is('ServerSoldierEntity')) or self.m_Player.attachedControllable ~= nil
+end
+
+---Doesn't get along right now on foot: an obstacle on its path, another bot in the way, a way on the mesh it gets
+---nowhere on. No squad mate to spawn at (GameDirector:GetSpawnableBeaconOrMate): the crowd only grows (MP_017).
 ---@return boolean
 function Bot:IsStuck()
-	if self._ObstacleSequenceTimer ~= 0 then
+	if self._CrowdStepTimer > 0.0 then
 		return true
-	else
-		return false
 	end
+	-- On the mesh the timers of the paths are left from before.
+	if self.m_Zone ~= nil then
+		return self.m_Zone.Stuck > 2.0
+	end
+	return self._ObstacleSequenceTimer ~= 0 or self._StuckTimer > 2.0
 end
 
 ---@return integer
@@ -221,27 +254,18 @@ function Bot:_GetWayIndex(p_Increment)
 
 		-- Direction handling.
 		local s_CountOfPoints = #m_NodeCollection:Get(nil, self._PathIndex)
-		local s_FirstPoint = m_NodeCollection:GetFirst(self._PathIndex)
+		local s_Loops = m_NodeCollection:Loops(self._PathIndex)
 
 		if s_ActivePointIndex > s_CountOfPoints then
-			if s_FirstPoint and s_FirstPoint.OptValue == 0xFF then -- Inversion needed.		
+			if not s_Loops then -- Inversion needed.
 				s_ActivePointIndex = s_CountOfPoints
-				local s_Diff = s_ActivePointIndex - s_CountOfPoints - 1
-				if s_Diff > 1 then
-					s_ActivePointIndex = s_ActivePointIndex - s_Diff
-				end
-
 				s_InvertPathDirection = true
 			else
 				s_ActivePointIndex = 1
 			end
 		elseif s_ActivePointIndex < 1 then
-			if s_FirstPoint and s_FirstPoint.OptValue == 0xFF then -- Inversion needed.
+			if not s_Loops then -- Inversion needed.
 				s_ActivePointIndex = 1
-				local s_Diff = 1 - s_ActivePointIndex - 1
-				if s_Diff > 1 then
-					s_ActivePointIndex = s_ActivePointIndex + s_Diff
-				end
 				s_InvertPathDirection = false
 			else
 				s_ActivePointIndex = s_CountOfPoints

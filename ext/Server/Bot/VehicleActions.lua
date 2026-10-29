@@ -1,3 +1,6 @@
+---@type NodeCollection
+local m_NodeCollection = require('NodeCollection')
+
 -- For vehicles to block missiles this fires a flare or smoke.
 ---@param p_TimeDelay number
 function Bot:FireFlareSmoke(p_TimeDelay)
@@ -8,25 +11,61 @@ end
 function Bot:_DoExitVehicle()
 	if self._ExitVehicleActive then
 		self:AbortAttack()
-		self.m_Player:ExitVehicle(true, false)
-		self.m_ActiveVehicle = nil
-		self:SetState(g_BotStates.States.Moving)
-		local s_Node = g_GameDirector:FindClosestPath(self.m_Player.soldier.worldTransform.trans, false, true, nil)
-
-		if s_Node ~= nil then
-			-- Switch to foot.
-			self._InvertPathDirection = false
-			self._PathIndex = s_Node.PathIndex
-			self._CurrentWayPoint = s_Node.PointIndex
-			self._LastWayDistance = 1000.0
+		local s_Vehicle = self.m_Player.controlledControllable
+		if s_Vehicle ~= nil and s_Vehicle.typeInfo.name == "ServerSoldierEntity" then
+			s_Vehicle = self.m_Player.attachedControllable
 		end
-		self._KillYourselfTimer = 0.0
-		self._ExitVehicleActive = false
-		self._DontAttackPlayers = false
+		if s_Vehicle ~= nil then
+			self._LeftVehicle = 'vehicle ' .. tostring(s_Vehicle.instanceId)
+			self._LeftVehicleUntil = SharedUtils:GetTime() + Registry.GAME_DIRECTOR.LEFT_VEHICLE_TIME
+		end
+		self.m_Player:ExitVehicle(true, false)
+		self:_OnFootAgain()
 		return true
 	end
 
 	return false
+end
+
+---Out of the vehicle (got out, or the vehicle is gone): on foot again, on the closest path, onto the mesh where it lands.
+function Bot:_OnFootAgain()
+	self.m_ActiveVehicle = nil
+	self._ChopperStartHeight = nil
+	self._GroundAhead = nil
+	self._ChopperRecoverTime = 0.0
+	self._VehicleStart = nil
+	-- The zone it had in the vehicle (the vehicle-network of a zone, or where it got in) is no way on foot: onto the
+	-- mesh where it lands (_MeshAfterExit). MP_001: two bots out of a LAV-25 tried for 50 s to get to a point of the
+	-- vehicle-network of the base 50 m away.
+	self.m_Zone = nil
+	self:SetState(g_BotStates.States.Moving)
+	local s_Node = g_GameDirector:FindClosestPath(self.m_Player.soldier.worldTransform.trans:Clone(), false, true, nil)
+
+	if s_Node ~= nil then
+		-- Switch to foot, towards the objective (as _LeaveZone). Not always forward: XP5_003, out of a vehicle 70 m from A,
+		-- the bot walked a road away from it for two minutes.
+		self._InvertPathDirection = false
+		self._PathIndex = s_Node.PathIndex
+		self._CurrentWayPoint = s_Node.PointIndex
+		self._LastWayDistance = 1000.0
+		if self._Objective ~= '' then
+			local s_Direction = g_NavRoutes ~= nil and g_NavRoutes:Direction(s_Node, self._Objective, self.m_RouteSeed) or nil
+			s_Direction = s_Direction or m_NodeCollection:ObjectiveDirection(s_Node, self._Objective, false)
+			if s_Direction then
+				self._InvertPathDirection = (s_Direction == 'Previous')
+			end
+		end
+	end
+	self._KillYourselfTimer = 0.0
+	-- Onto the mesh where it lands (UpdateNormalMovement): the closest waypoint from the air can be far off.
+	self._MeshAfterExit = true
+	-- The stuck-handling of the vehicle must not continue on foot.
+	self._StuckTimer = 0.0
+	self._StuckRerouteCount = 0
+	self._ObstacleRetryCounter = 0
+	self:_ResetObstacleSequence()
+	self._ExitVehicleActive = false
+	self._DontAttackPlayers = false
 end
 
 function Bot:ExitVehicle()

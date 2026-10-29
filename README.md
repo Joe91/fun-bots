@@ -12,13 +12,16 @@ Do you enjoy this mod? Feel free to [Donate](https://www.paypal.me/joe91de)
 Quite fun to use bots on different maps and gamemodes!
 - Bots can walk around, shoot and attack enemies using grenades, RPGs and other weaponry. [Which maps are supported?](https://github.com/Joe91/fun-bots/blob/master/Supported-maps.md)
 - Bots can drive all kinds of vehicles (on supported maps)
-- Need something a bit more? [Create your own traces](https://github.com/Joe91/fun-bots/wiki/Traces) using an easy-to-use trace manager (press <kbd>F12</kbd> in a game)
+- Need something a bit more? [Support a new map](https://github.com/Joe91/fun-bots/blob/master/tools/debug-server/NEW_MAP.md): record paths in the game (press <kbd>F12</kbd>), the debug-server does the rest
 - And all this, [highly configurable](https://github.com/Joe91/fun-bots/wiki/Basic-Configuration) to suit your needs using an easy-to-use in-game editor (accessible by pressing <kbd>F12</kbd>).
 - Want to see some Gameplay? [Here is a gameplay video](https://www.youtube.com/watch?v=TRA7RjqXRgk&lc=UgwP_9avBu3YTHdhSiZ4AaABAg.9UmWfabUSZ39UmcTFJsgOc) by EUWINPRO.
 
 ### Download it now!
 [Download the latest version](https://github.com/Joe91/fun-bots/releases), or if you need some help, we have an [up-to-date tutorial on how to install fun-bots on your server](https://github.com/Joe91/fun-bots/wiki/basic-installation), or if you already have an installation of fun-bots and want to upgrade, just [click here](https://github.com/Joe91/fun-bots/wiki/upgrading) to see how to upgrade. [What has changed?](https://github.com/Joe91/fun-bots/blob/master/.github/CHANGELOG.md)  
 You can also watch [this video](https://www.youtube.com/watch?v=H53KYyz1r8g&lc=UgyWWVJ9q1qePFAezmd4AaABAg.9UmW6z2xcZS9UmvXqC4PP4) on how to setup fun-bots by Brad's Bots.
+
+### Want to contribute?
+Start with the [Developer Guide](docs/DEVELOPER_GUIDE.md) for an overview of the code, and read the [contributing guidelines](.github/CONTRIBUTING.md).
 
 ### Meet the team!
 A team works around-the-clock to offer you an amazing bot experience. Got a question about something? Don't hesitate to ask them for help!

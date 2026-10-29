@@ -62,6 +62,12 @@ end
 
 function Bot:SetObjectiveIfPossible(p_Objective, p_ObjectiveMode)
 	if self._Objective ~= p_Objective and p_Objective ~= '' then
+		-- On the mesh: if a route leads there (NavRoutes), e.g. to the path of a vehicle.
+		if self.m_Zone ~= nil and not self.m_Zone.Vehicle and g_NavRoutes ~= nil and g_NavRoutes:Knows(p_Objective) then
+			self._Objective = p_Objective
+			self._ObjectiveMode = p_ObjectiveMode
+			return true
+		end
 		local s_Point = m_NodeCollection:Get(self._CurrentWayPoint, self._PathIndex)
 
 		if s_Point ~= nil then
@@ -81,6 +87,21 @@ end
 
 function Bot:SetObjective(p_Objective, p_ObjectiveMode)
 	if self._Objective ~= p_Objective or p_ObjectiveMode ~= self._ObjectiveMode then
+		-- Sent to a vehicle (again): its action-node counts, also if the bot failed to get in there before.
+		if p_Objective ~= nil and p_Objective ~= '' and g_GameDirector:IsVehicleEnterPath(p_Objective) then
+			self._LastActionId = nil
+		end
+		-- A vehicle given up on foot (no way there from here, gone for a moment, no seat): not that one again at once.
+		-- Else the GameDirector gave it back the next cycle, the bot turned to it and away from it every 1.5 s
+		-- (MP_013: round and round on a path next to a parked vehicle).
+		local s_Old = self._Objective
+		if s_Old ~= nil and s_Old:sub(1, 8) == 'vehicle ' and p_Objective ~= s_Old and self.m_ActiveVehicle == nil then
+			local s_Until = SharedUtils:GetTime() + Registry.GAME_DIRECTOR.VEHICLE_RETRY_TIME
+			if self._LeftVehicle ~= s_Old or self._LeftVehicleUntil < s_Until then
+				self._LeftVehicle = s_Old
+				self._LeftVehicleUntil = s_Until
+			end
+		end
 		self._Objective = p_Objective or ''
 		self._ObjectiveMode = p_ObjectiveMode or BotObjectiveModes.Default
 		local s_Point = m_NodeCollection:Get(self._CurrentWayPoint, self._PathIndex)
@@ -97,10 +118,17 @@ end
 ---@param p_Input EntryInputActionEnum|integer
 ---@param p_Value number
 function Bot:_SetInput(p_Input, p_Value)
-	self.m_ActiveInputs[p_Input] = {
-		value = p_Value,
-		reset = p_Value == 0,
-	}
+	-- Update the entry in place: this runs many times per frame, a new table each time only feeds the GC.
+	local s_ActiveInput = self.m_ActiveInputs[p_Input]
+	if s_ActiveInput then
+		s_ActiveInput.value = p_Value
+		s_ActiveInput.reset = p_Value == 0
+	else
+		self.m_ActiveInputs[p_Input] = {
+			value = p_Value,
+			reset = p_Value == 0,
+		}
+	end
 end
 
 ---@param p_Input EntryInputActionEnum|integer
@@ -144,6 +172,7 @@ end
 
 function Bot:ResetVars()
 	self._SpawnMode = BotSpawnModes.NoRespawn
+	self._KitInUse = false
 	self._ActiveAction = BotActionFlags.NoActionActive
 	self._PathIndex = 0
 	self._Respawning = false
@@ -163,6 +192,8 @@ function Bot:ResetVars()
 	self._FollowWayPoints = {}
 	self._SpawnDelayTimer = 0.0
 	self._KillYourselfTimer = 0.0
+	self._OffMeshTarget = nil
+	self._OffMeshBlocked = nil
 	self._RocketCooldownTimer = 0.0
 	self._SpawnProtectionTimer = 0.0
 	self._Objective = ''
@@ -170,13 +201,26 @@ function Bot:ResetVars()
 end
 
 function Bot:ResetSpawnVars()
+	-- Spawned (or in a vehicle): on the waypoints again.
+	self.m_Zone = nil
+	self.m_ZoneGiveUps = 0
+	self.m_RouteSeed = math.random() * 1000.0
+	self.m_Border = nil
 	-- Timers
 	self._SpawnDelayTimer = 0.0
 	self._WayWaitTimer = 0.0
 	self._VehicleWaitTimer = 0.0
+	self._VehicleWaited = 0.0
+	self._VehicleLookAroundTimer = 0.0
+	self._LookAroundYawOffset = 0.0
+	self._LookAroundYawGoal = 0.0
+	self._LookAroundPitch = 0.0
+	self._LookAroundPitchGoal = 0.0
+	self._LookAroundSide = 1
+	self._LookAroundBaseYaw = 0.0
+	self._LookAroundLastTime = 0.0
 	self._VehicleSeatTimer = 0.0
 	self._VehicleTakeoffTimer = 0.0
-	self._WayWaitYawTimer = 0.0
 	self._ObstacleSequenceTimer = 0.0
 	self._StuckTimer = 0.0
 	self._SoundTimer = 30.0
@@ -192,15 +236,48 @@ function Bot:ResetSpawnVars()
 	self._DefendTimer = 0.0
 	self._SidewardsTimer = 0.0
 	self._KillYourselfTimer = 0.0
+	self._OffMeshTarget = nil
 	self._RocketCooldownTimer = 0.0
 	self._SpawnProtectionTimer = 2.0
 	self._DeployTimer = MathUtils:GetRandomInt(1, Config.DeployCycle)
 
 	self._ObstacleRetryCounter = 0
+	self._StuckRerouteCount = 0
+	self._Breach = nil
+	self._BreachKey = nil
+	self._BreachCount = 0
+	self._MeshAfterExit = false
+	self._MeshRetryTimer = 0.0
+	-- The node of the paths the bot decided at last (NavRoutes:Step): it doesn't go straight back there.
+	self._NavCame = nil
+	self.m_RecentExits = nil
+	self._ChaseTime = 0.0
+	self._ChopperStartHeight = nil
+	self._GroundAhead = nil
+	self._GroundProbeTime = 0.0
+	self._ChopperRecoverTime = 0.0
+	self._PassengerExitTime = nil
+	self._LeftVehicle = nil
+	self._LeftVehicleUntil = 0.0
+	self._StrandedTime = 0.0
+	self._ProgressObjective = nil
+	self._VehicleAnchor = nil
+	self._VehicleGoal = nil
+	self._VehicleStart = nil
+	self._VehicleGoalBest = 0.0
+	self._VehicleGoalTime = 0.0
+	self._LowSpeedTimer = 0.0
+	self._NoProgressTimer = 0.0
+	self._ProgressNode = nil
+	self._ObstacleStartDistance = 0.0
+	self._CrowdTime = 0.0
+	self._CrowdStepTimer = 0.0
+	self._CrowdStrafe = nil
 	self._LastWayDistance = 1000.0
 	self._LastActionId = -1
 	self._ShootPlayer = nil
 	self._FollowTargetPlayer = nil
+	self._RemoteWalk = nil
 	self._DontAttackPlayers = false
 	self._ShootPlayerId = -1
 	self._AttackMode = BotAttackModes.RandomNotSet
@@ -211,6 +288,12 @@ function Bot:ResetSpawnVars()
 	self._NextTargetPoint = nil
 	self._ActiveAction = BotActionFlags.NoActionActive
 	self._KnifeWayPositions = {}
+
+	-- New side for the path-offset every life. Starts centered and fades in.
+	self.m_PathSide = nil
+	self.m_OffsetFactor = 0.0
+	self.m_OffsetCenterTimer = 0.0
+	self.m_PathOffsetCache = {}
 	self._ActiveDelay = 0.0
 	self._TargetPitch = 0.0
 	self._Objective = '' -- Reset objective on spawn, as another spawn-point might have chosen...
@@ -231,6 +314,18 @@ function Bot:ResetSpawnVars()
 	self.m_AttackPriority = 1
 	self.m_DelayedInputs = {}
 
+	self._Pid_Drv_Yaw:Reset()
+	self._Pid_Drv_Throttle:Reset()
+	self._Pid_Drv_YawChopper:Reset()
+	self._Pid_Drv_Height:Reset()
+	self._Pid_Drv_Tilt:Reset()
+	self._Pid_Drv_Roll:Reset()
+	self._Pid_Jet_Pitch:Reset()
+	self._Pid_Jet_Yaw:Reset()
+	self._JetTargetAcceleration.TargetId = nil
+	self._Pid_Att_Yaw:Reset()
+	self._Pid_Att_Pitch:Reset()
+
 	-- Reset all input-vars.
 	---@type EntryInputActionEnum
 	for l_EIA = 0, 36 do
@@ -238,7 +333,7 @@ function Bot:ResetSpawnVars()
 			value = 0,
 			reset = false,
 		}
-		self.m_Player.input:SetLevel(l_EIA, 0.0)
+		self.m_Input:SetLevel(l_EIA, 0.0)
 	end
 end
 

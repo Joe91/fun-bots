@@ -3,72 +3,76 @@
 ![Image](https://img.shields.io/github/downloads/Joe91/fun-bots/total?style=for-the-badge)
 ![Image](https://img.shields.io/github/stars/Joe91/fun-bots?style=for-the-badge)
 
-## Welcome to the changelogs for release **V3.0.0**
-This is the changelog for release **V3.0.0**. Don't forget to [join us on Discord](https://discord.com/invite/FKamccAEqz)
+## Welcome to the changelogs for release **V3.6.0**
+This is the changelog for release **V3.6.0**. Don't forget to [join us on Discord](https://discord.com/invite/FKamccAEqz)
 
 
 ## Changelog
 
 ### New features / improvements
-* Rework of the complete update to state pattern
-* Performance improvements
-* Use the original game spawn method by default (still a bit to do until it works fine)
-* Add two missing weapons
-* Info node in maps for future versioning and information
-* Pathless jets
-* Pathless choppers
-* Bots can use the gunships (TODO: separate state with separate distance and targets)
-* Separate worsening values for different vehicle types (by MatiasPastori)
-* Make bots attack the gunship by themselves (by ThyKingdomCome)
-* Bots can use every jet in Conquest now (no more paths needed)
-* No more air paths needed (only enter paths for choppers)
-* Kind of support for Air Superiority (jets still too passive)
-* Bots randomly move or stop while shooting in vehicles (by MatiasPastori)
-* Cooldown time for rockets after refill
-* Max bot kits per team
-* Randomized spawn order
-* Better distance handling for attack
-* Registry option to still spawn bots on the last tickets added
-* Passengers now exit when close to objective in some vehicles (by ThyKingdomCome)
-* Spawn of bots in AMTRAC and transport choppers (by ThyKingdomCome)
-* Option to disable KeepVehicleSeatForPlayer (by MatiasPastori)
-* Registry option to USE_EXPERIMENTAL_NAMETAGS (by MatiasPastori)
-* Bots don't use the 3rd seat of tanks anymore (by MatiasPastori)
-* Support for dynamic jet spawn + fixes for some special cases (by MatiasPastori)
-* Support of gunship on Rush maps
-* Variation in default fire cycles (by MatiasPastori)
-* Refactoring of lots of Bot-Stuff (by Bree_Arnold)
-* Switch to the new Web UI backend (by Paul)
-* Sometimes stop for shooting of bots (by MatiasPastori)
-* Improved performance of the node editor
-* Don't exit vehicle if player is driver
-* Attempt to fix messed-up first spawn in TDM (only a workaround right now)
-* Bots now can use a path offset sideways (by MatiasPastori)
-* Added the command to make the bots follow a player (by MatiasPastori)
-* Default color for appearance added (thanks to QuantumTube)
-* Bot movement and obstacle handling rework
-* Fix of mcom handling of the bots
-* Fix of some path switching issues in context with actions
-* improvement in FOV-logic (by kruschk)
-* Fix the Node-Editor-Function to remove a full trace (and unlik correctly)
-* Improved unlink-handling and Path-deletion in Node-Editor
-* Don't always detect enemys at distance and FOV-edge
-
+* **New navigation:** on Conquest and Rush the bots walk a navigation mesh at the objectives and spawns and use the
+  paths only between them. Routes are found over both, bots spread over different ways and learn spots where they get
+  stuck (other ways, shooting through penetrable walls, getting back onto the mesh). They take other ways around spots
+  where their team was just killed, and step aside for teammates in narrow places
+* **Spawning:** bots use the spawn points of the game on Conquest and Rush, spawn next to free vehicles and in transport
+  helicopters and AMTRACs (passengers jump out at the objective)
+* **Rush:** MCOMs are found and armed/disarmed without recorded paths, defenders hold their MCOMs and hurry to armed
+  ones to disarm them, bots wait at the border of the combat area
+* **Domination:** supported on all four XP2 maps (with a navigation mesh); Team Deathmatch, Squad Deathmatch and Gun
+  Master use it there as well
+* **Vehicles:** vehicles and their teams are found automatically, smoother air-vehicle control and aiming (choppers,
+  jets, PID controllers, world compensation for vehicle guns), bots leave stuck or flipped vehicles. Jets no longer
+  hang nose-up at the ceiling of the level and score kills in Air Superiority
+* **Aiming and combat:** reworked, more human aim error (new settings "Bot Aim Error", "... of Snipers / Support",
+  "... Spread"; old "Aim Worsening" values are not taken over), grenades at the last known position of a target,
+  improved look-around, better hit detection on vehicles
+* **Optional server-side raycasts:** bots fight each other without any client ("!serverraycasts on")
+* **Debug-server** (tools/debug-server): live map, recordings and analyzers in the browser, RCON/chat console, and a
+  *Maps* tab that makes the mesh of a level and cuts its paths (see tools/debug-server/NEW_MAP.md); every step keeps a
+  backup of what it overwrites. A bot can record the missing way from a cut-off spawn. The census measures only floors
+  (up to 12 per spot) and can rescan the floors of a level without breaking its mesh
+* **Performance:** much less garbage collection, faster route and mesh searches
+* Web UI: values can be typed directly, changed values are marked and can be reset
+* Node editor: better performance, shows the mesh, more info on selected nodes
+* All server events check the permissions of the player
+* Development: luacheck in CI, developer guide (docs/DEVELOPER_GUIDE.md), better Linux support
 
 ### Bug fixes
-* Fix stationary AA again...
-* Fix horn usage of jeeps #356
-* Fix refill of rockets
-* Fix keep same bot players
-* Fix air vehicles attacking bases (by ThyKingdomCome)
-* Fix bots trying to spawn in unarmed gunships (by MatiasPastori)
-* Fixed static-bot-modes
+* Settings: "Save temporarily", "config.saveall"/"config.restore", RCON/console values, invalid defaults and quotes in
+  values fixed; importing traces no longer wipes settings, permissions or saved traces; a failed save no longer loses
+  all settings
+* Chat commands fixed (!spawnway, !spawnbots, !setbotkit, !setbotcolor, !permissions, !stop, !stopall, !kickplayer,
+  !kick), !dbg needs permission
+* Vehicles: mobile artillery and light AA attack again, no firing from seats without weapon, failed vehicle spawns no
+  longer disable a bot, choppers and jets don't all fly to the same flag
+* Objectives: "Defend objective" of the comm-rose, defending bots hold their position, objectives with an empty team 1
+* Spawning and team balance: dead bots no longer moved or counted, beacon/squad spawns no longer overwritten
+* Errors with destroyed vehicles, beacons and players on round switch, crashes on Scavenger and GunMaster
+* Bots kept the Gun Master weapons in the next level (no kills in Squad Deathmatch after Gun Master)
+* Choppers crashing during an attack
+* Bots out of a boat in the water no longer walk to a point of the mesh far away (MP_017)
+* Conquest, Domination, Air and Tank Superiority: the deaths of bots cost tickets (the game only counted players); Rush:
+  bots the mod respawns (stuck, stranded on a ship) cost no ticket
+* No spawn on a squad mate in a fight (squad rush: 2 % of the spawns next to an enemy instead of 20-30 %)
+* Medics revive bots again (since 2024 only right after their own spawn: 1 % of the deaths, now 11-21 %); in a fight
+  only a mate down close by
+* MP_017 Rush: the attackers on the ship get to the boats and the AMTRAC again and ride along in its passenger seats
+  (40 % fewer bots stuck on the ship)
+* Levels without a navigation mesh (community mapfiles): bots spawn at the spawns of the game and follow the objectives
+  on the paths again (MCOMs are armed)
+* Capture the Flag: bots spawn on the paths and walk them again (they spawned far from them: 4 % of the time stuck)
+* Deathmatch modes: a bot that spawns far from the paths starts on the closest one (XP3_Alborz Team Deathmatch: bots
+  stood at walls for minutes, 6.5 % of the time stuck, now 0.2 %)
+* Many more small fixes
 
 ### Updated maps
-* MP12_ConquestSmall0 by ThyKingdomCome (with explore paths)
-* MP17_ConquestLarge0 by ThyKingdomCome (with explore paths)
-* MP01_ConquestLarge0 by MatiasPastori (with explore paths)
-* XP1_003_ConquestAssaultLarge0 by MatiasPastori
-* XP3_Desert_ConquestLarge0 by MatiasPastori
-* MP01_ConquestLarge0 by MatiasPastori (with explore paths)
-* XP4_ConquestLarge0 by MatiasPastori
+* All Conquest and Rush maps: navigation mesh at the objectives and spawns, paths cut at it
+* New paths on MP_013 Rush; XP4_FD_ConquestLarge (by ThyKingdomCome), MP_007_ConquestLarge, MP_001_ConquestLarge,
+  XP3_Desert_ConquestLarge
+* Domination: navigation meshes for XP2_Office, XP2_Palace, XP2_Skybar and XP2_Factory
+* Junctions re-checked on all maps; recorded ways from cut-off spawns on 11 maps; MP_017 Rush fixed
+* All maps: meshes rescanned from the floors only, stairs and buildings with several storeys are covered now; MP_Subway
+  Rush no longer leads through a wall north of MCOM 4
+* All maps: meshes cut again, the corners of the mesh keep away from the ends of walls and barriers (MP_Subway
+  Conquest: 60-90 bots a round ran into a barrier near B and C, now about 6) and the check finds walls through a
+  corner

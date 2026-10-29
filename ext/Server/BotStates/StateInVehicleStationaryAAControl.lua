@@ -12,7 +12,6 @@ StateInVehicleStationaryAAControl = class('StateInVehicleStationaryAAControl')
 -- - idle (on death)
 
 -- bot-methods
-local m_Vehicles = require('Vehicles')
 local m_AirTargets = require('AirTargets')
 local m_VehicleAttacking = require('Bot/VehicleAttacking')
 local m_VehicleMovement = require('Bot/VehicleMovement')
@@ -81,12 +80,12 @@ function StateInVehicleStationaryAAControl:UpdateFast(p_Bot, p_DeltaTime)
 
 	-- Fast code.
 	if s_IsAttacking then
-		m_VehicleAiming:UpdateAimingVehicle(p_Bot, true)
+		m_VehicleAiming:UpdateAimingVehicle(p_Bot, true, p_DeltaTime)
 	else
 		m_VehicleMovement:UpdateVehicleLookAround(p_Bot, p_DeltaTime)
 	end
 
-	m_VehicleMovement:UpdateYawVehicle(p_Bot, s_IsAttacking, true)
+	m_VehicleMovement:UpdateYawVehicle(p_Bot, s_IsAttacking, true, p_DeltaTime)
 end
 
 ---update in every frame

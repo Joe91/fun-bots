@@ -8,12 +8,37 @@ local m_Utilities = require('__shared/Utilities')
 ---@type Logger
 local m_Logger = Logger("Vehicles", Debug.Server.VEHICLES)
 
+-- The cast VehicleEntityData(data) costs ~150 µs, reading the guid ~2 µs. The data of a vehicle never changes,
+-- so the name is cached per data-instance.
+---@type table<string, string>
+local s_VehicleNameByDataGuid = {}
+
+---Name of the vehicle (key of VehicleData) of a vehicle-entity.
+---@param p_Entity ControllableEntity|Entity
+---@return string
+function Vehicles:GetVehicleNameOfEntity(p_Entity)
+	local s_Data = p_Entity.data
+	local s_Guid = s_Data.instanceGuid
+	local s_Key = s_Guid and s_Guid:ToString('D')
+	local s_Name = s_Key and s_VehicleNameByDataGuid[s_Key]
+
+	if s_Name == nil then
+		s_Name = (VehicleEntityData(s_Data).controllableType:gsub(".+/.+/", ""))
+		if s_Key then
+			s_VehicleNameByDataGuid[s_Key] = s_Name
+		end
+	end
+
+	return s_Name
+end
+
 ---@param p_Player Player
 function Vehicles:FindOutVehicleType(p_Player)
 	local s_VehicleType = VehicleTypes.NoVehicle -- No vehicle.
 
-	if p_Player and p_Player.controlledControllable and not p_Player.controlledControllable:Is("ServerSoldierEntity") then
-		local s_VehicleName = VehicleEntityData(p_Player.controlledControllable.data).controllableType:gsub(".+/.+/", "")
+	local s_Controllable = p_Player and p_Player.controlledControllable
+	if s_Controllable and not s_Controllable:Is("ServerSoldierEntity") then
+		local s_VehicleName = self:GetVehicleNameOfEntity(s_Controllable)
 
 		local s_VehicleData = VehicleData[s_VehicleName]
 		if s_VehicleData and s_VehicleData.Type then
@@ -26,8 +51,9 @@ end
 
 ---@param p_Player Player?
 function Vehicles:GetVehicleName(p_Player)
-	if p_Player and p_Player.controlledControllable and not p_Player.controlledControllable:Is("ServerSoldierEntity") then
-		return VehicleEntityData(p_Player.controlledControllable.data).controllableType:gsub(".+/.+/", "")
+	local s_Controllable = p_Player and p_Player.controlledControllable
+	if s_Controllable and not s_Controllable:Is("ServerSoldierEntity") then
+		return self:GetVehicleNameOfEntity(s_Controllable)
 	else
 		return nil
 	end
@@ -48,7 +74,7 @@ function Vehicles:GetVehicleByEntity(p_Entity)
 	local s_VehicleName = nil
 
 	if p_Entity then
-		s_VehicleName = VehicleEntityData(p_Entity.data).controllableType:gsub(".+/.+/", "")
+		s_VehicleName = self:GetVehicleNameOfEntity(p_Entity)
 	end
 
 	if s_VehicleName == nil then
@@ -116,6 +142,121 @@ function Vehicles:GetNrOfFreeSeats(p_Entity, p_PlayerIsDriver)
 	return s_NrOfFreeSeats
 end
 
+---The seats bots may take (0 .. count - 1): one is kept free for a player if there are enough, at most
+---Config.MaxBotsPerVehicle (one more if a player drives).
+---@param p_Entity ControllableEntity
+---@param p_VehicleData VehicleDataInner
+---@param p_PlayerIsDriver boolean
+---@return integer
+function Vehicles:GetBotSeatCount(p_Entity, p_VehicleData, p_PlayerIsDriver)
+	local s_MaxEntries = p_Entity.entryCount
+	if p_VehicleData.Type == VehicleTypes.Gunship then
+		s_MaxEntries = 2
+	end
+	if p_VehicleData.Type == VehicleTypes.MobileArtillery then
+		s_MaxEntries = 1
+	end
+	if p_VehicleData.Type == VehicleTypes.UnarmedGunship then
+		s_MaxEntries = 0
+	end
+
+	if not p_PlayerIsDriver then
+		-- Leave a place for a player if more than two seats are available.
+		if s_MaxEntries > 2 and Config.KeepVehicleSeatForPlayer then
+			s_MaxEntries = s_MaxEntries - 1
+		end
+		-- Limit the bots per vehicle, if no player is the driver.
+		if s_MaxEntries > Config.MaxBotsPerVehicle then
+			s_MaxEntries = Config.MaxBotsPerVehicle
+		end
+	else
+		-- Allow one more bot, if driver is player.
+		if s_MaxEntries > (Config.MaxBotsPerVehicle + 1) then
+			s_MaxEntries = Config.MaxBotsPerVehicle + 1
+		end
+	end
+	return s_MaxEntries
+end
+
+---Whether a bot may get into the vehicle (Bot:_EnterVehicleEntity): allowed by the config, a seat for bots is free.
+---@param p_Entity ControllableEntity
+---@param p_VehicleData VehicleDataInner
+---@return boolean
+function Vehicles:HasFreeBotSeat(p_Entity, p_VehicleData)
+	if not Config.UseAirVehicles and self:IsAirVehicle(p_VehicleData) then
+		return false
+	end
+	if not Config.UseJets and self:IsVehicleType(p_VehicleData, VehicleTypes.Plane) then
+		return false
+	end
+	for l_Seat = 0, self:GetBotSeatCount(p_Entity, p_VehicleData, false) - 1 do
+		if p_Entity:GetPlayerInEntry(l_Seat) == nil then
+			return true
+		end
+	end
+	return false
+end
+
+---How many seats a bot may still take (HasFreeBotSeat): the driver and its passengers walk to the vehicle together. An
+---AMTRAC also takes them in its passenger seats (WalkInPassengerSeats).
+---@param p_Entity ControllableEntity
+---@param p_VehicleData VehicleDataInner
+---@return integer
+function Vehicles:FreeBotSeats(p_Entity, p_VehicleData)
+	local s_Free = {}
+	if self:HasFreeBotSeat(p_Entity, p_VehicleData) then
+		for l_Seat = 0, self:GetBotSeatCount(p_Entity, p_VehicleData, false) - 1 do
+			if p_Entity:GetPlayerInEntry(l_Seat) == nil then
+				s_Free[l_Seat] = true
+			end
+		end
+	end
+	local s_Passengers = self:WalkInPassengerSeats(p_Entity, p_VehicleData)
+	for l_Index = 1, #s_Passengers do
+		s_Free[s_Passengers[l_Index]] = true
+	end
+	local s_Count = 0
+	for _ in pairs(s_Free) do
+		s_Count = s_Count + 1
+	end
+	return s_Count
+end
+
+---The passenger seats of an AMTRAC a bot that walks up to it may take, beyond Config.MaxBotsPerVehicle (the crew): the
+---attackers of MP_017 rush only get ashore by boat and AMTRAC, 12 seats for 18 of them, the rest waited on the ship.
+---Not the ones of a transport helicopter (it takes off at once). The crew seats are taken first (Bot:_EnterVehicleEntity).
+---@param p_Entity ControllableEntity
+---@param p_VehicleData VehicleDataInner|nil
+---@return integer[] seat indices
+function Vehicles:WalkInPassengerSeats(p_Entity, p_VehicleData)
+	if p_VehicleData == nil or p_VehicleData.FirstPassengerSeat == nil or self:IsAirVehicle(p_VehicleData) then
+		return {}
+	end
+	return self:FreePassengerSeats(p_Entity, p_VehicleData)
+end
+
+---The passenger seats of a transport helicopter or an AMTRAC that a bot may spawn in. They don't count towards
+---Config.MaxBotsPerVehicle (that limits the crew: driver and gunners), the passengers get out at the objective
+---(Bot:_CheckShouldExitVehicleIfPassenger). One of them is kept for a player (Config.KeepVehicleSeatForPlayer).
+---@param p_Entity ControllableEntity
+---@param p_VehicleData VehicleDataInner|nil
+---@return integer[] seat indices
+function Vehicles:FreePassengerSeats(p_Entity, p_VehicleData)
+	local s_Free = {}
+	if p_VehicleData == nil or p_VehicleData.FirstPassengerSeat == nil then
+		return s_Free
+	end
+	for l_Seat = p_VehicleData.FirstPassengerSeat - 1, p_Entity.entryCount - 1 do
+		if p_Entity:GetPlayerInEntry(l_Seat) == nil then
+			s_Free[#s_Free + 1] = l_Seat
+		end
+	end
+	if Config.KeepVehicleSeatForPlayer then
+		table.remove(s_Free)
+	end
+	return s_Free
+end
+
 ---@param p_Entity ControllableEntity
 function Vehicles:IsEmpty(p_Entity)
 	return self:GetNrOfFreeSeats(p_Entity, true) == p_Entity.entryCount
@@ -157,16 +298,6 @@ end
 
 ---@param p_VehicleData VehicleDataInner
 ---@param p_VehicleTerrain VehicleTerrains
-function Vehicles:IsVehicleTerrain(p_VehicleData, p_VehicleTerrain)
-	if p_VehicleData and p_VehicleData.Terrain then
-		return p_VehicleData.Terrain == p_VehicleTerrain
-	else
-		return false
-	end
-end
-
----@param p_VehicleData VehicleDataInner
----@param p_VehicleTerrain VehicleTerrains
 function Vehicles:IsNotVehicleTerrain(p_VehicleData, p_VehicleTerrain)
 	if p_VehicleData and p_VehicleData.Terrain then
 		return p_VehicleData.Terrain ~= p_VehicleTerrain
@@ -189,11 +320,6 @@ end
 ---@param p_VehicleType VehicleTypes
 function Vehicles:IsVehicleType(p_VehicleData, p_VehicleType)
 	return self:VehicleType(p_VehicleData) == p_VehicleType
-end
-
----@param p_VehicleData VehicleDataInner
-function Vehicles:IsTransportChopper(p_VehicleData)
-	return self:IsVehicleType(p_VehicleData, VehicleTypes.TransportChopper)
 end
 
 ---@param p_VehicleData VehicleDataInner
@@ -288,7 +414,29 @@ function Vehicles:GetOffsets(p_VehicleData, p_Index, p_WeaponSelection)
 		end
 	end
 
-	return s_Offset
+	return s_Offset or Vec3.zero
+end
+
+---Angle of the shot relative to the forward of the aiming-part (as measured with "!aimeval").
+---@param p_VehicleData VehicleDataInner
+---@param p_Index integer
+---@param p_WeaponSelection integer
+---@return number yaw > 0 → shot goes left of the part-forward
+---@return number pitch < 0 → shot goes above the part-forward
+function Vehicles:GetAimOffsets(p_VehicleData, p_Index, p_WeaponSelection)
+	if p_VehicleData == nil or p_VehicleData.AimOffset == nil then
+		return 0.0, 0.0
+	end
+
+	local s_Offset = p_VehicleData.AimOffset[p_Index + 1]
+	if type(s_Offset) == "table" then
+		s_Offset = s_Offset[p_WeaponSelection ~= 0 and p_WeaponSelection or 1]
+	end
+	if s_Offset == nil then
+		return 0.0, 0.0
+	end
+
+	return s_Offset.x, s_Offset.y
 end
 
 ---@param p_VehicleData VehicleDataInner
@@ -378,8 +526,11 @@ function Vehicles:CheckForVehicleAttack(p_VehicleType, p_Bot)
 	end
 
 	if p_VehicleType ~= VehicleTypes.MavBot then      -- MAV or EOD always with rifle.
-		if s_Gadget1 and s_Gadget1.type == WeaponTypes.Rocket and p_Bot._RocketCooldownTimer <= 0 then
-			s_AttackMode = VehicleAttackModes.AttackWithRocket -- Always use rocket if possible.
+		-- Always use rocket if possible. Not at planes: they are faster than the rocket, it can't hit them (and the
+		-- lead can't be calculated).
+		if s_Gadget1 and s_Gadget1.type == WeaponTypes.Rocket and p_Bot._RocketCooldownTimer <= 0
+			and p_VehicleType ~= VehicleTypes.Plane then
+			s_AttackMode = VehicleAttackModes.AttackWithRocket
 		elseif s_Gadget2 and s_Gadget2.type == WeaponTypes.C4 and s_Distance < 25 then
 			if not self:IsAirVehicleType(p_VehicleType) then
 				s_AttackMode = VehicleAttackModes.AttackWithC4 -- Always use C4 if possible.

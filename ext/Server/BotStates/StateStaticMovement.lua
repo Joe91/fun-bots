@@ -29,11 +29,10 @@ function StateStaticMovement:Update(p_Bot, p_DeltaTime)
 	p_Bot.m_StateTimer = p_Bot.m_StateTimer + p_DeltaTime
 
 	-- default-handling
-	p_Bot:UpdateWeaponSelection(p_DeltaTime) -- TODO: maybe compbine with reload now?
+	p_Bot:UpdateWeaponSelection(p_DeltaTime) -- TODO: maybe combine with reload now?
 
 	p_Bot:UpdateStaticMovement()
 
-	-- p_Bot:UpdateSpeedOfMovement() -- is this needed?
 	p_Bot:_UpdateInputs(p_DeltaTime)
 end
 
@@ -41,7 +40,6 @@ end
 ---@param p_Bot Bot
 ---@param p_DeltaTime number
 function StateStaticMovement:UpdateFast(p_Bot, p_DeltaTime)
-	-- p_Bot:UpdateTargetMovement()
 end
 
 ---update in every frame
@@ -55,7 +53,7 @@ end
 ---@param p_Bot Bot
 ---@param p_DeltaTime number
 function StateStaticMovement:UpdateSlow(p_Bot, p_DeltaTime)
-	-- p_Bot:UpdateDeployAndReload(p_DeltaTime, true) -- don't deploy in static movement
+	-- No deploy/reload handling in static movement.
 end
 
 if g_StateStaticMovement == nil then

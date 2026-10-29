@@ -1,0 +1,24 @@
+name: Lua checks
+
+on:
+  push:
+    paths:
+      - 'ext/**.lua'
+      - '.luacheckrc'
+      - '.github/workflows/lua-checks.yml'
+  pull_request:
+    paths:
+      - 'ext/**.lua'
+      - '.luacheckrc'
+      - '.github/workflows/lua-checks.yml'
+
+jobs:
+  luacheck:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+      - name: Install luacheck
+        run: sudo apt-get update && sudo apt-get install -y lua-check
+      - name: Run luacheck
+        run: luacheck ext

@@ -16,6 +16,9 @@ function Bot:Revive(p_Player)
 	-- These gamemodes don't allow revives.
 	if Globals.IsGm or Globals.IsScavenger then return end
 
+	-- Only revive teammates. The request comes from a client raycast report.
+	if p_Player.teamId ~= self.m_Player.teamId then return end
+
 	-- The player to revive is not revivable. Could be already alive or dead.
 	if not p_Player.corpse or p_Player.corpse.isDead then return end
 
@@ -35,6 +38,21 @@ function Bot:Revive(p_Player)
 		self._ShootPlayer = PlayerManager:GetPlayerById(self._ShootPlayerId)
 		self._ShootPlayerVehicleType = VehicleTypes.NoVehicle -- does not matter here
 	end
+end
+
+---Refreshes the vehicle to repair from the target player. Don't rely on a cached entity,
+---the vehicle can get destroyed or left while repairing.
+---@return ControllableEntity|nil
+function Bot:UpdateRepairVehicleEntity()
+	local s_ShootPlayer = self._ShootPlayer
+	local s_Controllable = s_ShootPlayer ~= nil and s_ShootPlayer.soldier ~= nil and s_ShootPlayer.controlledControllable or nil
+
+	if s_Controllable ~= nil and s_Controllable:Is('ServerSoldierEntity') then
+		s_Controllable = nil
+	end
+
+	self._RepairVehicleEntity = s_Controllable
+	return s_Controllable
 end
 
 ---@param p_Player Player
@@ -163,25 +181,22 @@ function Bot:ShootAt(p_Player, p_IgnoreYaw)
 		p_IgnoreYaw = true
 	end
 
-	local s_RelativePitch = 0
-	local s_RelativeYaw = 0
+	-- Determine the target's position relative to the bot. Also needed without FOV-check, for the first-shot-delay.
+	local s_Vector = s_TargetPos - s_PlayerPos
+
+	-- Compute the pitch and yaw between the bot and its target. These
+	-- angles are relative to the absolute coordinate system; pitch is
+	-- measured from the x-z plane while yaw is measured from the z axis.
+	local s_TargetPitch = math.atan(s_Vector.y, math.sqrt(s_Vector.x ^ 2 + s_Vector.z ^ 2))
+	local s_TargetYaw = -math.atan(s_Vector.x, s_Vector.z)
+
+	-- Transform the pitch and yaw to be relative to the bot's current
+	-- heading.
+	local s_RelativePitch = m_Utilities:NormalizeAngleRad(s_TargetPitch - self.m_Input.authoritativeAimingPitch)
+	local s_RelativeYaw = m_Utilities:NormalizeAngleRad(s_TargetYaw - self.m_Input.authoritativeAimingYaw)
 	local s_HalfHfov = 0
 	local s_HalfVfov = 0
 	if not p_IgnoreYaw then
-		-- Determine the target's position relative to the bot.
-		local s_Vector = s_TargetPos - s_PlayerPos
-
-		-- Compute the pitch and yaw between the bot and its target. These
-		-- angles are relative to the absolute coordinate system; pitch is
-		-- measured from the x-z plane while yaw is measured from the x axis.
-		local s_Pitch = math.atan(s_Vector.y, math.sqrt(s_Vector.x ^ 2 + s_Vector.z ^ 2))
-		local s_Yaw = math.atan(s_Vector.z, s_Vector.x) - (math.pi / 2) -- alignment to authoritativeAimingYaw needed (-pi/2)
-
-		-- Transform the pitch and yaw to be relative to the bot's current
-		-- heading.
-		s_RelativePitch = m_Utilities:NormalizeAngleRad(s_Pitch - self.m_Player.input.authoritativeAimingPitch)
-		s_RelativeYaw = m_Utilities:NormalizeAngleRad(s_Yaw - self.m_Player.input.authoritativeAimingYaw)
-
 		-- Halve configured horizontal & vertical FOVs and convert them to
 		-- radians.
 		if s_InVehicle then
@@ -216,16 +231,23 @@ function Bot:ShootAt(p_Player, p_IgnoreYaw)
 		if self._Shoot then
 			-- only reset ShotTimer, if not already attacking
 			if self._ShootModeTimer <= 0 then
-				self._ShotTimer = -self:GetFirstShotDelay(self._DistanceToPlayer, false)
+				self._ShotTimer = -self:GetFirstShotDelay(self._DistanceToPlayer, false,
+					math.sqrt(s_RelativeYaw * s_RelativeYaw + s_RelativePitch * s_RelativePitch))
+				self._GrenadeTried = false
 			end
+			if self._ShootModeTimer <= 0 or s_NewTarget then
+				-- The aim has to settle on the new target.
+				self._AimAcquire = true
+			end
+			self._LastSeenPosition = s_TargetPos
 			if s_InVehicle then
-				self._ShootModeTimer = Config.BotVehicleFireModeDuration
+				self._ShootModeTimer = Registry.BOT.VEHICLE_FIRE_MODE_DURATION
 			else
-				self._ShootModeTimer = Config.BotFireModeDuration
+				self._ShootModeTimer = Registry.BOT.FIRE_MODE_DURATION
 				if self.m_Behavior == BotBehavior.LongerAttacking then
-					self._ShootModeTimer = Config.BotFireModeDuration * 1.7
+					self._ShootModeTimer = Registry.BOT.FIRE_MODE_DURATION * 1.7
 				elseif self.m_Behavior == BotBehavior.AbortAttackFast then
-					self._ShootModeTimer = Config.BotFireModeDuration * 0.5
+					self._ShootModeTimer = Registry.BOT.FIRE_MODE_DURATION * 0.5
 				end
 			end
 			self._ActiveShootDuration = self._ShootModeTimer
@@ -251,7 +273,9 @@ function Bot:ShootAt(p_Player, p_IgnoreYaw)
 				-- check for changed weapon
 				BotSpawner:UpdateGmWeapon(self)
 			end
-			self._KillYourselfTimer = 0.0
+			-- Not the time without progress off the mesh (GameDirector:_CheckProgressOffMesh): it doesn't count while the
+			-- bot has a target anyway. Reset at each new one, a bot stuck where it sees enemies all the time never got
+			-- onto the mesh again (XP1_003: defenders on stairs at MCOM 2 the mesh doesn't cover, 160 s).
 			self.m_AttackPriority = s_NewAttackPriority
 			return true
 		else
@@ -274,7 +298,7 @@ function Bot:_EnterVehicleEntity(p_Entity, p_PlayerIsDriver)
 		return -2
 	end
 
-	local s_Position = p_Entity.transform.trans
+	local s_Position = p_Entity.transform.trans:Clone()
 	local s_VehicleData = m_Vehicles:GetVehicleByEntity(p_Entity)
 
 	if not s_VehicleData then
@@ -289,50 +313,41 @@ function Bot:_EnterVehicleEntity(p_Entity, p_PlayerIsDriver)
 		return -3 -- Not allowed to use.
 	end
 
-	-- Keep one seat free, if enough available.
-	local s_MaxEntries = p_Entity.entryCount
-	if s_VehicleData.Type == VehicleTypes.Gunship then
-		s_MaxEntries = 2
-	end
-	if s_VehicleData.Type == VehicleTypes.MobileArtillery then
-		s_MaxEntries = 1
-	end
-	-- The idea is to avoid the bots from seating in the 3rd slot of the tanks to be more useful somwhere else.
-	if s_VehicleData.Type == VehicleTypes.UnarmedGunship then
-		s_MaxEntries = 0
+	if g_GameDirector:IsStuckVehicle(p_Entity) then
+		return -2
 	end
 
-	--Now the bots may fully occupy a vehicle ( attack choppers, scout choppers, and some other transport vehicles.)
-	if not p_PlayerIsDriver then
-		-- Leave a place for a player if more than two seats are available.
-		if s_MaxEntries > 2 and Config.KeepVehicleSeatForPlayer then
-			s_MaxEntries = s_MaxEntries - 1
-		end
-		-- Limit the bots per vehicle, if no player is the driver.
-		if s_MaxEntries > Config.MaxBotsPerVehicle then
-			s_MaxEntries = Config.MaxBotsPerVehicle
-		end
-	else
-		-- Allow one more bot, if driver is player.
-		if s_MaxEntries > (Config.MaxBotsPerVehicle + 1) then
-			s_MaxEntries = Config.MaxBotsPerVehicle + 1
-		end
+	-- Nothing for a bot to drive it on: it would stand there with its crew.
+	if not p_PlayerIsDriver and not g_GameDirector:HasVehicleWay(s_VehicleData, p_Entity) then
+		return -3
 	end
+
+	local s_MaxEntries = m_Vehicles:GetBotSeatCount(p_Entity, s_VehicleData, p_PlayerIsDriver)
 
 	for l_IndexOfSeat = 0, s_MaxEntries - 1 do
 		local s_SeatIndex = l_IndexOfSeat
+		local s_SeatReserved = false
 		if s_VehicleData.Type == VehicleTypes.Gunship then
 			s_SeatIndex = s_SeatIndex + 1
+			s_SeatReserved = g_GameDirector:IsGunshipEntryReserved(s_SeatIndex)
 		end
-		if p_Entity:GetPlayerInEntry(s_SeatIndex) == nil or Globals.IsAirSuperiority or (Globals.MapHasDynamiJetSpawns and m_Vehicles:IsVehicleType(s_VehicleData, VehicleTypes.Plane)) then -- already in this seat in air superiority
+		-- A reserved seat is kept free for a player.
+		if not s_SeatReserved and (p_Entity:GetPlayerInEntry(s_SeatIndex) == nil or Globals.IsAirSuperiority or (Globals.MapHasDynamiJetSpawns and m_Vehicles:IsVehicleType(s_VehicleData, VehicleTypes.Plane))) then -- already in this seat in air superiority
 			self.m_Player:EnterVehicle(p_Entity, s_SeatIndex)
+			if not self:IsSeated() then
+				goto next_seat
+			end
 			self._ExitVehicleHealth = PhysicsEntity(p_Entity).internalHealth * (Registry.VEHICLES.VEHICLE_EXIT_HEALTH / 100.0)
 			-- Get ID.
 			self.m_ActiveVehicle = s_VehicleData
 			self._ActiveVehicleWeaponSlot = 0
 			self:UpdateVehicleMovableId()
 			if s_SeatIndex == 0 then
-				if s_SeatIndex == s_MaxEntries - 1 then
+				if m_Vehicles:IsVehicleType(s_VehicleData, VehicleTypes.StationaryLauncher) then
+					-- Nothing to wait for: the timer only runs down while driving (UpdateNormalMovementVehicle), never in a
+					-- launcher, and while it runs the bot isn't checked for getting out (GameDirector:_CheckVehicleProgress).
+					self._VehicleWaitTimer = 0.0
+				elseif s_SeatIndex == s_MaxEntries - 1 then
 					self._VehicleWaitTimer = 0.5 -- Always wait a short time to check for free start.
 					if Globals.IsAirSuperiority then
 						self._VehicleTakeoffTimer = 0.0
@@ -341,31 +356,76 @@ function Bot:_EnterVehicleEntity(p_Entity, p_PlayerIsDriver)
 						self._VehicleTakeoffTimer = Registry.VEHICLES.JET_TAKEOFF_TIME
 						self._JetTakeoffActive = true
 					end
-					g_GameDirector:_SetVehicleObjectiveState(p_Entity.transform.trans, false)
+					g_GameDirector:_SetVehicleObjectiveState(p_Entity.transform.trans:Clone(), false)
 				else
 					self._VehicleWaitTimer = Config.VehicleWaitForPassengersTime
+					self._VehicleWaited = 0.0
 					self._BrakeTimer = 0.0
 				end
 			else
 				self._VehicleWaitTimer = 0.0
 
-				if s_SeatIndex == s_MaxEntries - 1 then
+				if s_SeatIndex == s_MaxEntries - 1 and #m_Vehicles:WalkInPassengerSeats(p_Entity, s_VehicleData) == 0 then
 					-- Last seat taken: Disable vehicle and abort, wait for passengers.
 					local s_Driver = p_Entity:GetPlayerInEntry(0)
 
 					if s_Driver ~= nil then
 						Events:Dispatch('Bot:AbortWait', s_Driver.id)
-						g_GameDirector:_SetVehicleObjectiveState(p_Entity.transform.trans, false)
+						g_GameDirector:_SetVehicleObjectiveState(p_Entity.transform.trans:Clone(), false)
 					end
 				end
 			end
 
 			return 0, s_Position -- Everything fine.
 		end
+		::next_seat::
+	end
+
+	-- The crew is full: along in a passenger seat of an AMTRAC (Vehicles:WalkInPassengerSeats).
+	if not p_PlayerIsDriver and #m_Vehicles:WalkInPassengerSeats(p_Entity, s_VehicleData) > 0
+		and self:_EnterPassengerSeat(p_Entity) == 0 then
+		-- The last one: the driver goes.
+		local s_Driver = p_Entity:GetPlayerInEntry(0)
+		if s_Driver ~= nil and #m_Vehicles:WalkInPassengerSeats(p_Entity, s_VehicleData) == 0 then
+			Events:Dispatch('Bot:AbortWait', s_Driver.id)
+			g_GameDirector:_SetVehicleObjectiveState(p_Entity.transform.trans:Clone(), false)
+		end
+		return 0, s_Position
 	end
 
 	-- No place left.
 	return -2
+end
+
+---Into a free passenger seat of a transport helicopter or an AMTRAC (Vehicles:FreePassengerSeats): spawned in it, the
+---bot rides along and gets out at the objective.
+---@param p_Entity ControllableEntity
+---@return integer 0 if it got in
+function Bot:_EnterPassengerSeat(p_Entity)
+	local s_VehicleData = m_Vehicles:GetVehicleByEntity(p_Entity)
+	if s_VehicleData == nil then
+		return -2
+	end
+	if not Config.UseAirVehicles and m_Vehicles:IsAirVehicle(s_VehicleData) then
+		return -3
+	end
+	if g_GameDirector:IsStuckVehicle(p_Entity) then
+		return -2
+	end
+	local s_Seats = m_Vehicles:FreePassengerSeats(p_Entity, s_VehicleData)
+	if #s_Seats == 0 then
+		return -2
+	end
+	self.m_Player:EnterVehicle(p_Entity, s_Seats[1])
+	if not self:IsSeated() then
+		return -2
+	end
+	self._ExitVehicleHealth = PhysicsEntity(p_Entity).internalHealth * (Registry.VEHICLES.VEHICLE_EXIT_HEALTH / 100.0)
+	self.m_ActiveVehicle = s_VehicleData
+	self._ActiveVehicleWeaponSlot = 0
+	self:UpdateVehicleMovableId()
+	self._VehicleWaitTimer = 0.0
+	return 0
 end
 
 ---@param p_PlayerIsDriver boolean
@@ -381,7 +441,7 @@ function Bot:_EnterVehicle(p_PlayerIsDriver, p_Distance)
 
 	while s_Entity ~= nil do
 		s_Entity = ControllableEntity(s_Entity)
-		local s_Position = s_Entity.transform.trans
+		local s_Position = s_Entity.transform.trans:Clone()
 		local s_Distance = s_Position:Distance(self.m_Player.soldier.worldTransform.trans)
 
 		if s_Distance < s_ClosestDistance then

@@ -6,7 +6,6 @@ StateInVehicleChopperControl = class('StateInVehicleChopperControl')
 -- bot-methods
 local m_VehicleAiming = require('Bot/VehicleAiming')
 local m_VehicleAttacking = require('Bot/VehicleAttacking')
-local m_VehicleMovement = require('Bot/VehicleMovement')
 local m_ChopperControl = require('Bot/VehicleChopperControl')
 local m_VehicleWeaponHandling = require('Bot/VehicleWeaponHandling')
 
@@ -34,7 +33,6 @@ function StateInVehicleChopperControl:Update(p_Bot, p_DeltaTime)
 		m_VehicleAttacking:UpdateAttackingVehicle(p_DeltaTime, p_Bot)
 	else
 		m_ChopperControl:UpdateMovementChopper(p_DeltaTime, p_Bot)
-		-- m_VehicleMovement:UpdateNormalMovementVehicle(p_DeltaTime, p_Bot)
 	end
 
 	-- Common things.
@@ -56,12 +54,12 @@ function StateInVehicleChopperControl:UpdateFast(p_Bot, p_DeltaTime)
 
 	local s_IsAttacking = p_Bot._ShootPlayer ~= nil
 	if s_IsAttacking then
-		m_VehicleAiming:UpdateAimingVehicle(p_Bot, true)
+		m_VehicleAiming:UpdateAimingVehicle(p_Bot, true, p_DeltaTime)
 	else
 		m_ChopperControl:UpdateTargetMovementChopper(p_Bot)
 	end
 
-	m_ChopperControl:UpdateYawChopperPilot(p_Bot, s_IsAttacking)
+	m_ChopperControl:UpdateYawChopperPilot(p_Bot, s_IsAttacking, p_DeltaTime)
 end
 
 ---update in every frame
@@ -75,6 +73,13 @@ end
 function StateInVehicleChopperControl:UpdateSlow(p_Bot, p_DeltaTime)
 	if p_Bot.m_Player.soldier == nil then
 		return
+	end
+	-- A gunner got in (or out) after the pilot: with a gunner the pilot of an attack chopper only flies
+	-- (Config.ChopperDriversAttack). Set only when the pilot got in, the pilot spawned first attacked anyway (half of
+	-- the time with a gunner on board, diving at the targets).
+	p_Bot:UpdateDontAttackFlag()
+	if p_Bot._DontAttackPlayers and p_Bot._ShootPlayer ~= nil then
+		p_Bot:AbortAttack()
 	end
 	local s_IsAttacking = p_Bot._ShootPlayer ~= nil
 	p_Bot:_CheckForVehicleActions(p_DeltaTime, true)

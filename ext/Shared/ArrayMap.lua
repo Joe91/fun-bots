@@ -15,7 +15,7 @@ function ArrayMap:deleteByIndex(p_Index)
 end
 
 function ArrayMap:exists(p_Value)
-	for l_Key, l_Data in pairs(self._Entries) do
+	for _, l_Data in pairs(self._Entries) do
 		if p_Value == l_Data then
 			return true
 		end
@@ -49,10 +49,6 @@ end
 
 function ArrayMap:join(p_Character)
 	return table.concat(self._Entries, p_Character)
-end
-
-function ArrayMap:_tostring()
-	return '[ArrayList Count=' .. self:count() .. ', ' .. json.encode(self._Entries) .. ']'
 end
 
 return ArrayMap
