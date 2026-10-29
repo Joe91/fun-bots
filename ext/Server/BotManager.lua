@@ -908,12 +908,10 @@ function BotManager:GetPlayerCount()
 	return PlayerManager:GetPlayerCount() - #self._Bots
 end
 
----Get the amount of bots using this kit
----@param p_TeamId TeamId|nil
----@return table<BotKits, integer>
 ---Kits in use: of the bots that are spawned or about to spawn. Inactive bots (kept for the next round) don't count.
 ---@param p_TeamId? TeamId|integer
 ---@param p_ExcludeBot? Bot not counted, e.g. the bot that spawns right now
+---@return table<BotKits, integer>
 function BotManager:GetKitCount(p_TeamId, p_ExcludeBot)
 	local s_AllCounts = {
 		[BotKits.Assault] = 0,

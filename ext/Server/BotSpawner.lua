@@ -22,6 +22,9 @@ local m_Vehicles = require('Vehicles')
 ---@type NavZones
 local m_NavZones = require('NavZones')
 
+-- A spawn of the game farther from the closest path (metres): the bot starts on its waypoint (OnEngineUpdate).
+local SPAWN_PATH_RANGE = 25.0
+
 function BotSpawner:__init()
 	self:RegisterVars()
 end
@@ -312,7 +315,14 @@ function BotSpawner:OnEngineUpdate(p_DeltaTime, p_SimulationDeltaTime)
 					end
 					table.remove(self._BotsWithoutPath, l_Index)
 					-- On the network of a zone (base, capture point) the bot starts there (BotZoneMovement).
-					l_Bot:TryEnterZoneAt(s_Position, true)
+					if not l_Bot:TryEnterZoneAt(s_Position, true) and s_Node ~= nil
+						and s_Node.Position:Distance(s_Position) > SPAWN_PATH_RANGE then
+						-- A spawn of the game far from the paths: onto the waypoint at once, nobody sees the bot there yet
+						-- (XP3_Alborz TDM: two spawns 30-45 m from them, walls between, bots stood there for minutes).
+						local s_Transform = l_Bot.m_Player.soldier.worldTransform:Clone()
+						s_Transform.trans = s_Node.Position:Clone()
+						l_Bot.m_Player.soldier:SetTransform(s_Transform)
+					end
 
 					self:_ApplyCosumizationAfterSpawn(l_Bot)
 
@@ -1044,7 +1054,7 @@ end
 ---combat area of the stage (MP_Subway rush without its mesh: 182 of 496 spawns died 10 s later).
 ---@return boolean
 function BotSpawner:_UseGameSpawn()
-	return Globals.UseGameSpawn or Globals.IsConquest or Globals.IsRush
+	return Globals.UseGameSpawn or (Globals.IsConquest and not Globals.IsCtf) or Globals.IsRush
 end
 
 ---@param p_Bot Bot
@@ -1790,8 +1800,7 @@ function BotSpawner:_SettleDeathTicket(p_Bot)
 		if s_Death.ByMod and s_Tickets > 0 then
 			TicketManager:SetTicketCount(s_Death.Team, s_Tickets + 1)
 		end
-	elseif Globals.IsConquest and not s_Death.ByMod and s_Tickets > 1
-		and not SharedUtils:GetCurrentGameMode():match('CaptureTheFlag') then
+	elseif Globals.IsConquest and not Globals.IsCtf and not s_Death.ByMod and s_Tickets > 1 then
 		TicketManager:SetTicketCount(s_Death.Team, s_Tickets - 1)
 	end
 end

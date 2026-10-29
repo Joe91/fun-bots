@@ -13,6 +13,7 @@ Globals = {
 	IsGm = false,
 	IsConquest = false,
 	IsDomination = false,
+	IsCtf = false,
 	IsAssault = false,
 	IsAirSuperiority = false,
 	NrOfTeams = 0,

@@ -225,7 +225,7 @@ function PathSwitcher:_GetNewFootPath(p_Bot, p_Point, p_Objective)
 			return true, s_Beacon, m_NodeCollection:_ActionDirection(s_Beacon)
 		end
 		-- Conquest and rush (community mapfiles without a mesh): by the objectives on the paths, as the vehicles.
-		if Globals.IsConquest or Globals.IsRush then
+		if (Globals.IsConquest and not Globals.IsCtf) or Globals.IsRush then
 			return self:_SwitchByPriority(p_Point, p_Objective, p_Bot.m_Player.teamId, s_Candidates, p_Bot.m_Id)
 		end
 		if m_Utilities:CheckProbability(Registry.GAME_DIRECTOR.PROBABILITY_SWITCH_SAME_PRIO) then

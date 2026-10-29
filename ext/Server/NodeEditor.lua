@@ -955,7 +955,6 @@ function NodeEditor:_getNewIndex()
 	return s_HighestIndex + 1
 end
 
----@param p_Player Player
 ---The "Vehicles" of a path traced in the vehicle the player sits in now, nil on foot.
 ---@param p_Player Player
 ---@return string[]|nil

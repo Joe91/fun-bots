@@ -148,6 +148,8 @@ local ZONE_ENTER_HEIGHT = 3.0    -- the bot goes onto the mesh from.
 ---@field Entered number time the bot came onto the mesh (or onto another part of it, _ZoneRejoin)
 ---@field FallTime number time of the last fall off a way
 ---@field Trail integer[]|nil the last points it reached (Bot:_ZoneTrail)
+---@field EntryJunction NavZoneJunction|nil the junction it came onto the mesh at (from a path)
+---@field RejoinUntil number|nil time it may take to the point of _ZoneRejoin: not snapped back before
 ---@field NoGoals integer|nil times in a row no goal of the zone was close enough over the mesh (_ZoneNewGoal)
 ---@field Transit integer|nil a vehicle across the network at the end of this path (_VehicleZoneTransit)
 
