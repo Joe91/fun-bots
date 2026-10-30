@@ -57,10 +57,17 @@ the beach) stand off the mesh for 30-70 s.
 the census corners; a connection the check blocks with moved corners gets the census corners again, `blockedCentered`)
 and the check casting across each corner, twice. MP_Subway conquest: the bots that ran into the barrier at (-167, 65,
 -432) went from 29 to 6 a round. Left there: bots that drift 1.5 m east of 387-614 into a structure at the south end of
-the barrier (-167.8, 65, -435.9), about 10 a round. MP_001 squad rush: the loose end of path 1 at (-64, 75, 38) gets
-attached to the next waypoint at every cut and the check blocks it (13 m through a wall), 12 times in a row; lint is
-clean without it. Gains elsewhere are modest (per rush stage `zone_stuck` 0-25 % lower, conquest about the same); a new
+the barrier (-167.8, 65, -435.9), about 10 a round. Gains elsewhere are modest (per rush stage `zone_stuck` 0-25 % lower, conquest about the same); a new
 census changes nothing (cells measured again: 0.00 % differ).
+
+**Checks edited by hand** (2026-10-30, in `tools/debug-server/census/<map>.checks.json`, which is not in git: a new check
+of these levels writes them anew, put the entries back). MP_001 squad rush: the check blocked the junctions of path 1 to
+its waypoints 1-8 one after another, the cut ended at waypoint 9 behind something on the way (the path walks over it, the
+bots on the mesh don't): the attackers stayed at spawn us 1, 19-40 `no_progress` a round, no MCOM destroyed. The junction
+to waypoint 1 is no longer blocked (as before the rescan): both MCOMs fall, 0-1 `no_progress`. XP2_Office: point (26, 1.3,
+-41.5) is boxed in by something the census and the check don't see (60-80 bots a round put across its two connections)
+and the connection (-78.5, 3.8, -28.5)-(-78, 4.4, -34.5) leads into the side of the stairs: both blocked. Domination 74 ->
+3 bots put across a round, Gun Master 76 -> 32.
 
 **P15. XP3_Desert conquest: a corner of the mesh under a parked vehicle.** The Tunguska at spawn ru 1 (-815.5, 68.7,
 -148.4) stands on a corner of the mesh (the check leaves out hits next to vehicle spawns: they usually drive off). The
@@ -80,14 +87,25 @@ bot leaves the area as team danger (`NavZones:OnKilled`): no change (23 vs 25 a 
 
 **M0. Domination (XP2).** The zone of Factory's C has a single mesh point (capture radius 4 m, points 5 m apart): the
 census needs a point at the flag for small zones. Each level has two HQs per team of the same name (NavZones warns and
-drops the second). Many spawns land next to enemies (XP2_Office 49 %, XP2_Factory 35 %).
+drops the second). Many spawns land next to enemies (XP2_Office 49 %, XP2_Factory 35 %). XP2_Office (also its
+Gun Master and TDM): bots get stuck on (-82.5, 3.8, -61.5)-(-78.5, 3.8, -65.5) between desks
+(6-12 put across a round), the only way into 23 points of the mesh: not blocked.
+
+**P18. MP_017 conquest large: a spawn 28 m from path 12** at (-663, 68, 63), no mesh within 140 m. The bots walk straight
+to waypoint 81 and stand at (-663, 68, 59) for 50-70 s (5 a round), skipping through the waypoints of the path without
+moving (`_ObstacleHandling`: a target more than 1.5 m higher or lower counts as reached at once). The spawn rule of
+2026-10-29 (`SPAWN_PATH_RANGE`, onto the waypoint) should put them onto the path but doesn't there, cause unknown.
 
 **M1. Scavenger and CTF have no objectives** (no mesh, no labels). Scavenger needs a mesh per layout and the mode in
 `SetGameMode`, like Domination. CTF also needs flag pickup (Interact) and carrying the flag to the own stand.
 
 ## Stability
 
-**P7. Server crashes.** 2026-10-18: MP_017 Rush 94 s into the round, the log ends without an error. It came ~1 s after
+**P7. Server crashes.** 2026-10-29/30: three in 1¾ h with 8 game-servers on the host (load ~10 on 12 cores, 8 GB in
+swap), none in the 1¾ h after with 7 (~12 server-hours, about 60 rounds). MP_007 conquest large 394 s into the round (a bot
+spawned into a vehicle 4 s before), XP1_002 TDM 194 s in and XP5_002 squad deathmatch 140 s in (infantry only); nothing
+in the logs (wine output included), nothing common in the last events, the reruns played. Likely the load of the host,
+not proven. 2026-10-18: MP_017 Rush 94 s into the round, the log ends without an error. It came ~1 s after
 two `stranded` kills on the ship. Those bots respawn into a mate's AAV/boat ~300 m away (`_EnterVehicleEntity` right
 after the spawn), similar to the two crashes from debug commands (engine null-read at `vu.com+0x119501f`). Four reruns
 with ~120 such respawns didn't crash, so it isn't proven. Earlier: loading XP5_003 CQL and MP_003 Rush once each, and
