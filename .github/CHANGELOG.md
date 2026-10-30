@@ -76,3 +76,5 @@ This is the changelog for release **V3.6.0**. Don't forget to [join us on Discor
 * All maps: meshes cut again, the corners of the mesh keep away from the ends of walls and barriers (MP_Subway
   Conquest: 60-90 bots a round ran into a barrier near B and C, now about 6) and the check finds walls through a
   corner
+* MP_001 Squad Rush: the attackers get out of their first spawn again (they stayed there and no MCOM fell); XP2_Office:
+  two spots of the mesh where 60-80 bots a round got stuck are left out
