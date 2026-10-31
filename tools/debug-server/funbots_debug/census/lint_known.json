@@ -34,6 +34,18 @@
    "todo": "Nothing required: a spawn of the round end. Its spawn entities 183 m up at (299..344, 262, -259) and (234, 262, -268) are off during all three stages and on once the round is over (seen 2026-10-13); the recorder bot is outside the combat area there in stage 2."
   },
   {
+   "finding": "XP1_003_SquadRush0: spawn-cut-off: no objective can be walked to from spawn 2",
+   "todo": "Nothing required: out of the combat-area in every stage (census connect), no bot stranded there in the test rounds."
+  },
+  {
+   "finding": "XP1_003_SquadRush0: spawn-cut-off: no objective can be walked to from spawn 3",
+   "todo": "Nothing required: out of the combat-area in every stage (census connect), no bot stranded there in the test rounds."
+  },
+  {
+   "finding": "XP1_003_SquadRush0: spawn-cut-off: no objective can be walked to from spawn ru 3",
+   "todo": "Nothing required: out of the combat-area in every stage (census connect), no bot stranded there in the test rounds."
+  },
+  {
    "finding": "XP1_004_ConquestAssaultLarge0: spawn-cut-off: no objective can be walked to from base us",
    "todo": "Nothing required: the carrier; RHIBs (water paths 31, 32), jets and helicopters."
   },
@@ -48,6 +60,10 @@
   {
    "finding": "XP3_Desert_RushLarge0: spawn-cut-off: no objective can be walked to from spawn us 1",
    "todo": "Nothing required: the boats (water paths 9, 5) and the AAV (amphibious path 4) take the bots ashore; there is no way on foot."
+  },
+  {
+   "finding": "XP4_Parl_SquadRush0: spawn-cut-off: no objective can be walked to from spawn us 5",
+   "todo": "Nothing required: out of the combat-area in every stage (census connect), no bot stranded there in the test rounds."
   }
  ],
  "tasks": [

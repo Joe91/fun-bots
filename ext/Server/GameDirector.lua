@@ -3691,16 +3691,52 @@ function GameDirector:_NearWaypointsOrMcomZone(p_Position)
 		return true
 	end
 	-- Paths recorded by bots end at the mesh of the spawns, farther from the MCOMs.
+	return self:_NearSpawnZone(p_Position, MCOM_NEAR_SPAWN_HEIGHT) and self:_HasGroundAround(p_Position)
+end
+
+-- A spawn of the attackers can be high above its zone (XP1_001 Squad Rush: 27 m, on a roof).
+local MCOM_SPAWN_ZONE_HEIGHT = 60.0
+
+---Whether the position is close to a spawn-zone with mesh. Only those: the levels of Back to Karkand have spawns and the
+---MCOMs of other layouts high up in the air (XP1_002: 570 m), no ground there.
+---@param p_Position Vec3
+---@param p_Height number vertical metres
+---@return boolean
+function GameDirector:_NearSpawnZone(p_Position, p_Height)
 	for _, l_Zone in pairs(m_NavZones:GetZones()) do
 		local s_DeltaX = l_Zone.Center.x - p_Position.x
 		local s_DeltaZ = l_Zone.Center.z - p_Position.z
-		if (l_Zone.Kind == 'base' or l_Zone.Kind == 'spawn')
+		if (l_Zone.Kind == 'base' or l_Zone.Kind == 'spawn') and #l_Zone.Inside > 0
 			and math.sqrt(s_DeltaX * s_DeltaX + s_DeltaZ * s_DeltaZ) < MCOM_NEAR_SPAWN
-			and math.abs(l_Zone.Center.y - p_Position.y) < MCOM_NEAR_SPAWN_HEIGHT then
+			and math.abs(l_Zone.Center.y - p_Position.y) < p_Height then
 			return true
 		end
 	end
 	return false
+end
+
+-- An MCOM stands on the ground: of MCOM_GROUND_SPOTS spots this far around it, at least MCOM_GROUND_MIN have ground
+-- below. The ones of other layouts are stored in rows in the air (MP_013: six at the height of the summit, 14 and 55 m
+-- apart).
+local MCOM_GROUND_DISTANCE = 2.5
+local MCOM_GROUND_SPOTS = 8
+local MCOM_GROUND_MIN = 4
+
+---@param p_Position Vec3
+---@return boolean
+function GameDirector:_HasGroundAround(p_Position)
+	local s_Flags = RayCastFlags.DontCheckCharacter | RayCastFlags.DontCheckRagdoll | RayCastFlags.DontCheckWater
+	---@cast s_Flags RayCastFlags
+	local s_Grounded = 0
+	for l_Index = 0, MCOM_GROUND_SPOTS - 1 do
+		local s_Angle = l_Index * 2 * math.pi / MCOM_GROUND_SPOTS
+		local s_Spot = p_Position + Vec3(math.cos(s_Angle), 0.0, math.sin(s_Angle)) * MCOM_GROUND_DISTANCE
+		if RaycastManager:CollisionRaycast(s_Spot + Vec3(0.0, 1.0, 0.0), s_Spot - Vec3(0.0, 2.5, 0.0), 1, 0,
+				s_Flags)[1] ~= nil then
+			s_Grounded = s_Grounded + 1
+		end
+	end
+	return s_Grounded >= MCOM_GROUND_MIN
 end
 
 ---The positions of the MCOMs of the engine (its interactions, GameInteractionEntityData, ~1 m from where a soldier
@@ -3812,6 +3848,15 @@ function GameDirector:_NumberEngineMcoms()
 		s_Entity = s_Iterator:Next()
 	end
 	local s_Spawns = #s_Enabled > 0 and s_Enabled or s_All
+	-- Only the ones at a spawn-zone with mesh: the levels of Back to Karkand also have spawns in rows in the air (XP1_001
+	-- Squad Rush, none on at the start: their middle was next to the MCOM of stage 2).
+	local s_OnMesh = {}
+	for _, l_Position in ipairs(s_Spawns) do
+		if self:_NearSpawnZone(l_Position, MCOM_SPAWN_ZONE_HEIGHT) then
+			s_OnMesh[#s_OnMesh + 1] = l_Position
+		end
+	end
+	s_Spawns = #s_OnMesh > 0 and s_OnMesh or s_Spawns
 	if #s_Spawns == 0 then
 		return
 	end

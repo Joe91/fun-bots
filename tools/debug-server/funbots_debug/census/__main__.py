@@ -680,6 +680,9 @@ def command_connect(options) -> int:
     map_file = options.mapfiles / f"{name}.map"
     census_file = options.census / f"{name}.json.gz"
     shapes = record.area_shapes(load(census_file)) if census_file.is_file() else []
+    # The other layouts of the level: their foot paths join islands too far apart for a walk.
+    refs = {file.stem: MapData.load(file) for file in sorted(options.mapfiles.glob(f"{level}_*.map"))
+            if file.stem != name}
     # A new round: the bots of a census are dead until the next level, and rush starts at stage 1.
     switch_level(server, level, mode, fresh=True)
     settings = quiet_bots(server)
@@ -693,7 +696,7 @@ def command_connect(options) -> int:
             walked, later = connect.record_round(server, name, networks, data,
                                                  log=lambda message: print(message, flush=True),
                                                  max_gap=options.max_gap, second_way=not options.no_second,
-                                                 shapes=shapes)
+                                                 shapes=shapes, refs=refs)
             if walked and not options.dry_run:
                 indices = connect.add_paths(data, walked)
                 data.save(map_file)

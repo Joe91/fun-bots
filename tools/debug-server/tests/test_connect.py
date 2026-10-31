@@ -66,6 +66,38 @@ class ConnectTest(unittest.TestCase):
         self.assertAlmostEqual(abs(via[2]), connect.SECOND_APART)
         self.assertAlmostEqual(via[0], 61.0)
 
+    def test_borrow_a_path_of_another_layout(self):
+        networks = _bigger()
+        found = connect.islands(networks, MapData({}))
+        order = [island["zones"][0] for island in found]
+        a, b = order.index("mcom 1"), order.index("mcom 2")
+        # Recorded the other way round (x 96 to 30), the first waypoint walked back and forth; another one too far off.
+        path = _path(1, 30, 96)
+        path.nodes = path.nodes[::-1]
+        for number, node in enumerate(path.nodes, start=1):
+            node.point = number
+        path.nodes[0].input = 0xFF04
+        path.nodes[5].input = 0x13
+        refs = {"X_RushLarge0": MapData({1: path, 2: _path(2, 60, 80)})}
+        borrowed = connect.borrow(networks, found, a, b, refs)
+        self.assertIn("path 1 of X_RushLarge0", borrowed["spawn"])
+        points = borrowed["points"]
+        # From the mesh of mcom 1 (x 22) over the straight piece to x 30, along the path to the mesh of mcom 2 (x 100).
+        self.assertEqual(points[0], [22.0, 0.0, 0.0])
+        self.assertEqual(points[-1], [100.0, 0.0, 0.0])
+        self.assertTrue(all(p[0] <= q[0] for p, q in zip(points, points[1:])))
+        self.assertEqual(len(borrowed["inputs"]), len(points))
+        # The loop option stays behind, the jump (extra-mode) goes along, the straight piece at the speed only.
+        self.assertNotIn(0xFF04, borrowed["inputs"])
+        self.assertIn(0x13, borrowed["inputs"])
+        self.assertEqual(borrowed["inputs"][0], 3)
+        self.assertIsNone(connect.borrow(networks, found, a, b, {"X_RushLarge0": MapData({2: _path(2, 60, 80)})}))
+
+        data = MapData({})
+        index = connect.add_paths(data, [borrowed])[0]
+        self.assertFalse(data.paths[index].loops)
+        self.assertEqual(data.paths[index].nodes[-1].input, borrowed["inputs"][-1])
+
 
 if __name__ == "__main__":
     unittest.main()

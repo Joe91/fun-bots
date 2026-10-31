@@ -649,7 +649,11 @@ It joins the islands of the mesh (the parts that don't reach each other over mes
 first, then a second way between the objectives that follow each other (through a point 25 m to the side). Each way
 is planned with the rays of the game and walked by a bot of the team whose spawn is there (rush: the combat-areas are
 the team's own), written, cut and loaded into the running round (command `paths_reload`). A way that leaves the
-combat-area of the rush stage waits: with `--stages` the bots play until the next stage, then it is tried again.
+combat-area of the rush stage waits: with `--stages` the bots play until the next stage, then it is tried again
+(with fewer defenders meanwhile, `RUSH_DEFENDER_FACTOR` 0.7 at runtime: with as many as attackers they often held).
+Islands too far apart for a walk (`--max-gap`, 400 m) get a foot path of another layout of the level instead, the
+shortest one with its ends at most 15 m from both (MP_013 Squad Rush: the jump from the summit in rush), with a
+straight piece from each end to the mesh.
 
 ### Paths: trimmed at the mesh
 
