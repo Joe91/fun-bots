@@ -263,10 +263,21 @@ class TrimTest(unittest.TestCase):
     def test_thin_junctions(self):
         walk = _path(1, _line(0, 40, 0))
         data = MapData({1: walk})
+        # Points 5 and 9 on one part of the mesh (over 6): twins, the one at the end of the path stays.
         networks = {"attach": [[1, 1, 5, 1.0, [0, 0, 0], []], [1, 2, 9, 1.0, [2, 0, 0], []],
-                               [1, len(walk.nodes), 7, 1.0, [40, 0, 0], []]]}
+                               [1, len(walk.nodes), 7, 1.0, [40, 0, 0], []]],
+                    "edges": [[5, 6, 1.0, []], [6, 9, 1.0, []]]}
         self.assertEqual(navpaths.thin_junctions(data, networks), 1)
         self.assertEqual([entry[1] for entry in networks["attach"]], [1, len(walk.nodes)])
+
+    def test_thin_junctions_keeps_a_bridge(self):
+        # A short path between two parts of the mesh (5 and 9 not connected): both junctions stay.
+        walk = _path(1, _line(0, 8, 0))
+        data = MapData({1: walk})
+        networks = {"attach": [[1, 1, 5, 1.0, [0, 0, 0], []], [1, len(walk.nodes), 9, 1.0, [8, 0, 0], []]],
+                    "edges": [[5, 6, 1.0, []], [9, 10, 1.0, []]]}
+        self.assertEqual(navpaths.thin_junctions(data, networks), 0)
+        self.assertEqual(len(networks["attach"]), 2)
 
 
 if __name__ == "__main__":

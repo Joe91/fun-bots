@@ -42,6 +42,23 @@ with the **Live** tab open (*Findings* lists bots stuck on the mesh) and commit 
 | Check | rays of the game over the mesh, then the cut again: drops connections through walls | `python -m funbots_debug.census check <map>`, then the cut |
 | Report | the checks of the census | `python -m funbots_debug.census report census/<map>.json.gz` |
 
+## Without recording: paths by bots
+
+A layout can get its paths from bots instead (first done for MP_012 Squad Rush):
+
+1. An empty waypoint-file (header and the info line) in `mapfiles/`, imported into `mod.db` together with an empty
+   mesh (Maps tab: Import), else the mod loads no mesh for the level.
+2. Census (`--apply`), twice on a rush layout: the first finds the spawns; the MCOMs of the engine are taken near
+   them, numbered by the stages of the spawn layers (`base1`, `base2`), and the second census measures them.
+3. `python -m funbots_debug.census connect <map> --stages`: bots walk the ways between the parts of the mesh and two
+   ways between the objectives that follow each other; rush layouts are played stage by stage (README, *A level
+   recorded by bots*).
+4. Play it (Live tab), commit.
+
+Vehicle paths: `census trace --from ... --to ... --vehicle NAME --test-vehicles ...`, or where another layout of the
+level has roads `census roads` (README; Alborz Tank Superiority from the conquest roads: some of them leave the
+combat-area of tank superiority, the drives show where).
+
 ## More paths for a level that is cut already
 
 1. In the game: load the level, record the new paths (linked to the old ones), save.

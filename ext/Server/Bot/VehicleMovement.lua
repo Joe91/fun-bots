@@ -404,6 +404,8 @@ end
 
 -- A point of a remote drive closer than this (horizontally) is reached.
 local REMOTE_DRIVE_REACHED = 4.0
+-- Points looked ahead for one that is reached already.
+local REMOTE_DRIVE_LOOKAHEAD = 4
 
 ---Driven by the debug-server (Debug/BotWalker.lua, command drive): along the points it was given, to the last one. No
 ---obstacle handling: where the vehicle gets stuck is the answer.
@@ -415,11 +417,16 @@ function VehicleMovement:_UpdateRemoteDrive(p_Bot)
 	end
 	local s_Here = s_Vehicle.transform.trans
 	local s_Points = p_Bot._FollowWayPoints
-	while #s_Points > 0 do
-		local s_Position = s_Points[1].Position
-		if (s_Position.x - s_Here.x) ^ 2 + (s_Position.z - s_Here.z) ^ 2 > REMOTE_DRIVE_REACHED ^ 2 then
-			break
+	-- The last of the next few points that is reached: the ones before it were passed (a curve cut short; else the
+	-- vehicle turned back to them on a slope and stayed there, XP3_Alborz).
+	local s_Passed = 0
+	for l_Index = 1, math.min(#s_Points, REMOTE_DRIVE_LOOKAHEAD) do
+		local s_Position = s_Points[l_Index].Position
+		if (s_Position.x - s_Here.x) ^ 2 + (s_Position.z - s_Here.z) ^ 2 <= REMOTE_DRIVE_REACHED ^ 2 then
+			s_Passed = l_Index
 		end
+	end
+	for _ = 1, s_Passed do
 		table.remove(s_Points, 1)
 	end
 	if #s_Points == 0 then

@@ -627,6 +627,30 @@ through (test a tank and a jeep for a road everything drives). A vehicle standin
 obstacle: the way is planned from points around it. Vehicles never switch onto such a path when it leads nowhere else
 (`PathSwitcher`: no other link, no loop, not the objective), only the vehicles that start on it drive it.
 
+Where another layout of the level has vehicle paths (the roads players drove), `census roads` composes routes over
+them and has bots drive each with the vehicles of the team; where one leaves the combat-area (the drives tell it in
+all modes), gets stuck or is wrecked, the roads around that spot are left out and the route is composed again. The
+speeds players drove go onto the new waypoints (slow before the curves):
+```
+python -m funbots_debug.census roads XP3_Alborz_TankSuperiority0 --refs XP3_Alborz_ConquestLarge0,XP3_Alborz_ConquestSmall0 \
+    --from 553,548,-88 --to 450.5,420.4,442.6 --team 1 --vehicles M1Abrams,M1128 --objectives "base us,a" --write
+```
+
+### A level recorded by bots
+
+A layout without any paths gets them from bots (`census/connect.py`): an empty waypoint-file (header and info line),
+imported into `mod.db` with its mesh (else the mod doesn't load the mesh), the census twice (the first finds the
+spawns; on a new rush level the MCOMs of the engine are taken near those spawns, the second census measures them),
+then
+```
+python -m funbots_debug.census connect MP_012_SquadRush0 --stages
+```
+It joins the islands of the mesh (the parts that don't reach each other over mesh and paths) like a tree, closest
+first, then a second way between the objectives that follow each other (through a point 25 m to the side). Each way
+is planned with the rays of the game and walked by a bot of the team whose spawn is there (rush: the combat-areas are
+the team's own), written, cut and loaded into the running round (command `paths_reload`). A way that leaves the
+combat-area of the rush stage waits: with `--stages` the bots play until the next stage, then it is tried again.
+
 ### Paths: trimmed at the mesh
 
 In the areas of the mesh the bots walk the mesh, between them the recorded paths (as released, with their links: the

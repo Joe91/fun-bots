@@ -25,6 +25,7 @@ from __future__ import annotations
 import heapq
 import json
 import math
+import time
 from dataclasses import dataclass, field
 from pathlib import Path
 
@@ -411,13 +412,23 @@ def resample(points: list[list[float]], spacing: float = SPACING) -> list[list[f
     return result
 
 
-def walk(server, points: list[list[float]], timeout: float = 240.0, vehicle: int | None = None) -> dict:
-    """A bot walks the points, or drives them in the vehicle (its instance id)."""
+def walk(server, points: list[list[float]], timeout: float = 240.0, vehicle: int | None = None,
+         team: int | None = None) -> dict:
+    """A bot walks the points, or drives them in the vehicle (its instance id). team: a bot of this team (1, 2): the
+    combat-areas of rush are the team's own (the defenders don't get into the spawn of the attackers)."""
     args = {"points": points, "speed": "normal", "stuck": 6, "timeout": timeout}
+    if team is not None:
+        args["team"] = team
     if vehicle is not None:
         args.update(vehicle=vehicle, stuck=10)
     answer = server.request("/api/command?wait=" + str(int(timeout) + 30), {
         "type": "walk" if vehicle is None else "drive", "args": args}, timeout=timeout + 40)
+    # The debug-server waits at most 120 s for an answer: a long way (a road of 800 m) is asked for until it is done.
+    end = time.monotonic() + timeout + 60
+    while answer.get("status") in ("queued", "sent") and answer.get("id") is not None and time.monotonic() < end:
+        time.sleep(2.0)
+        answer = next((entry for entry in server.request("/api/commands") or [] if entry.get("id") == answer["id"]),
+                      answer)
     if answer.get("status") != "ok":
         raise RuntimeError(f"walk: {answer.get('error') or answer.get('status')}")
     return answer.get("result") or {}
@@ -463,10 +474,12 @@ def link_of(gap: Gap, end: list[float]) -> tuple[int, int] | None:
 
 def record_gap(server, gap: Gap, log=print, shapes: list | None = None, profile: Profile = FOOT,
                vehicle: int | None = None, margin: float = MARGIN,
-               via: list[list[float]] | None = None) -> list[list[float]] | None:
+               via: list[list[float]] | None = None, stop_at_border: bool = False,
+               team: int | None = None) -> list[list[float]] | None:
     """Plans, walks (drives: vehicle) and replans the way of one gap. The way the bot walked, or None. shapes:
     area_shapes. margin: how far the way may go beyond the box around start and goal. via: points the way goes through,
-    in this order (another way than the shortest one)."""
+    in this order (another way than the shortest one). stop_at_border: no way round where the bot left the combat-area
+    (the goal is outside of it in this rush stage)."""
     rays = Rays(server)
     # One planner per leg (start, via..., goal), each with the box around its own ends.
     ends = [gap.best[0]] + list(via or []) + [gap.best[1]]
@@ -501,13 +514,16 @@ def record_gap(server, gap: Gap, log=print, shapes: list | None = None, profile:
         points = resample(smooth(rays, cells, profile), profile.spacing)
         log(f"    try {attempt}: {len(cells)} cells -> {len(points)} points, {rays.count} rays; "
             f"{'walking' if vehicle is None else 'driving'}")
-        result = walk(server, points, vehicle=vehicle)
+        result = walk(server, points, vehicle=vehicle, team=team)
         status = result.get("status")
         log(f"    walked: {status}, {result.get('reached')}/{len(points)} points in {result.get('time')} s")
         if status == "done":
             # The points it walked: the trail itself starts with the turn after it was put there.
             return points
         if status not in ("stuck", "border", "missed") or not result.get("pos"):
+            return None
+        if status == "border" and stop_at_border:
+            log(f"    border at {[round(c, 1) for c in result['pos']]}: left for later")
             return None
         radius = BORDER_RADIUS if status == "border" else None
         blocked = sum(planner.block_near(result["pos"], radius) for planner in planners)

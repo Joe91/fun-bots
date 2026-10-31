@@ -13,6 +13,8 @@ DebugCommands = class('DebugCommands')
 --   nodes           {}                          streams all waypoints as "nodes" events
 --   paths_apply     { paths, save }             objectives, loop and links from the labeler of the debug-server
 --                                               (funbots_debug/paths), see DebugCommands.PathsApply
+--   paths_reload    {}                          the waypoints and the mesh of the level again from mod.db, the round
+--                                               goes on (paths recorded by bots in a later rush stage)
 --   scan            see MapScanner:Start        streams the scan as "scan_row" events
 --   scan_stop       { scan }                    stops one (or all) scans
 --   census          see MapCensus:Start         everything about the level for the waypoint-tools, streamed as
@@ -139,6 +141,7 @@ function DebugCommands:__init()
 	m_DebugBridge:RegisterCommand('bot', self.Bot)
 	m_DebugBridge:RegisterCommand('nodes', self.Nodes)
 	m_DebugBridge:RegisterCommand('paths_apply', self.PathsApply)
+	m_DebugBridge:RegisterCommand('paths_reload', self.PathsReload)
 	m_DebugBridge:RegisterCommand('scan', self.Scan)
 	m_DebugBridge:RegisterCommand('scan_stop', self.ScanStop)
 	m_DebugBridge:RegisterCommand('census', self.Census)
@@ -571,6 +574,13 @@ end
 function DebugCommands.ZoneProbe(p_Args, p_Bridge, p_Command)
 	m_ZoneProbe:Start(p_Bridge, p_Command.id)
 	return DebugBridge.ASYNC
+end
+
+---The waypoints and the mesh of the level again from mod.db (NodeEditor:Reload, then NavZones and GameDirector as at
+---the end of a load): what a cut wrote there, without a new round.
+function DebugCommands.PathsReload()
+	m_NodeEditor:Reload()
+	return { map = m_NodeCollection:GetMapName() }
 end
 
 function DebugCommands.NavZonesApply(p_Args)

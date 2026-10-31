@@ -378,8 +378,20 @@ def _places(path: PathData, points: set[int]) -> int:
 def thin_junctions(data: MapData, networks: dict) -> int:
     """One junction per place of a foot path (PLACE_DISTANCE along it): the one closest to the end of the path. Two
     junctions next to each other with different points of the mesh let the bots go off the mesh at the one and onto it
-    at the other, again and again. Returns how many were dropped."""
+    at the other, again and again. Junctions onto different parts of the mesh stay: the path is the way between them
+    (a gap of 8 m between two islands, recorded by census connect). Returns how many were dropped."""
     attach = networks.get("attach") or []
+    owner: dict[int, int] = {}
+
+    def part(point: int) -> int:
+        owner.setdefault(point, point)
+        while owner[point] != point:
+            owner[point] = owner[owner[point]]
+            point = owner[point]
+        return point
+
+    for edge in networks.get("edges") or []:
+        owner[part(int(edge[0]))] = part(int(edge[1]))
     by_path: dict[int, list] = defaultdict(list)
     for entry in attach:
         path = data.paths.get(int(entry[0]))
@@ -398,9 +410,13 @@ def thin_junctions(data: MapData, networks: dict) -> int:
             if entry is not None and cluster and along[int(entry[1]) - 1] - along[int(cluster[0][1]) - 1] <= PLACE_DISTANCE:
                 cluster.append(entry)
                 continue
-            if len(cluster) > 1:
-                keep = min(cluster, key=lambda item: min(int(item[1]) - 1, count - int(item[1])))
-                drop.update(id(item) for item in cluster if item is not keep)
+            by_part: dict[int, list] = defaultdict(list)
+            for item in cluster:
+                by_part[part(int(item[2]))].append(item)
+            for twins in by_part.values():
+                if len(twins) > 1:
+                    keep = min(twins, key=lambda item: min(int(item[1]) - 1, count - int(item[1])))
+                    drop.update(id(item) for item in twins if item is not keep)
             cluster = [entry] if entry is not None else []
     networks["attach"] = [entry for entry in attach if id(entry) not in drop]
     return len(drop)

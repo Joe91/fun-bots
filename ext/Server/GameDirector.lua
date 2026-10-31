@@ -177,6 +177,12 @@ function GameDirector:OnLevelLoaded()
 end
 
 function GameDirector:OnLoadFinished()
+	if self.m_MapCompletelyLoaded then
+		-- The waypoints again during the round (command paths_reload): the rush stage and what is known stay, else
+		-- each load counted the stage up (_InitObjectives).
+		self:ReloadObjectives()
+		return
+	end
 	self.m_MapCompletelyLoaded = true
 	-- parse all objectives
 	self:_InitObjectives()
@@ -1344,6 +1350,14 @@ function GameDirector:OnCombatArea(p_Player, p_Left)
 		s_Bot:AbortAttack()
 		s_Bot._JetAbortAttackActive = false
 		s_Bot._VehicleTakeoffTimer = JET_RETURN_TIME
+		return
+	end
+	-- A bot of the debug-server that walks or drives a way (BotWalker): it tells where the way left the combat-area, in
+	-- all modes (tank superiority: the roads of conquest lead out of it).
+	if s_Bot._RemoteWalk ~= nil then
+		if p_Left then
+			s_Bot.m_Border = { Left = SharedUtils:GetTime(), Returned = nil, Inverted = false }
+		end
 		return
 	end
 	if not Globals.IsRush then
@@ -2955,8 +2969,12 @@ function GameDirector:_InitObjectives()
 				end
 			end
 		end
-		-- No paths to the MCOMs at all (a new level): the MCOMs of the engine, numbered by their order.
-		if next(self._McomPositions) == nil and next(m_NavZones:GetZones()) == nil then
+		-- No paths to the MCOMs and no MCOM-zones (a new level): the MCOMs of the engine, numbered by their order.
+		local s_McomZones = false
+		for _, l_Zone in pairs(m_NavZones:GetZones()) do
+			s_McomZones = s_McomZones or l_Zone.Kind == 'mcom'
+		end
+		if next(self._McomPositions) == nil and not s_McomZones then
 			self:_NumberEngineMcoms()
 		end
 		-- Without the path to arm it: the middle of its zone.
@@ -3653,9 +3671,13 @@ end
 local MCOM_SAME = 1.0
 -- An MCOM is close to the waypoints players recorded; the level also has interactions far off (other layouts, dummies).
 local MCOM_NEAR_WAYPOINTS = 40.0
+-- A level without waypoints yet: an MCOM is this close to a spawn of the mode (horizontal, vertical metres). The
+-- dummies are far off (MP_012 Squad Rush: 450 m under the ground, 600 m outside of the level).
+local MCOM_NEAR_SPAWN = 120.0
+local MCOM_NEAR_SPAWN_HEIGHT = 25.0
 
 ---Whether an interaction of the engine is an MCOM of the level: close to the waypoints, or to an MCOM-zone of the mesh
----(the paths are trimmed there).
+---(the paths are trimmed there), or to a spawn-zone of the mode (a new level, paths recorded by bots).
 ---@param p_Position Vec3
 ---@return boolean
 function GameDirector:_NearWaypointsOrMcomZone(p_Position)
@@ -3665,7 +3687,20 @@ function GameDirector:_NearWaypointsOrMcomZone(p_Position)
 		end
 	end
 	local s_Node = self:FindClosestPath(p_Position, false, true, nil, 1)
-	return s_Node ~= nil and s_Node.Position:Distance(p_Position) < MCOM_NEAR_WAYPOINTS
+	if s_Node ~= nil and s_Node.Position:Distance(p_Position) < MCOM_NEAR_WAYPOINTS then
+		return true
+	end
+	-- Paths recorded by bots end at the mesh of the spawns, farther from the MCOMs.
+	for _, l_Zone in pairs(m_NavZones:GetZones()) do
+		local s_DeltaX = l_Zone.Center.x - p_Position.x
+		local s_DeltaZ = l_Zone.Center.z - p_Position.z
+		if (l_Zone.Kind == 'base' or l_Zone.Kind == 'spawn')
+			and math.sqrt(s_DeltaX * s_DeltaX + s_DeltaZ * s_DeltaZ) < MCOM_NEAR_SPAWN
+			and math.abs(l_Zone.Center.y - p_Position.y) < MCOM_NEAR_SPAWN_HEIGHT then
+			return true
+		end
+	end
+	return false
 end
 
 ---The positions of the MCOMs of the engine (its interactions, GameInteractionEntityData, ~1 m from where a soldier
@@ -3706,12 +3741,59 @@ function GameDirector:_FindEngineMcoms()
 	return self.m_EngineMcoms
 end
 
+---The MCOMs of the engine by the stages of the spawn layers ("layer1_base1_sr"): the ones of stage N (one in squad
+---rush, else two) are the closest to where the defenders spawn in stage N. The level can have more interactions than
+---MCOMs of the mode (MP_012 Squad Rush: one of rush in the deployment of the attackers): those get no number.
+---@param p_Mcoms Vec3[]
+---@return boolean false without spawns of stages (numbered from the attackers' spawn then)
+function GameDirector:_NumberMcomsByStages(p_Mcoms)
+	local s_Sums = {}
+	for _, l_Point in ipairs(m_SpawnPoints:GetAll()) do
+		if l_Point.Stage ~= nil and l_Point.Team == TeamId.Team2 then
+			local s_Sum = s_Sums[l_Point.Stage] or { Position = Vec3(0, 0, 0), Count = 0 }
+			s_Sum.Position = s_Sum.Position + l_Point.Position
+			s_Sum.Count = s_Sum.Count + 1
+			s_Sums[l_Point.Stage] = s_Sum
+		end
+	end
+	local s_Stages = {}
+	for l_Stage in pairs(s_Sums) do
+		s_Stages[#s_Stages + 1] = l_Stage
+	end
+	if #s_Stages == 0 then
+		return false
+	end
+	table.sort(s_Stages)
+	local s_Left = {}
+	for _, l_Position in ipairs(p_Mcoms) do
+		s_Left[#s_Left + 1] = l_Position
+	end
+	local s_PerStage = Globals.IsSquadRush and 1 or 2
+	local s_Index = 0
+	for _, l_Stage in ipairs(s_Stages) do
+		local s_Defenders = s_Sums[l_Stage].Position * (1.0 / s_Sums[l_Stage].Count)
+		table.sort(s_Left, function(p_A, p_B)
+			return (p_A.x - s_Defenders.x) ^ 2 + (p_A.z - s_Defenders.z) ^ 2
+				< (p_B.x - s_Defenders.x) ^ 2 + (p_B.z - s_Defenders.z) ^ 2
+		end)
+		for _ = 1, math.min(s_PerStage, #s_Left) do
+			s_Index = s_Index + 1
+			self._McomPositions[s_Index] = table.remove(s_Left, 1)
+		end
+	end
+	m_Logger:Write("MCOMs numbered by the defenders' spawns of " .. #s_Stages .. " stages: " .. s_Index)
+	return true
+end
+
 ---Rush without recorded paths to the MCOMs ("mcom N interact"): the MCOMs of the engine get their numbers. Stage 1 is
 ---the pair (squad rush: the one) closest to the spawn of the attackers, each next stage the closest to the one before.
 ---Right on 24 of 26 levels with known numbers; check the numbers of a new level (Maps tab, map view).
 function GameDirector:_NumberEngineMcoms()
 	local s_Mcoms = self:_FindEngineMcoms()
 	if #s_Mcoms == 0 then
+		return
+	end
+	if self:_NumberMcomsByStages(s_Mcoms) then
 		return
 	end
 	-- Where the attackers start: their spawns that are on (all of them if none is on yet).

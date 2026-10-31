@@ -34,7 +34,7 @@ from pathlib import Path
 
 from ..backups import backup
 from ..paths.mapfile import MapData
-from . import check, lint, navpaths, navzones, record
+from . import check, connect, lint, navpaths, navzones, record, roads
 from .report import build_report
 from .store import load
 
@@ -659,6 +659,111 @@ def command_record(options) -> int:
     return status
 
 
+def _ensure_bot(server: Server) -> None:
+    """Living bots of both teams to walk the ways (after a census the bots are dead until the next level)."""
+    end = time.monotonic() + QUIET_SPAWN_TIMEOUT
+    while time.monotonic() < end:
+        alive = {bot.get("team") for bot in server.request("/api/state").get("bots") or [] if bot.get("alive")}
+        if {1, 2} <= alive:
+            return
+        for team in ({1, 2} - alive):
+            server.rcon("funbots.spawn", "2", f"Team{team}")
+        time.sleep(8)
+
+
+def command_connect(options) -> int:
+    """Records the paths of a level by itself (connect.py): ways between the islands of the mesh, walked by a bot, cut
+    and loaded into the running round. With --stages through all rush stages: the bots play between them."""
+    server = Server(options.server)
+    name = Path(options.map).name.split(".")[0]
+    level, _, mode = name.rpartition("_")
+    map_file = options.mapfiles / f"{name}.map"
+    census_file = options.census / f"{name}.json.gz"
+    shapes = record.area_shapes(load(census_file)) if census_file.is_file() else []
+    # A new round: the bots of a census are dead until the next level, and rush starts at stage 1.
+    switch_level(server, level, mode, fresh=True)
+    settings = quiet_bots(server)
+    total = 0
+    try:
+        for round_index in range(1, options.rounds + 1):
+            _ensure_bot(server)
+            networks = json.loads((options.navzones / f"{name}.json").read_text(encoding="utf-8"))
+            data = MapData.load(map_file)
+            print(f"{name}: round {round_index}", flush=True)
+            walked, later = connect.record_round(server, name, networks, data,
+                                                 log=lambda message: print(message, flush=True),
+                                                 max_gap=options.max_gap, second_way=not options.no_second,
+                                                 shapes=shapes)
+            if walked and not options.dry_run:
+                indices = connect.add_paths(data, walked)
+                data.save(map_file)
+                for entry, index in zip(walked, indices):
+                    entry["path"] = index
+                record.save_recorded(name, walked)
+                total += len(walked)
+                print(f"  paths {indices} written, cut:", flush=True)
+                cut = argparse.Namespace(maps=[name], mapfiles=options.mapfiles, navzones=options.navzones,
+                                         census=options.census, write=True, db=options.db, verbose=False)
+                if command_navpaths(cut) != 0:
+                    return 1
+                answer = server.request("/api/command?wait=60", {"type": "paths_reload", "args": {}}, timeout=70)
+                print(f"  loaded into the round: {answer.get('status')}", flush=True)
+                time.sleep(10)
+                continue
+            if not later or not options.stages:
+                break
+            restore_bots(server, settings)
+            moved = connect.wait_next_stage(server, log=lambda message: print(message, flush=True))
+            settings = quiet_bots(server)
+            if not moved:
+                break
+    finally:
+        restore_bots(server, settings)
+    print(f"{name}: {total} paths recorded")
+    return 0
+
+
+def command_roads(options) -> int:
+    """Vehicle paths from the roads of other layouts of the level (roads.py), driven by bots; --write adds them."""
+    server = Server(options.server)
+    name = Path(options.map).name.split(".")[0]
+    level, _, mode = name.rpartition("_")
+    map_file = options.mapfiles / f"{name}.map"
+    refs = [MapData.load(options.mapfiles / f"{ref}.map") for ref in options.refs.split(",")]
+    network = roads.Roads(refs)
+    blocked = set()
+    for text in options.block or []:
+        bx, bz, radius = (float(value) for value in text.split(","))
+        blocked |= {index for index, pos in enumerate(network.nodes) if math.hypot(pos[0] - bx, pos[2] - bz) <= radius}
+    print(f"{name}: {len(network.nodes)} waypoints of roads, {len(blocked)} left out", flush=True)
+    switch_level(server, level, mode)
+    settings = quiet_bots(server)
+    found = []
+    try:
+        _ensure_bot(server)
+        used: set = set()
+        for number in range(1, options.k + 1):
+            print(f"  route {number}", flush=True)
+            points, _ = roads.drive_route(server, network, options.start, options.to, options.team,
+                                          options.vehicles.split(","), lambda n, p: _pick_vehicle(server, n, p),
+                                          tries=options.tries, start_range=options.start_range,
+                                          goal_range=options.goal_range, blocked=blocked, used=used,
+                                          log=lambda message: print(message, flush=True))
+            if points is None:
+                break
+            found.append(points)
+    finally:
+        restore_bots(server, settings)
+    if found and options.write:
+        data = MapData.load(map_file)
+        objectives = [name.strip() for name in options.objectives.split(",")] if options.objectives else None
+        indices = [roads.add_vehicle_path(data, points, objectives) for points in found]
+        data.save(map_file)
+        print(f"  vehicle paths {indices} written into {map_file}; census and cut next")
+    print(f"{name}: {len(found)} routes")
+    return 0 if found else 1
+
+
 def _position(text: str) -> list[float]:
     values = [float(value) for value in text.replace(" ", "").split(",")]
     if len(values) != 3:
@@ -866,6 +971,41 @@ def main() -> int:
     paths.add_argument("--db", type=Path, metavar="MOD_DB", help="with --write: also into the tables of this mod.db")
     paths.add_argument("-v", "--verbose", action="store_true", help="list the dropped paths")
     paths.set_defaults(handler=command_navpaths)
+
+    roadss = commands.add_parser("roads", help="vehicle paths from the roads of other layouts of the level, driven by "
+                                 "bots (roads.py)")
+    roadss.add_argument("map", help="<Level>_<Mode>, e.g. XP3_Alborz_TankSuperiority0")
+    roadss.add_argument("--refs", required=True, help="the layouts whose vehicle paths are the roads, comma separated")
+    roadss.add_argument("--from", dest="start", type=_position, required=True, metavar="X,Y,Z")
+    roadss.add_argument("--to", type=_position, required=True, metavar="X,Y,Z")
+    roadss.add_argument("--team", type=int, required=True, help="the team whose bots drive (its combat-area)")
+    roadss.add_argument("--vehicles", required=True, help="the vehicles of the team, part of the name, comma separated")
+    roadss.add_argument("--objectives", help='of the paths, e.g. "base us,a"')
+    roadss.add_argument("--block", action="append", metavar="X,Z,R", help="no roads within R m of X,Z (repeatable)")
+    roadss.add_argument("--k", type=int, default=1, help="routes (each next one apart from the ones before)")
+    roadss.add_argument("--tries", type=int, default=6)
+    roadss.add_argument("--start-range", type=float, default=60.0)
+    roadss.add_argument("--goal-range", type=float, default=25.0)
+    roadss.add_argument("--write", action="store_true", help="add the routes as vehicle paths to the waypoint-file")
+    roadss.add_argument("--server", default="http://127.0.0.1:8765", help="address of the debug-server")
+    roadss.add_argument("--mapfiles", type=Path, default=MAPFILES)
+    roadss.set_defaults(handler=command_roads)
+
+    connects = commands.add_parser("connect", help="record the paths of a level with bots: ways between the islands "
+                                   "of the mesh (connect.py)")
+    connects.add_argument("map", help="<Level>_<Mode>, e.g. MP_012_SquadRush0 (census and mesh done)")
+    connects.add_argument("--stages", action="store_true",
+                          help="rush: the bots play to the next stage where a way leaves the combat-area, then on")
+    connects.add_argument("--rounds", type=int, default=12, help="at most this many rounds of joins")
+    connects.add_argument("--max-gap", type=float, default=400.0, help="no way between islands farther apart (m)")
+    connects.add_argument("--no-second", action="store_true", help="no second way between following objectives")
+    connects.add_argument("--dry-run", action="store_true", help="plan and walk, don't write")
+    connects.add_argument("--server", default="http://127.0.0.1:8765", help="address of the debug-server")
+    connects.add_argument("--mapfiles", type=Path, default=MAPFILES)
+    connects.add_argument("--navzones", type=Path, default=NAVZONES)
+    connects.add_argument("--census", type=Path, default=CENSUS)
+    connects.add_argument("--db", type=Path, default=MAPFILES.parent / "mod.db", help="mod.db the cut writes into")
+    connects.set_defaults(handler=command_connect)
 
     lints = commands.add_parser("lint", help="offline checks of the routes over mesh and paths (no game needed)")
     records = commands.add_parser("record", help="record the missing ways of cut-off spawns with a bot (record.py)")
