@@ -166,6 +166,28 @@ local function _Labels(p_PathIndex)
 	return type(s_First) == 'table' and s_First.Data ~= nil and s_First.Data.Objectives or {}
 end
 
+---Whether a vehicle on the path can only come back the way it came: no loop, and all its links lead to p_From (a
+---way out from a vehicle spawn into the roads, XP5_002 D: the dirt bikes in the depot).
+---@param p_PathIndex integer
+---@param p_From integer the path the vehicle is on
+---@return boolean
+local function _IsVehicleDeadEnd(p_PathIndex, p_From)
+	if m_NodeCollection:Loops(p_PathIndex) then
+		return false
+	end
+	local s_Waypoints = m_NodeCollection:Get(nil, p_PathIndex) or {}
+	for l_Index = 1, #s_Waypoints do
+		local l_Links = s_Waypoints[l_Index].Data and s_Waypoints[l_Index].Data.Links or {}
+		for l_LinkIndex = 1, #l_Links do
+			local s_Target = m_NodeCollection:Get(l_Links[l_LinkIndex])
+			if s_Target ~= nil and s_Target.PathIndex ~= p_From and s_Target.PathIndex ~= p_PathIndex then
+				return false
+			end
+		end
+	end
+	return true
+end
+
 ---Whether the path has an action-node (vehicle, MCOM, beacon).
 ---@param p_PathIndex integer
 ---@return boolean
@@ -303,7 +325,10 @@ function PathSwitcher:_GetNewVehiclePath(p_Point, p_Objective, p_TeamId, p_Activ
 			do
 				local s_PathNode = m_NodeCollection:GetFirst(s_NewPoint.PathIndex)
 
-				if s_PathNode.Data.Vehicles ~= nil and #s_PathNode.Data.Vehicles > 0 then -- Check for vehicle-type.
+				-- Not onto a dead end (a way out from a vehicle spawn), unless it leads to the objective.
+				if s_PathNode.Data.Vehicles ~= nil and #s_PathNode.Data.Vehicles > 0
+					and (table.has(s_PathNode.Data.Objectives or {}, p_Objective)
+						or not _IsVehicleDeadEnd(s_NewPoint.PathIndex, p_Point.PathIndex)) then -- Check for vehicle-type.
 					if p_ActiveVehicle ~= nil and p_ActiveVehicle.Terrain ~= nil then
 						local s_VehicleTerrain = p_ActiveVehicle.Terrain
 						local s_isAirPath = false

@@ -301,6 +301,14 @@ class NavzonesTest(unittest.TestCase):
         self.assertEqual(zone["stats"]["parts"], 2)
         self.assertFalse(self._connected(zone))
 
+    def test_objective_keeps_its_mesh_without_paths(self):
+        # No waypoints at all (a level recorded by bots): the room the capture point is in has mesh, the other not.
+        from funbots_debug.census import navzones
+        area = dict(_rooms_area(door=False), center=[15.0, 0.0, 5.0])
+        zone = navzones.build({"paths": "MP_001_ConquestLarge0", "areas": [area], "entities": {}, "nodes": {}})
+        self.assertGreater(len(zone["points"]), 0)
+        self.assertTrue(all(point[0] > 10.0 for point in zone["points"]))
+
     def test_trace_joins_parts(self):
         # No door, but path 3 walks from one room into the other (e.g. over stairs the grid doesn't see).
         from funbots_debug.census import navzones

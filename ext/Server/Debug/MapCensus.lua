@@ -589,7 +589,9 @@ local function _CapturePoints()
 		local s_Entry = {
 			id = p_Entity.instanceId,
 			name = s_CapturePoint.name,
-			objective = g_GameDirector.m_Translations[s_CapturePoint.name],
+			-- A new level has no paths or zones yet to translate the name: the letter of the engine name.
+			objective = g_GameDirector.m_Translations[s_CapturePoint.name]
+				or g_GameDirector:_EngineObjective(s_CapturePoint.name),
 			hq = m_Utilities:IsHq(s_CapturePoint),
 			pos = _Vec(s_CapturePoint.transform.trans),
 			team = s_CapturePoint.team,
@@ -1110,7 +1112,8 @@ function CensusTask:_DefaultAreas()
 			s_Radius = CapturePointEntityData(p_Entity.data).captureRadius
 		end
 		local s_Area = {
-			name = g_GameDirector.m_Translations[s_CapturePoint.name] or s_CapturePoint.name,
+			name = g_GameDirector.m_Translations[s_CapturePoint.name] or g_GameDirector:_EngineObjective(s_CapturePoint.name)
+				or s_CapturePoint.name,
 			kind = s_Hq and 'hq' or 'capturepoint',
 			center = s_CapturePoint.transform.trans:Clone(),
 			radius = s_Radius + s_Margin,

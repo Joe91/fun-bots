@@ -6,7 +6,7 @@ BotWalker = class('BotWalker')
 -- getting around), no path offsets. Used to find and record ways the waypoints are missing (funbots_debug/census:
 -- spawns cut off from the network): the debug-server plans a way with rays, the bot walks it and tells where it got
 -- stuck. Runs as task of the DebugBridge, answers the command at the end.
---   walk       { points = { {x, y, z}, ... }, bot?, team?, speed? = "normal"|"sprint"|"slow", place? = true,
+--   walk       { points = { {x, y, z[, speed]}, ... }, bot?, team?, speed? = "normal"|"sprint"|"slow", place? = true,
 --                stuck? = 6, timeout? = 180 }
 --              -> { status = "done"|"missed"|"stuck"|"border"|"dead"|"timeout"|"stopped", reached, bot, pos, time,
 --                   trail = { {x, y, z}, ... } }
@@ -135,7 +135,10 @@ function BotWalker:Start(p_Bridge, p_CommandId, p_Args, p_Drive)
 	local s_Points = {}
 	for l_Index = 1, #s_Raw do
 		local l_Raw = s_Raw[l_Index]
-		s_Points[l_Index] = { SpeedMode = s_Speed, Position = Vec3(l_Raw[1], l_Raw[2], l_Raw[3]) }
+		-- A fourth number: the speed of this point, as on a waypoint (2 crouch / slow vehicle ... 4 run, inputVar).
+		local s_PointSpeed = tonumber(l_Raw[4])
+		s_Points[l_Index] = { SpeedMode = s_PointSpeed ~= nil and s_PointSpeed > 0 and s_PointSpeed or s_Speed,
+			Position = Vec3(l_Raw[1], l_Raw[2], l_Raw[3]) }
 	end
 
 	p_Bridge:AddTask(setmetatable({

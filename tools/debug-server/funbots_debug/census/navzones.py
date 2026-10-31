@@ -955,6 +955,26 @@ def spawn_positions(census: dict) -> list[list[float]]:
     return [pos for pos in positions if len(pos) >= 3 and max(abs(float(value)) for value in pos[:3]) >= 1.0]
 
 
+def objective_seeds(census: dict) -> list[list[float]]:
+    """Around the middle of each capture point and MCOM (the middle and a ring of 3 m, at its height; the flag can
+    stand on a base, the MCOM is solid): the mesh
+    there is kept even without a foot path that walks into it (a level recorded by bots, tank superiority: only roads
+    lead to the flag)."""
+    result = []
+    for area in census.get("areas") or []:
+        if area.get("kind") not in ("capturepoint", "mcom"):
+            continue
+        center = as_list(area.get("center"))
+        if len(center) < 3:
+            continue
+        result.append(list(center[:3]))
+        for radius in (3.0,):
+            for index in range(8):
+                angle = index * math.pi / 4
+                result.append([center[0] + radius * math.cos(angle), center[1], center[2] + radius * math.sin(angle)])
+    return result
+
+
 # The checks blocked the way to every point up to LOOSE_RANGE: a point up to this far is taken (checked again then),
 # not the end cut back. The points move with every new mesh (each is placed after the ones with more clearance): on
 # MP_001 Squad Rush the free point 13 m from path 1 came to lie 17 m away, the spawn us 1 was cut off.
@@ -1058,7 +1078,8 @@ def build(census: dict, attach: dict | None = None, checks: dict | None = None, 
         soldier_attach = (_walked(grid, attach_nodes, attach_nodes.foot, ATTACH_HEIGHT)
                           + _walked(grid, attach_nodes, _roads(attach_nodes), ROAD_ATTACH_HEIGHT), attach_nodes)
     soldier = _network(grid, clearance, set(grid.surfaces), _walked(grid, nodes, nodes.foot, ATTACH_HEIGHT), nodes,
-                       inside_any, SOLDIER, True, soldier_attach, spawns=spawn_positions(census),
+                       inside_any, SOLDIER, True, soldier_attach,
+                       spawns=spawn_positions(census) + objective_seeds(census),
                        keep_corners=(checks or {}).get("blockedCentered"))
     soldier = _reattach(check_apply(soldier, checks, spawn_positions(census)), checks)
     nav_paths = {int(path) for path, entry in (attach or {}).items() if entry.get("nav")}

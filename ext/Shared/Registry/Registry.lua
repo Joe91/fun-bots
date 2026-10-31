@@ -395,7 +395,7 @@ Registry = {
 		PROBABILITY_SPAWN_FOR_VEHICLE = 50,
 		-- Rush: the defenders (always Team2) get this share of the bots of their team (balanced_teams), e.g. to test
 		-- the attack. 1.0 = as many as the attackers.
-		RUSH_DEFENDER_FACTOR = 0.85,
+		RUSH_DEFENDER_FACTOR = 1.0,
 		-- Bots spawn at the spawn-points of the game in all game modes. Else only in TDM, SDM, GunMaster, AirSuperiority,
 		-- Domination, conquest and rush; elsewhere on the waypoints (the game-spawns of the other modes don't work on most
 		-- levels).

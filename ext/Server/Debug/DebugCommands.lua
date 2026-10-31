@@ -13,13 +13,17 @@ DebugCommands = class('DebugCommands')
 --   nodes           {}                          streams all waypoints as "nodes" events
 --   paths_apply     { paths, save }             objectives, loop and links from the labeler of the debug-server
 --                                               (funbots_debug/paths), see DebugCommands.PathsApply
+--   paths_reload    {}                          the waypoints and the mesh of the level again from mod.db, the round
+--                                               goes on (paths recorded by bots in a later rush stage)
 --   scan            see MapScanner:Start        streams the scan as "scan_row" events
 --   scan_stop       { scan }                    stops one (or all) scans
 --   census          see MapCensus:Start         everything about the level for the waypoint-tools, streamed as
 --                                               "census_*" events (funbots_debug/census)
 --   census_stop     {}                          stops a running census
 --   spawns          {}                          -> the spawn-entities and the alternate spawns of the running mode
---   entities        { type, pos, radius }       -> the entities of the type (near pos): { id, data, pos }
+--   entities        { type, pos, radius }       -> the entities of the type (near pos): { id, data, pos, owners }
+--                                               owners: the blueprints it is part of and their partitions (the layer
+--                                               of the mode, e.g. which layout an MCOM belongs to)
 --   navzones_apply  { map, mesh, save }         the walking mesh and its zones (NavZones.lua), save: into mod.db
 --   rcon            { command, args }           any RCON-command (also the vanilla ones) -> { lines }
 --   chat            { message, player }         a chat-command, as the player with that id or (no player) as
@@ -139,6 +143,7 @@ function DebugCommands:__init()
 	m_DebugBridge:RegisterCommand('bot', self.Bot)
 	m_DebugBridge:RegisterCommand('nodes', self.Nodes)
 	m_DebugBridge:RegisterCommand('paths_apply', self.PathsApply)
+	m_DebugBridge:RegisterCommand('paths_reload', self.PathsReload)
 	m_DebugBridge:RegisterCommand('scan', self.Scan)
 	m_DebugBridge:RegisterCommand('scan_stop', self.ScanStop)
 	m_DebugBridge:RegisterCommand('census', self.Census)
@@ -540,10 +545,25 @@ function DebugCommands.Entities(p_Args)
 			s_Position = s_Ok and s_Position or nil
 		end
 		if s_Near == nil or (s_Position ~= nil and s_Position:Distance(s_Near) <= s_Radius) then
+			-- The blueprints it is part of, inside out, with the partition each was placed in (the layer of a mode).
+			local s_Owners = {}
+			pcall(function()
+				local s_Bus = s_Entity.bus
+				while s_Bus ~= nil and #s_Owners < 6 do
+					local s_Representative = s_Bus.parentRepresentative
+					if s_Representative ~= nil then
+						local s_Partition = s_Representative.partition
+						s_Owners[#s_Owners + 1] = s_Representative.typeInfo.name .. ' ' ..
+							(s_Partition ~= nil and s_Partition.name or '?')
+					end
+					s_Bus = s_Bus.parent
+				end
+			end)
 			s_Result[#s_Result + 1] = {
 				id = s_Entity.instanceId,
 				data = s_Entity.data ~= nil and s_Entity.data.typeInfo.name or nil,
 				pos = s_Position ~= nil and _Vec(s_Position) or nil,
+				owners = s_Owners,
 			}
 		end
 		s_Entity = s_Iterator:Next()
@@ -571,6 +591,13 @@ end
 function DebugCommands.ZoneProbe(p_Args, p_Bridge, p_Command)
 	m_ZoneProbe:Start(p_Bridge, p_Command.id)
 	return DebugBridge.ASYNC
+end
+
+---The waypoints and the mesh of the level again from mod.db (NodeEditor:Reload, then NavZones and GameDirector as at
+---the end of a load): what a cut wrote there, without a new round.
+function DebugCommands.PathsReload()
+	m_NodeEditor:Reload()
+	return { map = m_NodeCollection:GetMapName() }
 end
 
 function DebugCommands.NavZonesApply(p_Args)
