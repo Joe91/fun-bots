@@ -88,6 +88,13 @@ FOOT = Profile()
 VEHICLE = Profile(cell=2.5, step_up=0.6, step_down=0.6, ground_above=1.6, wall_heights=(0.7, 1.6), headroom=3.0,
                   wall_cost=2.0, side=1.6, width=1.5, sample=1.0, spacing=4.0, piece_max=40.0, goal_range=4.0,
                   goal_height=2.0, block_radius=4.0)
+# Dirt bikes and quads: narrow. The ground is looked for from lower down (a bike spawn under a low roof: XP5_002 D).
+BIKE = Profile(cell=1.5, step_up=0.5, step_down=0.6, ground_above=0.9, wall_heights=(0.6, 1.3), headroom=2.2,
+               wall_cost=2.0, side=0.8, width=0.6, sample=0.75, spacing=3.0, piece_max=25.0, goal_range=3.0,
+               goal_height=2.0, block_radius=3.0)
+PROFILES = {"foot": FOOT, "vehicle": VEHICLE, "bike": BIKE}
+# A start the planner gets nowhere from (a vehicle stands on it: its spawn) is tried from points this far around.
+START_RING = 2.5
 
 
 @dataclass
@@ -455,18 +462,42 @@ def link_of(gap: Gap, end: list[float]) -> tuple[int, int] | None:
 
 
 def record_gap(server, gap: Gap, log=print, shapes: list | None = None, profile: Profile = FOOT,
-               vehicle: int | None = None, margin: float = MARGIN) -> list[list[float]] | None:
+               vehicle: int | None = None, margin: float = MARGIN,
+               via: list[list[float]] | None = None) -> list[list[float]] | None:
     """Plans, walks (drives: vehicle) and replans the way of one gap. The way the bot walked, or None. shapes:
-    area_shapes. margin: how far the way may go beyond the box around start and goal."""
+    area_shapes. margin: how far the way may go beyond the box around start and goal. via: points the way goes through,
+    in this order (another way than the shortest one)."""
     rays = Rays(server)
-    planner = Planner(rays, gap, shapes, profile, margin)
+    # One planner per leg (start, via..., goal), each with the box around its own ends.
+    ends = [gap.best[0]] + list(via or []) + [gap.best[1]]
+    planners = []
+    for index, (a, b) in enumerate(zip(ends, ends[1:])):
+        leg = Gap(gap.spawn, gap.starts if index == 0 else [a], gap.goals if index == len(ends) - 2 else [b], (a, b),
+                  gap.waypoints)
+        planners.append(Planner(rays, leg, shapes, profile, margin))
     # From the spawn points closest to the goal.
-    starts = sorted(gap.starts, key=lambda s: math.dist(s, gap.best[1]))[:6]
+    starts = sorted(gap.starts, key=lambda s: math.dist(s, ends[1]))[:6]
+    # The start itself, if the way begins next to it (see below).
+    first = None
     for attempt in range(1, TRIES + 1):
-        cells = planner.plan(starts)
+        cells = planners[0].plan(starts)
+        if cells is None and first is None and len(planners[0].cache) <= len(starts):
+            # Nothing around the starts: a vehicle stands on it (the spawn of a vehicle), the rays hit it. From the
+            # points around it, the start put in front of the way again.
+            first = starts[0]
+            starts = ring_starts(first)
+            log(f"    try {attempt}: the start is blocked, from {len(starts)} points {START_RING} m around it")
+            cells = planners[0].plan(starts)
+        for planner in planners[1:]:
+            if cells is None:
+                break
+            more = planner.plan([cells[-1]])
+            cells = cells + more[1:] if more is not None else None
         if cells is None:
-            log(f"    try {attempt}: no way found ({len(planner.cache)} cells, {rays.count} rays)")
+            log(f"    try {attempt}: no way found ({sum(len(p.cache) for p in planners)} cells, {rays.count} rays)")
             return None
+        if first is not None:
+            cells = [first] + cells
         points = resample(smooth(rays, cells, profile), profile.spacing)
         log(f"    try {attempt}: {len(cells)} cells -> {len(points)} points, {rays.count} rays; "
             f"{'walking' if vehicle is None else 'driving'}")
@@ -478,18 +509,35 @@ def record_gap(server, gap: Gap, log=print, shapes: list | None = None, profile:
             return points
         if status not in ("stuck", "border", "missed") or not result.get("pos"):
             return None
-        blocked = planner.block_near(result["pos"], BORDER_RADIUS if status == "border" else None)
+        radius = BORDER_RADIUS if status == "border" else None
+        blocked = sum(planner.block_near(result["pos"], radius) for planner in planners)
+        if not blocked:
+            # Off the way (a vehicle that slid aside): around the point it didn't get to, else the same way again.
+            missed = points[min(int(result.get("reached") or 0), len(points) - 1)]
+            blocked = sum(planner.block_near(missed) for planner in planners)
         log(f"    {status} at {[round(c, 1) for c in result['pos']]}: {blocked} cells blocked")
     return None
 
 
-def add_path(data: MapData, points: list[list[float]], link: tuple[int, int] | list | None = None) -> int:
-    """A new foot path with the points (as recorded in the game, no objectives): its index. link: (path, point) of the
-    waypoint its last point is linked to (the way ends at a path, not at the mesh)."""
+def ring_starts(start: list[float], radius: float = START_RING) -> list[list[float]]:
+    """Points around the start (at its height): where the planner begins if the start itself is blocked."""
+    return [[start[0] + radius * math.cos(angle), start[1], start[2] + radius * math.sin(angle)]
+            for angle in (index * math.pi / 4 for index in range(8))]
+
+
+def add_path(data: MapData, points: list[list[float]], link: tuple[int, int] | list | None = None,
+             vehicles: list[str] | None = None, start_link: tuple[int, int] | list | None = None) -> int:
+    """A new path with the points (as recorded in the game, no objectives): its index. link: (path, point) of the
+    waypoint its last point is linked to (the way ends at a path, not at the mesh), start_link the same for its first
+    point. vehicles: a vehicle path ("Vehicles", e.g. ["land"]), else a foot path."""
     index = max(data.paths) + 1 if data.paths else 1
     nodes = [Node(index, number, (p[0], p[1], p[2]), 3, {}) for number, p in enumerate(points, start=1)]
+    if vehicles:
+        nodes[0].data["Vehicles"] = list(vehicles)
     if link:
         nodes[-1].set_links([(int(link[0]), int(link[1]))])
+    if start_link:
+        nodes[0].set_links(nodes[0].links + [(int(start_link[0]), int(start_link[1]))])
     path = PathData(index, nodes)
     # Walked back and forth: a loop would close the gap between its ends (it was cut as one, back to the spawn).
     path.loops = False

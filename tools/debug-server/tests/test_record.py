@@ -61,6 +61,21 @@ class RecordTest(unittest.TestCase):
         self.assertEqual(data.paths[linked].nodes[-1].links, [(1, 1)])
         self.assertEqual(data.paths[linked].nodes[0].links, [])
 
+    def test_add_vehicle_path(self):
+        data = MapData({1: PathData(1, [Node(1, 1, (0.0, 0.0, 0.0)), Node(1, 2, (9.0, 0.0, 0.0))])})
+        index = record.add_path(data, [[0.0, 0.0, 0.0], [4.0, 0.0, 0.0]], (1, 2), vehicles=["land"], start_link=(1, 1))
+        self.assertEqual(data.paths[index].vehicles, ["land"])
+        self.assertEqual(data.paths[index].nodes[0].links, [(1, 1)])
+        self.assertEqual(data.paths[index].nodes[-1].links, [(1, 2)])
+        self.assertFalse(data.paths[index].loops)
+
+    def test_ring_starts(self):
+        ring = record.ring_starts([10.0, 5.0, 20.0], 2.0)
+        self.assertEqual(len(ring), 8)
+        for point in ring:
+            self.assertAlmostEqual(math.hypot(point[0] - 10.0, point[2] - 20.0), 2.0)
+            self.assertEqual(point[1], 5.0)
+
     def test_mesh_outside(self):
         # An island of 2 points up at y 10, the ground of 3 points (min_part 3), a speck of 1 point.
         points = [[0, 10, 0], [2, 10, 0], [0, 0, 0], [5, 0, 0], [10, 0, 0], [50, 0, 50]]

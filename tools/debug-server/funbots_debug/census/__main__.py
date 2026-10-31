@@ -675,10 +675,42 @@ def _pick_vehicle(server: Server, name: str, near: list[float]) -> dict | None:
     return fitting[0] if fitting else None
 
 
+def _waypoint_at(data: MapData, position: list[float] | None) -> tuple[int, int] | None:
+    """The waypoint (path, point) at the position (up to 0.5 m away), if any."""
+    if position is None:
+        return None
+    near = min(((math.dist(node.pos, position), (node.path, node.point)) for p in data.paths.values()
+                for node in p.nodes), default=None)
+    return near[1] if near and near[0] <= 0.5 else None
+
+
+def _test_drives(server: Server, way: list[list[float]], names: list[str]) -> list[str]:
+    """Drives the way with each of the vehicles (part of the name or instance id): what failed, empty if all got
+    through."""
+    failed = []
+    for name in names:
+        found = _pick_vehicle(server, name, way[0])
+        if found is None:
+            failed.append(f"{name}: not in the level")
+            continue
+        result = record.walk(server, way, vehicle=found["id"])
+        if result.get("status") in ("exited", "dead"):
+            # Put down onto another vehicle (the one of the spawn), or wrecked by the drive before: once more.
+            found = _pick_vehicle(server, name, way[0]) or found
+            result = record.walk(server, way, vehicle=found["id"])
+        status = result.get("status")
+        print(f"    {found['name']}: {status}, {result.get('reached')}/{len(way)} points in {result.get('time')} s",
+              flush=True)
+        if status != "done":
+            failed.append(f"{found['name']}: {status} at {[round(c, 1) for c in result.get('pos') or []]}")
+    return failed
+
+
 def command_trace(options) -> int:
     """Traces one way with a bot (record.py): a stretch of a path again (--replace PATH:A-B, walked; driven with
-    --vehicle), or a new foot path (--from, --to). Planned with the rays of the game, replanned where the bot gets
-    stuck. The waypoints go into mapfiles/<map>.map (cut: `navpaths --write`) and census/recorded/<map>.json."""
+    --vehicle), or a new path (--from, --to: on foot, or a vehicle path driven with --vehicle). Planned with the rays
+    of the game, replanned where the bot gets stuck. The waypoints go into mapfiles/<map>.map (cut: `navpaths
+    --write`) and census/recorded/<map>.json."""
     server = Server(options.server)
     name = Path(options.map).name.split(".")[0]
     level, _, mode = name.rpartition("_")
@@ -702,13 +734,10 @@ def command_trace(options) -> int:
             print("--replace PATH:A-B or --from X,Y,Z [--to X,Y,Z]", file=sys.stderr)
             return 2
         start, goal = options.start, options.to
-        # Ends at a waypoint: linked to it.
-        ends = [(math.dist(node.pos, goal), (node.path, node.point)) for p in data.paths.values() for node in p.nodes
-                if goal is not None]
-        near = min(ends, default=None)
-        link = near[1] if near and near[0] <= 0.5 else None
+        # Ends at a waypoint: linked to it (a vehicle path also where it starts at one).
+        link = _waypoint_at(data, goal)
         label = f"from {start} to {goal or 'the mesh'}"
-    profile = record.VEHICLE if options.vehicle else record.FOOT
+    profile = record.PROFILES[options.profile] if options.profile else record.VEHICLE if options.vehicle else record.FOOT
     if goal is None:
         # Off an island of the mesh: to any point of the other parts.
         goals = record.mesh_outside(json.loads((options.navzones / f"{name}.json").read_text(encoding="utf-8")), start)
@@ -734,13 +763,18 @@ def command_trace(options) -> int:
             print(f"  {found['name']} {vehicle} at {[round(c) for c in found['pos']]}", flush=True)
         print(f"  {label}: {math.dist(*gap.best):.0f} m, margin {options.margin:.0f} m", flush=True)
         way = record.record_gap(server, gap, log=lambda message: print(message, flush=True), profile=profile,
-                                vehicle=vehicle, margin=options.margin)
+                                vehicle=vehicle, margin=options.margin, via=options.via)
+        failed = _test_drives(server, way, options.test_vehicles.split(",")) if way and options.test_vehicles else []
     finally:
         restore_bots(server, settings)
     if not way:
         print(f"  {label}: no way found", file=sys.stderr)
         return 1
-    print(f"  {label}: way of {len(way)} points")
+    length = sum(math.dist(a, b) for a, b in zip(way, way[1:]))
+    print(f"  {label}: way of {len(way)} points, {length:.0f} m")
+    if failed:
+        print(f"  {label}: not written, the test drives failed: {'; '.join(failed)}", file=sys.stderr)
+        return 1
     if options.dry_run:
         for point in way:
             print("   ", [round(c, 2) for c in point])
@@ -751,6 +785,11 @@ def command_trace(options) -> int:
         for message in record.replace_stretch(data, path, low, high, ordered):
             print(f"  dropped {message}")
         entry_out = {"spawn": label, "points": way, "path": path}
+    elif options.vehicle:
+        start_link = _waypoint_at(data, start)
+        index = record.add_path(data, way, link, vehicles=["land"], start_link=start_link)
+        entry_out = {"spawn": label, "points": way, "link": link, "startLink": start_link, "path": index,
+                     "vehicles": ["land"]}
     else:
         entry_out = {"spawn": label, "points": way, "link": link, "path": record.add_path(data, way, link)}
     data.save(map_file)
@@ -841,17 +880,25 @@ def main() -> int:
     records.add_argument("--census", type=Path, default=CENSUS, help="the censuses (combat-areas)")
     records.set_defaults(handler=command_record)
 
-    traces = commands.add_parser("trace", help="trace one way with a bot: a stretch of a path again, or a new foot path")
+    traces = commands.add_parser("trace", help="trace one way with a bot: a stretch of a path again, or a new foot or vehicle path")
     traces.add_argument("map", help="<Level>_<Mode>, e.g. XP4_Parl_RushLarge0")
     traces.add_argument("--replace", metavar="PATH:A-B", help="the waypoints between A and B of the path, new (walked or "
                         "driven from A to B, B < A: against the path)")
-    traces.add_argument("--from", dest="start", type=_position, metavar="X,Y,Z", help="a new foot path from here...")
+    traces.add_argument("--from", dest="start", type=_position, metavar="X,Y,Z",
+                        help="a new path from here (on foot; with --vehicle a vehicle path)...")
     traces.add_argument("--to", type=_position, metavar="X,Y,Z",
                         help="...to here (a waypoint there: linked); without: to the mesh off the island of --from")
     traces.add_argument("--margin", type=float, default=record.MARGIN,
                         help="how far the way may go round, beyond the box around start and goal (metres)")
     traces.add_argument("--navzones", type=Path, default=NAVZONES)
-    traces.add_argument("--vehicle", help="driven in a vehicle of the level (part of its name, or its instance id)")
+    traces.add_argument("--vehicle", help="driven in a vehicle of the level (part of its name, or its instance id); "
+                        "with --from: a new vehicle path (land), linked at both ends where they are waypoints")
+    traces.add_argument("--via", type=_position, action="append", metavar="X,Y,Z",
+                        help="through this point (repeat for more, in order): another way than the shortest")
+    traces.add_argument("--profile", choices=sorted(record.PROFILES),
+                        help="what the way is planned for (default: vehicle with --vehicle, else foot); bike: narrow")
+    traces.add_argument("--test-vehicles", metavar="NAME,...",
+                        help="drive the way with these vehicles as well; written only if all of them get through")
     traces.add_argument("--dry-run", action="store_true", help="plan and walk, don't write")
     traces.add_argument("--server", default="http://127.0.0.1:8765", help="address of the debug-server")
     traces.add_argument("--mapfiles", type=Path, default=MAPFILES)
