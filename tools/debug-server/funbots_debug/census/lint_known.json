@@ -2,6 +2,14 @@
  "about": "Known findings of `census lint` (accepted, only others fail) with what to trace for each (todo, empty: nothing to do), and more things to trace no check finds (tasks). `python -m funbots_debug.census lint --todo` lists them by level. After recording: `census navpaths <map> --write --db ../../mod.db`, then lint.",
  "known": [
   {
+   "finding": "MP_012_SquadRush0: dead-end: foot path 1 (6 waypoints) has 1 ways out",
+   "todo": "Record the way between the end of foot path 2 (36.0, 121.2, -128.5) and the start of path 1 (70.5, 121.3, -119.0), 36 m (more than LINK_MAX): path 1 is a stub at spawn us 6 (mesh point 1131), path 2 comes from spawn us 3 and ends 30 m off the mesh (split recording of census connect, f1928977)."
+  },
+  {
+   "finding": "MP_012_SquadRush0: dead-end: foot path 2 (56 waypoints) has 1 ways out",
+   "todo": "Record the way between the end of foot path 2 (36.0, 121.2, -128.5) and the start of path 1 (70.5, 121.3, -119.0), 36 m (more than LINK_MAX): path 1 is a stub at spawn us 6 (mesh point 1131), path 2 comes from spawn us 3 and ends 30 m off the mesh (split recording of census connect, f1928977)."
+  },
+  {
    "finding": "MP_017_ConquestSmall0: spawn-cut-off: no objective can be walked to from base us",
    "todo": "Nothing required: the ship; RHIBs (water paths 41, 31) and the AAV/LAV (path 40 down the ramp, then land path 32) take the bots ashore. Optional: link the last waypoint of path 40 (-218.8, 67.6, 574.7) to the first of path 32 (-212.1, 65.4, 579.8)."
   },
