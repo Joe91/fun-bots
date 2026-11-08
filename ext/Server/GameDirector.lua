@@ -22,6 +22,11 @@ local m_Logger = Logger("GameDirector", Debug.Server.GAMEDIRECTOR)
 -- A node is re-read when its Position is another object than the cached one (positions are replaced, never changed).
 local s_NodeCoords = {}
 
+-- An amphibious vehicle takes a path of the boats (water only) only if no path it can go ashore on is this many metres
+-- closer. MP_017 rush: the AAV took the RHIB path next to its spawn, drove to the beach where the path ends, back to
+-- the ship over it and got stuck between the boats; its own path ashore starts 2 m farther away.
+local AMPHIBIOUS_WATER_PATH_PENALTY = 30.0
+
 local function _AccessEntity(p_Entity)
 	return p_Entity.data ~= nil
 end
@@ -2335,8 +2340,13 @@ function GameDirector:FindClosestPath(p_Trans, p_VehiclePath, p_DetailedSearch, 
 
 			if s_Search then
 				local s_LastIndex = p_DetailedSearch and #l_Waypoints or 1
+				local s_WaterOnly = p_VehicleTerrain == VehicleTerrains.Amphibious and s_isWaterPath
+					and not table.has(s_FirstNode.Data.Vehicles, 'land')
 				for i = 1, s_LastIndex, p_Increment do
 					local s_NewDistance = _NodeDistanceSquared(l_PathIndex, l_Waypoints, i, s_X, s_Y, s_Z)
+					if s_WaterOnly then
+						s_NewDistance = (math.sqrt(s_NewDistance) + AMPHIBIOUS_WATER_PATH_PENALTY) ^ 2
+					end
 
 					if s_NewDistance < s_ClosestDistance then
 						s_ClosestDistance = s_NewDistance

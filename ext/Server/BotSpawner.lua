@@ -141,8 +141,13 @@ function BotSpawner:OnEngineUpdate(p_DeltaTime, p_SimulationDeltaTime)
 			local s_PosOfSetInTable = MathUtils:GetRandomInt(1, #self._SpawnSets)
 			---@type SpawnSet
 			local s_SpawnSet = table.remove(self._SpawnSets, s_PosOfSetInTable)
-			self:_SpawnSingleWayBot(s_SpawnSet.PlayerVarOfBot, s_SpawnSet.UseRandomWay, s_SpawnSet.ActiveWayIndex,
-				s_SpawnSet.IndexOnPath, s_SpawnSet.Bot, s_SpawnSet.Team)
+			local s_Bot = s_SpawnSet.Bot
+			-- A respawn queued before the bot was killed for good (killAll: NoRespawn) or destroyed (kickAll: no player
+			-- anymore) is dropped: the bots came back after killAll, a destroyed one errored on m_Player.
+			if s_Bot == nil or (s_Bot.m_Player ~= nil and s_Bot:GetSpawnMode() ~= BotSpawnModes.NoRespawn) then
+				self:_SpawnSingleWayBot(s_SpawnSet.PlayerVarOfBot, s_SpawnSet.UseRandomWay, s_SpawnSet.ActiveWayIndex,
+					s_SpawnSet.IndexOnPath, s_Bot, s_SpawnSet.Team)
+			end
 		end
 
 		self._BotSpawnTimer = self._BotSpawnTimer + p_DeltaTime
@@ -1241,7 +1246,9 @@ function BotSpawner:_ConquestSpawn(p_Bot, p_Near)
 	end
 
 	if s_BestSpawnPoint == nil then
-		m_Logger:Error("No valid spawn point found")
+		-- No error: the attackers of conquest assault without a flag have no spawn at all (no HQ), every bot tried again
+		-- every few seconds (70 log lines a minute, XP1_001).
+		m_Logger:Write("No valid spawn point found for team " .. tostring(p_Bot.m_Player.teamId))
 		return
 	end
 
