@@ -630,6 +630,7 @@ function ChatCommands:Execute(p_Parts, p_Player)
 			return
 		end
 		Globals.SpawnMode = SpawnModes.manual
+		m_BotSpawner:ClearSpawnSets()
 		m_BotManager:DestroyAll()
 	elseif p_Parts[1] == '!kill' then
 		if _HasPermission(p_Player, 'ChatCommands.Kill') == false then

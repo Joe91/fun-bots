@@ -68,6 +68,9 @@ This is the changelog for release **V3.6.0**. Don't forget to [join us on Discor
 * Deathmatch modes: a bot that spawns far from the paths starts on the closest one (XP3_Alborz Team Deathmatch: bots
   stood at walls for minutes, 6.5 % of the time stuck, now 0.2 %)
 * Vehicles no longer turn into a path that only leads back (the way out from a vehicle spawn)
+* MP_017 Rush: the AMTRAC no longer takes the paths of the boats (it drove back into them and got stuck at the ship)
+* RCON funbots.killAll/kickAll and !kickall: queued respawns are dropped (bots came back right after killAll, kickAll
+  could raise an error); a team with "Bot Team Names" and a fixed bot kit is no longer capped at 16 bots
 * Many more small fixes
 
 ### Updated maps

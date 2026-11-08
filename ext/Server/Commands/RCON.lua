@@ -92,6 +92,7 @@ function RCONCommands:__init()
 			Name = 'funbots.kickAll',
 			Callback = (function(p_Command, p_Args)
 				Globals.SpawnMode = SpawnModes.manual
+				m_BotSpawner:ClearSpawnSets()
 				m_BotManager:DestroyAll()
 
 				return { 'OK' }
@@ -120,6 +121,7 @@ function RCONCommands:__init()
 			Name = 'funbots.killAll',
 			Callback = (function(p_Command, p_Args)
 				Globals.SpawnMode = SpawnModes.manual
+				m_BotSpawner:ClearSpawnSets()
 				m_BotManager:KillAll()
 
 				return { 'OK' }
@@ -329,6 +331,8 @@ function RCONCommands:CreateConfigCommands()
 						return { 'ERROR', 'Not valid' }
 					end
 				end
+
+				return { 'ERROR', 'One value expected' }
 			end)
 	end
 end

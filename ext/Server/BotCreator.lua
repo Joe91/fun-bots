@@ -133,23 +133,31 @@ function BotCreator:GetNextBotName(p_BotKit, p_TeamId)
 		botTattributesByClass = self.BotAttributesByClass
 		activeNames = self.ActiveTeamBotNames
 	end
-	for _, l_Attributes in pairs(botTattributesByClass[p_BotKit]) do
-		local s_NameAvailable = true
-		for _, l_UsedNames in pairs(activeNames) do
-			if l_Attributes.Name == l_UsedNames then
-				s_NameAvailable = false
-				break
-			end
+	-- The names of the kit first, then of the other kits: the team names are split into the four kits (about 16 each),
+	-- with a fixed BotKit a team got no more than 16 bots (the kit of a name is overridden then, SetAttributesToBot).
+	local s_Kits = { p_BotKit, BotKits.Assault, BotKits.Engineer, BotKits.Support, BotKits.Recon }
+	for _, l_Kit in ipairs(s_Kits) do
+		if #s_PossibleNames > 0 then
+			break
 		end
-		for _, l_PlayerName in pairs(Globals.IgnoreBotNames) do
-			if l_Attributes.Name == l_PlayerName then
-				s_NameAvailable = false
-				break
+		for _, l_Attributes in pairs(botTattributesByClass[l_Kit]) do
+			local s_NameAvailable = true
+			for _, l_UsedNames in pairs(activeNames) do
+				if l_Attributes.Name == l_UsedNames then
+					s_NameAvailable = false
+					break
+				end
 			end
-		end
+			for _, l_PlayerName in pairs(Globals.IgnoreBotNames) do
+				if l_Attributes.Name == l_PlayerName then
+					s_NameAvailable = false
+					break
+				end
+			end
 
-		if s_NameAvailable then
-			s_PossibleNames[#s_PossibleNames + 1] = l_Attributes.Name
+			if s_NameAvailable then
+				s_PossibleNames[#s_PossibleNames + 1] = l_Attributes.Name
+			end
 		end
 	end
 	local s_SelectedName = s_PossibleNames[MathUtils:GetRandomInt(1, #s_PossibleNames)]
@@ -161,7 +169,8 @@ end
 ---@param p_Bot Bot
 function BotCreator:SetAttributesToBot(p_Bot)
 	local s_Attributes = self:GetAttributesOfBot(p_Bot.m_Player.name)
-	p_Bot.m_Kit = s_Attributes.Kit
+	local s_Kit = Config.BotKit ~= BotKits.RANDOM_KIT and Config.BotKit or s_Attributes.Kit
+	p_Bot.m_Kit = s_Kit
 	p_Bot.m_PreferredKit = s_Attributes.Kit
 	p_Bot.m_Color = s_Attributes.Color
 	p_Bot.m_Behavior = s_Attributes.Behaviour
