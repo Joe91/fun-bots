@@ -96,6 +96,10 @@ to waypoint 81 and stand at (-663, 68, 59) for 50-70 s (5 a round), skipping thr
 moving (`_ObstacleHandling`: a target more than 1.5 m higher or lower counts as reached at once). The spawn rule of
 2026-10-29 (`SPAWN_PATH_RANGE`, onto the waypoint) should put them onto the path but doesn't there, cause unknown.
 
+**Launchers (TOW, Kornet) are not used by the bots anymore** (2026-11-11): no objective, no spawn, no entry. What is
+left of them in the vehicle states (`StateInVehicleMoving`, `StateInVehicleAttacking`, `VehicleMovement:UpdateYawVehicle`,
+`GameDirector:_CheckVehicleProgress`) is dead code.
+
 **M1. Scavenger has no objectives** (no mesh, no labels). It needs a mesh per layout and the mode in `SetGameMode`,
 like Domination.
 

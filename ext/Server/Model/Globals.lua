@@ -14,6 +14,7 @@ Globals = {
 	IsConquest = false,
 	IsDomination = false,
 	IsCtf = false,
+	IsBflag = false,
 	IsAssault = false,
 	IsAirSuperiority = false,
 	NrOfTeams = 0,

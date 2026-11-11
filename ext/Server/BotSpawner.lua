@@ -1087,8 +1087,9 @@ function BotSpawner:_TriggerSpawn(p_Bot, p_Near)
 		-- Seems to be the same as DeathMatchSpawn.
 		-- But it has vehicles.
 		self:_RushSpawn(p_Bot, p_Near)
-	elseif s_CurrentGameMode:match("Conquest") then
+	elseif s_CurrentGameMode:match("Conquest") or s_CurrentGameMode:match("BFLAG") then
 		-- event + target spawn ("ID_H_US_B", "_ID_H_US_HQ", etc.)
+		-- BFLAG (a mod, conquest small of MP_001 around B): at A and C, each owned by a team, it has no HQs.
 		self:_ConquestSpawn(p_Bot, p_Near)
 	elseif s_CurrentGameMode:match("AirSuperiority") then
 		self:_AirSuperioritySpawn(p_Bot)

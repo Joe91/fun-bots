@@ -305,6 +305,11 @@ function Bot:_EnterVehicleEntity(p_Entity, p_PlayerIsDriver)
 		return -2
 	end
 
+	-- Launchers (TOW, Kornet) are not for the bots.
+	if m_Vehicles:IsVehicleType(s_VehicleData, VehicleTypes.StationaryLauncher) then
+		return -2
+	end
+
 	if not Config.UseAirVehicles and m_Vehicles:IsAirVehicle(s_VehicleData) then
 		return -3 -- Not allowed to use.
 	end
@@ -343,11 +348,7 @@ function Bot:_EnterVehicleEntity(p_Entity, p_PlayerIsDriver)
 			self._ActiveVehicleWeaponSlot = 0
 			self:UpdateVehicleMovableId()
 			if s_SeatIndex == 0 then
-				if m_Vehicles:IsVehicleType(s_VehicleData, VehicleTypes.StationaryLauncher) then
-					-- Nothing to wait for: the timer only runs down while driving (UpdateNormalMovementVehicle), never in a
-					-- launcher, and while it runs the bot isn't checked for getting out (GameDirector:_CheckVehicleProgress).
-					self._VehicleWaitTimer = 0.0
-				elseif s_SeatIndex == s_MaxEntries - 1 then
+				if s_SeatIndex == s_MaxEntries - 1 then
 					self._VehicleWaitTimer = 0.5 -- Always wait a short time to check for free start.
 					if Globals.IsAirSuperiority then
 						self._VehicleTakeoffTimer = 0.0

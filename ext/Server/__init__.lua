@@ -1290,6 +1290,9 @@ function FunBotServer:SetGameMode(p_GameMode, p_LevelName)
 		Globals.IsConquest = false
 	end
 
+	-- A mod: conquest small of MP_001 around B, with its own waypoint-file (MP_001_BFLAG, NodeEditor:OnLevelLoaded).
+	Globals.IsBflag = p_GameMode == 'BFLAG0' or p_GameMode == 'BFLAG'
+
 	-- Counts as conquest (the stands of the flags are HQs). With a mesh the flags are the objectives
 	-- (GameDirector:_InitFlags), without one the bots walk the paths as in deathmatch.
 	Globals.IsCtf = p_GameMode == 'CaptureTheFlag0'

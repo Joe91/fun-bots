@@ -137,12 +137,18 @@ def kill_bots(server: Server) -> None:
     print("  some bots are still alive", file=sys.stderr)
 
 
+# Modes of other mods whose waypoint-file has another name than the mode in the map-list: the mod names the mode
+# itself (ServerUtils:SetCustomGameModeName, NodeEditor:OnLevelLoaded). MP_001_BFLAG.map is played as "MP_001 BFLAG0"
+# (the BFLAG mod, an alias of ConquestSmall0).
+MODE_ALIASES = {"BFLAG": "BFLAG0"}
+
+
 def _level_matches(meta: dict, level: str, mode: str) -> bool:
     # During a change of the mode on the same level, the game reports the new mode while the old one still runs. The
     # waypoints of the new one are only loaded with it.
     paths = meta.get("paths")
     return str(meta.get("level") or "").rsplit("/", 1)[-1].lower() == level.lower() and \
-        str(meta.get("mode") or "").lower() == mode.lower() and \
+        str(meta.get("mode") or "").lower() == MODE_ALIASES.get(mode, mode).lower() and \
         (paths is None or str(paths).lower() == f"{level}_{mode}".lower())
 
 
@@ -154,7 +160,7 @@ def switch_level(server: Server, level: str, mode: str, fresh: bool = False) -> 
         return
     print(f"  {'loading' if _level_matches(meta, level, mode) else 'switching to'} {level} {mode}")
     server.rcon("mapList.clear")
-    server.rcon("mapList.add", level, mode, "1")
+    server.rcon("mapList.add", level, MODE_ALIASES.get(mode, mode), "1")
     server.rcon("mapList.setNextMapIndex", "0")
     server.rcon("mapList.runNextRound")
     end = time.monotonic() + LEVEL_TIMEOUT

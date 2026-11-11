@@ -667,6 +667,18 @@ for a soldier within about 2 m, no interaction; its map-markers only move when i
 the mod follows the carrier itself (`_UpdateFlags`, event `flag`). A flag away from the mesh (carried or dropped
 between the bases) can't be routed to: the bots wait for it in the base it comes to (`GetFlagBase`).
 
+### A mode of another mod (BFLAG)
+
+BFLAG is conquest small of MP_001 around B (A and C belong to a team for good, no HQs), played as `MP_001 BFLAG0`
+with the BFLAG mod in the `ModList.txt`. The mod names the mode itself, so its waypoint-file is `MP_001_BFLAG`: the
+tools take that name and load the level by its alias (`MODE_ALIASES` in `census/__main__.py`):
+```
+python -m funbots_debug.census run --map "MP_001 BFLAG" --apply
+python -m funbots_debug.census check MP_001_BFLAG
+python -m funbots_debug.census navpaths MP_001_BFLAG --write --db ../../mod.db
+```
+In the game only B is an objective (`Globals.IsBflag`), the bots spawn at A and C as in conquest.
+
 ### Paths: trimmed at the mesh
 
 In the areas of the mesh the bots walk the mesh, between them the recorded paths (as released, with their links: the

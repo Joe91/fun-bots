@@ -146,6 +146,9 @@ function GameDirector:RegisterVars()
 	self.m_MapCompletelyLoaded = false
 	self.m_SpawnedEntitiesToProcess = {}
 
+	-- Vehicles outside of the combat-area (OnCombatArea), by the name of their objective ("vehicle <instanceId>"): no
+	-- bot spawns into them or goes there.
+	self.m_OutsideVehicles = {}
 	-- Capture the flag: the flag of each team (_InitFlags), by TeamId.
 	self.m_Flags = {}
 	self.m_FlagTimer = 0.0
@@ -536,6 +539,7 @@ function GameDirector:OnEngineUpdate(p_DeltaTime)
 					-- to any vehicle, also to one at a spawn far behind the front.
 					if Config.UseVehicles and
 						l_Objective.isEnterVehiclePath and
+						not self.m_OutsideVehicles[l_Objective.name] and
 						(l_Objective.team == l_BotTeam or (l_Objective.isVehicleEntity and l_Objective.team == TeamId.TeamNeutral)) and
 						l_Objective.assigned[l_BotTeam] < (l_Objective.seats or 1) and
 						-- Not back into the vehicle it just got out of (passenger near an objective, stuck vehicle): parked
@@ -1669,6 +1673,21 @@ function GameDirector:OnCombatArea(p_Player, p_Left)
 		end
 		return
 	end
+	-- In a stationary AA outside of the combat-area (a mode on a part of a level, as BFLAG, leaves the bases out): the
+	-- game kills its gunner after 10 s, the next bot spawned into it. No bot spawns into it anymore, this one gets out.
+	if p_Left and s_Bot.m_ActiveVehicle ~= nil and s_Bot.m_Player.controlledControllable ~= nil
+		and m_Vehicles:IsVehicleType(s_Bot.m_ActiveVehicle, VehicleTypes.StationaryAA) then
+		self.m_OutsideVehicles['vehicle ' .. s_Bot.m_Player.controlledControllable.instanceId] = true
+		s_Bot:ExitVehicle()
+		return
+	end
+	-- On foot on its way to a vehicle, out of the combat-area: that vehicle stands outside (the others parked there
+	-- as well: each costs one bot its way).
+	if p_Left and s_Bot.m_ActiveVehicle == nil and (s_Bot:GetObjective() or ''):sub(1, 8) == 'vehicle ' then
+		self.m_OutsideVehicles[s_Bot:GetObjective()] = true
+		s_Bot:SetObjective('')
+		return
+	end
 	if not Globals.IsRush then
 		return
 	end
@@ -1881,6 +1900,7 @@ function GameDirector:GetSpawnableVehicle(p_TeamId)
 		local s_Spawn = self.m_SpawnInVehicle[l_Vehicle.instanceId]
 		-- Its spawn on, and still of this team (a capture point the enemy took meanwhile: its vehicles stay in this list).
 		if (s_Spawn == nil or (_SpawnOn(s_Spawn) and _SpawnTeam(s_Spawn) == p_TeamId))
+			and not self.m_OutsideVehicles['vehicle ' .. l_Vehicle.instanceId]
 			and (s_Data == nil or (m_Vehicles:HasFreeBotSeat(l_Vehicle, s_Data) and self:HasVehicleWay(s_Data, l_Vehicle))) then
 			s_Usable[#s_Usable + 1] = l_Vehicle
 		end
@@ -1903,7 +1923,13 @@ function GameDirector:GetMobileRespawnVehicles(p_TeamId)
 end
 
 function GameDirector:GetStationaryAas(p_TeamId)
-	return _PruneInvalidEntities(self.m_SpawnableStationaryAas[p_TeamId])
+	local s_Usable = {}
+	for _, l_Entity in ipairs(_PruneInvalidEntities(self.m_SpawnableStationaryAas[p_TeamId])) do
+		if not self.m_OutsideVehicles['vehicle ' .. l_Entity.instanceId] then
+			s_Usable[#s_Usable + 1] = l_Entity
+		end
+	end
+	return s_Usable
 end
 
 ---Team that owns a stationary AA. Uses the team of the vehicle-spawn, as the faction
@@ -2038,6 +2064,11 @@ function GameDirector:OnVehicleSpawnDone(p_Entity)
 	end
 
 	if not Config.UseJets and m_Vehicles:IsVehicleType(s_VehicleData, VehicleTypes.Plane) then
+		return
+	end
+
+	-- Launchers (TOW, Kornet) are not for the bots: no bot spawns into one or goes there.
+	if m_Vehicles:IsVehicleType(s_VehicleData, VehicleTypes.StationaryLauncher) then
 		return
 	end
 
@@ -3128,6 +3159,9 @@ function GameDirector:_UpdateTimersOfMcoms(p_DeltaTime)
 	end
 end
 
+-- BFLAG: the capture points that are the bases of the teams.
+local BFLAG_BASES = { a = true, c = true }
+
 function GameDirector:_InitObjectives()
 	self.m_AllObjectives = {}
 	self._McomPositions = {}
@@ -3255,6 +3289,12 @@ function GameDirector:_InitObjectives()
 		if Globals.IsConquest and not s_Objective.isBase and not s_Objective.isFlag and s_Objective.canBeCaptured
 			and m_NavZones:GetZone(l_ObjectiveName) == nil
 			and (m_NavZones:GetMesh() ~= nil or not s_Engine[l_ObjectiveName]) then
+			s_Objective.active = false
+			s_Objective.canBeCaptured = false
+		end
+		-- BFLAG (a mod: conquest small of MP_001 around B): A and C belong to a team for good, the teams spawn there.
+		-- Going for them the bots left the combat-area of their team.
+		if Globals.IsBflag and BFLAG_BASES[l_ObjectiveName] then
 			s_Objective.active = false
 			s_Objective.canBeCaptured = false
 		end
@@ -3716,28 +3756,6 @@ function GameDirector:_VehicleOwner(p_Position)
 	return s_Best or TeamId.TeamNeutral
 end
 
--- A launcher (TOW, Kornet) is an objective this close to a capture point or an active MCOM.
-local LAUNCHER_FRONT_RANGE = 100.0
-
----Whether a capture point or an active MCOM is within LAUNCHER_FRONT_RANGE.
----@param p_Position Vec3
----@return boolean
-function GameDirector:_NearFront(p_Position)
-	local s_CapturePoints = self:GetAllCapturePoints() or {}
-	for l_Index = 1, #s_CapturePoints do
-		if s_CapturePoints[l_Index].transform.trans:Distance(p_Position) <= LAUNCHER_FRONT_RANGE then
-			return true
-		end
-	end
-	local s_Mcoms = self:GetActiveMcomPositions()
-	for l_Index = 1, #s_Mcoms do
-		if s_Mcoms[l_Index]:Distance(p_Position) <= LAUNCHER_FRONT_RANGE then
-			return true
-		end
-	end
-	return false
-end
-
 ---Whether the vehicle got stuck with a bot driving it a short while ago and still stands there: no bot gets in, also
 ---not when it spawns or passes by (MP_017: an AMTRAC in the canal below the quay, six crews in a row got in and out into
 ---the water).
@@ -3772,7 +3790,9 @@ function GameDirector:_RefreshVehicleEntities()
 	while s_Entity ~= nil do
 		local s_Vehicle = ControllableEntity(s_Entity)
 		local s_Data = m_Vehicles:GetVehicleByEntity(s_Vehicle)
+		-- No launchers (TOW, Kornet): a bot in one shoots at little and is out of the fight.
 		if s_Data ~= nil and not m_Vehicles:IsVehicleType(s_Data, VehicleTypes.StationaryAA)
+			and not m_Vehicles:IsVehicleType(s_Data, VehicleTypes.StationaryLauncher)
 			and not m_Vehicles:IsVehicleType(s_Data, VehicleTypes.Gadgets)
 			and not m_Vehicles:IsVehicleType(s_Data, VehicleTypes.MavBot)
 			and not m_Vehicles:IsGunship(s_Data) then
@@ -3810,10 +3830,6 @@ function GameDirector:_RefreshVehicleEntities()
 			s_Objective.seats = m_Vehicles:FreeBotSeats(s_Vehicle, s_Data)
 			s_Objective.active = s_Objective.seats > 0 and self:HasVehicleWay(s_Data, s_Vehicle)
 				and PhysicsEntity(s_Vehicle).velocity.magnitude < VEHICLE_PARKED_SPEED
-				-- A launcher (TOW, Kornet) only next to a capture point or MCOM: one deep in a base shoots at nothing and
-				-- keeps the bot out of the fight.
-				and (not m_Vehicles:IsVehicleType(s_Data, VehicleTypes.StationaryLauncher)
-					or self:_NearFront(s_Objective.position))
 				and not self:_IsStuckVehicle(s_Name, s_Objective.position)
 		end
 		s_Entity = s_Iterator:Next()
