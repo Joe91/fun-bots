@@ -53,6 +53,18 @@ def islands(networks: dict, data: MapData) -> list[dict]:
             result[owner]["zones"].append(zone["name"])
             if zone.get("kind") in lint.OBJECTIVE_KINDS:
                 result[owner]["objectives"].append(zone["name"])
+    # The spawn areas of the game away from the zones (mesh only, no zone: capture the flag on XP5_001, 100 m from the
+    # stands of the flags): the bots start there, a way has to lead on.
+    for area in networks.get("areas") or []:
+        center = area.get("center") or []
+        if area.get("kind") != "spawn" or len(center) < 3:
+            continue
+        radius = float(area.get("radius") or 0)
+        owners = {seen[index] for index, point in enumerate(points)
+                  if index in seen and math.hypot(point[0] - center[0], point[2] - center[2]) <= radius}
+        for owner in owners:
+            if not result[owner]["zones"]:
+                result[owner]["zones"].append(str(area.get("name")))
     return [island for island in result if island["zones"] and len(island["points"]) >= MIN_PART]
 
 
@@ -95,7 +107,11 @@ def tree(networks: dict, found: list[dict]) -> list[tuple[float, int, int, int, 
 
 def objective_order(networks: dict) -> list[dict]:
     """The objectives in the order they are played: rush MCOMs by number, capture points by name."""
-    zones = [zone for zone in networks.get("zones") or [] if zone.get("kind") in lint.OBJECTIVE_KINDS]
+    kinds = lint.OBJECTIVE_KINDS
+    if "CaptureTheFlag" in str(networks.get("map")):
+        # The flags stand in the bases.
+        kinds = lint.SPAWN_KINDS
+    zones = [zone for zone in networks.get("zones") or [] if zone.get("kind") in kinds and zone.get("inside")]
 
     def key(zone):
         name = str(zone.get("name"))

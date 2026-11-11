@@ -461,7 +461,8 @@ end
 ---@param p_Bot Bot
 function BotSpawner:TriggerRespawnBot(p_Bot)
 	-- fix for end-of-round-crash
-	if Registry.COMMON.DONT_SPAWN_BOTS_ON_LAST_CONQUEST_TICKET and Globals.IsConquest
+	-- Not in capture the flag: it has no tickets (the count is 0), its bots never came back.
+	if Registry.COMMON.DONT_SPAWN_BOTS_ON_LAST_CONQUEST_TICKET and Globals.IsConquest and not Globals.IsCtf
 		and TicketManager:GetTicketCount(p_Bot.m_Player.teamId) < 2 then
 		-- Only one ticket left: don't spawn.
 		return
@@ -1059,7 +1060,10 @@ end
 ---combat area of the stage (MP_Subway rush without its mesh: 182 of 496 spawns died 10 s later).
 ---@return boolean
 function BotSpawner:_UseGameSpawn()
-	return Globals.UseGameSpawn or (Globals.IsConquest and not Globals.IsCtf) or Globals.IsRush
+	-- Capture the flag without a mesh: on the waypoints (its paths have no objectives, the bots walk them as in a
+	-- deathmatch).
+	return Globals.UseGameSpawn or (Globals.IsConquest and not (Globals.IsCtf and m_NavZones:GetMesh() == nil))
+		or Globals.IsRush
 end
 
 ---@param p_Bot Bot

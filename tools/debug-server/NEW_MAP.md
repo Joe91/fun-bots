@@ -6,8 +6,8 @@ All you record in the game are paths between the areas of a level; the **Maps** 
 
 | Mode | Needed |
 |---|---|
-| Conquest (all layouts), Rush, Squad Rush, Tank Superiority, Domination | paths between the areas, then census and cut (below) |
-| Team / Squad Deathmatch, Gun Master, Scavenger, Capture the Flag | paths only, linked where they meet (CTF: no flag carrying yet) |
+| Conquest (all layouts), Rush, Squad Rush, Tank Superiority, Domination, Capture the Flag | paths between the areas, then census and cut (below) |
+| Team / Squad Deathmatch, Gun Master, Scavenger | paths only, linked where they meet |
 | Air Superiority | nothing: the bots spawn in jets |
 
 On a level with a mesh the bots walk the mesh inside the areas (capture points, MCOMs, bases, spawns) and the recorded

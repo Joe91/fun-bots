@@ -55,6 +55,11 @@ local ZONE_DETOUR_FACTOR = 2.0   -- ...one whose way is at most this many times 
 local ZONE_DETOUR_MIN = 40.0     -- ...or this many metres. None of them: the bot waits where it is...
 local ZONE_NO_GOAL_MAX = 3       -- ...this many times in a row, then it takes the closest of them anyway (XP4_Quake:
                                  -- attackers on a floor above the MCOM, all goals a long way round, waited there).
+local ZONE_FLAG_REACH = 25.0     -- Capture the flag: from the points next to a flag the soldier walks straight onto it,
+local ZONE_FLAG_FLOOR = 6.0      -- this far and this much higher or lower at most (else the route to it anew).
+local ZONE_FLAG_TOUCH = 0.5      -- On the flag (the game picks it up from about 2 m).
+local ZONE_FLAG_SPRINT = 5.0     -- Farther than this the soldier runs.
+local ZONE_FLAG_STALL = 6.0      -- Seconds without getting closer to the flag: the bot gives it up for now.
 local ZONE_ARM_DISTANCE = 1.3    -- Horizontal metres to the MCOM the soldier walks up to before it interacts.
 local ZONE_ARM_APPROACH = 4.0    -- Seconds at most for that, then it interacts from where it is...
 local ZONE_ARM_APPROACH_MAX = 15.0 -- ...unless it still gets closer (not ZONE_ARM_STALL seconds without), up to this.
@@ -1558,6 +1563,10 @@ function Bot:_ZoneAction(p_DeltaTime)
 		return true
 	end
 
+	if s_Action.Kind == 'flag' then
+		return self:_ZoneFlag(p_DeltaTime, s_Action)
+	end
+
 	-- MCOM: up to it (where the soldier stood on the recorded path, else close to the MCOM), then interact.
 	s_State.ActionTime = s_State.ActionTime + p_DeltaTime
 	local s_Position = s_Soldier.worldTransform.trans
@@ -1661,6 +1670,60 @@ function Bot:_ZoneAction(p_DeltaTime)
 		end
 		self:SetObjective(s_Parent or '', self._ObjectiveMode)
 	end
+	return true
+end
+
+---Capture the flag, at the points of the mesh next to a flag: onto it. The game picks the flag of the others up for
+---the soldier that touches it, scores for the one that brings it to its own flag at its stand, and takes its own flag
+---home from where it lies. Its own flag at home the bot guards from where it is; the one that carries the other flag
+---walks onto the stand of its own (p_Action.AtStand) and waits there until its flag is back.
+---@param p_DeltaTime number
+---@param p_Action table
+---@return boolean true while the bot is in the zone
+function Bot:_ZoneFlag(p_DeltaTime, p_Action)
+	local s_State = self.m_Zone
+	---@cast s_State -nil
+	local s_Flag = p_Action.Flag
+	local s_Position = self.m_Player.soldier.worldTransform.trans
+	local s_Goal = p_Action.AtStand and s_Flag.Stand or s_Flag.Position
+	local s_DeltaX = s_Goal.x - s_Position.x
+	local s_DeltaZ = s_Goal.z - s_Position.z
+	local s_Distance = math.sqrt(s_DeltaX * s_DeltaX + s_DeltaZ * s_DeltaZ)
+	if s_Distance > ZONE_FLAG_REACH or math.abs(s_Goal.y - s_Position.y) > ZONE_FLAG_FLOOR then
+		-- It was taken away meanwhile: the way to where it is now.
+		s_State.Action = nil
+		self:_ZoneDecide()
+		return self.m_Zone ~= nil
+	end
+	if not p_Action.AtStand and s_Flag.Team == self.m_Player.teamId and s_Flag.State == 'home' then
+		s_State.Waiting = true
+		self:LookAround(p_DeltaTime)
+		return true
+	end
+	if s_Distance > ZONE_FLAG_TOUCH then
+		s_State.ActionTime = s_State.ActionTime + p_DeltaTime
+		if s_Distance < s_State.ActionBest - ZONE_MIN_PROGRESS then
+			s_State.ActionBest = s_Distance
+			s_State.ActionStall = 0.0
+		else
+			s_State.ActionStall = s_State.ActionStall + p_DeltaTime
+		end
+		if s_State.ActionStall > ZONE_FLAG_STALL then
+			-- Something in the way: from another point next to it.
+			m_Logger:Write(self.m_Player.name .. ' does not get to ' .. tostring(self._Objective))
+			self:SetObjective('')
+			return true
+		end
+		self.m_ActiveSpeedValue = s_Distance > ZONE_FLAG_SPRINT and BotMoveSpeeds.Sprint or BotMoveSpeeds.Normal
+		self._TargetPoint = { Position = s_Goal }
+		self._NextTargetPoint = nil
+		return true
+	end
+	-- On it: the game does the rest.
+	self.m_ActiveSpeedValue = BotMoveSpeeds.NoMovement
+	self._TargetPoint = nil
+	s_State.Waiting = true
+	self:LookAround(p_DeltaTime)
 	return true
 end
 

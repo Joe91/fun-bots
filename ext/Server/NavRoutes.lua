@@ -479,6 +479,10 @@ function NavRoutes:Target(p_Objective)
 		if s_ActionTarget ~= nil then
 			return s_ActionTarget
 		end
+		-- A flag away from the mesh (carried, dropped between the bases): the base it is taken or comes back to.
+		if s_Action.Kind == 'flag' then
+			return self:Target(g_GameDirector:GetFlagBase(p_Objective))
+		end
 	end
 	local s_Known = self._Targets[p_Objective]
 	if s_Known == nil then

@@ -47,6 +47,7 @@ GOAL_RANGE = 2.0         # A cell this close to a point of the network (horizont
 GOAL_HEIGHT = 1.5
 MARGIN = 40.0            # The cells may go this far beyond the box around start and goal.
 MAX_EXPANSIONS = 8000
+LONG_STRIP = 120         # Cells per cell of length a long way may look at.
 GOALS_MAX = 300
 BATCH = 64               # Cells expanded per round of rays.
 PIECE_MAX = 12.0
@@ -196,7 +197,11 @@ class Planner:
         zs = [p[2] for p in gap.best]
         self.box = (min(xs) - margin, max(xs) + margin, min(zs) - margin, max(zs) + margin)
         # A wider box has more cells to look at.
-        self.max_expansions = int(MAX_EXPANSIONS * max(1.0, margin / MARGIN) ** 2)
+        # A long way as well: enough for a strip LONG_STRIP cells wide all along it (capture the flag: 270-570 m
+        # between the bases, 8000 cells ended a third of the way).
+        length = math.hypot(xs[1] - xs[0], zs[1] - zs[0]) if len(xs) > 1 else 0.0
+        self.max_expansions = max(int(MAX_EXPANSIONS * max(1.0, margin / MARGIN) ** 2),
+                                  int(length / profile.cell * LONG_STRIP))
         # Only in the combat-areas the spawn is in (MP_003, MP_007: the bot left it and was killed).
         start = gap.best[0]
         self.shapes = [shape for shape in shapes or [] if _in_polygon(start[0], start[2], shape)]

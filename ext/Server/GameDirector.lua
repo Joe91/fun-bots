@@ -146,6 +146,11 @@ function GameDirector:RegisterVars()
 	self.m_MapCompletelyLoaded = false
 	self.m_SpawnedEntitiesToProcess = {}
 
+	-- Capture the flag: the flag of each team (_InitFlags), by TeamId.
+	self.m_Flags = {}
+	self.m_FlagTimer = 0.0
+	self.m_FlagFindTime = 0.0
+
 	self._AllCapturePoints = {}
 	self._McomPositions = {}
 	self._AllBases = {}
@@ -294,6 +299,9 @@ end
 function GameDirector:OnEngineUpdate(p_DeltaTime)
 	if self.m_UpdateTimer >= 0 then
 		self.m_UpdateTimer = self.m_UpdateTimer + p_DeltaTime
+		if next(self.m_Flags) ~= nil then
+			self:_UpdateFlags(p_DeltaTime)
+		end
 	end
 
 	if self.m_UpdateTimer < Registry.GAME_DIRECTOR.UPDATE_OBJECTIVES_CYCLE then
@@ -420,10 +428,13 @@ function GameDirector:OnEngineUpdate(p_DeltaTime)
 		end
 	end
 	-- Reserved vehicles are taken as well, by the bot that spawns for them.
-	for l_Name, _ in pairs(self:_GetVehicleReservations()) do
+	-- For the team of that bot: a vehicle of no team (neutral) can be reserved as well.
+	for l_Name, l_Reservation in pairs(self:_GetVehicleReservations()) do
 		local s_Objective = self:_GetObjectiveObject(l_Name)
-		if s_Objective ~= nil and s_Objective.team >= 1 and s_Objective.team <= Globals.NrOfTeams then
-			s_Objective.assigned[s_Objective.team] = s_Objective.assigned[s_Objective.team] + 1
+		local s_Player = PlayerManager:GetPlayerById(l_Reservation.Bot)
+		local s_Team = s_Player ~= nil and s_Player.teamId or (s_Objective ~= nil and s_Objective.team) or 0
+		if s_Objective ~= nil and s_Team >= 1 and s_Team <= Globals.NrOfTeams then
+			s_Objective.assigned[s_Team] = s_Objective.assigned[s_Team] + 1
 		end
 	end
 
@@ -451,6 +462,14 @@ function GameDirector:OnEngineUpdate(p_DeltaTime)
 		for l_Index0 = 1, #l_Bots do
 			local l_Bot = l_Bots[l_Index0]
 			local s_BotObjective = l_Bot:GetObjective()
+			-- Capture the flag: the bot with the flag of the others takes it to the stand of its own one.
+			local s_OwnFlag = self:_CarrierObjective(l_Bot)
+			if s_OwnFlag ~= nil then
+				if s_BotObjective ~= s_OwnFlag then
+					l_Bot:SetObjective(s_OwnFlag, BotObjectiveModes.Attack)
+				end
+				goto continue_with_next_bot
+			end
 			if s_ArmedDefenders ~= nil and l_BotTeam == TeamId.Team2 then
 				---@type string|nil
 				local s_Armed = s_ArmedDefenders[l_Bot]
@@ -642,7 +661,8 @@ function GameDirector:OnEngineUpdate(p_DeltaTime)
 				end
 
 				-- remove from invalid objectives
-				if s_Objective.isBase or not s_Objective.active or s_Objective.destroyed then
+				if (s_Objective.isBase or not s_Objective.active or s_Objective.destroyed) and l_Bot:GetObjective() ~= '' then
+					s_Objective.assigned[l_BotTeam] = s_Objective.assigned[l_BotTeam] - 1
 					l_Bot:SetObjective()
 				end
 				-- remove from enter vehicle, when enter is done
@@ -653,6 +673,284 @@ function GameDirector:OnEngineUpdate(p_DeltaTime)
 
 			::continue_with_next_bot::
 		end
+	end
+end
+
+-- =============================================
+-- Capture the flag.
+-- =============================================
+
+-- The game picks a flag up for a soldier of the other team that comes within about 2 m of it (no interaction), and
+-- scores when that soldier touches the stand of its own flag while that one is at home. A flag on the ground goes back
+-- to its stand by itself. The map-markers of a flag (ServerMapMarkerEntity, two per flag) are at the top of the pole
+-- while it is at home (2.45 m above the stand). They only move when something happens: to where the soldier was that
+-- picked it up, to where it was dropped, back to the pole. They don't follow the carrier: the mod does that.
+local FLAG_POLL = 0.25          -- Seconds between two looks at the markers.
+local FLAG_FIND_INTERVAL = 5.0  -- Seconds between two searches for the markers, while a flag has none.
+local FLAG_MARKER_RANGE = 3.0   -- A marker this close to a stand (horizontally) is the one of its flag.
+local FLAG_HOME_RANGE = 0.5     -- At home: the marker this close to the stand (horizontally) ...
+local FLAG_HOME_HEIGHT = 1.5    -- ... and at least this high above it.
+local FLAG_MOVED = 0.05         -- The marker moved this far: something happened.
+local FLAG_CARRIER_RANGE = 3.0  -- The soldier of the other team this close to the marker when it moved carries the flag.
+local FLAG_STAND_RANGE = 1.5    -- A carrier this close to its own stand (own flag at home) scores ...
+local FLAG_SCORE_TIME = 3.0     -- ... within this time, else it doesn't carry the flag (taken for the carrier wrongly).
+
+---@class CtfFlag
+---@field Team TeamId|integer whose flag it is
+---@field Name string its objective: "flag us", "flag ru"
+---@field StandName string the objective of the bot that carries the other flag: "stand us", "stand ru"
+---@field Base string the zone of its stand: "base us", "base ru"
+---@field Stand Vec3
+---@field Position Vec3 where it is now (the stand, the carrier, where it lies)
+---@field State string 'home'|'carried'|'dropped'
+---@field CarrierId integer|nil the player that carries it
+---@field Markers Entity[]
+---@field Marker Vec3|nil where its marker was at the last look
+---@field AtStandSince number|nil since when its carrier is at its own stand
+
+---The flags of capture the flag, on a level with a mesh: one per HQ of the engine (the stand).
+function GameDirector:_InitFlags()
+	self.m_Flags = {}
+	if not Globals.IsCtf or m_NavZones:GetMesh() == nil then
+		return
+	end
+	local s_Iterator = EntityManager:GetIterator('ServerCapturePointEntity')
+	local s_Entity = s_Iterator:Next()
+	while s_Entity ~= nil do
+		local s_CapturePoint = CapturePointEntity(s_Entity)
+		local s_Team = s_CapturePoint.team
+		if m_Utilities:IsHq(s_CapturePoint) and (s_Team == TeamId.Team1 or s_Team == TeamId.Team2)
+			and self.m_Flags[s_Team] == nil then
+			local s_Us = s_Team == TeamId.Team1
+			self.m_Flags[s_Team] = {
+				Team = s_Team,
+				Name = s_Us and 'flag us' or 'flag ru',
+				StandName = s_Us and 'stand us' or 'stand ru',
+				Base = s_Us and 'base us' or 'base ru',
+				Stand = s_CapturePoint.transform.trans:Clone(),
+				Position = s_CapturePoint.transform.trans:Clone(),
+				State = 'home',
+				CarrierId = nil,
+				Markers = {},
+				Marker = nil,
+			}
+		end
+		s_Entity = s_Iterator:Next()
+	end
+	if self.m_Flags[TeamId.Team1] == nil or self.m_Flags[TeamId.Team2] == nil then
+		self.m_Flags = {}
+		return
+	end
+	self:_FindFlagMarkers()
+end
+
+---@param p_Entity Entity
+---@return Vec3|nil
+local function _MarkerPosition(p_Entity)
+	local s_Ok, s_Position = pcall(function() return SpatialEntity(p_Entity).transform.trans end)
+	return s_Ok and s_Position or nil
+end
+
+---The markers of the flags: the ones at a stand belong to its flag. During a round (the waypoints loaded again) a flag
+---can be away: the markers at no stand are the ones of the only flag without any.
+function GameDirector:_FindFlagMarkers()
+	self.m_FlagFindTime = m_Utilities:GetTime()
+	for _, l_Flag in pairs(self.m_Flags) do
+		l_Flag.Markers = {}
+	end
+	local s_Away = {}
+	local s_Iterator = EntityManager:GetIterator('ServerMapMarkerEntity')
+	local s_Entity = s_Iterator:Next()
+	while s_Entity ~= nil do
+		local s_Position = _MarkerPosition(s_Entity)
+		if s_Position ~= nil then
+			local s_Owner = nil
+			for _, l_Flag in pairs(self.m_Flags) do
+				local s_DeltaX = s_Position.x - l_Flag.Stand.x
+				local s_DeltaZ = s_Position.z - l_Flag.Stand.z
+				if s_DeltaX * s_DeltaX + s_DeltaZ * s_DeltaZ < FLAG_MARKER_RANGE * FLAG_MARKER_RANGE then
+					s_Owner = l_Flag
+				end
+			end
+			if s_Owner ~= nil then
+				s_Owner.Markers[#s_Owner.Markers + 1] = s_Entity
+			else
+				s_Away[#s_Away + 1] = s_Entity
+			end
+		end
+		s_Entity = s_Iterator:Next()
+	end
+	local s_Without = {}
+	for _, l_Flag in pairs(self.m_Flags) do
+		if #l_Flag.Markers == 0 then
+			s_Without[#s_Without + 1] = l_Flag
+		end
+	end
+	if #s_Without == 1 then
+		s_Without[1].Markers = s_Away
+	end
+end
+
+---The flag of the objective ("flag us", "flag ru": the flag where it is; "stand us", "stand ru": its stand), nil for
+---other objectives and outside of capture the flag.
+---@param p_Objective string|nil
+---@return CtfFlag|nil
+---@return boolean|nil whether the objective is its stand
+function GameDirector:GetFlag(p_Objective)
+	for _, l_Flag in pairs(self.m_Flags) do
+		if l_Flag.Name == p_Objective then
+			return l_Flag, false
+		elseif l_Flag.StandName == p_Objective then
+			return l_Flag, true
+		end
+	end
+	return nil
+end
+
+---Where the bots go for a flag the mesh doesn't lead to (carried or dropped between the bases, the mesh only covers
+---the bases and spawns): the base its carrier takes it to, else its own base (it comes back there).
+---@param p_Objective string|nil
+---@return string|nil the zone
+function GameDirector:GetFlagBase(p_Objective)
+	local s_Flag, s_Stand = self:GetFlag(p_Objective)
+	if s_Flag == nil then
+		return nil
+	end
+	if s_Flag.State == 'carried' and not s_Stand then
+		local s_Other = self.m_Flags[s_Flag.Team == TeamId.Team1 and TeamId.Team2 or TeamId.Team1]
+		return s_Other ~= nil and s_Other.Base or s_Flag.Base
+	end
+	return s_Flag.Base
+end
+
+---The objective of the bot that carries the flag of the other team: the stand of its own flag. There it scores, once
+---its own flag is at home (the others of its team get it back meanwhile; two carriers that went for each other's flag
+---stood next to each other).
+---@param p_Bot Bot
+---@return string|nil
+function GameDirector:_CarrierObjective(p_Bot)
+	if p_Bot.m_Player == nil then
+		return nil
+	end
+	for _, l_Flag in pairs(self.m_Flags) do
+		if l_Flag.State == 'carried' and l_Flag.CarrierId == p_Bot.m_Player.id then
+			local s_Own = self.m_Flags[p_Bot.m_Player.teamId]
+			return s_Own ~= nil and s_Own.StandName or nil
+		end
+	end
+	return nil
+end
+
+---The soldier of the other team closest to where the marker of the flag went: it picked the flag up.
+---@param p_Flag CtfFlag
+---@param p_Position Vec3
+---@return Player|nil
+function GameDirector:_FlagCarrierAt(p_Flag, p_Position)
+	local s_Closest = nil
+	local s_ClosestDistance = FLAG_CARRIER_RANGE
+	local s_Players = PlayerManager:GetPlayers()
+	for l_Index = 1, #s_Players do
+		local l_Player = s_Players[l_Index]
+		if l_Player.teamId ~= p_Flag.Team and l_Player.soldier ~= nil and l_Player.soldier.isAlive then
+			local s_Distance = l_Player.soldier.worldTransform.trans:Distance(p_Position)
+			if s_Distance < s_ClosestDistance then
+				s_Closest = l_Player
+				s_ClosestDistance = s_Distance
+			end
+		end
+	end
+	return s_Closest
+end
+
+---@param p_Flag CtfFlag
+---@param p_State string
+---@param p_CarrierId integer|nil
+function GameDirector:_SetFlagState(p_Flag, p_State, p_CarrierId)
+	if p_Flag.State == p_State and p_Flag.CarrierId == p_CarrierId then
+		return
+	end
+	p_Flag.State = p_State
+	p_Flag.CarrierId = p_CarrierId
+	p_Flag.AtStandSince = nil
+	m_Logger:Write(p_Flag.Name .. ': ' .. p_State .. (p_CarrierId ~= nil and (' by player ' .. p_CarrierId) or ''))
+	if m_DebugBridge.m_Enabled then
+		m_DebugBridge:Event('flag', {
+			flag = p_Flag.Name,
+			state = p_State,
+			carrier = p_CarrierId,
+			pos = DebugBridge.Vec(p_Flag.Position),
+		})
+	end
+end
+
+---Where the flags are and who carries them, from their markers (they move when a flag is picked up, dropped or back).
+---@param p_DeltaTime number
+function GameDirector:_UpdateFlags(p_DeltaTime)
+	self.m_FlagTimer = self.m_FlagTimer + p_DeltaTime
+	if self.m_FlagTimer < FLAG_POLL then
+		return
+	end
+	self.m_FlagTimer = 0.0
+	local s_Now = m_Utilities:GetTime()
+
+	for _, l_Flag in pairs(self.m_Flags) do
+		local s_Position = nil
+		for l_Index = 1, #l_Flag.Markers do
+			s_Position = _MarkerPosition(l_Flag.Markers[l_Index])
+			if s_Position ~= nil then
+				break
+			end
+		end
+		if s_Position == nil then
+			-- The entities of the round before: the ones of this round.
+			if s_Now - self.m_FlagFindTime > FLAG_FIND_INTERVAL then
+				self:_FindFlagMarkers()
+			end
+			goto continue_with_next_flag
+		end
+
+		do
+			local s_DeltaX = s_Position.x - l_Flag.Stand.x
+			local s_DeltaZ = s_Position.z - l_Flag.Stand.z
+			local s_Home = s_DeltaX * s_DeltaX + s_DeltaZ * s_DeltaZ < FLAG_HOME_RANGE * FLAG_HOME_RANGE
+				and s_Position.y - l_Flag.Stand.y > FLAG_HOME_HEIGHT
+			if s_Home then
+				l_Flag.Position = l_Flag.Stand:Clone()
+				self:_SetFlagState(l_Flag, 'home', nil)
+			elseif l_Flag.Marker == nil or l_Flag.State == 'home' or s_Position:Distance(l_Flag.Marker) > FLAG_MOVED then
+				local s_Carrier = self:_FlagCarrierAt(l_Flag, s_Position)
+				l_Flag.Position = s_Position:Clone()
+				if s_Carrier ~= nil then
+					self:_SetFlagState(l_Flag, 'carried', s_Carrier.id)
+				else
+					self:_SetFlagState(l_Flag, 'dropped', nil)
+				end
+			end
+			l_Flag.Marker = s_Position:Clone()
+		end
+
+		if l_Flag.State == 'carried' then
+			local s_Carrier = PlayerManager:GetPlayerById(l_Flag.CarrierId)
+			if s_Carrier == nil or s_Carrier.soldier == nil or not s_Carrier.soldier.isAlive or s_Carrier.teamId == l_Flag.Team then
+				-- It lies where the carrier died (the marker goes there).
+				self:_SetFlagState(l_Flag, 'dropped', nil)
+			else
+				l_Flag.Position = s_Carrier.soldier.worldTransform.trans:Clone()
+				-- At its own stand with its own flag at home, and no score: it doesn't carry the flag.
+				local s_Own = self.m_Flags[s_Carrier.teamId]
+				if s_Own ~= nil and s_Own.State == 'home' and l_Flag.Position:Distance(s_Own.Stand) < FLAG_STAND_RANGE then
+					l_Flag.AtStandSince = l_Flag.AtStandSince or s_Now
+					if s_Now - l_Flag.AtStandSince > FLAG_SCORE_TIME then
+						l_Flag.Position = l_Flag.Marker:Clone()
+						self:_SetFlagState(l_Flag, 'dropped', nil)
+					end
+				else
+					l_Flag.AtStandSince = nil
+				end
+			end
+		end
+
+		::continue_with_next_flag::
 	end
 end
 
@@ -1091,6 +1389,12 @@ function GameDirector:_CheckObjectiveProgress(p_Bot)
 		or g_BotStates:IsOnVehicleState(p_Bot.m_ActiveState)
 		or p_Bot._ActiveAction == BotActionFlags.OtherActionActive or p_Bot._FollowTargetPlayer ~= nil
 		or p_Bot._RemoteWalk ~= nil then
+		p_Bot._ProgressObjective = nil
+		return
+	end
+	-- Capture the flag: a flag that is away moves, and the bots wait for it in a base (GetFlagBase).
+	local s_Flag, s_FlagStand = self:GetFlag(s_Objective)
+	if s_Flag ~= nil and not s_FlagStand and s_Flag.State ~= 'home' then
 		p_Bot._ProgressObjective = nil
 		return
 	end
@@ -2296,6 +2600,7 @@ function GameDirector:FindClosestPath(p_Trans, p_VehiclePath, p_DetailedSearch, 
 			local s_isVehiclePath = false
 			local s_isAirPath = false
 			local s_isWaterPath = false
+			local s_isLandPath = false
 			local s_isSpawnVehiclePath = false
 
 			if s_FirstNode.Data ~= nil then
@@ -2310,6 +2615,10 @@ function GameDirector:FindClosestPath(p_Trans, p_VehiclePath, p_DetailedSearch, 
 
 						if l_PathType == "water" then
 							s_isWaterPath = true
+						end
+
+						if l_PathType == "land" then
+							s_isLandPath = true
 						end
 					end
 				end
@@ -2340,8 +2649,7 @@ function GameDirector:FindClosestPath(p_Trans, p_VehiclePath, p_DetailedSearch, 
 
 			if s_Search then
 				local s_LastIndex = p_DetailedSearch and #l_Waypoints or 1
-				local s_WaterOnly = p_VehicleTerrain == VehicleTerrains.Amphibious and s_isWaterPath
-					and not table.has(s_FirstNode.Data.Vehicles, 'land')
+				local s_WaterOnly = p_VehicleTerrain == VehicleTerrains.Amphibious and s_isWaterPath and not s_isLandPath
 				for i = 1, s_LastIndex, p_Increment do
 					local s_NewDistance = _NodeDistanceSquared(l_PathIndex, l_Waypoints, i, s_X, s_Y, s_Z)
 					if s_WaterOnly then
@@ -2555,24 +2863,6 @@ function GameDirector:IsDeadEndSpawn(p_Position, p_TeamId, p_SquadId)
 		end
 	end
 	return true
-end
-
----@param p_Path integer
----@param p_Objective string
----@return boolean
-function GameDirector:IsOnSubobjectivePath(p_Path, p_Objective)
-	local s_CurrentPathFirst = m_NodeCollection:GetFirst(p_Path)
-
-	if s_CurrentPathFirst.Data ~= nil and s_CurrentPathFirst.Data.Objectives ~= nil then
-		if #s_CurrentPathFirst.Data.Objectives == 1 and s_CurrentPathFirst.Data.Objectives[1] == p_Objective then
-			local s_TempObjective = self:_GetObjectiveObject(p_Objective)
-			if s_TempObjective ~= nil and s_TempObjective.subObjective then
-				return true
-			end
-		end
-	end
-
-	return false
 end
 
 ---@param p_ObjectiveNames string[]
@@ -2864,6 +3154,12 @@ function GameDirector:_InitObjectives()
 	for _, l_CapturePoint in pairs(self:_EngineCapturePoints()) do
 		s_Engine[l_CapturePoint] = true
 	end
+	-- Capture the flag: the flags are the objectives ("flag us", "flag ru"), wherever they are.
+	self:_InitFlags()
+	for _, l_Flag in pairs(self.m_Flags) do
+		m_NodeCollection:AddKnownObjective(l_Flag.Name)
+		m_NodeCollection:AddKnownObjective(l_Flag.StandName)
+	end
 
 	for l_ObjectiveName, _ in pairs(m_NodeCollection:GetKnownObjectives()) do
 		local s_Objective = {
@@ -2883,6 +3179,17 @@ function GameDirector:_InitObjectives()
 			subObjective = false,
 			assigned = {}
 		}
+
+		local s_Flag, s_FlagStand = self:GetFlag(l_ObjectiveName)
+		if s_Flag ~= nil then
+			s_Objective.isFlag = true
+			s_Objective.team = s_Flag.Team
+			-- The stand is only the objective of the bot with the other flag (_CarrierObjective).
+			if s_FlagStand then
+				s_Objective.active = false
+				s_Objective.canBeCaptured = false
+			end
+		end
 
 		if string.find(l_ObjectiveName:lower(), "base") ~= nil then
 			s_Objective.isBase = true
@@ -2933,9 +3240,10 @@ function GameDirector:_InitObjectives()
 				s_Objective.isEnterJetPath = true
 			end
 
-			if string.find(l_ObjectiveName:lower(), "us") ~= nil then
+			-- As a word: "vehicle truck2" (of no team) has an "ru" in it.
+			if string.find(l_ObjectiveName:lower(), "%f[%a]us%f[%A]") ~= nil then
 				s_Objective.team = TeamId.Team1
-			elseif string.find(l_ObjectiveName:lower(), "ru") ~= nil then
+			elseif string.find(l_ObjectiveName:lower(), "%f[%a]ru%f[%A]") ~= nil then
 				s_Objective.team = TeamId.Team2
 			end
 		end
@@ -2944,7 +3252,7 @@ function GameDirector:_InitObjectives()
 		-- engine and the zones are (rush: the MCOMs, by their numbers, see _UpdateValidObjectives). With a mesh only the
 		-- zones: a capture point of the engine without one is of another mode (CQS of XP3_Desert, XP5_003: the "G" of the
 		-- large layout, nobody can take it, the census found it inactive).
-		if Globals.IsConquest and not s_Objective.isBase and s_Objective.canBeCaptured
+		if Globals.IsConquest and not s_Objective.isBase and not s_Objective.isFlag and s_Objective.canBeCaptured
 			and m_NavZones:GetZone(l_ObjectiveName) == nil
 			and (m_NavZones:GetMesh() ~= nil or not s_Engine[l_ObjectiveName]) then
 			s_Objective.active = false
@@ -3559,6 +3867,11 @@ function GameDirector:GetActionTarget(p_Objective)
 		end
 		return { Kind = 'vehicle', Position = s_Objective.position, Entity = s_Objective.entity }
 	end
+	if s_Objective.isFlag then
+		local s_Flag, s_Stand = self:GetFlag(s_Objective.name)
+		return s_Flag ~= nil and { Kind = 'flag', Position = s_Stand and s_Flag.Stand or s_Flag.Position, Flag = s_Flag,
+			AtStand = s_Stand } or nil
+	end
 	if s_Objective.subObjective then
 		local s_Parent = self:_GetObjectiveFromSubObj(s_Objective.name)
 		local s_Zone = s_Parent ~= nil and m_NavZones:GetZone(s_Parent) or nil
@@ -3957,6 +4270,11 @@ function GameDirector:_GetObjectivePosition(p_Objective)
 	local s_Vehicle = self.m_VehicleObjectives ~= nil and self.m_VehicleObjectives[p_Objective] or nil
 	if s_Vehicle ~= nil then
 		return s_Vehicle.position
+	end
+
+	local s_Flag, s_FlagStand = self:GetFlag(p_Objective)
+	if s_Flag ~= nil then
+		return s_FlagStand and s_Flag.Stand or s_Flag.Position
 	end
 
 	if self.m_ObjectivePositions[p_Objective] == nil then

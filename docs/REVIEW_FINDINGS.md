@@ -96,8 +96,8 @@ to waypoint 81 and stand at (-663, 68, 59) for 50-70 s (5 a round), skipping thr
 moving (`_ObstacleHandling`: a target more than 1.5 m higher or lower counts as reached at once). The spawn rule of
 2026-10-29 (`SPAWN_PATH_RANGE`, onto the waypoint) should put them onto the path but doesn't there, cause unknown.
 
-**M1. Scavenger and CTF have no objectives** (no mesh, no labels). Scavenger needs a mesh per layout and the mode in
-`SetGameMode`, like Domination. CTF also needs flag pickup (Interact) and carrying the flag to the own stand.
+**M1. Scavenger has no objectives** (no mesh, no labels). It needs a mesh per layout and the mode in `SetGameMode`,
+like Domination.
 
 ## Stability
 

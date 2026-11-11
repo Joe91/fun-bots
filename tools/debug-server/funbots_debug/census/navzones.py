@@ -961,8 +961,10 @@ def objective_seeds(census: dict) -> list[list[float]]:
     there is kept even without a foot path that walks into it (a level recorded by bots, tank superiority: only roads
     lead to the flag)."""
     result = []
+    # Capture the flag: the flag stands at the HQ, the spawns can be 100 m from it (XP5_001: no mesh at the stands).
+    kinds = ("capturepoint", "mcom", "base") if "CaptureTheFlag" in str(census.get("mode")) else ("capturepoint", "mcom")
     for area in census.get("areas") or []:
-        if area.get("kind") not in ("capturepoint", "mcom"):
+        if area.get("kind") not in kinds:
             continue
         center = as_list(area.get("center"))
         if len(center) < 3:
@@ -1081,7 +1083,9 @@ def build(census: dict, attach: dict | None = None, checks: dict | None = None, 
                        inside_any, SOLDIER, True, soldier_attach,
                        spawns=spawn_positions(census) + objective_seeds(census),
                        keep_corners=(checks or {}).get("blockedCentered"))
-    soldier = _reattach(check_apply(soldier, checks, spawn_positions(census)), checks)
+    # Capture the flag: the mesh at the stands of the flags stays as well (no spawn there, no path yet on a new level).
+    flag_stands = objective_seeds(census) if "CaptureTheFlag" in str(census.get("mode")) else []
+    soldier = _reattach(check_apply(soldier, checks, spawn_positions(census) + flag_stands), checks)
     nav_paths = {int(path) for path, entry in (attach or {}).items() if entry.get("nav")}
     if nav_paths:
         soldier = _drop_dead_parts(soldier, nav_paths)

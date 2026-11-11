@@ -1290,7 +1290,8 @@ function FunBotServer:SetGameMode(p_GameMode, p_LevelName)
 		Globals.IsConquest = false
 	end
 
-	-- Counts as conquest (tickets), but no objectives on its paths and no mesh: the bots walk the paths as in deathmatch.
+	-- Counts as conquest (the stands of the flags are HQs). With a mesh the flags are the objectives
+	-- (GameDirector:_InitFlags), without one the bots walk the paths as in deathmatch.
 	Globals.IsCtf = p_GameMode == 'CaptureTheFlag0'
 
 	if p_GameMode == 'AirSuperiority0' then

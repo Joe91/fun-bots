@@ -111,6 +111,9 @@ def lint_map(name: str, networks: dict, data: MapData, checks: dict | None = Non
     graph = build_graph(networks, data)
     zones = [zone for zone in networks.get("zones") or [] if zone.get("inside")]
     objectives = [zone for zone in zones if zone.get("kind") in OBJECTIVE_KINDS]
+    if "CaptureTheFlag" in name:
+        # The flags stand in the bases: each has to be walked to from the other.
+        objectives = [zone for zone in zones if zone.get("kind") in SPAWN_KINDS]
     fields = {zone["name"]: _field(graph, [("m", point) for point in zone["inside"]]) for zone in objectives}
 
     def reaches(zone: dict, objective: dict) -> bool:

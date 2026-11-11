@@ -206,8 +206,8 @@ end
 ---the routes know the objective they decide at the nodes (NavRoutes:Step), not here. On the way to its objective (a
 ---vehicle, the paths with that name) a bot stays, and onto it it switches. A bot with a beacon to place takes the way to a beacon now and
 ---then. Any other path (spawned at a beacon, a connecting path, after the vehicle left) it leaves: for a navigation path,
----else for a path that isn't the dead end of another objective. Without a mesh conquest and rush go by the objectives on
----the paths (_SwitchByPriority, a community mapfile), the deathmatch modes switch at random.
+---else for a path that isn't the dead end of another objective. Without a mesh (the deathmatch modes, a community
+---mapfile) they switch at random.
 ---@param p_Bot Bot
 ---@param p_Point Waypoint
 ---@param p_Objective string
@@ -245,10 +245,6 @@ function PathSwitcher:_GetNewFootPath(p_Bot, p_Point, p_Objective)
 		if s_TakeBeacon then
 			---@cast s_Beacon -nil
 			return true, s_Beacon, m_NodeCollection:_ActionDirection(s_Beacon)
-		end
-		-- Conquest and rush (community mapfiles without a mesh): by the objectives on the paths, as the vehicles.
-		if (Globals.IsConquest and not Globals.IsCtf) or Globals.IsRush then
-			return self:_SwitchByPriority(p_Point, p_Objective, p_Bot.m_Player.teamId, s_Candidates, p_Bot.m_Id)
 		end
 		if m_Utilities:CheckProbability(Registry.GAME_DIRECTOR.PROBABILITY_SWITCH_SAME_PRIO) then
 			m_Logger:Write('switch at random')
@@ -358,18 +354,17 @@ function PathSwitcher:_GetNewVehiclePath(p_Point, p_Objective, p_TeamId, p_Activ
 			end
 		end
 	end
-	return self:_SwitchByPriority(p_Point, p_Objective, p_TeamId, s_PossiblePaths, nil)
+	return self:_SwitchByPriority(p_Point, p_Objective, p_TeamId, s_PossiblePaths)
 end
 
----By the state of the objectives on the paths (vehicles; soldiers on a level without a mesh, where no routes guide them).
+---Vehicles: by the state of the objectives on the vehicle-paths.
 ---@param p_Point Waypoint
 ---@param p_Objective string|nil
 ---@param p_TeamId TeamId
 ---@param p_PossiblePaths Waypoint[] the linked waypoints the bot may take
----@param p_BotId integer|nil soldiers: also onto the path of a sub-objective the GameDirector gives them (an MCOM to arm)
 ---@returns boolean
 ---@returns Waypoint|nil
-function PathSwitcher:_SwitchByPriority(p_Point, p_Objective, p_TeamId, p_PossiblePaths, p_BotId)
+function PathSwitcher:_SwitchByPriority(p_Point, p_Objective, p_TeamId, p_PossiblePaths)
 	-- Check if on base, or on path away from base. In this case: change path.
 	local s_OnBasePath = false
 	local s_CurrentPathFirst = m_NodeCollection:GetFirst(p_Point.PathIndex)
@@ -405,7 +400,9 @@ function PathSwitcher:_SwitchByPriority(p_Point, p_Objective, p_TeamId, p_Possib
 
 	local s_OnVehicleEnterObjective = m_GameDirector:IsVehicleEnterPath(p_Objective)
 	local s_ValidPaths = {}
-	local s_HighestPriority = 0
+	-- Below the lowest priority (-1, a path of other objectives): from such a path onto another one of them the bot
+	-- switches by chance as well (with 0 here the list of the "better" paths was empty, it never left).
+	local s_HighestPriority = -2
 	local s_CurrentPriority = 0
 
 	-- Loop through each possible path.
@@ -432,11 +429,6 @@ function PathSwitcher:_SwitchByPriority(p_Point, p_Objective, p_TeamId, p_Possib
 				-- No vehicle of this team there (gone, taken, other team): a dead end. Bots took it by priority, found
 				-- nothing at its end and lost their time until they got teleported.
 				goto skip
-			end
-
-			-- Rush: onto the path of an MCOM ("mcom N interact") the GameDirector sends this soldier to.
-			if p_BotId ~= nil and p_Objective ~= '' and m_GameDirector:UseSubobjective(p_BotId, p_TeamId, s_PathNode.Data.Objectives[1]) then
-				return true, s_NewPoint
 			end
 		end
 
@@ -490,16 +482,6 @@ function PathSwitcher:_SwitchByPriority(p_Point, p_Objective, p_TeamId, p_Possib
 
 		if s_CountOld == 0 and s_CountNew > 0 then
 			s_SwitchAnyways = true
-		end
-
-		-- Leave subObjective, if disabled.
-		if Globals.IsRush then
-			local s_TopObjective = m_GameDirector:_GetObjectiveFromSubObj(p_Objective)
-
-			if s_TopObjective ~= nil and s_CurrentPathStatus == 0 and s_CountNew == 1 and
-				s_TopObjective == s_PathNode.Data.Objectives[1] then
-				s_SwitchAnyways = true
-			end
 		end
 
 		if s_SwitchAnyways then
@@ -557,7 +539,7 @@ function PathSwitcher:_SwitchByPriority(p_Point, p_Objective, p_TeamId, p_Possib
 	end
 
 	local s_Chance = Registry.GAME_DIRECTOR.PROBABILITY_SWITCH_SAME_PRIO
-	local s_RandomNumber = MathUtils:GetRandomInt(0, 100)
+	local s_RandomNumber = MathUtils:GetRandomInt(1, 100)
 	if s_CurrentPriority < s_HighestPriority then
 		local s_HighestPrioPathsIndex = {}
 		for i = 1, #s_ValidPaths do

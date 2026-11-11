@@ -97,7 +97,7 @@ The **Live** tab:
 
 ## Labeling and linking paths
 
-On levels with a mesh (conquest, rush, squad rush, tank superiority, see below) the soldiers find their way over the
+On levels with a mesh (conquest, rush, squad rush, tank superiority, domination, capture the flag, see below) the soldiers find their way over the
 mesh and the paths between its areas, without names: the trim drops them from the foot paths, and the ways to vehicles,
 to arm an MCOM, to place a beacon (the bots do that on the mesh). Vehicle-paths keep all their objectives, the vehicles
 still switch paths by them. The labeling below
@@ -654,6 +654,18 @@ combat-area of the rush stage waits: with `--stages` the bots play until the nex
 Islands too far apart for a walk (`--max-gap`, 400 m) get a foot path of another layout of the level instead, the
 shortest one with its ends at most 15 m from both (MP_013 Squad Rush: the jump from the summit in rush), with a
 straight piece from each end to the mesh.
+
+### Capture the flag
+
+The stands of the flags are the HQs of the engine: the census makes the mesh of the bases around them (`base us`,
+`base ru`, seeded at the stands: the spawns can be 100 m away) and around the spawns, `census connect` joins them
+(also a spawn area that is no zone) and adds a second way between the bases. Ways of 300-600 m are planned with more
+cells (`record.LONG_STRIP`). In the game the flags are the objectives (`GameDirector:_InitFlags`, `flag us` /
+`flag ru`): the bots go for the flag of the others where it is, guard their own at home and go after it when it is
+taken; the bot that picked a flag up carries it to its own stand (`stand us` / `stand ru`). The game picks a flag up
+for a soldier within about 2 m, no interaction; its map-markers only move when it is picked up, dropped or back, so
+the mod follows the carrier itself (`_UpdateFlags`, event `flag`). A flag away from the mesh (carried or dropped
+between the bases) can't be routed to: the bots wait for it in the base it comes to (`GetFlagBase`).
 
 ### Paths: trimmed at the mesh
 

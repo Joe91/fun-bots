@@ -52,7 +52,8 @@ CENSUS = DEBUG_SERVER / "census"
 STEPS = ("export", "label", "import", "census", "cut", "check", "report")
 # Modes whose bots go for objectives: they need the census, the mesh and the cut. The others only walk the paths.
 MESH_MODES = ("ConquestLarge0", "ConquestSmall0", "ConquestAssaultLarge0", "ConquestAssaultSmall0",
-              "ConquestAssaultSmall1", "RushLarge0", "SquadRush0", "TankSuperiority0", "Domination0")
+              "ConquestAssaultSmall1", "RushLarge0", "SquadRush0", "TankSuperiority0", "Domination0",
+              "CaptureTheFlag0")
 PATH_MODES = ("TeamDeathMatch0", "TeamDeathMatchC0", "SquadDeathMatch0", "GunMaster0", "Scavenger0")
 # Close Quarters levels: their floors and walls are detail-meshes, the rays of the census see them only with
 # --detail-mesh (XP2_Office Domination: 325 points without, 522 with). Their storeys fit into the floors per cell of

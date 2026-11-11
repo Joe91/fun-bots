@@ -257,8 +257,6 @@ function Bot:ApplyPathOffset(p_OriginalPoint, p_NextPoint, p_NextToNextPoint, p_
 	if self.m_OffsetCenterTimer > 0.0 then
 		self.m_OffsetCenterTimer = self.m_OffsetCenterTimer - p_DeltaTime
 		s_TargetFactor = 0.0
-	elseif Globals.IsRush and self._Objective ~= '' and g_GameDirector:IsOnSubobjectivePath(self._PathIndex, self._Objective) then
-		s_TargetFactor = 0.0
 	end
 
 	if self.m_OffsetFactor < s_TargetFactor then
@@ -747,7 +745,9 @@ function Bot:_ObstacleHandling(p_Velocity, p_DistanceSquared, p_HeightDistance, 
 		if self._ObstacleSequenceTimer == 0 then -- Step 0
 			local s_P = Vec2(p_PlayerPos.x, p_PlayerPos.z)
 			local s_A = Vec2(self._TargetPoint.Position.x, self._TargetPoint.Position.z)
-			local s_B = Vec2(self._NextTargetPoint.Position.x, self._NextTargetPoint.Position.z)
+			-- The last point of a way has no next one (a walk of the debug-server, the spot at an MCOM): to its right.
+			local s_Next = self._NextTargetPoint or self._TargetPoint
+			local s_B = Vec2(s_Next.Position.x, s_Next.Position.z)
 			local s_Cross = (s_B.x - s_A.x) * (s_P.y - s_A.y) - (s_B.y - s_A.y) * (s_P.x - s_A.x)
 			if s_Cross > 0 then
 				-- target on left side
