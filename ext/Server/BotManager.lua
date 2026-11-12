@@ -285,7 +285,11 @@ function BotManager:OnUpdateManagerUpdate(p_DeltaTime, p_UpdatePass)
 	-- other checks and stuff
 	if Config.BotsAttackBots then
 		if self._BotAttackBotTimer >= Registry.GAME_RAYCASTING.BOT_BOT_CHECK_INTERVAL then
-			self._BotAttackBotTimer = 0.0
+			-- Subtract instead of reset: with 30 Hz (33 ms frames) a reset made 15 checks per second out of 20.
+			self._BotAttackBotTimer = self._BotAttackBotTimer - Registry.GAME_RAYCASTING.BOT_BOT_CHECK_INTERVAL
+			if self._BotAttackBotTimer >= Registry.GAME_RAYCASTING.BOT_BOT_CHECK_INTERVAL then
+				self._BotAttackBotTimer = 0.0 -- No catching up after a long frame.
+			end
 			self:_CheckForBotBotAttack()
 			if s_Profile then
 				local s_Now = SharedUtils:GetTimeNS()
@@ -810,8 +814,9 @@ function BotManager:ConfigGlobals()
 		m_Logger:Error("No Playercount found")
 	end
 
-	-- Calculate Raycast per Player.
-	local s_FactorTicksUpdate = Registry.GAME_RAYCASTING.BOT_BOT_CHECK_INTERVAL * SharedUtils:GetTickrate()
+	-- Calculate Raycast per Player. The clients do MAX_RAYCASTS_PER_PLAYER_PER_CYCLE per update (with the tickrate), but
+	-- at least as many per second as with 60 Hz (ClientBotManager scales the budget below 60 Hz).
+	local s_FactorTicksUpdate = Registry.GAME_RAYCASTING.BOT_BOT_CHECK_INTERVAL * math.max(SharedUtils:GetTickrate(), 60)
 	local s_RaycastsMax = s_FactorTicksUpdate * (Registry.GAME_RAYCASTING.MAX_RAYCASTS_PER_PLAYER_BOT_BOT)
 	-- Always round down one.
 	self._RaycastsPerActivePlayer = math.floor(s_RaycastsMax - 0.1)
@@ -1519,6 +1524,7 @@ end
 ---Runs the bot-bot-raycasts on the server (Registry.GAME_RAYCASTING.USE_SERVER_RAYCASTS) or sends them to the clients.
 ---@param p_RaycastData RaycastRequests[]
 function BotManager:_DispatchRaycastsBotBotAttack(p_RaycastData)
+	self._StatsBotBotRays = (self._StatsBotBotRays or 0) + #p_RaycastData
 	if not m_ServerRaycasts.m_Enabled then
 		self:_DistributeRaycastsBotBotAttack(p_RaycastData)
 		return

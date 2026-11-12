@@ -168,6 +168,7 @@ end
 function FunBotServer:RegisterCustomEvents()
 	Events:Subscribe('NodeCollection:FinishedLoading', self, self.OnFinishedLoading)
 	NetEvents:Subscribe("Botmanager:RaycastResults", self, self.OnClientRaycastResults)
+	NetEvents:Subscribe('Debug:ClientRayStats', self, self.OnClientRayStats)
 	Events:Subscribe('Bot:AbortWait', self, self.OnBotAbortWait)
 	Events:Subscribe('Bot:ExitVehicle', self, self.OnBotExitVehicle)
 	NetEvents:Subscribe('Client:RequestSettings', self, self.OnRequestClientSettings)
@@ -474,6 +475,15 @@ function FunBotServer:_UpdateRoundStats(p_DeltaTime)
 		end
 		return s_Count
 	end
+
+	-- Rounds over all bot-bot pairs: every pair gets one sight-check per round (far pairs every second round).
+	local s_BotBotRounds = m_BotManager._BotBotRound - (self._StatsLastBotBotRound or m_BotManager._BotBotRound)
+	self._StatsLastBotBotRound = m_BotManager._BotBotRound
+	local s_BotBotRays = m_BotManager._StatsBotBotRays or 0
+	m_BotManager._StatsBotBotRays = 0
+	print(string.format("[RoundStats] BotBot: %d rounds over all pairs (%.2f s/round), %.1f sight-checks/s",
+		s_BotBotRounds, s_BotBotRounds > 0 and s_StatsElapsed / s_BotBotRounds or -1,
+		s_BotBotRays / math.max(s_StatsElapsed, 0.001)))
 
 	local s_ConnectionChecks = 0
 	for _ in pairs(m_BotManager._ConnectionCheckState) do
@@ -975,6 +985,30 @@ end
 
 function FunBotServer:OnClientRaycastResults(p_Player, p_RaycastResults)
 	m_BotManager:OnClientRaycastResults(p_Player, p_RaycastResults)
+end
+
+---Debug: the raycast-costs of a client (ClientBotManager:_UpdateRayStats).
+---@param p_Player Player
+---@param p_Stats table
+function FunBotServer:OnClientRayStats(p_Player, p_Stats)
+	if Registry.DEBUG.ROUND_STATS_INTERVAL <= 0 or type(p_Stats) ~= 'table' then
+		return
+	end
+	local s_Seconds = math.max(tonumber(p_Stats.Seconds) or 1, 0.001)
+	local s_Rays = math.max(tonumber(p_Stats.Rays) or 0, 1)
+	print(string.format("[RoundStats] Client %s: %.1f frames/s | rays %.1f/s, %.3f ms/ray avg, max %.2f ms, max %.2f ms in one frame, %.3f ms/frame | bot-bot received %.1f/s done %.1f/s visible %d dropped %d queue max %d | enemy-check rays %.1f/s | tick-scale %.2f",
+		p_Player.name, (p_Stats.Frames or 0) / s_Seconds, (p_Stats.Rays or 0) / s_Seconds,
+		(p_Stats.RayMs or 0) / s_Rays, p_Stats.RayMaxMs or 0, p_Stats.FrameRayMaxMs or 0,
+		(p_Stats.RayMs or 0) / math.max(p_Stats.Frames or 1, 1),
+		(p_Stats.BotBotReceived or 0) / s_Seconds, (p_Stats.BotBotDone or 0) / s_Seconds, p_Stats.BotBotVisible or 0,
+		p_Stats.Dropped or 0, p_Stats.QueueMax or 0, (p_Stats.EnemyRays or 0) / s_Seconds,
+		tonumber(p_Stats.TickScale) or 0))
+	print(string.format("[RoundStats] Client %s: render %.1f fps, longest frame %.1f ms, %d frames > 25 ms | update %.3f ms avg, max %.2f ms (with GC %d, max %.2f ms, without max %.2f ms) | rays > 2 ms: %d (GC inside %d) | player list max %.2f ms, send max %.2f ms, %.1f sends/s %.3f ms avg | pair lookup max %.2f ms, rest of the update max %.2f ms",
+		p_Player.name, (p_Stats.RenderFrames or 0) / s_Seconds, p_Stats.RenderMaxMs or 0, p_Stats.Hitches or 0,
+		(p_Stats.UpdateMs or 0) / math.max(p_Stats.Frames or 1, 1), p_Stats.UpdateMaxMs or 0, p_Stats.GcUpdates or 0,
+		p_Stats.GcMaxMs or 0, p_Stats.NoGcMaxMs or 0, p_Stats.SlowRays or 0, p_Stats.SlowRaysGc or 0,
+		p_Stats.PlayersMaxMs or 0, p_Stats.SendMaxMs or 0, (p_Stats.Sends or 0) / s_Seconds,
+		(p_Stats.SendMs or 0) / math.max(p_Stats.Sends or 1, 1), p_Stats.PairMaxMs or 0, p_Stats.OtherMaxMs or 0))
 end
 
 function FunBotServer:OnBotAbortWait(p_BotId)

@@ -159,6 +159,63 @@ function DebugCommands:__init()
 	m_DebugBridge:RegisterCommand('chat', self.Chat)
 	m_DebugBridge:RegisterCommand('tdm_bots', self.TdmBots)
 	m_DebugBridge:RegisterCommand('registry', self.Registry)
+	m_DebugBridge:RegisterCommand('raybench', self.RayBench)
+end
+
+---Costs of the sight-raycasts of the server: { n = rays, maxDistance = m } casts n rays between random pairs of living
+---enemy bots (eye to eye, as ServerRaycasts:CheckSight) within maxDistance and times them in one frame.
+function DebugCommands.RayBench(p_Args)
+	local s_Count = math.max(1, math.min(tonumber(p_Args.n) or 200, 5000))
+	local s_MaxDistance = tonumber(p_Args.maxDistance) or 1000
+	local s_Eyes = {}
+	for _, l_Bot in ipairs(m_BotManager:GetBots()) do
+		local s_Soldier = l_Bot.m_Player.soldier
+		if s_Soldier ~= nil then
+			local s_Eye = s_Soldier.worldTransform.trans:Clone()
+			s_Eye.y = s_Eye.y + 1.6
+			s_Eyes[#s_Eyes + 1] = { Eye = s_Eye, Team = l_Bot.m_Player.teamId }
+		end
+	end
+	local s_Pairs = {}
+	for i = 1, #s_Eyes do
+		for j = i + 1, #s_Eyes do
+			if s_Eyes[i].Team ~= s_Eyes[j].Team and s_Eyes[i].Eye:Distance(s_Eyes[j].Eye) <= s_MaxDistance then
+				s_Pairs[#s_Pairs + 1] = { s_Eyes[i].Eye, s_Eyes[j].Eye }
+			end
+		end
+	end
+	if #s_Pairs == 0 then
+		error('no enemy pairs')
+	end
+	local s_PassThrough = MaterialFlags.MfSeeThrough | MaterialFlags.MfPenetrable | MaterialFlags.MfClientDestructible
+	---@cast s_PassThrough MaterialFlags
+	local s_Result = { pairs = #s_Pairs, n = s_Count }
+	for _, l_Variant in ipairs({ 'collision', 'detailmesh', 'insight' }) do
+		local s_Flags = RayCastFlags.DontCheckWater | RayCastFlags.DontCheckCharacter | RayCastFlags.DontCheckRagdoll
+		if l_Variant == 'detailmesh' then
+			s_Flags = s_Flags | RayCastFlags.CheckDetailMesh
+		end
+		---@cast s_Flags RayCastFlags
+		local s_Visible = 0
+		local s_Length = 0
+		local s_Start = SharedUtils:GetTimeNS()
+		for l_Index = 1, s_Count do
+			local l_Pair = s_Pairs[(l_Index - 1) % #s_Pairs + 1]
+			local s_Hits = RaycastManager:CollisionRaycast(l_Pair[1], l_Pair[2], 5, s_PassThrough, s_Flags)
+			if l_Variant == 'insight' then
+				if m_Utilities:IsInSight(s_Hits, s_PassThrough, l_Pair[2], false) then
+					s_Visible = s_Visible + 1
+				end
+			elseif #s_Hits == 0 then
+				s_Visible = s_Visible + 1
+			end
+			s_Length = s_Length + l_Pair[1]:Distance(l_Pair[2])
+		end
+		local s_Ms = (SharedUtils:GetTimeNS() - s_Start) / 1000000
+		s_Result[l_Variant] = { ms = s_Ms, usPerRay = s_Ms * 1000 / s_Count, visible = s_Visible,
+			avgLength = s_Length / s_Count }
+	end
+	return s_Result
 end
 
 ---TDM without a real player: bots anyway (BotSpawner:UpdateBotAmountAndTeam leaves them out there, a crash of the
@@ -192,7 +249,8 @@ end
 ---level with and without a change (A/B). { section, key, value } sets Registry[section][key] (a number or a boolean,
 ---as it is), without value it only reads it.
 function DebugCommands.Registry(p_Args)
-	local s_Section = Registry[p_Args.section]
+	-- section "Config": a value of the Config (not saved, the clients keep theirs).
+	local s_Section = p_Args.section == 'Config' and Config or Registry[p_Args.section]
 	if type(s_Section) ~= 'table' or s_Section[p_Args.key] == nil then
 		error('no Registry.' .. tostring(p_Args.section) .. '.' .. tostring(p_Args.key))
 	end
@@ -201,6 +259,15 @@ function DebugCommands.Registry(p_Args)
 			error('Registry.' .. p_Args.section .. '.' .. p_Args.key .. ' is a ' .. type(s_Section[p_Args.key]))
 		end
 		s_Section[p_Args.key] = p_Args.value
+		-- The clients have their own Registry (e.g. the raycast-budgets of ClientBotManager).
+		if s_Section ~= Config then
+			NetEvents:BroadcastLocal('Debug:Registry', p_Args.section, p_Args.key, p_Args.value)
+		end
+		-- Derived at level start (BotManager:ConfigGlobals).
+		if p_Args.key == 'MAX_RAYCASTS_PER_PLAYER_BOT_BOT' then
+			m_BotManager._RaycastsPerActivePlayer = math.floor(Registry.GAME_RAYCASTING.BOT_BOT_CHECK_INTERVAL *
+				math.max(SharedUtils:GetTickrate(), 60) * p_Args.value - 0.1)
+		end
 	end
 	return { value = s_Section[p_Args.key] }
 end

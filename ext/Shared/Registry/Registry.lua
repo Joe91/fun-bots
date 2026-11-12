@@ -72,12 +72,24 @@ Registry = {
 		MAX_CHECKS_PER_CYCLE = 10,
 		-- Time bots will not attack a player when spawned.
 		SPAWN_PROTECTION = 1.5,
+		-- Raycasts of a client towards enemy bots per enemy-check (every GAME_RAYCASTING.RAYCAST_INTERVAL_ENEMY_CHECK).
+		-- With 32 enemy bots in range every bot is checked every 32 / 2 * 0.03 s = 0.5 s.
+		ENEMY_RAYCASTS_PER_CYCLE = 2,
+		-- Seconds between rebuilds of the list of enemy bots for the enemy-check (going through all players costs about
+		-- as much as the raycasts themselves when done on every check).
+		ENEMY_LIST_INTERVAL = 1.0,
 	},
 	-- Variables related to raycasting.
 	GAME_RAYCASTING = {
-		MAX_RAYCASTS_PER_PLAYER_PER_CYCLE = 3,
-		-- Max Raycasts for Bot-Bot Attack per player and cycle. Needs to be smaller than max_raycasts.
-		MAX_RAYCASTS_PER_PLAYER_BOT_BOT = 2,
+		-- Max raycasts of a client per update (the update runs with the tickrate of the server; below 60 Hz the budget
+		-- grows, so it is at least this * 60 per second). One ray costs the client 0.06-0.09 ms (measured 2026-11-12).
+		MAX_RAYCASTS_PER_PLAYER_PER_CYCLE = 6,
+		-- Bot-bot-raycasts the server sends to every client per update of the client (sent every BOT_BOT_CHECK_INTERVAL).
+		-- Must not be bigger than MAX_RAYCASTS_PER_PLAYER_PER_CYCLE - CLIENT.ENEMY_RAYCASTS_PER_CYCLE, else the queue of
+		-- the client overflows.
+		MAX_RAYCASTS_PER_PLAYER_BOT_BOT = 4,
+		-- Bot-bot-raycasts a client keeps queued: more are dropped (requests that old are useless).
+		MAX_QUEUED_RAYCASTS_BOT_BOT = 40,
 		-- How often get the nodes calculated.
 		UPDATE_INTERVAL_NODEEDITOR = 0.03,
 		-- Raycast Interval of client for different raycasts.
@@ -88,8 +100,9 @@ Registry = {
 		BOT_BOT_INFO_MAX_AGE = 0.25,
 		-- Hof often Bot-Revive-Bot-Raycast-chcks are done (costs server performance)
 		BOT_BOT_REVIVE_INTERVAL = 0.5,
-		-- Max checks per cycle.
-		BOT_BOT_MAX_CHECKS = 30,
+		-- Max pairs of enemy bots checked (distance) per bot-bot-check. With 30 a round over all pairs of 64 bots took
+		-- 1.4 s, with 120 0.35-0.4 s (measured 2026-11-12, the raycasts are the limit then).
+		BOT_BOT_MAX_CHECKS = 120,
 		-- Pairs of bots farther apart than this (m) are checked only in every second round over all pairs: the close ones
 		-- more often (a round took up to 5 s on crowded levels, half of the rays went to pairs farther than 75 m).
 		BOT_BOT_FAR_DISTANCE = 75.0,
@@ -100,7 +113,8 @@ Registry = {
 		-- Costs server performance. Toggle ingame with "!serverraycasts on|off" or RCON "funbots.serverRaycasts".
 		USE_SERVER_RAYCASTS = false,
 		-- Max server-raycasts per bot-bot-check (every BOT_BOT_CHECK_INTERVAL).
-		SERVER_RAYCASTS_BOT_BOT = 6,
+		-- 24: ~30 ms/s Lua and raycasts on the server with 64 bots (6: 10 ms/s, 60: 90 ms/s with spikes of 30 ms).
+		SERVER_RAYCASTS_BOT_BOT = 24,
 		-- Max server-raycasts per real player and update for the bot-player- and revive-checks.
 		SERVER_RAYCASTS_PER_PLAYER = 1,
 	},
