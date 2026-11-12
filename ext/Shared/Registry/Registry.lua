@@ -82,14 +82,16 @@ Registry = {
 	-- Variables related to raycasting.
 	GAME_RAYCASTING = {
 		-- Max raycasts of a client per update (the update runs with the tickrate of the server; below 60 Hz the budget
-		-- grows, so it is at least this * 60 per second). One ray costs the client 0.06-0.09 ms (measured 2026-11-12).
-		MAX_RAYCASTS_PER_PLAYER_PER_CYCLE = 6,
+		-- grows, so it is at least this * 60 per second). One ray costs the client 0.04-0.09 ms (measured 2026-11-12):
+		-- with 6 bot-bot + 2 enemy rays the whole update takes ~0.5 ms, the frame rate of the client did not change.
+		MAX_RAYCASTS_PER_PLAYER_PER_CYCLE = 8,
 		-- Bot-bot-raycasts the server sends to every client per update of the client (sent every BOT_BOT_CHECK_INTERVAL).
 		-- Must not be bigger than MAX_RAYCASTS_PER_PLAYER_PER_CYCLE - CLIENT.ENEMY_RAYCASTS_PER_CYCLE, else the queue of
-		-- the client overflows.
-		MAX_RAYCASTS_PER_PLAYER_BOT_BOT = 4,
-		-- Bot-bot-raycasts a client keeps queued: more are dropped (requests that old are useless).
-		MAX_QUEUED_RAYCASTS_BOT_BOT = 40,
+		-- the client overflows. One player on MP_011 CQL with 64 bots: 4 → 0.8 s, 6 → 0.42 s for a round over all pairs.
+		MAX_RAYCASTS_PER_PLAYER_BOT_BOT = 6,
+		-- Bot-bot-raycasts a client keeps queued: more are dropped (requests that old are useless). At 120 Hz the server
+		-- sends 35 per check (every 0.05 s), the queue must hold them.
+		MAX_QUEUED_RAYCASTS_BOT_BOT = 60,
 		-- How often get the nodes calculated.
 		UPDATE_INTERVAL_NODEEDITOR = 0.03,
 		-- Raycast Interval of client for different raycasts.
