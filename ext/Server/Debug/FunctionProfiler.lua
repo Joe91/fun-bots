@@ -89,9 +89,19 @@ local function _Wrap(p_Name, p_Function)
 end
 
 function FunctionProfiler:__init()
-	if Registry.DEBUG.ROUND_STATS_INTERVAL <= 0 then
-		return
+	self._Enabled = false
+	if Registry.DEBUG.ROUND_STATS_INTERVAL > 0 then
+		self:Enable()
 	end
+end
+
+---Wraps the functions (once, until the mod is loaded again). Also via the debug-bridge command profile_functions.
+---@return integer @wrapped functions
+function FunctionProfiler:Enable()
+	if self._Enabled then
+		return 0
+	end
+	self._Enabled = true
 
 	local s_Count = 0
 	for l_Index = 1, #TARGETS do
@@ -126,6 +136,7 @@ function FunctionProfiler:__init()
 	end
 
 	print('[FunctionProfiler] ' .. s_Count .. ' functions wrapped')
+	return s_Count
 end
 
 if g_FunctionProfiler == nil then

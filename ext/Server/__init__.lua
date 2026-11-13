@@ -485,10 +485,7 @@ function FunBotServer:_UpdateRoundStats(p_DeltaTime)
 		s_BotBotRounds, s_BotBotRounds > 0 and s_StatsElapsed / s_BotBotRounds or -1,
 		s_BotBotRays / math.max(s_StatsElapsed, 0.001)))
 
-	local s_ConnectionChecks = 0
-	for _ in pairs(m_BotManager._ConnectionCheckState) do
-		s_ConnectionChecks = s_ConnectionChecks + 1
-	end
+	local s_ConnectionChecks = m_BotManager._BotBotPairsChecked
 
 	local s_Beacons = 0
 	for _ in pairs(m_GameDirector.m_Beacons) do

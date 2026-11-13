@@ -33,6 +33,7 @@ DebugCommands = class('DebugCommands')
 --   walk_stop       {}                          stops it (also drive)
 --   tdm_bots        { on }                      bots in TDM without a real player (DebugCommands.TdmBots)
 --   registry        { section, key, value }     a value of the Registry at runtime (A/B tests), -> { value }
+--   profile_functions {}                        wraps the functions of Debug/FunctionProfiler (round-stats), -> { wrapped }
 
 ---@type DebugBridge
 local m_DebugBridge = require('Debug/DebugBridge')
@@ -160,6 +161,12 @@ function DebugCommands:__init()
 	m_DebugBridge:RegisterCommand('tdm_bots', self.TdmBots)
 	m_DebugBridge:RegisterCommand('registry', self.Registry)
 	m_DebugBridge:RegisterCommand('raybench', self.RayBench)
+	m_DebugBridge:RegisterCommand('profile_functions', self.ProfileFunctions)
+end
+
+---Profiles single functions from now on (printed with the round-stats), without loading the mod with the stats on.
+function DebugCommands.ProfileFunctions()
+	return { wrapped = g_FunctionProfiler:Enable() }
 end
 
 ---Costs of the sight-raycasts of the server: { n = rays, maxDistance = m } casts n rays between random pairs of living

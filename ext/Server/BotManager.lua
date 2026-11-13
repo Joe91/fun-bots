@@ -49,11 +49,11 @@ function BotManager:RegisterVars()
 	self._BotBotAttackList = {}
 	self._RaycastsPerActivePlayer = 0
 
-	---@type table<integer, boolean>
-	---`[lowerId * 65536 + higherId] -> boolean`
-	self._ConnectionCheckState = {}
-
+	-- Position of the bot-bot check in the pairs of _BotBotAttackList (outer index, next inner index > outer).
 	self._LastBotCheckIndex = 1
+	self._LastBotCheckInner = 2
+	-- Pairs checked for their distance in this round (debug stats).
+	self._BotBotPairsChecked = 0
 	self._LastPlayerCheckIndex = 1
 	-- Rounds over all bot-pairs so far (far pairs only in every second one).
 	self._BotBotRound = 0
@@ -94,8 +94,9 @@ function BotManager:OnLevelDestroy()
 	self._BotsToDestroy = {}
 	self._BotBotAttackList = {}
 	self._RaycastsPerActivePlayer = 0
-	self._ConnectionCheckState = {}
 	self._LastBotCheckIndex = 1
+	self._LastBotCheckInner = 2
+	self._BotBotPairsChecked = 0
 	self._LastPlayerCheckIndex = 1
 
 	-- reset-timers
@@ -196,7 +197,9 @@ function BotManager:TakeProfileStats()
 	end
 
 	local s_Stats = self._ProfileStats
-	self._ProfileStats = { Sections = {}, WorstBotCalls = {}, Spikes = 0, SpikesWithGc = 0 }
+	-- Without ROUND_STATS_PROFILE the round-stats only count frames (the profiling costs some time on every bot call).
+	self._ProfileStats = Registry.DEBUG.ROUND_STATS_PROFILE and
+		{ Sections = {}, WorstBotCalls = {}, Spikes = 0, SpikesWithGc = 0 } or nil
 	return s_Stats
 end
 
@@ -1651,77 +1654,68 @@ function BotManager:_CheckForBotBotAttack()
 		return s_Info
 	end
 
-	for i = self._LastBotCheckIndex, s_AttackListCount do
-		-- Body.
-		local s_BotIdToCheck = s_AttackList[i]
-		local s_BotInfo = _GetBotInfo(s_BotIdToCheck)
+	-- Every pair of bots once per round: the outer bot i, the inner bots j > i. Both bots of a pair shoot at each other
+	-- (OnBotShootAtBot), the first one that is ready to attack is the one the ray starts at.
+	local s_Outer = self._LastBotCheckIndex
+	local s_Inner = self._LastBotCheckInner
+	while s_Outer < s_AttackListCount do
+		local s_BotInfo = _GetBotInfo(s_AttackList[s_Outer])
 
-		if s_BotInfo and s_BotInfo.Bot:IsReadyToAttack(false, nil, false, true) then
+		if s_BotInfo then
 			local s_BotX, s_BotY, s_BotZ = s_BotInfo.X, s_BotInfo.Y, s_BotInfo.Z
 			local s_BotTeamId = s_BotInfo.TeamId
+			local s_BotReady = s_BotInfo.Bot:IsReadyToAttack(false, nil, false, true)
 
-			for l_Index = 1, s_AttackListCount do
-				local l_BotId = s_AttackList[l_Index]
-				if l_BotId ~= s_BotIdToCheck then
-					local s_EnemyInfo = _GetBotInfo(l_BotId)
+			for l_Inner = math.max(s_Inner, s_Outer + 1), s_AttackListCount do
+				local s_EnemyInfo = _GetBotInfo(s_AttackList[l_Inner])
 
-					if s_EnemyInfo and s_EnemyInfo.TeamId ~= s_BotTeamId then -- enemy does not have to be ready!
-						-- Check connection-state.
-						-- Integer key (player ids are < 65536) avoids building strings for every pair.
-						local s_ConnectionValue
-						if s_BotIdToCheck > l_BotId then
-							s_ConnectionValue = l_BotId * 65536 + s_BotIdToCheck
-						else
-							s_ConnectionValue = s_BotIdToCheck * 65536 + l_BotId
+				if s_EnemyInfo and s_EnemyInfo.TeamId ~= s_BotTeamId and
+					(s_BotReady or s_EnemyInfo.Bot:IsReadyToAttack(false, nil, false, true)) then
+					-- Check distance.
+					local s_DiffX = s_BotX - s_EnemyInfo.X
+					local s_DiffY = s_BotY - s_EnemyInfo.Y
+					local s_DiffZ = s_BotZ - s_EnemyInfo.Z
+					local s_Distance = math.sqrt(s_DiffX * s_DiffX + s_DiffY * s_DiffY + s_DiffZ * s_DiffZ)
+					s_ChecksDone = s_ChecksDone + 1
+					local s_MaxDistance = math.max(s_BotInfo.AttackDistance, s_EnemyInfo.AttackDistance)
+
+					-- Far pairs only in every second round (BOT_BOT_FAR_DISTANCE).
+					if s_Distance <= s_MaxDistance and (s_Distance <= s_FarDistance or s_FarRound) then
+						local s_First, s_Second = s_BotInfo, s_EnemyInfo
+						if not s_BotReady then
+							s_First, s_Second = s_EnemyInfo, s_BotInfo
 						end
+						s_RaycastEntries[#s_RaycastEntries + 1] = {
+							Bot1 = s_First.Bot.m_Id,
+							Bot2 = s_Second.Bot.m_Id,
+							Bot1InVehicle = s_First.InVehicle,
+							Bot2InVehicle = s_Second.InVehicle,
+						}
+						s_Raycasts = s_Raycasts + 1
+					end
 
-						if not self._ConnectionCheckState[s_ConnectionValue] then
-							self._ConnectionCheckState[s_ConnectionValue] = true
-							-- Check distance.
-							local s_DiffX = s_BotX - s_EnemyInfo.X
-							local s_DiffY = s_BotY - s_EnemyInfo.Y
-							local s_DiffZ = s_BotZ - s_EnemyInfo.Z
-							local s_Distance = math.sqrt(s_DiffX * s_DiffX + s_DiffY * s_DiffY + s_DiffZ * s_DiffZ)
-							s_ChecksDone = s_ChecksDone + 1
-							local s_MaxDistance = math.max(s_BotInfo.AttackDistance, s_EnemyInfo.AttackDistance)
-
-							-- Far pairs only in every second round (BOT_BOT_FAR_DISTANCE).
-							if s_Distance <= s_MaxDistance and (s_Distance <= s_FarDistance or s_FarRound) then
-								s_RaycastEntries[#s_RaycastEntries + 1] = {
-									Bot1 = s_BotIdToCheck,
-									Bot2 = l_BotId,
-									Bot1InVehicle = s_BotInfo.InVehicle,
-									Bot2InVehicle = s_EnemyInfo.InVehicle,
-								}
-								s_Raycasts = s_Raycasts + 1
-
-								if s_Raycasts >= s_MaxRaycasts then
-									self._LastBotCheckIndex = i
-									self:_DispatchRaycastsBotBotAttack(s_RaycastEntries)
-									return
-								end
-							end
-
-							if s_ChecksDone >= Registry.GAME_RAYCASTING.BOT_BOT_MAX_CHECKS then
-								self._LastBotCheckIndex = i
-								self:_DispatchRaycastsBotBotAttack(s_RaycastEntries)
-								return
-							end
-						end
+					if s_Raycasts >= s_MaxRaycasts or s_ChecksDone >= Registry.GAME_RAYCASTING.BOT_BOT_MAX_CHECKS then
+						self._LastBotCheckIndex = s_Outer
+						self._LastBotCheckInner = l_Inner + 1
+						self._BotBotPairsChecked = self._BotBotPairsChecked + s_ChecksDone
+						self:_DispatchRaycastsBotBotAttack(s_RaycastEntries)
+						return
 					end
 				end
 			end
 		end
 
-		self._LastBotCheckIndex = i
+		s_Outer = s_Outer + 1
+		s_Inner = s_Outer + 1
 	end
 
+	self._BotBotPairsChecked = self._BotBotPairsChecked + s_ChecksDone
 	self:_DispatchRaycastsBotBotAttack(s_RaycastEntries)
 
-	-- Should only reach here if every connection has been checked.
-	-- Clear the cache and start over.
+	-- Should only reach here if every pair has been checked. Start over with a new order.
 	self._LastBotCheckIndex = 1
-	self._ConnectionCheckState = {}
+	self._LastBotCheckInner = 2
+	self._BotBotPairsChecked = 0
 	self._BotBotAttackList = {}
 	self._BotBotRound = self._BotBotRound + 1
 end

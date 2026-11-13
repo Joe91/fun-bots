@@ -436,6 +436,8 @@ Registry = {
 		-- Seconds between prints of Lua memory, bot-update times, GC and table sizes. 0 = off.
 		-- Used to find what grows or stutters over long rounds.
 		ROUND_STATS_INTERVAL = 0.0,
+		-- With the round-stats: time and memory of every bot call and section (costs some time on every call).
+		ROUND_STATS_PROFILE = true,
 		-- Prints every single call of a mod-function that takes longer than this (ms), with its callers. 0 = off.
 		SPIKE_TRACE_MS = 0,
 		-- Streams the game-state to the external debug-server (tools/debug-server) and executes its commands.
